@@ -6,6 +6,7 @@ plugins {
 dependencies {
     compileOnly(project(":game-client"))
     compileOnly(project(":game-server"))
+    compileOnly(project(":game-launcher"))
 }
 
 allprojects {
