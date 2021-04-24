@@ -1,2 +1,2 @@
 rootProject.name = "dodian"
-include("game-client", "game-server")
+include("game-client", "game-server", "game-launcher")
