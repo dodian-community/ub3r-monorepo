@@ -32,7 +32,7 @@ public class PickupLog extends LogEntry {
    */
   public static void recordPickup(Player player, int item, int amount, String type, Position pos) {
     try {
-  	  if(Config.worldId > 1) {
+  	  if(Config.getWorldId() > 1) {
 		  return;
 	  }
       Statement statement = Database.conn.createStatement();

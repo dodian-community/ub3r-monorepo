@@ -56,7 +56,7 @@ public Login() {
   public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
     try {
       Database.statement.executeUpdate("INSERT INTO uber3_sessions SET dbid='" + dbId + "', client='"+clientPid+"', duration='" + elapsed
-          + "', hostname='" + connectedFrom + "',start='"+start+"',end='"+end+"',world='"+Config.worldId+"'");
+          + "', hostname='" + connectedFrom + "',start='"+start+"',end='"+end+"',world='"+Config.getWorldId()+"'");
     } catch (Exception e) {
       System.out.println(e.getMessage());
       e.printStackTrace();

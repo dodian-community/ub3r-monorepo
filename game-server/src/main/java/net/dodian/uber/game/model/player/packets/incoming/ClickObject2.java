@@ -1,7 +1,5 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import java.util.Random;
-
 import net.dodian.Config;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
@@ -19,6 +17,8 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.Misc;
 
+import java.util.Random;
+
 public class ClickObject2 implements Packet {
 
 	@Override
@@ -32,7 +32,7 @@ public class ClickObject2 implements Packet {
 		GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
 		GameObjectData object = GameObjectData.forId(task.getWalkToId());
 		client.setWalkToTask(task);
-	    if(Config.worldId > 1 && object != null)
+	    if(Config.getWorldId() > 1 && object != null)
 	    	client.send(new SendMessage("Obj click2: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
 		if (objectID == 14896) {
 			client.addItem(1779, 1);
@@ -78,7 +78,7 @@ public class ClickObject2 implements Packet {
 		if (client.adding) {
 			client.objects.add(new RS2Object(objectID, position.getX(), position.getY(), 2));
 		}
-		if(Config.worldId > 0) {
+		if(Config.getWorldId() > 0) {
 			client.println_debug("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
 		}
 		if (System.currentTimeMillis() < client.walkBlock) {

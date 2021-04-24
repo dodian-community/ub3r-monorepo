@@ -31,7 +31,7 @@ public class PmLog extends LogEntry {
    */
   public static void recordPm(String sender, String receiver, String message) {
     try {
-  	  if(Config.worldId > 1) {
+  	  if(Config.getWorldId() > 1) {
 		  return;
 	  }
       Statement statement = Database.conn.createStatement();
