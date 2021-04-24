@@ -29,7 +29,7 @@ public class CommandLog extends LogEntry {
    *          The command typed.
    */
   public static void recordCommand(Player player, String command) {
-	  if(Config.worldId > 1) {
+	  if(Config.getWorldId() > 1) {
 		  return;
 	  }
     try {

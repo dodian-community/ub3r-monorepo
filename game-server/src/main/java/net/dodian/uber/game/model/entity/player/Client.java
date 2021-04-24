@@ -705,9 +705,9 @@ public class Client extends Player implements Runnable {
       clientSessionKey = getInputStream().readQWord();
       serverSessionKey = getInputStream().readQWord();
 
-      Config.customClientVersion = getInputStream().readString();
+      Config.setCustomClientVersion(getInputStream().readString());
       //System.out.println("Client version: " + Config.customClientVersion + ", " + Config.getClient());
-      officialClient = Config.customClientVersion.equals(Config.getClient());
+      officialClient = Config.getCustomClientVersion().equals(Config.getClient());
 
       setPlayerName(getInputStream().readString());
       if (getPlayerName() == null || getPlayerName().length() == 0) {
@@ -1322,9 +1322,9 @@ public class Client extends Player implements Runnable {
     }
     /*double chance = (double)newXp / 1000000; //1 xp = 0.000001, 0.0001 %
     double roll = Math.random() * 1;
-    if(Config.worldId > 1)
+    if(Config.getWorldId() > 1)
     	send(new SendMessage("XP gained: "+ newXp +", your chance is " + chance * 100 + "% and you rolled a " + roll * 100));
-    if(roll <= chance && Config.worldId > 1) //Test world 2 or higher for this to trigger!
+    if(roll <= chance && Config.getWorldId() > 1) //Test world 2 or higher for this to trigger!
     	Balloons.triggerBalloonEvent(this);*/
     refreshSkill(skill);
     if (skill == Skill.STRENGTH || skill == Skill.RANGED)

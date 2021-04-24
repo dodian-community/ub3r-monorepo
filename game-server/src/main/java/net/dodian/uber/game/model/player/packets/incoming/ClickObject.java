@@ -40,7 +40,7 @@ public class ClickObject implements Packet {
             GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
             GameObjectData object = GameObjectData.forId(task.getWalkToId());
             client.setWalkToTask(task);
-            if(Config.worldId > 1 && object != null)
+            if(Config.getWorldId() > 1 && object != null)
                 client.send(new SendMessage("Obj click1: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
             if (client.randomed) {
                 return;

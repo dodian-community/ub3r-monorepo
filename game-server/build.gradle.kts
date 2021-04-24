@@ -21,7 +21,10 @@ java {
 }
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.11.0.rc1")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0.rc1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("org.quartz-scheduler:quartz:2.3.2")
     implementation("mysql:mysql-connector-java:8.0.24")
