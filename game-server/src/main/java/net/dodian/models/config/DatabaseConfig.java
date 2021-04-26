@@ -1,12 +1,12 @@
 package net.dodian.models.config;
 
 public class DatabaseConfig {
-    private String host = "locahost";
+    private String host = "dodian.net";
     private int port = 3306;
-    private String database = "dodian";
+    private String database = "dodiannet";
     private String tablePrefix = "";
-    private String username = "root";
-    private String password = "";
+    private String username = "nozemi";
+    private String password = "^8LrP.m6S[G,+P),";
 
     public DatabaseConfig() {
 

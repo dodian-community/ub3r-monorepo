@@ -4,12 +4,9 @@
 
 public class Node {
 
-    public final void unlink()
-    {
-        if(next == null)
-        {
-        } else
-        {
+    public final void unlink() {
+        if (next == null) {
+        } else {
             next.prev = prev;
             prev.next = next;
             prev = null;
@@ -17,8 +14,7 @@ public class Node {
         }
     }
 
-    public Node()
-    {
+    public Node() {
     }
 
     public long id;

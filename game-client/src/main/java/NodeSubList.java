@@ -4,16 +4,14 @@
 
 final class NodeSubList {
 
-    public NodeSubList()
-    {
+    public NodeSubList() {
         head = new NodeSub();
         head.prevNodeSub = head;
         head.nextNodeSub = head;
     }
 
-    public void insertHead(NodeSub nodeSub)
-    {
-        if(nodeSub.nextNodeSub != null)
+    public void insertHead(NodeSub nodeSub) {
+        if (nodeSub.nextNodeSub != null)
             nodeSub.unlinkSub();
         nodeSub.nextNodeSub = head.nextNodeSub;
         nodeSub.prevNodeSub = head;
@@ -21,51 +19,41 @@ final class NodeSubList {
         nodeSub.prevNodeSub.nextNodeSub = nodeSub;
     }
 
-    public NodeSub popTail()
-    {
+    public NodeSub popTail() {
         NodeSub nodeSub = head.prevNodeSub;
-        if(nodeSub == head)
-        {
+        if (nodeSub == head) {
             return null;
-        } else
-        {
+        } else {
             nodeSub.unlinkSub();
             return nodeSub;
         }
     }
 
-    public NodeSub reverseGetFirst()
-    {
+    public NodeSub reverseGetFirst() {
         NodeSub nodeSub = head.prevNodeSub;
-        if(nodeSub == head)
-        {
+        if (nodeSub == head) {
             current = null;
             return null;
-        } else
-        {
+        } else {
             current = nodeSub.prevNodeSub;
             return nodeSub;
         }
     }
 
-    public NodeSub reverseGetNext()
-    {
+    public NodeSub reverseGetNext() {
         NodeSub nodeSub = current;
-        if(nodeSub == head)
-        {
+        if (nodeSub == head) {
             current = null;
             return null;
-        } else
-        {
+        } else {
             current = nodeSub.prevNodeSub;
             return nodeSub;
         }
     }
 
-    public int getNodeCount()
-    {
+    public int getNodeCount() {
         int i = 0;
-        for(NodeSub nodeSub = head.prevNodeSub; nodeSub != head; nodeSub = nodeSub.prevNodeSub)
+        for (NodeSub nodeSub = head.prevNodeSub; nodeSub != head; nodeSub = nodeSub.prevNodeSub)
             i++;
 
         return i;

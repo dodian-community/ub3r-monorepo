@@ -1,5 +1,8 @@
 package net.dodian.uber.comm;
 
+import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.model.entity.player.Client;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,9 +10,6 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.model.entity.player.Client;
 
 public class SocketHandler implements Runnable {
 

@@ -5,9 +5,9 @@ import net.dodian.uber.game.model.entity.Entity;
 
 public class ControlledMelee extends CombatExperienceHandler {
 
-  @Override
-  public void appendExperience(Entity attacker, int hit) {
+    @Override
+    public void appendExperience(Entity attacker, int hit) {
 
-  }
+    }
 
 }

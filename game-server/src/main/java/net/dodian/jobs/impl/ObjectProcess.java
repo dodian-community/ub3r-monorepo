@@ -12,12 +12,12 @@ import org.quartz.JobExecutionException;
 @DisallowConcurrentExecution
 
 public class ObjectProcess implements Job {
-  public void execute(JobExecutionContext context) throws JobExecutionException {
-    for (int i = 0; i < Constants.maxPlayers; i++) {
-      Client c = ((Client) (PlayerHandler.players[i]));
-      if(c != null)
-        GlobalObject.updateObject(c);
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client c = ((Client) (PlayerHandler.players[i]));
+            if (c != null)
+                GlobalObject.updateObject(c);
+        }
     }
-  }
 
 }

@@ -5,8 +5,7 @@
 
 public final class OnDemandData extends NodeSub {
 
-    public OnDemandData()
-    {
+    public OnDemandData() {
         incomplete = true;
     }
 

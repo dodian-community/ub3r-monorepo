@@ -1,12 +1,5 @@
 package net.dodian.uber.game;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import net.dodian.Config;
 import net.dodian.cache.Cache;
 import net.dodian.cache.object.GameObjectData;
@@ -14,11 +7,7 @@ import net.dodian.cache.object.ObjectDef;
 import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
-import net.dodian.jobs.impl.GroundItemProcessor;
-import net.dodian.jobs.impl.ItemProcessor;
-import net.dodian.jobs.impl.PlayerProcessor;
-import net.dodian.jobs.impl.ShopProcessor;
-import net.dodian.jobs.impl.ObjectProcess;
+import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.Memory;
@@ -42,6 +31,13 @@ import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.Database;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
+
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Testing..
@@ -144,7 +140,7 @@ public class Server implements Runnable {
         System.out.println("Server is now running!");
     }
 
-	public static Server clientHandler = null; // handles all the clients
+    public static Server clientHandler = null; // handles all the clients
     public static java.net.ServerSocket clientListener = null;
     public static boolean shutdownServer = false; // set this to true in order to
     // shut down and kill the server
@@ -204,16 +200,16 @@ public class Server implements Runnable {
     public static void logError(String message) {
         Utils.println(message);
     }
-    
+
     public static int totalHostConnection(String host) {
-    	int num = 0;
-	    for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
-	        Player p = PlayerHandler.players[slot];
-	        if (p != null) {
-	          if(host.equals(p.connectedFrom))
-	        	  num++;
-	        }
-	      }
+        int num = 0;
+        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
+            Player p = PlayerHandler.players[slot];
+            if (p != null) {
+                if (host.equals(p.connectedFrom))
+                    num++;
+            }
+        }
         return num;
     }
 
@@ -257,9 +253,9 @@ public class Server implements Runnable {
             e.printStackTrace();
         }
     }
-    
-	public static void setGlobalItems() { //I set global item spawn here as I do not have a config file for it yet!
-		//Yanille
+
+    public static void setGlobalItems() { //I set global item spawn here as I do not have a config file for it yet!
+        //Yanille
 		/*
 		Ground.items.add(new GroundItem(2642, 3123, 401, 1, 30 * 1000));
 		Ground.items.add(new GroundItem(2641, 3123, 401, 1, 30 * 1000));
@@ -276,15 +272,15 @@ public class Server implements Runnable {
 			Ground.items.add(new GroundItem(2839 + i, 3433, 401, 1, 30 * 1000));
 		Ground.items.add(new GroundItem(2842, 3432, 401, 1, 30 * 1000));
 		*/
-		/* Troll items */
-		Ground.items.add(new GroundItem(2611, 3096, 1048, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2612, 3096, 1040, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2563, 9511, 1631, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2564, 9511, 6571, 1, 30 * 1000));
-		/* End of troll */
-		Ground.items.add(new GroundItem(2605, 3104, 1277, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2607, 3104, 1171, 1, 30 * 1000));
-	}
+        /* Troll items */
+        Ground.items.add(new GroundItem(2611, 3096, 1048, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2612, 3096, 1040, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2563, 9511, 1631, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2564, 9511, 6571, 1, 30 * 1000));
+        /* End of troll */
+        Ground.items.add(new GroundItem(2605, 3104, 1277, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2607, 3104, 1171, 1, 30 * 1000));
+    }
 
     public static int EnergyRegian = 60;
 

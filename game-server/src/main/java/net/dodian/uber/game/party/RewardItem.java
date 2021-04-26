@@ -13,11 +13,13 @@ public class RewardItem {
         this.amount = 1;
         this.pos = null;
     }
+
     public RewardItem(int id, int amount) {
         this.id = id;
         this.amount = amount;
         this.pos = null;
     }
+
     public RewardItem(int id, int amount, Position pos) {
         this.id = id;
         this.amount = 1;
@@ -31,6 +33,7 @@ public class RewardItem {
     public int getAmount() {
         return amount;
     }
+
     public void setAmount(int amount) {
         this.amount += amount;
     }
@@ -38,6 +41,7 @@ public class RewardItem {
     public Position getPosition() {
         return pos;
     }
+
     public void setPosition(Position pos) {
         this.pos = pos;
     }

@@ -1,19 +1,21 @@
 public final class Class36 {
 
-	public static java.util.Hashtable<Integer, Class36> frameList = new java.util.Hashtable<Integer, Class36>();
+    public static java.util.Hashtable<Integer, Class36> frameList = new java.util.Hashtable<Integer, Class36>();
 
-	public static void load(int file, byte[] array) {
-		   try {
+    public static void load(int file, byte[] array) {
+        try {
             final Stream ay = new Stream(array);
             final Class18 b2 = new Class18(ay);
-            final int n = ay.readUnsignedWord();;
+            final int n = ay.readUnsignedWord();
+            ;
             animationlist[file] = new Class36[n * 3];
             final int[] array2 = new int[500];
             final int[] array3 = new int[500];
             final int[] array4 = new int[500];
             final int[] array5 = new int[500];
             for (int j = 0; j < n; ++j) {
-                final int k = ay.readUnsignedWord();;
+                final int k = ay.readUnsignedWord();
+                ;
                 final Class36[] array6 = animationlist[file];
                 final int n2 = k;
                 final Class36 q = new Class36();
@@ -44,20 +46,17 @@ public final class Class36 {
                         }
                         if ((f2 & 0x1) != 0x0) {
                             array3[c2] = ay.readShort2();
-                        }
-                        else {
+                        } else {
                             array3[c2] = n4;
                         }
                         if ((f2 & 0x2) != 0x0) {
                             array4[c2] = ay.readShort2();
-                        }
-                        else {
+                        } else {
                             array4[c2] = n4;
                         }
                         if ((f2 & 0x4) != 0x0) {
                             array5[c2] = ay.readShort2();
-                        }
-                        else {
+                        } else {
                             array5[c2] = n4;
                         }
                         n3 = l;
@@ -76,45 +75,45 @@ public final class Class36 {
                     q2.anIntArray642[l] = array5[l];
                 }
             }
+        } catch (Exception ex) {
         }
-        catch (Exception ex) {}
-	}
+    }
 
-	public static Class36[][] animationlist;
-	public static void nullLoader() {
-		animationlist = null;
-	}
+    public static Class36[][] animationlist;
 
-	public static Class36 method531(int int1) {
+    public static void nullLoader() {
+        animationlist = null;
+    }
+
+    public static Class36 method531(int int1) {
         try {
             final String hexString;
             final int int2 = Integer.parseInt((hexString = Integer.toHexString(int1)).substring(0, hexString.length() - 4), 16);
             int1 = Integer.parseInt(hexString.substring(hexString.length() - 4), 16);
             if (animationlist[int2].length == 0) {
-            	Client.instance.onDemandFetcher.method558(1, int2);
+                Client.instance.onDemandFetcher.method558(1, int2);
                 return null;
             }
             return animationlist[int2][int1];
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             return null;
         }
     }
 
-	public static boolean method532(int i) {
-		return i == -1;
-	}
+    public static boolean method532(int i) {
+        return i == -1;
+    }
 
-	public Class36() {
-	}
+    public Class36() {
+    }
 
-	public int anInt636;
-	public Class18 aClass18_637;
-	public int anInt638;
-	public int anIntArray639[];
-	public int anIntArray640[];
-	public int anIntArray641[];
-	public int anIntArray642[];
+    public int anInt636;
+    public Class18 aClass18_637;
+    public int anInt638;
+    public int anIntArray639[];
+    public int anIntArray640[];
+    public int anIntArray641[];
+    public int anIntArray642[];
 
 }

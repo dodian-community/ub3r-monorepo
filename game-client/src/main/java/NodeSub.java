@@ -5,12 +5,9 @@
 
 public class NodeSub extends Node {
 
-    public final void unlinkSub()
-    {
-        if(nextNodeSub == null)
-        {
-        } else
-        {
+    public final void unlinkSub() {
+        if (nextNodeSub == null) {
+        } else {
             nextNodeSub.prevNodeSub = prevNodeSub;
             prevNodeSub.nextNodeSub = nextNodeSub;
             prevNodeSub = null;
@@ -18,8 +15,7 @@ public class NodeSub extends Node {
         }
     }
 
-    public NodeSub()
-    {
+    public NodeSub() {
     }
 
     public NodeSub prevNodeSub;

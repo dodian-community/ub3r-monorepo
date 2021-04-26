@@ -5,17 +5,17 @@ import net.dodian.uber.game.model.player.packets.OutgoingPacket;
 
 public class SendSideTab implements OutgoingPacket {
 
-  private int tabId;
+    private int tabId;
 
-  public SendSideTab(int tabId) {
-    this.tabId = tabId;
-  }
+    public SendSideTab(int tabId) {
+        this.tabId = tabId;
+    }
 
-  @Override
-  public void send(Client client) {
-    client.getOutputStream().createFrame(106);
-    client.getOutputStream().writeByteC(tabId);
-    client.flushOutStream();
-  }
+    @Override
+    public void send(Client client) {
+        client.getOutputStream().createFrame(106);
+        client.getOutputStream().writeByteC(tabId);
+        client.flushOutStream();
+    }
 
 }

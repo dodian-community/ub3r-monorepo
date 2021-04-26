@@ -5,17 +5,17 @@ import net.dodian.uber.game.model.player.packets.OutgoingPacket;
 
 public class SendMessage implements OutgoingPacket {
 
-  private String message;
+    private String message;
 
-  public SendMessage(String message) {
-    this.message = message;
-  }
+    public SendMessage(String message) {
+        this.message = message;
+    }
 
-  @Override
-  public void send(Client client) {
-    client.getOutputStream().createFrameVarSize(253);
-    client.getOutputStream().writeString(message);
-    client.getOutputStream().endFrameVarSize();
-  }
+    @Override
+    public void send(Client client) {
+        client.getOutputStream().createFrameVarSize(253);
+        client.getOutputStream().writeString(message);
+        client.getOutputStream().endFrameVarSize();
+    }
 
 }

@@ -5,10 +5,10 @@ import net.dodian.uber.game.model.player.packets.Packet;
 
 public class AddIgnore implements Packet {
 
-  @Override
-  public void ProcessPacket(Client client, int packetType, int packetSize) {
-    long igtoadd = client.getInputStream().readQWord();
-    client.addIgnore(igtoadd);
-  }
+    @Override
+    public void ProcessPacket(Client client, int packetType, int packetSize) {
+        long igtoadd = client.getInputStream().readQWord();
+        client.addIgnore(igtoadd);
+    }
 
 }

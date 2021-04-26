@@ -1,4 +1,4 @@
-import java.awt.Color;
+import java.awt.*;
 
 public class RSFont extends DrawingArea {
 
@@ -118,7 +118,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawStringMoveY(String string, int drawX, int drawY, int color,
-            int shadow, int randomMod, int randomMod2) {
+                                int shadow, int randomMod, int randomMod2) {
         if (string != null) {
             setColorAndShadow(color, shadow);
             double d = 7.0 - (double) randomMod2 / 8.0;
@@ -148,8 +148,8 @@ public class RSFont extends DrawingArea {
     }
 
     public static int method1014(byte[][] is, byte[][] is_27_, int[] is_28_,
-            int[] is_29_, int[] is_30_, int i,
-            int i_31_) {
+                                 int[] is_29_, int[] is_30_, int i,
+                                 int i_31_) {
         int i_32_ = is_28_[i];
         int i_33_ = i_32_ + is_30_[i];
         int i_34_ = is_28_[i_31_];
@@ -180,7 +180,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawCenteredStringMoveXY(String string, int drawX, int drawY, int color,
-            int shadow, int randomMod) {
+                                         int shadow, int randomMod) {
         if (string != null) {
             setColorAndShadow(color, shadow);
             int[] xMods = new int[string.length()];
@@ -190,12 +190,12 @@ public class RSFont extends DrawingArea {
                 yMods[index] = (int) (Math.sin((double) index / 3.0 + (double) randomMod / 5.0) * 5.0);
             }
             drawBaseStringMoveXY(string, drawX - getTextWidth(string) / 2, drawY, xMods,
-                                 yMods);
+                    yMods);
         }
     }
 
     public void drawCenteredStringMoveY(String class100, int drawX, int drawY, int color,
-            int shadow, int i_54_) {
+                                        int shadow, int i_54_) {
         if (class100 != null) {
             setColorAndShadow(color, shadow);
             int[] yOffset = new int[class100.length()];
@@ -203,7 +203,7 @@ public class RSFont extends DrawingArea {
                 yOffset[index] = (int) (Math.sin((double) index / 2.0 + (double) i_54_ / 5.0) * 5.0);
             }
             drawBaseStringMoveXY(class100, drawX - getTextWidth(class100) / 2, drawY, null,
-                                 yOffset);
+                    yOffset);
         }
     }
 
@@ -215,7 +215,7 @@ public class RSFont extends DrawingArea {
         drawY -= baseCharacterHeight;
         int startIndex = -1;
         @SuppressWarnings("unused")
-		int i_70_ = -1;
+        int i_70_ = -1;
         for (int currentCharacter = 0; currentCharacter < string.length(); currentCharacter++) {
             int character = string.charAt(currentCharacter);
             if (character > 255) {
@@ -250,9 +250,9 @@ public class RSFont extends DrawingArea {
                                 Sprite icon = chatImages[imageId];
                                 int iconModY = icon.anInt1445;
                                 //if (transparency == 256) {
-                                  //  icon.method346(drawX, (drawY + baseCharacterHeight - iconModY));
+                                //  icon.method346(drawX, (drawY + baseCharacterHeight - iconModY));
                                 //} else {
-                                    icon.drawSprite(drawX,(drawY + baseCharacterHeight - iconModY), transparency);
+                                icon.drawSprite(drawX, (drawY + baseCharacterHeight - iconModY), transparency);
                                 //}
                                 drawX += icon.anInt1444;
                                 i_70_ = -1;
@@ -272,24 +272,24 @@ public class RSFont extends DrawingArea {
                         if (transparency == 256) {
                             if (textShadowColor != -1) {
                                 drawCharacter(character,
-                                              drawX + characterDrawXOffsets[character] + 1,
-                                              drawY + characterDrawYOffsets[character] + 1,
-                                              width, height, textShadowColor, true);
+                                        drawX + characterDrawXOffsets[character] + 1,
+                                        drawY + characterDrawYOffsets[character] + 1,
+                                        width, height, textShadowColor, true);
                             }
                             drawCharacter(character, drawX + characterDrawXOffsets[character],
-                                          drawY + characterDrawYOffsets[character], width,
-                                          height, textColor, false);
+                                    drawY + characterDrawYOffsets[character], width,
+                                    height, textColor, false);
                         } else {
                             if (textShadowColor != -1) {
                                 drawTransparentCharacter(character,
-                                                         drawX + characterDrawXOffsets[character] + 1,
-                                                         drawY + characterDrawYOffsets[character] + 1,
-                                                         width, height, textShadowColor, transparency,
-                                                         true);
+                                        drawX + characterDrawXOffsets[character] + 1,
+                                        drawY + characterDrawYOffsets[character] + 1,
+                                        width, height, textShadowColor, transparency,
+                                        true);
                             }
                             drawTransparentCharacter(character, drawX + characterDrawXOffsets[character],
-                                                     drawY + characterDrawYOffsets[character], width,
-                                                     height, textColor, transparency, false);
+                                    drawY + characterDrawYOffsets[character], width,
+                                    height, textColor, transparency, false);
                         }
                     } else if (anInt4178 > 0) {
                         anInt4175 += anInt4178;
@@ -298,10 +298,10 @@ public class RSFont extends DrawingArea {
                     }
                     int lineWidth = characterScreenWidths[character];
                     if (strikethroughColor != -1) {
-                    	drawHorizontalLine(drawX,drawY + (int) ((double) baseCharacterHeight * 0.69999999999999996D), lineWidth,strikethroughColor);
+                        drawHorizontalLine(drawX, drawY + (int) ((double) baseCharacterHeight * 0.69999999999999996D), lineWidth, strikethroughColor);
                     }
                     if (underlineColor != -1) {
-            rsDrawingArea.drawHorizontalLine(drawX,drawY +  baseCharacterHeight, lineWidth,underlineColor);
+                        rsDrawingArea.drawHorizontalLine(drawX, drawY + baseCharacterHeight, lineWidth, underlineColor);
                     }
                     drawX += lineWidth;
                     i_70_ = character;
@@ -311,7 +311,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawRAString(String string, int drawX, int drawY, int color,
-            int shadow) {
+                             int shadow) {
         if (string != null) {
             setColorAndShadow(color, shadow);
             drawBasicString(string, drawX - getTextWidth(string), drawY);
@@ -319,11 +319,11 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawBaseStringMoveXY(String string, int drawX, int drawY, int[] xModifier,
-            int[] yModifier) {
+                                     int[] yModifier) {
         drawY -= baseCharacterHeight;
         int startIndex = -1;
         @SuppressWarnings("unused")
-		int i_96_ = -1;
+        int i_96_ = -1;
         int modifierOffset = 0;
         for (int currentCharacter = 0; currentCharacter < string.length(); currentCharacter++) {
             int character = string.charAt(currentCharacter);
@@ -372,9 +372,9 @@ public class RSFont extends DrawingArea {
                                     class92.drawSprite(drawX + xModI,
                                                        (drawY + baseCharacterHeight - iconOffsetY + yMod));
                                 } else {*/
-                                    class92.drawSprite(drawX + xModI,
-                                                                  (drawY + baseCharacterHeight - iconOffsetY + yMod),
-                                                                  transparency);
+                                class92.drawSprite(drawX + xModI,
+                                        (drawY + baseCharacterHeight - iconOffsetY + yMod),
+                                        transparency);
                                 //}
                                 drawX += class92.anInt1444;
                                 i_96_ = -1;
@@ -407,27 +407,27 @@ public class RSFont extends DrawingArea {
                         if (transparency == 256) {
                             if (textShadowColor != -1) {
                                 drawCharacter(character,
-                                              (drawX + characterDrawXOffsets[character] + 1 + xOff),
-                                              (drawY + characterDrawYOffsets[character] + 1 + yOff),
-                                              width, height, textShadowColor, true);
+                                        (drawX + characterDrawXOffsets[character] + 1 + xOff),
+                                        (drawY + characterDrawYOffsets[character] + 1 + yOff),
+                                        width, height, textShadowColor, true);
                             }
                             drawCharacter(character,
-                                          drawX + characterDrawXOffsets[character] + xOff,
-                                          drawY + characterDrawYOffsets[character] + yOff,
-                                          width, height, textColor, false);
+                                    drawX + characterDrawXOffsets[character] + xOff,
+                                    drawY + characterDrawYOffsets[character] + yOff,
+                                    width, height, textColor, false);
                         } else {
                             if (textShadowColor != -1) {
                                 drawTransparentCharacter(character,
-                                                         (drawX + characterDrawXOffsets[character] + 1 + xOff),
-                                                         (drawY + characterDrawYOffsets[character] + 1 + yOff),
-                                                         width, height, textShadowColor,
-                                                         transparency, true);
+                                        (drawX + characterDrawXOffsets[character] + 1 + xOff),
+                                        (drawY + characterDrawYOffsets[character] + 1 + yOff),
+                                        width, height, textShadowColor,
+                                        transparency, true);
                             }
                             drawTransparentCharacter(character,
-                                                     drawX + characterDrawXOffsets[character] + xOff,
-                                                     drawY + characterDrawYOffsets[character] + yOff,
-                                                     width, height, textColor, transparency,
-                                                     false);
+                                    drawX + characterDrawXOffsets[character] + xOff,
+                                    drawY + characterDrawYOffsets[character] + yOff,
+                                    width, height, textColor, transparency,
+                                    false);
                         }
                     } else if (anInt4178 > 0) {
                         anInt4175 += anInt4178;
@@ -437,12 +437,12 @@ public class RSFont extends DrawingArea {
                     int i_109_ = characterScreenWidths[character];
                     if (strikethroughColor != -1) {
                         rsDrawingArea.drawHorizontalLine(drawX,
-                                                         drawY + (int) ((double) baseCharacterHeight * 0.7),
-                                                         i_109_, strikethroughColor);
+                                drawY + (int) ((double) baseCharacterHeight * 0.7),
+                                i_109_, strikethroughColor);
                     }
                     if (underlineColor != -1) {
                         rsDrawingArea.drawHorizontalLine(drawX, drawY + baseCharacterHeight, i_109_,
-                                                         underlineColor);
+                                underlineColor);
                     }
                     drawX += i_109_;
                     i_96_ = character;
@@ -455,8 +455,8 @@ public class RSFont extends DrawingArea {
         do {
             try {
                 if (string.startsWith(startColor)) {
-                	String color = string.substring(4);
-                	textColor = color.length() < 6 ? Color.decode(color).getRGB() : Integer.parseInt(color, 16);
+                    String color = string.substring(4);
+                    textColor = color.length() < 6 ? Color.decode(color).getRGB() : Integer.parseInt(color, 16);
                 } else if (string.equals(endColor)) {
                     textColor = defaultColor;
                 } else if (string.startsWith(startTransparency)) {
@@ -510,7 +510,7 @@ public class RSFont extends DrawingArea {
         }
         int startIndex = -1;
         @SuppressWarnings("unused")
-		int i_126_ = -1;
+        int i_126_ = -1;
         int finalWidth = 0;
         for (int currentCharacter = 0; currentCharacter < string.length(); currentCharacter++) {
             int character = string.charAt(currentCharacter);
@@ -562,7 +562,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawBasicString(String string, int drawX, int drawY, int color,
-            int shadow) {
+                                int shadow) {
         if (string != null) {
             setColorAndShadow(color, shadow);
             drawBasicString(string, drawX, drawY);
@@ -570,7 +570,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawCenteredString(String string, int drawX, int drawY, int color,
-            int shadow) {
+                                   int shadow) {
         if (string != null) {
             setColorAndShadow(color, shadow);
             drawBasicString(string, drawX - getTextWidth(string) / 2, drawY);
@@ -606,8 +606,8 @@ public class RSFont extends DrawingArea {
     }
 
     public static void createTransparentCharacterPixels(int[] is, byte[] is_0_, int i, int i_1_,
-            int i_2_, int i_3_, int i_4_, int i_5_,
-            int i_6_, int i_7_) {
+                                                        int i_2_, int i_3_, int i_4_, int i_5_,
+                                                        int i_6_, int i_7_) {
         i = ((i & 0xff00ff) * i_7_ & ~0xff00ff) + ((i & 0xff00) * i_7_ & 0xff0000) >> 8;
         i_7_ = 256 - i_7_;
         for (int i_8_ = -i_4_; i_8_ < 0; i_8_++) {
@@ -625,7 +625,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawTransparentCharacter(int i, int i_11_, int i_12_, int i_13_, int i_14_,
-            int i_15_, int i_16_, boolean bool) {
+                                         int i_15_, int i_16_, boolean bool) {
         int i_17_ = i_11_ + i_12_ * DrawingArea.width;
         int i_18_ = DrawingArea.width - i_13_;
         int i_19_ = 0;
@@ -657,13 +657,13 @@ public class RSFont extends DrawingArea {
         }
         if (i_13_ > 0 && i_14_ > 0) {
             createTransparentCharacterPixels(DrawingArea.pixels, fontPixels[i], i_15_,
-                                             i_20_, i_17_, i_13_, i_14_, i_18_, i_19_, i_16_);
+                    i_20_, i_17_, i_13_, i_14_, i_18_, i_19_, i_16_);
         }
     }
 
     public static void createCharacterPixels(int[] is, byte[] is_24_, int i, int i_25_,
-            int i_26_, int i_27_, int i_28_, int i_29_,
-            int i_30_) {
+                                             int i_26_, int i_27_, int i_28_, int i_29_,
+                                             int i_30_) {
         int i_31_ = -(i_27_ >> 2);
         i_27_ = -(i_27_ & 0x3);
         for (int i_32_ = -i_28_; i_32_ < 0; i_32_++) {
@@ -702,7 +702,7 @@ public class RSFont extends DrawingArea {
     }
 
     public void drawCharacter(int character, int i_35_, int i_36_, int i_37_, int i_38_,
-            int i_39_, boolean bool) {
+                              int i_39_, boolean bool) {
         int i_40_ = i_35_ + i_36_ * DrawingArea.width;
         int i_41_ = DrawingArea.width - i_37_;
         int i_42_ = 0;
@@ -734,7 +734,7 @@ public class RSFont extends DrawingArea {
         }
         if (i_37_ > 0 && i_38_ > 0) {
             createCharacterPixels(DrawingArea.pixels, fontPixels[character],
-                                  i_39_, i_43_, i_40_, i_37_, i_38_, i_41_, i_42_);
+                    i_39_, i_43_, i_40_, i_37_, i_38_, i_41_, i_42_);
 
         }
     }
