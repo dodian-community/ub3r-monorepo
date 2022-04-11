@@ -3,7 +3,11 @@ package net.dodian
 import net.dodian.models.config.DatabaseConfig
 import net.dodian.models.config.ServerConfig
 
-fun env(key: String): String? = System.getenv(key)
+fun env(key: String): String? {
+    val value = System.getenv(key)
+    println("- ENV $key=$value")
+    return value
+}
 
 fun getConfigFromEnv() = ServerConfig().apply {
     name = env("SERVER_NAME") ?: name

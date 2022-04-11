@@ -8,7 +8,7 @@ services:
       MYSQL_DATABASE: dodiannet
       MYSQL_USER: dodian
       MYSQL_PASSWORD: dodian_local_development_123
-      MYSQL_ALLOW_EMPTY_PASSWORD: true
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
     ports:
       - '3306:3306'
     volumes:
