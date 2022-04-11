@@ -19,6 +19,12 @@ services:
       - '3306:3306'
     volumes:
       - dev-db:/var/lib/mysql
+      # Enable the below SQL file mappings if you want to initialize the database with data.
+      # Do note that these files (the way they are done in this example) need to be in the same directory as this file.
+      # You can find them in the "database"-directory of the game-server module
+      #- ./mandatory_tables.sql:/docker-entrypoint-initdb.d/1_mandatory_game_tables.sql
+      #- ./convenient_data.sql:/docker-entrypoint-initdb.d/2_convenient_game_data.sql
+      #- ./dummy_development_data.sql:/docker-entrypoint-initdb/3_dummy_game_data.sql
 
   game-server: # The Dodian game server (the "good" old Ub3r server)
     image: ub3r-server:test-1.0 # To use this image, you need to build the server jar, and create the image manually first (for now)
