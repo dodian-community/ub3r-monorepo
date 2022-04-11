@@ -4,6 +4,9 @@ services:
   mysql:
     image: mysql:5.7
     restart: always
+    networks:
+      front:
+        ipv4_address: 172.16.238.10
     environment:
       MYSQL_DATABASE: dodiannet
       MYSQL_USER: dodian
@@ -17,10 +20,13 @@ services:
   game-server:
     image: ub3r-server:test-1.0
     restart: unless-stopped
+    networks:
+      front:
+        ipv4_address: 172.16.238.20
     environment:
       SERVER_NAME: Dodian
       SERVER_PORT: 43594
-      DATABASE_HOST: localhost
+      DATABASE_HOST: 172.16.238.10
       DATABASE_NAME: dodiannet
       DATABASE_USERNAME: dodian
       DATABASE_PASSWORD: dodian_local_development_123
@@ -29,3 +35,12 @@ services:
 
 volumes:
   dev-db:
+
+networks:
+  front:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
+          gateway: 172.16.238.1
