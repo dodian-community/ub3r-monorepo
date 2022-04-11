@@ -1,16 +1,11 @@
-val springVersion: String by project
-
 plugins {
+    kotlin("jvm") version "1.6.10"
     application
-    kotlin("jvm")
-    kotlin("plugin.spring") version "1.3.72"
-    kotlin("plugin.jpa") version "1.3.72"
-    id("org.springframework.boot") version "2.2.6.RELEASE"
-    id("io.spring.dependency-management") version "1.0.7.RELEASE"
+    java
 }
 
 application {
-    mainClassName = "net.dodian.uber.game.Server"
+    mainClass.set("net.dodian.uber.game.Server")
 }
 
 java {
@@ -18,12 +13,32 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.11.0.rc1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0.rc1")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+tasks.jar {
 
-    implementation("org.apache.commons:commons-compress:1.20")
+    manifest {
+        attributes["Main-Class"] = "net.dodian.uber.game.Server"
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    val sourcesMain = sourceSets.main.get()
+    val contents = configurations.runtimeClasspath.get()
+        .map { if (it.isDirectory) it else zipTree(it) } +
+            sourcesMain.output
+
+    from(contents)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(kotlin("stdlib"))
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+
+    implementation("org.apache.commons:commons-compress:1.21")
     implementation("org.quartz-scheduler:quartz:2.3.2")
-    implementation("mysql:mysql-connector-java:8.0.24")
+    implementation("mysql:mysql-connector-java:8.0.28")
 }

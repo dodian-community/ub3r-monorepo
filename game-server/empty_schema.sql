@@ -1,0 +1,1 @@
+-- This will be the default database schema to get started with a blank Ub3r server installation.

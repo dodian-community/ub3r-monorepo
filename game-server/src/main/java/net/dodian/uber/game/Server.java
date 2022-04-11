@@ -76,8 +76,6 @@ public class Server implements Runnable {
     public static LoginManager loginManager = null;
 
     public static void main(String args[]) throws Exception {
-        Config.loadConfig();
-
         System.out.println();
         System.out.println("    ____            ___               ");
         System.out.println("   / __ \\____  ____/ (_)___ _____    ");
@@ -85,6 +83,8 @@ public class Server implements Runnable {
         System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / /    ");
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
+
+        Config.loadConfig();
 
         world = Config.getWorldId();
         MySQLUser = Config.getMysqlUser();

@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: dodiannet
+      MYSQL_USER: dodian
+      MYSQL_PASSWORD: dodian_local_development_123
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+    ports:
+      - '3306:3306'
+    volumes:
+      - dev-db:/var/lib/mysql
+
+  game-server:
+    image: ub3r-server:test-1.0
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: Dodian
+      SERVER_PORT: 43594
+      DATABASE_HOST: localhost
+      DATABASE_NAME: dodiannet
+      DATABASE_USERNAME: dodian
+      DATABASE_PASSWORD: dodian_local_development_123
+    ports:
+      - '43594:43594'
+
+volumes:
+  dev-db:
