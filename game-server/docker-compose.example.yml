@@ -1,13 +1,16 @@
 version: '3.7'
 
 services:
-  mysql:
+  mysql: # A MySQL instance for the game server to use
     image: mysql:5.7
     restart: always
     networks:
+      # Added the network bridge, so server and database can communicate
       front:
         ipv4_address: 172.16.238.10
     environment:
+      # Configured the database credentials
+      # Refer to https://hub.docker.com/_/mysql for more info.
       MYSQL_DATABASE: dodiannet
       MYSQL_USER: dodian
       MYSQL_PASSWORD: dodian_local_development_123
@@ -17,25 +20,41 @@ services:
     volumes:
       - dev-db:/var/lib/mysql
 
-  game-server:
-    image: ub3r-server:test-1.0
+  game-server: # The Dodian game server (the "good" old Ub3r server)
+    image: ub3r-server:test-1.0 # To use this image, you need to build the server jar, and create the image manually first (for now)
     restart: unless-stopped
     networks:
+      # Added the network bridge, so server and database can communicate
       front:
         ipv4_address: 172.16.238.20
     environment:
-      SERVER_NAME: Dodian
-      SERVER_PORT: 43594
+      # Required For a Valid Configuration (unless using config.json, which you shouldn't with this!)
       DATABASE_HOST: 172.16.238.10
-      DATABASE_NAME: dodiannet
       DATABASE_USERNAME: dodian
       DATABASE_PASSWORD: dodian_local_development_123
+
+      # Optional Values - Set here for reference only
+      # --- These optional values may be removed (or changed...)
+      SERVER_NAME: Dodian
+      SERVER_PORT: 43594
+
+      DATABASE_NAME: dodiannet
+      DATABASE_PORT: 3306
+      DATABASE_TABLE_PREFIX: ''
+
+      DEBUG_MODE: 'false'
+      CLIENT_SECRET: NOT_SET
+      MAX_CONNECTIONS_FROM_IP: 2
+      WORLD_ID: 1
+      EXPERIENCE_MULTIPLIER: 1
+      CUSTOM_CLIENT_VERSION: ''
     ports:
       - '43594:43594'
 
 volumes:
   dev-db:
 
+# Defined a bridge network for the server and database containers to communicate within
 networks:
   front:
     driver: bridge
