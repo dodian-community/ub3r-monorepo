@@ -244,3 +244,15 @@ create index usergroupid
 create index username
     on user (username);
 
+create table worlds
+(
+    players int unsigned            not null,
+    id      varchar(45) default '0' not null
+        primary key,
+    trade   int                     not null,
+    duel    int                     not null,
+    pk      int                     not null,
+    `drop`  int                     not null
+)
+    engine = MyISAM;
+

@@ -27,7 +27,7 @@ services:
       #- ./dummy_development_data.sql:/docker-entrypoint-initdb/3_dummy_game_data.sql
 
   game-server: # The Dodian game server (the "good" old Ub3r server)
-    image: ub3r-server:test-1.0 # To use this image, you need to build the server jar, and create the image manually first (for now)
+    image: nozemi/ub3r-game-server:beta-1.0
     restart: unless-stopped
     networks:
       # Added the network bridge, so server and database can communicate
