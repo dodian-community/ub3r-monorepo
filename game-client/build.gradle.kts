@@ -8,7 +8,7 @@ java {
 }
 
 application {
-    mainClassName = "Client"
+    mainClass.set("Client")
 }
 
 tasks.register<JavaExec>("runClient") {
