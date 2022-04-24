@@ -186,6 +186,7 @@ public final class ItemDef {
         itemDef.setDefaults();
         itemDef.readValues(stream);
         /* Customs added here? */
+        
         customValues(itemDef);
         return itemDef;
     }
@@ -255,6 +256,13 @@ public final class ItemDef {
             case 11997:
                 def.name = "Event shards";
                 def.itemActions[2] = "Info";
+                break;
+            case 21295://infernalcape
+            	def.name = "Infernal Cape";
+				def.originalModelColors= new int[1];
+				def.modifiedModelColors = new int[1];
+				def.originalModelColors[0] = 40;
+				def.modifiedModelColors[0] = 40;
                 break;
         }
         if (def.certTemplateID != -1)

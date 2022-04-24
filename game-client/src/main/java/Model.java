@@ -2289,6 +2289,7 @@ public class Model extends Animable {
             }
         }
     }
+    
 
     private final boolean method486(int i, int j, int k, int l, int i1, int j1,
                                     int k1, int l1) {
@@ -2382,4 +2383,5 @@ public class Model extends Animable {
         modelIntArray3 = Texture.anIntArray1482;
         modelIntArray4 = Texture.anIntArray1469;
     }
+    
 }

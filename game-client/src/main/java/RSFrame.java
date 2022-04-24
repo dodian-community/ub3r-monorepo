@@ -3,7 +3,7 @@ import java.awt.*;
 final class RSFrame extends Frame {
 
     private static final long serialVersionUID = 1L;
-    private String title = "Dodian.net Client - Uber Server 3.0";
+    private String title = "Dodian.net Client - Uber Server 3.0 (Client: 1.2)";
 
     public RSFrame(RSApplet RSApplet_, int i, int j) {
         rsApplet = RSApplet_;
