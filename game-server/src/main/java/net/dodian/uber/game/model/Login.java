@@ -9,6 +9,7 @@ import net.dodian.utilities.Database;
 import java.io.*;
 import java.sql.Date;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -29,8 +30,8 @@ public class Login extends Thread {
             if (!trade)
                 type = 1;
             String query = "";
-            query = "INSERT INTO uber3_trades SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + new Date(System.currentTimeMillis());
-            Database.statement.executeUpdate(query);
+            query = "INSERT INTO uber3_trades SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + (System.currentTimeMillis() / 1000);
+            Database.statement.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
             ResultSet inserted = Database.statement.getGeneratedKeys();
             inserted.next();
             int id = inserted.getInt(1);
