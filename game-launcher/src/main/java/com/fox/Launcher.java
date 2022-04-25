@@ -24,6 +24,4 @@ public class Launcher {
             audio.playAudio();
         new Thread(new ServerTime()).start();
     }
-
-
 }

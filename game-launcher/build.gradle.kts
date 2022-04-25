@@ -1,17 +1,17 @@
-plugins {
-    application
-}
-
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 application {
-    mainClassName = ""
+    mainClass.set("com.fox.Launcher")
 }
 
-tasks.register<JavaExec>("runLauncher") {
-    group = "dodian-game"
-    dependsOn("run")
+tasks.jar {
+
+    manifest {
+        attributes["Main-Class"] = "net.dodian.client.Client"
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
