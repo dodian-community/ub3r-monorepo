@@ -6,6 +6,8 @@ import java.net.URLConnection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static net.dodian.client.config.Constants.CACHE_DOWNLOAD_URL;
+
 public class CacheDownloader {
 
     private Client client;
@@ -19,7 +21,7 @@ public class CacheDownloader {
     private final int VERSION = 4; // Version of net.dodian.client.cache
 
     // Link to the cache
-    private String cacheLink = "https://dodian.net/client/cacheosrs.zip";
+    private String cacheLink = CACHE_DOWNLOAD_URL;
 
     private String fileToExtract = getCacheDir() + getArchivedName();
 

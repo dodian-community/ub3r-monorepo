@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.zip.GZIPInputStream;
 
+import static net.dodian.client.config.Constants.SERVER_JAGGRAB_PORT;
+
 public final class OnDemandFetcher extends OnDemandFetcherParent implements Runnable {
 
     private void readData() {
@@ -150,7 +152,7 @@ public final class OnDemandFetcher extends OnDemandFetcherParent implements Runn
                 if (l - openSocketTime < 4000L)
                     return;
                 openSocketTime = l;
-                socket = clientInstance.openSocket(43594 + Client.portOff);
+                socket = clientInstance.openSocket(SERVER_JAGGRAB_PORT + Client.portOff);
                 inputStream = socket.getInputStream();
                 outputStream = socket.getOutputStream();
                 outputStream.write(15);

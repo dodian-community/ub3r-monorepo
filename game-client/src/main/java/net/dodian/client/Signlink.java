@@ -5,6 +5,11 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static net.dodian.client.config.Constants.CACHE_LOCAL_DIRECTORY;
 
 public final class Signlink implements Runnable {
 
@@ -97,23 +102,18 @@ public final class Signlink implements Runnable {
 
     private static String cacheDir = null;
 
-    public static final String findCacheDir() {
+    public static String findCacheDir() {
         if (cacheDir != null) {
             return cacheDir;
         }
 
-        String s;
-        String s1;
-        File file;
-        s = System.getProperty("user.home") + "/.dodian-osrs/";
-        s1 = "";
-        file = new File(s1 + s);
-        if (file.exists() || file.mkdir()) {
-            cacheDir = s1 + s + "/";
+        Path cacheDirectory = Paths.get(CACHE_LOCAL_DIRECTORY);
+        if (Files.exists(cacheDirectory) && Files.isDirectory(cacheDirectory)) {
+            cacheDir = CACHE_LOCAL_DIRECTORY;
             return cacheDir;
         }
 
-        return null;
+        throw new RuntimeException("Failed to find or create cache directory at: " + cacheDirectory.toAbsolutePath());
     }
 
     private static int getuid(String s) {

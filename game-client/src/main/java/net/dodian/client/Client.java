@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 
+import static net.dodian.client.config.Constants.*;
+
 @SuppressWarnings("serial")
 public class Client extends RSApplet {
 
@@ -6937,7 +6939,7 @@ public class Client extends RSApplet {
                 loginMessage1 = "Dodian has been updated!";
                 loginMessage2 = "Opened a new window for you to download!";
                 try {
-                    Desktop.getDesktop().browse(new URI("https://dodian.net/client/DodianClient.jar"));
+                    Desktop.getDesktop().browse(new URI(CLIENT_DOWNLOAD_URL));
                 } catch (Exception e) {
                     pushMessage("Failed to open url! ", 9, "");
                 }
@@ -7503,7 +7505,8 @@ public class Client extends RSApplet {
     public static Client instance;
 
     void startUp() {
-        System.out.println("TEst: " + server + ", " + port);
+        System.out.println("Will Connect to game server using: " + server + ":" + port);
+
         drawLoadingText(20, "Starting up");
         new CacheDownloader(this).downloadCache();
         if (Signlink.cache_dat != null) {
@@ -12176,7 +12179,7 @@ public class Client extends RSApplet {
         clanChatMode = 0;
         cButtonHPos = -1;
         cButtonCPos = 0;
-        server = "127.0.0.1"; //127.0.0.1 : dodian.net
+        server = SERVER_HOSTNAME; //127.0.0.1 : dodian.net
         anIntArrayArray825 = new int[104][104];
         friendsNodeIDs = new int[200];
         groundArray = new NodeList[4][104][104];
@@ -12759,8 +12762,7 @@ public class Client extends RSApplet {
     private static int anInt1288;
     public static int anInt1290;
     public static String server = "";
-    //public static int port = 5555; //Beta Server
-    public static int port = 5555; //Live server
+    public static int port = SERVER_GAME_PORT;
     public boolean shiftIsDown = false;
     //public int gatherChatMode = Integer.parseInt(settings.get("Gather")), announceChatMode = Integer.parseInt(settings.get("Announce"));
 

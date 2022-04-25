@@ -2,10 +2,12 @@ package net.dodian.client;
 
 import java.awt.*;
 
+import static net.dodian.client.config.Constants.WINDOW_TITLE;
+
 final class RSFrame extends Frame {
 
     private static final long serialVersionUID = 1L;
-    private String title = "Dodian.net Client - Uber Server 3.0";
+    private String title = WINDOW_TITLE;
 
     public RSFrame(RSApplet RSApplet_, int i, int j) {
         rsApplet = RSApplet_;
