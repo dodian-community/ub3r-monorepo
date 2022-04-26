@@ -116,6 +116,10 @@ public final class ObjectDef {
             def.actions = new String[5];
             def.actions[0] = "Chop down";
         }
+        if (def.type == 4528) {
+            def.name = "The Oaktree Fountain";
+            def.actions = new String[5];
+        }
 
     }
 

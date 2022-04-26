@@ -652,7 +652,7 @@ public class Client extends RSApplet {
 			} else {
 				newRegularFont.drawBasicString(s + ":",11,y + 133,0,-1);
 	            newRegularFont.drawBasicString(inputString + ((loopCycle % 40 < 20) ? "<col=0000FF>|</col>" : ""), 12 + textDrawingArea.getTextWidth(s + ": "),133,255,-1);
-	            net.dodian.client.DrawingArea.method339(y + 121, 0x807660, 506, 7);
+	            DrawingArea.method339(y + 121, 0x807660, 506, 7);
 			}*/
         }
         if (menuOpen && menuScreenArea == 2) {
@@ -2389,6 +2389,20 @@ public class Client extends RSApplet {
                 background_2.aByteArray1450 = abyte5;
                 aByteArray912 = abyte2;
                 Texture.method370(34);
+            }
+            if (Texture.anIntArray1480[40] >= j) ;
+            {
+                Background background_2 = Texture.aBackgroundArray1474s[40];
+                int i1 = background_2.anInt1452 * background_2.anInt1453 - 1;
+                int l1 = background_2.anInt1452 * anInt945 * 2;
+                byte abyte2[] = background_2.aByteArray1450;
+                byte abyte5[] = aByteArray912;
+                for (int k2 = 0; k2 <= i1; k2++)
+                    abyte5[k2] = abyte2[k2 - l1 & i1];
+
+                background_2.aByteArray1450 = abyte5;
+                aByteArray912 = abyte2;
+                Texture.method370(40);
             }
         }
     }
@@ -5202,7 +5216,7 @@ public class Client extends RSApplet {
                         TextInput.method526(promptInput, stream);
                         stream.writeBytes(stream.currentOffset - k);
                         promptInput = TextInput.processText(promptInput);
-                        // promptInput = net.dodian.client.Censor.doCensor(promptInput);
+                        // promptInput = Censor.doCensor(promptInput);
                         pushMessage(promptInput, 6, TextClass.fixName(TextClass.nameForLong(aLong953)));
                         if (privateChatMode == 2) {
                             privateChatMode = 1;
@@ -5303,7 +5317,7 @@ public class Client extends RSApplet {
                             }
                         }
                     }
-                    /* net.dodian.client.Client commands! */
+                    /* Client commands! */
                     if (inputString.equals("::fps"))
                         fpsOn = !fpsOn;
                     if (inputString.equals("::fixed"))
@@ -5389,7 +5403,7 @@ public class Client extends RSApplet {
                         stream.method441(0, aStream_834.buffer, aStream_834.currentOffset);
                         stream.writeBytes(stream.currentOffset - j3);
                         inputString = TextInput.processText(inputString);
-                        // inputString = net.dodian.client.Censor.doCensor(inputString);
+                        // inputString = Censor.doCensor(inputString);
                         myPlayer.textSpoken = inputString;
                         myPlayer.anInt1513 = j2;
                         myPlayer.anInt1531 = i3;
@@ -8942,7 +8956,7 @@ public class Client extends RSApplet {
                         stream.method442(j3, 0, aStream_834.buffer);
                         aStream_834.currentOffset = 0;
                         String s = TextInput.method525(j3, aStream_834);
-                        // s = net.dodian.client.Censor.doCensor(s);
+                        // s = Censor.doCensor(s);
                         player.textSpoken = s;
                         player.anInt1513 = i1 >> 8;
                         player.privelage = j2;
@@ -9184,14 +9198,14 @@ public class Client extends RSApplet {
 		if(anInt1018 != -1)
 		{
 			method119(anInt945, anInt1018);
-			drawInterface(0, clientSize == 0 ? 0 : (clientWidth / 2) - -80, net.dodian.client.RSInterface.interfaceCache[anInt1018], clientSize == 0 ? 0 : (clientHeight / 2) - 550);
-			//drawInterface(0, 0, net.dodian.client.RSInterface.interfaceCache[anInt1018], 0);
+			drawInterface(0, clientSize == 0 ? 0 : (clientWidth / 2) - -80, RSInterface.interfaceCache[anInt1018], clientSize == 0 ? 0 : (clientHeight / 2) - 550);
+			//drawInterface(0, 0, RSInterface.interfaceCache[anInt1018], 0);
 		}
 		if(openInterfaceID != -1)
 		{
 			method119(anInt945, openInterfaceID);
-			drawInterface(0, clientSize == 0 ? 0 : (clientWidth / 2) - 256, net.dodian.client.RSInterface.interfaceCache[openInterfaceID], clientSize == 0 ? 0 : (clientHeight / 2) - 167);
-			//drawInterface(0, 0, net.dodian.client.RSInterface.interfaceCache[openInterfaceID], 0);
+			drawInterface(0, clientSize == 0 ? 0 : (clientWidth / 2) - 256, RSInterface.interfaceCache[openInterfaceID], clientSize == 0 ? 0 : (clientHeight / 2) - 167);
+			//drawInterface(0, 0, RSInterface.interfaceCache[openInterfaceID], 0);
 		}
 		method70();
 		if(!menuOpen)
@@ -11098,8 +11112,8 @@ public class Client extends RSApplet {
                         message = inStream.readString();
                         clanname = inStream.readString();
                         rights = inStream.readUnsignedWord();
-                        // message = net.dodian.client.TextInput.processText(message);
-                        // message = net.dodian.client.Censor.doCensor(message);
+                        // message = TextInput.processText(message);
+                        // message = Censor.doCensor(message);
                         System.out.println(clanname);
                         pushMessage(message, 16, name);
                     } catch (Exception e) {
@@ -11707,7 +11721,7 @@ public class Client extends RSApplet {
                             //anInt1169 = (anInt1169 + 1) % 100;
                             String s9 = TextInput.method525(pktSize - 13, inStream);
                             // if(l21 != 3)
-                            // s9 = net.dodian.client.Censor.doCensor(s9);
+                            // s9 = Censor.doCensor(s9);
                             if (l21 == 2 || l21 == 3)
                                 pushMessage(s9, 7, "@cr2@" + TextClass.fixName(TextClass.nameForLong(l5)));
                             else if (l21 == 1)
