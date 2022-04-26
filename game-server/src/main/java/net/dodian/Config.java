@@ -22,7 +22,7 @@ public class Config {
 
     public static List<String> MULTILOG_EXCEPTION = new ArrayList<>();
 
-    public static void loadConfig() throws Exception {
+    public static void loadConfig() {
         serverConfig = ConfigFromEnvKt.getConfigFromEnv();
 
         ObjectMapper mapper = new ObjectMapper()
@@ -47,6 +47,8 @@ public class Config {
             Server.logError("Config file does not exist for the server, unless values are set by environment variables, the values uses fallback defaults.");
             Server.logError("Config file expected location: " + Paths.get(DIRECTORY_DATA + "config.json").toAbsolutePath());
         }
+
+        System.out.println(serverConfig.toString());
     }
 
     public static int getPort() {

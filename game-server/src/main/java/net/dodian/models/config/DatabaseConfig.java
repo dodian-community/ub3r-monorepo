@@ -1,62 +1,71 @@
 package net.dodian.models.config;
 
 public class DatabaseConfig {
-    private String host = "dodian.net";
-    private int port = 3306;
-    private String database = "dodiannet";
-    private String tablePrefix = "";
-    private String username = "nozemi";
-    private String password = "^8LrP.m6S[G,+P),";
+	private String host = "dodian.net";
+	private int port = 3306;
+	private String database = "dodiannet";
+	private String tablePrefix = "";
+	private String username = "nozemi";
+	private String password = "^8LrP.m6S[G,+P),";
 
-    public DatabaseConfig() {
+	public DatabaseConfig() {
+	}
 
-    }
+	@Override
+	public String toString() {
+		return "DatabaseConfig(host=" + host +
+				", port=" + port +
+				", database=" + database +
+				", tablePrefix=" + tablePrefix +
+				", username=" + username +
+				", password=" + password + ")";
+	}
 
-    public String getDatabase() {
-        return database;
-    }
+	public String getDatabase() {
+		return database;
+	}
 
-    public void setDatabase(String database) {
-        this.database = database;
-    }
+	public void setDatabase(String database) {
+		this.database = database;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public int getPort() {
-        return port;
-    }
+	public int getPort() {
+		return port;
+	}
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-    public String getHost() {
-        return host;
-    }
+	public String getHost() {
+		return host;
+	}
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+	public void setHost(String host) {
+		this.host = host;
+	}
 
-    public String getTablePrefix() {
-        return tablePrefix;
-    }
+	public String getTablePrefix() {
+		return tablePrefix;
+	}
 
-    public void setTablePrefix(String tablePrefix) {
-        this.tablePrefix = tablePrefix;
-    }
+	public void setTablePrefix(String tablePrefix) {
+		this.tablePrefix = tablePrefix;
+	}
 }

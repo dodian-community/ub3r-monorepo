@@ -66,7 +66,7 @@ public class Cache implements Closeable {
      * Creates the cache.
      *
      * @param directory The directory where the cache is stored.
-     * @throws com.rs2.cache.InvalidCacheException if the cache is corrupt or invalid.
+     * @throws net.dodian.cache.InvalidCacheException if the cache is corrupt or invalid.
      */
     public Cache(File directory) throws InvalidCacheException {
         try {

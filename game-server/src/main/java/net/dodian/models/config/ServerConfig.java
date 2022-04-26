@@ -1,89 +1,102 @@
 package net.dodian.models.config;
 
 public class ServerConfig {
-    private String name = "Dodian";
-    private int port = 43594;
-    private String clientSecret = "NOT_SET";
-    private boolean debugMode = false;
-    private int connectionsPerIp = 2;
-    private int worldId = 1;
-    private int experienceMultiplier = 1;
-    private String customClientVersion = "";
-    private DatabaseConfig databaseConfig = new DatabaseConfig();
+	private String name = "Dodian";
+	private int port = 43594;
+	private String clientSecret = "NOT_SET";
+	private boolean debugMode = false;
+	private int connectionsPerIp = 2;
+	private int worldId = 1;
+	private int experienceMultiplier = 1;
+	private String customClientVersion = "";
+	private DatabaseConfig databaseConfig = new DatabaseConfig();
 
-    public ServerConfig() {
+	public ServerConfig() {
 
-    }
+	}
 
-    public int getExperienceMultiplier() {
-        return experienceMultiplier;
-    }
+	@Override
+	public String toString() {
+		return "ServerConfig(name=" + name +
+				", port=" + port +
+				", clientSecret=" + clientSecret +
+				", debugMode=" + debugMode +
+				", connectionsPerIp=" + connectionsPerIp +
+				", worldId=" + worldId +
+				", experienceMultiplier=" + experienceMultiplier +
+				", customClientVersion=" + customClientVersion +
+				", databaseConfig=" + databaseConfig.toString() + ")";
+	}
 
-    public void setExperienceMultiplier(int experienceMultiplier) {
-        this.experienceMultiplier = experienceMultiplier;
-    }
+	public int getExperienceMultiplier() {
+		return experienceMultiplier;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public void setExperienceMultiplier(int experienceMultiplier) {
+		this.experienceMultiplier = experienceMultiplier;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public int getPort() {
-        return port;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+	public int getPort() {
+		return port;
+	}
 
-    public String getClientSecret() {
-        return clientSecret;
-    }
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
+	public String getClientSecret() {
+		return clientSecret;
+	}
 
-    public boolean isDebugMode() {
-        return debugMode;
-    }
+	public void setClientSecret(String clientSecret) {
+		this.clientSecret = clientSecret;
+	}
 
-    public void setDebugMode(boolean debugMode) {
-        this.debugMode = debugMode;
-    }
+	public boolean isDebugMode() {
+		return debugMode;
+	}
 
-    public int getConnectionsPerIp() {
-        return connectionsPerIp;
-    }
+	public void setDebugMode(boolean debugMode) {
+		this.debugMode = debugMode;
+	}
 
-    public void setConnectionsPerIp(int connectionsPerIp) {
-        this.connectionsPerIp = connectionsPerIp;
-    }
+	public int getConnectionsPerIp() {
+		return connectionsPerIp;
+	}
 
-    public int getWorldId() {
-        return worldId;
-    }
+	public void setConnectionsPerIp(int connectionsPerIp) {
+		this.connectionsPerIp = connectionsPerIp;
+	}
 
-    public void setWorldId(int worldId) {
-        this.worldId = worldId;
-    }
+	public int getWorldId() {
+		return worldId;
+	}
 
-    public DatabaseConfig getDatabaseConfig() {
-        return databaseConfig;
-    }
+	public void setWorldId(int worldId) {
+		this.worldId = worldId;
+	}
 
-    public void setDatabaseConfig(DatabaseConfig databaseConfig) {
-        this.databaseConfig = databaseConfig;
-    }
+	public DatabaseConfig getDatabaseConfig() {
+		return databaseConfig;
+	}
 
-    public String getCustomClientVersion() {
-        return customClientVersion;
-    }
+	public void setDatabaseConfig(DatabaseConfig databaseConfig) {
+		this.databaseConfig = databaseConfig;
+	}
 
-    public void setCustomClientVersion(String customClientVersion) {
-        this.customClientVersion = customClientVersion;
-    }
+	public String getCustomClientVersion() {
+		return customClientVersion;
+	}
+
+	public void setCustomClientVersion(String customClientVersion) {
+		this.customClientVersion = customClientVersion;
+	}
 }

@@ -1,7 +1,5 @@
 plugins {
     kotlin("jvm") version "1.6.10"
-    application
-    java
 }
 
 application {
@@ -27,10 +25,6 @@ tasks.jar {
             sourcesMain.output
 
     from(contents)
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
