@@ -17,6 +17,7 @@ val databaseName = dotenv["DATABASE_NAME"] ?: "dodiannet"
 val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
 val databaseUsername = dotenv["DATABASE_USERNAME"] ?: "dodian_game"
 val databasePassword = dotenv["DATABASE_PASSWORD"] ?: "abcd1234"
+val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 // Game Settings - Various
 val gameWorldId = dotenv["GAME_WORLD_ID"]?.toInt() ?: 1

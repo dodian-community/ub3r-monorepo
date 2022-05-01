@@ -36,6 +36,7 @@ public class DoorHandler {
                 doorHeight[i] = results.getInt("doorHeight");
                 i++;
             }
+            System.out.println("Loaded " + i + " doors...");
         } catch (Exception e) {
             e.printStackTrace();
         }

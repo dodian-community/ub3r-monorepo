@@ -31,6 +31,7 @@ public class ItemManager {
                 while (row.next()) {
                     items.put(row.getInt("id"), new Item(row));
                 }
+                System.out.println("Loaded " + items.size() + " item definitions...");
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {

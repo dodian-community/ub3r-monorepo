@@ -173,8 +173,10 @@ public class Login extends Thread {
     }
 
     public static void appendStarters() {
+        File file = new File("./data/starters/FirstStarterRecieved.txt");
         try {
-            BufferedReader in = new BufferedReader(new FileReader("./data/starters/FirstStarterRecieved.txt"));
+            if (!file.exists()) file.createNewFile();
+            BufferedReader in = new BufferedReader(new FileReader(file));
             String data = null;
             try {
                 while ((data = in.readLine()) != null) {
@@ -191,8 +193,10 @@ public class Login extends Thread {
     }
 
     public static void appendStarters2() {
+        File file = new File("./data/starters/SecondStarterRecieved.txt");
         try {
-            BufferedReader in = new BufferedReader(new FileReader("./data/starters/SecondStarterRecieved.txt"));
+            if (!file.exists()) file.createNewFile();
+            BufferedReader in = new BufferedReader(new FileReader(file));
             String data = null;
             try {
                 while ((data = in.readLine()) != null) {
@@ -219,8 +223,10 @@ public class Login extends Thread {
     }
 
     public static void addIpToStarterList1(String Name) {
+        File file = new File("./data/starters/FirstStarterRecieved.txt");
         try {
-            BufferedWriter out = new BufferedWriter(new FileWriter("./data/starters/FirstStarterRecieved.txt", true));
+            if (!file.exists()) file.createNewFile();
+            BufferedWriter out = new BufferedWriter(new FileWriter(file, true));
             try {
                 out.newLine();
                 out.write(Name);
@@ -233,8 +239,10 @@ public class Login extends Thread {
     }
 
     public static void addIpToStarterList2(String Name) {
+        File file = new File("./data/starters/SecondStarterRecieved.txt");
         try {
-            BufferedWriter out = new BufferedWriter(new FileWriter("./data/starters/SecondStarterRecieved.txt", true));
+            if (!file.exists()) file.createNewFile();
+            BufferedWriter out = new BufferedWriter(new FileWriter(file, true));
             try {
                 out.newLine();
                 out.write(Name);

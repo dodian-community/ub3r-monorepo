@@ -1,6 +1,5 @@
 package net.dodian.uber.game;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dodian.cache.Cache;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
@@ -39,7 +38,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.DotEnvKt.getDatabaseInitialize;
 import static net.dodian.DotEnvKt.getServerPort;
+import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -82,6 +83,11 @@ public class Server implements Runnable {
         System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / /    ");
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
+
+        if (getDatabaseInitialize()) {
+            initializeDatabase();
+            return;
+        }
 
         new JobScheduler();
         ConnectionList.getInstance();

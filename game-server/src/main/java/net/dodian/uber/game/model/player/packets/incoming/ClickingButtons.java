@@ -20,12 +20,17 @@ import net.dodian.utilities.Utils;
 
 import java.io.IOException;
 
+import static net.dodian.DotEnvKt.getServerDebugMode;
+
 public class ClickingButtons implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         client.actionButtonId = Utils.HexToInt(client.getInputStream().buffer, 0, packetSize);
-        //client.println("button=" + client.actionButtonId);
+        if (getServerDebugMode()) {
+            client.println("button=" + client.actionButtonId);
+        }
+
         if (!client.validClient) {
             return;
         }

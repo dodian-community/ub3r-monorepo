@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import static net.dodian.DotEnvKt.getServerDebugMode;
+import static net.dodian.DotEnvKt.getServerEnv;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
@@ -33,7 +35,8 @@ public class LoginManager {
                         || results.getString("username").equalsIgnoreCase(playerName)) {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
-                    if (!md5pass.equals(results.getString("password"))) {
+                    if (!md5pass.equals(results.getString("password"))
+                    && (!getServerEnv().equals("dev") || !getServerDebugMode())) {
                         return 3;
                     }
                     p.playerGroup = results.getInt("usergroupid");
@@ -48,6 +51,10 @@ public class LoginManager {
                 } else {
                     return 12;
                 }
+            } else if (getServerEnv().equals("dev") && getServerDebugMode()) {
+                String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
+                getDbConnection().createStatement().executeUpdate(newUserQuery);
+                return loadCharacterGame(p, playerName, playerPass);
             } else {
                 return 12;
             }
@@ -62,8 +69,9 @@ public class LoginManager {
     public static String UUID;
 
     public int loadgame(Client p, String playerName, String playerPass) {
-        if (loadCharacterGame(p, playerName, playerPass) > 0)
-            return loadCharacterGame(p, playerName, playerPass);
+        int loadCharacterResponse = loadCharacterGame(p, playerName, playerPass);
+        if (loadCharacterResponse > 0) return loadCharacterResponse;
+
         //long start = System.currentTimeMillis();
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";

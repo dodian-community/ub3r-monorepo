@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.21"
 }
 
 application {
@@ -37,4 +37,16 @@ dependencies {
     implementation("org.quartz-scheduler:quartz:2.3.2")
 
     implementation("mysql:mysql-connector-java:8.0.28")
+    implementation("org.mybatis:mybatis:3.5.9")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "11"
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

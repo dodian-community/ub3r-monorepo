@@ -25,8 +25,8 @@ import java.util.Map;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class NpcManager extends Thread {
-    Map<Integer, Npc> npcs = new HashMap<Integer, Npc>();
-    Map<Integer, NpcData> data = new HashMap<Integer, NpcData>();
+    Map<Integer, Npc> npcs = new HashMap<>();
+    Map<Integer, NpcData> data = new HashMap<>();
     int nextIndex = 1;
 
     public void run() {
