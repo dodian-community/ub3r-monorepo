@@ -30,7 +30,7 @@ public class Settings {
     public static final String twitter = "";
     public static final String facebook = "";
 
-    public static final String community = "http://dodian.net";
+    public static final String community = "https://dodian.net";
     public static final String leaders = "https://dodian.net/index.php?pageid=highscores";
     public static final String store = "https://dodian.net/index.php?pageid=droplist";
     public static final String vote = "https://dodian.net/index.php?pageid=vote";
