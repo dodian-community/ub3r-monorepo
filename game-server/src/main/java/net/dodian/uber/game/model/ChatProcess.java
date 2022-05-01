@@ -3,7 +3,6 @@ package net.dodian.uber.game.model;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.utilities.Database;
 
 import java.io.DataInputStream;
 import java.net.URL;
@@ -11,6 +10,8 @@ import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ChatProcess extends Thread {
     public static final int cycleTime = 5000;
@@ -22,7 +23,7 @@ public class ChatProcess extends Thread {
 
     public void run() {
         try {
-            statement = Database.conn.createStatement();
+            statement = getDbConnection().createStatement();
             while (running) {
                 try {
                     statement.executeUpdate(

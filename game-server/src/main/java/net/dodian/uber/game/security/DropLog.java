@@ -1,13 +1,14 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves information about every player dropped item on the server. Contains
@@ -26,14 +27,14 @@ public class DropLog extends LogEntry {
      * Adds a drop record to the drop table.
      *
      * @param player The player dropping the item.
-     * @param item   The item being dropped.
+     * @param id   The item being dropped.
      */
     public static void recordDrop(Player player, int id, int amount, String type, Position pos) {
-        if (Config.getWorldId() > 1) {
+        if (getGameWorldId() > 1) {
             return;
         }
         try {
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO drop_log(username, item, amount, type, timestamp, x, y, z) VALUES ('" + player.getPlayerName()
                     + "', '" + id + "', '" + amount + "', '" + type.replaceAll("_", " ") + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "')";
             statement.executeUpdate(query);

@@ -1,11 +1,12 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.YellSystem;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves information pertaining to pms between players.
@@ -28,10 +29,10 @@ public class PmLog extends LogEntry {
      */
     public static void recordPm(String sender, String receiver, String message) {
         try {
-            if (Config.getWorldId() > 1) {
+            if (getGameWorldId() > 1) {
                 return;
             }
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO pm_log(sender, receiver, message, timestamp) VALUES ('" + sender + "', '" + receiver
                     + "', '" + message.replaceAll("'", "") + "', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);

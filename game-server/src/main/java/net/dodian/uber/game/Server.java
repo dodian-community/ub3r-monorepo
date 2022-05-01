@@ -1,6 +1,6 @@
 package net.dodian.uber.game;
 
-import net.dodian.Config;
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dodian.cache.Cache;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
@@ -28,7 +28,6 @@ import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
-import net.dodian.utilities.Database;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
@@ -38,6 +37,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static net.dodian.DotEnvKt.getServerPort;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Testing..
@@ -57,23 +59,19 @@ public class Server implements Runnable {
     public static long updateStartTime;
     public Player player;
     public Client c;
-
-    private static String MySQLDataBase = "vBulletin";
-    public static String MySQLURL = "";
-    public static String MySQLUser = "";
-    public static String MySQLPassword = "";
-    public static ArrayList<String> connections = new ArrayList<String>();
-    public static ArrayList<String> banned = new ArrayList<String>();
-    public static ArrayList<RS2Object> objects = new ArrayList<RS2Object>();
-    public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<ChatLine>();
+    public static ArrayList<String> connections = new ArrayList<>();
+    public static ArrayList<String> banned = new ArrayList<>();
+    public static ArrayList<RS2Object> objects = new ArrayList<>();
+    public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
     private static ChatProcess chatprocess = null;
     public static int nullConnections = 0;
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
     public static SlotMachine slots = new SlotMachine();
-    public static Map<String, Long> tempConns = new HashMap<String, Long>();
+    public static Map<String, Long> tempConns = new HashMap<>();
     public static LoginManager loginManager = null;
+
 
     public static void main(String args[]) throws Exception {
         System.out.println();
@@ -84,17 +82,6 @@ public class Server implements Runnable {
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
 
-        Config.loadConfig();
-
-        world = Config.getWorldId();
-        MySQLUser = Config.getMysqlUser();
-        MySQLPassword = Config.getMysqlPass();
-        MySQLDataBase = Config.getMysqlDatabase();
-        MySQLURL = Config.getMysqlUrl() + MySQLDataBase;
-
-        //new Motivote<>(new RewardHandler(), "http://srv.dodian.net/voting/", "e18b9362").start();
-        //AuthService.setProvider(new Motivote("dodiannet", "d79027cc0a2278c4fb206266cbf4b9e7"));
-        Database.init();
         new JobScheduler();
         ConnectionList.getInstance();
         playerHandler = new PlayerHandler();
@@ -155,7 +142,7 @@ public class Server implements Runnable {
         // setup the listener
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(Config.getPort(), 1, null);
+            clientListener = new java.net.ServerSocket(getServerPort(), 1, null);
             while (true) {
                 try {
                     if (clientListener == null)
@@ -243,7 +230,7 @@ public class Server implements Runnable {
 
     public static void loadObjects() {
         try {
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             ResultSet results = statement.executeQuery("SELECT * from uber3_objects");
             while (results.next()) {
                 objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));

@@ -1,6 +1,5 @@
 package net.dodian.uber.comm;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 
@@ -70,11 +69,7 @@ public final class ConnectionList {
     }
 
     public boolean filter(final InetAddress address) {
-        if (Config.MULTILOG_EXCEPTION.contains(address.toString())) {
-            return false;
-        } else {
-            System.out.println("Hostname: " + address.toString() + " is not whitelisted.");
-        }
+        // TODO: If we want multi-log exceptions, we need to re-implement the feature a better way.
 
         if (connectionMap.containsKey(address)) {
             return connectionMap.get(address) < MAX_CONNECTIONS_PER_IP;
@@ -84,10 +79,7 @@ public final class ConnectionList {
     }
 
     public static boolean isSameMac(final String macAddress) throws UnknownHostException, SocketException {
-        if (HardwareAddress.getMacAddress() == macAddress) {
-            return true;
-        }
-        return false;
+        return HardwareAddress.getMacAddress().equals(macAddress);
     }
 
     /**

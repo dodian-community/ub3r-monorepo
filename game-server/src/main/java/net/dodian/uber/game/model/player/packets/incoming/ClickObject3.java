@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import net.dodian.Config;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.event.Event;
@@ -13,6 +12,8 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
 
 public class ClickObject3 implements Packet {
 
@@ -27,7 +28,7 @@ public class ClickObject3 implements Packet {
         GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
         GameObjectData object = GameObjectData.forId(task.getWalkToId());
         client.setWalkToTask(task);
-        if (Config.getWorldId() > 1 && object != null)
+        if (getGameWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click3: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", def: " + (def == null ? "Def is null!" : def.getType())));
         if (client.randomed) {
             return;

@@ -1,18 +1,18 @@
 package net.dodian.uber.game.model;
 
-import net.dodian.Config;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.utilities.Database;
 
 import java.io.*;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static net.dodian.DotEnvKt.*;
+import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
 
@@ -31,17 +31,17 @@ public class Login extends Thread {
                 type = 1;
             String query = "";
             query = "INSERT INTO uber3_trades SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + (System.currentTimeMillis() / 1000);
-            Database.statement.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-            ResultSet inserted = Database.statement.getGeneratedKeys();
+            getDbStatement().executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
+            ResultSet inserted = getDbStatement().getGeneratedKeys();
             inserted.next();
             int id = inserted.getInt(1);
             System.out.println("Auto-id: " + id);
             for (GameItem item : items) {
-                Database.statement.executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p1 + ", item="
+                getDbStatement().executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p1 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
             for (GameItem item : otherItems) {
-                Database.statement.executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p2 + ", item="
+                getDbStatement().executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p2 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
             //ystem.out.println("Trade " + id + " logged!");
@@ -53,8 +53,8 @@ public class Login extends Thread {
 
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
-            Database.statement.executeUpdate("INSERT INTO uber3_sessions SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
-                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + Config.getWorldId() + "'");
+            getDbStatement().executeUpdate("INSERT INTO uber3_sessions SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
+                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + getGameWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -64,7 +64,7 @@ public class Login extends Thread {
     public void sendChat(int dbId, int type, int absX, int absY, String chat) {
         try {
             // chat = chat.replace("'", "");
-            // Database.statement.executeUpdate("INSERT DELAYED into
+            // getDbStatement().executeUpdate("INSERT DELAYED into
             // uber3_chat(world,dbid,type,absX,absY,chat,timestamp) values(1," + dbId
             // + "," + type + ", " + absX + "," + absY + ",'" + chat + "', '" +
             // System.currentTimeMillis() + "')");
@@ -77,7 +77,7 @@ public class Login extends Thread {
     public synchronized void sendPlayers() {
         try {
             int players = PlayerHandler.getPlayerCount();
-            Database.statement.executeUpdate("UPDATE worlds SET players = " + players + " WHERE id = " + Server.world);
+            getDbStatement().executeUpdate("UPDATE worlds SET players = " + players + " WHERE id = " + Server.world);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
