@@ -8,13 +8,14 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.herblore.Herblore;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
-import net.dodian.utilities.Database;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ClickItem implements Packet {
 
@@ -36,7 +37,7 @@ public class ClickItem implements Packet {
                     Server.npcManager.reloadNpcConfig(client, client.getPlayerNpc(), "New Npc", "-1");
                     return;
                 }
-                Connection conn = Database.conn;
+                Connection conn = getDbConnection();
                 Statement statement = conn.createStatement();
                 ResultSet rs = statement.executeQuery("SELECT 1 FROM uber3_spawn where id='" + client.getPlayerNpc() + "' && x='" + client.getPosition().getX() + "' && y='" + client.getPosition().getY() + "' && height='" + client.getPosition().getZ() + "'");
                 if (rs.next()) {

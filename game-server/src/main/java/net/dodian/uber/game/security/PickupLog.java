@@ -1,13 +1,14 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves information about every player dropped item on the server. Contains
@@ -30,10 +31,10 @@ public class PickupLog extends LogEntry {
      */
     public static void recordPickup(Player player, int item, int amount, String type, Position pos) {
         try {
-            if (Config.getWorldId() > 1) {
+            if (getGameWorldId() > 1) {
                 return;
             }
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
 
             String query = "INSERT INTO pickup_log(username, item, amount, type, timestamp, x, y, z) VALUES ('" + player.getPlayerName()
                     + "', '" + item + "', '" + amount + "', '" + type.replaceAll("_", " ") + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "')";

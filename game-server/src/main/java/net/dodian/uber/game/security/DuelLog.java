@@ -1,11 +1,12 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.YellSystem;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves all duels that take place.
@@ -30,11 +31,11 @@ public class DuelLog extends LogEntry {
      */
     public static void recordDuel(String player, String opponent, String playerStake, String opponentStake,
                                   String winner) {
-        if (Config.getWorldId() > 1) {
+        if (getGameWorldId() > 1) {
             return;
         }
         try {
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO duel_log(player, opponent, playerstake, opponentstake, winner, timestamp) VALUES ('"
                     + player + "', '" + opponent + "', '" + playerStake + "', '" + opponentStake + "', '" + winner + "', '"
                     + getTimeStamp() + "')";

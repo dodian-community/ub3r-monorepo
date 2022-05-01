@@ -1,10 +1,10 @@
 package net.dodian.uber.game.model.object;
 
-import net.dodian.utilities.Database;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class DoorHandler {
     public static int[] doorX = new int[100];
@@ -41,7 +41,7 @@ public class DoorHandler {
 
     public static boolean mysql_connect() {
         try {
-            conn = Database.conn;
+            conn = getDbConnection();
             statement = conn.createStatement();
             return true;
         } catch (Exception e) {

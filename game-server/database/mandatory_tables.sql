@@ -1,54 +1,220 @@
-create table if not exists uber3_misc
+create table character_stats
 (
-    id      int not null,
-    players int not null
+    uid          int        default 0    not null
+        primary key,
+    oldid        int        default 0    not null,
+    combat       int        default 3    not null,
+    total        int        default 29   not null,
+    totalxp      bigint     default 1154 not null,
+    attack       bigint     default 0    not null,
+    defence      bigint     default 0    not null,
+    strength     bigint     default 0    not null,
+    hitpoints    bigint     default 1154 not null,
+    prayer       bigint     default 0    not null,
+    magic        bigint     default 0    not null,
+    ranged       bigint     default 0    not null,
+    woodcutting  bigint     default 0    not null,
+    firemaking   bigint     default 0    not null,
+    fletching    bigint     default 0    not null,
+    mining       bigint     default 0    not null,
+    smithing     bigint     default 0    not null,
+    agility      bigint     default 0    not null,
+    thieving     bigint     default 0    not null,
+    runecrafting bigint     default 0    not null,
+    slayer       bigint     default 0    not null,
+    farming      bigint     default 0    not null,
+    crafting     bigint     default 0    not null,
+    herblore     bigint     default 0    not null,
+    fishing      bigint     default 0    not null,
+    cooking      bigint     default 0    not null,
+    name         varchar(255)            null,
+    rights       tinyint(2) default 0    null
 )
-    engine = MyISAM;
+    engine = InnoDB;
+
+create index uid
+    on character_stats (uid);
+
+create table character_stats_progress
+(
+    id           int auto_increment
+        primary key,
+    oldid        int        default 0                 not null,
+    uid          int        default 0                 not null,
+    total        int        default 29                not null,
+    totalxp      bigint     default 1200              not null,
+    attack       bigint     default 0                 not null,
+    defence      bigint     default 0                 not null,
+    strength     bigint     default 0                 not null,
+    hitpoints    bigint     default 1200              not null,
+    combat       int        default 3                 not null,
+    magic        bigint     default 0                 not null,
+    ranged       bigint     default 0                 not null,
+    woodcutting  bigint     default 0                 not null,
+    firemaking   bigint     default 0                 not null,
+    fletching    bigint     default 0                 not null,
+    mining       bigint     default 0                 not null,
+    prayer       bigint     default 0                 not null,
+    agility      bigint     default 0                 not null,
+    thieving     bigint     default 0                 not null,
+    runecrafting bigint     default 0                 not null,
+    slayer       bigint     default 0                 not null,
+    farming      bigint     default 0                 not null,
+    crafting     bigint     default 0                 not null,
+    herblore     bigint     default 0                 not null,
+    fishing      bigint     default 0                 not null,
+    cooking      bigint     default 0                 not null,
+    smithing     bigint     default 0                 not null,
+    rights       tinyint(2) default 0                 null,
+    name         varchar(255)                         null,
+    updated      datetime   default CURRENT_TIMESTAMP null
+)
+    engine = InnoDB
+    auto_increment = 212533;
+
+create table characters
+(
+    id              int                  default 0                                            not null
+        primary key,
+    name            varchar(25)          default ''                                           not null,
+    height          tinyint              default 0                                            not null,
+    x               smallint             default 2611                                         not null,
+    y               smallint             default 3094                                         not null,
+    pkrating        smallint             default 0                                            not null,
+    lastlogin       varchar(25)          default '0'                                          not null,
+    health          smallint             default 10                                           not null,
+    look            varchar(55)          default '0 2 13 18 26 33 36 42 3 5 6 3 7 0 1 2 0 0 ' not null,
+    slayerData      varchar(55)          default '-1,-1,0,0,0,0,-1'                           not null,
+    essence_pouch   varchar(55)          default '0:0:0:0'                                    not null,
+    agility         int(2)               default 0                                            not null,
+    autocast        int(3)               default -1                                           not null,
+    equipment       text                                                                      not null,
+    inventory       text                                                                      not null,
+    bank            text                                                                      not null,
+    friends         text                                                                      not null,
+    banned          int(11) unsigned     default 0                                            not null,
+    ban_level       int                  default 0                                            not null,
+    ban_by          varchar(255)         default ''                                           not null,
+    ban_reason      varchar(255)         default ''                                           not null,
+    unbantime       bigint(255) unsigned default 0                                            not null,
+    muted           tinyint unsigned     default 0                                            not null,
+    mute_level      int                  default 0                                            not null,
+    mute_by         varchar(255)         default ''                                           not null,
+    mute_reason     varchar(255)         default ''                                           not null,
+    unmutetime      int(255)             default 0                                            not null,
+    mgroup_others   varchar(255)         default ''                                           not null,
+    tl_level        int                  default 0                                            not null,
+    tradelocked     tinyint(3)           default 0                                            not null,
+    tl_reason       varchar(255)         default ''                                           not null,
+    tl_by           varchar(255)         default ''                                           not null,
+    untradelocktime int(255)             default 0                                            not null,
+    mgroup          varchar(255)         default '0'                                          not null,
+    lastvote        bigint(255)          default 0                                            not null,
+    Boss_Log        text                                                                      null,
+    fightStyle      tinyint              default 0                                            not null,
+    songUnlocked    text                                                                      null,
+    uuid            varchar(255)                                                              null,
+    sibling         tinyint(2)           default 0                                            null,
+    kc              int                  default 0                                            null,
+    dc              int                  default 0                                            null,
+    explock         tinyint(2)           default 0                                            null
+)
+    engine = InnoDB;
+
+create fulltext index bank
+    on characters (bank);
+
+create fulltext index equipment
+    on characters (equipment);
+
+create index id
+    on characters (id);
+
+create fulltext index inventory
+    on characters (inventory);
+
+create fulltext index name
+    on characters (name);
+
+create table chat_log
+(
+    username  varchar(255) null,
+    message   varchar(255) null,
+    timestamp varchar(255) null
+)
+    engine = InnoDB;
+
+create table drop_log
+(
+    username  varchar(255) null,
+    item      int(255)     null,
+    amount    int(255)     null,
+    type      varchar(255) null,
+    timestamp varchar(255) null,
+    x         int(10)      null,
+    y         int(10)      null,
+    z         int(10)      null
+)
+    engine = InnoDB;
+
+create table duel_log
+(
+    player        varchar(255) null,
+    opponent      varchar(255) null,
+    playerstake   varchar(255) null,
+    opponentstake varchar(255) null,
+    winner        varchar(255) null,
+    timestamp     varchar(255) null
+)
+    engine = InnoDB;
+
+create table pete_co
+(
+    Tracker_ID   int      not null
+        primary key,
+    Name         char(25) null,
+    CoinsBillion int      null,
+    Coins        int      null,
+    ForLater_1   int      null
+);
+
+create table pickup_log
+(
+    username  varchar(255) null,
+    item      int(255)     null,
+    amount    int(255)     null,
+    type      varchar(255) null,
+    timestamp varchar(255) null,
+    x         int(10)      null,
+    y         int(10)      null,
+    z         int(10)      null
+)
+    engine = InnoDB;
+
+create table pm_log
+(
+    sender    varchar(255) null,
+    receiver  varchar(255) null,
+    message   varchar(255) null,
+    timestamp varchar(255) null
+)
+    engine = InnoDB;
 
 create table uber3_actions
 (
     action varchar(20) not null,
     pid    int         not null
 )
-    engine = MyISAM;
+    engine = InnoDB;
 
-create table uber3_spawn
+create table uber3_command_log
 (
-    id         varchar(8)                  not null,
-    x          int(4)                      not null,
-    y          int(4)                      not null,
-    height     int(4)          default 0   not null,
-    rx         int(4)          default 0   null,
-    ry         int(4)          default 0   null,
-    rx2        int(4)          default 0   null,
-    ry2        int(4)          default 0   null,
-    movechance int(4) unsigned default 0   null,
-    hitpoints  int unsigned                null,
-    live       int(4) unsigned default 1   not null,
-    face       varchar(45)     default '0' not null,
-    primary key (id, x, y, height)
+    userId int(12)     not null,
+    name   varchar(25) null,
+    time   text        not null,
+    action text        not null
 )
-    engine = MyISAM
-    charset = utf8;
-
-create table uber3_npcs
-(
-    id          int auto_increment
-        primary key,
-    name        varchar(255)     default 'no name' null,
-    combat      int              default 0         null,
-    attackEmote int              default 806       null,
-    deathEmote  int              default 836       null,
-    hitpoints   int              default 0         null,
-    respawn     int(11) unsigned default 60        null,
-    size        int              default 1         null,
-    attack      int(5)           default 0         null,
-    strength    int(5)           default 0         null,
-    defence     int(5)           default 0         null,
-    ranged      int(5)           default 0         null,
-    magic       int(5)           default 0         null
-)
-    engine = MyISAM;
+    engine = InnoDB;
 
 create table uber3_doors
 (
@@ -63,8 +229,9 @@ create table uber3_doors
     doorState      int(1) null,
     doorHeight     int(1) null
 )
-    engine = MyISAM
-    charset = utf8;
+    engine = InnoDB
+    charset = utf8
+    auto_increment = 94;
 
 create table uber3_drops
 (
@@ -76,17 +243,7 @@ create table uber3_drops
     rareShout tinytext      null,
     primary key (npcid, percent, itemid)
 )
-    engine = MyISAM;
-
-create table pete_co
-(
-    Tracker_ID   int      not null
-        primary key,
-    Name         char(25) null,
-    CoinsBillion int      null,
-    Coins        int      null,
-    ForLater_1   int      null
-);
+    engine = InnoDB;
 
 create table uber3_items
 (
@@ -122,8 +279,44 @@ create table uber3_items
     Bonus11       int(3)                null,
     Bonus12       int(3)                null
 )
-    engine = MyISAM
+    engine = InnoDB
     charset = utf8;
+
+create table uber3_logs
+(
+    id     int unsigned not null,
+    pid    varchar(45)  not null,
+    item   int unsigned not null,
+    amount int(255)     not null
+)
+    engine = InnoDB;
+
+create table uber3_misc
+(
+    id      int not null,
+    players int not null
+)
+    engine = InnoDB;
+
+create table uber3_npcs
+(
+    id          int auto_increment
+        primary key,
+    name        varchar(255)     default 'no name' null,
+    combat      int              default 0         null,
+    attackEmote int              default 806       null,
+    deathEmote  int              default 836       null,
+    hitpoints   int              default 0         null,
+    respawn     int(11) unsigned default 60        null,
+    size        int              default 1         null,
+    attack      int(5)           default 0         null,
+    strength    int(5)           default 0         null,
+    defence     int(5)           default 0         null,
+    ranged      int(5)           default 0         null,
+    magic       int(5)           default 0         null
+)
+    engine = InnoDB
+    auto_increment = 10000;
 
 create table uber3_objects
 (
@@ -132,8 +325,54 @@ create table uber3_objects
     y    int(4)          null,
     type int(1)          null
 )
-    engine = MyISAM
+    engine = InnoDB
     charset = utf8;
+
+create table uber3_sessions
+(
+    id       int auto_increment
+        primary key,
+    client   int(5) default 1337 null,
+    duration int                 null,
+    dbid     int                 null,
+    hostname varchar(255)        null,
+    start    bigint(11)          null,
+    end      bigint(11)          null,
+    world    int                 null
+)
+    engine = InnoDB
+    auto_increment = 214920;
+
+create table uber3_spawn
+(
+    id         varchar(8)                  not null,
+    x          int(4)                      not null,
+    y          int(4)                      not null,
+    height     int(4)          default 0   not null,
+    rx         int(4)          default 0   null,
+    ry         int(4)          default 0   null,
+    rx2        int(4)          default 0   null,
+    ry2        int(4)          default 0   null,
+    movechance int(4) unsigned default 0   null,
+    hitpoints  int unsigned                null,
+    live       int(4) unsigned default 1   not null,
+    face       varchar(45)     default '0' not null,
+    primary key (id, x, y, height)
+)
+    engine = InnoDB
+    charset = utf8;
+
+create table uber3_trades
+(
+    id   int unsigned auto_increment
+        primary key,
+    p1   bigint(50) unsigned not null,
+    p2   bigint(50) unsigned not null,
+    type varchar(45)         not null,
+    date mediumtext          null
+)
+    engine = InnoDB
+    auto_increment = 25855;
 
 create table user
 (
@@ -224,7 +463,8 @@ create table user
     constraint username_UNIQUE
         unique (username)
 )
-    engine = MyISAM;
+    engine = InnoDB
+    auto_increment = 474552;
 
 create index birthday
     on user (birthday, showbirthday);
@@ -254,5 +494,4 @@ create table worlds
     pk      int                     not null,
     `drop`  int                     not null
 )
-    engine = MyISAM;
-
+    engine = InnoDB;

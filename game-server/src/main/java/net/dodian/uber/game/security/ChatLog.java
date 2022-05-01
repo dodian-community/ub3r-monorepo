@@ -1,11 +1,12 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.YellSystem;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves all the chat logs to the 'chat_log' database.
@@ -26,11 +27,11 @@ public class ChatLog extends LogEntry {
      * @param message The message sent.
      */
     public static void recordChat(String player, String message) {
-        if (Config.getWorldId() > 1) {
+        if (getGameWorldId() > 1) {
             return;
         }
         try {
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO chat_log(username, message, timestamp) VALUES ('" + player + "', '" + message.replaceAll("'", "") + "', '"
                     + getTimeStamp() + "')";
             statement.executeUpdate(query);

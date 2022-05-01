@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import net.dodian.Config;
 import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
@@ -27,7 +26,6 @@ import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.CommandLog;
-import net.dodian.utilities.Database;
 import net.dodian.utilities.Misc;
 
 import java.net.InetAddress;
@@ -36,6 +34,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Commands implements Packet {
 
@@ -62,7 +63,7 @@ public class Commands implements Packet {
                     int id = Integer.parseInt(cmd[1]);
                     Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
                 }
-                if (cmd[0].equalsIgnoreCase("tnpc") && Config.getWorldId() > 1) {
+                if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
                         Position pos = client.getPosition().copy();
@@ -120,7 +121,7 @@ public class Commands implements Packet {
                             return;
                         }
                         try {
-                            Connection conn = Database.conn;
+                            Connection conn = getDbConnection();
                             Statement statement = conn.createStatement();
                             statement.executeUpdate("UPDATE user SET usergroupid='" + rankId + "' WHERE username ='" + name + "'");
                             statement.close();
@@ -296,7 +297,7 @@ public class Commands implements Packet {
                     int itemid = Integer.parseInt(cmd[1]);
                     double chance = Double.parseDouble(cmd[2]);
                     try {
-                        Connection conn = Database.conn;
+                        Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
                         String sql = "delete from uber3_drops where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
                                 + " && percent=" + chance + "";
@@ -341,7 +342,7 @@ public class Commands implements Packet {
                         chance = chance > 100.000 ? 100.0 : chance < 0.001 ? 0.001 : chance;
                         String rareShout = cmd.length >= 6 && (cmd[5].equalsIgnoreCase("false") || cmd[5].equalsIgnoreCase("true")) ? cmd[5].toLowerCase() : "false";
                         try {
-                            Connection conn = Database.conn;
+                            Connection conn = getDbConnection();
                             Statement statement = conn.createStatement();
                             String sql = "INSERT INTO uber3_drops SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
                                     + "', itemid='" + itemid + "', amt_min='" + min + "', amt_max='" + max + "', rareShout='" + rareShout + "'";
@@ -367,7 +368,7 @@ public class Commands implements Packet {
                     try {
                         boolean found = false;
                         String query = "select * from uber3_drops where npcid=" + client.getPlayerNpc() + "";
-                        ResultSet results = Database.conn.createStatement().executeQuery(query);
+                        ResultSet results = getDbConnection().createStatement().executeQuery(query);
                         while (results.next()) {
                             if (!found)
                                 client.send(new SendMessage("-----------DROPS FOR "
@@ -406,7 +407,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("addxmastree")) {
                     try {
-                        Connection conn = Database.conn;
+                        Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
                         statement
                                 .executeUpdate("INSERT INTO uber3_objects SET id = 1318, x = " + client.getPosition().getX()
@@ -429,7 +430,7 @@ public class Commands implements Packet {
                             client.send(new SendMessage("Does not exist in the database!"));
                             return;
                         }
-                        Connection conn = Database.conn;
+                        Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
                         int health = Server.npcManager.getData(client.getPlayerNpc()).getHP();
                         statement
@@ -733,7 +734,7 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("addsibling") && client.playerRights > 0) {
                     try {
                         String otherPName = command.substring(cmd[0].length() + 1);
-                        Connection conn = Database.conn;
+                        Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
                         String sql = "UPDATE characters SET sibling= '1' WHERE name= '" + otherPName + "'";
                         client.send(new SendMessage("You added " + otherPName + " to the siblings list!"));
@@ -823,11 +824,11 @@ public class Commands implements Packet {
                     client.send(new SendMessage("::" + cmd[0] + " First_name second_name"));
                 }
             }
-            if ((command.equalsIgnoreCase("mypos") || command.equalsIgnoreCase("pos")) && (client.playerRights > 1 || Config.getWorldId() > 1)) {
+            if ((command.equalsIgnoreCase("mypos") || command.equalsIgnoreCase("pos")) && (client.playerRights > 1 || getGameWorldId() > 1)) {
                 client.send(new SendMessage(
                         "Your position is (" + client.getPosition().getX() + " , " + client.getPosition().getY() + ")"));
             }
-            if (command.startsWith("noclip") && client.playerRights < 2 && Config.getWorldId() == 1) {
+            if (command.startsWith("noclip") && client.playerRights < 2 && getGameWorldId() == 1) {
                 client.kick();
             }
             if (cmd[0].equalsIgnoreCase("boss")) {
@@ -985,7 +986,7 @@ public class Commands implements Packet {
                     client.send(new SendMessage("wrong usage! ::loot " + (client.getPlayerNpc() > 0 ? "amount" : "npcid amount") + ""));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("tele") && (client.playerRights > 1 || Config.getWorldId() > 1)) {
+            if (cmd[0].equalsIgnoreCase("tele") && (client.playerRights > 1 || getGameWorldId() > 1)) {
                 try {
                     int newPosX = Integer.parseInt(cmd[1]);
                     int newPosY = Integer.parseInt(cmd[2]);
@@ -996,7 +997,7 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " x y or ::" + cmd[0] + " x y height"));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("pnpc") && (client.playerRights > 1 || Config.getWorldId() > 1)) {
+            if (cmd[0].equalsIgnoreCase("pnpc") && (client.playerRights > 1 || getGameWorldId() > 1)) {
                 try {
                     int npcId = Integer.parseInt(cmd[1]);
                     if (npcId <= 8195) {
@@ -1009,7 +1010,7 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid"));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("forcetask") && (client.playerRights > 1 || Config.getWorldId() > 1)) {
+            if (cmd[0].equalsIgnoreCase("forcetask") && (client.playerRights > 1 || getGameWorldId() > 1)) {
                 try {
                     int taskId = Integer.parseInt(cmd[1]);
                     int length = SlayerTask.slayerTasks.values().length - 1;
@@ -1136,7 +1137,7 @@ public class Commands implements Packet {
                 client.flushOutStream();
             }
             /* Beta commands*/
-            if (Config.getWorldId() > 1) {
+            if (getGameWorldId() > 1) {
                 if (cmd[0].equalsIgnoreCase("rehp") && !specialRights) {
                     client.reloadHp = !client.reloadHp;
                     client.send(new SendMessage("You set reload hp as " + client.reloadHp));

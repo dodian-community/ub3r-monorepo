@@ -1,11 +1,12 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
 
 public class Bank10 implements Packet {
 
@@ -14,7 +15,7 @@ public class Bank10 implements Packet {
         int interfaceID = client.getInputStream().readUnsignedWordBigEndian();
         int removeID = client.getInputStream().readUnsignedWordA();
         int removeSlot = client.getInputStream().readUnsignedWordA();
-        if (Config.getWorldId() > 1)
+        if (getGameWorldId() > 1)
             client.println_debug("RemoveItem 10: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
         if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, 10);

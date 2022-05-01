@@ -1,11 +1,9 @@
 package net.dodian.uber.game.model.player.casino;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
-import net.dodian.utilities.Database;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -14,6 +12,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class SlotMachine {
 
@@ -123,11 +125,11 @@ public class SlotMachine {
     public int Coins_Win, Coins_Lose = 0;
 
     public void loadGamble() {
-        if (Config.getWorldId() == 5) {
+        if (getGameWorldId() == 5) {
             return;
         }
         try {
-            ResultSet results = Database.statement.executeQuery("SELECT * FROM pete_co");
+            ResultSet results = getDbStatement().executeQuery("SELECT * FROM pete_co");
             if (results.next()) {
                 if (results.getInt("Tracker_ID") == 1) {
                     CoinsBillion_Win = results.getInt("CoinsBillion");
@@ -146,11 +148,11 @@ public class SlotMachine {
     }
 
     public void trackDice(int id, int amt) {
-        if (Config.getWorldId() == 5) {
+        if (getGameWorldId() == 5) {
             return;
         }
         try {
-            Connection conn = Database.conn;
+            Connection conn = getDbConnection();
             Statement statement = conn.createStatement();
             if (id == 1) {
                 Coins_Win = Coins_Win + amt;

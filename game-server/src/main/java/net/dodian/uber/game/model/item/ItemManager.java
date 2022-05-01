@@ -3,12 +3,13 @@ package net.dodian.uber.game.model.item;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.Database;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ItemManager {
     // public ArrayList<Item> items = new ArrayList<Item>();
@@ -24,7 +25,7 @@ public class ItemManager {
         Statement s = null;
         try {
             try {
-                s = Database.conn.createStatement();
+                s = getDbConnection().createStatement();
                 ResultSet row = s.executeQuery("SELECT * FROM uber3_items ORDER BY id ASC");
                 while (row.next()) {
                     items.put(row.getInt("id"), new Item(row));

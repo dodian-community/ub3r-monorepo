@@ -1,12 +1,13 @@
 package net.dodian.uber.game.security;
 
-import net.dodian.Config;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.utilities.Database;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
+
+import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves all the chat logs to the 'chat_log' database.
@@ -27,11 +28,11 @@ public class CommandLog extends LogEntry {
      * @param command The command typed.
      */
     public static void recordCommand(Player player, String command) {
-        if (Config.getWorldId() > 1) {
+        if (getGameWorldId() > 1) {
             return;
         }
         try {
-            Statement statement = Database.conn.createStatement();
+            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO uber3_command_log(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command.replaceAll("'", "") + "')";
             statement.executeUpdate(query);
             statement.close();
