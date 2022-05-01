@@ -1,6 +1,7 @@
 package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
+import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -32,7 +33,7 @@ public class ChatLog extends LogEntry {
         }
         try {
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO chat_log(username, message, timestamp) VALUES ('" + player + "', '" + message.replaceAll("'", "") + "', '"
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_PUBLIC_CHAT + "(username, message, timestamp) VALUES ('" + player + "', '" + message.replaceAll("'", "") + "', '"
                     + getTimeStamp() + "')";
             statement.executeUpdate(query);
             statement.close();

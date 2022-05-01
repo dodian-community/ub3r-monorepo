@@ -1,5 +1,7 @@
 package net.dodian.uber.game.model.object;
 
+import net.dodian.utilities.DbTables;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -21,7 +23,7 @@ public class DoorHandler {
     public DoorHandler() {
         try {
             mysql_connect();
-            ResultSet results = statement.executeQuery("SELECT * FROM uber3_doors");
+            ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_DOOR_DEFINITIONS);
             int i = 0;
             while (results.next()) {
                 doorX[i] = results.getInt("doorX");

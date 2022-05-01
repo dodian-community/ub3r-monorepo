@@ -1,6 +1,7 @@
 package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
+import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -33,7 +34,7 @@ public class PmLog extends LogEntry {
                 return;
             }
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO pm_log(sender, receiver, message, timestamp) VALUES ('" + sender + "', '" + receiver
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_PRIVATE_CHAT + "(sender, receiver, message, timestamp) VALUES ('" + sender + "', '" + receiver
                     + "', '" + message.replaceAll("'", "") + "', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
             statement.close();

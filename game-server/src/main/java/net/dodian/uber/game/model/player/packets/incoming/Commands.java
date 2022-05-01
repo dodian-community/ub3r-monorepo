@@ -26,6 +26,7 @@ import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.CommandLog;
+import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.net.InetAddress;
@@ -123,7 +124,7 @@ public class Commands implements Packet {
                         try {
                             Connection conn = getDbConnection();
                             Statement statement = conn.createStatement();
-                            statement.executeUpdate("UPDATE user SET usergroupid='" + rankId + "' WHERE username ='" + name + "'");
+                            statement.executeUpdate("UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='" + rankId + "' WHERE username ='" + name + "'");
                             statement.close();
                             if (other != null)
                                 other.disconnected = true;
@@ -299,7 +300,7 @@ public class Commands implements Packet {
                     try {
                         Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
-                        String sql = "delete from uber3_drops where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
+                        String sql = "delete from " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
                                 + " && percent=" + chance + "";
                         if (statement.executeUpdate(sql) < 1)
                             client.send(new SendMessage("" + Server.npcManager.getName(client.getPlayerNpc())
@@ -344,7 +345,7 @@ public class Commands implements Packet {
                         try {
                             Connection conn = getDbConnection();
                             Statement statement = conn.createStatement();
-                            String sql = "INSERT INTO uber3_drops SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
+                            String sql = "INSERT INTO" + DbTables.GAME_NPC_DROPS + " SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
                                     + "', itemid='" + itemid + "', amt_min='" + min + "', amt_max='" + max + "', rareShout='" + rareShout + "'";
                             statement.execute(sql);
                             client.send(new SendMessage("You added " + min + "-" + max + " " + client.GetItemName(itemid) + " to "
@@ -367,7 +368,7 @@ public class Commands implements Packet {
                     }
                     try {
                         boolean found = false;
-                        String query = "select * from uber3_drops where npcid=" + client.getPlayerNpc() + "";
+                        String query = "select * from " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc() + "";
                         ResultSet results = getDbConnection().createStatement().executeQuery(query);
                         while (results.next()) {
                             if (!found)
@@ -410,7 +411,7 @@ public class Commands implements Packet {
                         Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
                         statement
-                                .executeUpdate("INSERT INTO uber3_objects SET id = 1318, x = " + client.getPosition().getX()
+                                .executeUpdate("INSERT INTO " + DbTables.GAME_OBJECT_DEFINITIONS + " SET id = 1318, x = " + client.getPosition().getX()
                                         + ", y = " + client.getPosition().getY() + ", type = 2");
                         statement.close();
                         Server.objects.add(new RS2Object(1318, client.getPosition().getX(), client.getPosition().getY(), 10));
@@ -434,7 +435,7 @@ public class Commands implements Packet {
                         Statement statement = conn.createStatement();
                         int health = Server.npcManager.getData(client.getPlayerNpc()).getHP();
                         statement
-                                .executeUpdate("INSERT INTO uber3_spawn SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
+                                .executeUpdate("INSERT INTO " + DbTables.GAME_NPC_SPAWNS + " SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
                                         + ", y=" + client.getPosition().getY() + ", height=" + client.getPosition().getZ() + ", hitpoints="
                                         + health + ", live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0");
                         statement.close();
@@ -736,7 +737,7 @@ public class Commands implements Packet {
                         String otherPName = command.substring(cmd[0].length() + 1);
                         Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
-                        String sql = "UPDATE characters SET sibling= '1' WHERE name= '" + otherPName + "'";
+                        String sql = "UPDATE " + DbTables.GAME_CHARACTERS + " SET sibling= '1' WHERE name= '" + otherPName + "'";
                         client.send(new SendMessage("You added " + otherPName + " to the siblings list!"));
                         statement.executeUpdate(sql);
                         statement.close();

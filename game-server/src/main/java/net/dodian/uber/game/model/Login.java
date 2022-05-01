@@ -3,6 +3,7 @@ package net.dodian.uber.game.model;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.GameItem;
+import net.dodian.utilities.DbTables;
 
 import java.io.*;
 import java.sql.ResultSet;
@@ -30,18 +31,18 @@ public class Login extends Thread {
             if (!trade)
                 type = 1;
             String query = "";
-            query = "INSERT INTO uber3_trades SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + (System.currentTimeMillis() / 1000);
+            query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_TRADES + " SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + (System.currentTimeMillis() / 1000);
             getDbStatement().executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
             ResultSet inserted = getDbStatement().getGeneratedKeys();
             inserted.next();
             int id = inserted.getInt(1);
             System.out.println("Auto-id: " + id);
             for (GameItem item : items) {
-                getDbStatement().executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p1 + ", item="
+                getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p1 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
             for (GameItem item : otherItems) {
-                getDbStatement().executeUpdate("INSERT INTO uber3_logs SET id = " + id + ", pid=" + p2 + ", item="
+                getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p2 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
             //ystem.out.println("Trade " + id + " logged!");
@@ -53,7 +54,7 @@ public class Login extends Thread {
 
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
-            getDbStatement().executeUpdate("INSERT INTO uber3_sessions SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
+            getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
                     + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + getGameWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -77,7 +78,7 @@ public class Login extends Thread {
     public synchronized void sendPlayers() {
         try {
             int players = PlayerHandler.getPlayerCount();
-            getDbStatement().executeUpdate("UPDATE worlds SET players = " + players + " WHERE id = " + Server.world);
+            getDbStatement().executeUpdate("UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + Server.world);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

@@ -28,6 +28,7 @@ import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
@@ -231,7 +232,7 @@ public class Server implements Runnable {
     public static void loadObjects() {
         try {
             Statement statement = getDbConnection().createStatement();
-            ResultSet results = statement.executeQuery("SELECT * from uber3_objects");
+            ResultSet results = statement.executeQuery("SELECT * from " + DbTables.GAME_OBJECT_DEFINITIONS);
             while (results.next()) {
                 objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
             }

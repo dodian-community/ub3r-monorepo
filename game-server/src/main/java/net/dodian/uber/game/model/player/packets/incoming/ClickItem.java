@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.herblore.Herblore;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
+import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -39,14 +40,14 @@ public class ClickItem implements Packet {
                 }
                 Connection conn = getDbConnection();
                 Statement statement = conn.createStatement();
-                ResultSet rs = statement.executeQuery("SELECT 1 FROM uber3_spawn where id='" + client.getPlayerNpc() + "' && x='" + client.getPosition().getX() + "' && y='" + client.getPosition().getY() + "' && height='" + client.getPosition().getZ() + "'");
+                ResultSet rs = statement.executeQuery("SELECT 1 FROM " + DbTables.GAME_NPC_SPAWNS + " where id='" + client.getPlayerNpc() + "' && x='" + client.getPosition().getX() + "' && y='" + client.getPosition().getY() + "' && height='" + client.getPosition().getZ() + "'");
                 if (rs.next()) {
                     client.send(new SendMessage("You already got a spawn on this position!"));
                     return;
                 }
                 int health = Server.npcManager.getData(client.getPlayerNpc()).getHP();
                 statement
-                        .executeUpdate("INSERT INTO uber3_spawn SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
+                        .executeUpdate("INSERT INTO " + DbTables.GAME_NPC_SPAWNS + " SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
                                 + ", y=" + client.getPosition().getY() + ", height=" + client.getPosition().getZ() + ", hitpoints="
                                 + health + ", live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0");
                 statement.close();

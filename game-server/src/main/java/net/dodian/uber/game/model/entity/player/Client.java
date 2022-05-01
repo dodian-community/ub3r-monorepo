@@ -1050,8 +1050,8 @@ public class Client extends Player implements Runnable {
 					totallvl += getLevel(Skill.getSkill(i));
 				}
 				String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-				String query = "UPDATE character_stats SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ";
-				String query2 = "INSERT INTO character_stats_progress SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ";
+				String query = "UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ";
+				String query2 = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ";
 				for (int i = 0; i < 21; i++) {
 					query += Skill.getSkill(i).getName() + "=" + getExperience(Skill.getSkill(i)) + ", ";
 					query2 += Skill.getSkill(i).getName() + "=" + getExperience(Skill.getSkill(i)) + ", ";
@@ -1101,7 +1101,7 @@ public class Client extends Player implements Runnable {
 				if (elapsed > 10000) {
 					last = ", lastlogin = '" + System.currentTimeMillis() + "'";
 				}
-				statement.executeUpdate("UPDATE characters SET sibling= '" + isSibling + "', uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
+				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET sibling= '" + isSibling + "', uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
 						+ "', friends='" + list + "', fightStyle = " + FightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
 						+ ", autocast=" + autocast_spellIndex + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
@@ -7868,7 +7868,7 @@ public class Client extends Player implements Runnable {
 					try {
 						java.sql.Connection conn = getDbConnection();
 						Statement statement = conn.createStatement();
-						String sql = "delete from uber3_spawn where id='" + npcId + "' && x='" + tempNpc.getPosition().getX() + "' && y='" + tempNpc.getPosition().getY() + "' && height='" + tempNpc.getPosition().getZ() + "'";
+						String sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.getPosition().getX() + "' && y='" + tempNpc.getPosition().getY() + "' && height='" + tempNpc.getPosition().getZ() + "'";
 						if (statement.executeUpdate(sql) < 1)
 							send(new SendMessage("This npc has already been removed!"));
 						else { //Functions to remove npc!
@@ -8918,13 +8918,13 @@ public class Client extends Player implements Runnable {
 			try {
 				java.sql.Connection conn = getDbConnection();
 				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM user WHERE username = '" + player + "'";
+				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
 				ResultSet results = statement.executeQuery(query);
 				int id = -1;
 				if (results.next())
 					id = results.getInt("userid");
 				if (id >= 0) {
-					query = "SELECT * FROM characters WHERE id = " + id + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("inventory");
@@ -8973,13 +8973,13 @@ public class Client extends Player implements Runnable {
 			try {
 				java.sql.Connection conn = getDbConnection();
 				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM user WHERE username = '" + player + "'";
+				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
 				ResultSet results = statement.executeQuery(query);
 				int id = -1;
 				if (results.next())
 					id = results.getInt("userid");
 				if (id >= 0) {
-					query = "SELECT * FROM characters WHERE id = " + id + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("bank");
@@ -9068,13 +9068,13 @@ public class Client extends Player implements Runnable {
 				int currentXp = 0, totalXp = 0, totalLevel = 0;
 				java.sql.Connection conn = getDbConnection();
 				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM user WHERE username = '" + user + "'";
+				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
 				ResultSet results = statement.executeQuery(query);
 				int userid = -1;
 				if (results.next())
 					userid = results.getInt("userid");
 				if (userid >= 0) {
-					query = "SELECT * FROM character_stats WHERE uid = " + userid + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid + "";
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						currentXp = results.getInt(skillName);
@@ -9090,7 +9090,7 @@ public class Client extends Player implements Runnable {
 					int newXp = currentXp - xp;
 					totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
 					totalXp -= xp;
-					statement.executeUpdate("UPDATE character_stats SET " + skillName + "='" + newXp + "', totalxp='" + totalXp + "', total='" + totalLevel + "' WHERE uid = " + userid);
+					statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET " + skillName + "='" + newXp + "', totalxp='" + totalXp + "', total='" + totalLevel + "' WHERE uid = " + userid);
 					send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
 				} else
 					send(new SendMessage("username '" + user + "' have yet to login!"));
@@ -9153,14 +9153,14 @@ public class Client extends Player implements Runnable {
 				boolean found = true;
 				java.sql.Connection conn = getDbConnection();
 				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM user WHERE username = '" + user + "'";
+				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
 				ResultSet results = statement.executeQuery(query);
 				int userid = -1;
 				if (results.next())
 					userid = results.getInt("userid");
 				if (userid >= 0) {
 					String bank = "", inventory = "", equipment = "";
-					query = "SELECT * FROM characters WHERE id = " + userid + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid + "";
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("bank");
@@ -9215,7 +9215,7 @@ public class Client extends Player implements Runnable {
 						found = false;
 					if (found) {
 						statement = getDbConnection().createStatement();
-						statement.executeUpdate("UPDATE characters SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
+						statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
 						if (totalItemRemoved > 0)
 							send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
 						else

@@ -4,6 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -129,7 +130,7 @@ public class SlotMachine {
             return;
         }
         try {
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM pete_co");
+            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_PETE_CO);
             if (results.next()) {
                 if (results.getInt("Tracker_ID") == 1) {
                     CoinsBillion_Win = results.getInt("CoinsBillion");
@@ -160,7 +161,7 @@ public class SlotMachine {
                     Coins_Win = Coins_Win - 1000000000;
                     CoinsBillion_Win = CoinsBillion_Win + 1;
                 }
-                statement.executeUpdate("INSERT Pete_Co SET CoinsBillion = " + CoinsBillion_Win + ", Coins = " + Coins_Win
+                statement.executeUpdate("INSERT " + DbTables.GAME_PETE_CO + " SET CoinsBillion = " + CoinsBillion_Win + ", Coins = " + Coins_Win
                         + " where Tracker_ID=1");
             }
             if (id == 2) {
@@ -169,7 +170,7 @@ public class SlotMachine {
                     Coins_Lose = Coins_Lose - 1000000000;
                     CoinsBillion_Lose = CoinsBillion_Lose + 1;
                 }
-                statement.executeUpdate("INSERT Pete_Co SET CoinsBillion = " + CoinsBillion_Lose + ", Coins = " + Coins_Lose
+                statement.executeUpdate("INSERT " + DbTables.GAME_PETE_CO + " SET CoinsBillion = " + CoinsBillion_Lose + ", Coins = " + Coins_Lose
                         + " where Tracker_ID=2");
             }
             statement.close();

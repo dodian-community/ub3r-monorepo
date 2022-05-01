@@ -3,6 +3,7 @@ package net.dodian.uber.game.security;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -36,7 +37,7 @@ public class PickupLog extends LogEntry {
             }
             Statement statement = getDbConnection().createStatement();
 
-            String query = "INSERT INTO pickup_log(username, item, amount, type, timestamp, x, y, z) VALUES ('" + player.getPlayerName()
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_ITEM_PICKUPS + "(username, item, amount, type, timestamp, x, y, z) VALUES ('" + player.getPlayerName()
                     + "', '" + item + "', '" + amount + "', '" + type.replaceAll("_", " ") + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "')";
             statement.executeUpdate(query);
             statement.close();

@@ -13,6 +13,7 @@ import net.dodian.jobs.impl.NpcProcessor;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.utilities.DbTables;
 import org.quartz.SchedulerException;
 
 import java.sql.ResultSet;
@@ -45,7 +46,7 @@ public class NpcManager extends Thread {
     public void loadSpawns() {
         try {
             int amount = 0;
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM uber3_spawn");
+            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_SPAWNS);
             while (results.next()) {
                 amount++;
                 createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
@@ -61,7 +62,7 @@ public class NpcManager extends Thread {
         try {
             if (data.containsKey(id)) {
                 data.get(id).getDrops().clear();
-                ResultSet results = getDbStatement().executeQuery("SELECT * FROM uber3_drops where npcid='" + id + "'");
+                ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DROPS + " where npcid='" + id + "'");
                 while (results.next()) {
                     data.get(id).addDrop(results.getInt("itemid"), results.getInt("amt_min"), results.getInt("amt_max"),
                             results.getDouble("percent"), results.getBoolean("rareShout"));
@@ -77,7 +78,7 @@ public class NpcManager extends Thread {
     public void reloadAllData(Client c, int id) {
         try {
             Statement statement = getDbStatement();
-            ResultSet results = statement.executeQuery("SELECT * FROM uber3_npcs where id='" + id + "'");
+            ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id='" + id + "'");
             if (results.next()) {
                 data.replace(results.getInt("id"), new NpcData(results));
                 /* Reload all npc data! */
@@ -96,8 +97,8 @@ public class NpcManager extends Thread {
         if (!data.containsKey(id)) {
             try {
                 Statement statement = getDbStatement();
-                statement.executeUpdate("INSERT INTO uber3_npcs SET id = " + id + "");
-                ResultSet results = getDbStatement().executeQuery("SELECT * FROM uber3_npcs where id='" + id + "'");
+                statement.executeUpdate("INSERT INTO " + DbTables.GAME_NPC_DEFINITIONS + " SET id = " + id);
+                ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id='" + id + "'");
                 if (results.next()) {
                     data.put(results.getInt("id"), new NpcData(results));
                     c.send(new SendMessage("Added default config values to the npc!"));
@@ -108,7 +109,7 @@ public class NpcManager extends Thread {
         } else if (!table.equalsIgnoreCase("new npc")) {
             try {
                 Statement statement = getDbStatement();
-                String query = "UPDATE uber3_npcs SET " + table + " = '" + value + "' WHERE id = '" + id + "'";
+                String query = "UPDATE " + DbTables.GAME_NPC_DEFINITIONS + " SET " + table + " = '" + value + "' WHERE id = '" + id + "'";
                 statement.executeUpdate(query);
                 c.send(new SendMessage("You updated '" + table + "' with value '" + value + "'!"));
                 reloadAllData(c, id);
@@ -127,14 +128,14 @@ public class NpcManager extends Thread {
     public void loadData() {
         try {
             int amount = 0;
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM uber3_npcs");
+            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS);
             while (results.next()) {
                 amount++;
                 data.put(results.getInt("id"), new NpcData(results));
             }
             System.out.println("Loaded " + amount + " Npc Definitions");
             amount = 0;
-            results = getDbStatement().executeQuery("SELECT * FROM uber3_drops");
+            results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DROPS);
             while (results.next()) {
                 if (results.getInt("npcid") > 0) {
                     amount++;

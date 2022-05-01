@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.utilities.DbTables;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ public class LoginManager {
         if (playerName.length() < 1) //To short name!
             return 3;
         try {
-            String query = "SELECT * FROM user WHERE username = '" + playerName + "'";
+            String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
                 p.dbId = results.getInt("userid");
@@ -65,7 +66,7 @@ public class LoginManager {
             return loadCharacterGame(p, playerName, playerPass);
         //long start = System.currentTimeMillis();
         try {
-            String query = "select * from characters where id = '" + p.dbId + "'";
+            String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
                 if (isBanned(p.dbId)) {
@@ -211,7 +212,7 @@ public class LoginManager {
                         }
                     }
                 }
-                String query2 = "select * from character_stats where uid = '" + p.dbId + "'";
+                String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
                     for (int i = 0; i < 21; i++) {
@@ -235,7 +236,7 @@ public class LoginManager {
                     }
                 } else {
                     Statement statement = getDbConnection().createStatement();
-                    String newStatsAccount = "INSERT INTO character_stats(uid)" + " VALUES ('" + p.dbId + "')";
+                    String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "')";
                     statement.executeUpdate(newStatsAccount);
                     statement.close();
                     for (int i = 0; i < 21; i++) { //Default skills!
@@ -256,10 +257,10 @@ public class LoginManager {
                 return 0;
             } else {
                 Statement statement = getDbConnection().createStatement();
-                String newAccount = "INSERT INTO characters(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
+                String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
                         + p.dbId + "', '" + playerName + "', '', '', '', '', '0')";
                 statement.executeUpdate(newAccount);
-                String newStatsAccount = "INSERT INTO character_stats(uid)" + " VALUES ('" + p.dbId + "') ON CONFLICT (uid) DO NOTHING";
+                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON CONFLICT (uid) DO NOTHING";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
                 return loadgame(p, playerName, playerPass);
@@ -272,7 +273,7 @@ public class LoginManager {
     }
 
     public boolean isBanned(int id) throws SQLException {
-        String query = "select * from characters where id = '" + id + "'";
+        String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + id + "'";
         ResultSet results = getDbConnection().createStatement().executeQuery(query);
         Date now = new Date();
         if (results.next()) {

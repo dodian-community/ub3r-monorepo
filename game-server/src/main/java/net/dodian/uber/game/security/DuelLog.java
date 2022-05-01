@@ -1,6 +1,7 @@
 package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
+import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -36,7 +37,7 @@ public class DuelLog extends LogEntry {
         }
         try {
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO duel_log(player, opponent, playerstake, opponentstake, winner, timestamp) VALUES ('"
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_DUELS + "(player, opponent, playerstake, opponentstake, winner, timestamp) VALUES ('"
                     + player + "', '" + opponent + "', '" + playerStake + "', '" + opponentStake + "', '" + winner + "', '"
                     + getTimeStamp() + "')";
             statement.executeUpdate(query);

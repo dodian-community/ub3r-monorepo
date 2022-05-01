@@ -3,6 +3,7 @@ package net.dodian.uber.game.model;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.utilities.DbTables;
 
 import java.io.DataInputStream;
 import java.net.URL;
@@ -27,8 +28,8 @@ public class ChatProcess extends Thread {
             while (running) {
                 try {
                     statement.executeUpdate(
-                            "UPDATE uber3_misc set players = " + PlayerHandler.getPlayerCount() + " where id = " + Server.world);
-                    results = statement.executeQuery("SELECT * FROM uber3_actions");
+                            "UPDATE " + DbTables.GAME_MISC + " set players = " + PlayerHandler.getPlayerCount() + " where id = " + Server.world);
+                    results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_ACTIONS);
                     while (results.next()) {
                         if (results.getString("action").equals("kick")) {
                             int pid = results.getInt("pid");
@@ -40,7 +41,7 @@ public class ChatProcess extends Thread {
                                     }
                                 }
                             }
-                            statement.executeUpdate("DELETE FROM uber3_actions where pid = " + pid);
+                            statement.executeUpdate("DELETE FROM " + DbTables.GAME_ACTIONS + " where pid = " + pid);
                         }
                     }
                     long now = System.currentTimeMillis();

@@ -2,6 +2,7 @@ package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
@@ -33,7 +34,7 @@ public class CommandLog extends LogEntry {
         }
         try {
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO uber3_command_log(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command.replaceAll("'", "") + "')";
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command.replaceAll("'", "") + "')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {

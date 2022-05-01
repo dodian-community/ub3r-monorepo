@@ -499,7 +499,7 @@ public abstract class Player extends Entity {
 
     // handles anything related to character position basically walking, running
     // and standing
-    // applies to only to "non-thisPlayer" characters
+    // applies to only to "non-thisPlayer" charracters
     public void updatePlayerMovement(Stream str) {
         if (primaryDirection == -1) {
             // don't have to update the character position, because the char is
