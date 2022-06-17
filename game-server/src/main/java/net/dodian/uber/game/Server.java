@@ -41,6 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static net.dodian.DotEnvKt.getDatabaseInitialize;
 import static net.dodian.DotEnvKt.getServerPort;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -84,9 +85,8 @@ public class Server implements Runnable {
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
 
-        if (getDatabaseInitialize()) {
+        if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
-            return;
         }
 
         new JobScheduler();
