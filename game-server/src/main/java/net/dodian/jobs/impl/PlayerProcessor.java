@@ -35,11 +35,10 @@ public class PlayerProcessor implements Job {
                             System.out.println("Disconnecting bugged player " + PlayerHandler.players[i].getPlayerName());
                             Server.playerHandler.removePlayer(PlayerHandler.players[i]);
                             PlayerHandler.players[i] = null;
-                            continue;
                         } else {
                             PlayerHandler.players[i].violations++;
-                            continue;
                         }
+                        continue;
                     }
                     if (PlayerHandler.players[i].disconnected)
                         continue;
@@ -49,18 +48,17 @@ public class PlayerProcessor implements Job {
                         PlayerHandler.players[i].disconnected = true;
                     }
                     PlayerHandler.players[i].actionAmount--;
-
                     //PlayerHandler.players[i].preProcessing(); //???
                     PlayerHandler.players[i].process();
-                    while (PlayerHandler.players[i].packetProcess()) ;
-                    PlayerHandler.players[i].postProcessing();
-                    PlayerHandler.players[i].getNextPlayerMovement();
+                    while (PlayerHandler.players[i].packetProcess()) {
+                        PlayerHandler.players[i].postProcessing();
+                    }
 
+                    PlayerHandler.players[i].getNextPlayerMovement();
                     if (PlayerHandler.players[i].getPlayerName().equalsIgnoreCase(PlayerHandler.kickNick)) {
                         PlayerHandler.players[i].kick();
                         PlayerHandler.kickNick = "";
                     }
-
                 } catch (Exception e) {
                     if (!PlayerHandler.players[i].getPlayerName().equals("null"))
                         System.out.println("Error with player " + i + ", " + PlayerHandler.players[i].getPlayerName());
@@ -102,7 +100,7 @@ public class PlayerProcessor implements Job {
             }
 
             if (Server.updateRunning
-                    && currentTime - Server.updateStartTime > (Server.updateSeconds * 1000)) {
+                    && currentTime - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
                 if (PlayerHandler.getPlayerCount() < 1) {
                     System.exit(0);
                 }

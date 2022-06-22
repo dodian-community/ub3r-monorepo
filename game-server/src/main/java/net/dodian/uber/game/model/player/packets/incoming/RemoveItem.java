@@ -44,17 +44,20 @@ public class RemoveItem implements Packet {
         } else if (interfaceID >= 4233 && interfaceID <= 4245) {
             client.startGoldCrafting(interfaceID, removeSlot, 1);
         } else if (interfaceID == 3823) { // Show value to sell items
-            boolean IsIn = false;
+            if (!Server.shopping || client.tradeLocked) {
+                client.send(new SendMessage(client.tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
+                return;
+            }
             if (Server.itemManager.getShopBuyValue(removeID) < 1) {
                 client.send(
                         new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
                 return;
             }
+            boolean IsIn = false;
             if (ShopHandler.ShopSModifier[client.MyShopID] > 1) {
-                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID]; j++) {
+                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID] && !IsIn; j++) {
                     if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1)) {
                         IsIn = true;
-                        break;
                     }
                 }
             } else {
@@ -66,11 +69,13 @@ public class RemoveItem implements Packet {
                 int currency = client.MyShopID == 55 ? 11997 : 995;
                 int ShopValue = client.MyShopID == 55 ? 1000 : (int) Math.floor(client.GetShopBuyValue(removeID, 1, removeSlot));
                 String ShopAdd = "";
-
-                if (ShopValue >= 1000 && ShopValue < 1000000) {
-                    ShopAdd = " (" + (ShopValue / 1000) + "K)";
-                } else if (ShopValue >= 1000000) {
-                    ShopAdd = " (" + (ShopValue / 1000000) + " million)";
+                int thousand = (int)Math.pow(10, 3);
+                int million = (int)Math.pow(10, 6);
+                if (ShopValue >= thousand && ShopValue < million) {
+                    ShopAdd = " (" + (ShopValue / thousand) + "K)";
+                } else if (ShopValue >= million) {
+                    int leftover = ShopValue - ((ShopValue / million) * million);
+                    ShopAdd = " (" + (ShopValue / 1000000) + "" + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
                 }
                 client.send(
                         new SendMessage(client.GetItemName(removeID) + ": shop will buy for " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + "" + ShopAdd));
@@ -79,11 +84,14 @@ public class RemoveItem implements Packet {
             int currency = client.MyShopID == 55 ? 11997 : 995;
             int ShopValue = client.MyShopID == 55 ? client.eventShopValues(removeSlot) : (int) Math.floor(client.GetShopSellValue(removeID, 0, removeSlot));
             String ShopAdd = "";
+            int thousand = (int)Math.pow(10, 3);
+            int million = (int)Math.pow(10, 6);
             ShopValue = client.MyShopID >= 9 && client.MyShopID <= 11 ? (int) (ShopValue * 1.5) : ShopValue;
-            if (ShopValue >= 1000 && ShopValue < 1000000) {
-                ShopAdd = " (" + (ShopValue / 1000) + "K)";
-            } else if (ShopValue >= 1000000) {
-                ShopAdd = " (" + (ShopValue / 1000000) + " million)";
+            if (ShopValue >= thousand && ShopValue < million) {
+                ShopAdd = " (" + (ShopValue / thousand) + "K)";
+            } else if (ShopValue >= million) {
+                int leftover = ShopValue - ((ShopValue / million) * million);
+                ShopAdd = " (" + (ShopValue / 1000000) + "" + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
             }
             client
                     .send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + "" + ShopAdd));

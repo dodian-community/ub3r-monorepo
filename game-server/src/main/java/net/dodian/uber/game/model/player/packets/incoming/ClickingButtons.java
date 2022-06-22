@@ -65,6 +65,8 @@ public class ClickingButtons implements Packet {
                 client.sendFrame248(21172, 3213);
                 break;
             case 83051:
+            case 9118:
+            case 19022:
                 client.send(new RemoveInterfaces());
                 break;
             case 24136:
@@ -75,19 +77,11 @@ public class ClickingButtons implements Packet {
                 client.yellOn = false;
                 client.send(new SendMessage("You disabled the boss yell messages."));
                 break;
-            case 89223: // Bank All
+            case 89223: // TODO: Check what this button do!
                 for (int i = 0; i < client.playerItems.length; i++) {
                     client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
                 }
-//		for (int i = 0; i < client.playerItems.length; i++) {
-//			client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
-//		}
-                break;
-//	case 23007: // Bank All
-//		for (int i = 0; i < client.playerItems.length; i++) {
-//			client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
-//		}
-//		break;
+		    break;
             case 3056:
             case 48054:
                 client.travelTrigger();
@@ -254,35 +248,27 @@ public class ClickingButtons implements Packet {
             case 33204:
             case 33203:
                 client.startCraft(client.actionButtonId);
-                break;
-            case 9118:
-            case 19022:
-                client.send(new RemoveInterfaces());
-                break;
+            break;
             case 57225:
                 client.startTan(1, 0);
-                break;
+            break;
             case 57217:
                 client.startTan(5, 0);
                 break;
+            case 57201:
             case 57209:
                 client.startTan(27, 0);
-                break;
-            case 57201:
-                client.startTan(27, 0);
-                break;
+            break;
             case 57229: //Hard leather!
                 client.startTan(1, 1);
-                break;
+            break;
             case 57221:
                 client.startTan(5, 1);
-                break;
+            break;
+            case 57205:
             case 57213:
                 client.startTan(27, 1);
-                break;
-            case 57205:
-                client.startTan(27, 1);
-                break;
+            break;
             case 57227:
                 client.startTan(1, 2);
                 break;
@@ -538,23 +524,27 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 21011:
-                client.takeAsNote = !client.takeAsNote;
-                client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
-                client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
+                if(client.IsBanking) {
+                    client.takeAsNote = !client.takeAsNote;
+                    client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
+                    client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
+                }
                 break;
             case 21010:
-                if (client.freeSlots() < 28) {
-                    for (int i = 0; i < 28; i++)
-                        if (client.playerItems[i] > 0)
-                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
-                    client.send(new SendMessage("You bank all your items!"));
-                } else
-                    client.send(new SendMessage("You do not have anything that can be banked!"));
+                if(client.IsBanking) {
+                    if (client.freeSlots() < 28) {
+                        for (int i = 0; i < 28; i++)
+                            if (client.playerItems[i] > 0)
+                                client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
+                        client.send(new SendMessage("You bank all your items!"));
+                    } else
+                        client.send(new SendMessage("You do not have anything that can be banked!"));
+                }
                 break;
 
             case 13092:
                 try {
-                    if (System.currentTimeMillis() - client.lastButton < 200)
+                    if (System.currentTimeMillis() - client.lastButton < 600)
                         break;
                     client.lastButton = System.currentTimeMillis();
                     if (client.inTrade && !client.tradeConfirmed) {
@@ -587,7 +577,7 @@ public class ClickingButtons implements Packet {
                     if (!client.validClient(client.trade_reqId)) {
                         break;
                     }
-                    if (System.currentTimeMillis() - client.lastButton < 1000) {
+                    if (System.currentTimeMillis() - client.lastButton < 600) {
                         client.lastButton = System.currentTimeMillis();
                         break;
                     } else {
@@ -678,21 +668,15 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 9167:
-                client.triggerChat(1);
-                break;
-            case 9168:
-                client.triggerChat(2);
-                break;
-            case 9169:
-                client.triggerChat(3);
-                break;
 
             case 9190:
                 client.triggerChat(1);
                 break;
+            case 9168:
             case 9191:
                 client.triggerChat(2);
                 break;
+            case 9169:
             case 9192:
                 client.triggerChat(3);
                 break;
@@ -726,7 +710,7 @@ public class ClickingButtons implements Packet {
                 }
                 client.duelConfirmed = true;
                 client.canOffer = false;
-                if (client.duelConfirmed && o.duelConfirmed) {
+                if (o.duelConfirmed) {
                     /*
                      * Danno: Fix; stop a duel with all combat styles disabled.
                      */
@@ -993,11 +977,7 @@ public class ClickingButtons implements Packet {
                 break;
             case 72032: //Zombie walk
                 client.requestAnim(3544, 0);
-                break;
-            case 88065: //Zombie hand
-                //client.requestAnim(7272, 0);
-                //client.gfx0(1244);
-                break;
+            break;
             case 74108:
                 Skillcape skillcape = Skillcape.getSkillCape(client.getEquipment()[Equipment.Slot.CAPE.getId()]);
                 if (skillcape != null) {

@@ -105,7 +105,7 @@ public class Commands implements Packet {
                         Client other = (Client) PlayerHandler.getPlayer(name);
                         switch (rank) {
                             case "normal":
-                                rankId = 2;
+                                rankId = 40;
                                 break;
                             case "premium":
                                 rankId = 11;
@@ -161,7 +161,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equals("remskill")) {
                     try {
-                        int id = cmd[1].matches(".*[0-9].*") ? Integer.parseInt(cmd[1]) : client.getSkillId(cmd[1]);
+                        int id = cmd[1].matches(".*\\d.*") ? Integer.parseInt(cmd[1]) : client.getSkillId(cmd[1]);
                         if (id < 0 || id > 20) {
                             client.send(new SendMessage("Skills are between 0 - 20!"));
                             return;
@@ -223,7 +223,7 @@ public class Commands implements Packet {
                         @Override
                         public void execute() {
 
-                            if (client == null || client.disconnected) {
+                            if (client.disconnected) {
                                 this.stop();
                                 return;
                             }
@@ -279,7 +279,7 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Try entering a name you want to tele to.."));
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("tool")) {
+                if (cmd[0].equalsIgnoreCase("tool") || cmd[0].equalsIgnoreCase("potato")) {
                     client.addItem(5733, 1);
                 }
                 if (cmd[0].equalsIgnoreCase("r_drops")) {
@@ -340,7 +340,7 @@ public class Commands implements Packet {
                         double first = !cmd[4].contains(":") ? 0.0 : Double.parseDouble(cmd[4].split(":")[0]);
                         double second = !cmd[4].contains(":") ? 0.0 : Double.parseDouble(cmd[4].split(":")[1]);
                         double chance = first != 0.0 || second != 0.0 ? Double.parseDouble(numberFormat.format((first / second) * 100)) : Double.parseDouble(cmd[4]);
-                        chance = chance > 100.000 ? 100.0 : chance < 0.001 ? 0.001 : chance;
+                        chance = chance > 100.000 ? 100.0 : Math.max(chance, 0.001);
                         String rareShout = cmd.length >= 6 && (cmd[5].equalsIgnoreCase("false") || cmd[5].equalsIgnoreCase("true")) ? cmd[5].toLowerCase() : "false";
                         try {
                             Connection conn = getDbConnection();
@@ -464,7 +464,7 @@ public class Commands implements Packet {
                         else
                             client.addItem(newItemID, newItemAmount);
                     else {
-                        newItemAmount = newItemAmount > client.freeSlots() ? client.freeSlots() : newItemAmount;
+                        newItemAmount = Math.min(newItemAmount, client.freeSlots());
                         if (newItemAmount > 0)
                             for (int i = 0; i < newItemAmount; i++)
                                 client.addItem(newItemID, 1);
@@ -476,7 +476,7 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("setlevel")) {
                     int skill = Integer.parseInt(cmd[1]);
                     int level = Integer.parseInt(cmd[2]);
-                    if (level > 99 || (skill < 0 && skill > 22 || level < 1)) {
+                    if (level > 99 || level < 1) {
                         return;
                     }
                     int bonus = 0;
@@ -489,7 +489,7 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("setxp")) {
                     int skill = Integer.parseInt(cmd[1]);
                     int xp = Integer.parseInt(cmd[2]);
-                    if (xp + client.getExperience(Skill.getSkill(skill)) > 200000000 || (skill < 0 && skill > 22 || xp < 1)) {
+                    if (xp + client.getExperience(Skill.getSkill(skill)) > 200000000 || xp < 1) {
                         return;
                     }
                     client.giveExperience(xp, Skill.getSkill(skill));
@@ -512,7 +512,7 @@ public class Commands implements Packet {
                 }
             } //End of Special rank commands
             if (client.playerRights > 0) {
-                if (cmd[0].equalsIgnoreCase("invis") && client.playerRights > 0) {
+                if (cmd[0].equalsIgnoreCase("invis")) {
                     client.invis = !client.invis;
                     client.send(new SendMessage("You turn invis to " + client.invis));
                     client.teleportToX = client.getPosition().getX();
@@ -597,10 +597,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("busy") && client.playerRights > 1) {
                     client.busy = !client.busy;
-                    if (!client.busy)
-                        client.send(new SendMessage("You are no longer busy!"));
-                    else
-                        client.send(new SendMessage("You are now busy!"));
+                    client.send(new SendMessage(!client.busy ? "You are no longer busy!" : "You are now busy!"));
                 }
                 if (cmd[0].equalsIgnoreCase("camera")) {
                     client
@@ -622,15 +619,15 @@ public class Commands implements Packet {
                     try {
                         int npcId = client.getPlayerNpc() > 0 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
                         int amount = client.getPlayerNpc() > 0 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
-                        amount = amount < 1 ? 1 : amount > 10000 ? 10000 : amount; // need to set amount 1 - 10000!
+                        amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
                         NpcData n = Server.npcManager.getData(npcId);
                         if (n == null)
                             client.send(new SendMessage("This npc have no data!"));
                         else if (n.getDrops().isEmpty())
                             client.send(new SendMessage(n.getName() + " do not got any drops!"));
                         else {
-                            ArrayList<Integer> lootedItem = new ArrayList<Integer>();
-                            ArrayList<Integer> lootedAmount = new ArrayList<Integer>();
+                            ArrayList<Integer> lootedItem = new ArrayList<>();
+                            ArrayList<Integer> lootedAmount = new ArrayList<>();
                             for (int LOOP = 0; LOOP < amount; LOOP++) {
                                 for (NpcDrop drop : n.getDrops()) {
                                     boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
@@ -653,6 +650,54 @@ public class Commands implements Packet {
                         client.send(new SendMessage("wrong usage! ::loot " + (client.getPlayerNpc() > 0 ? "amount" : "npcid amount") + ""));
                     }
                 }
+                if(client.playerRights > 0) { //Toggle commands!
+                    cmd[0] = cmd[0].startsWith("toggle") ? cmd[0].replace("_", "") : cmd[0];
+                    if (cmd[0].equalsIgnoreCase("toggleyell")) {
+                        Server.chatOn = !Server.chatOn;
+                        client.yell(Server.chatOn ? "[SERVER]: Yell has been enabled!" : "[SERVER]: Yell has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("togglepvp")) {
+                        Server.pking = !Server.pking;
+                        client.yell(Server.pking ? "[SERVER]: Player Killing has been enabled!" : "[SERVER]: Player Killing  has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("toggletrade")) {
+                        Server.trading = !Server.trading;
+                        client.yell(Server.trading ? "[SERVER]: Trading has been enabled!" : "[SERVER]: Trading has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("toggleduel")) {
+                        Server.dueling = !Server.dueling;
+                        client.yell(Server.dueling ? "[SERVER]: Dueling has been enabled!" : "[SERVER]: Dueling has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("toggledrop")) {
+                        Server.dropping = !Server.dropping;
+                        client.yell(Server.dropping ? "[SERVER]: Dropping items has been enabled!" : "[SERVER]: Dropping items has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("toggleshop")) {
+                        Server.shopping = !Server.shopping;
+                        client.yell(Server.shopping ? "[SERVER]: Shops has been enabled!" : "[SERVER]: Shops has been disabled!");
+                        CommandLog.recordCommand(client, command);
+                    }
+                    if (cmd[0].equalsIgnoreCase("togglebank")) {
+                        Server.banking = !Server.banking;
+                        client.yell(Server.banking ? "[SERVER]: The Bank has been enabled!" : "[SERVER]: The Bank has been disabled!");
+                        if (!Server.banking) {
+                            for (Player p : PlayerHandler.players) {
+                                if (p == null) continue;
+                                Client c = (Client) p;
+                                if (c.IsBanking) {
+                                    c.send(new RemoveInterfaces());
+                                    c.IsBanking = false;
+                                }
+                            }
+                        }
+                        CommandLog.recordCommand(client, command);
+                    }
+                }
                 if (cmd[0].equalsIgnoreCase("checkbank") && client.playerRights > 0) {
                     String player = command.substring(cmd[0].length() + 1);
                     client.openUpOtherBank(player);
@@ -661,63 +706,6 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("checkinv") && client.playerRights > 0) {
                     String player = command.substring(cmd[0].length() + 1);
                     client.openUpOtherInventory(player);
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("yellmute") && client.playerRights > 0) {
-                    Server.chatOn = !Server.chatOn;
-                    client.yell(Server.chatOn ? "[SERVER]: Yell has been enabled!" : "[SERVER]: Yell has been disabled!");
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("pking") && client.playerRights > 1) {
-                    Server.pking = !Server.pking;
-                    client.yell(Server.pking ? "[SERVER]: Player Killing has been enabled!" : "[SERVER]: Player Killing  has been disabled!");
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("trade") && client.playerRights > 0) {
-                    Server.trading = !Server.trading;
-                    client.yell(Server.trading ? "[SERVER]: Trading has been enabled!" : "[SERVER]: Trading has been disabled!");
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("duel") && client.playerRights > 0) {
-                    Server.dueling = !Server.dueling;
-                    client.yell(Server.dueling ? "[SERVER]: Dueling has been enabled!" : "[SERVER]: Dueling has been disabled!");
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("drop") && client.playerRights > 0) {
-                    Server.dropping = !Server.dropping;
-                    client.yell(Server.dropping ? "[SERVER]: Drop RewardItem has been enabled!" : "[SERVER]: Drop RewardItem has been disabled!");
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("shopping") && client.playerRights > 0) {
-                    Server.shopping = !Server.shopping;
-                    client.yell(Server.shopping ? "[SERVER]: Shopping has been enabled!" : "[SERVER]: Shopping has been disabled!");
-                    if (!Server.shopping) {
-                        for (Player p : PlayerHandler.players) {
-                            if (p == null) continue;
-                            Client c = (Client) p;
-                            if (c.IsShopping) {
-                                c.send(new RemoveInterfaces());
-                                c.IsShopping = false;
-                                c.MyShopID = 0;
-                                c.UpdateShop = false;
-                            }
-                        }
-                    }
-                    CommandLog.recordCommand(client, command);
-                }
-                if (cmd[0].equalsIgnoreCase("banking") && client.playerRights > 0) {
-                    Server.banking = !Server.banking;
-                    client.yell(Server.banking ? "[SERVER]: Banking has been enabled!" : "[SERVER]: Banking has been disabled!");
-                    if (!Server.banking) {
-                        for (Player p : PlayerHandler.players) {
-                            if (p == null) continue;
-                            Client c = (Client) p;
-                            if (c.IsBanking) {
-                                c.send(new RemoveInterfaces());
-                                c.IsBanking = false;
-                            }
-                        }
-                    }
                     CommandLog.recordCommand(client, command);
                 }
                 if (cmd[0].equalsIgnoreCase("clearc") && client.playerRights > 0) {
@@ -732,19 +720,6 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("getcs") && client.playerRights > 0) {
                     ConnectionList.getInstance().getConnectionMap().forEach((inet, amount) -> client.send(new SendMessage("Host: " + inet.getHostAddress() + " (" + amount + ")")));
                 }
-                if (cmd[0].equalsIgnoreCase("addsibling") && client.playerRights > 0) {
-                    try {
-                        String otherPName = command.substring(cmd[0].length() + 1);
-                        Connection conn = getDbConnection();
-                        Statement statement = conn.createStatement();
-                        String sql = "UPDATE " + DbTables.GAME_CHARACTERS + " SET sibling= '1' WHERE name= '" + otherPName + "'";
-                        client.send(new SendMessage("You added " + otherPName + " to the siblings list!"));
-                        statement.executeUpdate(sql);
-                        statement.close();
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Something bad happend with sql!"));
-                    }
-                }
                 if (command.startsWith("uuidban") && client.playerRights > 0) {
                     try {
                         String otherPName = command.substring(5);
@@ -755,7 +730,7 @@ public class Commands implements Packet {
                             PlayerHandler.players[otherPIndex].getLoginManager();
                             Login.addUidToBanList(LoginManager.UUID);
                             Login.addUidToFile(LoginManager.UUID);
-                            ((Client) p).logout();
+                            p.logout();
                         } else {
                             client.send(new SendMessage("Error UUID banning player. Name doesn't exist or player is offline."));
                         }
@@ -764,7 +739,7 @@ public class Commands implements Packet {
                     }
                 }
 
-                if (command.startsWith("unuuidban") && client.playerRights > 1) {
+                if (command.startsWith("unuuidban") && client.playerRights > 0) {
                     try {
                         String otherPName = command.substring(5);
                         int otherPIndex = PlayerHandler.getPlayerID(otherPName);
@@ -773,7 +748,7 @@ public class Commands implements Packet {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
                             PlayerHandler.players[otherPIndex].getLoginManager();
                             Login.removeUidFromBanList(LoginManager.UUID);
-                            ((Client) p).logout();
+                            p.logout();
                         } else {
                             client.send(new SendMessage("Error unbanning UUID of player. Name doesn't exist or player is offline."));
                         }
@@ -783,34 +758,34 @@ public class Commands implements Packet {
                 }
             }
             if (cmd[0].equalsIgnoreCase("request")) {
-                client.openPage(client, "https://dodian.net/forumdisplay.php?f=83");
+                Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83");
             }
             if (cmd[0].equalsIgnoreCase("report")) {
-                client.openPage(client, "https://dodian.net/forumdisplay.php?f=118");
+                Player.openPage(client, "https://dodian.net/forumdisplay.php?f=118");
             }
             if (cmd[0].equalsIgnoreCase("suggest")) {
-                client.openPage(client, "https://dodian.net/forumdisplay.php?f=4");
+                Player.openPage(client, "https://dodian.net/forumdisplay.php?f=4");
             }
             if (cmd[0].equalsIgnoreCase("bug")) {
-                client.openPage(client, "https://dodian.net/forumdisplay.php?f=120");
+                Player.openPage(client, "https://dodian.net/forumdisplay.php?f=120");
             }
             if (cmd[0].equalsIgnoreCase("rules")) {
-                client.openPage(client, "https://dodian.net/index.php?pageid=rules");
+                Player.openPage(client, "https://dodian.net/index.php?pageid=rules");
             }
             if (cmd[0].equalsIgnoreCase("droplist") || (cmd[0].equalsIgnoreCase("drops") && client.playerRights < 2)) {
-                client.openPage(client, "https://dodian.net/index.php?pageid=droplist");
+                Player.openPage(client, "https://dodian.net/index.php?pageid=droplist");
             }
             if (cmd[0].equalsIgnoreCase("latestclient")) {
-                client.openPage(client, "https://dodian.net/client/DodianClient.jar");
+                Player.openPage(client, "https://dodian.net/client/DodianClient.jar");
             }
             if (cmd[0].equalsIgnoreCase("updates")) {
-                client.openPage(client, "https://dodian.net/showthread.php?t=747");
+                Player.openPage(client, "https://dodian.net/showthread.php?t=747");
                 //client.openPage(client, "https://dodian.net/forumdisplay.php?f=99");
             }
             if (cmd[0].equalsIgnoreCase("thread")) {
                 try {
                     int page = Integer.parseInt(cmd[1]);
-                    client.openPage(client, "https://dodian.net/showthread.php?t=" + page);
+                    Player.openPage(client, "https://dodian.net/showthread.php?t=" + page);
                 } catch (Exception e) {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " page"));
                 }
@@ -819,7 +794,7 @@ public class Commands implements Packet {
                 try {
                     String firstPerson = cmd.length < 2 ? "" : cmd[1].replace("_", "+");
                     String secondPerson = cmd.length < 3 ? "" : cmd[2].replace("_", "+");
-                    client.openPage(client, firstPerson.equals("") && secondPerson.equals("") ? "https://dodian.net/index.php?pageid=highscores" : !firstPerson.equals("") && secondPerson.equals("") ? "https://dodian.net/index.php?pageid=highscores&player1=" + firstPerson : "https://dodian.net/index.php?pageid=highscores&player1=" + firstPerson + "&player2=" + secondPerson);
+                    Player.openPage(client, firstPerson.equals("") && secondPerson.equals("") ? "https://dodian.net/index.php?pageid=highscores" : !firstPerson.equals("") && secondPerson.equals("") ? "https://dodian.net/index.php?pageid=highscores&player1=" + firstPerson : "https://dodian.net/index.php?pageid=highscores&player1=" + firstPerson + "&player2=" + secondPerson);
                 } catch (Exception e) {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " or ::" + cmd[0] + " First_name or"));
                     client.send(new SendMessage("::" + cmd[0] + " First_name second_name"));
@@ -884,7 +859,7 @@ public class Commands implements Packet {
 				client.send(new SendMessage("Misuse of the yell channel is grounds for a 24 hour mute."));
 				return;
 			}
-			client.lastYell = System.currentTimeMillis();*/ //Add timer if needed!
+			client.lastYell = System.currentTimeMillis();*/ //TODO: Add timer if needed!
                 String text = command.substring(5);
                 text = text.replace("<col", "<moo");
                 text = text.replace("<shad", "<moo");
@@ -897,19 +872,11 @@ public class Commands implements Packet {
                 text = text.replace("d:", "<col=000000>");
                 if (!client.muted) {
                     String[] bad = {"chalreq", "duelreq", "tradereq"};
-                    for (int i = 0; i < bad.length; i++) {
-                        if (text.indexOf(bad[i]) >= 0) {
+                    for (String s : bad) {
+                        if (text.contains(s)) {
                             return;
                         }
                     }
-                    client.lastMessage[0] = client.lastMessage[1];
-                    client.lastMessage[1] = client.lastMessage[2];
-                    client.lastMessage[2] = Character.toUpperCase(text.charAt(0)) + text.substring(1);
-                    if (client.lastMessage[0].equals(client.lastMessage[1])
-                            && client.lastMessage[1].equals(client.lastMessage[2])) {
-                        client.send(new SendMessage(
-                                client.getPlayerName() + ": " + Character.toUpperCase(text.charAt(0)) + text.substring(1)));
-                    } else {
                         String yell = Character.toUpperCase(text.charAt(0)) + text.substring(1);
                         Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 1, yell, client.getPosition().getX(),
                                 client.getPosition().getY()));
@@ -920,33 +887,30 @@ public class Commands implements Packet {
                         } else if (client.playerRights >= 2) {
                             client.yell("<col=FFFF00>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr2@");
                         }
-                        Server.login.sendChat(client.dbId, 1, client.getPosition().getX(), client.getPosition().getY(), yell);
-                    }
+                        //TODO: Add yell text chat log!
                 } else {
-                    client.send(new SendMessage(
-                            client.getPlayerName() + ":  " + Character.toUpperCase(text.charAt(0)) + text.substring(1)));
+                    client.send(new SendMessage("You are currently muted!"));
                 }
             }
             if (cmd[0].equalsIgnoreCase("loot_new")) {
                 try {
                     int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
                     int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
-                    amount = amount < 1 ? 1 : amount > 10000 ? 10000 : amount; // need to set amount 1 - 10000!
+                    amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
                     NpcData n = Server.npcManager.getData(npcId);
                     if (n == null)
                         client.send(new SendMessage("This npc have no data!"));
                     else if (n.getDrops().isEmpty())
                         client.send(new SendMessage(n.getName() + " do not got any drops!"));
                     else {
-                        ArrayList<Integer> lootedItem = new ArrayList<Integer>();
-                        ArrayList<Integer> lootedAmount = new ArrayList<Integer>();
+                        ArrayList<Integer> lootedItem = new ArrayList<>();
+                        ArrayList<Integer> lootedAmount = new ArrayList<>();
                         boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
                         double chance, currentChance;
                         boolean itemDropped = false;
                         for (int LOOP = 0; LOOP < amount; LOOP++) {
                             chance = Misc.chance(100000) / 1000D;
                             currentChance = 0.0;
-                            itemDropped = false;
                             for (NpcDrop drop : n.getDrops()) {
                                 if (drop == null) continue;
 
@@ -1122,8 +1086,8 @@ public class Commands implements Packet {
                 client.clearQuestInterface();
                 int line = 8145;
                 int count = 0;
-                for (int i = 0; i < commando.length; i++) {
-                    client.send(new SendString(commando[i], line));
+                for (String s : commando) {
+                    client.send(new SendString(s, line));
                     line++;
                     count++;
                     if (line == 8146)
@@ -1156,14 +1120,13 @@ public class Commands implements Packet {
                         else
                             client.addItem(newItemID, newItemAmount);
                     else {
-                        newItemAmount = newItemAmount > client.freeSlots() ? client.freeSlots() : newItemAmount;
+                        newItemAmount = Math.min(newItemAmount, client.freeSlots());
                         if (newItemAmount > 0)
                             for (int i = 0; i < newItemAmount; i++)
                                 client.addItem(newItemID, 1);
                         else
                             client.send(new SendMessage("Not enough space in your inventory."));
                     }
-                    return;
                 }
             }
         } catch (Exception e) { //end of commands!

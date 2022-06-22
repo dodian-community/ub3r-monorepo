@@ -18,6 +18,7 @@ public class Chat implements Packet {
             return;
         }
         if (client.muted) {
+            client.send(new SendMessage("You are currently muted!"));
             return;
         }
         if (!Server.chatOn && client.playerRights == 0) {
@@ -32,7 +33,6 @@ public class Chat implements Packet {
         client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true);
         ChatLog.recordChat(client.getPlayerName(), chat);
         client.println_debug("Text [" + client.getChatTextEffects() + "," + client.getChatTextColor() + "]: " + chat);
-        Server.login.sendChat(client.dbId, 2, client.getPosition().getX(), client.getPosition().getY(), chat);
         Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 2, chat, client.getPosition().getX(),
                 client.getPosition().getY()));
     }

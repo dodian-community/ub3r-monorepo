@@ -1,6 +1,5 @@
 package net.dodian.uber.comm;
 
-import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Friend;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -42,15 +41,8 @@ public class LoginManager {
                     p.playerGroup = results.getInt("usergroupid");
                     p.otherGroups = results.getString("membergroupids").split(",");
                     p.newPms = (results.getInt("pmunread"));
-                    boolean specialTreatment = p.playerGroup == 6 || p.playerGroup == 10 || p.playerGroup == 35 || p.playerGroup == 9 || p.playerGroup == 5;
-    	  /*if(!specialTreatment)
-    	    return 8;*/
-          /*int hosts = Server.totalHostConnection(p.connectedFrom);
-    	  if(hosts > 2 && !specialTreatment)
-    		  return 9;*/
-                } else {
+                } else
                     return 12;
-                }
             } else if (getServerEnv().equals("dev") && getServerDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
                 getDbConnection().createStatement().executeUpdate(newUserQuery);
@@ -102,79 +94,61 @@ public class LoginManager {
                 }
                 long lastOn = (results.getLong("lastlogin"));
                 if (lastOn == 0) {
-                    if (!Login.hasRecieved1stStarter(PlayerHandler.players[p.getSlot()].connectedFrom)) {
-                        p.getEquipment()[Equipment.Slot.WEAPON.getId()] = 1277;
-                        p.getEquipment()[Equipment.Slot.SHIELD.getId()] = 1171;
-                        p.getEquipmentN()[Equipment.Slot.WEAPON.getId()] = 1;
-                        p.getEquipmentN()[Equipment.Slot.SHIELD.getId()] = 1;
-                        p.addItem(995, 10000);
-                        p.addItem(1856, 1);
-                        Login.addIpToStarterList1(PlayerHandler.players[p.getSlot()].connectedFrom);
-                        Login.addIpToStarter1(PlayerHandler.players[p.getSlot()].connectedFrom);
-                        p.send(new SendMessage(("You have recieved 1 out of 2 starter packages on this IP address.")));
-                    } else if (Login.hasRecieved1stStarter(PlayerHandler.players[p.getSlot()].connectedFrom) && !Login.hasRecieved2ndStarter(PlayerHandler.players[p.getSlot()].connectedFrom)) {
-                        p.getEquipment()[Equipment.Slot.WEAPON.getId()] = 1277;
-                        p.getEquipment()[Equipment.Slot.SHIELD.getId()] = 1171;
-                        p.getEquipmentN()[Equipment.Slot.WEAPON.getId()] = 1;
-                        p.getEquipmentN()[Equipment.Slot.SHIELD.getId()] = 1;
-                        p.addItem(995, 10000);
-                        p.addItem(1856, 1);
-                        p.send(new SendMessage(("You have recieved 2 out of 2 starter packages on this IP address.")));
-                        Login.addIpToStarterList2(PlayerHandler.players[p.getSlot()].connectedFrom);
-                        Login.addIpToStarter2(PlayerHandler.players[p.getSlot()].connectedFrom);
-                    } else if (Login.hasRecieved1stStarter(PlayerHandler.players[p.getSlot()].connectedFrom) && Login.hasRecieved2ndStarter(PlayerHandler.players[p.getSlot()].connectedFrom)) {
-                        p.send(new SendMessage(("You have already recieved 2 starters!")));
-                    }
+                    p.getEquipment()[Equipment.Slot.WEAPON.getId()] = 1277;
+                    p.getEquipment()[Equipment.Slot.SHIELD.getId()] = 1171;
+                    p.getEquipmentN()[Equipment.Slot.WEAPON.getId()] = 1;
+                    p.getEquipmentN()[Equipment.Slot.SHIELD.getId()] = 1;
+                    p.addItem(995, 2000);
+                    p.addItem(1856, 1);
+                    p.addItem(4155, 1);
                 }
-                int Style = (Integer) (results.getInt("fightStyle"));
-                p.FightType = Style;
+                p.FightType = results.getInt("fightStyle");
                 p.CalculateMaxHit();
                 p.setTask(results.getString("slayerData"));
                 p.agilityCourseStage = results.getInt("agility");
                 p.autocast_spellIndex = results.getInt("autocast");
+                /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
-                String[] parse = inventory.split(" ");
-                for (int i = 0; i < parse.length; i++) {
-                    String[] parse2 = parse[i].split("-");
-                    if (parse2.length > 0) {
-                        try {
+                if(!inventory.equals("")) {
+                    String[] parse = inventory.split(" ");
+                    for (int i = 0; i < parse.length; i++) {
+                        String[] parse2 = parse[i].split("-");
+                        if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66000) {
                                 p.playerItems[slot] = Integer.parseInt(parse2[1]) + 1;
                                 p.playerItemsN[slot] = Integer.parseInt(parse2[2]);
                             }
-                        } catch (Exception e) {
                         }
                     }
                 }
+                /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();
-                parse = equip.split(" ");
-                for (int i = 0; i < parse.length; i++) {
-                    String[] parse2 = parse[i].split("-");
-                    if (parse2.length > 0) {
-                        try {
+                if(!equip.equals("")) {
+                    String[] parse = equip.split(" ");
+                    for (int i = 0; i < parse.length; i++) {
+                        String[] parse2 = parse[i].split("-");
+                        if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66000) {
                                 p.getEquipment()[slot] = Integer.parseInt(parse2[1]);
                                 p.getEquipmentN()[slot] = Integer.parseInt(parse2[2]);
                             }
-                        } catch (Exception e) {
                         }
                     }
                 }
-
+                /* Sets Bank */
                 String bank = (results.getString("bank")).trim();
-                parse = bank.split(" ");
-                for (int i = 0; i < parse.length; i++) {
-                    String[] parse2 = parse[i].split("-");
-                    if (parse2.length > 0) {
-                        try {
+                if(!bank.equals("")) {
+                    String[] parse = bank.split(" ");
+                    for (int i = 0; i < parse.length; i++) {
+                        String[] parse2 = parse[i].split("-");
+                        if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66600) {
                                 p.bankItems[slot] = Integer.parseInt(parse2[1]) + 1;
                                 p.bankItemsN[slot] = Integer.parseInt(parse2[2]);
                             }
-                        } catch (Exception e) {
                         }
                     }
                 }
@@ -195,9 +169,9 @@ public class LoginManager {
 
                 String[] songUnlocked = results.getString("songUnlocked").split(" ");
                 for (int i = 0; i < songUnlocked.length; i++) {
-                    if (songUnlocked[i] == "")
+                    if (songUnlocked[i].equals(""))
                         continue;
-                    p.setSongUnlocked(i, Integer.parseInt(songUnlocked[i]) == 1 ? true : false);
+                    p.setSongUnlocked(i, Integer.parseInt(songUnlocked[i]) == 1);
                 }
 
                 String[] friends = results.getString("friends").split(" ");
@@ -278,6 +252,18 @@ public class LoginManager {
             return 13;
         }
         // return 13;
+    }
+
+    public void updatePlayerForumRegistration(Client p) {
+        try {
+        Statement statement = getDbConnection().createStatement();
+        String newStatsAccount = "UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='40' WHERE userid = '" + p.dbId + "'";
+        statement.executeUpdate(newStatsAccount);
+        statement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        p.send(new SendMessage("You have now been registered to the forum! Enjoy your stay :D"));
     }
 
     public boolean isBanned(int id) throws SQLException {

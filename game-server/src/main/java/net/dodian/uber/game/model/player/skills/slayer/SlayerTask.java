@@ -49,11 +49,11 @@ public class SlayerTask {
         //DEFAULT("Default", false, new Range(1337, 4200), new Range(10, 30), 2264)
         ;
 
-        private String textRepresentation;
-        private boolean slayerOnly;
-        private Range levelAssign;
-        private Range taskAmount;
-        private int[] npcId;
+        private final String textRepresentation;
+        private final boolean slayerOnly;
+        private final Range levelAssign;
+        private final Range taskAmount;
+        private final int[] npcId;
 
         //Name, slayerOnly, levelRange, amtRange, npcId[]
 
@@ -97,18 +97,9 @@ public class SlayerTask {
         public static slayerTasks getTask(int slot) {
             return slot < 0 || slot >= slayerTasks.values().length ? null : slayerTasks.values()[slot];
         }
-
-        public static SlayerTask hasTask(int slot) {
-            return null;
-        }
-
-        public static boolean isSlayerNpc(int npcId) {
-            return getSlayerNpc(npcId) != null;
-        }
-
     }
 
-    private static slayerTasks[] mazchna = {
+    private static final slayerTasks[] mazchna = {
             slayerTasks.CRAWLING_HAND, slayerTasks.PYREFIENDS, slayerTasks.DEATH_SPAWN,
             slayerTasks.JELLY, slayerTasks.HEAD_MOURNER, slayerTasks.HILL_GIANT,
             slayerTasks.CHAOS_DWARF, slayerTasks.LESSER_DEMON, slayerTasks.ICE_GIANT,
@@ -116,14 +107,14 @@ public class SlayerTask {
             slayerTasks.FIRE_GIANTS, slayerTasks.BLOODVELD
     };
 
-    private static slayerTasks[] vannaka = {
+    private static final slayerTasks[] vannaka = {
             slayerTasks.GREATER_DEMON, slayerTasks.BLACK_DEMON, slayerTasks.BERSERK_BARBARIAN_SPIRIT,
             slayerTasks.MITHRIL_DRAGON, slayerTasks.TZHAAR, slayerTasks.MUMMY,
             slayerTasks.ABYSSAL_DEMONS, slayerTasks.GREEN_DRAGONS, slayerTasks.BLUE_DRAGONS,
             slayerTasks.GARGOYLES, slayerTasks.BLOODVELD, slayerTasks.ABERRANT_SPECTRE
     };
 
-    private static slayerTasks[] duradel = {
+    private static final slayerTasks[] duradel = {
             slayerTasks.DAD, slayerTasks.SAN_TOJALON, slayerTasks.BLACK_KNIGHT_TITAN,
             slayerTasks.JUNGLE_DEMON, slayerTasks.BLACK_DEMON, slayerTasks.UNGADULU,
             slayerTasks.ICE_QUEEN, slayerTasks.NECHRYAEL, slayerTasks.KING_BLACK_DRAGON,
@@ -131,7 +122,7 @@ public class SlayerTask {
     };
 
     public static ArrayList<slayerTasks> mazchnaTasks(Client c) {
-        ArrayList<slayerTasks> slayer = new ArrayList<slayerTasks>();
+        ArrayList<slayerTasks> slayer = new ArrayList<>();
         for (int i = 0; i < mazchna.length; i++) {
             int slayerLevel = c.getLevel(Skill.SLAYER);
             if (c.getSlayerData().get(1) != -1 && c.getSlayerData().get(1) == mazchna[i].ordinal()) {
@@ -155,7 +146,7 @@ public class SlayerTask {
     }
 
     public static ArrayList<slayerTasks> vannakaTasks(Client c) {
-        ArrayList<slayerTasks> slayer = new ArrayList<slayerTasks>();
+        ArrayList<slayerTasks> slayer = new ArrayList<>();
         for (int i = 0; i < vannaka.length; i++) {
             int slayerLevel = c.getLevel(Skill.SLAYER);
             if (c.getSlayerData().get(1) != -1 && c.getSlayerData().get(1) == vannaka[i].ordinal()) {
@@ -173,7 +164,7 @@ public class SlayerTask {
     }
 
     public static ArrayList<slayerTasks> duradelTasks(Client c) {
-        ArrayList<slayerTasks> slayer = new ArrayList<slayerTasks>();
+        ArrayList<slayerTasks> slayer = new ArrayList<>();
         for (int i = 0; i < duradel.length; i++) {
             int slayerLevel = c.getLevel(Skill.SLAYER);
             if (c.getSlayerData().get(1) != -1 && c.getSlayerData().get(1) == duradel[i].ordinal()) {

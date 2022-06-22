@@ -39,7 +39,6 @@ import net.dodian.utilities.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -52,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 
 import static net.dodian.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DatabaseKt.getJdbcUrl;
 
 public class Client extends Player implements Runnable {
 
@@ -256,7 +254,7 @@ public class Client extends Player implements Runnable {
 
 	public int getbattleTimer(int weapon) {
 		String wep = GetItemName(weapon).toLowerCase();
-		int wepPlainTime = 6;
+		int wepPlainTime = 7;
 		if (wep.contains("dart") || wep.contains("knife")) {
 			wepPlainTime = 8;
 		} else if (wep.contains("dagger")
@@ -553,7 +551,7 @@ public class Client extends Player implements Runnable {
 		try {
 			//Utils.println("ClientHandler: Client " + getPlayerName() + " disconnected (" + connectedFrom + ")");
 			//Server.connections.remove(mySock.getInetAddress().getHostAddress());
-			if (saveNeeded) {
+			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			}
 			ConnectionList.getInstance().remove(mySock.getInetAddress());
@@ -787,6 +785,9 @@ public class Client extends Player implements Runnable {
 				case 27:
 					premium = true;
 					break;
+				case 2: //Newly made character, automatically register these!
+					Server.loginManager.updatePlayerForumRegistration(this);
+				break;
 				default:
 					premium = true;
 					playerRights = 0;
@@ -2306,14 +2307,11 @@ public class Client extends Player implements Runnable {
         getOutputStream().endFrameVarSize();
       }*/ //We want this for snowballs????
 		CheckGear();
-		send(new SendMessage("Welcome to Uber Server"));
 		//send(new SendMessage("Please vote! You can earn your reward by doing ::redeem "+getPlayerName()+" every 6hrs."));
 //    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
 //    send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
 //    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
 		//addItem(4084, 1);
-		Login.appendStarters();
-		Login.appendStarters2();
 		Login.banUid();
 		/* Sets look! */
 		if (lookNeeded) {
@@ -2321,7 +2319,8 @@ public class Client extends Player implements Runnable {
 			showInterface(3559);
 		} else
 			setLook(playerLooks);
-		send(new SendMessage("Make sure you're running the latest client found under 'play now' on the forums!"));
+		//TODO: add check if need this message!
+		//send(new SendMessage("Make sure you're running the latest client found under 'play now' on the forums!"));
 		refreshSkill(Skill.HITPOINTS);
 		requestAnims(getEquipment()[Equipment.Slot.WEAPON.getId()]);
 		loaded = true;
@@ -2370,10 +2369,6 @@ public class Client extends Player implements Runnable {
 		WriteBonus();
 		replaceDoors();
 		pmstatus(2);
-		send(new SendString("Uber Server 3.0 (" + PlayerHandler.getPlayerCount() + " online)", 6570));
-		send(new SendString("", 6572));
-		send(new SendString("", 6664));
-		setInterfaceWalkable(6673);
 		send(new SendString("Using this will send a notification to all online mods", 5967));
 		send(new SendString("@yel@Then click below to indicate which of our rules is being broken.", 5969));
 		send(new SendString("4: Bug abuse (includes noclip)", 5974));
@@ -2384,6 +2379,7 @@ public class Client extends Player implements Runnable {
 		send(new SendString("12: Possible duped items", 5982));
 		//RegionMusic.sendSongSettings(this); //Music from client 2.95
 		setConfigIds();
+		send(new SendMessage("Welcome to Uber Server"));
 	}
 
 	public void removeObject(int x, int y) // romoves obj from
@@ -5087,8 +5083,8 @@ public class Client extends Player implements Runnable {
 		itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
 		int price = (int) Math.floor(GetShopBuyValue(itemID, 0, fromSlot));
 		/* Functions */
-		if (!Server.trading || tradeLocked) {
-			send(new SendMessage("Selling has been disabled"));
+		if (!Server.shopping || tradeLocked) {
+			send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
 			return false;
 		}
 		if (price <= 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
@@ -8248,7 +8244,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void updatePlayerDisplay() {
-		send(new SendString("Uber Server 3.0 (" + PlayerHandler.getPlayerCount() + " online)", 6570));
+		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
+		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
+		send(new SendString("", 6572));
+		send(new SendString("", 6664));
 		setInterfaceWalkable(6673);
 	}
 

@@ -9,12 +9,12 @@ public class PlayerHandler {
 
     public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
     public static int cycle = 0;
-    public static Player players[] = new Player[Constants.maxPlayers];
+    public static Player[] players = new Player[Constants.maxPlayers];
     public static int playerSlotSearchStart = 1; // where we start searching at when
     // adding a new player
     public static String kickNick = "";
     public static int playerCount = 0;
-    public static String playersCurrentlyOn[] = new String[Constants.maxPlayers];
+    public static String[] playersCurrentlyOn = new String[Constants.maxPlayers];
 
     // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
     public boolean validClient(int index) {
@@ -31,17 +31,6 @@ public class PlayerHandler {
             players[i] = null;
         }
     }
-
-//	public static boolean isPlayerOn(String playerName) {
-//		for (int i = 0; i < Constants.maxPlayers; i++) {
-//			if (players[i] != null) {
-//				if (players[i].getPlayerName().equalsIgnoreCase(playerName)) {
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
-//	}
 
     public void newPlayerClient(java.net.Socket s, String connectedFrom) {
         int slot = -1;
@@ -68,8 +57,8 @@ public class PlayerHandler {
 
     public static int getPlayerCount() {
         int count = 0;
-        for (int i = 0; i < players.length; i++) {
-            if (players[i] != null && !players[i].disconnected && players[i].dbId > 0) {
+        for (Player player : players) {
+            if (player != null && !player.disconnected && player.dbId > 0) {
                 count++;
             }
         }
@@ -107,7 +96,7 @@ public class PlayerHandler {
         if (plr == null)
             return;
         Client temp = (Client) plr;
-        if (temp != null && temp.dbId > 0 && temp.saveNeeded) {
+        if (temp.dbId > 0 && temp.saveNeeded) {
             temp.saveStats(true);
             Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
         }
