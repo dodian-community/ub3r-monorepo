@@ -4,4 +4,4 @@ This is the original Dodian Ub3r source code, which has been maintained by vario
 
 ---
 
-[Click here](/docs/README.md) to find more information about how to set up, host, or otherwise use this project.
+[Click here](/docs) to find more information about how to set up, host, or otherwise use this project.

@@ -5,7 +5,40 @@ This document will explain to you how to install MySQL in your desired environme
 
 ---
 
-**Just a for your information:** If you don't wish to use Docker Compose or you don't want to use the volumes in the  `docker-compose.yml`-file to initialize the database, the game server itself can also import it from the [database](/game-server/database)-directory at its root.
+<details>
+<summary>Navigation Menu</summary>
+
+<ul>
+    <li><a href="/docs/contribution">Guides</a>
+        <ul>
+            <li><a href="/docs/guides/getting_started.md">Getting Started</a></li>
+            <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
+            <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/contribution">Contribution</a>
+        <ul>
+            <li><a href="/docs/contribution/guidelines.md">Contribution Guidelines</a></li>
+            <li><a href="/docs/contribution/issue_definitions.md">Issue Definitions</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/development">Development</a>
+        <ul>
+            <li><a href="/docs/development/database.md">Ub3r Database</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/other">Other</a>
+        <ul>
+            <li><a href="/docs/other/environment_variables.md">Environment Variables</a></li>
+        </ul>
+    </li>
+</ul>
+
+</details>
+
+---
+
+**For your information:** If you don't wish to use _Docker Compose_ or you don't want to use the volumes in the  `docker-compose.yml`-file to initialize the database, the game server itself can also import it from the [database](/game-server/database)-directory at its root.
 
 ## Recommended Database Management Tools
 There are many ways to manage a MySQL database. However, the ones that we recommend are:

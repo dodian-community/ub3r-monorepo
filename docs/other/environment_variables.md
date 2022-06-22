@@ -3,7 +3,40 @@ The game server is configured via environment variables. These values can either
 
 ---
 
-We're going to refer to the [example.env](/game-server/example.env)-file, so you can see how it could look after it's configured properly.
+<details>
+<summary>Navigation Menu</summary>
+
+<ul>
+    <li><a href="/docs/contribution">Guides</a>
+        <ul>
+            <li><a href="/docs/guides/getting_started.md">Getting Started</a></li>
+            <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
+            <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/contribution">Contribution</a>
+        <ul>
+            <li><a href="/docs/contribution/guidelines.md">Contribution Guidelines</a></li>
+            <li><a href="/docs/contribution/issue_definitions.md">Issue Definitions</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/development">Development</a>
+        <ul>
+            <li><a href="/docs/development/database.md">Ub3r Database</a></li>
+        </ul>
+    </li>
+    <li><a href="/docs/other">Other</a>
+        <ul>
+            <li><a href="/docs/other/environment_variables.md">Environment Variables</a></li>
+        </ul>
+    </li>
+</ul>
+
+</details>
+
+---
+
+We're going to refer to the [example.env](/example.env)-file, so you can see how it could look after it's configured properly.
 
 **Example .env file:**
 ```dotenv
@@ -37,7 +70,7 @@ The above example contains all the possible environment variables that can confi
 - `DATABASE_*` = The details used to connect to the database
 - `DATABASE_TABLE_PREFIX` = The prefix for table names, blank if there is no prefix
   - Nothing in this project requires you to specify a prefix, you may however do it if you see fit to, and know what you're doing
-- `DATABASE_INITIALIZE` = Provided you have valid database details for connecting to the database, it will try to execute all the files inside [database](/game-server/database)-folder, then it will create a `.initialized_database`-file to avoid doing this job again
+- `DATABASE_INITIALIZE` = Provided you have valid database details for connecting to the database, it will try to execute all the files inside [database](/database)-folder, then it will create a `.initialized_database`-file to avoid doing this job again
   - All the default scripts we have included in this repository should be enough to run the game server, or even launch your own Dodian remake
 - `GAME_WORLD_ID` = The ID of the world to use, depending on which ID you use, some stuff on the server will behave a little differently
   - World ID of 2 or above will among other things disable player saving
