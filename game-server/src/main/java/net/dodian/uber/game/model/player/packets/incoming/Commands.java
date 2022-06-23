@@ -191,6 +191,15 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::config36 id value"));
                     }
                 }
+                if (cmd[0].equalsIgnoreCase("t")) {
+                    //173 = run config!
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        client.frame36(153, id);
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::t id"));
+                    }
+                }
                 if (cmd[0].equalsIgnoreCase("config87")) {
                     //173 = run config!
                     try {
@@ -1078,8 +1087,8 @@ public class Commands implements Packet {
             if (command.startsWith("commands")) {
                 String commands = "@dbl@::max,@dbl@::price @bla@'itemname',@dbl@::yell @bla@'text'";
                 if (client.playerRights >= 1)
-                    commands += ",@dbl@::teleto @bla@'name',@dbl@::teletome @bla@'name',@dbl@::yellmute,@dbl@::duel,@dbl@::trade"
-                            + ",@dbl@::pking,@dbl@::drop,@dbl@::shopping,@dbl@::banking,@dbl@::loot @bla@'npcid' 'amount'";
+                    commands += ",@dbl@::teleto @bla@'name',@dbl@::teletome @bla@'name',@dbl@::toggleyell,@dbl@::toggleduel,@dbl@::toggletrade"
+                            + ",@dbl@::togglepvp,@dbl@::toggledrop,@dbl@::toggleshop,@dbl@::togglebank,@dbl@::loot @bla@'npcid' 'amount'";
                 String[] commando = commands.split(",");
                 //client.send(new SendMessage("There are currently <col=006600>" + commando.length + "<col=0> commands ingame!"));
                 client.send(new SendString("@dre@               Uber 3.0 commands", 8144));

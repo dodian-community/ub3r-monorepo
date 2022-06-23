@@ -504,10 +504,10 @@ public class Client extends Player implements Runnable {
 	public int AttackingOn = 0;
 
 	public static final int bufferSize = 1000000;
+	private java.net.Socket mySock;
 	public byte[] buffer = null;
 	public int readPtr, writePtr;
 	public Stream inputStream, outputStream;
-
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
 
 	public int timeOutCounter = 0; // to detect timeouts on the connection to
@@ -517,26 +517,16 @@ public class Client extends Player implements Runnable {
 
 	private SocketHandler mySocketHandler;
 	private Thread mySocketThread;
-	private java.net.Socket mySock;
 
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
-    /*mySock = s;
-    try {
-      in = s.getInputStream();
-      out = s.getOutputStream();
-    } catch (java.io.IOException ioe) {
-      Utils.println("Uber Server (1): Exception!");
-      Server.logError(ioe.getMessage());
-    }*/
-		this.outputStream = new Stream(new byte[bufferSize]);
-		this.outputStream.currentOffset = 0;
-		this.inputStream = new Stream(new byte[bufferSize]);
-		this.inputStream.currentOffset = 0;
+		outputStream = new Stream(new byte[bufferSize]);
+		outputStream.currentOffset = 0;
+		inputStream = new Stream(new byte[bufferSize]);
+		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
-		//this.buffer = new byte[bufferSize];
 	}
 
 	public void shutdownError(String errorMessage) {
@@ -603,25 +593,25 @@ public class Client extends Player implements Runnable {
 		if (disconnected || getOutputStream().currentOffset == 0) {
 			return;
 		}
-		int length = getOutputStream().currentOffset;
+		int length = outputStream.currentOffset;
 		byte[] copy = new byte[length];
-		System.arraycopy(getOutputStream().buffer, 0, copy, 0, length);
+		System.arraycopy(outputStream.buffer, 0, copy, 0, length);
 		mySocketHandler.queueOutput(copy);
 		getOutputStream().currentOffset = 0;
 	}
 
 	// two methods that are only used for login procedure
 	private void directFlushOutStream() throws java.io.IOException {
-		mySocketHandler.getOutput().write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
+		mySocketHandler.getOutput().write(outputStream.buffer, 0, outputStream.currentOffset);
 		//out.write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
-		getOutputStream().currentOffset = 0; // reset
+		outputStream.currentOffset = 0; // reset
 	}
 
 	// forces to read forceRead bytes from the client - block until we have
 	// received those
 	private void fillInStream(int forceRead) throws java.io.IOException {
-		getInputStream().currentOffset = 0;
-		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
+		inputStream.currentOffset = 0;
+		mySocketHandler.getInput().read(inputStream.buffer, 0, forceRead);
 	}
 
 	private void fillInStream(PacketData pData) throws java.io.IOException {
@@ -657,7 +647,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < 8; i++) {
 				// out.write(9 + server.world);
 				//out.write(1);
-				mySocketHandler.getOutput().write(9 + Server.world);
+				mySocketHandler.getOutput().write(9 + getGameWorldId());
 			}
 			mySocketHandler.getOutput().write(0);
 			//out.write(0);
@@ -1102,7 +1092,7 @@ public class Client extends Player implements Runnable {
 				if (elapsed > 10000) {
 					last = ", lastlogin = '" + System.currentTimeMillis() + "'";
 				}
-				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET sibling= '" + isSibling + "', uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
+				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
 						+ "', friends='" + list + "', fightStyle = " + FightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
 						+ ", autocast=" + autocast_spellIndex + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
@@ -1997,7 +1987,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeByteC((itemY - 8 * mapRegionY));
 		getOutputStream().writeByteC((itemX - 8 * mapRegionX));
 		getOutputStream().createFrame(156); // Phate: Item Action: Delete
-		getOutputStream().writeByteS(0); // x(4 MSB) y(LSB) coords
+		getOutputStream().writeByteS(0); // Height, but we have all set to 0!
 		getOutputStream().writeWord(itemID); // Phate: Item ID
 	}
 
@@ -2010,7 +2000,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrame(44);
 		getOutputStream().writeWordBigEndianA(itemID);
 		getOutputStream().writeWord(itemAmount);
-		getOutputStream().writeByte(0);
+		getOutputStream().writeByte(0); //Height but we got this set to 0 by default!
 	}
 
 	public void deleteItem(int id, int amount) {
@@ -2400,7 +2390,6 @@ public class Client extends Player implements Runnable {
 	public void update() {
 		PlayerUpdating.getInstance().update(this, getOutputStream());
 		NpcUpdating.getInstance().update(this, getOutputStream());
-
 		flushOutStream();
 	}
 
@@ -2797,13 +2786,13 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		Queue<PacketData> data = mySocketHandler.getPackets();
-		if (data == null || data.isEmpty() || data.stream() == null)
+		if (data == null || data.isEmpty())
 			return false;
 		try {
 			fillInStream(data.poll());
 		} catch (IOException e) {
 			e.printStackTrace();
-			// saveStats(true);
+			saveStats(true);
 			disconnected = true;
 			return false;
 		}
@@ -7823,7 +7812,7 @@ public class Client extends Player implements Runnable {
 	public void refreshFriends() {
 		for (Friend f : friends) {
 			if (PlayerHandler.playersOnline.containsKey(f.name)) {
-				loadpm(f.name, Server.world);
+				loadpm(f.name, getGameWorldId());
 			} else {
 				loadpm(f.name, 0);
 			}
@@ -9276,23 +9265,39 @@ public class Client extends Player implements Runnable {
 		send(new SendString("Island", 12339));
 		for (int i = 0; i < 5; i++)
 			send(new SendString("", 809 + i));
+		send(new SendString("Catherby", 809));
 		send(new SendString("Shilo", 812));
 		showInterface(802);
 	}
 
-	public void travelTrigger() {
+	public void travelTrigger(int checkPos) {
 		if (travelInitiate) {
 			return;
 		}
-		int button = actionButtonId;
+		boolean home = checkPos != 0;
+		int[] posTrigger = { 1, 3, 4, 7, 10, 2, 5, 6, 11 }; //0-4 is to something! rest is to the Catherby
 		int[][] travel = {
-				{3056, 7, 2863, 2970, 0},
-				{48054, 10, 2772, 3221, 0}
+				{3057, 2803, 3421, 0}, //Home!
+				{3058, -1, -1, 0}, //Mountain!
+				{3059, -1, -1, 0}, //Castle!
+				{3060, -1, -1, 0}, //Tent!
+				{3056, 2875, 2972, 0}, //Tree aka shilo
+				{48054, 2772, 3234, 0} //Totem
 		};
 		for (int i = 0; i < travel.length; i++)
-			if (travel[i][0] == button) { //Initiate the teleport!
+			if (travel[i][0] == actionButtonId) { //Initiate the teleport!
+				/* Check conditions! */
+				if ((!home && i == 0) || (home && i != 0)) {
+					send(new SendMessage(!home && i == 0 ? "You are already here!" : "Please select Catherby!"));
+					return;
+				}
+				if (travel[i][1] == -1) {
+					send(new SendMessage("This will lead you to nothing!"));
+					return;
+				}
+				/* Set configs! */
 				final int pos = i;
-				frame36(153, travel[pos][1]);
+				frame36(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
 				travelInitiate = true;
 				EventManager.getInstance().registerEvent(new Event(1800) {
 					@Override
@@ -9300,9 +9305,9 @@ public class Client extends Player implements Runnable {
 						if (disconnected)
 							this.stop();
 						else {
-							teleportToX = travel[pos][2];
-							teleportToY = travel[pos][3];
-							getPosition().setZ(travel[pos][4]);
+							teleportToX = travel[pos][1];
+							teleportToY = travel[pos][2];
+							getPosition().setZ(travel[pos][3]);
 							send(new RemoveInterfaces());
 							travelInitiate = false;
 							this.stop();
@@ -9311,6 +9316,4 @@ public class Client extends Player implements Runnable {
 				});
 			}
 	}
-
-	public static int isSibling;
 }

@@ -93,7 +93,7 @@ public class Balloons {
             return;
         }
         eventActive = true;
-        Client.publicyell("<col=664400>A drop party has been started in the Partyroom!");
+        Client.publicyell("<col=664400>A drop party has been started in the Partyroom! Talk to Pete or teleport with Aubury!");
         partyEventPos.clear();
         setPartyPos();
         EventManager.getInstance().registerEvent(new Event(600) {

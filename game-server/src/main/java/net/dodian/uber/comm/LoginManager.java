@@ -79,7 +79,6 @@ public class LoginManager {
 //			return 22;
 //		}
                 p.setLastVote(results.getLong("lastvote"));
-                Client.isSibling = results.getInt("sibling");
                 p.UUID = results.getString("uuid");
                 p.moveTo(results.getInt("x"), results.getInt("y"), results.getInt("height"));
                 if (p.getPosition().getX() == -1 || p.getPosition().getY() == -1) {

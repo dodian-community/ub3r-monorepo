@@ -7,6 +7,8 @@ import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Utils;
 
 public class ClickNpc3 implements Packet {
@@ -58,7 +60,13 @@ public class ClickNpc3 implements Packet {
         if (NPCID == 637) { /* Mage arena tele */
             if (client.inDuel || client.inTrade)
                 return;
-            client.triggerTele(3086 + Utils.random(2), 3488 + Utils.random(2), 0, false);
+            if(Balloons.eventActive()) {
+                client.triggerTele(3045, 3372, 0, false);
+                client.send(new SendMessage("Welcome to the party room!"));
+            } else {
+                client.triggerTele(3086 + Utils.random(2), 3488 + Utils.random(2), 0, false);
+                client.send(new SendMessage("Welcome to Edgeville!"));
+            }
         } else if (NPCID == 70) {
             client.skillX = tempNpc.getPosition().getX();
             client.setSkillY(tempNpc.getPosition().getY());

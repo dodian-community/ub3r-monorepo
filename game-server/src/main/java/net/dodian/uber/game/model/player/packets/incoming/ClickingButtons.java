@@ -82,9 +82,15 @@ public class ClickingButtons implements Packet {
                     client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
                 }
 		    break;
-            case 3056:
-            case 48054:
-                client.travelTrigger();
+            case 3056: //Small tree
+            case 3057: //Big Tree
+            case 3058: //Mountain
+            case 3059: //Castle
+            case 3060: //Tent
+            case 48054: //totem!
+                int pos = client.skillX == 2772 && client.skillY == 3235 ? 5:
+                client.skillX == 2876 && client.skillY == 2972 ? 4: 0;
+                client.travelTrigger(pos);
                 break;
             case 84237: //Home teleport aka Yanille
                 client.triggerTele(2606, 3102, 0, false);

@@ -20,8 +20,10 @@ public class PlayerProcessor implements Job {
             Server.playerHandler.updatePlayerNames();
             if (PlayerHandler.cycle % 10 == 0) { //Every 8 tick (~5 seconds) remove shiet!
                 Server.connections.clear();
-                Server.banned.clear();
                 Server.nullConnections = 0;
+            }
+            if (PlayerHandler.cycle % 500 == 0) { //Hmm whatever this need to be here?
+                Server.banned.clear();
             }
             if (PlayerHandler.cycle > 10000)
                 PlayerHandler.cycle = 0;
@@ -48,12 +50,10 @@ public class PlayerProcessor implements Job {
                         PlayerHandler.players[i].disconnected = true;
                     }
                     PlayerHandler.players[i].actionAmount--;
-                    //PlayerHandler.players[i].preProcessing(); //???
+                    PlayerHandler.players[i].preProcessing(); //This is whatever!
                     PlayerHandler.players[i].process();
-                    while (PlayerHandler.players[i].packetProcess()) {
-                        PlayerHandler.players[i].postProcessing();
-                    }
-
+                    while (PlayerHandler.players[i].packetProcess());
+                    PlayerHandler.players[i].postProcessing();
                     PlayerHandler.players[i].getNextPlayerMovement();
                     if (PlayerHandler.players[i].getPlayerName().equalsIgnoreCase(PlayerHandler.kickNick)) {
                         PlayerHandler.players[i].kick();
@@ -74,7 +74,6 @@ public class PlayerProcessor implements Job {
                         || PlayerHandler.players[i].getPlayerName().equals("null"))
                     continue;
                 long lp = currentTime - PlayerHandler.players[i].lastPacket;
-                // System.out.println("LastPacket[" + i + "] = " + lp);
                 if ((PlayerHandler.players[i].dbId < 1 && lp > 15000) || (PlayerHandler.players[i].dbId > 0 && lp > 65000)) {
                     System.out.println("Removing non-responding player " + PlayerHandler.players[i].getPlayerName());
                     PlayerHandler.players[i].disconnected = true;
@@ -109,7 +108,6 @@ public class PlayerProcessor implements Job {
             for (int i = 0; i < Constants.maxPlayers; i++) {
                 if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
                     continue;
-
                 PlayerHandler.players[i].clearUpdateFlags();
             }
         } catch (Exception e) {
