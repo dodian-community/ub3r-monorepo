@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import static net.dodian.DotEnvKt.getGameWorldId;
+
 public class SocketPoolEntry {
     private Socket socket;
 
@@ -46,7 +48,7 @@ public class SocketPoolEntry {
         DataOutputStream out = getOut();
         try {
             out.writeInt(5);
-            out.writeInt(Server.world);
+            out.writeInt(getGameWorldId());
             out.flush();
         } catch (Exception e) {
             e.printStackTrace();

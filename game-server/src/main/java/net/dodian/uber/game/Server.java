@@ -38,8 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.DotEnvKt.getDatabaseInitialize;
-import static net.dodian.DotEnvKt.getServerPort;
+import static net.dodian.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -54,8 +53,6 @@ public class Server implements Runnable {
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     private static int delay = 0;
     public static long lastRunite = 0;
-    public static int world = 5;
-
     public static boolean updateAnnounced;
     public static boolean updateRunning;
     public static int updateSeconds;
@@ -131,7 +128,7 @@ public class Server implements Runnable {
         (new Thread(clientHandler)).start(); // launch server listener
         System.gc();
         setGlobalItems();
-        System.out.println("Server is now running!");
+        System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
     public static Server clientHandler = null; // handles all the clients

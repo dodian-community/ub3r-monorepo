@@ -40,9 +40,13 @@ public class NpcProcessor implements Job {
                     npc.attack();
                 npc.setLastAttack(System.currentTimeMillis());
             }
-            if (npc.getId() == 3805 && Misc.random(100) <= 1) {
+            if (npc.getId() == 3805 && Misc.chance(100) == 1) {
                 int jackpot = Server.slots.slotsJackpot + Server.slots.peteBalance >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Server.slots.slotsJackpot + Server.slots.peteBalance;
                 npc.setText("Current Jackpot is " + jackpot + " coins!");
+                npc.setLastChatMessage();
+            }
+            if (npc.getId() == 4218 && Misc.chance(8) == 1) {
+                npc.setText("Watch out for the plague!!");
                 npc.setLastChatMessage();
             }
             if (npc.getId() == 5792 && Balloons.eventActive()) {

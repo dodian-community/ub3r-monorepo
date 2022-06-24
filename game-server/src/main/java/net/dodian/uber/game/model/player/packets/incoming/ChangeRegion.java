@@ -49,7 +49,12 @@ public class ChangeRegion implements Packet {
             /*
              * Danno: Box off new area from noobs =]
              */
-
+            client.ReplaceObject2(2772, 3230, 2050, 0, 10);
+            /* Shilo - Plague Block! */
+            client.ReplaceObject2(2874, 2967, 2050, 0, 10);
+            client.ReplaceObject2(2875, 2967, 2050, 0, 10);
+            client.ReplaceObject2(2877, 2967, 2050, 0, 10);
+            /* ? */
             client.ReplaceObject2(2998, 3931, 6951, 0, 0);
             client.ReplaceObject2(2904, 9678, 6951, 0, 10);
             // slayer update

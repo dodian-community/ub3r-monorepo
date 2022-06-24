@@ -56,7 +56,7 @@ public class Login extends Thread {
     public synchronized void sendPlayers() {
         try {
             int players = PlayerHandler.getPlayerCount();
-            getDbStatement().executeUpdate("UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + Server.world);
+            getDbStatement().executeUpdate("UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + getGameWorldId());
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

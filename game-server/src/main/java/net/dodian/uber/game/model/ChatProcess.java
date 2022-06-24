@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static net.dodian.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ChatProcess extends Thread {
@@ -28,7 +29,7 @@ public class ChatProcess extends Thread {
             while (running) {
                 try {
                     statement.executeUpdate(
-                            "UPDATE " + DbTables.GAME_MISC + " set players = " + PlayerHandler.getPlayerCount() + " where id = " + Server.world);
+                            "UPDATE " + DbTables.GAME_MISC + " set players = " + PlayerHandler.getPlayerCount() + " where id = " + getGameWorldId());
                     results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_ACTIONS);
                     while (results.next()) {
                         if (results.getString("action").equals("kick")) {
@@ -53,7 +54,7 @@ public class ChatProcess extends Thread {
                     }
                     if (now - lastPlayerUpdate > 60000) {
                         lastPlayerUpdate = now;
-                        if (Server.world == 1)
+                        if (getGameWorldId() == 1)
                             Server.login.sendPlayers();
                     }
 
