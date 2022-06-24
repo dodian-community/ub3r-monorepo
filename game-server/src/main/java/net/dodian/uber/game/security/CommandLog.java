@@ -7,7 +7,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -29,14 +29,12 @@ public class CommandLog extends LogEntry {
      * @param command The command typed.
      */
     public static void recordCommand(Player player, String command) {
-        if (getGameWorldId() > 1 || player.playerRights > 1) {
-        if (getGameWorldId() > 1 || player.playerGroup == 10) { //Do not record developerment!
+        if (getGameWorldId() > 1 || player.playerRights < 2) {
             return;
         }
         try {
-            command = command.replaceAll("'", "`");
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command + "')";
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command.replaceAll("'", "") + "')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {
