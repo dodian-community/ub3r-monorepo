@@ -914,12 +914,12 @@ public class Commands implements Packet {
                     else {
                         ArrayList<Integer> lootedItem = new ArrayList<>();
                         ArrayList<Integer> lootedAmount = new ArrayList<>();
-                        boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
+                        boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
                         double chance, currentChance;
-                        boolean itemDropped = false;
                         for (int LOOP = 0; LOOP < amount; LOOP++) {
                             chance = Misc.chance(100000) / 1000D;
                             currentChance = 0.0;
+                            itemDropped = false;
                             for (NpcDrop drop : n.getDrops()) {
                                 if (drop == null) continue;
 

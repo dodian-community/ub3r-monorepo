@@ -12,12 +12,12 @@ import net.dodian.utilities.Utils;
 
 /**
  * @author blakeman8192
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 <<a href="http://github.com/lare96">...</a>>
  * @author Dashboard
  */
 public class PlayerUpdating extends EntityUpdating<Player> {
 
-    private static PlayerUpdating instance = new PlayerUpdating();
+    private static final PlayerUpdating instance = new PlayerUpdating();
 
     public static PlayerUpdating getInstance() {
         return instance;
@@ -62,7 +62,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
 
             for (int i = 0; i < Constants.maxPlayers; i++) {
-                if (PlayerHandler.players[i] == null || PlayerHandler.players[i].isActive == false || PlayerHandler.players[i] == player || !player.loaded)
+                if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive || PlayerHandler.players[i] == player || !player.loaded)
                     continue;
                 if (!player.withinDistance(PlayerHandler.players[i]) || (!player.didTeleport() && player.playersUpdating.contains(PlayerHandler.players[i])))
                     continue;
@@ -269,11 +269,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         playerProps.writeByte(player.playerLooks[11]); // feet color
         playerProps.writeByte(player.playerLooks[12]); // skin color (0-6)
         playerProps.writeWord(player.getStandAnim()); // standAnimIndex
-        playerProps.writeWord(0x337); // standTurnAnimIndex
+        playerProps.writeWord(player.getStandAnim()); // standTurnAnimIndex, 823 default
         playerProps.writeWord(player.getWalkAnim()); // walkAnimIndex
-        playerProps.writeWord(0x334); // turn180AnimIndex
-        playerProps.writeWord(0x335); // turn90CWAnimIndex
-        playerProps.writeWord(0x336); // turn90CCWAnimIndex
+        playerProps.writeWord(player.getWalkAnim()); // turn180AnimIndex, 820 default
+        playerProps.writeWord(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
+        playerProps.writeWord(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
         playerProps.writeWord(player.getRunAnim()); // runAnimIndex
 
         playerProps.writeQWord(Utils.playerNameToInt64(player.getPlayerName()));
