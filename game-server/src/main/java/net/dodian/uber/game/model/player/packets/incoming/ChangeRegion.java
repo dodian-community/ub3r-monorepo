@@ -46,6 +46,8 @@ public class ChangeRegion implements Packet {
             client.ReplaceObject2(2716, 3472, -1, -1, 0); // Remove seers door?
             client.ReplaceObject2(2594, 3102, -1, -1, 0); // Remove Yanille door?
             client.ReplaceObject2(2816, 3438, -1, -1, 0); // Remove Catherby door?
+            /* Rope from Tzhaar city */
+            client.ReplaceObject2(2443, 5169, 2352, 0, 10);
             /*
              * Danno: Box off new area from noobs =]
              */

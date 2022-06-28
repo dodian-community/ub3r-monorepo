@@ -51,7 +51,7 @@ public class ClickObject implements Packet {
             @Override
             public void execute() {
 
-                if (client == null || client.disconnected) {
+                if (client.disconnected) {
                     this.stop();
                     return;
                 }
@@ -87,8 +87,9 @@ public class ClickObject implements Packet {
         if (!client.validClient || client.randomed) {
             return;
         }
-        int xDiff = Math.abs(client.getPosition().getX() - objectPosition.getX());
-        int yDiff = Math.abs(client.getPosition().getY() - objectPosition.getY());
+        Position pos = client.getPosition().copy();
+        int xDiff = Math.abs(pos.getX() - objectPosition.getX());
+        int yDiff = Math.abs(pos.getY() - objectPosition.getY());
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, objectPosition.getX(), objectPosition.getY(), 1));
         }
@@ -106,8 +107,6 @@ public class ClickObject implements Packet {
         }
         if (objectID == 26193) {
             Balloons.openInterface(client);
-            //client.resetItems(5064);
-            //Balloons.displayItems(client);
             return;
         }
         if (objectID == 26194 && client.playerRights > 1) {
@@ -139,9 +138,9 @@ public class ClickObject implements Packet {
         if (objectID == 2097) {
             int type = -1;
             int[] possibleBars = {2349, 2351, 2353, 2359, 2361, 2363};
-            for (int i = 0; i < possibleBars.length; i++)
-                if (client.contains(possibleBars[i]))
-                    type = possibleBars[i];
+            for (int possibleBar : possibleBars)
+                if (client.contains(possibleBar))
+                    type = possibleBar;
             if (type != -1 && client.CheckSmithing(type) != -1) {
                 client.skillX = objectPosition.getX();
                 client.setSkillY(objectPosition.getY());
@@ -152,6 +151,16 @@ public class ClickObject implements Packet {
         if (objectID == 1294) {
             client.teleportToX = 2485;
             client.teleportToY = 9912;
+            client.newheightLevel = 0;
+        }
+        if (objectID == 14914) {
+            client.teleportToX = 2444;
+            client.teleportToY = 5169;
+            client.newheightLevel = 0;
+        }
+        if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
+            client.teleportToX = 2848;
+            client.teleportToY = 2991;
             client.newheightLevel = 0;
         }
         if (objectID == 17384 && objectPosition.getX() == 2892 && objectPosition.getY() == 3507) {
@@ -431,8 +440,7 @@ public class ClickObject implements Packet {
             agility.orangeBar();
         } else if (objectID == 23548) {
             agility.yellowLedge();
-        } else
-            agility = null;
+        }
         if (objectID == 1558 || objectID == 1557 && client.distanceToPoint(2758, 3482) < 5 && client.playerRights > 0) {
             client.ReplaceObject(2758, 3482, 1558, -2, 0);
             client.ReplaceObject(2757, 3482, 1557, 0, 0);
@@ -444,38 +452,30 @@ public class ClickObject implements Packet {
         if (objectID == 2102) {
             objectID = 2103;
         }
-        if (objectID == 14859 && objectID == 14860) {
-            return;
-        }
         for (int r = 0; r < Utils.rocks.length; r++) {
             if (objectID == Utils.rocks[r]) {
+                if(client.getPositionName(client.getPosition()) == Client.positions.TZHAAR) {
+                    client.send(new SendMessage("You can not mine here or the Tzhaar's will be angry!"));
+                    return;
+                }
                 if (client.getLevel(Skill.MINING) < Utils.rockLevels[r]) {
                     client.send(new SendMessage("You need a mining level of " + Utils.rockLevels[r] + " to mine this rock"));
                     return;
                 }
-                boolean hasPick = false;
-                int pickaxe = -1;
-                pickaxe = client.findPick();
+                int pickaxe = client.findPick();
                 if (pickaxe < 0) {
                     client.minePick = -1;
                     client.resetAction();
                     client.send(new SendMessage("You do not have an pickaxe that you can use."));
                     return;
-                } else {
-                    client.minePick = pickaxe;
-                    hasPick = true;
                 }
-                if (hasPick) {
+                    client.minePick = pickaxe;
                     client.mineIndex = r;
                     client.mining = true;
                     client.lastAction = System.currentTimeMillis() + client.getMiningSpeed();
                     client.lastPickAction = System.currentTimeMillis() + 1200;
                     client.requestAnim(client.getMiningEmote(Utils.picks[pickaxe]), 0);
                     client.send(new SendMessage("You swing your pick at the rock..."));
-                } else {
-                    client.resetAction();
-                    client.send(new SendMessage("You need a pickaxe to mine this rock"));
-                }
                 return;
             }
         }
@@ -502,6 +502,7 @@ public class ClickObject implements Packet {
                 if (objectPosition.getX() == x[c] && objectPosition.getY() == y[c]) {
                     client.teleportToX = 2868;
                     client.teleportToY = 9945;
+                    c = x.length;
                 }
             }
         }
@@ -771,7 +772,7 @@ public class ClickObject implements Packet {
             for (int d = 0; d < DoorHandler.doorX.length; d++) {
                 if (objectID == DoorHandler.doorId[d] && objectPosition.getX() == DoorHandler.doorX[d]
                         && objectPosition.getY() == DoorHandler.doorY[d]) {
-                    int newFace = -3;
+                    int newFace;
                     if (DoorHandler.doorState[d] == 0) { // closed
                         newFace = DoorHandler.doorFaceOpen[d];
                         DoorHandler.doorState[d] = 1;
@@ -876,21 +877,15 @@ public class ClickObject implements Packet {
         {
             client.openUpBank();
         }
-        if (objectName.contains("bank booth"))
+        if (objectName.toLowerCase().startsWith("bank") || objectName.toLowerCase().contains("bank"))
             client.openUpBank();
-        if (objectID == 9356 && (objectPosition.getX() == 2437) && (objectPosition.getY() == 5166)) // Tzhaar
-        // Jad
-        // Cave
-        // Enterance
+        if (objectID == 11833 && objectPosition.getX() == 2437 && objectPosition.getY() == 5166) // Jad entrance
         {
             client.teleportToX = 2413;
             client.teleportToY = 5117;
             client.send(new SendMessage("You have entered the Jad Cave."));
         }
-        if (objectID == 9357 && (objectPosition.getX() == 2412) && (objectPosition.getY() == 5118)) // Tzhaar
-        // Jad
-        // Cave
-        // Exit
+        if (objectID == 11833 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
         {
             client.teleportToX = 2438;
             client.teleportToY = 5168;
@@ -910,13 +905,12 @@ public class ClickObject implements Packet {
         // woodCutting
         // mining
         // if (actionTimer == 0) {
-        if (client.CheckObjectSkill(objectID, objectName) == true) {
+        if (client.CheckObjectSkill(objectID, objectName)) {
             client.skillX = objectPosition.getX();
             client.setSkillY(objectPosition.getY());
         }
         // }
         // go upstairs
-        if (true) {
             if (objectID == 1747) {
                 client.stairs = 1;
                 client.skillX = objectPosition.getX();
@@ -984,7 +978,6 @@ public class ClickObject implements Packet {
                 client.skillX = objectPosition.getX();
                 client.setSkillY(objectPosition.getY());
                 client.stairDistance = 1;
-                client.stairDistance = 1;
             } else if (objectID == 2406) { /* Lost City Door */
                 if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 772) { // Dramen
                     // Staff
@@ -992,7 +985,6 @@ public class ClickObject implements Packet {
                     client.skillX = objectPosition.getX();
                     client.setSkillY(objectPosition.getY());
                     client.stairDistance = 1;
-                } else {// Open Door
                 }
             }
             // go downstairs
@@ -1030,7 +1022,6 @@ public class ClickObject implements Packet {
                     client.teleportToY = 9525;
                     client.getPosition().setZ(0);
                 }
-                return;
             } else if (objectID == 1992 && objectPosition.getX() == 2558 && objectPosition.getY() == 3444) {
 //        if (client.playerHasItem(537, 50)) {
 //          client.deleteItem(537, client.getItemSlot(537), 50);
@@ -1042,7 +1033,6 @@ public class ClickObject implements Packet {
 //          client.send(new SendMessage("The gods require 50 dragon bones as a sacrifice!"));
 //          return;
 //        }
-            } else if (objectID == 69) { //Stuff??
             } else if (objectID == 54) {
                 client.stairs = 14;
                 client.skillX = objectPosition.getX();
@@ -1109,7 +1099,6 @@ public class ClickObject implements Packet {
                     client.setSkillY(objectPosition.getY());
                 }
             }
-        }
     }
 
 }

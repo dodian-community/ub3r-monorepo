@@ -254,19 +254,9 @@ public class Client extends Player implements Runnable {
 
 	public int getbattleTimer(int weapon) {
 		String wep = GetItemName(weapon).toLowerCase();
-		int wepPlainTime = 7;
+		int wepPlainTime = 6; //Default for many weapons!
 		if (wep.contains("dart") || wep.contains("knife")) {
 			wepPlainTime = 8;
-		} else if (wep.contains("dagger")
-				|| wep.contains("sword") && !wep.contains("godsword") && !wep.contains("longsword")
-				&& !wep.contains("2h sword")
-				|| wep.contains("scimitar") || wep.contains("claws") || wep.contains("zamorakian spear")
-				|| wep.contains("toktz-xil-ak") || wep.contains("toktz-xil-ek") || wep.contains("zamorak staff")
-				|| wep.contains("saradomin staff") || wep.contains("guthix staff") || wep.contains("slayer staff")
-				|| wep.contains("rapier") || wep.contains("waraxe") || wep.contains("ancient staff")
-				|| wep.contains("seercull") || wep.contains("hunter's crossbow")
-				|| wep.contains("karil's crossbow") || wep.contains("toktz-xil-ul") || wep.contains("whip") || wep.contains("abyssal whip")) {
-			wepPlainTime = 6;
 		} else if (wep.contains("longsword") || wep.contains("mace") || wep.contains("axe") && !wep.contains("dharok")
 				|| wep.contains("spear") || wep.contains("tzhaar-ket-em") || wep.contains("torag") || wep.contains("guthan")
 				|| wep.contains("verac") || wep.contains("staff") && !wep.contains("ahrim") || wep.contains("composite")
@@ -293,7 +283,6 @@ public class Client extends Player implements Runnable {
 		if (!foundStaff)
 			autocast_spellIndex = -1;
 		checkBow();
-		//getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()]);
 	}
 
 	public int distanceToPoint(int pointX, int pointY) {
@@ -505,6 +494,8 @@ public class Client extends Player implements Runnable {
 
 	public static final int bufferSize = 1000000;
 	private java.net.Socket mySock;
+	private java.io.InputStream in;
+	private java.io.OutputStream out;
 	public byte[] buffer = null;
 	public int readPtr, writePtr;
 	public Stream inputStream, outputStream;
@@ -521,12 +512,29 @@ public class Client extends Player implements Runnable {
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
 		mySock = s;
+		try {
+			in = s.getInputStream();
+			out = s.getOutputStream();
+		} catch (java.io.IOException ioe) {
+			System.out.println("Dodian (1): Exception!");
+			System.out.println(ioe.getMessage());
+		}
+
+		outputStream = new Stream(new byte[bufferSize]);
+		outputStream.currentOffset = 0;
+		inputStream = new Stream(new byte[bufferSize]);
+		inputStream.currentOffset = 0;
+		mySocketHandler = new SocketHandler(this, s);
+
+		readPtr = writePtr = 0;
+		buffer = buffer = new byte[bufferSize];
+		/*mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[bufferSize]);
 		outputStream.currentOffset = 0;
 		inputStream = new Stream(new byte[bufferSize]);
 		inputStream.currentOffset = 0;
-		readPtr = writePtr = 0;
+		readPtr = writePtr = 0;*/
 	}
 
 	public void shutdownError(String errorMessage) {
@@ -541,35 +549,29 @@ public class Client extends Player implements Runnable {
 		try {
 			//Utils.println("ClientHandler: Client " + getPlayerName() + " disconnected (" + connectedFrom + ")");
 			//Server.connections.remove(mySock.getInetAddress().getHostAddress());
+			disconnected = true;
 			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			}
+			if (in != null) {
+				in.close();
+			}
+			if (out != null) {
+				out.close();
+			}
 			ConnectionList.getInstance().remove(mySock.getInetAddress());
-			disconnected = true;
 			mySock.close();
 			mySock = null;
-			mySocketHandler = null;
-			this.outputStream = null;
+			in = null;
+			out = null;
+			//mySocketHandler = null;
 			this.inputStream = null;
+			this.outputStream = null;
 			isActive = false;
+			synchronized (this) {
+				notify();
+			} // make sure this threads gets control so it can terminate
 			buffer = null;
-      /*if (in != null) {
-        in.close();
-      }
-      if (out != null) {
-        out.close();
-      }
-      mySock.close();
-      mySock = null;
-      in = null;
-      out = null;
-      setInputStream(null);
-      setOuputStream(null);
-      isActive = false;
-      synchronized (this) {
-        notify();
-      }
-      */
 		} catch (java.io.IOException ioe) {
 			ioe.printStackTrace();
 		}
@@ -769,16 +771,9 @@ public class Client extends Player implements Runnable {
 					playerRights = 1;
 					premium = true;
 					break;
-				// case 10:
-				case 11:
-				case 7:
-				case 27:
-					premium = true;
-					break;
-				case 2: //Newly made character, automatically register these!
-					Server.loginManager.updatePlayerForumRegistration(this);
-				break;
 				default:
+					if(playerGroup == 2)
+						Server.loginManager.updatePlayerForumRegistration(this);
 					premium = true;
 					playerRights = 0;
 			}
@@ -2398,14 +2393,14 @@ public class Client extends Player implements Runnable {
 
 	public boolean process() {// is being called regularily every 500ms
 		//RegionMusic.handleRegionMusic(this);
-		QuestSend.questInterface(this);
-		// RubberCheck();
 		if (mutedTill * 1000 <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
 		} else {
 			mutedHours = ((mutedTill * 1000) - rightNow) / (60 * 60 * 1000);
 			send(new SendString("Muted: " + mutedHours + " hours", 6572));
 		}
+		QuestSend.questInterface(this);
+		// RubberCheck();
 		if (reloadHp) {
 			setCurrentHealth(getLevel(Skill.HITPOINTS));
 			refreshSkill(Skill.HITPOINTS);
@@ -3244,8 +3239,8 @@ public class Client extends Player implements Runnable {
 			String[] s1 = new String[0];
 			if (child == 0) {
 				s = new String[]{"Bronze Pickaxe", "Iron Pickaxe", "Steel Pickaxe", "Mithril Pickaxe", "Adamant Pickaxe",
-						"Rune Pickaxe"};
-				s1 = new String[]{"1", "1", "6", "21", "31", "41"};
+						"Rune Pickaxe", "Dragon Pickaxe"};
+				s1 = new String[]{"1", "1", "6", "21", "31", "41", "61"};
 			} else if (child == 1) {
 				s = new String[]{"Rune essence", "Copper ore", "Tin ore", "Iron ore", "Coal", "Gold ore", "Mithril ore",
 						"Adamant ore", "Runite ore"};
@@ -3262,7 +3257,7 @@ public class Client extends Player implements Runnable {
 				send(new SendString(s1[i], slot++));
 			}
 			if (child == 0)
-				setMenuItems(new int[]{1265, 1267, 1269, 1273, 1271, 1275});
+				setMenuItems(new int[]{1265, 1267, 1269, 1273, 1271, 1275, 11920});
 			else if (child == 1)
 				setMenuItems(new int[]{1436, 436, 438, 440, 453, 444, 447, 449, 451});
 			else if (child == 2)
@@ -4864,42 +4859,44 @@ public class Client extends Player implements Runnable {
 
 	public int getWoodcuttingEmote(int item) {
 		switch (item) {
-			case 1351:
-				return 879; // Bronze
-			case 1349:
-				return 877; // Iron
-			case 1353:
-				return 875; // Steel
-			case 1355:
-				return 871; // Mith
-			case 1357:
-				return 869; // addy
-			case 1359:
-				return 867; // rune
-			case 6739: // Dragon
+			case 1351: //bronze
+				return 879;
+			case 1349: //iron
+				return 877;
+			case 1353: //steel
+				return 875;
+			case 1355: // mithril
+				return 871;
+			case 1357: // addy
+				return 869;
+			case 1359: // rune
+				return 867;
+			case 6739: // dragon
+			case 20011: //3rd age
 				return 2846;
-			default:
-				send(new SendMessage("Could not find wc anim for axe id: " + getEquipment()[Equipment.Slot.WEAPON.getId()]));
 		}
-		return 875;
+		return -1;
 	}
 
 	public int getMiningEmote(int item) {
 		switch (item) {
-			case 1275:
+			case 1275: //bronze
 				return 624;
-			case 1271:
+			case 1271: //iron
 				return 628;
-			case 1273:
+			case 1273: //steel
 				return 629;
-			case 1269:
+			case 1269: // mithril
 				return 627;
-			case 1267:
+			case 1267: // addy
 				return 626;
-			case 1265:
+			case 1265: // rune
 				return 625;
+			case 11920: //dragon
+			case 20014: //3rd age
+				return 7139;
 		}
-		return 625;
+		return -1;
 	}
 
 	public long getMiningSpeed() {
@@ -8235,7 +8232,6 @@ public class Client extends Player implements Runnable {
 	public void updatePlayerDisplay() {
 		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
 		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
-		send(new SendString("", 6572));
 		send(new SendString("", 6664));
 		setInterfaceWalkable(6673);
 	}
@@ -9068,7 +9064,6 @@ public class Client extends Player implements Runnable {
 						currentXp = results.getInt(skillName);
 						totalXp = results.getInt("totalxp");
 						totalLevel = results.getInt("total");
-						System.out.println("test: " + currentXp);
 					}
 				} else
 					found = false;
