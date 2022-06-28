@@ -1059,7 +1059,11 @@ public abstract class Player extends Entity {
         TAVDUNG("in Taverly dungeon.", 2813, 2970, 9669, 9856),
         FISHGUILD("in Fishing Guild.", 2577, 2642, 3390, 3446),
         GNOMECOURSE("at Gnome course.", 2469, 2490, 3414, 3440),
+        GNOMEHIDDENCAVE_WEST("in the Gnome hidden cave.", 2434, 2452, 9896, 9918),
+        GNOMEHIDDENCAVE_MIDDLE("in the Gnome hidden cave.", 2453, 2478, 9901, 9918),
+        GNOMEHIDDENCAVE_EAST("in the Gnome hidden cave.", 2479, 2495, 9907, 9918),
         BARBCOURSE("at Barbarian course.", 2528, 2553, 3541, 3559),
+        WILDERNESSCOURSE("at Wilderness course.", 2987, 3009, 3931, 3966),
         HEROESGUILD("in Heroes Guild.", 2883, 2901, 3503, 3518),
         HEROESDUNG("in Heroes dungeon.", 2882, 2944, 9878, 9920),
         DRAGCAVE("in Dragon cave.", 3200, 3304, 9342, 9406),
@@ -1067,9 +1071,16 @@ public abstract class Player extends Entity {
         DRAGCAVE3("in Dragon cave.", 3303, 3326, 9342, 9357),
         KBDLAIR("in the Dragon's den!", 3303, 3326, 9360, 9394),
         STAFFZONE("in the Staffzone.", 2880, 2943, 4672, 4735),
+        EDGEVILLE("in the Edgeville.", 3065, 3133, 3463, 3521),
+        SHILO("in the Shilo village.", 2817, 2878, 2945, 3006),
+        TZHAAR("in the Tzhaar cave.", 2397, 2494, 5120, 5183),
+        JAD("in the Jad cave.", 2368, 2428, 5057, 5118),
+        BRIMHAVEN_DOCKS("in the Brimhaven docks.", 2758, 2787, 3218, 3240),
+        BRIMHAVEN_WEST("in the Brimhaven west.", 2689, 2757, 3137, 3247),
+        BRIMHAVEN_EAST("in the Brimhaven east.", 2757, 2815, 3137, 3217),
         KEYDUNG("in Key dungeon.", 2559, 2622, 9475, 9534),
-        IKOVDUNG("in the Temple of Ikov", 2626, 2750, 9784, 9918),
-        //PARTYROOM("in the Partyroom.", 2729, 2745, 3462, 3476),
+        IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
+        PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),
         ;
         String name;
         int[] coordValue;
@@ -1124,7 +1135,7 @@ public abstract class Player extends Entity {
     }
 
     public boolean inEdgeville() {
-        return getPosition().getX() > 3064 && getPosition().getX() < 3138 && getPosition().getY() < 3523 && getPosition().getY() > 3462;
+        return getPositionName(getPosition()) == positions.EDGEVILLE;
     }
 
     public LoginManager getLoginManager() {

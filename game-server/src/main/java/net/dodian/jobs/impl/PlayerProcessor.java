@@ -18,11 +18,11 @@ public class PlayerProcessor implements Job {
              * n.updatePosition(); }
              */
             Server.playerHandler.updatePlayerNames();
-            if (PlayerHandler.cycle % 10 == 0) { //Every 8 tick (~5 seconds) remove shiet!
+            if (PlayerHandler.cycle % 5 == 0) {
                 Server.connections.clear();
                 Server.nullConnections = 0;
             }
-            if (PlayerHandler.cycle % 500 == 0) { //Hmm whatever this need to be here?
+            if (PlayerHandler.cycle % 200 == 0) {
                 Server.banned.clear();
             }
             if (PlayerHandler.cycle > 10000)
@@ -45,15 +45,25 @@ public class PlayerProcessor implements Job {
                     if (PlayerHandler.players[i].disconnected)
                         continue;
                     if (PlayerHandler.players[i].dbId < 1
-                            && System.currentTimeMillis() - PlayerHandler.players[i].lastPacket >= 30000) {
+                            && System.currentTimeMillis() - PlayerHandler.players[i].lastPacket >= 10000) {
                         Utils.println("Disconnecting possible null " + PlayerHandler.players[i].getPlayerName());
                         PlayerHandler.players[i].disconnected = true;
                     }
                     PlayerHandler.players[i].actionAmount--;
-                    PlayerHandler.players[i].preProcessing(); //This is whatever!
+                    try {
+                        PlayerHandler.players[i].preProcessing();
+                        PlayerHandler.players[i].process();
+                        int PacketLimit = 10;
+                        while(PlayerHandler.players[i].packetProcess() && PacketLimit-- >= 0);
+                        PlayerHandler.players[i].postProcessing();
+                    } catch(Exception e) {
+                        PlayerHandler.players[i].disconnected = true;
+                    }
+                    /*PlayerHandler.players[i].preProcessing(); //This is whatever!
                     PlayerHandler.players[i].process();
                     while (PlayerHandler.players[i].packetProcess());
                     PlayerHandler.players[i].postProcessing();
+                     */
                     PlayerHandler.players[i].getNextPlayerMovement();
                     if (PlayerHandler.players[i].getPlayerName().equalsIgnoreCase(PlayerHandler.kickNick)) {
                         PlayerHandler.players[i].kick();

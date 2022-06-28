@@ -64,6 +64,13 @@ public class Commands implements Packet {
                     int id = Integer.parseInt(cmd[1]);
                     Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
                 }
+                if (cmd[0].equalsIgnoreCase("tobj")) {
+                    int id = Integer.parseInt(cmd[1]);
+                    Position pos = client.getPosition().copy();
+                    client.ReplaceObject(pos.getX(), pos.getY(), id, 0, 10);
+                    client.send(new SendMessage("Object temporary spawned = " + id + ", at x = " + pos.getX()
+                            + " y = " + pos.getY() + " with height " + pos.getZ() + ""));
+                }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
@@ -309,7 +316,7 @@ public class Commands implements Packet {
                     try {
                         Connection conn = getDbConnection();
                         Statement statement = conn.createStatement();
-                        String sql = "delete from " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
+                        String sql = "delete FROM " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
                                 + " && percent=" + chance + "";
                         if (statement.executeUpdate(sql) < 1)
                             client.send(new SendMessage("" + Server.npcManager.getName(client.getPlayerNpc())
@@ -354,7 +361,7 @@ public class Commands implements Packet {
                         try {
                             Connection conn = getDbConnection();
                             Statement statement = conn.createStatement();
-                            String sql = "INSERT INTO" + DbTables.GAME_NPC_DROPS + " SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
+                            String sql = "INSERT INTO " + DbTables.GAME_NPC_DROPS + " SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
                                     + "', itemid='" + itemid + "', amt_min='" + min + "', amt_max='" + max + "', rareShout='" + rareShout + "'";
                             statement.execute(sql);
                             client.send(new SendMessage("You added " + min + "-" + max + " " + client.GetItemName(itemid) + " to "
@@ -363,8 +370,10 @@ public class Commands implements Packet {
                         } catch (Exception e) {
                             if (e.getMessage().contains("Duplicate entry"))
                                 client.send(new SendMessage(client.GetItemName(itemid) + " with the chance of " + chance + "% already exist for the " + Server.npcManager.getName(client.getPlayerNpc())));
-                            else
+                            else {
                                 client.send(new SendMessage("Something bad happend with sql!"));
+                                System.out.println("sql error: " + e.getMessage());
+                            }
                         }
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " itemid min max procent(x:y or %)"));

@@ -30,18 +30,18 @@ public class Utils {
     public static int[] shortExp = {80, 120, 160, 200, 250, 320};
     public static int[] longExp = {90, 135, 180, 230, 290, 360};
     // cooper tin iron coal mith addy
-    public static int[] rocks = {7471, 7451, 7484, 7452, 7485, 7455, 7488, 7456, 7489, 7458, 7491, 7459, 7492, 7460, 7493, 7461, 7494};
-    public static int[] rockLevels = {1, 1, 1, 1, 1, 15, 15, 30, 30, 40, 40, 55, 55, 70, 70, 85, 85};
-    public static long[] mineTimes = {900, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000};
-    public static int[] ore = {1436, 436, 436, 438, 438, 440, 440, 453, 453, 444, 444, 447, 447, 449, 449, 451, 451};
-    public static int[] oreExp = {50, 110, 110, 110, 110, 280, 280, 420, 420, 510, 510, 620, 620, 780, 780, 3100, 3100};
-    public static int[] picks = {1265, 1267, 1269, 1273, 1271, 1275};
-    public static double[] pickBonus = {0.03, 0.035, 0.045, 0.06, 0.08, 0.2};
-    public static int[] pickReq = {1, 1, 6, 21, 31, 41};
+    public static int[] rocks = {7471, 7451, 7484, 7452, 7485, 7455, 7488, 7456, 7489, 7458, 7491, 7459, 7492, 7460, 7493, 7461, 7494, 7464, 7463};
+    public static int[] rockLevels = {1, 1, 1, 1, 1, 15, 15, 30, 30, 40, 40, 55, 55, 70, 70, 85, 85, 50, 50};
+    public static long[] mineTimes = {900, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000, 6500, 6500};
+    public static int[] ore = {1436, 436, 436, 438, 438, 440, 440, 453, 453, 444, 444, 447, 447, 449, 449, 451, 451, 1625, 1625};
+    public static int[] oreExp = {50, 110, 110, 110, 110, 280, 280, 420, 420, 510, 510, 620, 620, 780, 780, 3100, 3100, 550, 550};
+    public static int[] picks = {1265, 1267, 1269, 1273, 1271, 1275, 11920};
+    public static double[] pickBonus = {0.03, 0.035, 0.045, 0.065, 0.09, 0.15, 0.35};
+    public static int[] pickReq = {1, 1, 6, 21, 31, 41, 61};
 
     // Tree timer here soon!
     public static int[] axes = {1351, 1349, 1353, 1355, 1357, 1359, 6739};
-    public static double[] axeBonus = {0.03, 0.035, 0.045, 0.06, 0.08, 0.12, 0.18};
+    public static double[] axeBonus = {0.03, 0.035, 0.045, 0.065, 0.09, 0.15, 0.35};
     public static int[] axeReq = {1, 1, 6, 21, 31, 41, 61};
 
     public static int[] fishSpots = {1510, 1510, 1511, 1511, 1514, 1514, 1517, 1517};
