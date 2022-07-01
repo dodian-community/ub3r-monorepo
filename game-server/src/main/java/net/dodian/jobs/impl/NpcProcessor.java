@@ -49,6 +49,13 @@ public class NpcProcessor implements Job {
                 npc.setText("Watch out for the plague!!");
                 npc.setLastChatMessage();
             }
+            if (npc.getId() == 555 && Misc.chance(10) == 1) {
+                if(Misc.chance(2) == 1)
+                    npc.setText("The plague is coming!");
+                else
+                    npc.setText("Watch out for the plague!!");
+                npc.setLastChatMessage();
+            }
             if (npc.getId() == 5792 && Balloons.eventActive()) {
                 if (Misc.random(1) == 0) {
                     int[] danceEmote = {1835, 866};

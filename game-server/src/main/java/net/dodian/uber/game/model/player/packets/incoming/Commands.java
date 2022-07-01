@@ -71,6 +71,13 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Object temporary spawned = " + id + ", at x = " + pos.getX()
                             + " y = " + pos.getY() + " with height " + pos.getZ() + ""));
                 }
+                if (cmd[0].equalsIgnoreCase("tgfx")) {
+                    int id = Integer.parseInt(cmd[1]);
+                    int offsetX = (client.getPosition().getY() - (client.getPosition().getY() + 5)) * -1;
+                    int offsetY = (client.getPosition().getX() - (client.getPosition().getX() + 5)) * -1;
+                    client.arrowGfx(id, offsetX, offsetY, client.clientPid + 10);
+                    Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
+                }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
@@ -89,6 +96,9 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("rehp")) {
                     client.reloadHp = !client.reloadHp;
                     client.send(new SendMessage("You set reload hp as " + client.reloadHp));
+                }
+                if (cmd[0].equals("testboss")) {
+                    client.triggerTele(3349,3343,0,false);
                 }
                 if (cmd[0].equals("tomato")) {
                     client.RottenTomato(client);
@@ -607,8 +617,40 @@ public class Commands implements Packet {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("quest") && client.playerRights > 1) {
-                    client.quests[0]++;
-                    client.send(new SendMessage("quests = " + client.quests[0]));
+                    try {
+                        int id = cmd[1].matches(".*\\d.*") ? Integer.parseInt(cmd[1]) : 0;
+                        int amount = cmd.length > 2 && cmd[2].matches(".*\\d.*") ? Integer.parseInt(cmd[2]) : 1;
+                        if(amount == 1)
+                            client.send(new SendMessage("quests = " + ++client.quests[id]));
+                        else {
+                            client.quests[id] = amount;
+                            client.send(new SendMessage("quests = " + client.quests[id]));
+                        }
+                    } catch (Exception e) {
+                        client.send(new SendMessage("wrong usage! ::quest id amount or ::quest id"));
+                        System.out.println(e.getMessage());
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("quest_reward") && client.playerRights > 1) {
+                    System.out.println("quest_reward...");
+                    client.send(new SendString("Quest name here", 12144));
+                    client.send(new SendString("1", 12147));
+                    for(int i = 0; i < 6; i++)
+                        client.send(new SendString("", 12150 + i));
+                    client.sendFrame246(12145, 250, 4151);
+                    client.showInterface(12140);
+                    client.flushOutStream();
+                    client.stillgfx(199, client.getPosition().getY(), client.getPosition().getX());
+                }
+                if (cmd[0].equalsIgnoreCase("moooo") && client.playerRights > 1) {
+                    client.send(new SendString("@str@testing something@str@", 8147));
+                    client.send(new SendString("Yes", 8148));
+                    client.send(new SendString("@369@Tits1@369@", 8149));
+                    client.send(new SendString("@mon@Tits3@mon@", 8150));
+                    client.send(new SendString("@lre@Tits3@lre@", 8151));
+                    client.sendQuestSomething(8143);
+                    client.showInterface(8134);
+                    client.flushOutStream();
                 }
                 if (cmd[0].equalsIgnoreCase("staffzone")) {
                     client.teleportTo(2936, 4688, 0);
@@ -796,8 +838,8 @@ public class Commands implements Packet {
             if (cmd[0].equalsIgnoreCase("latestclient")) {
                 Player.openPage(client, "https://dodian.net/client/DodianClient.jar");
             }
-            if (cmd[0].equalsIgnoreCase("updates")) {
-                Player.openPage(client, "https://dodian.net/showthread.php?t=747");
+            if (cmd[0].equalsIgnoreCase("news")) {
+                Player.openPage(client, "https://dodian.net/showthread.php?t="+client.latestNews);
                 //client.openPage(client, "https://dodian.net/forumdisplay.php?f=99");
             }
             if (cmd[0].equalsIgnoreCase("thread")) {

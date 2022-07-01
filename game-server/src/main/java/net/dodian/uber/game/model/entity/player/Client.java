@@ -343,14 +343,14 @@ public class Client extends Player implements Runnable {
 	public boolean AnimationReset; // Resets Animations With The Use Of The
 	// ActionTimer
 
-	public void multiGfx(int gfx, int offX, int offY, int index) {
+	public void arrowGfx(int gfx, int offX, int offY, int index) {
 		for (int a = 0; a < Constants.maxPlayers; a++) {
 			Client projCheck = (Client) PlayerHandler.players[a];
 			if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
 					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) < 60
 					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) < 60) {
-				projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offY, offX, 50, 90, gfx, 43,
-						35, index);
+				projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offY, offX, 50, 80, gfx, 40,
+						31, index);
 			}
 		}
 	}
@@ -1090,7 +1090,7 @@ public class Client extends Player implements Runnable {
 				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
 						+ "', friends='" + list + "', fightStyle = " + FightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
-						+ ", autocast=" + autocast_spellIndex + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
+						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
 						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Boss_Log='"
 						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', look='" + getLook() + "'" + last
 						+ " WHERE id = " + dbId);
@@ -3795,17 +3795,20 @@ public class Client extends Player implements Runnable {
 				setInCombat(true);
 				lastPlayerCombat = System.currentTimeMillis();
 				if (DeleteArrow()) {
-					int[] arrowIds = {882, 884, 886, 888, 890, 892};
-					int[] arrowGfx = {10, 9, 11, 12, 13, 15};
-					int arrowgfx = 10;
+					int[] arrowIds = {882, 884, 886, 888, 890, 892, 11212};
+					int[] arrowPullGfx = {19, 18, 20, 21, 22, 23, 1116};
+					int[] arrowGfx = {10, 9, 11, 12, 13, 14, 1115};
+					int arrowgfx = 10, arrowpullgfx = 20;
 					for (int i1 = 0; i1 < arrowIds.length; i1++) {
 						if (getEquipment()[Equipment.Slot.ARROWS.getId()] == arrowIds[i1]) {
 							arrowgfx = arrowGfx[i1];
+							arrowpullgfx = arrowPullGfx[i1];
 						}
 					}
+					stillgfx(arrowpullgfx,getPosition().getY(),getPosition().getX(), 100, 0);
 					int offsetX = (getPosition().getY() - EnemyY) * -1;
 					int offsetY = (getPosition().getX() - EnemyX) * -1;
-					multiGfx(arrowgfx, offsetX, offsetY, AttackingOn + 10);
+					arrowGfx(arrowgfx, offsetX, offsetY, AttackingOn + 10);
 
 					// CalculateRange();
 					setFocus(EnemyX, EnemyY);
@@ -3967,8 +3970,9 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		int type = selectedNpc.getId();
-		int[] arrowIds = {882, 884, 886, 888, 890, 892};
-		int[] arrowGfx = {10, 9, 11, 12, 13, 15};
+		int[] arrowIds = {882, 884, 886, 888, 890, 892, 11212};
+		int[] arrowPullGfx = {19, 18, 20, 21, 22, 23, 1116};
+		int[] arrowGfx = {10, 9, 11, 12, 13, 14, 1115};
 		int[] prem = {1643, 158, 49, 1613};
 		for (int i = 0; i < prem.length; i++) {
 			if (prem[i] == type && !premium) {
@@ -4074,10 +4078,11 @@ public class Client extends Player implements Runnable {
 		}
 		long thisTime = System.currentTimeMillis();
 		hitDiff = Utils.random(playerMaxHit);
-		int arrowgfx = 10;
+		int arrowgfx = 10, arrowpullgfx = 20;
 		for (int i1 = 0; i1 < arrowIds.length; i1++) {
 			if (getEquipment()[Equipment.Slot.ARROWS.getId()] == arrowIds[i1]) {
 				arrowgfx = arrowGfx[i1];
+				arrowpullgfx = arrowPullGfx[i1];
 			}
 		}
 		if (UseBow && Utils.getDistance(getPosition().getX(), getPosition().getY(), selectedNpc.getPosition().getX(),
@@ -4088,9 +4093,10 @@ public class Client extends Player implements Runnable {
 			CalculateRange();
 			hitDiff = Utils.random((int) maxRangeHit());
 			if (DeleteArrow()) {
+				stillgfx(arrowpullgfx,getPosition().getY(),getPosition().getX(), 100, 0);
 				int offsetX = (getPosition().getY() - EnemyY) * -1;
 				int offsetY = (getPosition().getX() - EnemyX) * -1;
-				multiGfx(arrowgfx, offsetX, offsetY, attacknpc + 1);
+				arrowGfx(arrowgfx, offsetX, offsetY, attacknpc + 1);
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			} else {
 				resetAttackNpc();
@@ -4104,9 +4110,7 @@ public class Client extends Player implements Runnable {
 		} else {
 			return false;
 		}
-		int emote = Server.itemManager.getAttackAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]);
-		if (UseBow)
-			emote = 426;
+		int emote = UseBow ? 426 : Server.itemManager.getAttackAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]);
 		if (UseBow || GoodDistance(EnemyX, EnemyY, getPosition().getX(), getPosition().getY(), 1) == true) {
 			if (!selectedNpc.isAlive()) {
 				resetAttackNpc();
@@ -4180,9 +4184,7 @@ public class Client extends Player implements Runnable {
 			deleteequiment(getEquipment()[Equipment.Slot.ARROWS.getId()], Equipment.Slot.ARROWS.getId());
 			return false;
 		}
-		if (/*
-		 * getEquipment()[Equipment.Slot.WEAPON.getId()] != 4212 &&
-		 */getEquipmentN()[Equipment.Slot.ARROWS.getId()] > 0) {
+		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] > 0) {
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(1688);
 			getOutputStream().writeByte(Equipment.Slot.ARROWS.getId());
@@ -8836,19 +8838,17 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void checkBow() {
-		for (int i = 0; i < Constants.shortbow.length; i++) {
-			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == Constants.shortbow[i]
-					|| getEquipment()[Equipment.Slot.WEAPON.getId()] == Constants.longbow[i]) {
+		int weaponId = getEquipment()[Equipment.Slot.WEAPON.getId()];
+		UseBow = false;
+		for (int i = 0; i < Constants.shortbow.length &&!UseBow; i++) {
+			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
 				UseBow = true;
-				return;
 			}
 		}
-		if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4212 || getEquipment()[Equipment.Slot.WEAPON.getId()] == 6724 ||
-				getEquipment()[Equipment.Slot.WEAPON.getId()] == 841 || getEquipment()[Equipment.Slot.WEAPON.getId()] == 839) {
+		if (weaponId == 4212 || weaponId == 6724 || weaponId == 841 || weaponId == 839 || weaponId == 20997 ||
+				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768)) {
 			UseBow = true;
-			return;
 		}
-		UseBow = false;
 	}
 
 	public void RottenTomato(final Client c) {

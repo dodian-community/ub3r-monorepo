@@ -96,13 +96,16 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 3;
             client.convoId = 3;
         } else if (npcId == 3648) {
-            if (!client.checkItem(621)) {
-                client.send(new SendMessage("You need a shipping ticket to board the ship!"));
+            if (client.playerRights < 2) {
+                client.send(new SendMessage("I have closed my business..For now."));
                 return;
             }
             client.setTravelMenu();
-        } else if (npcId == 1307) {
+        } else if (npcId == 1307 ||npcId == 1306) {
             client.NpcWanneTalk = 21;
+        } else if (npcId == 555) {
+                client.quests[0]++;
+                client.send(new SendMessage(client.playerRights > 1 ? "Set your quest to: " + client.quests[0] : "Suddenly the monk had an urge to dissapear!"));
         } else if (npcId == 683) { // Range stuff
             client.WanneShop = 11;
         } else if (npcId == 3951) {

@@ -1,5 +1,6 @@
 package net.dodian.uber.comm;
 
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Friend;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -14,8 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import static net.dodian.DotEnvKt.getServerDebugMode;
-import static net.dodian.DotEnvKt.getServerEnv;
+import static net.dodian.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
@@ -78,6 +78,7 @@ public class LoginManager {
 //        if(Login.isUidBanned(LoginManager.UUID)) {
 //			return 22;
 //		}
+                p.latestNews = results.getInt("news"); //Sets the latest news for a user!
                 p.setLastVote(results.getLong("lastvote"));
                 p.UUID = results.getString("uuid");
                 p.moveTo(results.getInt("x"), results.getInt("y"), results.getInt("height"));

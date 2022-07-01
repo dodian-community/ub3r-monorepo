@@ -198,6 +198,9 @@ public class Npc extends Entity {
     public int getId() {
         return id;
     }
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getFace() {
         return defaultFace;
@@ -651,7 +654,7 @@ public class Npc extends Entity {
     }
 
     public int getTimeOnFloor() {
-        return this.TIME_ON_FLOOR;
+        return id == 3127 ? 2500 : TIME_ON_FLOOR;
     }
 
     public NpcData getData() {
