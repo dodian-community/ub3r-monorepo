@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.DotEnvKt.*;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
@@ -61,6 +62,19 @@ public class Login extends Thread {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+    }
+    public synchronized int latestNews() {
+        try {
+            String query = "SELECT * FROM post WHERE parentid = '0' ORDER BY threadid DESC";
+            ResultSet results = getDbConnection().createStatement().executeQuery(query);
+            if (results.next())
+                return results.getInt("threadid");
+            results.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return 1;
     }
 
 

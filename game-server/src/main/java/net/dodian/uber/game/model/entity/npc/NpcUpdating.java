@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.EntityUpdating;
+import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
@@ -15,7 +16,7 @@ import java.util.Iterator;
  */
 public class NpcUpdating extends EntityUpdating<Npc> {
 
-    private static NpcUpdating instance = new NpcUpdating();
+    private static final NpcUpdating instance = new NpcUpdating();
 
     public static NpcUpdating getInstance() {
         return instance;
@@ -32,7 +33,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeBits(8, player.getLocalNpcs().size());
         for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
             Npc npc = i.next();
-            if (player.withinDistance(npc) && npc.isVisible()) {
+            boolean exceptions = removeNpc(player, npc);
+            if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
                 updateNPCMovement(npc, stream);
                 if (npc.getUpdateFlags().isUpdateRequired())
                     appendBlockUpdate(npc, block);
@@ -44,7 +46,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         }
 
         for (Npc npc : Server.npcManager.getNpcs()) {
-            if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible()) continue;
+            boolean exceptions = removeNpc(player, npc);
+            if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
+            if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
+                npc.setId(((Client) player).getGender() == 0 ? 1306 : 1307);
             if (player.getLocalNpcs().add(npc)) {
                 addNpc(player, npc, stream);
                 npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
@@ -62,6 +67,14 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             stream.finishBitAccess();
         }
         stream.endFrameVarSizeWord();
+    }
+
+    public static boolean removeNpc(Player player, Npc npc) {
+        Client c = ((Client) player);
+        if(c == null || npc == null) return false;
+        if(c.quests[0] > 0 && npc.getId() == 555 && npc.getPosition().getX() == 2604 && npc.getPosition().getY() == 3092)
+            return true;
+        return false;
     }
 
 

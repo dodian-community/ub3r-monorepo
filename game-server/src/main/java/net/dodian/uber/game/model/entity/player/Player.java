@@ -36,6 +36,7 @@ public abstract class Player extends Entity {
     private int playerNpc = -1;
     public int dbId = -1, violations = 0;
     public boolean premium = false, randomed = false;
+    public int latestNews = 0;
     public int playerGroup = 3;
     public long lastPacket = 0;
     public int[] playerLooks = new int[13];

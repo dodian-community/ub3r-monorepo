@@ -3,6 +3,7 @@ package net.dodian.uber.game.model;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.DbTables;
 
 import java.io.DataInputStream;
@@ -18,19 +19,17 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 public class ChatProcess extends Thread {
     public static final int cycleTime = 5000;
     public static boolean running = true;
-    private Statement statement = null;
-    private ResultSet results = null;
     private long lastPlayerUpdate = 0;
     public ConcurrentHashMap<Integer, String> pending = new ConcurrentHashMap<Integer, String>();
 
     public void run() {
         try {
-            statement = getDbConnection().createStatement();
             while (running) {
                 try {
+                    Statement statement = getDbConnection().createStatement();
                     statement.executeUpdate(
                             "UPDATE " + DbTables.GAME_MISC + " set players = " + PlayerHandler.getPlayerCount() + " where id = " + getGameWorldId());
-                    results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_ACTIONS);
+                    ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_ACTIONS);
                     while (results.next()) {
                         if (results.getString("action").equals("kick")) {
                             int pid = results.getInt("pid");
@@ -45,17 +44,29 @@ public class ChatProcess extends Thread {
                             statement.executeUpdate("DELETE FROM " + DbTables.GAME_ACTIONS + " where pid = " + pid);
                         }
                     }
+                    statement.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                     long now = System.currentTimeMillis();
                     for (ChatLine line : Server.chat) {
-                        if (now - line.timestamp > 120000) {
+                        if (now - line.timestamp >= 120000) {
                             Server.chat.remove(line);
                             continue;
                         }
                     }
-                    if (now - lastPlayerUpdate > 60000) {
+                    if (now - lastPlayerUpdate >= 60000) {
                         lastPlayerUpdate = now;
-                        if (getGameWorldId() == 1)
+                        if (getGameWorldId() == 1) {
                             Server.login.sendPlayers();
+                        }
+                        int latestNews = Server.login.latestNews();
+                        for (int i = 0; i < PlayerHandler.players.length; i++) {
+                                if(PlayerHandler.players[i] != null && PlayerHandler.players[i].latestNews != latestNews) {
+                                    PlayerHandler.players[i].latestNews = latestNews;
+                                    ((Client) PlayerHandler.players[i]).send(new SendMessage("[SERVER]: There is a new post on the homepage! type ::news"));
+                            }
+                        }
                     }
 
                     for (int id : pending.keySet()) {
@@ -65,9 +76,6 @@ public class ChatProcess extends Thread {
                         pending.remove(id);
                     }
                     Thread.sleep(cycleTime);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();
