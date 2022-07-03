@@ -57,7 +57,10 @@ public class Login extends Thread {
     public synchronized void sendPlayers() {
         try {
             int players = PlayerHandler.getPlayerCount();
-            getDbStatement().executeUpdate("UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + getGameWorldId());
+            Statement statement = getDbConnection().createStatement();
+            String newStatsAccount = "UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + getGameWorldId();
+            statement.executeUpdate(newStatsAccount);
+            statement.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -69,7 +72,6 @@ public class Login extends Thread {
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next())
                 return results.getInt("threadid");
-            results.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

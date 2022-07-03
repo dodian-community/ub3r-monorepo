@@ -2776,22 +2776,27 @@ public class Client extends Player implements Runnable {
 		return !disconnected;
 	}
 
-	public boolean packetProcess() {
+	public boolean packetProcess() { //Packet fixed?!
 		if (disconnected) {
 			return false;
 		}
+		PacketData p;
+		int processed = 0;
 		Queue<PacketData> data = mySocketHandler.getPackets();
 		if (data == null || data.isEmpty())
 			return false;
-		try {
-			fillInStream(data.poll());
-		} catch (IOException e) {
-			e.printStackTrace();
-			saveStats(true);
-			disconnected = true;
-			return false;
+		while ((p = data.poll()) != null) {
+			if (processed > 90) {
+				break;
+			}
+			getInputStream().currentOffset = 0;
+			getInputStream().buffer = p.getData();
+			currentPacket = p;
+			if(p.getId() > 0) {
+				parseIncomingPackets();
+				processed++;
+			}
 		}
-		parseIncomingPackets();
 		return true;
 	}
 

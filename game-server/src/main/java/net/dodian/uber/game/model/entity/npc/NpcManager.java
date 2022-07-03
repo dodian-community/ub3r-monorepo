@@ -50,7 +50,6 @@ public class NpcManager extends Thread {
             while (results.next()) {
                 amount++;
                 createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
-
             }
             System.out.println("Loaded " + amount + " Npc Spawns");
         } catch (Exception e) {
