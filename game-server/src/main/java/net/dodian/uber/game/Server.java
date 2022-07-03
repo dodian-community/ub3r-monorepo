@@ -90,6 +90,11 @@ public class Server implements Runnable {
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
+        npcManager = new NpcManager();
+        clientHandler = new Server();
+        login = new Login();
+        itemManager = new ItemManager();
+
         Memory.getSingleton().process();
 
         Cache.load();
@@ -97,34 +102,29 @@ public class Server implements Runnable {
         ObjectDef.loadConfig();
         Region.load();
         Rangable.load();
-
         // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
-
         GameObjectData.init();
         loadObjects();
-
-        login = new Login();
-        new Thread(login).start();
-        itemManager = new ItemManager();
         new DoorHandler();
+        setGlobalItems();
+
+        /* Start Threads */
+        new Thread(EventManager.getInstance()).start();
+        new Thread(npcManager).start();
+        new Thread(clientHandler).start(); // launch server listener
+        new Thread(login).start();
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, WorldProcessor.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(60000, WorldProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, PlayerProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, ItemProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, ShopProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, GroundItemProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
-
-        npcManager = new NpcManager();
-        new Thread(EventManager.getInstance()).start();
-        new Thread(npcManager).start();
-        clientHandler = new Server();
-        (new Thread(clientHandler)).start(); // launch server listener
+        /* Done loading */
         System.gc();
-        setGlobalItems();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 

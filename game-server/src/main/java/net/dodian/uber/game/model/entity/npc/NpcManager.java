@@ -87,6 +87,7 @@ public class NpcManager extends Thread {
             }
             reloadDrops(c, id); //Need to set drops!
             c.send(new SendMessage("Finished updating all '" + getData(id).getName() + "' npcs!"));
+            results.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -102,6 +103,7 @@ public class NpcManager extends Thread {
                     data.put(results.getInt("id"), new NpcData(results));
                     c.send(new SendMessage("Added default config values to the npc!"));
                 }
+                results.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -112,6 +114,7 @@ public class NpcManager extends Thread {
                 statement.executeUpdate(query);
                 c.send(new SendMessage("You updated '" + table + "' with value '" + value + "'!"));
                 reloadAllData(c, id);
+                statement.close();
             } catch (Exception e) {
                 //System.out.println("test: " + e.getLocalizedMessage() + ", " + e.getMessage());
                 if (e.getMessage().contains("Unknown column"))

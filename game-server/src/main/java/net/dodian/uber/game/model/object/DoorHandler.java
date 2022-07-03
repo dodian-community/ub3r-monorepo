@@ -37,6 +37,7 @@ public class DoorHandler {
                 i++;
             }
             System.out.println("Loaded " + i + " doors...");
+            statement.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

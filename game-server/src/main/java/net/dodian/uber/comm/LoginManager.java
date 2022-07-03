@@ -50,6 +50,7 @@ public class LoginManager {
             } else {
                 return 12;
             }
+            results.close();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Failed to load player: " + playerName);
@@ -245,6 +246,7 @@ public class LoginManager {
                 String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON CONFLICT (uid) DO NOTHING";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
+                results.close();
                 return loadgame(p, playerName, playerPass);
             }
         } catch (Exception e) {

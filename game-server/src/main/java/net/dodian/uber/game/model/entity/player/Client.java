@@ -1095,7 +1095,6 @@ public class Client extends Player implements Runnable {
 						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', look='" + getLook() + "'" + last
 						+ " WHERE id = " + dbId);
 				statement.close();
-
 				//println_debug("Save:  " + getPlayerName() + " (" + (System.currentTimeMillis() - start) + "ms)");
 			} catch (Exception e) {
 				e.printStackTrace();

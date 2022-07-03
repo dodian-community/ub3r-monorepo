@@ -1,8 +1,10 @@
 package net.dodian.uber.game.model;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.GameItem;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.DbTables;
 
 import java.io.*;
@@ -10,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.DotEnvKt.*;
@@ -53,33 +56,6 @@ public class Login extends Thread {
             e.printStackTrace();
         }
     }
-
-    public synchronized void sendPlayers() {
-        try {
-            int players = PlayerHandler.getPlayerCount();
-            Statement statement = getDbConnection().createStatement();
-            String newStatsAccount = "UPDATE " + DbTables.GAME_WORLDS + " SET players = " + players + " WHERE id = " + getGameWorldId();
-            statement.executeUpdate(newStatsAccount);
-            statement.close();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    public synchronized int latestNews() {
-        try {
-            String query = "SELECT * FROM post WHERE parentid = '0' ORDER BY threadid DESC";
-            ResultSet results = getDbConnection().createStatement().executeQuery(query);
-            if (results.next())
-                return results.getInt("threadid");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-        return 1;
-    }
-
-
     public static void deleteFromFile(String file, String name) {
         try {
             BufferedReader r = new BufferedReader(new FileReader(file));
