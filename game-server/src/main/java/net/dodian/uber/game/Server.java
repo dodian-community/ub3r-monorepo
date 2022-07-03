@@ -13,7 +13,6 @@ import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
-import net.dodian.uber.game.model.ChatProcess;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
@@ -63,7 +62,6 @@ public class Server implements Runnable {
     public static ArrayList<String> banned = new ArrayList<>();
     public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
-    private static ChatProcess chatprocess = null;
     public static int nullConnections = 0;
     public static Login login = null;
     public static ItemManager itemManager = null;
@@ -109,12 +107,11 @@ public class Server implements Runnable {
 
         login = new Login();
         new Thread(login).start();
-        chatprocess = new ChatProcess();
-        new Thread(chatprocess).start();
         itemManager = new ItemManager();
         new DoorHandler();
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
+        JobScheduler.ScheduleStaticRepeatForeverJob(600, WorldProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, PlayerProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, ItemProcessor.class);
         JobScheduler.ScheduleStaticRepeatForeverJob(600, ShopProcessor.class);

@@ -52,10 +52,10 @@ public class PlayerProcessor implements Job {
                     PlayerHandler.players[i].actionAmount--;
                     try {
                         PlayerHandler.players[i].preProcessing();
+                        PlayerHandler.players[i].packetProcess();
                         PlayerHandler.players[i].process();
-                        int PacketLimit = 10;
-                        while(PlayerHandler.players[i].packetProcess() && PacketLimit-- >= 0);
                         PlayerHandler.players[i].postProcessing();
+                        PlayerHandler.players[i].getNextPlayerMovement();
                     } catch(Exception e) {
                         PlayerHandler.players[i].disconnected = true;
                     }
@@ -64,7 +64,6 @@ public class PlayerProcessor implements Job {
                     while (PlayerHandler.players[i].packetProcess());
                     PlayerHandler.players[i].postProcessing();
                      */
-                    PlayerHandler.players[i].getNextPlayerMovement();
                     if (PlayerHandler.players[i].getPlayerName().equalsIgnoreCase(PlayerHandler.kickNick)) {
                         PlayerHandler.players[i].kick();
                         PlayerHandler.kickNick = "";
@@ -103,22 +102,21 @@ public class PlayerProcessor implements Job {
                     }
                 }
             }
-
-            if (Server.updateRunning && !Server.updateAnnounced) {
-                Server.updateAnnounced = true;
-            }
-
-            if (Server.updateRunning
-                    && currentTime - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
-                if (PlayerHandler.getPlayerCount() < 1) {
-                    System.exit(0);
-                }
-            }
             // post processing
             for (int i = 0; i < Constants.maxPlayers; i++) {
                 if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
                     continue;
                 PlayerHandler.players[i].clearUpdateFlags();
+            }
+
+            if (Server.updateRunning && !Server.updateAnnounced) {
+                Server.updateAnnounced = true;
+            }
+            if (Server.updateRunning
+                    && currentTime - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
+                if (PlayerHandler.getPlayerCount() < 1) {
+                    System.exit(0);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
