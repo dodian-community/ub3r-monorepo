@@ -21,7 +21,7 @@ private fun connect(): Connection {
 
 enum class DbTables(val table: String) {
     WEB_USERS_TABLE("user"),
-    WEB_POSTS("post"),
+    WEB_THREAD("thread"),
 
     GAME_PLAYER_SESSIONS("uber3_sessions"),
 
