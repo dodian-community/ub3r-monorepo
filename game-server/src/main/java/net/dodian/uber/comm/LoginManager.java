@@ -1,6 +1,6 @@
 package net.dodian.uber.comm;
 
-import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Friend;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -73,12 +73,9 @@ public class LoginManager {
                 if (isBanned(p.dbId)) {
                     return 4;
                 }
-//        if (isSibling(p.dbId)) {
-//        	return 23;
-//        }
-//        if(Login.isUidBanned(LoginManager.UUID)) {
-//			return 22;
-//		}
+                if(Login.isUidBanned(LoginManager.UUID)) {
+                    return 22;
+                }
                 p.latestNews = results.getInt("news"); //Sets the latest news for a user!
                 p.setLastVote(results.getLong("lastvote"));
                 p.UUID = results.getString("uuid");
@@ -106,14 +103,15 @@ public class LoginManager {
                 p.FightType = results.getInt("fightStyle");
                 p.CalculateMaxHit();
                 p.setTask(results.getString("slayerData"));
+                p.setTravel(results.getString("travel"));
                 p.agilityCourseStage = results.getInt("agility");
                 p.autocast_spellIndex = results.getInt("autocast");
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
                 if(!inventory.equals("")) {
                     String[] parse = inventory.split(" ");
-                    for (int i = 0; i < parse.length; i++) {
-                        String[] parse2 = parse[i].split("-");
+                    for (String s : parse) {
+                        String[] parse2 = s.split("-");
                         if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66000) {
@@ -123,12 +121,20 @@ public class LoginManager {
                         }
                     }
                 }
+                /* Sets Unlocks */
+                String unlocks = (results.getString("unlocks")).trim();
+                if(!unlocks.equals("")) {
+                    String[] parse = unlocks.split(":");
+                    for (int i = 0; i < parse.length; i++) {
+                        p.addUnlocks(i, parse[i].split(","));
+                    }
+                }
                 /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();
                 if(!equip.equals("")) {
                     String[] parse = equip.split(" ");
-                    for (int i = 0; i < parse.length; i++) {
-                        String[] parse2 = parse[i].split("-");
+                    for (String s : parse) {
+                        String[] parse2 = s.split("-");
                         if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66000) {
@@ -142,8 +148,8 @@ public class LoginManager {
                 String bank = (results.getString("bank")).trim();
                 if(!bank.equals("")) {
                     String[] parse = bank.split(" ");
-                    for (int i = 0; i < parse.length; i++) {
-                        String[] parse2 = parse[i].split("-");
+                    for (String s : parse) {
+                        String[] parse2 = s.split("-");
                         if (parse2.length > 0) {
                             int slot = Integer.parseInt(parse2[0]);
                             if (Integer.parseInt(parse2[1]) < 66600) {
@@ -176,9 +182,9 @@ public class LoginManager {
                 }
 
                 String[] friends = results.getString("friends").split(" ");
-                for (int i = 0; i < friends.length; i++) {
-                    if (friends[i].length() > 0) {
-                        p.friends.add(new Friend(Long.parseLong(friends[i]), true));
+                for (String friend : friends) {
+                    if (friend.length() > 0) {
+                        p.friends.add(new Friend(Long.parseLong(friend), true));
                     }
                 }
                 String Boss = results.getString("Boss_Log");
@@ -236,6 +242,7 @@ public class LoginManager {
                 p.loadingDone = true;
                 PlayerHandler.playersOnline.put(p.longName, p);
                 results.close();
+                results2.close();
                 //p.println("Loading Process Completed  [" + p.playerRights + ", " + p.dbId + ", " + elapsed + "]");
                 return 0;
             } else {

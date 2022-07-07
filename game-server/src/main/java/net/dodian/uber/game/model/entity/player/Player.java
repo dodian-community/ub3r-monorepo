@@ -15,12 +15,12 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
+import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -38,7 +38,7 @@ public abstract class Player extends Entity {
     public boolean premium = false, randomed = false;
     public int latestNews = 0;
     public int playerGroup = 3;
-    public long lastPacket = 0;
+    public long lastPacket;
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false;
     private boolean inCombat = false;
@@ -66,7 +66,7 @@ public abstract class Player extends Entity {
     public int playerIsMember;
     public int playerEnergy;
     public int playerEnergyGian;
-    public int playerBonus[] = new int[12];
+    public int[] playerBonus = new int[12];
     public int FightType = 1;
     public int playerMaxHit = 0;
     private int playerSE = 0x328; // SE = Standard Emotion
@@ -94,10 +94,7 @@ public abstract class Player extends Entity {
     public int actionTimer = 0;
     public int actionAmount = 0;
     public String connectedFrom = "";
-    public static String connectedMac = "";
-    public static String connectedISP = "";
     public String UUID = "";
-    public static InetAddress connectedLocal;
     public boolean takeAsNote = false;
     private String playerName = null; // name of the connecting client
     public String playerPass = null; // name of the connecting client
@@ -122,28 +119,28 @@ public abstract class Player extends Entity {
     private int pLegs;
     private int pFeet;
     private int pBeard;
-    private int[] playerEquipment = new int[14];
-    private int[] playerEquipmentN = new int[14];
-    private int[] playerLevel = new int[21];
-    private int[] playerXP = new int[21];
+    private final int[] playerEquipment = new int[14];
+    private final int[] playerEquipmentN = new int[14];
+    private final int[] playerLevel = new int[21];
+    private final int[] playerXP = new int[21];
     private int currentHealth = getLevel(Skill.HITPOINTS);
     public int maxHealth = getLevel(Skill.HITPOINTS);
     public final static int maxPlayerListSize = Constants.maxPlayers;
-    public Player playerList[] = new Player[maxPlayerListSize]; // To remove -Dashboard
+    public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public ArrayList<Player> playersUpdating = new ArrayList<Player>();
+    public ArrayList<Player> playersUpdating = new ArrayList<>();
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
     public boolean loaded = false;
-    private boolean songUnlocked[] = new boolean[RegionSong.values().length];
+    private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
     private int faceNPC = -1;
-    public int newWalkCmdX[] = new int[WALKING_QUEUE_SIZE];
-    public int newWalkCmdY[] = new int[WALKING_QUEUE_SIZE];
-    public int tmpNWCX[] = new int[WALKING_QUEUE_SIZE];
-    public int tmpNWCY[] = new int[WALKING_QUEUE_SIZE];
+    public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
+    public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
+    public int[] tmpNWCX = new int[WALKING_QUEUE_SIZE];
+    public int[] tmpNWCY = new int[WALKING_QUEUE_SIZE];
     public int newWalkCmdSteps = 0;
     public boolean newWalkCmdIsRunning = false;
-    public int travelBackX[] = new int[WALKING_QUEUE_SIZE];
-    public int travelBackY[] = new int[WALKING_QUEUE_SIZE];
+    public int[] travelBackX = new int[WALKING_QUEUE_SIZE];
+    public int[] travelBackY = new int[WALKING_QUEUE_SIZE];
     public int numTravelBackSteps = 0;
     private int graphicId = 0;
     private int graphicHeight = 0;
@@ -163,16 +160,19 @@ public abstract class Player extends Entity {
     public int agilityCourseStage = 0;
     public long walkBlock = 0;
     public boolean xLog = false;
-    public ArrayList<RewardItem> offeredPartyItems = new ArrayList<RewardItem>();
+    public ArrayList<RewardItem> offeredPartyItems = new ArrayList<>();
     /*
      Entity(1 = player, 2 = npc, 3 = object, 4 = itemInv)
      slot
      id
      functionId (1 = use item on entity, 2 = click entity)
      */
-    public ArrayList<Integer> playerPotato = new ArrayList<Integer>();
+    public ArrayList<Integer> playerPotato = new ArrayList<>();
     //Slayer
-    private ArrayList<Integer> slayerData = new ArrayList<Integer>();
+    private final ArrayList<Integer> slayerData = new ArrayList<>();
+    private final ArrayList<Boolean> travelData = new ArrayList<>();
+    private final ArrayList<Integer> paid = new ArrayList<>();
+    private final ArrayList<Boolean> unlocked = new ArrayList<>();
 
 
     public Player(int slot) {
@@ -236,11 +236,10 @@ public abstract class Player extends Entity {
     public void setTask(String input) {
         if (input.equals(""))
             input = "-1,-1,0,0,0,0,-1";
-        String tasks[] = input.split(",");
+        String[] tasks = input.split(",");
         for (int i = 0; i < tasks.length; i++)
             slayerData.add(Integer.parseInt(tasks[i]));
     }
-
     public String saveTaskAsString() {
         String tasks = "";
         for (int i = 0; i < slayerData.size(); i++) {
@@ -248,10 +247,62 @@ public abstract class Player extends Entity {
         }
         return tasks;
     }
-
     public ArrayList<Integer> getSlayerData() {
         //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
         return slayerData;
+    }
+    public void setTravel(String input) {
+        if (input.equals("")) input = "0:0:0:0:0";
+        String[] travel = input.split(":");
+        for (int i = 0; i < travel.length; i++)
+            travelData.add(travel[i].equals("1"));
+    }
+    public String saveTravelAsString() {
+        String travel = "";
+        for (int i = 0; i < travelData.size(); i++) {
+            int id = travelData.get(i).toString().equals("true") ? 1 : 0;
+            travel += id + "" + (i == travelData.size() - 1 ? "" : ":");
+        }
+        return travel;
+    }
+    public boolean getTravel(int i) {
+        return travelData.get(i);
+    }
+    public void saveTravel(int i) {
+        travelData.set(i, true);
+    }
+    public void addUnlocks(int i, String... check) {
+            if(check.length == 1) {
+                if(unlocked.isEmpty() || unlocked.size() < i) {
+                    paid.add(i, -1);
+                    unlocked.add(i, check[0].equals("1"));
+                } else {
+                    paid.set(i, -1);
+                    unlocked.set(i, check[0].equals("1"));
+                }
+            } else if (check.length == 2) {
+                if(unlocked.isEmpty() || unlocked.size() < i) {
+                    unlocked.add(i, check[1].equals("1"));
+                    paid.add(i, check[0].equals("1") ? 1 : 0);
+                } else {
+                    unlocked.set(i, check[1].equals("1"));
+                    paid.set(i, check[0].equals("1") ? 1 : 0);
+                }
+            }
+    }
+    public String saveUnlocksAsString() {
+        String unlocks = "";
+        for (int i = 0; i < unlocked.size(); i++) {
+            int unlock = unlocked.get(i) ? 1 : 0;
+            unlocks += (paid.get(i) == -1 ? unlock + "" : paid.get(i) + "," + unlock) + "" + (i == unlocked.size() - 1 ? "" : ":");
+        }
+        return unlocks;
+    }
+    public boolean checkUnlock(int i) {
+        return unlocked.isEmpty() || unlocked.size() < i ? false : unlocked.get(i);
+    }
+    public int checkUnlockPaid(int i) {
+        return paid.isEmpty() || paid.size() < i  ? -1 : paid.get(i);
     }
 
     public abstract void initialize();
@@ -784,6 +835,22 @@ public abstract class Player extends Entity {
 
     public boolean isSongUnlocked(int songId) {
         return this.songUnlocked[songId];
+    }
+    public boolean blackMaskEffect(int npcId) {
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
+        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
+        int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
+        boolean maskEquip = (itemId >= 8905 && itemId <= 8921) || itemId == 11864;
+        return maskEquip && onTask;
+    }
+    public boolean blackMaskImbueEffect(int npcId) {
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
+        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
+        int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
+        boolean maskEquip = (itemId >= 11774 && itemId <= 11784) || itemId == 11865;
+        return maskEquip && onTask;
     }
 
     public boolean areAllSongsUnlocked() {

@@ -23,7 +23,8 @@ public class Dialogue implements Packet {
             client.NpcDialogueSend = false;
             client.nextDiag = -1;
         } else {
-            client.send(new RemoveInterfaces());
+            if(client.NpcDialogue != 48054)
+                client.send(new RemoveInterfaces());
         }
     }
 

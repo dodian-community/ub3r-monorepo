@@ -48,9 +48,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         for (Npc npc : Server.npcManager.getNpcs()) {
             boolean exceptions = removeNpc(player, npc);
             if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-            if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                npc.setId(((Client) player).getGender() == 0 ? 1306 : 1307);
             if (player.getLocalNpcs().add(npc)) {
+                if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
+                    npc.setId(((Client) player).getGender() == 0 ? 1306 : 1307);
                 addNpc(player, npc, stream);
                 npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
                 appendBlockUpdate(npc, block);

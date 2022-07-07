@@ -98,8 +98,9 @@ public class MagicOnNpc implements Packet {
                         client.setLastCombat(System.currentTimeMillis());
                         client.lastAttack = client.getLastCombat();
                         if (client.getLevel(Skill.MAGIC) >= client.requiredLevel[i2]) {
-                            int dmg = client.baseDamage[i2] + (int) Math.ceil(client.playerBonus[11] * 0.5);
-                            double hit = Utils.random(dmg);
+                            double dmg = client.baseDamage[i2] + Math.ceil(client.playerBonus[11] * 0.5);
+                            double hit = client.blackMaskImbueEffect(type) ? 1.2 * dmg : dmg;
+                            hitDiff = Utils.random((int) hit);
                             if (hit >= EnemyHP2)
                                 hit = EnemyHP2;
                             hitDiff = (int) hit;

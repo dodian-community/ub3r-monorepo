@@ -96,13 +96,11 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 3;
             client.convoId = 3;
         } else if (npcId == 3648) {
-            if (client.playerRights < 2) {
-                client.send(new SendMessage("I have closed my business..For now."));
-                return;
-            }
             client.setTravelMenu();
         } else if (npcId == 1307 ||npcId == 1306) {
             client.NpcWanneTalk = 21;
+        } else if (npcId == 2345) {
+            client.NpcWanneTalk = npcId;
         } else if (npcId == 555) {
                 client.quests[0]++;
                 client.send(new SendMessage(client.playerRights > 1 ? "Set your quest to: " + client.quests[0] : "Suddenly the monk had an urge to dissapear!"));
