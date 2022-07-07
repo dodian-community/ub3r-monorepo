@@ -49,6 +49,7 @@ public class PacketHandler {
         packets[188] = new AddFriend();
         packets[192] = new ItemOnObject();
         packets[208] = new BankX2();
+        packets[210] = new ChangeRegion();
         packets[214] = new MoveItems();
         packets[215] = new RemoveFriend();
         packets[236] = new PickUpGroundItem();

@@ -261,8 +261,8 @@ public class Server implements Runnable {
 		Ground.items.add(new GroundItem(2842, 3432, 401, 1, 30 * 1000));
 		*/
         /* Troll items */
-        Ground.items.add(new GroundItem(2611, 3096, 1048, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2612, 3096, 1040, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2611, 3096, 20997, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(2612, 3096, 11863, 1, 30 * 1000));
         Ground.items.add(new GroundItem(2563, 9511, 1631, 1, 30 * 1000));
         Ground.items.add(new GroundItem(2564, 9511, 6571, 1, 30 * 1000));
         /* End of troll */

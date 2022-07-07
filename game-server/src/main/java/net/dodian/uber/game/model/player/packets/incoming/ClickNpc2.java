@@ -91,6 +91,8 @@ public class ClickNpc2 implements Packet {
             client.Essence = npcId == 5034 ? 1 : npcId == 844 ? 2 : 3;
         } else if (npcId == 1174) {
             client.WanneShop = 39;
+        } else if (npcId == 2345) {
+            client.NpcWanneTalk = npcId + 1;
         } else if (npcId == 637) { // Aubury rune shop
             client.WanneShop = 9; // Aubury Magic Shop
         } else if (npcId == 522 || npcId == 523) { // Shop Keeper +

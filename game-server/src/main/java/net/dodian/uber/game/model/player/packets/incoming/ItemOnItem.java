@@ -71,7 +71,6 @@ public class ItemOnItem implements Packet {
                 client.setPots(1200, itemUsed, otherItem, Utils.finished[h], Utils.potexp[h]);
             }
         }
-
         for (int i = 0; i < Utils.pot_4_dose.length; i++) {
             if ((itemUsed == Utils.pot_4_dose[i] && useWith == 229) || (itemUsed == 229 && useWith == Utils.pot_4_dose[i])) {
                 client.deleteItem(itemUsed, 1);
@@ -122,6 +121,18 @@ public class ItemOnItem implements Packet {
                 client.deleteItem(useWith, 1);
                 client.addItem(Utils.pot_4_dose[i], 1);
                 client.addItem(229, 1);
+            }
+        }
+
+        if (itemUsed == 85 || otherItem == 85) {
+            int otherId = itemUsed == 85 ? otherItem : itemUsed;
+            if(otherId == 1543 || otherId == 1544) {
+                if(!client.checkItem(otherId + 1)) {
+                    client.deleteItem(85, 1);
+                    client.addItem(otherId + 1, 1);
+                    client.send(new SendMessage("Your key shine bright and turned your " + client.GetItemName(85).toLowerCase() + " into a " + client.GetItemName(otherId + 1).toLowerCase()));
+                } else
+                    client.send(new SendMessage("I already have a " + client.GetItemName(otherId + 1).toLowerCase() + " in " + (client.playerHasItem(otherId + 1) ? "my inventory!" : "my bank!")));
             }
         }
 

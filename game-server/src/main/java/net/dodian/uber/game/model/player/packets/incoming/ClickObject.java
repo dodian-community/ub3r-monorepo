@@ -183,6 +183,29 @@ public class ClickObject implements Packet {
             client.teleportToY = 3507;
             client.newheightLevel = 0;
         }
+        if (objectID == 20877 && objectPosition.getX() == 2743 && objectPosition.getY() == 3153) {
+            if (!client.checkUnlock(0) && client.checkUnlockPaid(0) != 1) {
+                client.showNPCChat(2345, 596, new String[]{"You have not paid yet to enter my dungeon."});
+                return;
+            }
+            client.addUnlocks(0, "0", client.checkUnlock(0) ? "1" : "0");
+            client.teleportToX = 3748;
+            client.teleportToY = 9373 + Misc.random(1);
+            client.newheightLevel = 0;
+            client.showNPCChat(2345, 592, new String[]{"Welcome to my dungeon."});
+        }
+        if (objectID == 5553 && objectPosition.getX() == 3749 && objectPosition.getY() == 9373) {
+            client.teleportToX = 2744 + Misc.random(1);
+            client.teleportToY = 3153;
+            client.newheightLevel = 0;
+            client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
+        }
+        if (objectID == 6702 && objectPosition.getX() == 3749 && objectPosition.getY() == 9374) {
+            client.teleportToX = 2744 + Misc.random(1);
+            client.teleportToY = 3153;
+            client.newheightLevel = 0;
+            client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
+        }
         if (objectID == 882 && objectPosition.getX() == 2899 && objectPosition.getY() == 9728) {
             if (client.getLevel(Skill.AGILITY) < 85) {
                 client.send(new SendMessage("You need level 85 agility to use this shortcut!"));

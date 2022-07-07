@@ -831,23 +831,22 @@ public class Client extends Player implements Runnable {
 
 			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
 			mySocketHandler.getOutput().write(0);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		} catch (java.lang.Exception __ex) {
 			__ex.printStackTrace();
 			destruct();
 			return;
 		}
-
-		isActive = true;
 		if (getSlot() == -1 || returnCode != 2) {
 			return;
 		}
+		isActive = true;
 		mySocketThread = Server.createNewConnection(mySocketHandler);
 		mySocketThread.start();
 		packetSize = 0;
 		packetType = -1;
 		readPtr = 0;
 		writePtr = 0;
+		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
 	public void setSidebarInterface(int menuId, int form) {
@@ -1092,7 +1091,8 @@ public class Client extends Player implements Runnable {
 						+ "', friends='" + list + "', fightStyle = " + FightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
 						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
 						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Boss_Log='"
-						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', look='" + getLook() + "'" + last
+						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
+						"" + last
 						+ " WHERE id = " + dbId);
 				statement.close();
 				//println_debug("Save:  " + getPlayerName() + " (" + (System.currentTimeMillis() - start) + "ms)");
@@ -2364,6 +2364,7 @@ public class Client extends Player implements Runnable {
 		//RegionMusic.sendSongSettings(this); //Music from client 2.95
 		setConfigIds();
 		send(new SendMessage("Welcome to Uber Server"));
+		//initialized = true;
 	}
 
 	public void removeObject(int x, int y) // romoves obj from
@@ -2785,7 +2786,7 @@ public class Client extends Player implements Runnable {
 		if (data == null || data.isEmpty())
 			return false;
 		while ((p = data.poll()) != null) {
-			if (processed > 90) {
+			if (processed >= 100) {
 				break;
 			}
 			getInputStream().currentOffset = 0;
@@ -4029,7 +4030,7 @@ public class Client extends Player implements Runnable {
 				return false;
 			}
 		}
-
+		//System.out.println("Effect active: " + (blackMaskEffect(type) ? "Black mask!" : blackMaskImbueEffect(type) ? "Imbue Black mask" : "none"));
 		for (int a = 0; a < staffs.length; a++) {
 			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staffs[a] && autocast_spellIndex >= 0) {
 				if (System.currentTimeMillis() - lastAttack < coolDown[coolDownGroup[autocast_spellIndex]]) {
@@ -4044,11 +4045,11 @@ public class Client extends Player implements Runnable {
 						return false;
 					}
 					deleteItem(565, 1);
-					int dmg = baseDamage[autocast_spellIndex] + (int) Math.ceil(playerBonus[11] * 0.5);
-					double hit = Utils.random(dmg);
-					if (hit >= EnemyHP)
-						hit = EnemyHP;
-					hitDiff = (int) hit;
+					double dmg = baseDamage[autocast_spellIndex] + Math.ceil(playerBonus[11] * 0.5);
+					double hit = blackMaskImbueEffect(type) ? 1.2 * dmg : dmg;
+					hitDiff = Utils.random((int) hit);
+					if (hitDiff >= EnemyHP)
+						hitDiff = EnemyHP;
 					requestAnim(1979, 0);
 					// AnimationReset = true;
 					teleportToX = getPosition().getX();
@@ -4081,7 +4082,6 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		long thisTime = System.currentTimeMillis();
-		hitDiff = Utils.random(playerMaxHit);
 		int arrowgfx = 10, arrowpullgfx = 20;
 		for (int i1 = 0; i1 < arrowIds.length; i1++) {
 			if (getEquipment()[Equipment.Slot.ARROWS.getId()] == arrowIds[i1]) {
@@ -4095,7 +4095,8 @@ public class Client extends Player implements Runnable {
 		if (thisTime - lastAttack > getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()]) && UseBow) {
 			resetWalkingQueue();
 			CalculateRange();
-			hitDiff = Utils.random((int) maxRangeHit());
+			double hit = blackMaskImbueEffect(type) ? 1.2 * maxRangeHit() : maxRangeHit();
+			hitDiff = Utils.random((int) hit);
 			if (DeleteArrow()) {
 				stillgfx(arrowpullgfx,getPosition().getY(),getPosition().getX(), 100, 0);
 				int offsetX = (getPosition().getY() - EnemyY) * -1;
@@ -4119,6 +4120,8 @@ public class Client extends Player implements Runnable {
 			if (!selectedNpc.isAlive()) {
 				resetAttackNpc();
 			} else {
+				double hit = blackMaskEffect(type) ? 1.15 * playerMaxHit : blackMaskImbueEffect(type) ? 1.2 * playerMaxHit : playerMaxHit;
+				hitDiff = Utils.random((int) hit);
 				int chance = new Range(1, 8).getValue();
 				if (chance == 1 && specsOn == true) {
 					if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4151) {
@@ -4132,22 +4135,17 @@ public class Client extends Player implements Runnable {
 						requestAnim(emoteSpec, 0);
 						animation(animationSpec, EnemyY, EnemyX);
 					}
-				} else {
+				} else
 					requestAnim(emote, 0);
-				}
 				setFocus(EnemyX, EnemyY);
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-				if ((EnemyHP - hitDiff) < 0) {
-					hitDiff = EnemyHP;
-				}
+				double extra = UseBow ? getLevel(Skill.RANGED) * 0.195 : getLevel(Skill.STRENGTH) * 0.195;
 				double critChance = getLevel(Skill.AGILITY) / 9;
-				double extra = getLevel(Skill.STRENGTH) * 0.195;
-				if (UseBow)
-					extra = getLevel(Skill.RANGED) * 0.195;
-				if (Math.random() * 100 <= critChance)
-					selectedNpc.dealDamage(this, hitDiff + (int) Utils.dRandom2((extra)), true);
-				else
-					selectedNpc.dealDamage(this, hitDiff, false);
+				boolean hitCrit = Math.random() * 100 <= critChance;
+				hitDiff = hitCrit ? hitDiff + (int) Utils.dRandom2((extra)) : hitDiff;
+				if (hitDiff >= EnemyHP)
+					hitDiff = EnemyHP;
+				selectedNpc.dealDamage(this, hitDiff, hitCrit);
 				double TotalExp = 0;
 				if (!UseBow) {
 					// animationReset = System.currentTimeMillis() + 1200;
@@ -4156,9 +4154,8 @@ public class Client extends Player implements Runnable {
 					TotalExp = (FightType != 3 ? 40 * hitDiff : 20 * hitDiff);
 					TotalExp = (TotalExp * CombatExpRate);
 					giveExperience((int) (TotalExp), Skill.RANGED);
-					if (FightType == 3) {
+					if (FightType == 3)
 						giveExperience((int) TotalExp, Skill.DEFENCE);
-					}
 				} else if (FightType != 3) {
 					TotalExp = (40 * hitDiff);
 					TotalExp = (TotalExp * CombatExpRate);
@@ -4454,8 +4451,7 @@ public class Client extends Player implements Runnable {
 
 			case 1308:
 			case 5551:
-			case 5552:
-			case 5553: // Willow Tree
+			case 5552: // Willow Tree
 				woodcuttingIndex = 2;
 				// startWoodcutting();
 				break;
@@ -5223,7 +5219,6 @@ public class Client extends Player implements Runnable {
 
 	/* NPC Talking */
 	public void UpdateNPCChat() {
-		send(new SendString("", 976));
 		switch (NpcDialogue) {
 			case 1:
 
@@ -5644,40 +5639,22 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 21:
-				sendFrame200(4888, 592);
-				send(new SendString(GetNpcName(NpcTalkTo), 4889));
-				send(new SendString("Hello there, would you like to change your looks?", 4890));
-				send(new SendString("If so, it will be free of charge", 4891));
-				send(new SendString("Click here to continue", 4892));
-				send(new NpcDialogueHead(NpcTalkTo, 4888));
-				sendFrame164(4887);
+				showNPCChat(getGender() == 0 ? 1306 : 1307, 588, new String[]{
+				"Hello there, would you like to change your looks?",
+				"If so, it will be free of charge"
+				});
 				NpcDialogueSend = true;
 				break;
 			case 22:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("Would you like to change your looks?", 2460));
-				send(new SendString("Sure", 2461));
-				send(new SendString("No thanks", 2462));
-				sendFrame164(2459);
+				showPlayerOption(new String[]{"Would you like to change your looks?", "Sure", "No thanks" });
 				NpcDialogueSend = true;
 				break;
 			case 23:
-				sendFrame200(969, 974);
-				send(new SendString(getPlayerName(), 970));
-				send(new SendString("I would love that.", 971));
-				send(new SendString("Click here to continue", 972));
-				sendFrame185(969);
-				sendFrame164(968);
+				showPlayerChat(new String[]{ "I would love that." }, 614);
 				NpcDialogueSend = true;
 				break;
 			case 24:
-				sendFrame200(969, 974);
-				send(new SendString(getPlayerName(), 970));
-				send(new SendString("Not at the moment.", 971));
-				send(new SendString("Click here to continue", 972));
-				sendFrame185(969);
-				sendFrame164(968);
+				showPlayerChat(new String[]{ "Not at the moment." }, 614);
 				NpcDialogueSend = true;
 				break;
 			case 25:
@@ -5687,21 +5664,11 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = false;
 				break;
 			case 26:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("What would you like to do?", 2460));
-				send(new SendString("Enable specials", 2461));
-				send(new SendString("Disable specials", 2462));
-				sendFrame164(2459);
+				showPlayerOption(new String[]{ "What would you like to do?", "Enable specials", "Disable specials" });
 				NpcDialogueSend = true;
 				break;
 			case 27:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("What would you like to do?", 2460));
-				send(new SendString("Enable boss yell messages", 2461));
-				send(new SendString("Disable boss yell messages", 2462));
-				sendFrame164(2459);
+				showPlayerOption(new String[]{ "What would you like to do?", "Enable boss yell messages", "Disable boss yell messages" });
 				NpcDialogueSend = true;
 				break;
 			case 162:
@@ -5730,9 +5697,28 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 536:
-				showPlayerOption(new String[]{
-						"Do you wish to enter?", "Sacrifice 5 dragon bones", "Stay here"});
+				showPlayerOption(new String[]{"Do you wish to enter?", "Sacrifice 5 dragon bones", "Stay here"});
 				NpcDialogueSend = true;
+				break;
+			case 2345:
+				showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", this.checkUnlock(0) ? "You can enter for free." : "You have to pay a ship ticket to enter.", this.checkUnlock(0) ? "" : "You can also pay a one time fee of 20 ship tickets."});
+				nextDiag = ++NpcDialogue;
+				System.out.println("testing dialogue: " + nextDiag + ", " + NpcDialogue);
+				NpcDialogueSend = true;
+				break;
+			case 2346:
+				if(!checkUnlock(0) && checkUnlockPaid(0) != 1)
+					showPlayerOption(new String[]{
+						"Select a option", "One Ship Ticket", "One Time Fee", "Nevermind"});
+				else if(checkUnlock(0))
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
+				else
+					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid.", "Just enter the dungeon now."});
+				NpcDialogueSend = true;
+			break;
+			case 2347:
+				showNPCChat(NpcTalkTo, 596, new String[]{"You do not have 20 ship tickets."});
+				nextDiag = 2345;
 				break;
 			case 8051:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Happy Holidays adventurer!"});
@@ -5749,6 +5735,10 @@ public class Client extends Player implements Runnable {
 						"Select a option", "I'd like to see your shop.", "I'll just be on my way."});
 				NpcDialogueSend = true;
 				break;
+			case 48054: //Travel shiet unlock!
+				showPlayerOption(new String[]{ "Unlock the travel?", "Yes", "No" });
+				NpcDialogueSend = true;
+			break;
 		}
 	}
 
@@ -5760,13 +5750,12 @@ public class Client extends Player implements Runnable {
 			base = 2480;
 		if (text.length == 6)
 			base = 2492;
-		send(new Frame171(1, base + 4 + text.length - 1));
-		send(new Frame171(0, base + 7 + text.length - 1));
+		//send(new Frame171(1, base + 4 + text.length - 1));
+		//send(new Frame171(0, base + 7 + text.length - 1));
 		for (int i = 0; i < text.length; i++)
 			send(new SendString(text[i], base + 1 + i));
 		sendFrame164(base);
 	}
-
 	public void showNPCChat(int npcId, int emote, String[] text) {
 		int base = 4882;
 		if (text.length == 2)
@@ -5781,6 +5770,21 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < text.length; i++)
 			send(new SendString(text[i], base + 3 + i));
 		send(new SendString("Click here to continue", base + 3 + text.length));
+		sendFrame164(base);
+	}
+	public void showPlayerChat(String[] text, int emote) {
+		int base = 968;
+		if(text.length == 2)
+			base = 973;
+		if(text.length == 3)
+			base = 979;
+		if(text.length == 4)
+			base = 986;
+		send(new PlayerDialogueHead(base + 1));
+		sendFrame200(base + 1, emote); //614 seems standard!
+		send(new SendString(getPlayerName(), base + 2));
+		for (int i = 0; i < text.length; i++)
+			send(new SendString(text[i], base + 3 + i));
 		sendFrame164(base);
 	}
 
@@ -5832,7 +5836,7 @@ public class Client extends Player implements Runnable {
 			return 1;
 		}
 		String checkName = GetItemName(ItemID).toLowerCase();
-		if (checkName.endsWith("pickaxe") || checkName.endsWith("mask") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
+		if (checkName.endsWith("arrow") || checkName.endsWith("pickaxe") || checkName.endsWith("mask") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
 			return 1;
 		if (ItemID == 11284)
 			return 70;
@@ -5978,6 +5982,21 @@ public class Client extends Player implements Runnable {
 		}
 		if (ItemName.startsWith("Spined")) {
 			return 75;
+		}
+		if (ItemName.startsWith("Dragon arr")) {
+			return 60;
+		}
+		if (ItemName.startsWith("Rune arr")) {
+			return 40;
+		}
+		if (ItemName.startsWith("Adamant arr")) {
+			return 30;
+		}
+		if (ItemName.startsWith("Mithril arr")) {
+			return 20;
+		}
+		if (ItemName.startsWith("Steel arr")) {
+			return 10;
 		}
 		if (ItemID == 6724)
 			return 75;
@@ -7964,6 +7983,29 @@ public class Client extends Player implements Runnable {
 			else if (button == 2)
 				teleportTo(type == 3 ? 2547 : 3002, type == 3 ? 3553 : 3932, 0);
 			send(new RemoveInterfaces());
+		} else if (NpcDialogue == 2346) {
+			if (button == 1) { //One time pay!
+				if(checkUnlockPaid(0) != 1) {
+					if(playerHasItem(621)) {
+						deleteItem(621, 1);
+						addUnlocks(0, "1", checkUnlock(0) ? "1" : "0");
+						showNPCChat(NpcTalkTo, 591, new String[]{"You Can now step into the dungeon"});
+					} else
+						showNPCChat(NpcTalkTo, 596, new String[]{"You need a ship ticket to enter my dungeon!"});
+				} else
+					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my dungeon."});
+			} else if (button == 2) { //One time fee
+				if(!checkUnlock(0) && playerHasItem(621, 20)) {
+					deleteItem(621, 20);
+					addUnlocks(0, checkUnlockPaid(0) + "", "1");
+					showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the ship tickets.", "You may enter freely into my dungeon."});
+				} else if(!playerHasItem(621, 20)) {
+					nextDiag = 2347;
+				}
+			} else if (button == 3) { //Nevermind!
+				showPlayerChat(new String[]{ "I do not want anything." }, 614);
+			} else
+				send(new RemoveInterfaces());
 		} else if (NpcDialogue == 8053) {
 			if (button == 1) {
 				send(new RemoveInterfaces());
@@ -8007,6 +8049,23 @@ public class Client extends Player implements Runnable {
 				send(new RemoveInterfaces());
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 48054) {
+			if(getInvAmt(621) < 1) {
+				send(new SendMessage("You need a ship ticket to unlock this travel!"));
+			}
+			else if (button == 1) {
+				int id = actionButtonId == 48054 ? 4 : actionButtonId == 3056 ? 3 : actionButtonId - 3058;
+				System.out.println("id: " + id + ", " + actionButtonId);
+				if(!getTravel(id)) {
+					deleteItem(621, 1);
+					saveTravel(id);
+					send(new SendMessage("You have now unlocked the travel!"));
+				} else
+					send(new SendMessage("You have already unlocked this travel!"));
+			}
+			setTravelMenu();
+			NpcDialogueSend = false;
+			NpcDialogue = -1;
 		}
 		if (nextDiag > 0) {
 			NpcDialogue = nextDiag;
@@ -9292,6 +9351,10 @@ public class Client extends Player implements Runnable {
 				}
 				if (travel[i][1] == -1) {
 					send(new SendMessage("This will lead you to nothing!"));
+					return;
+				}
+				if(i > 0 && !getTravel(i - 1)) {
+					NpcDialogue = 48054;
 					return;
 				}
 				/* Set configs! */

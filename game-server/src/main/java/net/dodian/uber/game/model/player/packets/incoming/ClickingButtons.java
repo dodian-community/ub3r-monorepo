@@ -26,27 +26,27 @@ public class ClickingButtons implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
-        client.actionButtonId = Utils.HexToInt(client.getInputStream().buffer, 0, packetSize);
+        int actionButton = Utils.HexToInt(client.getInputStream().buffer, 0, packetSize);
         if (getServerDebugMode()) {
-            client.println("button=" + client.actionButtonId);
+            client.println("button=" + actionButton);
         }
-
         if (!client.validClient) {
             return;
         }
+        if(!(actionButton >= 9157 && actionButton <= 9194))
+            client.actionButtonId = actionButton;
         client.resetAction(false);
-        CombatStyleHandler.setWeaponHandler(client, client.actionButtonId);
-
-        if (client.duelButton(client.actionButtonId)) {
+        CombatStyleHandler.setWeaponHandler(client, actionButton);
+        if (client.duelButton(actionButton)) {
             return;
         }
-        Prayers.Prayer prayer = Prayers.Prayer.forButton(client.actionButtonId);
+        Prayers.Prayer prayer = Prayers.Prayer.forButton(actionButton);
         if (prayer != null) {
             client.getPrayerManager().togglePrayer(prayer);
             return;
         }
-        Emotes.doEmote(client.actionButtonId, client);
-        switch (client.actionButtonId) {
+        Emotes.doEmote(actionButton, client);
+        switch (actionButton) {
             case 58073:
                 client.send(new SendMessage("Visit the Dodian.net UserCP and click edit pin to remove your pin"));
                 break;

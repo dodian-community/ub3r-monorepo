@@ -19,6 +19,7 @@ public class SendString implements OutgoingPacket {
         client.getOutputStream().writeString(string);
         client.getOutputStream().writeWordA(lineId);
         client.getOutputStream().endFrameVarSizeWord();
+        client.flushOutStream();
     }
 
 }
