@@ -37,6 +37,7 @@ import net.dodian.uber.game.security.PickupLog;
 import net.dodian.uber.game.security.PmLog;
 import net.dodian.utilities.*;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.ResultSet;
@@ -496,7 +497,7 @@ public class Client extends Player implements Runnable {
 	private java.net.Socket mySock;
 	private java.io.InputStream in;
 	private java.io.OutputStream out;
-	public byte[] buffer = null;
+	public byte[] buffer;
 	public int readPtr, writePtr;
 	public Stream inputStream, outputStream;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
@@ -506,7 +507,7 @@ public class Client extends Player implements Runnable {
 
 	public int returnCode = 2; // Tells the client if the login was successfull
 
-	private SocketHandler mySocketHandler;
+	private final SocketHandler mySocketHandler;
 	private Thread mySocketThread;
 
 	public Client(java.net.Socket s, int _playerId) {
@@ -524,10 +525,9 @@ public class Client extends Player implements Runnable {
 		outputStream.currentOffset = 0;
 		inputStream = new Stream(new byte[bufferSize]);
 		inputStream.currentOffset = 0;
+		buffer = new byte[bufferSize];
 		mySocketHandler = new SocketHandler(this, s);
-
 		readPtr = writePtr = 0;
-		buffer = buffer = new byte[bufferSize];
 		/*mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[bufferSize]);
@@ -1035,47 +1035,51 @@ public class Client extends Player implements Runnable {
 					totallvl += getLevel(Skill.getSkill(i));
 				}
 				String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-				String query = "UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ";
-				String query2 = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ";
+				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ");
+				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
 				for (int i = 0; i < 21; i++) {
-					query += Skill.getSkill(i).getName() + "=" + getExperience(Skill.getSkill(i)) + ", ";
-					query2 += Skill.getSkill(i).getName() + "=" + getExperience(Skill.getSkill(i)) + ", ";
+					query.append(Skill.getSkill(i).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
+					query2.append(Skill.getSkill(i).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
 				}
-				query += "totalxp=" + allxp + " WHERE uid=" + dbId;
-				query2 += "totalxp=" + allxp;
+				query.append("totalxp=").append(allxp).append(" WHERE uid=").append(dbId);
+				query2.append("totalxp=").append(allxp);
 
-				statement.executeUpdate(query);
+				statement.executeUpdate(query.toString());
 
 				if (updateProgress) {
-					statement.executeUpdate(query2);
+					statement.executeUpdate(query2.toString());
 				}
 
 				System.currentTimeMillis();
-				String inventory = "", equipment = "", bank = "", list = "", boss_log = "";
+				StringBuilder inventory = new StringBuilder();
+				StringBuilder equipment = new StringBuilder();
+				StringBuilder bank = new StringBuilder();
+				StringBuilder list = new StringBuilder();
+				StringBuilder boss_log = new StringBuilder();
 				for (int i = 0; i < playerItems.length; i++) {
 					if (playerItems[i] > 0) {
-						inventory += i + "-" + (playerItems[i] - 1) + "-" + playerItemsN[i] + " ";
+						inventory.append(i).append("-").append(playerItems[i] - 1).append("-").append(playerItemsN[i]).append(" ");
 					}
 				}
 				for (int i = 0; i < bankItems.length; i++) {
 					if (bankItems[i] > 0) {
-						bank += i + "-" + (bankItems[i] - 1) + "-" + bankItemsN[i] + " ";
+						bank.append(i).append("-").append(bankItems[i] - 1).append("-").append(bankItemsN[i]).append(" ");
 					}
 				}
 				for (int i = 0; i < getEquipment().length; i++) {
 					if (getEquipment()[i] > 0) {
-						equipment += i + "-" + (getEquipment()[i]) + "-" + getEquipmentN()[i] + " ";
+						equipment.append(i).append("-").append(getEquipment()[i]).append("-").append(getEquipmentN()[i]).append(" ");
 					}
 				}
 				for (int i = 0; i < boss_name.length; i++) {
 					if (boss_amount[i] >= 0) {
-						boss_log += boss_name[i] + ":" + boss_amount[i] + " ";
+						boss_log.append(boss_name[i]).append(":").append(boss_amount[i]).append(" ");
 					}
 				}
 				int num = 0;
 				for (Friend f : friends) {
 					if (f.name > 0 && num < 200) {
-						list += f.name + " ";
+						list.append(f.name).append(" ");
 						num++;
 					}
 				}
@@ -1138,7 +1142,7 @@ public class Client extends Player implements Runnable {
 						while (amount > 0) {
 							if (bankItemsN[fromSlot] > 0) {
 								if (addItem(itemID, 1)) {
-									bankItemsN[fromSlot] += -1;
+									bankItemsN[fromSlot] -= 1;
 									amount--;
 								} else {
 									amount = 0;
@@ -1186,7 +1190,7 @@ public class Client extends Player implements Runnable {
 						while (amount > 0) {
 							if (bankItemsN[fromSlot] > 0) {
 								if (addItem(itemID, 1)) {
-									bankItemsN[fromSlot] += -1;
+									bankItemsN[fromSlot] -= 1;
 									amount--;
 								} else {
 									amount = 0;
@@ -1228,22 +1232,47 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You must answer the genie before you can gain experience!"));
 			return false;
 		}
-		int newXp = amount * getGameMultiplierGlobalXp();
-		int oldLevel = Skills.getLevelForExperience(getExperience(skill));
-		addExperience(newXp, skill);
-		if (oldLevel < Skills.getLevelForExperience(getExperience(skill))) {
-			animation(199, getPosition().getY(), getPosition().getX());
-			setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			if (skill == Skill.ATTACK || skill == Skill.AGILITY) {
-				send(new SendMessage("Congratulations, you just advanced an " + skill.getName() + " level."));
-			} else {
-				send(new SendMessage("Congratulations, you just advanced a " + skill.getName() + " level."));
-			}
-			if (getLevel(skill) > 90) {
+		amount = amount * getGameMultiplierGlobalXp();
+		int oldXP = getExperience(skill),
+		newXP = getExperience(skill) + amount > 200000000 ? 200000000 : getExperience(skill) + amount;
+		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
+		addExperience(amount, skill);
+		setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
+		int animation = -1;
+		if(oldLevel < 99) {
+			animation = 199;
+			if (newLevel == 99) {
+				animation = 623;
+				publicyell(getPlayerName() + " have now reached the max level for " + skill.getName() + "!");
+			} else if (newLevel > 93)
 				publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + getLevel(skill) + "!");
-			}
+			send(new SendMessage("Congratulations, you just advanced " + (skill == Skill.ATTACK || skill == Skill.AGILITY ? "an" : "a") + " " + skill.getName() + " level."));
 		}
+		else if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 50 million experience!");
+		} else if (oldXP < 75000000 && newXP >= 75000000) { // 75 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 75 million experience!");
+		} else if (oldXP < 100000000 && newXP >= 100000000) { // 100 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 100 million experience!");
+		} else if (oldXP < 125000000 && newXP >= 125000000) { // 100 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 125 million experience!");
+		} else if (oldXP < 150000000 && newXP >= 150000000) { // 150 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 150 million experience!");
+		} else if (oldXP < 175000000 && newXP >= 175000000) { // 150 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached 175 million experience!");
+		} else if (oldXP < 200000000 && newXP >= 200000000) { // 200 million announcement!
+			animation = 623;
+			publicyell(getPlayerName() + "'s " + skill.getName() + " have just reached the maximum experience!");
+		}
+		if(animation != -1)
+			animation(animation, getPosition().getY(), getPosition().getX());
+		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     /*double chance = (double)newXp / 1000000; //1 xp = 0.000001, 0.0001 %
     double roll = Math.random() * 1;
     if(getGameWorldId() > 1)
@@ -1254,7 +1283,6 @@ public class Client extends Player implements Runnable {
 		if (skill == Skill.STRENGTH || skill == Skill.RANGED)
 			CalculateMaxHit();
 		return true;
-
 	}
 
 	public boolean bankItem(int itemID, int fromSlot, int amount) {
@@ -2016,27 +2044,20 @@ public class Client extends Player implements Runnable {
 					resetItems(5064);
 				}
 			}
-    /*} else {
-      send(new SendMessage("Item Alched"));*/
 		}
 	}
 
 	public void setEquipment(int wearID, int amount, int targetSlot) {
-		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
-			return;
-		}
-		getOutputStream().createFrameVarSizeWord(34);
-		getOutputStream().writeWord(1688);
-		getOutputStream().writeByte(targetSlot);
-		getOutputStream().writeWord((wearID + 1));
-		if (amount > 254) {
-			getOutputStream().writeByte(255);
-			getOutputStream().writeDWord(amount);
-		} else {
-			getOutputStream().writeByte(amount); // amount
-		}
-		getOutputStream().endFrameVarSizeWord();
-
+			getOutputStream().createFrameVarSizeWord(34);
+			getOutputStream().writeWord(1688);
+			getOutputStream().writeByte(targetSlot);
+			getOutputStream().writeWord((wearID + 1));
+			if (amount > 254) {
+				getOutputStream().writeByte(255);
+				getOutputStream().writeDWord(amount);
+			} else
+				getOutputStream().writeByte(amount); // amount
+			getOutputStream().endFrameVarSizeWord();
 		if (targetSlot == Equipment.Slot.WEAPON.getId() && wearID >= 0) {
 			CombatStyleHandler.setWeaponHandler(this, -1);
 		}
@@ -2081,7 +2102,7 @@ public class Client extends Player implements Runnable {
 		Skillcape skillcape = Skillcape.getSkillCape(wearID);
 		if (skillcape != null) {
 			if (Skillcape.isTrimmed(wearID) && getExperience(skillcape.getSkill()) < 50000000) {
-				send(new SendMessage("This cape requires 50M " + skillcape.getSkill().getName() + " experience to wear."));
+				send(new SendMessage("This cape requires 50 million " + skillcape.getSkill().getName() + " experience to wear."));
 				return false;
 			} else if (getLevel(skillcape.getSkill()) < 99) {
 				send(new SendMessage("This cape requires level 99 " + skillcape.getSkill().getName() + " to wear."));
@@ -2090,9 +2111,8 @@ public class Client extends Player implements Runnable {
 		}
 		if (Server.itemManager.isTwoHanded(wearID)) {
 			if (getEquipment()[Equipment.Slot.SHIELD.getId()] > 0) {
-				// have one
 				if (hasSpace()) {
-					remove(getEquipment()[Equipment.Slot.SHIELD.getId()], Equipment.Slot.SHIELD.getId(), true);
+					remove(Equipment.Slot.SHIELD.getId(), true);
 				} else {
 					send(new SendMessage("You can't wear this weapon with a shield"));
 					return false;
@@ -2102,9 +2122,7 @@ public class Client extends Player implements Runnable {
 		if (Server.itemManager.getSlot(wearID) == Equipment.Slot.SHIELD.getId()) {
 			if (Server.itemManager.isTwoHanded(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
 				if (hasSpace()) {
-					// addItem(getEquipment()[Equipment.Slot.WEAPON.getId()], 1);
-					remove(getEquipment()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId(), true);
-					// getEquipment()[Equipment.Slot.WEAPON.getId()] = -1;
+					remove(Equipment.Slot.WEAPON.getId(), true);
 				} else {
 					send(new SendMessage("You can't wear this shield with a two-handed weapon"));
 					return false;
@@ -2159,31 +2177,20 @@ public class Client extends Player implements Runnable {
 					addItem(getEquipment()[targetSlot], getEquipmentN()[targetSlot]);
 				}
 			}
-			getOutputStream().createFrameVarSizeWord(34);
-			getOutputStream().writeWord(1688);
-			getOutputStream().writeByte(targetSlot);
-			getOutputStream().writeWord(wearID + 1);
-			if (wearAmount > 254) {
-				getOutputStream().writeByte(255);
-				getOutputStream().writeDWord(wearAmount);
-			} else {
-				getOutputStream().writeByte(wearAmount); // amount
-			}
-			getOutputStream().endFrameVarSizeWord();
 			getEquipment()[targetSlot] = wearID;
 			getEquipmentN()[targetSlot] = wearAmount;
+			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
 
 			if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
 					&& Server.itemManager.isTwoHanded(wearID)) {
-				remove(getEquipment()[Equipment.Slot.SHIELD.getId()], Equipment.Slot.SHIELD.getId(), false);
+				remove(Equipment.Slot.SHIELD.getId(), false);
 			}
 
 			if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 				CombatStyleHandler.setWeaponHandler(this, -1);
+				CheckGear();
 				requestAnims(wearID); // This caused lagg wtf?!
 			}
-			if (targetSlot == 3)
-				CheckGear();
 			GetBonus();
 			wearing = false;
 			WriteBonus();
@@ -2193,7 +2200,7 @@ public class Client extends Player implements Runnable {
 		return false;
 	}
 
-	public void remove(int wearID, int slot, boolean force) {
+	public void remove(int slot, boolean force) {
 		if (duelFight && duelRule[3] && !force) {
 			send(new SendMessage("Equipment changing has been disabled in this duel!"));
 			return;
@@ -2201,6 +2208,7 @@ public class Client extends Player implements Runnable {
 		if (duelConfirmed && !force) {
 			return;
 		}
+		System.out.println("test_ " + slot);
 		if (addItem(getEquipment()[slot], getEquipmentN()[slot])) {
 			getEquipment()[slot] = -1;
 			getEquipmentN()[slot] = 0;
@@ -2214,7 +2222,7 @@ public class Client extends Player implements Runnable {
 			WriteBonus();
 			if (slot == Equipment.Slot.WEAPON.getId()) {
 				CombatStyleHandler.setWeaponHandler(this, -1);
-				requestAnims(-1);
+				requestAnims(Equipment.Slot.WEAPON.getId());
 			}
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		}
@@ -2391,7 +2399,7 @@ public class Client extends Player implements Runnable {
 	public int packetSize = 0, packetType = -1;
 	public boolean canAttack = true;
 
-	public boolean process() {// is being called regularily every 500ms
+	public void process() {// is being called regularily every 500ms
 		//RegionMusic.handleRegionMusic(this);
 		if (mutedTill * 1000 <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
@@ -2773,19 +2781,27 @@ public class Client extends Player implements Runnable {
 			logout();
 		}
 		/* Incase a player disconnect! */
-		return !disconnected;
 	}
 
 	public boolean packetProcess() { //Packet fixed?!
 		if (disconnected) {
 			return false;
 		}
-		PacketData p;
-		int processed = 0;
+		//PacketData p;
+		//int processed = 0;
 		Queue<PacketData> data = mySocketHandler.getPackets();
-		if (data == null || data.isEmpty())
+		if (data == null || data.isEmpty() || data.stream() == null)
 			return false;
-		while ((p = data.poll()) != null) {
+		try {
+			fillInStream(data.poll());
+		} catch (IOException e) {
+			e.printStackTrace();
+			// saveStats(true);
+			disconnected = true;
+			return false;
+		}
+		parseIncomingPackets();
+		/*while ((p = data.poll()) != null) {
 			if (processed >= 100) {
 				break;
 			}
@@ -2796,7 +2812,7 @@ public class Client extends Player implements Runnable {
 				parseIncomingPackets();
 				processed++;
 			}
-		}
+		}*/
 		return true;
 	}
 
@@ -5388,7 +5404,7 @@ public class Client extends Player implements Runnable {
 					String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
 					String[] slayerMaster = new String[]{
 							"What would you like to say?", "I'd like a task please",
-							!taskName.equals("") ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "Can you teleport me to west ardougne?"};
+							!taskName.equals("") ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my slayer mask", "Can you teleport me to west ardougne?"};
 					showPlayerOption(slayerMaster);
 				}
 				NpcDialogueSend = true;
@@ -5572,6 +5588,34 @@ public class Client extends Player implements Runnable {
 				send(new SendString("Click here to continue", 4886));
 				NpcDialogueSend = true;
 				break;
+			case 34: //Upgrade black mask!
+				if(!playerHasItem(8921))
+					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have a black mask!"});
+				else {
+					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to upgrade your black mask?", "It will cost you 2 million gold pieces."});
+					this.nextDiag = 35;
+				}
+				NpcDialogueSend = true;
+			break;
+			case 35:
+				showPlayerOption(new String[]{"Do you wish to upgrade?", "Yes, please", "No, please"});
+			break;
+			case 36:
+				showPlayerChat(new String[]{"Yes, thank you."}, 614);
+				NpcDialogueSend = true;
+				nextDiag = 37;
+			break;
+			case 37:
+				if(!playerHasItem(995, 2000000))
+					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have enough money!"});
+				else {
+					deleteItem(995, 2000000);
+					deleteItem(8921, 1);
+					addItem(11784, 1);
+					showNPCChat(NpcTalkTo, 592, new String[]{"Here is your imbued black mask."});
+				}
+				NpcDialogueSend = true;
+				break;
 			case 14:
 				sendFrame200(4883, npcFace);
 				send(new SendString(GetNpcName(NpcTalkTo), 4884));
@@ -5703,7 +5747,6 @@ public class Client extends Player implements Runnable {
 			case 2345:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", this.checkUnlock(0) ? "You can enter for free." : "You have to pay a ship ticket to enter.", this.checkUnlock(0) ? "" : "You can also pay a one time fee of 20 ship tickets."});
 				nextDiag = ++NpcDialogue;
-				System.out.println("testing dialogue: " + nextDiag + ", " + NpcDialogue);
 				NpcDialogueSend = true;
 				break;
 			case 2346:
@@ -5720,6 +5763,13 @@ public class Client extends Player implements Runnable {
 				showNPCChat(NpcTalkTo, 596, new String[]{"You do not have 20 ship tickets."});
 				nextDiag = 2345;
 				break;
+			case 3648:
+				showNPCChat(NpcTalkTo, 591, new String[]{"Hello dear.", "Would you like to travel?"});
+				nextDiag = 3649;
+			break;
+			case 3649:
+				showPlayerOption(new String[]{ "Do you wish to travel?", "Yes", "No" });
+			break;
 			case 8051:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Happy Holidays adventurer!"});
 				nextDiag = 8052;
@@ -5750,8 +5800,8 @@ public class Client extends Player implements Runnable {
 			base = 2480;
 		if (text.length == 6)
 			base = 2492;
-		//send(new Frame171(1, base + 4 + text.length - 1));
-		//send(new Frame171(0, base + 7 + text.length - 1));
+		send(new Frame171(1, base + 4 + text.length - 1));
+		send(new Frame171(0, base + 7 + text.length - 1));
 		for (int i = 0; i < text.length; i++)
 			send(new SendString(text[i], base + 1 + i));
 		sendFrame164(base);
@@ -7937,13 +7987,19 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		if (NpcDialogue == 12) { //Slayer dialogue
-			nextDiag = button == 1 ? 13 : button == 3 ? 14 : 31;
+			nextDiag = button == 1 ? 13 : button == 2 ? 31 : button == 4 ? 14 : 34;
 		}
 		if (NpcDialogue == 32) { //Slayer dialogue
 			if (button == 1)
 				nextDiag = 33;
 			else
 				send(new RemoveInterfaces());
+		}
+		if (NpcDialogue == 35) { //Slayer dialogue
+			if(button == 1) {
+				nextDiag = 36;
+			} else
+				showPlayerChat(new String[]{ "No, thank you." }, 614);
 		}
 		if (convoId == 2) {
 			if (button == 1) {
@@ -7983,6 +8039,13 @@ public class Client extends Player implements Runnable {
 			else if (button == 2)
 				teleportTo(type == 3 ? 2547 : 3002, type == 3 ? 3553 : 3932, 0);
 			send(new RemoveInterfaces());
+		} else if (NpcDialogue == 3649) {
+			if (button == 1)
+				setTravelMenu();
+			else if(button == 2)
+				showPlayerChat(new String[]{ "No thank you." }, 614);
+			NpcDialogueSend = false;
+			NpcDialogue = -1;
 		} else if (NpcDialogue == 2346) {
 			if (button == 1) { //One time pay!
 				if(checkUnlockPaid(0) != 1) {
@@ -8055,8 +8118,7 @@ public class Client extends Player implements Runnable {
 			}
 			else if (button == 1) {
 				int id = actionButtonId == 48054 ? 4 : actionButtonId == 3056 ? 3 : actionButtonId - 3058;
-				System.out.println("id: " + id + ", " + actionButtonId);
-				if(!getTravel(id)) {
+				if(getTravel(id)) {
 					deleteItem(621, 1);
 					saveTravel(id);
 					send(new SendMessage("You have now unlocked the travel!"));
@@ -8542,7 +8604,7 @@ public class Client extends Player implements Runnable {
 			if (!duelBodyRules[i])
 				continue;
 			if (getEquipmentN()[trueSlots[i]] > 0) {
-				remove(getEquipment()[trueSlots[i]], trueSlots[i], true);
+				remove(trueSlots[i], true);
 			}
 		}
 	}
@@ -9318,6 +9380,10 @@ public class Client extends Player implements Runnable {
 	private boolean travelInitiate = false;
 
 	public void setTravelMenu() {
+		if(playerRights < 2) {
+			send(new SendMessage("Not added yet! But it is coming!"));
+			return;
+		}
 		frame36(153, 0);
 		send(new SendString("Brimhaven", 12338));
 		send(new SendString("Island", 12339));
@@ -9353,7 +9419,7 @@ public class Client extends Player implements Runnable {
 					send(new SendMessage("This will lead you to nothing!"));
 					return;
 				}
-				if(i > 0 && !getTravel(i - 1)) {
+				if(i > 0 && getTravel(i - 1)) {
 					NpcDialogue = 48054;
 					return;
 				}

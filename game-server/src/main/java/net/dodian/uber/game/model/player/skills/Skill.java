@@ -27,8 +27,8 @@ public enum Skill {
     FARMING(19, "farming"),
     RUNECRAFTING(20, "runecrafting");
 
-    private int id;
-    private String name;
+    private final int id;
+    private final String name;
 
     Skill(int id, String name) {
         this.id = id;

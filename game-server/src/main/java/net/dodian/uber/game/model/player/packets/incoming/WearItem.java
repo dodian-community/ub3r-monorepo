@@ -15,7 +15,6 @@ public class WearItem implements Packet {
             return;
         }
         client.wear(wearID, wearSlot, interfaceID);
-        CombatStyleHandler.setWeaponHandler(client, -1);
     }
 
 }

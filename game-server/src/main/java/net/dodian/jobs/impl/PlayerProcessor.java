@@ -20,12 +20,12 @@ public class PlayerProcessor implements Job {
         if (PlayerHandler.cycle % 100 == 0) {
             Server.banned.clear();
         }
-        PlayerHandler.cycle = PlayerHandler.cycle >= 1000 ? 0 : PlayerHandler.cycle + 1;
+        PlayerHandler.cycle = PlayerHandler.cycle >= 10000 ? 0 : PlayerHandler.cycle + 1;
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null || PlayerHandler.players[i].disconnected)
-                continue;
             try {
-                if (!PlayerHandler.players[i].isActive) {
+                if (PlayerHandler.players[i] == null)
+                    continue;
+                if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
                     if (PlayerHandler.players[i].violations > 100) {
                         System.out.println("Disconnecting bugged player " + PlayerHandler.players[i].getPlayerName());
                         Server.playerHandler.removePlayer(PlayerHandler.players[i]);
@@ -35,15 +35,16 @@ public class PlayerProcessor implements Job {
                     }
                     continue;
                 }
+                if (PlayerHandler.players[i].disconnected)
+                    continue;
                 if (PlayerHandler.players[i].dbId < 1
-                        && System.currentTimeMillis() - PlayerHandler.players[i].lastPacket >= 60000) {
+                        && System.currentTimeMillis() - PlayerHandler.players[i].lastPacket >= 30000) {
                     Utils.println("Disconnecting possible null " + PlayerHandler.players[i].getPlayerName());
                     PlayerHandler.players[i].disconnected = true;
                 }
                 PlayerHandler.players[i].actionAmount--;
                 try {
-                    PlayerHandler.players[i].preProcessing();
-                    PlayerHandler.players[i].packetProcess();
+                    while (PlayerHandler.players[i].packetProcess()); //TODO: Add different packet handling!
                     PlayerHandler.players[i].process();
                     PlayerHandler.players[i].postProcessing();
                     PlayerHandler.players[i].getNextPlayerMovement();

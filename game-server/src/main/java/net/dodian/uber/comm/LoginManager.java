@@ -205,22 +205,17 @@ public class LoginManager {
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
                     for (int i = 0; i < 21; i++) {
-                        // p.playerXP[i] = (Integer)(results.getInt("skill" + i));
-                        p.setExperience(results2.getInt(Skill.getSkill(i).getName()), Skill.getSkill(i));
-                        // p.playerLevel[i] = p.getLevelForXP(p.playerXP[i]);
-                        p.setLevel(Skills.getLevelForExperience(p.getExperience(Skill.getSkill(i))), Skill.getSkill(i));
-                        if (health == 0 && i == 3) {
-                            p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
-                        } else if (health > 0) {
-                            p.setCurrentHealth(health);
-                        }
-                        if (i != 3)
-                            p.refreshSkill(Skill.getSkill(i));
-                            // p.setSkillLevel(i, p.playerLevel[i], p.playerXP[i]);
-                        else {
-                            p.refreshSkill(Skill.getSkill(i));
-                            // p.setSkillLevel(i, p.currentHealth, p.playerXP[i]);
-                            p.maxHealth = p.getLevel(Skill.HITPOINTS);
+                        Skill skill = Skill.getSkill(i);
+                        if (skill != null) {
+                            // p.playerXP[i] = (Integer)(results.getInt("skill" + i));
+                            p.setExperience(results2.getInt(skill.getName()), skill);
+                            // p.playerLevel[i] = p.getLevelForXP(p.playerXP[i]);
+                            p.setLevel(Skills.getLevelForExperience(p.getExperience(skill)), skill);
+                            if (i == 3) {
+                                p.setCurrentHealth(health < 1 ? p.getLevel(Skill.HITPOINTS) : health);
+                                p.maxHealth = p.getLevel(Skill.HITPOINTS);
+                            } else
+                                p.refreshSkill(skill);
                         }
                     }
                 } else {
@@ -229,10 +224,13 @@ public class LoginManager {
                     statement.executeUpdate(newStatsAccount);
                     statement.close();
                     for (int i = 0; i < 21; i++) { //Default skills!
-                        p.setExperience(i == 3 ? 1155 : 0, Skill.getSkill(i));
-                        p.setLevel(i == 3 ? 10 : 1, Skill.getSkill(i));
-                        p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
-                        p.refreshSkill(Skill.getSkill(i));
+                        Skill skill = Skill.getSkill(i);
+                        if (skill != null) {
+                            p.setExperience(i == 3 ? 1155 : 0, skill);
+                            p.setLevel(i == 3 ? 10 : 1, skill);
+                            p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
+                            p.refreshSkill(skill);
+                        }
                     }
                 }
 

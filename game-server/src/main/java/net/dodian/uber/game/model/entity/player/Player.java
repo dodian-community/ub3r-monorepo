@@ -1,8 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
@@ -21,9 +19,7 @@ import net.dodian.uber.game.party.RewardItem;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false;
@@ -179,12 +175,10 @@ public abstract class Player extends Entity {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
         playerRights = 0; // player rights
         lastPacket = System.currentTimeMillis();
-        for (int i = 0; i < playerItems.length; i++) { // Setting player items
-            playerItems[i] = 0;
-        }
-        for (int i = 0; i < playerItemsN.length; i++) { // Setting Item amounts
-            playerItemsN[i] = 0;
-        }
+        // Setting player items
+        Arrays.fill(playerItems, 0);
+        // Setting Item amounts
+        Arrays.fill(playerItemsN, 0);
 
         for (int i = 0; i < playerLevel.length; i++) { // Setting Levels
             if (i == 3) {
@@ -218,15 +212,11 @@ public abstract class Player extends Entity {
 
     public void defaultCharacterLook(Client temp) {
         int[] testLook = {0, 3, 14, 18, 26, 34, 38, 42, 2, 14, 5, 4, 0}; // DEfault look!
-        for (int i = 0; i < 13; i++)
-            playerLooks[i] = testLook[i];
+        System.arraycopy(testLook, 0, playerLooks, 0, 13);
         temp.setLook(playerLooks);
     }
 
     void destruct() {
-        playerListSize = 0;
-        for (int i = 0; i < maxPlayerListSize; i++)
-            playerList[i] = null;
         getPosition().moveTo(-1, -1);
         mapRegionX = mapRegionY = -1;
         currentX = currentY = 0;
@@ -237,15 +227,14 @@ public abstract class Player extends Entity {
         if (input.equals(""))
             input = "-1,-1,0,0,0,0,-1";
         String[] tasks = input.split(",");
-        for (int i = 0; i < tasks.length; i++)
-            slayerData.add(Integer.parseInt(tasks[i]));
+        for (String task : tasks) slayerData.add(Integer.parseInt(task));
     }
     public String saveTaskAsString() {
-        String tasks = "";
+        StringBuilder tasks = new StringBuilder();
         for (int i = 0; i < slayerData.size(); i++) {
-            tasks += slayerData.get(i).toString() + "" + (i == slayerData.size() - 1 ? "" : ",");
+            tasks.append(slayerData.get(i).toString()).append(i == slayerData.size() - 1 ? "" : ",");
         }
-        return tasks;
+        return tasks.toString();
     }
     public ArrayList<Integer> getSlayerData() {
         //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
@@ -254,16 +243,15 @@ public abstract class Player extends Entity {
     public void setTravel(String input) {
         if (input.equals("")) input = "0:0:0:0:0";
         String[] travel = input.split(":");
-        for (int i = 0; i < travel.length; i++)
-            travelData.add(travel[i].equals("1"));
+        for (String s : travel) travelData.add(s.equals("1"));
     }
     public String saveTravelAsString() {
-        String travel = "";
+        StringBuilder travel = new StringBuilder();
         for (int i = 0; i < travelData.size(); i++) {
-            int id = travelData.get(i).toString().equals("true") ? 1 : 0;
-            travel += id + "" + (i == travelData.size() - 1 ? "" : ":");
+            int id = travelData.get(i) ? 1 : 0;
+            travel.append(id).append(i == travelData.size() - 1 ? "" : ":");
         }
-        return travel;
+        return travel.toString();
     }
     public boolean getTravel(int i) {
         return travelData.get(i);
@@ -291,15 +279,15 @@ public abstract class Player extends Entity {
             }
     }
     public String saveUnlocksAsString() {
-        String unlocks = "";
+        StringBuilder unlocks = new StringBuilder();
         for (int i = 0; i < unlocked.size(); i++) {
             int unlock = unlocked.get(i) ? 1 : 0;
-            unlocks += (paid.get(i) == -1 ? unlock + "" : paid.get(i) + "," + unlock) + "" + (i == unlocked.size() - 1 ? "" : ":");
+            unlocks.append(paid.get(i) == -1 ? unlock + "" : paid.get(i) + "," + unlock).append(i == unlocked.size() - 1 ? "" : ":");
         }
-        return unlocks;
+        return unlocks.toString();
     }
     public boolean checkUnlock(int i) {
-        return unlocked.isEmpty() || unlocked.size() < i ? false : unlocked.get(i);
+        return !unlocked.isEmpty() && unlocked.size() >= i && unlocked.get(i);
     }
     public int checkUnlockPaid(int i) {
         return paid.isEmpty() || paid.size() < i  ? -1 : paid.get(i);
@@ -310,7 +298,7 @@ public abstract class Player extends Entity {
     public abstract void update();
 
     public void receieveDamage(Entity e, int amount, boolean crit) {
-        amount = amount >= currentHealth ? currentHealth : amount;
+        amount = Math.min(amount, currentHealth);
         if (getDamage().containsKey(e)) {
             getDamage().put(e, getDamage().get(e) + amount);
         } else {
@@ -328,11 +316,11 @@ public abstract class Player extends Entity {
     }
 
     public String getSongUnlockedSaveText() {
-        String out = "";
-        for (int i = 0; i < songUnlocked.length; i++) {
-            out += (songUnlocked[i] ? 1 : 0) + " ";
+        StringBuilder out = new StringBuilder();
+        for (boolean b : songUnlocked) {
+            out.append(b ? 1 : 0).append(" ");
         }
-        return out;
+        return out.toString();
     }
 
     public boolean withinDistance(Object o) {
@@ -388,11 +376,11 @@ public abstract class Player extends Entity {
     // Note that mapRegionX*8+currentX yields absX
 
     public static final int WALKING_QUEUE_SIZE = 50;
-    public int walkingQueueX[] = new int[WALKING_QUEUE_SIZE], walkingQueueY[] = new int[WALKING_QUEUE_SIZE];
+    public int[] walkingQueueX = new int[WALKING_QUEUE_SIZE], walkingQueueY = new int[WALKING_QUEUE_SIZE];
     public int wQueueReadPtr = 0; // points to slot for reading from queue
     public int wQueueWritePtr = 0; // points to (first free) slot for writing
     public boolean isRunning = false;
-    public int teleportToX = -1, teleportToY = -1; // contain absolute x/y
+    public int teleportToX, teleportToY; // contain absolute x/y
 
     public void resetWalkingQueue() {
         wQueueReadPtr = wQueueWritePtr = 0;
@@ -602,7 +590,8 @@ public abstract class Player extends Entity {
         str.writeBits(5, z); // x coordinate relative to thisPlayer
     }
 
-    private byte chatText[] = new byte[4096], chatTextSize = 0;
+    private final byte[] chatText = new byte[4096];
+    private byte chatTextSize = 0;
     private int chatTextEffects = 0, chatTextColor = 0;
 
     public byte[] getChatText() {
@@ -658,23 +647,16 @@ public abstract class Player extends Entity {
     public void setFaceNpc(int faceNpc) {
         this.faceNPC = faceNpc;
     }
+    public abstract void process(); //Send every 600 ms
 
-    public void preProcessing() {
-        // newWalkCmdSteps = 0;
-    }
-
-    // is being called regularily every 500ms - do any automatic player actions
-    // herein
-    public abstract boolean process();
-
-    public abstract boolean packetProcess();
+    public abstract boolean packetProcess(); //Send every 600 ms
 
     public void postProcessing() {
         if (newWalkCmdSteps > 0) {
             int firstX = newWalkCmdX[0], firstY = newWalkCmdY[0]; // the point
 
             // travel backwards to find a proper connection vertex
-            int lastDir = 0;
+            int lastDir;
             boolean found = false;
             numTravelBackSteps = 0;
             int ptr = wQueueReadPtr;
@@ -697,9 +679,7 @@ public abstract class Player extends Entity {
 
                 } while (ptr != wQueueWritePtr);
             } else
-                found = true; // we didn't need to go back in time because the
-            // current position
-            // already can be connected to first
+                found = true; // we didn't need to go back in time because the current position already can be connected to first
 
             if (!found) {
                 println_debug("Fatal: couldn't find connection vertex! Dropping packet.");
@@ -837,7 +817,7 @@ public abstract class Player extends Entity {
         return this.songUnlocked[songId];
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
@@ -845,7 +825,7 @@ public abstract class Player extends Entity {
         return maskEquip && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
@@ -1099,13 +1079,13 @@ public abstract class Player extends Entity {
         double mag = magLvl * 1.5;
         double ran = ranLvl * 1.5;
         double attstr = attLvl + strLvl;
-        double combatLevel = 0;
+        double combatLevel;
         if (ran > attstr && ran > mag) { // player is ranged class
-            combatLevel = ((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((ranLvl) * 0.4875);
+            combatLevel = ((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(ranLvl) * 0.4875);
         } else if (mag > attstr) { // player is mage class
-            combatLevel = (((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((magLvl) * 0.4875));
+            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(magLvl) * 0.4875));
         } else {
-            combatLevel = (((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((attLvl) * 0.325) + ((strLvl) * 0.325));
+            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
         }
         return (int) combatLevel;
     }
@@ -1150,8 +1130,8 @@ public abstract class Player extends Entity {
         IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
         PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),
         ;
-        String name;
-        int[] coordValue;
+        final String name;
+        final int[] coordValue;
 
         positions(String name, int... coordValue) {
             this.name = name;
@@ -1193,7 +1173,6 @@ public abstract class Player extends Entity {
             c.send(new SendMessage(pageName + "#url#"));
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -1204,10 +1183,6 @@ public abstract class Player extends Entity {
 
     public boolean inEdgeville() {
         return getPositionName(getPosition()) == positions.EDGEVILLE;
-    }
-
-    public LoginManager getLoginManager() {
-        return Server.loginManager;
     }
 
 }

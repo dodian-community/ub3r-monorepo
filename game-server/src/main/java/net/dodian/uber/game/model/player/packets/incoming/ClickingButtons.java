@@ -674,18 +674,21 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 9167:
-
+            case 9178:
             case 9190:
                 client.triggerChat(1);
                 break;
             case 9168:
+            case 9179:
             case 9191:
                 client.triggerChat(2);
                 break;
             case 9169:
+            case 9180:
             case 9192:
                 client.triggerChat(3);
                 break;
+            case 9181:
             case 9193:
                 client.triggerChat(4);
                 break;
