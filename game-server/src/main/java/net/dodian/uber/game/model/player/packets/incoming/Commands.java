@@ -232,6 +232,11 @@ public class Commands implements Packet {
                     client.requestAnim(id, 0);
                     client.send(new SendMessage("You set animation to: " + id));
                 }
+                if (cmd[0].equalsIgnoreCase("gfx")) {
+                    int id = Integer.parseInt(cmd[1]);
+                    client.animation(id, client.getPosition().getY(), client.getPosition().getX());
+                    client.send(new SendMessage("You set gfx to: " + id));
+                }
                 if (command.startsWith("random")) {
                     String otherPName = command.substring(7);
                     int otherPIndex = PlayerHandler.getPlayerID(otherPName);
@@ -507,10 +512,7 @@ public class Commands implements Packet {
                     if (level > 99 || level < 1) {
                         return;
                     }
-                    int bonus = 0;
-                    if (level > 1)
-                        bonus = 1;
-                    client.setExperience(client.getXPForLevel(level) + bonus, Skill.getSkill(skill));
+                    client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(skill));
                     client.setLevel(level, Skill.getSkill(skill));
                     client.refreshSkill(Skill.getSkill(skill));
                 }
@@ -787,7 +789,6 @@ public class Commands implements Packet {
 
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
-                            PlayerHandler.players[otherPIndex].getLoginManager();
                             Login.addUidToBanList(LoginManager.UUID);
                             Login.addUidToFile(LoginManager.UUID);
                             p.logout();
@@ -806,7 +807,6 @@ public class Commands implements Packet {
 
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
-                            PlayerHandler.players[otherPIndex].getLoginManager();
                             Login.removeUidFromBanList(LoginManager.UUID);
                             p.logout();
                         } else {

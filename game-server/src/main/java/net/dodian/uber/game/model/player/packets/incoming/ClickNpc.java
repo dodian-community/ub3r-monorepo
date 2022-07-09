@@ -96,7 +96,7 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 3;
             client.convoId = 3;
         } else if (npcId == 3648) {
-            client.setTravelMenu();
+            client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 ||npcId == 1306) {
             client.NpcWanneTalk = 21;
         } else if (npcId == 2345) {

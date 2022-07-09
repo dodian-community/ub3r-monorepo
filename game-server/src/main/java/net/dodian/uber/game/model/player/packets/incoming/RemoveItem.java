@@ -24,7 +24,7 @@ public class RemoveItem implements Packet {
             client.fromDuel(removeID, removeSlot, 1);
         } else if (interfaceID == 1688) {
             if (client.getEquipment()[removeSlot] > 0) {
-                client.remove(removeID, removeSlot, false);
+                client.remove(removeSlot, false);
             }
         } else if (interfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
