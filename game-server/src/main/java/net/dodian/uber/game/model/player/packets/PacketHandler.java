@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.player.packets.incoming.*;
 
 public class PacketHandler {
 
-    private static Packet packets[] = new Packet[255];
+    private static Packet[] packets = new Packet[255];
 
     static {
         packets[4] = new Chat();
@@ -26,6 +26,8 @@ public class PacketHandler {
         packets[74] = new RemoveIgnore();
         packets[87] = new DropItem();
         packets[95] = new UpdateChat();
+        packets[248] = new Walking();
+        packets[164] = new Walking();
         packets[98] = new Walking();
         packets[101] = new ChangeAppearance();
         packets[103] = new Commands();
@@ -44,7 +46,6 @@ public class PacketHandler {
         packets[145] = new RemoveItem();
         packets[153] = new DuelRequest();
         packets[155] = new ClickNpc();
-        packets[164] = new Walking();
         packets[185] = new ClickingButtons();
         packets[188] = new AddFriend();
         packets[192] = new ItemOnObject();
@@ -55,7 +56,6 @@ public class PacketHandler {
         packets[236] = new PickUpGroundItem();
         packets[237] = new MagicOnItems();
         packets[241] = new MouseClicks();
-        packets[248] = new Walking();
         packets[249] = new MagicOnPlayer();
         packets[252] = new ClickObject2();
     }

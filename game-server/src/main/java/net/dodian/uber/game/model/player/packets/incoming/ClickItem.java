@@ -456,7 +456,7 @@ public class ClickItem implements Packet {
 //    	  break;
                 case 6199: //Something here!
                     int[] idss = {6856, 6857, 6859, 6861, 6860, 6858};
-                    int rs = Utils.random(idss.length) - 1;
+                    int rs = Utils.random(idss.length - 1);
                     client.deleteItem(6199, 1);
                     client.addItem(idss[rs], 1);
                     client.send(new SendMessage("Thank you for waiting patiently on us, take this as a token of gratitude!"));

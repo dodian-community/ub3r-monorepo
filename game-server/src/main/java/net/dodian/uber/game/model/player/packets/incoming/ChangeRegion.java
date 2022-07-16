@@ -9,6 +9,19 @@ public class ChangeRegion implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
+        int wild = client.getWildLevel();
+        if (wild > 0) {
+            client.setWildLevel(wild);
+        } else {
+            client.updatePlayerDisplay();
+        }
+        if (!client.pLoaded) {
+            client.pLoaded = true;
+        }
+        if (!client.IsPMLoaded) {
+            client.refreshFriends();
+            client.IsPMLoaded = true;
+        }
         client.replaceDoors();
         Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
@@ -51,11 +64,15 @@ public class ChangeRegion implements Packet {
             /*
              * Danno: Box off new area from noobs =]
              */
-            client.ReplaceObject2(2772, 3230, 2050, 0, 10);
+            client.ReplaceObject2(2770, 3140, 2050, 0, 10);
+            client.ReplaceObject2(2771, 3140, 2050, 0, 10);
+            client.ReplaceObject2(2772, 3140, 2050, 0, 10);
+            client.ReplaceObject2(2772, 3141, 2050, 0, 10);
+            client.ReplaceObject2(2772, 3142, 2050, 0, 10);
+            client.ReplaceObject2(2772, 3143, 2050, 0, 10);
             /* Shilo - Plague Block! */
-            client.ReplaceObject2(2874, 2967, 2050, 0, 10);
-            client.ReplaceObject2(2875, 2967, 2050, 0, 10);
-            client.ReplaceObject2(2877, 2967, 2050, 0, 10);
+            client.ReplaceObject2(2832, 2971, 2050, 0, 10);
+            client.ReplaceObject2(2831, 2971, 2050, 0, 10);
             /* ? */
             client.ReplaceObject2(2998, 3931, 6951, 0, 0);
             client.ReplaceObject2(2904, 9678, 6951, 0, 10);
@@ -81,19 +98,6 @@ public class ChangeRegion implements Packet {
             client.getOutputStream().endFrameVarSize();
         }
         client.updatePlayerDisplay();
-        int wild = client.getWildLevel();
-        if (wild > 0) {
-            client.setWildLevel(wild);
-        } else {
-            client.updatePlayerDisplay();
-        }
-        if (!client.pLoaded) {
-            client.pLoaded = true;
-        }
-        if (!client.IsPMLoaded) {
-            client.refreshFriends();
-            client.IsPMLoaded = true;
-        }
     }
 
 }

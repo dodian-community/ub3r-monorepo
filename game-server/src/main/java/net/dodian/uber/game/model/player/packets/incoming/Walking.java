@@ -15,7 +15,7 @@ public class Walking implements Packet {
         if (packetType == 248)
             packetSize -= 14;
 
-        if (packetType != 98) {
+        if (packetType != 98 && packetType != 164) {
             client.setWalkToTask(null);
         }
         if (!client.pLoaded || System.currentTimeMillis() < client.walkBlock) {

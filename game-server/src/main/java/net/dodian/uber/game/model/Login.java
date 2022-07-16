@@ -31,7 +31,6 @@ public class Login extends Thread {
             ResultSet inserted = getDbStatement().getGeneratedKeys();
             inserted.next();
             int id = inserted.getInt(1);
-            System.out.println("Auto-id: " + id);
             for (GameItem item : items) {
                 getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p1 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
