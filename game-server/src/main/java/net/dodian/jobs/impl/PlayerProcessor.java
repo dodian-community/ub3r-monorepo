@@ -43,19 +43,10 @@ public class PlayerProcessor implements Job {
                     PlayerHandler.players[i].disconnected = true;
                 }
                 PlayerHandler.players[i].actionAmount--;
-                try {
-                    while (PlayerHandler.players[i].packetProcess()); //TODO: Add different packet handling!
-                    PlayerHandler.players[i].process();
-                    PlayerHandler.players[i].postProcessing();
-                    PlayerHandler.players[i].getNextPlayerMovement();
-                } catch(Exception e) {
-                    PlayerHandler.players[i].disconnected = true;
-                }
-                    /*PlayerHandler.players[i].preProcessing(); //This is whatever!
-                    PlayerHandler.players[i].process();
-                    while (PlayerHandler.players[i].packetProcess());
-                    PlayerHandler.players[i].postProcessing();
-                     */
+                PlayerHandler.players[i].process();
+                while (PlayerHandler.players[i].packetProcess()); //TODO: Add different packet handling!
+                PlayerHandler.players[i].postProcessing();
+                PlayerHandler.players[i].getNextPlayerMovement();
                 if (PlayerHandler.players[i].getPlayerName().equalsIgnoreCase(PlayerHandler.kickNick)) {
                     PlayerHandler.players[i].kick();
                     PlayerHandler.kickNick = "";
@@ -66,14 +57,13 @@ public class PlayerProcessor implements Job {
                 e.printStackTrace();
             }
         }
-
         // loop through all players and do the updating stuff
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive|| PlayerHandler.players[i].getPlayerName() == null
+            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive || PlayerHandler.players[i].getPlayerName() == null
                     || PlayerHandler.players[i].getPlayerName().equals("null"))
                 continue;
             long lp = currentTime - PlayerHandler.players[i].lastPacket;
-            if (PlayerHandler.players[i].dbId > 0 && lp >= 60000) {
+            if ((PlayerHandler.players[i].dbId < 1 && lp > 15000) || (PlayerHandler.players[i].dbId > 0 && lp > 65000)) {
                 System.out.println("Removing non-responding player " + PlayerHandler.players[i].getPlayerName());
                 PlayerHandler.players[i].disconnected = true;
             }
@@ -87,26 +77,10 @@ public class PlayerProcessor implements Job {
                 if (!PlayerHandler.players[i].initialized) {
                     PlayerHandler.players[i].initialize();
                     PlayerHandler.players[i].initialized = true;
-                } else {
-                    try {
-                        PlayerHandler.players[i].update();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                } else PlayerHandler.players[i].update();
             }
         }
-        // post processing
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
-                continue;
-            try {
-                PlayerHandler.players[i].clearUpdateFlags();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+        /* Server update! */
         if (Server.updateRunning && !Server.updateAnnounced) {
             Server.updateAnnounced = true;
         }
@@ -116,7 +90,12 @@ public class PlayerProcessor implements Job {
                 System.exit(0);
             }
         }
-
+        // post processing
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
+                continue;
+            PlayerHandler.players[i].clearUpdateFlags();
+        }
     }
 
 }

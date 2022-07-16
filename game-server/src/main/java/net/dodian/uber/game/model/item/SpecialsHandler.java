@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.item;
 
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.utilities.Utils;
 
@@ -8,7 +9,7 @@ public class SpecialsHandler {
     public static void specAction(Client player, int weapon, int dmg) {
         if (weapon == 4151) {
             player.bonusSpec = 1 + Utils.random(5);
-            player.emoteSpec = player.getStandAnim();
+            player.emoteSpec = Server.itemManager.getAttackAnim(weapon);
             player.animationSpec = 341;
         } else if (weapon == 7158) {
             player.bonusSpec = 1 + Utils.random(5);

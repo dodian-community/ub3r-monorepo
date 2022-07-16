@@ -21,7 +21,7 @@ public class GlobalObject {
             }
             Client c = (Client) p;
             if (c.withinDistance(o))
-                c.ReplaceObject(o.x, o.y, o.id, o.face, o.type);
+                c.ReplaceObject2(o.x, o.y, o.id, o.face, o.type);
         }
     }
 

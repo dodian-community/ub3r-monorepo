@@ -42,6 +42,10 @@ public class ItemOnItem implements Packet {
                 client.send(new SendMessage("You need 60 crafting to make the crystal key"));
             }
         }
+        if(itemUsed >= 6157 && itemUsed <= 6161 && useWith >= 6157 && useWith <= 6161) {
+            client.NpcDialogueSend = false;
+            client.NpcDialogue = 10000;
+        }
         for (int h = 0; h < Utils.herbs.length; h++) {
             if ((itemUsed == Utils.herbs[h] && otherItem == 227) || (itemUsed == 227 && otherItem == Utils.herbs[h])) {
                 if (!client.premium && h > 2) {
@@ -133,6 +137,15 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("Your key shine bright and turned your " + client.GetItemName(85).toLowerCase() + " into a " + client.GetItemName(otherId + 1).toLowerCase()));
                 } else
                     client.send(new SendMessage("I already have a " + client.GetItemName(otherId + 1).toLowerCase() + " in " + (client.playerHasItem(otherId + 1) ? "my inventory!" : "my bank!")));
+            } else if (otherId == 2382 || otherId == 2383) {
+                if(!client.checkItem(989) && (!client.checkItem(2382) || !client.checkItem(2383))) {
+                    client.deleteItem(85, 1);
+                    client.addItem(otherId == 2382 ? 2383 : 2382, 1);
+                    client.send(new SendMessage("Your key shine bright and turned your " + client.GetItemName(85).toLowerCase() + " into a " + client.GetItemName(otherId == 2382 ? 2383 : 2382).toLowerCase()));
+                } else if (!client.checkItem(989) && client.checkItem(2382) && client.checkItem(2383))
+                    client.send(new SendMessage("You already have the crystals, perhaps you should combine them?"));
+                else
+                    client.send(new SendMessage("I already have a " + client.GetItemName(989).toLowerCase() + " in " + (client.playerHasItem(989) ? "my inventory!" : "my bank!")));
             }
         }
 

@@ -6,7 +6,9 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.party.Balloons;
+import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.utilities.Misc;
+import net.dodian.utilities.Utils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -18,20 +20,26 @@ public class NpcProcessor implements Job {
 
     public void execute(JobExecutionContext context) throws JobExecutionException {
         for (Npc npc : Server.npcManager.getNpcs()) {
-            long now = System.currentTimeMillis();
-            npc.clearUpdateFlags();
-      /*if(npc.alive) {
-        npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
-        npc.getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-      }*/
-            if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
-                npc.setVisible(false);
-                npc.drop();
+            /* Clear the npc update! */
+            try {
+                npc.clearUpdateFlags();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000))) {
+            long now = System.currentTimeMillis();
+        if(npc.alive && !npc.isFighting()) {
+            npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
+            npc.getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
+        }
+        if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
+             npc.setVisible(false);
+             npc.drop();
+        }
+            if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
                 npc.respawn();
             }
-            if (npc.alive && npc.isFighting() && now - npc.getLastAttack() >= 2000) {
+            int attackTimer = npc.inFrenzy != -1 && System.currentTimeMillis() - npc.inFrenzy < 30000 ? 600 : npc.boss ? 1800 : 2400;
+            if (npc.alive && npc.isFighting() && now - npc.getLastAttack() >= attackTimer) {
                 if (npc.getId() == 430 || npc.getId() == 1977)
                     npc.attack_new();
                 else if (npc.getId() == 3200)
@@ -39,9 +47,20 @@ public class NpcProcessor implements Job {
                 else
                     npc.attack();
                 npc.setLastAttack(System.currentTimeMillis());
+                if(npc.getId() == 2261) {
+                    int hp = (int)(npc.getMaxHealth() * 0.40);
+                    if(npc.enraged(20000)) {
+                        npc.inFrenzy = -1;
+                        npc.hadFrenzy = true;
+                        npc.sendFightMessage(npc.npcName() + " have calmed down.");
+                    } else if(!npc.hadFrenzy && npc.inFrenzy == -1 && npc.getCurrentHealth() < hp) {
+                        npc.inFrenzy = System.currentTimeMillis();
+                        npc.sendFightMessage(npc.npcName() + " have become enraged!");
+                    }
+                }
             }
             if (npc.getId() == 3805 && Misc.chance(100) == 1) {
-                int jackpot = Server.slots.slotsJackpot + Server.slots.peteBalance >= Integer.MAX_VALUE ? Integer.MAX_VALUE : Server.slots.slotsJackpot + Server.slots.peteBalance;
+                int jackpot = Math.min(Server.slots.slotsJackpot + Server.slots.peteBalance, Integer.MAX_VALUE);
                 npc.setText("Current Jackpot is " + jackpot + " coins!");
                 npc.setLastChatMessage();
             }

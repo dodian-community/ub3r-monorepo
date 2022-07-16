@@ -42,6 +42,9 @@ public class NpcManager extends Thread {
     public Collection<Npc> getNpcs() {
         return npcs.values();
     }
+    public Collection<NpcData> getNpcData() {
+        return data.values();
+    }
 
     public void loadSpawns() {
         try {

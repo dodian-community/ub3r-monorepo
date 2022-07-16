@@ -36,8 +36,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             boolean exceptions = removeNpc(player, npc);
             if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
                 updateNPCMovement(npc, stream);
-                if (npc.getUpdateFlags().isUpdateRequired())
-                    appendBlockUpdate(npc, block);
+                appendBlockUpdate(npc, block);
             } else {
                 stream.writeBits(1, 1);
                 stream.writeBits(2, 3); // tells client to remove this npc from list
@@ -52,10 +51,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
                     npc.setId(((Client) player).getGender() == 0 ? 1306 : 1307);
                 addNpc(player, npc, stream);
-                npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
                 appendBlockUpdate(npc, block);
+                npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
             }
-
         }
 
         if (block.currentOffset > 0) {
@@ -78,21 +76,28 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
 
-    public static void addNpc(Player player, Npc npc, Stream stream) {
+    public void addNpc(Player player, Npc npc, Stream stream) {
         stream.writeBits(14, npc.getSlot());
-        Position delta = Position.delta(player.getPosition(), npc.getPosition());
-        stream.writeBits(5, delta.getY());
-        stream.writeBits(5, delta.getX());
-        stream.writeBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+        /* Position */
+        Position npcPos = npc.getPosition(), plrPos = player.getPosition();
+        int z = npcPos.getY() - plrPos.getY();
+        if(z < 0)
+            z += 32;
+        stream.writeBits(5, z); // y coordinate relative to thisPlayer
+        z = npcPos.getX() - plrPos.getX();
+        if(z < 0)
+            z += 32;
+        stream.writeBits(5, z); // y coordinate relative to thisPlayer
+
+        stream.writeBits(1, 0); // something??
         stream.writeBits(14, npc.getId());
-        stream.writeBits(1, 1);
+        stream.writeBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
     }
 
     @Override
     public void appendBlockUpdate(Npc npc, Stream stream) {
-        if (!npc.getUpdateFlags().isUpdateRequired())
+        if(!npc.getUpdateFlags().isUpdateRequired())
             return;
-
         int updateMask = 0x0;
         for (UpdateFlag flag : npc.getUpdateFlags().keySet()) {
             if (npc.getUpdateFlags().isRequired(flag)) {

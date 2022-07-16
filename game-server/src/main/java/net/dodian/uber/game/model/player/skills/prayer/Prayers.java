@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.player.skills.prayer;
 
+import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -193,13 +194,15 @@ public class Prayers {
         if (isPrayerOn(prayer)) {
             set(prayer, false);
             c.frame87(prayer.getConfigId(), 0);
-            // System.out.println(ifCheck2()+" = "+ifCheck(prayer));
-            if (!ifCheck())
+            if (!ifCheck()) {
                 player.setHeadIcon(HeadIcon.NONE.asInt());
+                player.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+            }
         } else {
             set(prayer, true);
             if (prayer.getHeadIcon() != null) {
                 player.setHeadIcon(prayer.getHeadIcon().asInt());
+                player.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             }
             checkExtraPrayers(prayer);
         }

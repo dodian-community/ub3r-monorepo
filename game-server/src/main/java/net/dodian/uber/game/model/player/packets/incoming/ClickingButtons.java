@@ -13,6 +13,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.party.Balloons;
@@ -43,6 +44,9 @@ public class ClickingButtons implements Packet {
         Prayers.Prayer prayer = Prayers.Prayer.forButton(actionButton);
         if (prayer != null) {
             client.getPrayerManager().togglePrayer(prayer);
+            return;
+        }
+        if(QuestSend.questMenu(client)) {
             return;
         }
         Emotes.doEmote(actionButton, client);

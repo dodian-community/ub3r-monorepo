@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.event.Event;
+import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
@@ -46,13 +48,13 @@ public abstract class Player extends Entity {
     public int[] killers = new int[Constants.maxPlayers];
     public boolean busy = false, invis = false;
     public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
-            "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Cow_Level_Is_A_Lie!", "Dagannoth_Prime"};
+            "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime"};
     public int[] boss_amount = new int[boss_name.length];
     // dueling
     public int duelStatus = -1; // 0 = Requesting duel, 1 = in duel screen, 2 =
     // waiting for other player to accept, 3 = in
     // duel, 4 = won
-    public int duelChatTimer = -1;
+    public int duelChatTimer = -1, iconTimer = 6;
     public boolean startDuel = false;
     public String forcedChat = "";
     private int headIcon = -1;
@@ -795,6 +797,49 @@ public abstract class Player extends Entity {
         getUpdateFlags().setRequired(UpdateFlag.HIT, true);
     }
 
+    private void delayedHit(Entity source, Entity target, final int damage, final boolean b, int delay) {
+        if(source instanceof Client && target instanceof Npc) {
+            final Client p = (Client) source;
+            final Npc n = (Npc) target;
+            EventManager.getInstance().registerEvent(new Event(delay) {
+
+                public void execute() {
+                    if(p == null || p.disconnected) {
+                        stop();
+                        return;
+                    }
+                    if(n == null || !n.alive) {
+                        stop();
+                        return;
+                    }
+                    n.dealDamage(p, damage, b);
+                    stop();
+                }
+
+            });
+        }
+        if(source instanceof Client && target instanceof Client) {
+            final Client p = (Client) source;
+            final Client other = (Client) target;
+            EventManager.getInstance().registerEvent(new Event(delay) {
+
+                public void execute() {
+                    if(p == null || p.disconnected) {
+                        stop();
+                        return;
+                    }
+                    if(other == null || other.disconnected || other.deathStage > 0) {
+                        stop();
+                        return;
+                    }
+                    other.receieveDamage(p, damage, b);
+                    stop();
+                }
+
+            });
+        }
+    }
+
     public void sendAnimation(int id) {
         this.setAnimationId(id);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
@@ -1126,6 +1171,7 @@ public abstract class Player extends Entity {
         BRIMHAVEN_DOCKS("in the Brimhaven docks.", 2758, 2787, 3218, 3240),
         BRIMHAVEN_WEST("in the Brimhaven west.", 2689, 2757, 3137, 3247),
         BRIMHAVEN_EAST("in the Brimhaven east.", 2757, 2815, 3137, 3217),
+        BRIMHAVEN_DUNGEON("in the Brimhaven dungeon.", 3713, 3837, 9346, 9469),
         KEYDUNG("in Key dungeon.", 2559, 2622, 9475, 9534),
         IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
         PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),

@@ -26,6 +26,8 @@ import java.util.Map;
  * @author Owner
  */
 public class Npc extends Entity {
+    public long inFrenzy = -1;
+    public boolean hadFrenzy = false;
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, maxHit;
     public boolean alive = true, visible = true, boss = false;
     private long deathTime = 0, lastAttack = 0;
@@ -33,7 +35,7 @@ public class Npc extends Entity {
     private int damageDealt = 0;
     private String text = "";
     private int deathEmote;
-    private NpcData data;
+    public NpcData data;
     private boolean fighting = false;
     private Map<Integer, Client> enemies = new HashMap<Integer, Client>();
     private final int TIME_ON_FLOOR = 500;
@@ -79,6 +81,8 @@ public class Npc extends Entity {
             } else if (id == 5311) { //Head Mourner
                 boss = true;
             } else if (id == 1432) { //Black demon
+                boss = true;
+            } else if (id == 2261) { //Rock crab boss
                 boss = true;
             } else if (id == 2266) { //Daganoth prime
                 boss = true;
@@ -205,6 +209,9 @@ public class Npc extends Entity {
     public int getFace() {
         return defaultFace;
     }
+    public void setFace(int face) {
+        defaultFace = face;
+    }
 
     public void clearUpdateFlags() {
         getUpdateFlags().clear();
@@ -329,8 +336,9 @@ public class Npc extends Entity {
         int rand_npc = Utils.random(getAttack());
         double blocked = (0.08 * (double) def_bonus) / 100;
         int hitDiff = 0;
+        double bonus = getId() == 2261 && enraged(20000) ? 1.15 : 1.0;
         if (rand_npc > rand) {
-            int new_max_hit = (int) Math.ceil(maxHit * (1 - blocked));
+            int new_max_hit = (int) Math.ceil(maxHit * (1 - blocked) * bonus);
             hitDiff = Utils.random(new_max_hit);
         }
         if (hitDiff < 0)
@@ -442,6 +450,8 @@ public class Npc extends Entity {
         alive = true;
         visible = true;
         currentHealth = maxHealth;
+        hadFrenzy = false;
+        inFrenzy = -1;
         getDamage().clear();
         enemies.clear();
     }
@@ -659,6 +669,20 @@ public class Npc extends Entity {
 
     public NpcData getData() {
         return data;
+    }
+
+    public boolean enraged(int timer) {
+        return inFrenzy != -1 && System.currentTimeMillis() - inFrenzy >= timer;
+    }
+
+    public void sendFightMessage(String msg) {
+        for (Entity e : getDamage().keySet()) {
+            if (e instanceof Player) {
+                if (e == null || (fighting && !getPosition().withinDistance(e.getPosition(), 12)))
+                    continue;
+                ((Client) e).send(new SendMessage(msg));
+            }
+        }
     }
 
 }

@@ -71,6 +71,10 @@ public class ClickNpc3 implements Packet {
             client.skillX = tempNpc.getPosition().getX();
             client.setSkillY(tempNpc.getPosition().getY());
             client.WanneShop = 2; // Crafting shop
+        } else if (NPCID >= 402 && NPCID <= 405) {
+            client.skillX = tempNpc.getPosition().getX();
+            client.setSkillY(tempNpc.getPosition().getY());
+            client.WanneShop = 15; // Slayer Store
         } else if (NPCID == 1307) { // Make-over mage
             client.NpcWanneTalk = 25;
         }

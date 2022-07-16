@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -71,12 +72,9 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Object temporary spawned = " + id + ", at x = " + pos.getX()
                             + " y = " + pos.getY() + " with height " + pos.getZ() + ""));
                 }
-                if (cmd[0].equalsIgnoreCase("tgfx")) {
+                if (cmd[0].equalsIgnoreCase("gfx")) {
                     int id = Integer.parseInt(cmd[1]);
-                    int offsetX = (client.getPosition().getY() - (client.getPosition().getY() + 5)) * -1;
-                    int offsetY = (client.getPosition().getX() - (client.getPosition().getX() + 5)) * -1;
-                    client.arrowGfx(id, offsetX, offsetY, client.clientPid + 10);
-                    Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
+                    client.CallGFXMask(id, 100);
                 }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
@@ -92,6 +90,47 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("immune")) {
                     client.immune = !client.immune;
                     client.send(new SendMessage("You set immune as " + client.immune));
+                }
+                if (cmd[0].equalsIgnoreCase("face")) {
+                    int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
+                    int face = 0; //Default face = 0
+                    Npc n = null;
+                    try {
+                        String query = "SELECT * FROM uber3_spawn where x="+x+" && y="+y+" && height="+z+"";
+                        ResultSet results = getDbConnection().createStatement().executeQuery(query);
+                        if (results.next()) {
+                            face = results.getInt("face");
+                            for (Npc npc : Server.npcManager.getNpcs()) {
+                                if(client.getPosition().equals(npc.getPosition()))
+                                    n = npc;
+                            }
+                        }
+                        results.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if(n == null)
+                        client.send(new SendMessage("Could not find a npc on this spot!"));
+                    else {
+                        client.send(new SendMessage(face == n.getFace() ? "This npc is already facing the way you want it" : "You set the face of the npc from " + n.getFace() + " to " + face + "!"));
+                        n.setFace(face);
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("dumpdrop")) {
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        System.out.println("------Starting drop dump of '"+client.GetItemName(id)+"'------");
+                        for (NpcData data : Server.npcManager.getNpcData()) {
+                            for (NpcDrop drop : data.getDrops()) {
+                                if(!data.getDrops().isEmpty() && drop.getId() == id) {
+                                    System.out.println(drop.getChance() + "% chance to get "+drop.getMinAmount()+"-"+drop.getMaxAmount()+" of " + client.GetItemName(id) + ", from " + data.getName());
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.out.println("test..." + e.getMessage());
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
+                    }
                 }
                 if (cmd[0].equalsIgnoreCase("rehp")) {
                     client.reloadHp = !client.reloadHp;
@@ -504,6 +543,7 @@ public class Commands implements Packet {
                         else
                             client.send(new SendMessage("Not enough space in your inventory."));
                     }
+                    CommandLog.recordCommand(client, command);
                     return;
                 }
                 if (cmd[0].equalsIgnoreCase("setlevel")) {

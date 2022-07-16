@@ -93,7 +93,7 @@ public class ClickObject implements Packet {
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, objectPosition.getX(), objectPosition.getY(), 1));
         }
-        if (System.currentTimeMillis() < client.walkBlock) {
+        if (System.currentTimeMillis() < client.walkBlock || client.genie) {
             return;
         }
         client.resetAction(false);
@@ -723,12 +723,12 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need atleast one free inventory slot!"));
                 return;
             }
-            if (System.currentTimeMillis() - client.lastAction < 2000) {
+            if (System.currentTimeMillis() - client.lastAction < 1200) {
                 client.lastAction = System.currentTimeMillis();
                 return;
             }
             final Object emptyObj = new Object(378, objectPosition.getX(), objectPosition.getY(), client.getPosition().getZ(), 10, 2, objectID);
-            if (!GlobalObject.addGlobalObject(emptyObj, 20000)) {
+            if (!GlobalObject.addGlobalObject(emptyObj, 12000)) {
                 return;
             }
             client.lastAction = System.currentTimeMillis();
@@ -741,7 +741,7 @@ public class ClickObject implements Packet {
                 client.yell("[Server] - " + client.getPlayerName() + " has just received from the chest a  "
                         + client.GetItemName(items[r]));
             } else {
-                int coins = 1200 + Utils.random(5000);
+                int coins = 500 + Utils.random(3000);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
             }
@@ -763,12 +763,12 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need atleast one free inventory slot!"));
                 return;
             }
-            if (System.currentTimeMillis() - client.lastAction < 2000) {
+            if (System.currentTimeMillis() - client.lastAction < 1200) {
                 client.lastAction = System.currentTimeMillis();
                 return;
             }
             final Object o = new Object(6421, objectPosition.getX(), objectPosition.getY(), objectPosition.getZ(), 11, -1, objectID);
-            if (!GlobalObject.addGlobalObject(o, 20000)) {
+            if (!GlobalObject.addGlobalObject(o, 15000)) {
                 return;
             }
             client.lastAction = System.currentTimeMillis();
@@ -781,7 +781,7 @@ public class ClickObject implements Packet {
                 client.yell("[Server] - " + client.getPlayerName() + " has just received from the premium chest a  "
                         + client.GetItemName(items[r]));
             } else {
-                int coins = 3000 + Utils.random(9000);
+                int coins = 1000 + Utils.random(6000);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
             }
