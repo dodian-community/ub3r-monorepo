@@ -42,8 +42,8 @@ public abstract class Entity {
     }
 
     public void requestAnim(int id, int delay) {
-        setAnimationId(id);
         setAnimationDelay(delay * 10);
+        this.setAnimationId(id);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
     }
 

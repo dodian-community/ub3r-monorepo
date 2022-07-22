@@ -38,7 +38,7 @@ public class NpcProcessor implements Job {
             if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
                 npc.respawn();
             }
-            int attackTimer = npc.inFrenzy != -1 && System.currentTimeMillis() - npc.inFrenzy < 30000 ? 600 : npc.boss ? 1800 : 2400;
+            int attackTimer = npc.enraged(20000) ? 600 : npc.boss ? 1800 : 2400;
             if (npc.alive && npc.isFighting() && now - npc.getLastAttack() >= attackTimer) {
                 if (npc.getId() == 430 || npc.getId() == 1977)
                     npc.attack_new();

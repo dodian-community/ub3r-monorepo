@@ -26,6 +26,7 @@ public class MagicOnPlayer implements Packet {
         int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
         Player pl2 = PlayerHandler.players[playerIndex];
         Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];
+        int EnemyHP = castOnPlayer.getLevel(Skill.HITPOINTS);
         client.resetWalkingQueue();
         int spellID = client.getInputStream().readSignedWordBigEndian();
         if (pl2 == null) {
@@ -73,8 +74,10 @@ public class MagicOnPlayer implements Packet {
                     client.lastPlayerCombat = System.currentTimeMillis();
                     if (client.getLevel(Skill.MAGIC) >= client.requiredLevel[i2]) {
                         client.setFocus(EnemyX3, EnemyY3);
-                        int dmg = client.baseDamage[i2] + (int) Math.ceil(client.playerBonus[11] * 0.5);
-                        double hit = Utils.random(dmg);
+                        double dmg = client.baseDamage[i2] * client.magicDmg();
+                        int hit = Utils.random((int)dmg);
+                        if (hit >= EnemyHP)
+                            hit = EnemyHP;
                         client.requestAnim(1979, 0);
                         client.AnimationReset = true;
                         client.lastAttack = System.currentTimeMillis();
@@ -108,7 +111,7 @@ public class MagicOnPlayer implements Packet {
                         } else if (client.ancientType[i2] == 2) {
                             // coolDown[coolDownGroup[i2]] = 12;
                             client.stillgfx(377, EnemyY, EnemyX);
-                            client.setCurrentHealth(client.getCurrentHealth() + (int) (hit / 10));
+                            client.setCurrentHealth(client.getCurrentHealth() + (hit / 4));
                             if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
                                 client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
                             }

@@ -553,6 +553,8 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 13092:
+                if(client.getClient(client.trade_reqId) == null)
+                    break;
                 try {
                     if (System.currentTimeMillis() - client.lastButton < 600)
                         break;
@@ -582,9 +584,11 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 13218:
+                if(client.getClient(client.trade_reqId) == null)
+                    break;
                 try {
                     Client other = client.getClient(client.trade_reqId);
-                    if (!client.validClient(client.trade_reqId)) {
+                    if (other == null || !client.validClient(client.trade_reqId)) {
                         break;
                     }
                     if (System.currentTimeMillis() - client.lastButton < 600) {
@@ -708,8 +712,11 @@ public class ClickingButtons implements Packet {
                     break;
                 }
                 Client o = client.getClient(client.duel_with);
+                boolean sendMsgToOther = o.getCurrentHealth() != o.getMaxHealth() && client.getCurrentHealth() == client.getMaxHealth();
                 if (o.getCurrentHealth() != o.getMaxHealth() || client.getCurrentHealth() != client.getMaxHealth()) {
-                    client.send(new SendMessage("One of you are on low health, so heal up!"));
+                    client.send(new SendMessage(sendMsgToOther ? "Your opponent is low on health!" : "You are low on health, so please heal up!"));
+                    if(sendMsgToOther)
+                        o.send(new SendMessage("You are low on health, so please heal up!"));
                     break;
                 }
                 if (System.currentTimeMillis() - client.lastButton < 1000) {

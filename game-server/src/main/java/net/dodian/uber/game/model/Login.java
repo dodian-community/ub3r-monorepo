@@ -39,7 +39,7 @@ public class Login extends Thread {
                 getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p2 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
-            //ystem.out.println("Trade " + id + " logged!");
+            inserted.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

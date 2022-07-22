@@ -932,14 +932,13 @@ public class Commands implements Packet {
             }
             if (cmd[0].equalsIgnoreCase("max")) {
                 client.CalculateMaxHit(); //Need this to calculate maxhit!
-                int magic_max = (int) Math.ceil(client.playerBonus[11] * 0.5);
                 client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.playerMaxHit));
                 client.send(new SendMessage("<col=0B610B>Range max hit: " + (int) client.maxRangeHit()));
                 if (client.autocast_spellIndex == -1)
-                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (client.baseDamage[0] + magic_max)));
+                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg())));
                 else
                     client.send(new SendMessage("<col=292BA3>Magic max hit (" + client.spellName[client.autocast_spellIndex]
-                            + "): " + (client.baseDamage[client.autocast_spellIndex] + magic_max)));
+                            + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * client.magicDmg())));
             }
             if (cmd[0].equalsIgnoreCase("yell") && command.length() > 5) {
                 if (!client.premium) {

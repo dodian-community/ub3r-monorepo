@@ -388,8 +388,11 @@ public class Npc extends Entity {
                     p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
                     p.giveExperience(p.getSlayerData().get(2) * maxHealth, Skill.SLAYER);
                     p.send(new SendMessage("You have completed your slayer task and gained some bonus experience!"));
-                } else
+                    p.triggerRandom(p.getSlayerData().get(2) * maxHealth);
+                } else {
                     p.giveExperience(maxHealth * 10, Skill.SLAYER);
+                    p.triggerRandom(maxHealth * 10);
+                }
             }
         }
     }
