@@ -157,10 +157,10 @@ public class Client extends Player implements Runnable {
 	public boolean validClient = true, muted = false;
 	public int newPms = 0;
 
-	public int[] requiredLevel = {1, 10, 25, 38, 50, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
-			94, 96, 20, 50};
+	public int[] requiredLevel = {1, 10, 0, 20, 30, 0, 40, 50, 0, 60, 70, 0, 74, 76, 0, 80, 82, 0, 86, 88, 0, 92,
+			94, 96, 0, 50};
 
-	public int[] baseDamage = {1, 2, 0, 3, 4, 0, 5, 6, 0, 7, 8, 0, 9, 10, 0, 11, 12, 0, 13, 14, 0, 15, 16, 0, 0, 0};
+	public int[] baseDamage = {2, 4, 0, 6, 8, 0, 10, 12, 0, 14, 16, 0, 18, 20, 0, 22, 24, 0, 26, 28, 0, 30, 32, 0, 0, 0};
 	public String[] spellName = {"Smoke Rush", "Shadow Rush", "", "Blood Rush", "Ice Rush", "", "Smoke Burst",
 			"Shadow Burst", "", "Blood Burst", "Ice Burst", "", "Smoke Blitz", "Shadow Blitz", "", "Blood Blitz", "Ice Blitz",
 			"", "Smoke Barrage", "Shadow Barrage", "", "Blood Barrage", "Ice Barrage", "", "", ""};
@@ -251,24 +251,23 @@ public class Client extends Player implements Runnable {
 
 	public int getbattleTimer(int weapon) {
 		String wep = GetItemName(weapon).toLowerCase();
-		int wepPlainTime = 6; //Default for many weapons!
+		double wepPlainTime = 6.0; //Default for many weapons!
 		if (wep.contains("dart") || wep.contains("knife")) {
-			wepPlainTime = 8;
+			wepPlainTime = 8.0;
 		} else if (wep.contains("longsword") || wep.contains("mace") || wep.contains("axe") && !wep.contains("dharok")
 				|| wep.contains("spear") || wep.contains("tzhaar-ket-em") || wep.contains("torag") || wep.contains("guthan")
 				|| wep.contains("verac") || wep.contains("staff") && !wep.contains("ahrim") || wep.contains("composite")
-				|| wep.contains("crystal") || wep.contains("thrownaxe") || wep.contains("shortbow")) {
-			wepPlainTime = 5;
+				|| wep.contains("crystal") || wep.contains("thrownaxe") || wep.contains("longbow")) {
+			wepPlainTime = 5.0;
 		} else if (wep.contains("battleaxe") || wep.contains("warhammer") || wep.contains("godsword")
 				|| wep.contains("barrelchest") || wep.contains("ahrim") || wep.contains("toktz-mej-tal")
-				|| wep.contains("longbow") || wep.contains("dorgeshuun") || wep.contains("crossbow")
-				|| wep.contains("hand cannon") || wep.contains("javelin")) {
-			wepPlainTime = 4;
+				|| wep.contains("dorgeshuun") || wep.contains("crossbow") || wep.contains("javelin")) {
+			wepPlainTime = 4.0;
 		} else if (wep.contains("2h sword") || wep.contains("halberd") || wep.contains("maul") || wep.contains("balmung")
 				|| wep.contains("tzhaar-ket-om") || wep.contains("dharok")) {
-			wepPlainTime = 3;
+			wepPlainTime = 3.0;
 		}
-		return (int) (6 - 0.6 * (wepPlainTime)) * 1000;
+		return (int) (6 - 0.6 * wepPlainTime) * 1000;
 	}
 
 	public void CheckGear() {
@@ -509,7 +508,6 @@ public class Client extends Player implements Runnable {
 
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
-		mySock = s;
 		try {
 			in = s.getInputStream();
 			out = s.getOutputStream();
@@ -517,21 +515,14 @@ public class Client extends Player implements Runnable {
 			System.out.println("Dodian (1): Exception!");
 			System.out.println(ioe.getMessage());
 		}
-
+		mySock = s;
+		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[bufferSize]);
 		outputStream.currentOffset = 0;
 		inputStream = new Stream(new byte[bufferSize]);
 		inputStream.currentOffset = 0;
 		buffer = new byte[bufferSize];
-		mySocketHandler = new SocketHandler(this, s);
 		readPtr = writePtr = 0;
-		/*mySock = s;
-		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[bufferSize]);
-		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[bufferSize]);
-		inputStream.currentOffset = 0;
-		readPtr = writePtr = 0;*/
 	}
 
 	public void shutdownError(String errorMessage) {
@@ -1231,10 +1222,10 @@ public class Client extends Player implements Runnable {
 		}
 		amount = amount * getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
-		newXP = getExperience(skill) + amount > 200000000 ? 200000000 : getExperience(skill) + amount;
+		newXP = getExperience(skill) + amount >= 200000000 ? 200000000 : getExperience(skill) + amount;
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
+		amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
 		addExperience(amount, skill);
-		setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
 		int animation = -1;
 		if(newLevel - oldLevel > 0) {
 			animation = 199;
@@ -1245,7 +1236,7 @@ public class Client extends Player implements Runnable {
 				publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + getLevel(skill) + "!");
 			send(new SendMessage("Congratulations, you just advanced " + (skill == Skill.ATTACK || skill == Skill.AGILITY ? "an" : "a") + " " + skill.getName() + " level."));
 		}
-		else if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
+		if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
 			animation = 623;
 			publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 50 million experience!");
 		}
@@ -1273,18 +1264,21 @@ public class Client extends Player implements Runnable {
 			animation = 623;
 			publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached the maximum experience!");
 		}
-		if(animation != -1)
-			animation(animation, getPosition().getY(), getPosition().getX());
-		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     /*double chance = (double)newXp / 1000000; //1 xp = 0.000001, 0.0001 %
     double roll = Math.random() * 1;
     if(getGameWorldId() > 1)
     	send(new SendMessage("XP gained: "+ newXp +", your chance is " + chance * 100 + "% and you rolled a " + roll * 100));
     if(roll <= chance && getGameWorldId() > 1) //Test world 2 or higher for this to trigger!
     	Balloons.triggerBalloonEvent(this);*/
+		setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
 		refreshSkill(skill);
 		if (skill == Skill.STRENGTH || skill == Skill.RANGED)
 			CalculateMaxHit();
+		else if(skill == Skill.FIREMAKING)
+			updateBonus(11);
+		if(animation != -1)
+			animation(animation, getPosition().getY(), getPosition().getX());
+		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		return true;
 	}
 
@@ -2054,15 +2048,16 @@ public class Client extends Player implements Runnable {
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(1688);
 			getOutputStream().writeByte(targetSlot);
-			getOutputStream().writeWord((wearID + 1));
+			getOutputStream().writeWord(wearID == -1 ? 0 : wearID + 1);
 			if (amount > 254) {
 				getOutputStream().writeByte(255);
 				getOutputStream().writeDWord(amount);
 			} else
 				getOutputStream().writeByte(amount); // amount
 			getOutputStream().endFrameVarSizeWord();
-		if (targetSlot == Equipment.Slot.WEAPON.getId() && wearID >= 0) {
+		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 			CombatStyleHandler.setWeaponHandler(this, -1);
+			requestAnims(Equipment.Slot.WEAPON.getId());
 		}
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
@@ -2092,6 +2087,7 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need to be assigned a task!"));
 			return false;
 		}
+		int shield = getEquipment()[Equipment.Slot.SHIELD.getId()];
 		int targetSlot = Server.itemManager.getSlot(wearID);
 		//println("Item: " + wearID + ", slot: " + targetSlot);
 		if (!canUse(wearID)) {
@@ -2112,26 +2108,29 @@ public class Client extends Player implements Runnable {
 				return false;
 			}
 		}
-		if (Server.itemManager.isTwoHanded(wearID)) {
-			if (getEquipment()[Equipment.Slot.SHIELD.getId()] > 0) {
-				if (hasSpace()) {
-					remove(Equipment.Slot.SHIELD.getId(), true);
-				} else {
-					send(new SendMessage("You can't wear this weapon with a shield"));
-					return false;
+
+		if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
+			if (Server.itemManager.isTwoHanded(wearID)) {
+				if (getEquipment()[Equipment.Slot.SHIELD.getId()] > 0) {
+					if (hasSpace()) {
+						remove(Equipment.Slot.SHIELD.getId(), true);
+					} else {
+						send(new SendMessage("You can't wear this weapon with a shield"));
+						return false;
+					}
 				}
 			}
-		}
-		if (Server.itemManager.getSlot(wearID) == Equipment.Slot.SHIELD.getId()) {
-			if (Server.itemManager.isTwoHanded(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
-				if (hasSpace()) {
-					remove(Equipment.Slot.WEAPON.getId(), true);
-				} else {
-					send(new SendMessage("You can't wear this shield with a two-handed weapon"));
-					return false;
+		if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
+			if (Server.itemManager.getSlot(wearID) == Equipment.Slot.SHIELD.getId()) {
+				if (Server.itemManager.isTwoHanded(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
+					if (hasSpace()) {
+						remove(Equipment.Slot.WEAPON.getId(), true);
+					} else {
+						send(new SendMessage("You can't wear this shield with a two-handed weapon"));
+						return false;
+					}
 				}
 			}
-		}
 
 		if ((playerItems[slot] - 1) == wearID) {
 			// targetSlot = itemType(wearID);
@@ -2162,6 +2161,10 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need " + CLRanged + " Ranged to equip this item."));
 				GoFalse = true;
 			}
+			if (getLevel(Skill.AGILITY) < 60 && wearID == 4224) {
+				send(new SendMessage("You need 60 Agility to equip this item."));
+				GoFalse = true;
+			}
 			if (GoFalse) {
 				return false;
 			}
@@ -2183,7 +2186,7 @@ public class Client extends Player implements Runnable {
 			getEquipment()[targetSlot] = wearID;
 			getEquipmentN()[targetSlot] = wearAmount;
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
-
+			if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
 			if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
 					&& Server.itemManager.isTwoHanded(wearID)) {
 				remove(Equipment.Slot.SHIELD.getId(), false);
@@ -2214,19 +2217,14 @@ public class Client extends Player implements Runnable {
 		if (addItem(getEquipment()[slot], getEquipmentN()[slot])) {
 			getEquipment()[slot] = -1;
 			getEquipmentN()[slot] = 0;
-			getOutputStream().createFrame(34);
-			getOutputStream().writeWord(6);
-			getOutputStream().writeWord(1688);
-			getOutputStream().writeByte(slot);
-			getOutputStream().writeWord(0);
-			getOutputStream().writeByte(0);
+			setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
 			GetBonus();
 			WriteBonus();
 			if (slot == Equipment.Slot.WEAPON.getId()) {
-				CombatStyleHandler.setWeaponHandler(this, -1);
-				requestAnims(Equipment.Slot.WEAPON.getId());
+				checkBow();
+				if(UseBow) CalculateRange();
+				else CalculateMaxHit();
 			}
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		}
 	}
 
@@ -2917,9 +2915,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Skeletal", "Crystal shield", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Dragon", "Dragonfire shield",
+			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "1", "10", "20", "30", "40", "60", "70", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "60", "70", "75", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2927,7 +2925,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {6139, 4224, 1117, 1115, 1119, 1121, 1123, 1127, 3140, 11284, 9753};
+			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 3140, 4224, 11284, 9753};
 			setMenuItems(items);
 		} else if (skillID == 4) {
 			changeInterfaceStatus(8825, false);
@@ -2975,11 +2973,11 @@ public class Client extends Player implements Runnable {
 			String[] s = new String[0];
 			String[] s1 = new String[0];
 			if (child == 0) {
-				s = new String[]{"High Alch"};
-				s1 = new String[]{"1"};
+				s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
+				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "90", "92"};
 			} else if (child == 1) {
-				s = new String[]{"Mystic", "Infinity"};
-				s1 = new String[]{"1", "50"};
+				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Infinity"};
+				s1 = new String[]{"1", "20", "20", "35", "50"};
 			} else if (child == 2) {
 				s = new String[]{"Zamorak staff", "Saradomin staff", "Guthix staff", "Master wand", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "1", "50", "99"};
@@ -2992,9 +2990,10 @@ public class Client extends Player implements Runnable {
 				send(new SendString(s1[i], slot++));
 			}
 			if (child == 0)
-				setMenuItems(new int[]{1379});
+				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
+				new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
 			else if (child == 1)
-				setMenuItems(new int[]{4089, 6918});
+				setMenuItems(new int[]{4089, 4109, 3385, 4099, 6918});
 			else if (child == 2)
 				setMenuItems(new int[]{2417, 2415, 2416, 6914, 9762});
 		} else if (skillID == 2) {
@@ -3218,8 +3217,8 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Taverly dungeon shortcut", "Wilderness course", "Prime boss shortcut", "Skillcape" + prem};
-			String[] s1 = {"1", "40", "50", "70", "70", "85", "99"};
+			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Taverly dungeon shortcut", "Wilderness course", "Prime boss shortcut", "Skillcape" + prem};
+			String[] s1 = {"1", "40", "50", "60", "70", "70", "85", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -3227,7 +3226,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {751, 1365, -1, 4155, 964, 4155, 9771};
+			int[] items = {751, 1365, -1, 4224, 4155, 964, 4155, 9771};
 			setMenuItems(items);
 		} else if (skillID == 7) {
 			send(new SendString("Axes", 8846));
@@ -3763,11 +3762,12 @@ public class Client extends Player implements Runnable {
 						return false;
 					}
 					deleteItem(565, 1);
-					int dmg = baseDamage[autocast_spellIndex] + (int) Math.ceil(playerBonus[11] * 0.5);
-					double hit = Utils.random(dmg);
-					if (hit >= EnemyHP)
-						hit = EnemyHP;
-					hitDiff = (int) hit;
+
+					double dmg = baseDamage[autocast_spellIndex] * magicDmg();
+					hitDiff = Utils.random((int) dmg);
+					if ((EnemyHP - hitDiff) < 0) {
+						hitDiff = EnemyHP;
+					}
 					setFocus(EnemyX, EnemyY);
 					requestAnim(1979, 0);
 					// AnimationReset = true;
@@ -3781,7 +3781,7 @@ public class Client extends Player implements Runnable {
 					} else if (ancientType[autocast_spellIndex] == 2) {
 						stillgfx(377, EnemyY, EnemyX);
 						// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-						setCurrentHealth(getCurrentHealth() + (int) (hit / 5));
+						setCurrentHealth(getCurrentHealth() + (int) (hitDiff / 4));
 						if (getCurrentHealth() > getLevel(Skill.HITPOINTS)) {
 							setCurrentHealth(getLevel(Skill.HITPOINTS));
 						}
@@ -4076,15 +4076,20 @@ public class Client extends Player implements Runnable {
 				setInCombat(true);
 				setLastCombat(System.currentTimeMillis());
 				lastAttack = System.currentTimeMillis();
+				double extra = getLevel(Skill.MAGIC) * 0.195;
+				double critChance = getLevel(Skill.AGILITY) / 9;
+				boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
 				if (getLevel(Skill.MAGIC) >= requiredLevel[autocast_spellIndex]) {
 					if (!runeCheck(autocast_spellIndex)) {
 						ResetAttack();
 						return false;
 					}
 					deleteItem(565, 1);
-					double dmg = baseDamage[autocast_spellIndex] + Math.ceil(playerBonus[11] * 0.5);
+					double dmg = baseDamage[autocast_spellIndex] * magicDmg();
 					double hit = blackMaskImbueEffect(type) ? 1.2 * dmg : dmg;
 					hitDiff = Utils.random((int) hit);
+					hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
+					hit = hitDiff;
 					if (hitDiff >= EnemyHP)
 						hitDiff = EnemyHP;
 					requestAnim(1979, 0);
@@ -4099,7 +4104,7 @@ public class Client extends Player implements Runnable {
 					} else if (ancientType[autocast_spellIndex] == 2) {
 						stillgfx(377, EnemyY, EnemyX);
 						// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-						setCurrentHealth(getCurrentHealth() + (int) (hit / 5));
+						setCurrentHealth(getCurrentHealth() + (int) (hit / 4));
 						if (getCurrentHealth() > getLevel(Skill.HITPOINTS)) {
 							setCurrentHealth(getLevel(Skill.HITPOINTS));
 						}
@@ -4114,7 +4119,7 @@ public class Client extends Player implements Runnable {
 				giveExperience(40 * hitDiff, Skill.MAGIC);
 				giveExperience(hitDiff * 15, Skill.HITPOINTS);
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-				selectedNpc.dealDamage(this, hitDiff, false);
+				selectedNpc.dealDamage(this, hitDiff, hitCrit);
 				return true;
 			}
 		}
@@ -4140,7 +4145,7 @@ public class Client extends Player implements Runnable {
 				arrowGfx(offsetY, offsetX,
 						50, 90, arrowgfx, 43, 35, attacknpc + 1, 51, 16);
 				CallGFXMask(arrowpullgfx, 100);
-				requestAnim(426, 0);
+				sendAnimation(426);
 				setFocus(EnemyX, EnemyY);
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			} else {
@@ -4160,28 +4165,29 @@ public class Client extends Player implements Runnable {
 			if (!selectedNpc.isAlive()) {
 				resetAttackNpc();
 			} else if(!UseBow) {
-				double hit = blackMaskEffect(type) ? 1.15 * playerMaxHit : playerMaxHit;
+				double hit = blackMaskImbueEffect(type) ? playerMaxHit * 1.2 : blackMaskEffect(type) ? 1.15 * playerMaxHit : playerMaxHit;
 				hitDiff = Utils.random((int) hit);
 				int chance = new Range(1, 8).getValue();
 				boolean specialTrigger = chance == 1 && specsOn == true;
 					if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 4151) {
 						SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
 						hitDiff = hitDiff + bonusSpec;
-						requestAnim(emoteSpec, 0);
+						sendAnimation(emoteSpec);
+						//requestAnim(emoteSpec, 0);
 						animation(animationSpec, EnemyY, EnemyX);
 					} else if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 7158) {
 						SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
 						hitDiff = hitDiff + bonusSpec;
-						requestAnim(emoteSpec, 0);
+						sendAnimation(emoteSpec);
 						animation(animationSpec, EnemyY, EnemyX);
 					} else
-						requestAnim(emote, 0);
-			}
+						sendAnimation(emote);
+				}
 				setFocus(EnemyX, EnemyY);
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 				double extra = UseBow ? getLevel(Skill.RANGED) * 0.195 : getLevel(Skill.STRENGTH) * 0.195;
 				double critChance = getLevel(Skill.AGILITY) / 9;
-				boolean hitCrit = Math.random() * 100 <= critChance;
+				boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
 				hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
 				if (hitDiff >= EnemyHP)
 					hitDiff = EnemyHP;
@@ -4317,43 +4323,42 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < 14; i++) {
 			if (getEquipment()[i] > -1) {
 				for (int k = 0; k < playerBonus.length; k++) {
-					playerBonus[k] += Server.itemManager.getBonus(getEquipment()[i], k);
+					int bonus = Server.itemManager.getBonus(getEquipment()[i], k);
+					playerBonus[k] += bonus;
 				}
 			}
 		}
-		for (int i = 0; i < 5; i++) {
+		/*for (int i = 0; i < 5; i++) {
 			playerBonus[i] += (getLevel(Skill.ATTACK) / 10);
+			playerBonus[i + 5] += (getLevel(Skill.DEFENCE) / 5);
 		}
-		playerBonus[5] += (getLevel(Skill.DEFENCE) / 5);
-		playerBonus[6] += (getLevel(Skill.DEFENCE) / 5);
-		playerBonus[7] += (getLevel(Skill.DEFENCE) / 5);
-		playerBonus[8] += (getLevel(Skill.DEFENCE) / 5);
-		playerBonus[9] += (getLevel(Skill.DEFENCE) / 5);
-
-		playerBonus[10] += (getLevel(Skill.STRENGTH) / 5);
-		// maxHealth = playerLevel[3];
+		playerBonus[10] += (getLevel(Skill.STRENGTH) / 5);*/
 	}
 
 	public void WriteBonus() {
-		int offset = 0;
-		String send;
-
-		for (int i = 0; i < playerBonus.length; i++) {
-			if (playerBonus[i] >= 0) {
-				send = BonusName[i] + ": +" + playerBonus[i];
-			} else {
-				send = BonusName[i] + ": -" + java.lang.Math.abs(playerBonus[i]);
-			}
-
-			if (i == 10) {
-				offset = 1;
-			}
-			if (i == 11) {
-				send = "Spell Dmg:  +" + playerBonus[i] + "";
-			}
-			send(new SendString(send, (1675 + i + offset)));
-		}
+		for (int i = 0; i < playerBonus.length; i++)
+			updateBonus(i);
 		CalculateMaxHit();
+	}
+	public int neglectDmg() {
+		int bonus = 0;
+		if(getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284)
+			bonus += (getLevel(Skill.FIREMAKING) + 1) / 5;
+		return Math.min(1000, playerBonus[11] + (bonus * 10));
+	}
+	public double magicDmg() {
+		return playerBonus[3] <= 0.0 ? 1.0 : (1.0 + (playerBonus[3] / 100D));
+	}
+	public void updateBonus(int id) {
+		String send;
+		if(id == 3) {
+			double dmg = (magicDmg() - 1.0) * 100D;
+			send = "Spell Dmg: " + String.format("%"+(dmg < 10 ? 1 : dmg >= 10 && dmg < 100 ? 2 : dmg >= 100 && dmg < 1000 ? 3 : 4)+".0f", dmg) + "%";
+		} else if(id == 11)
+			send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
+		else
+			send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
+		send(new SendString(send, 1675 + (id >= 10 ? id + 1 : id)));
 	}
 
 	public void CalculateMaxHit() {
@@ -4884,7 +4889,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You cut some " + GetItemName(woodcuttingLogs[woodcuttingIndex]).toLowerCase() + ""));
 			addItem(woodcuttingLogs[woodcuttingIndex], 1);
 			triggerRandom(woodcuttingExp[woodcuttingIndex]);
-			if (Misc.chance(50) == 1) {
+			if (Misc.chance(30) == 1) {
 				send(new SendMessage("You take a rest"));
 				resetAction(true);
 				return false;
@@ -5905,8 +5910,6 @@ public class Client extends Player implements Runnable {
 		String checkName = GetItemName(ItemID).toLowerCase();
 		if (checkName.endsWith("arrow") || checkName.endsWith("pickaxe") || checkName.endsWith("mask") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
 			return 1;
-		if (ItemID == 11284)
-			return 70;
 		String ItemName = GetItemName(ItemID);
 		if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier"))
 			return 1;
@@ -5935,6 +5938,10 @@ public class Client extends Player implements Runnable {
 			if (ItemName.startsWith("Saradomin") || ItemName.startsWith("Zamorak") || ItemName.startsWith("Guthix")
 					&& ItemName.toLowerCase().contains("staff") && ItemName.toLowerCase().contains("cape"))
 				return 1;
+			if (ItemID == 11284)
+				return 75;
+			if (ItemID == 4224)
+				return 70;
 			if (ItemName.startsWith("Bronze")) {
 				return 1;
 			} else if (ItemName.startsWith("Iron")) {
@@ -5944,6 +5951,8 @@ public class Client extends Player implements Runnable {
 			} else if (ItemName.startsWith("Black") && !ItemName.contains("hide") && !ItemName.contains("cavalier")) {
 				return 10;
 			} else if (ItemName.startsWith("Mithril") && !ItemName.contains("arrow")) {
+				return 20;
+			} else if (ItemName.startsWith("Splitbark")) {
 				return 20;
 			} else if (ItemName.startsWith("Adamant") && !ItemName.contains("arrow")) {
 				return 30;
@@ -5998,10 +6007,13 @@ public class Client extends Player implements Runnable {
 		if (ItemName.startsWith("Ahrim")) {
 			return 90;
 		}
-		if (ItemID == 6914) {
-			return 50;
+		if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark")) {
+			return 20;
 		}
-		if (ItemName.startsWith("Infinity")) {
+		if (ItemName.startsWith("Black Mystic")) {
+			return 35;
+		}
+		if (ItemName.startsWith("Infinity") || ItemID == 6914) {
 			return 50;
 		}
 		return 1;
@@ -6475,9 +6487,9 @@ public class Client extends Player implements Runnable {
 	public void triggerRandom(int xp) {
 		xp /= 5;
 		int reduceChance = Math.min(xp < 50 ? xp : xp < 100 ? (xp * 3) / 2 : xp < 200 ? xp * 2 : xp < 400 ? xp * 3 : xp * 4, 3000);
-		reduceChance *= 2;
-		//System.out.println("test: " + (8000 - reduceChance) + ", " + reduceChance);
-		if (Misc.chance(8000 - reduceChance) == 1) {
+		reduceChance *= 2 + Misc.random(8);
+		//System.out.println("testing..." + reduceChance + ", " + Math.min(reduceChance, 7000));
+		if (Misc.chance(6500 - Math.min(reduceChance, 6000)) == 1) {
 			showRandomEvent();
 		}
     /*int reduceChance = Math.min(1 + (totalXpGained / 15000), 10000);
@@ -7233,7 +7245,7 @@ public class Client extends Player implements Runnable {
 		}
 		requestAnim(Utils.fishAnim[fishIndex], 0);
 		triggerRandom(Utils.fishExp[fishIndex]);
-		if (Misc.chance(50) == 1) {
+		if (Misc.chance(30) == 1) {
 			send(new SendMessage("You take a rest"));
 			resetAction(true);
 			return;
@@ -7407,7 +7419,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public Client getClient(int index) {
-		return ((Client) PlayerHandler.players[index]);
+		return index < 0 ? null : ((Client) PlayerHandler.players[index]);
 	}
 
 	public void tradeReq(int id) {
@@ -7517,7 +7529,6 @@ public class Client extends Player implements Runnable {
 
 	public void giveItems() {
 		Client other = getClient(trade_reqId);
-		tradeSuccessful = true;
 		TradeDupeFix.remove(this, other);
 		TradeDupeFix.remove(other, this);
 		if (validClient(trade_reqId)) {
@@ -7542,8 +7553,9 @@ public class Client extends Player implements Runnable {
 				}
 				send(new RemoveInterfaces());
 				tradeResetNeeded = true;
-				//System.out.println("trade succesful");
 				saveStats(false);
+				tradeSuccessful = true;
+				//System.out.println("trade succesful");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -7690,7 +7702,7 @@ public class Client extends Player implements Runnable {
 		canOffer = false;
 		send(new RemoveInterfaces());
 		duelFight = true;
-		if (attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0) {
+		if (attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) {
 			attackPot = 0.0;
 			defensePot = 0.0;
 			strengthPot = 0.0;
@@ -8296,7 +8308,7 @@ public class Client extends Player implements Runnable {
 		giveExperience(Utils.oreExp[index], Skill.MINING);
 		requestAnim(getMiningEmote(Utils.picks[pickaxe]), 0);
 		triggerRandom(Utils.oreExp[index]);
-		if (Misc.chance(50) == 1) {
+		if (Misc.chance(30) == 1) {
 			send(new SendMessage("You take a rest"));
 			resetAction(true);
 			return;
@@ -9038,6 +9050,12 @@ public class Client extends Player implements Runnable {
 			UseBow = true;
 		}
 	}
+	public boolean bowWeapon(int weaponId) {
+		if (weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
+				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768))
+			return true;
+		return false;
+	}
 
 	public void RottenTomato(final Client c) {
 		for (int i = 0; i < PlayerHandler.players.length; i++) {
@@ -9403,7 +9421,7 @@ public class Client extends Player implements Runnable {
 
 	public void dropAllItems() {
 		//BAHAHAHAAHAH
-      /*or (int i = 0; i < bankItems.length; i++) {
+      /*for (int i = 0; i < bankItems.length; i++) {
           if (bankItems[i] > 0) {
 	    		  GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), bankItems[i] - 1, bankItemsN[i], getSlot(), -1);
 	    		  bankItems[i] = 0;

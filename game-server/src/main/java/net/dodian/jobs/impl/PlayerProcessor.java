@@ -77,7 +77,13 @@ public class PlayerProcessor implements Job {
                 if (!PlayerHandler.players[i].initialized) {
                     PlayerHandler.players[i].initialize();
                     PlayerHandler.players[i].initialized = true;
-                } else PlayerHandler.players[i].update();
+                } else {
+                    try {
+                        PlayerHandler.players[i].update();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         /* Server update! */

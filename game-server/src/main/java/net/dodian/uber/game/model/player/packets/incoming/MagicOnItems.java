@@ -186,7 +186,7 @@ public class MagicOnItems implements Packet {
             client.send(new SendSideTab(6));
             client.giveExperience(780, Skill.MAGIC);
         }
-        if (castSpell == 6003) {// Dragonstone
+        if (castSpell == 6003) {// Onyx
             if (client.getLevel(Skill.MAGIC) < 87) {
                 client.send(new SendMessage("You need a magic level of 87 to cast this spell."));
                 return;

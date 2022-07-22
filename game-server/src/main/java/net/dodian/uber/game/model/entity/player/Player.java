@@ -781,15 +781,14 @@ public abstract class Player extends Entity {
 
     public void dealDamage(int amt, boolean crit) {
         ((Client) this).debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
-        /* DFS effect */
-        if (amt > 0 && getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284) {
-            double chance = Math.random() * 1;
-            double reduceDamage = ((getLevel(Skill.FIREMAKING) + 1) / 100D) / 4D;
-            //System.out.println("chaance: " + chance + ", reduce: " + reduceDamage);
-            if (chance <= reduceDamage) {
-                amt = 0;
-                ((Client) this).send(new SendMessage("<col=FFD700>Your shield neglected the damage!"));
-            }
+        double rolledChance = Math.random() * 1;
+        double chance = 0.025 + (((getLevel(Skill.PRAYER) + 1) / 8) / 100D);
+        double dmg = ((Client) this).neglectDmg() / 10, reduceDamage = 1.0 - (dmg / 100);
+        int oldDmg = amt;
+        if (rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
+            amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
+            if(amt != oldDmg)
+                ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
         }
         currentHealth -= amt;
         hitDiff = amt;
@@ -804,11 +803,11 @@ public abstract class Player extends Entity {
             EventManager.getInstance().registerEvent(new Event(delay) {
 
                 public void execute() {
-                    if(p == null || p.disconnected) {
+                    if(p.disconnected) {
                         stop();
                         return;
                     }
-                    if(n == null || !n.alive) {
+                    if(!n.alive) {
                         stop();
                         return;
                     }
@@ -824,11 +823,11 @@ public abstract class Player extends Entity {
             EventManager.getInstance().registerEvent(new Event(delay) {
 
                 public void execute() {
-                    if(p == null || p.disconnected) {
+                    if(p.disconnected) {
                         stop();
                         return;
                     }
-                    if(other == null || other.disconnected || other.deathStage > 0) {
+                    if(other.disconnected || other.deathStage > 0) {
                         stop();
                         return;
                     }

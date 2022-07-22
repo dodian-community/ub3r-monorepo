@@ -212,8 +212,8 @@ public class LoginManager {
                             // p.playerLevel[i] = p.getLevelForXP(p.playerXP[i]);
                             p.setLevel(Skills.getLevelForExperience(p.getExperience(skill)), skill);
                             if (i == 3) {
-                                p.setCurrentHealth(health < 1 ? p.getLevel(Skill.HITPOINTS) : health);
                                 p.maxHealth = p.getLevel(Skill.HITPOINTS);
+                                p.setCurrentHealth(health < 1 || health > p.maxHealth ? p.maxHealth : health);
                             } else
                                 p.refreshSkill(skill);
                         }

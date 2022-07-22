@@ -10,6 +10,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.NpcProcessor;
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -33,7 +34,7 @@ public class NpcManager extends Thread {
         loadData();
         loadSpawns();
         try {
-            JobScheduler.ScheduleStaticRepeatForeverJob(600, NpcProcessor.class);
+            Server.job.ScheduleStaticRepeatForeverJob(600, NpcProcessor.class);
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
