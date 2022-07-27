@@ -31,13 +31,9 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask.slayerTasks;
-import net.dodian.uber.game.security.DropLog;
-import net.dodian.uber.game.security.DuelLog;
-import net.dodian.uber.game.security.PickupLog;
-import net.dodian.uber.game.security.PmLog;
+import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.ResultSet;
@@ -181,20 +177,20 @@ public class Client extends Player implements Runnable {
 	public void ReplaceObject2(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
 		if (!withinDistance(new int[]{objectX, objectY, 60}))
 			return;
-			getOutputStream().createFrame(85);
-			getOutputStream().writeByteC(objectY - (mapRegionY * 8));
-			getOutputStream().writeByteC(objectX - (mapRegionX * 8));
-			getOutputStream().createFrame(101);
-			getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
-			getOutputStream().writeByte(0);
-			/* CREATE OBJECT */
-			if (NewObjectID != -1) {
-				getOutputStream().createFrame(151);
-				getOutputStream().writeByteS(0);
-				getOutputStream().writeWordBigEndian(NewObjectID);
-				getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
-			}
-			flushOutStream();
+		getOutputStream().createFrame(85);
+		getOutputStream().writeByteC(objectY - (mapRegionY * 8));
+		getOutputStream().writeByteC(objectX - (mapRegionX * 8));
+		getOutputStream().createFrame(101);
+		getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
+		getOutputStream().writeByte(0);
+		/* CREATE OBJECT */
+		if (NewObjectID != -1) {
+			getOutputStream().createFrame(151);
+			getOutputStream().writeByteS(0);
+			getOutputStream().writeWordBigEndian(NewObjectID);
+			getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
+		}
+		flushOutStream();
 	}
 
 	/**
@@ -1222,7 +1218,7 @@ public class Client extends Player implements Runnable {
 		}
 		amount = amount * getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
-		newXP = getExperience(skill) + amount >= 200000000 ? 200000000 : getExperience(skill) + amount;
+				newXP = getExperience(skill) + amount >= 200000000 ? 200000000 : getExperience(skill) + amount;
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
 		amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
 		addExperience(amount, skill);
@@ -1233,7 +1229,7 @@ public class Client extends Player implements Runnable {
 				animation = 623;
 				publicyell(getPlayerName() + " has just reached the max level for " + skill.getName() + "!");
 			} else if (newLevel > 90)
-				publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + getLevel(skill) + "!");
+				publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + newLevel + "!");
 			send(new SendMessage("Congratulations, you just advanced " + (skill == Skill.ATTACK || skill == Skill.AGILITY ? "an" : "a") + " " + skill.getName() + " level."));
 		}
 		if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
@@ -2045,16 +2041,16 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void setEquipment(int wearID, int amount, int targetSlot) {
-			getOutputStream().createFrameVarSizeWord(34);
-			getOutputStream().writeWord(1688);
-			getOutputStream().writeByte(targetSlot);
-			getOutputStream().writeWord(wearID == -1 ? 0 : wearID + 1);
-			if (amount > 254) {
-				getOutputStream().writeByte(255);
-				getOutputStream().writeDWord(amount);
-			} else
-				getOutputStream().writeByte(amount); // amount
-			getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(34);
+		getOutputStream().writeWord(1688);
+		getOutputStream().writeByte(targetSlot);
+		getOutputStream().writeWord(wearID == -1 ? 0 : wearID + 1);
+		if (amount > 254) {
+			getOutputStream().writeByte(255);
+			getOutputStream().writeDWord(amount);
+		} else
+			getOutputStream().writeByte(amount); // amount
+		getOutputStream().endFrameVarSizeWord();
 		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 			CombatStyleHandler.setWeaponHandler(this, -1);
 			requestAnims(Equipment.Slot.WEAPON.getId());
@@ -2187,10 +2183,10 @@ public class Client extends Player implements Runnable {
 			getEquipmentN()[targetSlot] = wearAmount;
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
 			if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
-			if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
-					&& Server.itemManager.isTwoHanded(wearID)) {
-				remove(Equipment.Slot.SHIELD.getId(), false);
-			}
+				if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
+						&& Server.itemManager.isTwoHanded(wearID)) {
+					remove(Equipment.Slot.SHIELD.getId(), false);
+				}
 
 			if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 				CombatStyleHandler.setWeaponHandler(this, -1);
@@ -2991,7 +2987,7 @@ public class Client extends Player implements Runnable {
 			}
 			if (child == 0)
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
-				new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
+						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
 			else if (child == 1)
 				setMenuItems(new int[]{4089, 4109, 3385, 4099, 6918});
 			else if (child == 2)
@@ -4169,56 +4165,56 @@ public class Client extends Player implements Runnable {
 				hitDiff = Utils.random((int) hit);
 				int chance = new Range(1, 8).getValue();
 				boolean specialTrigger = chance == 1 && specsOn == true;
-					if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 4151) {
-						SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
-						hitDiff = hitDiff + bonusSpec;
-						sendAnimation(emoteSpec);
-						//requestAnim(emoteSpec, 0);
-						animation(animationSpec, EnemyY, EnemyX);
-					} else if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 7158) {
-						SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
-						hitDiff = hitDiff + bonusSpec;
-						sendAnimation(emoteSpec);
-						animation(animationSpec, EnemyY, EnemyX);
-					} else
-						sendAnimation(emote);
-				}
-				setFocus(EnemyX, EnemyY);
-				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-				double extra = UseBow ? getLevel(Skill.RANGED) * 0.195 : getLevel(Skill.STRENGTH) * 0.195;
-				double critChance = getLevel(Skill.AGILITY) / 9;
-				boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
-				hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
-				if (hitDiff >= EnemyHP)
-					hitDiff = EnemyHP;
-				selectedNpc.dealDamage(this, hitDiff, hitCrit);
-				double TotalExp = 0;
-				if (UseBow) {
-					TotalExp = (FightType != 3 ? 40 * hitDiff : 20 * hitDiff);
-					TotalExp = (TotalExp * CombatExpRate);
-					giveExperience((int) (TotalExp), Skill.RANGED);
-					if (FightType == 3)
-						giveExperience((int) TotalExp, Skill.DEFENCE);
-				} else if (FightType != 3) {
-					TotalExp = (40 * hitDiff);
-					TotalExp = (TotalExp * CombatExpRate);
-					giveExperience((int) (TotalExp), Skill.getSkill(FightType));
-				} else {
-					TotalExp = (15 * hitDiff);
-					TotalExp = (TotalExp * CombatExpRate);
-					giveExperience((int) (TotalExp), Skill.ATTACK);
-					giveExperience((int) (TotalExp), Skill.DEFENCE);
-					giveExperience((int) (TotalExp), Skill.STRENGTH);
-				}
+				if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 4151) {
+					SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
+					hitDiff = hitDiff + bonusSpec;
+					sendAnimation(emoteSpec);
+					//requestAnim(emoteSpec, 0);
+					animation(animationSpec, EnemyY, EnemyX);
+				} else if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 7158) {
+					SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
+					hitDiff = hitDiff + bonusSpec;
+					sendAnimation(emoteSpec);
+					animation(animationSpec, EnemyY, EnemyX);
+				} else
+					sendAnimation(emote);
+			}
+			setFocus(EnemyX, EnemyY);
+			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			double extra = UseBow ? getLevel(Skill.RANGED) * 0.195 : getLevel(Skill.STRENGTH) * 0.195;
+			double critChance = getLevel(Skill.AGILITY) / 9;
+			boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
+			hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
+			if (hitDiff >= EnemyHP)
+				hitDiff = EnemyHP;
+			selectedNpc.dealDamage(this, hitDiff, hitCrit);
+			double TotalExp = 0;
+			if (UseBow) {
+				TotalExp = (FightType != 3 ? 40 * hitDiff : 20 * hitDiff);
+				TotalExp = (TotalExp * CombatExpRate);
+				giveExperience((int) (TotalExp), Skill.RANGED);
+				if (FightType == 3)
+					giveExperience((int) TotalExp, Skill.DEFENCE);
+			} else if (FightType != 3) {
+				TotalExp = (40 * hitDiff);
+				TotalExp = (TotalExp * CombatExpRate);
+				giveExperience((int) (TotalExp), Skill.getSkill(FightType));
+			} else {
 				TotalExp = (15 * hitDiff);
 				TotalExp = (TotalExp * CombatExpRate);
-				giveExperience((int) (TotalExp), Skill.HITPOINTS);
-				if (debug) {
-					send(new SendMessage("hitDiff=" + hitDiff + ", elapsed=" + (thisTime - lastAttack)));
-				}
-				lastAttack = System.currentTimeMillis();
-				return true;
+				giveExperience((int) (TotalExp), Skill.ATTACK);
+				giveExperience((int) (TotalExp), Skill.DEFENCE);
+				giveExperience((int) (TotalExp), Skill.STRENGTH);
 			}
+			TotalExp = (15 * hitDiff);
+			TotalExp = (TotalExp * CombatExpRate);
+			giveExperience((int) (TotalExp), Skill.HITPOINTS);
+			if (debug) {
+				send(new SendMessage("hitDiff=" + hitDiff + ", elapsed=" + (thisTime - lastAttack)));
+			}
+			lastAttack = System.currentTimeMillis();
+			return true;
+		}
 		return false;
 	}
 
@@ -4246,19 +4242,19 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void ReplaceObject(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
-			getOutputStream().createFrame(85);
-			getOutputStream().writeByteC(objectY - (mapRegionY * 8));
-			getOutputStream().writeByteC(objectX - (mapRegionX * 8));
+		getOutputStream().createFrame(85);
+		getOutputStream().writeByteC(objectY - (mapRegionY * 8));
+		getOutputStream().writeByteC(objectX - (mapRegionX * 8));
 
-			getOutputStream().createFrame(101);
-			getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
-			getOutputStream().writeByte(0);
+		getOutputStream().createFrame(101);
+		getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
+		getOutputStream().writeByte(0);
 
-			if (NewObjectID != -1) {
-				getOutputStream().createFrame(151);
-				getOutputStream().writeByteS(0);
-				getOutputStream().writeWordBigEndian(NewObjectID);
-				getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
+		if (NewObjectID != -1) {
+			getOutputStream().createFrame(151);
+			getOutputStream().writeByteS(0);
+			getOutputStream().writeWordBigEndian(NewObjectID);
+			getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
 		}
 	}
 
@@ -4343,17 +4339,18 @@ public class Client extends Player implements Runnable {
 	public int neglectDmg() {
 		int bonus = 0;
 		if(getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284)
-			bonus += (getLevel(Skill.FIREMAKING) + 1) / 5;
-		return Math.min(1000, playerBonus[11] + (bonus * 10));
+			bonus += ((getLevel(Skill.FIREMAKING) + 1) / 5) * 10;
+		return Math.min(1000, playerBonus[11] + bonus);
 	}
 	public double magicDmg() {
-		return playerBonus[3] <= 0.0 ? 1.0 : (1.0 + (playerBonus[3] / 100D));
+		double bonus = playerBonus[3] / 10D;
+		return bonus <= 0.0 ? 1.0 : (1.0 + (bonus / 100D));
 	}
 	public void updateBonus(int id) {
 		String send;
 		if(id == 3) {
 			double dmg = (magicDmg() - 1.0) * 100D;
-			send = "Spell Dmg: " + String.format("%"+(dmg < 10 ? 1 : dmg >= 10 && dmg < 100 ? 2 : dmg >= 100 && dmg < 1000 ? 3 : 4)+".0f", dmg) + "%";
+			send = "Spell Dmg: " + String.format("%3.1f", magicDmg()) + "%";
 		} else if(id == 11)
 			send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
 		else
@@ -5610,15 +5607,15 @@ public class Client extends Player implements Runnable {
 					this.nextDiag = 35;
 				}
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 35:
 				showPlayerOption(new String[]{"Do you wish to upgrade?", "Yes, please", "No, please"});
-			break;
+				break;
 			case 36:
 				showPlayerChat(new String[]{"Yes, thank you."}, 614);
 				NpcDialogueSend = true;
 				nextDiag = 37;
-			break;
+				break;
 			case 37:
 				if(!playerHasItem(995, 2000000))
 					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have enough money!"});
@@ -5698,8 +5695,8 @@ public class Client extends Player implements Runnable {
 				break;
 			case 21:
 				showNPCChat(getGender() == 0 ? 1306 : 1307, 588, new String[]{
-				"Hello there, would you like to change your looks?",
-				"If so, it will be free of charge"
+						"Hello there, would you like to change your looks?",
+						"If so, it will be free of charge"
 				});
 				NpcDialogueSend = true;
 				break;
@@ -5766,13 +5763,13 @@ public class Client extends Player implements Runnable {
 			case 2346:
 				if(!checkUnlock(0) && checkUnlockPaid(0) != 1)
 					showPlayerOption(new String[]{
-						"Select a option", "One Ship Ticket", "One Time Fee", "Nevermind"});
+							"Select a option", "One Ship Ticket", "One Time Fee", "Nevermind"});
 				else if(checkUnlock(0))
 					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
 				else
 					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid.", "Just enter the dungeon now."});
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 2347:
 				showNPCChat(NpcTalkTo, 596, new String[]{"You do not have 20 ship tickets."});
 				nextDiag = 2345;
@@ -5780,10 +5777,10 @@ public class Client extends Player implements Runnable {
 			case 3648:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Hello dear.", "Would you like to travel?"});
 				nextDiag = 3649;
-			break;
+				break;
 			case 3649:
 				showPlayerOption(new String[]{ "Do you wish to travel?", "Yes", "No" });
-			break;
+				break;
 			case 8051:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Happy Holidays adventurer!"});
 				nextDiag = 8052;
@@ -5802,7 +5799,7 @@ public class Client extends Player implements Runnable {
 			case 48054: //Travel shiet unlock!
 				showPlayerOption(new String[]{ "Unlock the travel?", "Yes", "No" });
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 10000:
 				if(getLevel(Skill.SMITHING) >= 60 && playerHasItem(2347))
 					showPlayerOption(new String[]{ "What would you like to make?", "Head", "Body", "Legs", "Boots", "Gloves" });
@@ -5810,7 +5807,7 @@ public class Client extends Player implements Runnable {
 					send(new SendMessage(getLevel(Skill.SMITHING) < 60 ? "You need level 60 smithing to do this." : "You need a hammer to handle this material."));
 					NpcDialogueSend = true;
 				}
-			break;
+				break;
 		}
 	}
 
@@ -7547,10 +7544,8 @@ public class Client extends Player implements Runnable {
 						println("TradeConfirmed, item=" + item.getId());
 					}
 				}
-
-				if (this.dbId > other.dbId) {
-					Server.login.logTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
-				}
+				if (this.dbId > other.dbId)
+					TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
 				send(new RemoveInterfaces());
 				tradeResetNeeded = true;
 				saveStats(false);
@@ -8511,8 +8506,6 @@ public class Client extends Player implements Runnable {
 			for (GameItem item : offeredItems) {
 				offerCopy.add(new GameItem(item.getId(), item.getAmount()));
 			}
-			Server.login.logTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);
-
 			for (GameItem item : otherOfferedItems) {
 				if (item.getId() > 0 && item.getAmount() > 0) {
 					if (Server.itemManager.isStackable(item.getId())) {
@@ -8527,6 +8520,8 @@ public class Client extends Player implements Runnable {
 					addItem(item.getId(), item.getAmount());
 				}
 			}
+			if (this.dbId > other.dbId)
+				TradeLog.recordTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);
 			resetDuel();
 			saveStats(false);
 			if (validClient(duel_with)) {

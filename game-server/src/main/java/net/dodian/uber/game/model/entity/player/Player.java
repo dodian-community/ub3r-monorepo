@@ -782,9 +782,12 @@ public abstract class Player extends Entity {
     public void dealDamage(int amt, boolean crit) {
         ((Client) this).debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
         double rolledChance = Math.random() * 1;
-        double chance = 0.025 + (((getLevel(Skill.PRAYER) + 1) / 8) / 100D);
-        double dmg = ((Client) this).neglectDmg() / 10, reduceDamage = 1.0 - (dmg / 100);
+        double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
+        double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
+        double dmg = ((Client) this).neglectDmg() / 10D;
+        double reduceDamage = 1.0 - (dmg / 100);
         int oldDmg = amt;
+        //System.out.println("test..." + (rolledChance * 100) + "%, " + (chance * 100) + "%, " + (rolledChance <= chance) + ", " + level);
         if (rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
             amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
             if(amt != oldDmg)
