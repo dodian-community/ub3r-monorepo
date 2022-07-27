@@ -313,7 +313,6 @@ public class ClickItem implements Packet {
                     } else {
                         nextId = 229;
                     }
-                    client.CalculateMaxHit();
                     break;
                 case 2432:
                 case 133: // regular def

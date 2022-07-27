@@ -66,7 +66,6 @@ public abstract class Player extends Entity {
     public int playerEnergyGian;
     public int[] playerBonus = new int[12];
     public int FightType = 1;
-    public int playerMaxHit = 0;
     private int playerSE = 0x328; // SE = Standard Emotion
     private int playerSEW = 0x333; // SEW = Standard Emotion Walking
     private int playerSER = 0x338; // SER = Standard Emotion Run

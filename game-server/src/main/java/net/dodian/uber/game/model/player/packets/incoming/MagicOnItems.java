@@ -62,7 +62,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{2});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(175, Skill.MAGIC);
         }
@@ -92,7 +92,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{4});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(370, Skill.MAGIC);
         }
@@ -122,7 +122,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{6});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(590, Skill.MAGIC);
         }
@@ -152,7 +152,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{8});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(670, Skill.MAGIC);
         }
@@ -182,7 +182,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{10});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(780, Skill.MAGIC);
         }
@@ -212,7 +212,7 @@ public class MagicOnItems implements Packet {
             client.deleteRunes(new int[]{564}, new int[]{10});
             client.addItem(item, 1);
             client.requestAnim(720, 0);
-            client.CallGFXMask(115, 100);
+            client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
             client.giveExperience(1150, Skill.MAGIC);
         }
@@ -235,7 +235,7 @@ public class MagicOnItems implements Packet {
             // animation(113, absY, absX);
             // stillgfx(113, absY, absX);
             client.requestAnim(713, 0);
-            client.CallGFXMask(113, 100);
+            client.callGfxMask(113, 100);
             client.send(new SendSideTab(6));
             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         }
