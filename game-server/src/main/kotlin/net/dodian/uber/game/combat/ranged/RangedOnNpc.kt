@@ -26,37 +26,31 @@ fun Client.handleRanged(): Int {
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
     val arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
     val arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
+    val targetSlot = selectedNpc.slot
 
     if (distance(selectedNpc) > 5)
         return 0
 
     if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
-        resetWalkingQueue()
-        if (DeleteArrow()) {
-            // TODO: What's going on here?
-            val offsetX = (position.y - selectedNpc.position.y) * 1
-            val offsetY = (position.x - selectedNpc.position.x) * 1
-
-            arrowGfx(offsetY, offsetX, 50, 90, arrowGfx, 43, 35, attacknpc + 1, 51, 16)
-            callGfxMask(arrowPullGfx, 100)
-            sendAnimation(426)
-            setFocus(selectedNpc.position.x, selectedNpc.position.y)
-            updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-        } else {
-            resetAttackNpc()
-            send(SendMessage("You're out of arrows!"))
-            return 0
-        }
-    }
-
-    if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
         isInCombat = true
         lastCombat = System.currentTimeMillis()
     } else return 0
-
     setFocus(selectedNpc.position.x, selectedNpc.position.y)
+    if (DeleteArrow()) {
+        // TODO: What's going on here?
+        val offsetX = (position.y - selectedNpc.position.y) * 1
+        val offsetY = (position.x - selectedNpc.position.x) * 1
+        sendAnimation(426)
+        callGfxMask(arrowPullGfx, 100)
+        arrowGfx(offsetY, offsetX, 50, 90, arrowGfx, 43, 35, targetSlot + 1, 51, 16)
+        setFocus(selectedNpc.position.x, selectedNpc.position.y)
+        updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+    } else {
+        resetAttackNpc()
+        send(SendMessage("You're out of arrows!"))
+        return 0
+    }
     updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-
     // TODO: Reimplement the critical stuff...
     val criticalChance = getLevel(Skill.AGILITY) / 9
     val extra = getLevel(if (usingBow) Skill.RANGED else Skill.STRENGTH) * 0.195

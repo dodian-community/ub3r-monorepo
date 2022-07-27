@@ -139,6 +139,13 @@ public class Commands implements Packet {
                 if (cmd[0].equals("testboss")) {
                     client.triggerTele(3349,3343,0,false);
                 }
+                if (cmd[0].equalsIgnoreCase("split")) { //Magic armour split!
+                    int chance = Integer.parseInt(cmd[1]);
+                    double[] array = {0.14, 0.4, 0.3, 0.08, 0.08};
+                    String[] parts = {"helm", "body", "legs", "feet", "boots"};
+                    for(int i = 0; i < array.length; i++)
+                        client.send(new SendMessage(chance+ " is started and of that " + parts[i] + " should be " + (int)(chance * array[i]) + " stats!"));
+                }
                 if (cmd[0].equals("tomato")) {
                     client.RottenTomato(client);
                 }

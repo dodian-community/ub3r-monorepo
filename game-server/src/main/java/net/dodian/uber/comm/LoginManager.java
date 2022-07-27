@@ -77,7 +77,6 @@ public class LoginManager {
                     return 22;
                 }
                 p.latestNews = results.getInt("news"); //Sets the latest news for a user!
-                p.setLastVote(results.getLong("lastvote"));
                 p.UUID = results.getString("uuid");
                 p.moveTo(results.getInt("x"), results.getInt("y"), results.getInt("height"));
                 if (p.getPosition().getX() == -1 || p.getPosition().getY() == -1) {
