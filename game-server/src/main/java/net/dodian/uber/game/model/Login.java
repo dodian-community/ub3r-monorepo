@@ -20,32 +20,6 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
-    public synchronized void logTrade(int p1, int p2, CopyOnWriteArrayList<GameItem> items,
-                                      CopyOnWriteArrayList<GameItem> otherItems, boolean trade) {
-        try {
-            int type = 0;
-            if (!trade)
-                type = 1;
-            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_TRADES + " SET p1=" + p1 + ", p2=" + p2 + ", type=" + type + ", date=" + (System.currentTimeMillis() / 1000);
-            getDbStatement().executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-            ResultSet inserted = getDbStatement().getGeneratedKeys();
-            inserted.next();
-            int id = inserted.getInt(1);
-            for (GameItem item : items) {
-                getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p1 + ", item="
-                        + item.getId() + ", amount=" + item.getAmount());
-            }
-            for (GameItem item : otherItems) {
-                getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p2 + ", item="
-                        + item.getId() + ", amount=" + item.getAmount());
-            }
-            inserted.close();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
             getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
