@@ -36,8 +36,8 @@ fun Client.handleMagic(): Int {
     deleteItem(565, 1)
     // TODO: Insert logging for rune being removed
 
-    val damage = baseDamage[autocast_spellIndex] + ceil(playerBonus[11] + 0.5).toInt()
-    val hit = min(Utils.random(damage), selectedNpc.currentHealth)
+    val damage = baseDamage[autocast_spellIndex] * magicDmg()
+    val hit = min(Utils.random(damage.toInt()), selectedNpc.currentHealth)
 
     requestAnim(1979, 0)
 

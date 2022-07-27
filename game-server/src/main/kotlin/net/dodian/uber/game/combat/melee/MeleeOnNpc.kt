@@ -3,6 +3,7 @@ package net.dodian.uber.game.combat.melee
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.criticalHit
 import net.dodian.uber.game.combat.extensions.canReach
+import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.item.SpecialsHandler
@@ -17,9 +18,17 @@ fun Client.handleMelee(): Int {
         return 0
 
     val time = System.currentTimeMillis()
+    if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
+        isInCombat = true
+        lastCombat = System.currentTimeMillis()
+    } else return 0
+
+    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
+    setFocus(selectedNpc.position.x, selectedNpc.position.y)
+    sendAnimation(emote)
+    updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
 
     val hit = Utils.random(meleeMaxHit())
-
     val criticalHit = criticalHit(Skill.STRENGTH)
     val criticalDamageBonus = Random.nextInt(criticalHit.min, criticalHit.max)
     if (Math.random() <= criticalHit.chance)
@@ -33,10 +42,13 @@ fun Client.handleMelee(): Int {
         giveExperience(xp, Skill.STRENGTH)
     } else giveExperience((40 * hit) * CombatExpRate, Skill.getSkill(FightType))
 
-    giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
+        giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
+        if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
+
     if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
 
     lastAttack = System.currentTimeMillis()
+
     return 1
 }
 

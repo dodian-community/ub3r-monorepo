@@ -3875,7 +3875,7 @@ public class Client extends Player implements Runnable {
 		String send;
 		if(id == 3) {
 			double dmg = (magicDmg() - 1.0) * 100D;
-			send = "Spell Dmg: " + String.format("%3.1f", magicDmg()) + "%";
+			send = "Spell Dmg: " + String.format("%3.1f", dmg) + "%";
 		} else if(id == 11)
 			send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
 		else
