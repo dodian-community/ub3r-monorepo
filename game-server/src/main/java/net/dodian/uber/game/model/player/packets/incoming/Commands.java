@@ -74,7 +74,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("gfx")) {
                     int id = Integer.parseInt(cmd[1]);
-                    client.CallGFXMask(id, 100);
+                    client.callGfxMask(id, 100);
                 }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
@@ -572,7 +572,6 @@ public class Commands implements Packet {
                             client.setExperience(1155, Skill.HITPOINTS);
                         client.setLevel(Skills.getLevelForExperience(i), Skill.getSkill(i));
                         client.refreshSkill(Skill.getSkill(i));
-                        client.CalculateMaxHit();
                     }
                 }
                 if (command.startsWith("master") && client.playerRights > 1) {
@@ -931,9 +930,8 @@ public class Commands implements Packet {
                 Server.itemManager.getItemName(client, name);
             }
             if (cmd[0].equalsIgnoreCase("max")) {
-                client.CalculateMaxHit(); //Need this to calculate maxhit!
-                client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.playerMaxHit));
-                client.send(new SendMessage("<col=0B610B>Range max hit: " + (int) client.maxRangeHit()));
+                client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.meleeMaxHit()));
+                client.send(new SendMessage("<col=0B610B>Range max hit: " + client.rangedMaxHit()));
                 if (client.autocast_spellIndex == -1)
                     client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg())));
                 else

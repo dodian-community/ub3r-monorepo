@@ -6,6 +6,7 @@ import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.combat.extensions.ClientExtensionsKt;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
@@ -30,7 +31,6 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask.slayerTasks;
 import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
@@ -47,6 +47,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static net.dodian.DotEnvKt.*;
+import static net.dodian.uber.game.combat.PlayerOnNpcCombatKt.attackNpc;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Client extends Player implements Runnable {
@@ -203,17 +204,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean wearing = false;
-
-	public void CalculateRange() {
-		double MaxHit = 0;
-		int RangeBonus = playerBonus[3] / 2; // Range Bonus
-		int Range = getLevel(Skill.RANGED); // Range
-		{
-			MaxHit += (1.05 + ((double) (RangeBonus * Range) * 0.00175));
-		}
-		MaxHit += Range * 0.2;
-		playerMaxHit = (int) Math.floor(MaxHit);
-	}
 
 	public int resetanim = 8;
 
@@ -1268,9 +1258,7 @@ public class Client extends Player implements Runnable {
     	Balloons.triggerBalloonEvent(this);*/
 		setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
 		refreshSkill(skill);
-		if (skill == Skill.STRENGTH || skill == Skill.RANGED)
-			CalculateMaxHit();
-		else if(skill == Skill.FIREMAKING)
+		if(skill == Skill.FIREMAKING)
 			updateBonus(11);
 		if(animation != -1)
 			animation(animation, getPosition().getY(), getPosition().getX());
@@ -2105,7 +2093,7 @@ public class Client extends Player implements Runnable {
 			}
 		}
 
-		if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
+		if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
 			if (Server.itemManager.isTwoHanded(wearID)) {
 				if (getEquipment()[Equipment.Slot.SHIELD.getId()] > 0) {
 					if (hasSpace()) {
@@ -2116,7 +2104,7 @@ public class Client extends Player implements Runnable {
 					}
 				}
 			}
-		if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
+		if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
 			if (Server.itemManager.getSlot(wearID) == Equipment.Slot.SHIELD.getId()) {
 				if (Server.itemManager.isTwoHanded(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
 					if (hasSpace()) {
@@ -2182,7 +2170,7 @@ public class Client extends Player implements Runnable {
 			getEquipment()[targetSlot] = wearID;
 			getEquipmentN()[targetSlot] = wearAmount;
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
-			if((bowWeapon(wearID) || UseBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
+			if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
 				if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
 						&& Server.itemManager.isTwoHanded(wearID)) {
 					remove(Equipment.Slot.SHIELD.getId(), false);
@@ -2218,8 +2206,6 @@ public class Client extends Player implements Runnable {
 			WriteBonus();
 			if (slot == Equipment.Slot.WEAPON.getId()) {
 				checkBow();
-				if(UseBow) CalculateRange();
-				else CalculateMaxHit();
 			}
 		}
 	}
@@ -2657,7 +2643,8 @@ public class Client extends Player implements Runnable {
 		if (IsAttacking && !attackingNpc && deathStage == 0) {
 			if (PlayerHandler.players[AttackingOn] != null) {
 				if (PlayerHandler.players[AttackingOn].getCurrentHealth() > 0) {
-					Attack();
+					// TODO: Handle PVP!
+					//Attack();
 				} else {
 					ResetAttack();
 					// if(duelStatus == 3)
@@ -2669,7 +2656,7 @@ public class Client extends Player implements Runnable {
 		}
 		// Attacking an NPC
 		else if (attackingNpc && deathStage == 0) {
-			AttackNPC();
+			attackNpc(this);
 		}
 		// If killed apply dead
 		if (deathStage == 0 && getCurrentHealth() < 1) {
@@ -3655,211 +3642,7 @@ public class Client extends Player implements Runnable {
 		return true;
 	}
 
-	public boolean UseBow = false;
-
-	// pk: 2726 9193
-	public boolean Attack() {
-		if (!(AttackingOn > 0) || !(AttackingOn < PlayerHandler.players.length)) {
-			ResetAttack();
-			return false;
-		}
-		if (getSlot() < 1) {
-			send(new SendMessage("Error:  Your player id is invalid.  Please try again or logout and back in"));
-		}
-		if (AttackingOn > 0 && !(duelFight && duel_with == AttackingOn) && !Server.pking) {
-			send(new SendMessage("Pking has been disabled"));
-			ResetAttack();
-			return false;
-		}
-		Client temp = getClient(AttackingOn);
-		if (!validClient(AttackingOn)) {
-			send(new SendMessage("Invalid player"));
-			ResetAttack();
-			return false;
-		}
-		if (temp.immune) {
-			send(new SendMessage("That player is immune"));
-			ResetAttack();
-			return false;
-		}
-		if (duelFight) {
-			if (UseBow && duelRule[0]) {
-				send(new SendMessage("You can't range in this duel!"));
-				return false;
-			}
-			if (!UseBow && duelRule[1]) {
-				send(new SendMessage("You can't melee in this duel!"));
-				ResetAttack();
-				return false;
-			}
-		}
-		if (!(duelFight && AttackingOn == duel_with) && (wildyLevel < 1 || temp.wildyLevel < 1)) {
-			send(new SendMessage("You can't fight here!"));
-			ResetAttack();
-			return false;
-		}
-		if (!(duelFight && temp.getSlot() == duel_with)
-				&& (wildyLevel > 0 && temp.wildyLevel > 0 && Math.abs(temp.determineCombatLevel() - determineCombatLevel()) > wildyLevel
-				|| Math.abs(temp.determineCombatLevel() - determineCombatLevel()) > temp.wildyLevel)) {
-			send(new SendMessage("You are too low in the wilderness to fight that player"));
-			ResetAttack();
-			return false;
-		}
-		int EnemyHP = PlayerHandler.players[AttackingOn].getLevel(Skill.HITPOINTS);
-		Client AttackingOn2 = (Client) PlayerHandler.players[AttackingOn];
-
-		int hitDiff;
-		int aBonus = 0;
-		if (UseBow)
-			hitDiff = (int) maxRangeHit();
-		else
-			hitDiff = playerMaxHit;
-		int rand_att = Utils.random(getLevel(Skill.ATTACK));
-		if (attackPot > 0.0) {
-			rand_att = Utils.random((int) ((1 + (attackPot / 100)) * getLevel(Skill.ATTACK)));
-		}
-		int rand_def = (int) (0.65 * Utils.random(AttackingOn2.getLevel(Skill.DEFENCE)));
-		if (FightType == 1) {
-			aBonus += (playerBonus[1] / 20);
-		}
-		if (FightType == 2) {
-			hitDiff = (int) (hitDiff * 1.20);
-		}
-		int random_u = Utils.random(playerBonus[1] + aBonus) * 2;
-		int dBonus = 0;
-		if (AttackingOn2.FightType == 4) {
-			dBonus += (AttackingOn2.playerBonus[6] / 20);
-		}
-		int random_def = Utils.random(AttackingOn2.playerBonus[6] + dBonus);
-		if (AttackingOn2.defensePot > 0.0) {
-			random_def = (int) ((1 + (AttackingOn2.defensePot / 100)) * AttackingOn2.getLevel(Skill.DEFENCE));
-		}
-		if (random_u >= random_def && rand_att > rand_def) {
-			hitDiff = Utils.random(hitDiff);
-		} else {
-			hitDiff = 0;
-		}
-
-		int EnemyX = PlayerHandler.players[AttackingOn].getPosition().getX();
-		int EnemyY = PlayerHandler.players[AttackingOn].getPosition().getY();
-		long thisAttack = System.currentTimeMillis();
-
-		for (int a = 0; a < staffs.length; a++) {
-			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staffs[a] && autocast_spellIndex >= 0) {
-				if (System.currentTimeMillis() - lastAttack < coolDown[coolDownGroup[autocast_spellIndex]]) {
-					return false;
-				}
-				setInCombat(true);
-				setLastCombat(System.currentTimeMillis());
-				lastAttack = System.currentTimeMillis();
-				if (getLevel(Skill.MAGIC) >= requiredLevel[autocast_spellIndex]) {
-					if (!runeCheck(autocast_spellIndex)) {
-						ResetAttack();
-						return false;
-					}
-					deleteItem(565, 1);
-
-					double dmg = baseDamage[autocast_spellIndex] * magicDmg();
-					hitDiff = Utils.random((int) dmg);
-					if ((EnemyHP - hitDiff) < 0) {
-						hitDiff = EnemyHP;
-					}
-					setFocus(EnemyX, EnemyY);
-					requestAnim(1979, 0);
-					// AnimationReset = true;
-					teleportToX = getPosition().getX();
-					teleportToY = getPosition().getY();
-					//resetWalkingQueue();
-					if (ancientType[autocast_spellIndex] == 3) {
-						// coolDown[coolDownGroup[autocast_spellIndex]] = 35;
-						// server.npcHandler.npcs[attacknpc].effects[0] = 15;
-						stillgfx(369, EnemyY, EnemyX);
-					} else if (ancientType[autocast_spellIndex] == 2) {
-						stillgfx(377, EnemyY, EnemyX);
-						// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-						setCurrentHealth(getCurrentHealth() + (int) (hitDiff / 4));
-						if (getCurrentHealth() > getLevel(Skill.HITPOINTS)) {
-							setCurrentHealth(getLevel(Skill.HITPOINTS));
-						}
-					} else {
-						animation(78, EnemyY, EnemyX);
-					}
-				} else {
-					send(new SendMessage("You need a magic level of " + requiredLevel[autocast_spellIndex]));
-				}
-				// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-				//setFocus(EnemyX, EnemyY);
-				//getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-				PlayerHandler.players[AttackingOn].receieveDamage(getClient(getSlot()), hitDiff, false);
-				return true;
-			}
-		}
-
-		if (!UseBow) {
-			if (thisAttack - lastAttack > getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
-				setInCombat(true);
-				lastPlayerCombat = System.currentTimeMillis();
-				if (PlayerHandler.players[AttackingOn].deathStage > 0) {
-					ResetAttack();
-					send(new SendMessage("That player is dead!"));
-				} else {
-					requestAnim(Server.itemManager.getAttackAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]), 0);
-					//PlayerHandler.players[AttackingOn].getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-					if ((EnemyHP - hitDiff) < 0) {
-						hitDiff = EnemyHP;
-					}
-					PlayerHandler.players[AttackingOn].receieveDamage(getClient(getSlot()), hitDiff, false);
-					PlayerHandler.players[AttackingOn].killers[localId] += hitDiff;
-					lastAttack = System.currentTimeMillis();
-				}
-				return true;
-			}
-		}
-		if (UseBow) {
-			if (PlayerHandler.players[AttackingOn].deathStage > 0) {
-				ResetAttack();
-				return false;
-			}
-			// if (GoodDistance(EnemyX, EnemyY, absX, absY, 1) == false) {
-			if (thisAttack - lastAttack > getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
-				setInCombat(true);
-				lastPlayerCombat = System.currentTimeMillis();
-				if (DeleteArrow()) {
-					int[] arrowIds = {882, 884, 886, 888, 890, 892, 11212};
-					int[] arrowPullGfx = {19, 18, 20, 21, 22, 23, 1116};
-					int[] arrowGfx = {10, 9, 11, 12, 13, 14, 1120};
-					int arrowgfx = 10, arrowpullgfx = 20;
-					for (int i1 = 0; i1 < arrowIds.length; i1++) {
-						if (getEquipment()[Equipment.Slot.ARROWS.getId()] == arrowIds[i1]) {
-							arrowgfx = arrowGfx[i1];
-							arrowpullgfx = arrowPullGfx[i1];
-						}
-					}
-					//CalculateRange();
-					int offsetX = (getPosition().getY() - EnemyY) * -1;
-					int offsetY = (getPosition().getX() - EnemyX) * -1;
-					arrowGfx(offsetY, offsetX,
-							50, 90, arrowgfx, 43, 35, -(AttackingOn + 1), 51, 16);
-					CallGFXMask(arrowpullgfx, 100);
-					requestAnim(426, 0);
-					setFocus(EnemyX, EnemyY);
-					getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-					if ((EnemyHP - hitDiff) < 0) {
-						hitDiff = EnemyHP;
-					}
-					PlayerHandler.players[AttackingOn].receieveDamage(getClient(getSlot()), hitDiff, false);
-					lastAttack = System.currentTimeMillis();
-					return true;
-				} else {
-					send(new SendMessage("You are out of arrows!"));
-					ResetAttack();
-					return false;
-				}
-			}
-		}
-		return false;
-
-	}
+	public boolean usingBow = false;
 
 	public boolean ResetAttack() {
 		IsAttacking = false;
@@ -3987,237 +3770,6 @@ public class Client extends Player implements Runnable {
 
 	public int[] staffs = {2415, 2416, 2417, 4675, 4710, 6914};
 
-	public boolean AttackNPC() {
-		int EnemyX = selectedNpc.getPosition().getX();
-		int EnemyY = selectedNpc.getPosition().getY();
-		int EnemyHP = selectedNpc.getCurrentHealth();
-		int hitDiff = 0;
-		// TurnPlayerTo(EnemyX, EnemyY);
-		// faceNPC(selectedNpc.getIndex());
-		if (EnemyHP < 1 || deathTimer > 0) {
-			// println("Monster is dead");
-			resetAttackNpc();
-			return false;
-		}
-		int type = selectedNpc.getId();
-		int[] arrowIds = {882, 884, 886, 888, 890, 892, 11212};
-		int[] arrowPullGfx = {19, 18, 20, 21, 22, 23, 1116};
-		int[] arrowGfx = {10, 9, 11, 12, 13, 14, 1120};
-		int[] prem = {1643, 158, 49, 1613};
-		for (int i = 0; i < prem.length; i++) {
-			if (prem[i] == type && !premium) {
-				resetPos();
-				return false;
-			}
-		}
-		SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(type);
-		boolean slayExceptions = slayerTask == null ||
-				(slayerTask == slayerTasks.MUMMY && getPositionName(selectedNpc.getPosition()) == positions.KEYDUNG);
-		if (!slayExceptions && slayerTask.isSlayerOnly() && (slayerTask.ordinal() != getSlayerData().get(1) || getSlayerData().get(3) <= 0)) {
-			send(new SendMessage("You need a Slayer task to kill this monster."));
-			resetAttackNpc();
-			return false;
-		}
-		if (type == 2266) { //Prime slayer requirement
-			if (getLevel(Skill.SLAYER) < 90) {
-				send(new SendMessage("You need a slayer level of 90 to harm this monster."));
-				resetAttackNpc();
-				return false;
-			}
-		}
-		if (type == 3209 || type == 3204 || type == 3201) { //Brimhaven dungeon monster
-			int slayerRequired = type == 3209 ? 65 : type == 3204 ? 45 : 25;
-			if (getLevel(Skill.SLAYER) < slayerRequired) {
-				send(new SendMessage("You need a slayer level of "+slayerRequired+" to harm this monster!"));
-				resetAttackNpc();
-				return false;
-			}
-		}
-		/* Dad 50 combat requirement */
-		if (type == 4130) {
-			if (determineCombatLevel() < 50) {
-				send(new SendMessage("You must be level 50 combat or higher to attack Dad!"));
-				resetAttackNpc();
-				return false;
-			}
-		}
-		/* Key check mobs! */
-		if (type == 1443 || type == 289) {
-			if (!checkItem(1545) && getPositionName(selectedNpc.getPosition()) == positions.KEYDUNG) {
-				resetPos();
-				resetAttackNpc();
-				return false;
-			}
-		}
-		if (type == 4067 || type == 950) {
-			if (!checkItem(1544) && getPositionName(selectedNpc.getPosition()) == positions.KEYDUNG) {
-				resetPos();
-				resetAttackNpc();
-				return false;
-			}
-		}
-		if (type == 3964 || type == 2075) {
-			if (!checkItem(1543) && getPositionName(selectedNpc.getPosition()) == positions.KEYDUNG) {
-				resetPos();
-				resetAttackNpc();
-				return false;
-			}
-		}
-		//System.out.println("Effect active: " + (blackMaskEffect(type) ? "Black mask!" : blackMaskImbueEffect(type) ? "Imbue Black mask" : "none"));
-		for (int a = 0; a < staffs.length; a++) {
-			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staffs[a] && autocast_spellIndex >= 0) {
-				if (System.currentTimeMillis() - lastAttack < coolDown[coolDownGroup[autocast_spellIndex]]) {
-					return false;
-				}
-				setInCombat(true);
-				setLastCombat(System.currentTimeMillis());
-				lastAttack = System.currentTimeMillis();
-				double extra = getLevel(Skill.MAGIC) * 0.195;
-				double critChance = getLevel(Skill.AGILITY) / 9;
-				boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
-				if (getLevel(Skill.MAGIC) >= requiredLevel[autocast_spellIndex]) {
-					if (!runeCheck(autocast_spellIndex)) {
-						ResetAttack();
-						return false;
-					}
-					deleteItem(565, 1);
-					double dmg = baseDamage[autocast_spellIndex] * magicDmg();
-					double hit = blackMaskImbueEffect(type) ? 1.2 * dmg : dmg;
-					hitDiff = Utils.random((int) hit);
-					hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
-					hit = hitDiff;
-					if (hitDiff >= EnemyHP)
-						hitDiff = EnemyHP;
-					requestAnim(1979, 0);
-					// AnimationReset = true;
-					teleportToX = getPosition().getX();
-					teleportToY = getPosition().getY();
-					resetWalkingQueue();
-					if (ancientType[autocast_spellIndex] == 3) {
-						// coolDown[coolDownGroup[autocast_spellIndex]] = 35;
-						// server.npcHandler.npcs[attacknpc].effects[0] = 15;
-						stillgfx(369, EnemyY, EnemyX);
-					} else if (ancientType[autocast_spellIndex] == 2) {
-						stillgfx(377, EnemyY, EnemyX);
-						// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-						setCurrentHealth(getCurrentHealth() + (int) (hit / 4));
-						if (getCurrentHealth() > getLevel(Skill.HITPOINTS)) {
-							setCurrentHealth(getLevel(Skill.HITPOINTS));
-						}
-					} else {
-						animation(78, EnemyY, EnemyX);
-					}
-				} else {
-					send(new SendMessage("You need a magic level of " + requiredLevel[autocast_spellIndex]));
-				}
-				// coolDown[coolDownGroup[autocast_spellIndex]] = 12;
-				setFocus(EnemyX, EnemyY);
-				giveExperience(40 * hitDiff, Skill.MAGIC);
-				giveExperience(hitDiff * 15, Skill.HITPOINTS);
-				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-				selectedNpc.dealDamage(this, hitDiff, hitCrit);
-				return true;
-			}
-		}
-		long thisTime = System.currentTimeMillis();
-		int arrowgfx = 10, arrowpullgfx = 20;
-		for (int i1 = 0; i1 < arrowIds.length; i1++) {
-			if (getEquipment()[Equipment.Slot.ARROWS.getId()] == arrowIds[i1]) {
-				arrowgfx = arrowGfx[i1];
-				arrowpullgfx = arrowPullGfx[i1];
-			}
-		}
-		if (UseBow && Utils.getDistance(getPosition().getX(), getPosition().getY(), selectedNpc.getPosition().getX(),
-				selectedNpc.getPosition().getY()) > 5)
-			return false;
-		if (thisTime - lastAttack > getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()]) && UseBow) {
-			resetWalkingQueue();
-			CalculateRange();
-			double hit = blackMaskImbueEffect(type) ? 1.2 * maxRangeHit() : maxRangeHit();
-			hitDiff = Utils.random((int) hit);
-			if (DeleteArrow()) {
-				int offsetX = (getPosition().getY() - EnemyY) * -1;
-				int offsetY = (getPosition().getX() - EnemyX) * -1;
-				arrowGfx(offsetY, offsetX,
-						50, 90, arrowgfx, 43, 35, attacknpc + 1, 51, 16);
-				CallGFXMask(arrowpullgfx, 100);
-				sendAnimation(426);
-				setFocus(EnemyX, EnemyY);
-				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			} else {
-				resetAttackNpc();
-				send(new SendMessage("You're out of arrows!"));
-				return false;
-			}
-		}
-		if (thisTime - lastAttack > getbattleTimer(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
-			setInCombat(true);
-			setLastCombat(System.currentTimeMillis());
-		} else {
-			return false;
-		}
-		int emote = UseBow ? 426 : Server.itemManager.getAttackAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]);
-		if (UseBow || GoodDistance(EnemyX, EnemyY, getPosition().getX(), getPosition().getY(), 1) == true) {
-			if (!selectedNpc.isAlive()) {
-				resetAttackNpc();
-			} else if(!UseBow) {
-				double hit = blackMaskImbueEffect(type) ? playerMaxHit * 1.2 : blackMaskEffect(type) ? 1.15 * playerMaxHit : playerMaxHit;
-				hitDiff = Utils.random((int) hit);
-				int chance = new Range(1, 8).getValue();
-				boolean specialTrigger = chance == 1 && specsOn == true;
-				if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 4151) {
-					SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
-					hitDiff = hitDiff + bonusSpec;
-					sendAnimation(emoteSpec);
-					//requestAnim(emoteSpec, 0);
-					animation(animationSpec, EnemyY, EnemyX);
-				} else if (specialTrigger && getEquipment()[Equipment.Slot.WEAPON.getId()] == 7158) {
-					SpecialsHandler.specAction(this, getEquipment()[Equipment.Slot.WEAPON.getId()], hitDiff);
-					hitDiff = hitDiff + bonusSpec;
-					sendAnimation(emoteSpec);
-					animation(animationSpec, EnemyY, EnemyX);
-				} else
-					sendAnimation(emote);
-			}
-			setFocus(EnemyX, EnemyY);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			double extra = UseBow ? getLevel(Skill.RANGED) * 0.195 : getLevel(Skill.STRENGTH) * 0.195;
-			double critChance = getLevel(Skill.AGILITY) / 9;
-			boolean hitCrit = Math.random() * 100 <= critChance * (getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 2 : 1);
-			hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
-			if (hitDiff >= EnemyHP)
-				hitDiff = EnemyHP;
-			selectedNpc.dealDamage(this, hitDiff, hitCrit);
-			double TotalExp = 0;
-			if (UseBow) {
-				TotalExp = (FightType != 3 ? 40 * hitDiff : 20 * hitDiff);
-				TotalExp = (TotalExp * CombatExpRate);
-				giveExperience((int) (TotalExp), Skill.RANGED);
-				if (FightType == 3)
-					giveExperience((int) TotalExp, Skill.DEFENCE);
-			} else if (FightType != 3) {
-				TotalExp = (40 * hitDiff);
-				TotalExp = (TotalExp * CombatExpRate);
-				giveExperience((int) (TotalExp), Skill.getSkill(FightType));
-			} else {
-				TotalExp = (15 * hitDiff);
-				TotalExp = (TotalExp * CombatExpRate);
-				giveExperience((int) (TotalExp), Skill.ATTACK);
-				giveExperience((int) (TotalExp), Skill.DEFENCE);
-				giveExperience((int) (TotalExp), Skill.STRENGTH);
-			}
-			TotalExp = (15 * hitDiff);
-			TotalExp = (TotalExp * CombatExpRate);
-			giveExperience((int) (TotalExp), Skill.HITPOINTS);
-			if (debug) {
-				send(new SendMessage("hitDiff=" + hitDiff + ", elapsed=" + (thisTime - lastAttack)));
-			}
-			lastAttack = System.currentTimeMillis();
-			return true;
-		}
-		return false;
-	}
-
 	public boolean DeleteArrow() {
 		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] == 0) {
 			deleteequiment(getEquipment()[Equipment.Slot.ARROWS.getId()], Equipment.Slot.ARROWS.getId());
@@ -4334,7 +3886,6 @@ public class Client extends Player implements Runnable {
 	public void WriteBonus() {
 		for (int i = 0; i < playerBonus.length; i++)
 			updateBonus(i);
-		CalculateMaxHit();
 	}
 	public int neglectDmg() {
 		int bonus = 0;
@@ -4356,42 +3907,6 @@ public class Client extends Player implements Runnable {
 		else
 			send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
 		send(new SendString(send, 1675 + (id >= 10 ? id + 1 : id)));
-	}
-
-	public void CalculateMaxHit() {
-		double MaxHit = 0;
-		int StrBonus = playerBonus[10]; // Strength Bonus
-		int Strength = getLevel(Skill.STRENGTH); // Strength
-		int RngBonus = playerBonus[4]; // Ranged Bonus
-		int Range = getLevel(Skill.RANGED); // Ranged
-		if (strengthPot > 0.0) {
-			Strength = (int) ((1 + (strengthPot / 100)) * getLevel(Skill.STRENGTH));
-		}
-		if (FightType == 0 || FightType == 1) { // Accurate & Defensive
-			MaxHit += (1.05 + ((double) (StrBonus * Strength) * 0.00175));
-		} else if (FightType == 2) { // Aggresive
-			MaxHit += (1.35 + ((double) (StrBonus * Strength) * 0.00175));
-		} else if (FightType == 3) { // Controlled
-			MaxHit += (1.15 + ((double) (StrBonus * Strength) * 0.00175));
-		}
-		MaxHit += (Strength * 0.1);
-
-		/*
-		 * if (StrPrayer == 1) { // Burst Of Strength MaxHit += (double) (Strength *
-		 * 0.005); } else if (StrPrayer == 2) { // Super Human Strength MaxHit +=
-		 * (double) (Strength * 0.01); } else if (StrPrayer == 3) { // Ultimate
-		 * Strength MaxHit += (double) (Strength * 0.015); }
-		 */
-		if (UseBow) {
-			if (FightType == 1 || FightType == 3) { // Accurate and Longranged
-				MaxHit += (1.05 + ((double) (RngBonus * Range) * 0.00075));
-			} else if (FightType < 3) { // Rapid
-				MaxHit += (1.35 + ((double) (RngBonus) * 0.00025));
-			}
-		}
-		MaxHit *= checkObsidianWeapons() ? 1.2 : 1.0;
-		// MaxHit += (double) (Range * 0.03);
-		playerMaxHit = (int) Math.floor(MaxHit);
 	}
 
 	public boolean GoodDistance2(int objectX, int objectY, int playerX, int playerY, int distance) {
@@ -6764,11 +6279,11 @@ public class Client extends Player implements Runnable {
 				xp = Utils.smelt_bars[i][1] * 4;
 		if (fail) {
 			send(new SendMessage("You can only use this spell on ores."));
-			CallGFXMask(85, 100);
+			callGfxMask(85, 100);
 		} else if (smelt_barId > 0 && xp > 0) {
 			lastMagic = System.currentTimeMillis();
 			requestAnim(725, 0);
-			CallGFXMask(148, 100);
+			callGfxMask(148, 100);
 			deleteRunes(new int[]{561}, new int[]{1});
 			for (Integer removeId : removed)
 				deleteItem(removeId, 1);
@@ -8310,7 +7825,7 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-	public void CallGFXMask(int id, int height) {
+	public void callGfxMask(int id, int height) {
 		setGraphic(id, height == 0 ? 65536 : 65536 * height);
 		getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
 	}
@@ -8423,7 +7938,6 @@ public class Client extends Player implements Runnable {
 		if (rangePot < 0.0) {
 			rangePot = 0.0;
 		}
-		CalculateMaxHit();
 	}
 
 	public void updatePlayerDisplay() {
@@ -9034,15 +8548,15 @@ public class Client extends Player implements Runnable {
 
 	public void checkBow() {
 		int weaponId = getEquipment()[Equipment.Slot.WEAPON.getId()];
-		UseBow = false;
-		for (int i = 0; i < Constants.shortbow.length &&!UseBow; i++) {
+		usingBow = false;
+		for (int i = 0; i < Constants.shortbow.length &&!usingBow; i++) {
 			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
-				UseBow = true;
+				usingBow = true;
 			}
 		}
 		if (weaponId == 4212 || weaponId == 6724 || weaponId == 841 || weaponId == 839 || weaponId == 20997 ||
 				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768)) {
-			UseBow = true;
+			usingBow = true;
 		}
 	}
 	public boolean bowWeapon(int weaponId) {
@@ -9515,5 +9029,17 @@ public class Client extends Player implements Runnable {
 					}
 				});
 			}
+	}
+
+	public int meleeMaxHit() {
+		return ClientExtensionsKt.meleeMaxHit(this);
+	}
+
+	public int rangedMaxHit() {
+		return ClientExtensionsKt.rangedMaxHit(this);
+	}
+
+	public int magicMaxHit() {
+		return ClientExtensionsKt.magicMaxHit(this);
 	}
 }
