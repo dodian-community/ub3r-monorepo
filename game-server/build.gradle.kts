@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.7.0"
 }
 
 application {
@@ -30,14 +30,14 @@ tasks.jar {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("io.github.cdimascio:dotenv-kotlin:6.2.2")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
     implementation("org.apache.commons:commons-compress:1.21")
     implementation("org.quartz-scheduler:quartz:2.3.2")
 
-    implementation("mysql:mysql-connector-java:8.0.28")
-    implementation("org.mybatis:mybatis:3.5.9")
+    implementation("mysql:mysql-connector-java:8.0.29")
+    implementation("org.mybatis:mybatis:3.5.10")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
