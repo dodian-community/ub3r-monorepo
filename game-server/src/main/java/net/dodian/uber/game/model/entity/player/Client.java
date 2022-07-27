@@ -1208,7 +1208,7 @@ public class Client extends Player implements Runnable {
 		}
 		amount = amount * getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
-				newXP = getExperience(skill) + amount >= 200000000 ? 200000000 : getExperience(skill) + amount;
+				newXP = Math.min(getExperience(skill) + amount, 200000000);
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
 		amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
 		addExperience(amount, skill);
@@ -1751,17 +1751,6 @@ public class Client extends Player implements Runnable {
 			bankItemsN[to] = tempN;
 			resetBank();
 		}
-	}
-
-	public int itemAmount(int itemID) {
-		int tempAmount = 0;
-
-		for (int i = 0; i < playerItems.length; i++) {
-			if (playerItems[i] == itemID) {
-				tempAmount += playerItemsN[i];
-			}
-		}
-		return tempAmount;
 	}
 
 	public int freeBankSlots() {
@@ -2355,21 +2344,6 @@ public class Client extends Player implements Runnable {
 		setConfigIds();
 		send(new SendMessage("Welcome to Uber Server"));
 		//initialized = true;
-	}
-
-	public void removeObject(int x, int y) // romoves obj from
-	// currentx,y
-	{
-		getOutputStream().createFrameVarSizeWord(60); // tells baseX and baseY to
-		// client
-		getOutputStream().writeByte(y - (mapRegionY * 8));
-		getOutputStream().writeByteC(x - (mapRegionX * 8));
-
-		getOutputStream().writeByte(101); // remove object
-		getOutputStream().writeByteC(0); // x and y from baseX
-		getOutputStream().writeByte(0); // ??
-
-		getOutputStream().endFrameVarSizeWord();
 	}
 
 	public void update() {
@@ -5948,14 +5922,6 @@ public class Client extends Player implements Runnable {
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
-	public double maxRangeHit() {
-		int range = getLevel(Skill.RANGED);
-		if (rangePot > 0.0) {
-			range = (int) ((1 + (rangePot / 100)) * getLevel(Skill.RANGED));
-		}
-		return (playerBonus[4] / 15D) + (range / 4D);
-	}
-
 	public boolean runeCheck(int spell) {
 		if (playerHasItem(565)) {
 			return true;
@@ -6334,7 +6300,7 @@ public class Client extends Player implements Runnable {
 				return true;
 			}
 			int max = runePouchesMaxAmount[slot] - runePouchesAmount[slot];
-			int amount = getInvAmt(1436) >= max ? max : getInvAmt(1436);
+			int amount = Math.min(getInvAmt(1436), max);
 			if (amount > 0) {
 				for (int i = 0; i < amount; i++)
 					deleteItem(1436, 1);
@@ -6358,7 +6324,7 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("Not enough inventory slot to empty the pouch!"));
 				return true;
 			}
-			amount = amount >= runePouchesAmount[slot] ? runePouchesAmount[slot] : amount;
+			amount = Math.min(amount, runePouchesAmount[slot]);
 			if (amount > 0) {
 				for (int i = 0; i < amount; i++)
 					addItem(1436, 1);
@@ -6507,7 +6473,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		amount = getInvAmt(995) > amount * charge[type] ? getInvAmt(995) / charge[type] : amount;
-		amount = amount > getInvAmt(hide[type]) ? getInvAmt(hide[type]) : amount;
+		amount = Math.min(amount, getInvAmt(hide[type]));
 		for (int i = 0; i < amount; i++) {
 			deleteItem(hide[type], 1);
 			deleteItem(995, charge[type]);
@@ -6599,7 +6565,7 @@ public class Client extends Player implements Runnable {
 		cSelected = Constants.leathers[cIndex];
 		cAmount = amounts[index] == 27 ? getInvAmt(cSelected) : amounts[index];
 		cExp = Constants.leatherExp[cIndex];
-		int required = -1;
+		int required;
 		if (index2 == 0) {
 			required = Constants.gloveLevels[cIndex];
 			cItem = Constants.gloves[cIndex];
@@ -6760,7 +6726,6 @@ public class Client extends Player implements Runnable {
 		if (Misc.chance(30) == 1) {
 			send(new SendMessage("You take a rest"));
 			resetAction(true);
-			return;
 		}
 	}
 
@@ -6983,7 +6948,7 @@ public class Client extends Player implements Runnable {
 		send(new InventoryInterface(3443, 3213)); // trade confirm + normal bag
 		inTrade = true;
 		resetItems(3214);
-		String SendTrade = "Absolutely nothing!";
+		StringBuilder SendTrade = new StringBuilder("Absolutely nothing!");
 		String SendAmount;
 		int Count = 0;
 		Client other = getClient(trade_reqId);
@@ -6998,19 +6963,18 @@ public class Client extends Player implements Runnable {
 					SendAmount = "" + Utils.format(item.getAmount());
 				}
 				if (Count == 0) {
-					SendTrade = GetItemName(item.getId());
+					SendTrade = new StringBuilder(GetItemName(item.getId()));
 				} else {
-					SendTrade = SendTrade + "\\n" + GetItemName(item.getId());
+					SendTrade.append("\\n").append(GetItemName(item.getId()));
 				}
 				if (item.isStackable()) {
-					SendTrade = SendTrade + " x " + SendAmount;
+					SendTrade.append(" x ").append(SendAmount);
 				}
 				Count++;
 			}
 		}
-		send(new SendString(SendTrade, 3557));
-		SendTrade = "Absolutely nothing!";
-		SendAmount = "";
+		send(new SendString(SendTrade.toString(), 3557));
+		SendTrade = new StringBuilder("Absolutely nothing!");
 		Count = 0;
 		for (GameItem item : other.offeredItems) {
 			if (item.getId() > 0) {
@@ -7024,17 +6988,17 @@ public class Client extends Player implements Runnable {
 				}
 				// SendAmount = SendAmount;
 				if (Count == 0) {
-					SendTrade = GetItemName(item.getId());
+					SendTrade = new StringBuilder(GetItemName(item.getId()));
 				} else {
-					SendTrade = SendTrade + "\\n" + GetItemName(item.getId());
+					SendTrade.append("\\n").append(GetItemName(item.getId()));
 				}
 				if (Server.itemManager.isStackable(item.getId())) {
-					SendTrade = SendTrade + " x " + SendAmount;
+					SendTrade.append(" x ").append(SendAmount);
 				}
 				Count++;
 			}
 		}
-		send(new SendString(SendTrade, 3558));
+		send(new SendString(SendTrade.toString(), 3558));
 	}
 
 	private boolean tradeSuccessful = false;
@@ -7179,24 +7143,24 @@ public class Client extends Player implements Runnable {
 		if (!validClient(duel_with)) {
 			declineDuel();
 		}
-		String out = "";
+		StringBuilder out = new StringBuilder();
 		for (GameItem item : offeredItems) {
 			if (Server.itemManager.isStackable(item.getId()) || Server.itemManager.isNote(item.getId())) {
-				out += GetItemName(item.getId()) + " x " + Utils.format(item.getAmount()) + ", ";
+				out.append(GetItemName(item.getId())).append(" x ").append(Utils.format(item.getAmount())).append(", ");
 			} else {
-				out += GetItemName(item.getId()) + ", ";
+				out.append(GetItemName(item.getId())).append(", ");
 			}
 		}
-		send(new SendString(out, 6516));
-		out = "";
+		send(new SendString(out.toString(), 6516));
+		out = new StringBuilder();
 		for (GameItem item : other.offeredItems) {
 			if (Server.itemManager.isStackable(item.getId()) || Server.itemManager.isNote(item.getId())) {
-				out += GetItemName(item.getId()) + " x " + Utils.format(item.getAmount()) + ", ";
+				out.append(GetItemName(item.getId())).append(" x ").append(Utils.format(item.getAmount())).append(", ");
 			} else {
-				out += GetItemName(item.getId()) + ", ";
+				out.append(GetItemName(item.getId())).append(", ");
 			}
 		}
-		send(new SendString(out, 6517));
+		send(new SendString(out.toString(), 6517));
 		send(new SendString("Movement will be disabled", 8242));
 		for (int i = 8243; i <= 8253; i++) {
 			send(new SendString("", i));
@@ -7821,7 +7785,6 @@ public class Client extends Player implements Runnable {
 		if (Misc.chance(30) == 1) {
 			send(new SendMessage("You take a rest"));
 			resetAction(true);
-			return;
 		}
 	}
 
@@ -8199,24 +8162,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	/**
-	 * @return the skillX
-	 */
-	public int getSkillX() {
-		return skillX;
-	}
-
-	/**
 	 * @param skillX the skillX to set
 	 */
 	public void setSkillX(int skillX) {
 		this.skillX = skillX;
-	}
-
-	/**
-	 * @return the skillY
-	 */
-	public int getSkillY() {
-		return skillY;
 	}
 
 	/**
@@ -8228,10 +8177,6 @@ public class Client extends Player implements Runnable {
 			WanneBank = 0;
 		if (NpcWanneTalk > 0)
 			NpcWanneTalk = 0;
-	}
-
-	public OutputStream getConnection() {
-		return mySocketHandler.getOutput();
 	}
 
 	public void spendTickets() {
@@ -8259,29 +8204,6 @@ public class Client extends Player implements Runnable {
 			}
 			deleteItem(2996, playerItemsN[slot]);
 		}
-	}
-
-	public boolean hasVoted() {
-		long timeLeft = ((lastVoted + (43200000 / 2)) - System.currentTimeMillis());
-		long hours = TimeUnit.MILLISECONDS.toHours(timeLeft);
-		long min = TimeUnit.MILLISECONDS.toMinutes(timeLeft)
-				- TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(timeLeft));
-		long sec = TimeUnit.MILLISECONDS.toSeconds(timeLeft)
-				- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(timeLeft));
-		String time = "" + hours + "h " + min + "m " + sec + "s";
-		if (timeLeft > 0) {
-			send(new SendMessage("You must wait " + time + " before you may claim another reward."));
-			return true; // return true;
-		}
-		return false;
-	}
-
-	public void setLastVote(long time) {
-		this.lastVoted = time;
-	}
-
-	public long getLastVote() {
-		return lastVoted;
 	}
 
 	public long potTime = 0;
@@ -8316,20 +8238,6 @@ public class Client extends Player implements Runnable {
 		addItem(mixPotId3, 1);
 		giveExperience(mixPotXp, Skill.HERBLORE);
 		triggerRandom(mixPotXp);
-	}
-
-	public int getXPForLevel(int level) {
-		int points = 0;
-		int output = 0;
-
-		for (int lvl = 1; lvl <= level; lvl++) {
-			points += Math.floor((double) lvl + 300.0 * Math.pow(2.0, (double) lvl / 7.0));
-			if (lvl >= level) {
-				return output;
-			}
-			output = (int) Math.floor(points / 4D);
-		}
-		return 0;
 	}
 
 	public void guideBook() {
@@ -8705,12 +8613,6 @@ public class Client extends Player implements Runnable {
 				System.out.println("issue: " + e.getMessage());
 			}
 		}
-	}
-
-	public void makesplat() {
-		sendAnimation(7528);
-		gfx0(1284);
-		addItem(2518, 2);
 	}
 
 	private ArrayList<GroundItem> displayItems = new ArrayList<GroundItem>();
