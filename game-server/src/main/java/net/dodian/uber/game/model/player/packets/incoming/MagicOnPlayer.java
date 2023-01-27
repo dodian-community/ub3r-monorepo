@@ -57,8 +57,8 @@ public class MagicOnPlayer implements Packet {
         System.currentTimeMillis();
 
         int wildLevel = client.getWildLevel();
-        if ((playerIndex == client.duel_with && client.duelFight) || wildLevel > 0) {
-            for (int i2 = 0; i2 < client.ancientId.length; i2++) {
+        if ((playerIndex == client.duel_with && client.duelFight) || wildLevel > 0) { //TODO: Fix magic on players!
+            /*for (int i2 = 0; i2 < client.ancientId.length; i2++) {
                 if (spellID == client.ancientId[i2]) {
                     if (System.currentTimeMillis() - client.lastAttack < client.coolDown[client.coolDownGroup[i2]]) {
                         // send(new SendMessage("You must wait before casting this
@@ -126,7 +126,7 @@ public class MagicOnPlayer implements Packet {
                         client.send(new SendMessage("You need a magic level of " + client.requiredLevel[i2]));
                     }
                 }
-            }
+            }*/
         } else {
             client.send(new SendMessage("You can't attack here!"));
         }

@@ -99,6 +99,7 @@ public class PlayerHandler {
         if (temp.dbId > 0 && temp.saveNeeded) {
             temp.saveStats(true);
             Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
+            temp.setPlayerName(null);
         }
         plr.destruct();
     }

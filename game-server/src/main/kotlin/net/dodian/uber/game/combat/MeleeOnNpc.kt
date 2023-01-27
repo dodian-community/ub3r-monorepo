@@ -1,8 +1,8 @@
-package net.dodian.uber.game.combat.melee
+package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.criticalHit
-import net.dodian.uber.game.combat.extensions.canReach
+import net.dodian.uber.game.combat.canReach
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
@@ -18,36 +18,38 @@ fun Client.handleMelee(): Int {
         return 0
 
     val time = System.currentTimeMillis()
-    if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
-        isInCombat = true
-        lastCombat = System.currentTimeMillis()
-    } else return 0
 
-    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
-    setFocus(selectedNpc.position.x, selectedNpc.position.y)
-    sendAnimation(emote)
-    updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+        if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
+            isInCombat = true
+            lastCombat = System.currentTimeMillis()
+        } else return 0
 
-    val hit = Utils.random(meleeMaxHit())
-    val criticalHit = criticalHit(Skill.STRENGTH)
-    val criticalDamageBonus = Random.nextInt(criticalHit.min, criticalHit.max)
-    if (Math.random() <= criticalHit.chance)
-        selectedNpc.dealDamage(this, hit + criticalDamageBonus, true)
-    else selectedNpc.dealDamage(this, hit, false)
+        val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
+        setFocus(selectedNpc.position.x, selectedNpc.position.y)
+        sendAnimation(emote)
+        //updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
 
-    if (FightType == 3) {
-        val xp = (15 * hit) * CombatExpRate
-        giveExperience(xp, Skill.ATTACK)
-        giveExperience(xp, Skill.DEFENCE)
-        giveExperience(xp, Skill.STRENGTH)
-    } else giveExperience((40 * hit) * CombatExpRate, Skill.getSkill(FightType))
+        val hit = Utils.random(meleeMaxHit())
+        val criticalHit = criticalHit(Skill.STRENGTH)
+        val criticalDamageBonus = Random.nextInt(criticalHit.min, criticalHit.max)
+        if (Math.random() <= criticalHit.chance)
+            selectedNpc.dealDamage(this, hit + criticalDamageBonus, true)
+        else selectedNpc.dealDamage(this, hit, false)
+
+        if (FightType == 3) {
+            val xp = (15 * hit) * CombatExpRate
+            giveExperience(xp, Skill.ATTACK)
+            giveExperience(xp, Skill.DEFENCE)
+            giveExperience(xp, Skill.STRENGTH)
+        } else giveExperience((40 * hit) * CombatExpRate, Skill.getSkill(FightType))
 
         giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
         if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
 
-    if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
+        if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
 
     lastAttack = System.currentTimeMillis()
+    updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
 
     return 1
 }

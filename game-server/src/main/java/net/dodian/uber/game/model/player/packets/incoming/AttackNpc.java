@@ -36,7 +36,7 @@ public class AttackNpc implements Packet {
                         return;
                     }
 
-                    if (!client.goodDistanceEntity(tempNpc, 1)) {
+                    if (!client.goodDistanceEntity(tempNpc, client.usingBow || client.autocast_spellIndex != -1 ? 5 : 1)) {
                         return;
                     }
                     client.startAttackNpc(npcIndex);

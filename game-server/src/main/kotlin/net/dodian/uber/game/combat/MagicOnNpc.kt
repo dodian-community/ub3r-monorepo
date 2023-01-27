@@ -1,4 +1,4 @@
-package net.dodian.uber.game.combat.magic
+package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -12,11 +12,11 @@ import kotlin.math.min
 
 fun Client.handleMagic(): Int {
     val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914)
-
     if (equipment[Equipment.Slot.WEAPON.id] !in staves || autocast_spellIndex < 0)
         return -1
+    val slot = autocast_spellIndex%4;
 
-    if (System.currentTimeMillis() - lastAttack < coolDown[coolDownGroup[autocast_spellIndex]])
+    if (System.currentTimeMillis() - lastAttack < coolDown[slot])
         return 0
 
     isInCombat = true
@@ -28,7 +28,7 @@ fun Client.handleMagic(): Int {
         return 0
     }
 
-    if (!runeCheck(autocast_spellIndex)) {
+    if (!runeCheck()) {
         ResetAttack()
         return 0
     }
@@ -43,12 +43,14 @@ fun Client.handleMagic(): Int {
 
     resetWalkingQueue()
 
-    if (ancientType[autocast_spellIndex] == 3)
-        stillgfx(369, selectedNpc.position.y, selectedNpc.position.x)
-    else if (ancientType[autocast_spellIndex] == 2) {
+    if (slot == 2) { //Blood effect
         stillgfx(377, selectedNpc.position.y, selectedNpc.position.x)
         currentHealth = min(getLevel(Skill.HITPOINTS), currentHealth + (hit / 5))
-    } else animation(78, selectedNpc.position.y, selectedNpc.position.x)
+    } else if (slot == 3) { //Freeze effect
+        stillgfx(369, selectedNpc.position.y, selectedNpc.position.x)
+    } else { //Other ancient effect!
+        animation(78, selectedNpc.position.y, selectedNpc.position.x)
+    }
 
     setFocus(selectedNpc.position.x, selectedNpc.position.y)
     giveExperience(40 * hit, Skill.MAGIC)

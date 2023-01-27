@@ -1,4 +1,4 @@
-package net.dodian.uber.game.combat.extensions
+package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client

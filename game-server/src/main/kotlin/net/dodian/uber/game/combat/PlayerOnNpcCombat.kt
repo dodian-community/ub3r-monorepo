@@ -1,21 +1,10 @@
 package net.dodian.uber.game.combat
 
-import net.dodian.uber.game.combat.extensions.checkSlayerTask
-import net.dodian.uber.game.combat.extensions.requireKey
-import net.dodian.uber.game.combat.magic.handleMagic
-import net.dodian.uber.game.combat.melee.handleMelee
-import net.dodian.uber.game.combat.ranged.handleRanged
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 
-fun Client.attackNpc(): Boolean {
-    val npcId = selectedNpc.id
 
-    if (selectedNpc.currentHealth < 1 || deathTimer > 0) {
-        resetAttackNpc()
-        return false
-    }
-
+fun Client.canAttackNpc(npcId: Int): Boolean {
     if (!checkSlayerTask(npcId))
         return false
 
@@ -24,7 +13,6 @@ fun Client.attackNpc(): Boolean {
         resetAttackNpc()
         return false
     }
-
     if (!requireKey(1545, 1443, 289))
         return false
 
@@ -33,6 +21,16 @@ fun Client.attackNpc(): Boolean {
 
     if (!requireKey(1543, 3964, 2075))
         return false
+
+    return true
+}
+fun Client.attackNpc(): Boolean {
+    val npcId = selectedNpc.id
+
+    if (selectedNpc.currentHealth < 1 || deathTimer > 0 || !canAttackNpc(npcId)) {
+        resetAttackNpc()
+        return false
+    }
 
     when (handleMagic()) {
         0 -> return false

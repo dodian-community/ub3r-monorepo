@@ -1,6 +1,5 @@
-package net.dodian.uber.game.combat.ranged
+package net.dodian.uber.game.combat
 
-import net.dodian.uber.game.combat.extensions.distance
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
