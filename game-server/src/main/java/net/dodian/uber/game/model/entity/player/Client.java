@@ -6,7 +6,7 @@ import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.combat.extensions.ClientExtensionsKt;
+import net.dodian.uber.game.combat.ClientExtensionsKt;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
@@ -35,7 +35,6 @@ import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -44,7 +43,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import static net.dodian.DotEnvKt.*;
 import static net.dodian.uber.game.combat.PlayerOnNpcCombatKt.attackNpc;
@@ -154,21 +152,17 @@ public class Client extends Player implements Runnable {
 	public boolean validClient = true, muted = false;
 	public int newPms = 0;
 
-	public int[] requiredLevel = {1, 10, 0, 20, 30, 0, 40, 50, 0, 60, 70, 0, 74, 76, 0, 80, 82, 0, 86, 88, 0, 92,
-			94, 96, 0, 50};
+	public int[] requiredLevel = {1, 10, 20, 30, 40, 50, 60, 70, 74, 76, 80, 82, 86, 88, 92,
+			94, 96};
 
-	public int[] baseDamage = {2, 4, 0, 6, 8, 0, 10, 12, 0, 14, 16, 0, 18, 20, 0, 22, 24, 0, 26, 28, 0, 30, 32, 0, 0, 0};
-	public String[] spellName = {"Smoke Rush", "Shadow Rush", "", "Blood Rush", "Ice Rush", "", "Smoke Burst",
-			"Shadow Burst", "", "Blood Burst", "Ice Burst", "", "Smoke Blitz", "Shadow Blitz", "", "Blood Blitz", "Ice Blitz",
-			"", "Smoke Barrage", "Shadow Barrage", "", "Blood Barrage", "Ice Barrage", "", "", ""};
-	public int[] ancientId = {12939, 12987, 0, 12901, 12861, 0, 12963, 13011, 0, 12919, 12881, 0, 12951, 12999, 0, 12911,
-			12871, 0, 12975, 13023, 0, 12929, 12891, 0, 0, 0};
-	public int[] ancientType = {0, 0, 1, 2, 3, 1, 0, 0, 1, 2, 3, 1, 0, 0, 1, 2, 3, 1, 0, 0, 1, 2, 3, 1, 4, 4};
-	public int[] ancientButton = {51133, 51185, -1, 51091, 24018, -1, 51159, 51211, -1, 51111, 51069, -1, 51146, 51198,
-			-1, 51102, 51058, -1, 51172, 51224, -1, 51122, 51080, -1, -1, -1};
-	public int[] coolDownGroup = {2, 2, 1, 2, 3, 1, 2, 2, 1, 2, 3, 1, 2, 2, 1, 2, 3, 1, 2, 2, 1, 2, 3, 1, 4, 4};
-	public long[] coolDown = {5000, 5000, 2500, 5000, 15000};
-	public int[] effects = new int[10];
+	public int[] baseDamage = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32};
+	public String[] spellName = {"Smoke Rush", "Shadow Rush", "Blood Rush", "Ice Rush",
+			"Smoke Burst", "Shadow Burst", "Blood Burst", "Ice Burst",
+			"Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz",
+			"Smoke Barrage", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
+	public int[] ancientId = {12939, 12987, 12901, 12861, 12963, 13011, 12919, 12881, 12951, 12999, 12911, 12871, 12975, 13023, 12929, 12891};
+	public long[] coolDown = {2400, 2400, 3000, 3000};
+	public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
 	public String properName = "";
 	public int actionButtonId = 0;
 	public long lastAttack = 0;
@@ -490,7 +484,6 @@ public class Client extends Player implements Runnable {
 	public int returnCode = 2; // Tells the client if the login was successfull
 
 	private final SocketHandler mySocketHandler;
-	private Thread mySocketThread;
 
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
@@ -521,8 +514,6 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			//Utils.println("ClientHandler: Client " + getPlayerName() + " disconnected (" + connectedFrom + ")");
-			//Server.connections.remove(mySock.getInetAddress().getHostAddress());
 			disconnected = true;
 			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
@@ -621,8 +612,6 @@ public class Client extends Player implements Runnable {
 			}
 			getInputStream().readUnsignedByte();
 			for (int i = 0; i < 8; i++) {
-				// out.write(9 + server.world);
-				//out.write(1);
 				mySocketHandler.getOutput().write(9 + getGameWorldId());
 			}
 			mySocketHandler.getOutput().write(0);
@@ -784,7 +773,7 @@ public class Client extends Player implements Runnable {
 			} else {
 				if (returnCode != 6 && returnCode != 5)
 					returnCode = loadgame;
-				setPlayerName("_");
+				//setPlayerName("_");
 				disconnected = true;
 				teleportToX = 0;
 				teleportToY = 0;
@@ -814,7 +803,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		isActive = true;
-		mySocketThread = Server.createNewConnection(mySocketHandler);
+		Thread mySocketThread = Server.createNewConnection(mySocketHandler);
 		mySocketThread.start();
 		packetSize = 0;
 		packetType = -1;
@@ -2383,8 +2372,7 @@ public class Client extends Player implements Runnable {
 		long now = System.currentTimeMillis();
 		if (now >= walkBlock && UsingAgility) {
 			UsingAgility = false;
-			if (xLog)
-				disconnected = xLog;
+			disconnected = xLog;
 			if (!disconnected)
 				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		}
@@ -2621,8 +2609,6 @@ public class Client extends Player implements Runnable {
 					//Attack();
 				} else {
 					ResetAttack();
-					// if(duelStatus == 3)
-					// DuelVictory(p.absX, p.absY);
 				}
 			} else {
 				ResetAttack();
@@ -2722,15 +2708,14 @@ public class Client extends Player implements Runnable {
 				NpcWanneTalk = 0;
 			}
 		} else if (NpcWanneTalk > 0) {
-			if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 2)) {
+			if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 2))
 				if (NpcWanneTalk == 804) {
-					openTan();
-					NpcWanneTalk = 0;
-				} else {
-					NpcDialogue = NpcWanneTalk;
-					NpcTalkTo = GetNPCID(skillX, skillY);
-					NpcWanneTalk = 0;
-				}
+				openTan();
+				NpcWanneTalk = 0;
+			} else {
+				NpcDialogue = NpcWanneTalk;
+				NpcTalkTo = GetNPCID(skillX, skillY);
+				NpcWanneTalk = 0;
 			}
 		}
 		if (NpcDialogue > 0 && !NpcDialogueSend) {
@@ -2755,8 +2740,6 @@ public class Client extends Player implements Runnable {
 		if (disconnected) {
 			return false;
 		}
-		//PacketData p;
-		//int processed = 0;
 		Queue<PacketData> data = mySocketHandler.getPackets();
 		if (data == null || data.isEmpty() || data.stream() == null)
 			return false;
@@ -2764,23 +2747,10 @@ public class Client extends Player implements Runnable {
 			fillInStream(data.poll());
 		} catch (IOException e) {
 			e.printStackTrace();
-			// saveStats(true);
 			disconnected = true;
 			return false;
 		}
 		parseIncomingPackets();
-		/*while ((p = data.poll()) != null) {
-			if (processed >= 100) {
-				break;
-			}
-			getInputStream().currentOffset = 0;
-			getInputStream().buffer = p.getData();
-			currentPacket = p;
-			if(p.getId() > 0) {
-				parseIncomingPackets();
-				processed++;
-			}
-		}*/
 		return true;
 	}
 
@@ -2931,7 +2901,7 @@ public class Client extends Player implements Runnable {
 			String[] s1 = new String[0];
 			if (child == 0) {
 				s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
-				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "90", "92"};
+				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
 			} else if (child == 1) {
 				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Infinity"};
 				s1 = new String[]{"1", "20", "20", "35", "50"};
@@ -3962,41 +3932,33 @@ public class Client extends Player implements Runnable {
 			case 5902:
 			case 5903:
 			case 5904: // Dead Tree
-				// if(distanceToPoint(skillX, skillY) > 5)
-				// return false;
 				woodcuttingIndex = 0;
-				// startWoodcutting();
 				break;
 
 			case 1281:
 			case 3037: // Oak Tree
 				woodcuttingIndex = 1;
-				// startWoodcutting();
 				break;
 
 			case 1308:
 			case 5551:
 			case 5552: // Willow Tree
 				woodcuttingIndex = 2;
-				// startWoodcutting();
 				break;
 
 			case 1307:
 			case 4674: // Maple Tree
 				woodcuttingIndex = 3;
-				// startWoodcutting();
 				break;
 
 			case 1309: // Yew Tree
 			case 1754:
 				woodcuttingIndex = 4;
-				// startWoodcutting();
 				break;
 
 			case 1306: // Magic Tree
 			case 1762:
 				woodcuttingIndex = 5;
-				// startWoodcutting();
 				break;
 
 			default:
@@ -4220,10 +4182,6 @@ public class Client extends Player implements Runnable {
 			if (getLevel(Skill.SMITHING) < smithing[1]) {
 				return false;
 			}
-			/*
-			 * for(int i = 0; i < Constants.smithing_frame.length; i++){ for(int i1 =
-			 * 0;
-			 */
 			int bars = 0;
 			int Length = 22;
 			int barid;
@@ -4240,15 +4198,12 @@ public class Client extends Player implements Runnable {
 			} else if (smithing[2] == 3) {
 				Length += 2;
 			}
-			// println("id="+ Constants.smithing_frame[(smithing[2] - 1)][i][0]);
 			int[] possibleBars = {2349, 2351, 2353, 2359, 2361, 2363};
 			int[] bar_xp = {13, 25, 38, 50, 63, 75};
 			for (int i = 0; i < Constants.smithing_frame.length; i++) {
 				for (int i1 = 0; i1 < Constants.smithing_frame[i].length; i1++) {
 					for (int i2 = 0; i2 < Constants.smithing_frame[i][i1].length; i2++) {
 						if (Constants.smithing_frame[i][i1][0] == smithing[4]) {
-							// println("needs " + Constants.smithing_frame[i][i1][3]
-							// + " bars, row " + i);
 							if (!AreXItemsInBag(possibleBars[i], Constants.smithing_frame[i][i1][3])) {
 								send(new SendMessage("You are missing bars needed to smith this!"));
 								resetSM();
@@ -4256,8 +4211,6 @@ public class Client extends Player implements Runnable {
 							}
 							xp = bar_xp[i];
 						}
-						// println("smithing[" + i + "][" + i1 + "][" + i2 + "]:
-						// " + Constants.smithing_frame[i][i1][i2]);
 					}
 				}
 			}
@@ -5820,9 +5773,6 @@ public class Client extends Player implements Runnable {
 		if (!checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
 			return false;
 		}
-    /*if (!canOffer) {
-      return false;
-    }*/ //Unsure about this code!
 		int count = 0;
 		if (!Server.itemManager.isStackable(itemID)) {
 			for (GameItem item : offeredItems) {
@@ -5843,14 +5793,6 @@ public class Client extends Player implements Runnable {
 						offeredItems.remove(item);
 					found = true;
 				} else {
-          /*if (item.getAmount() > amount) {
-            item.removeAmount(amount);
-            found = true;
-          } else {
-            amount = item.getAmount();
-            found = true;
-            offeredItems.remove(item);
-          }*/
 					if (amount == 1) {
 						offeredItems.remove(item);
 						found = true;
@@ -5922,10 +5864,9 @@ public class Client extends Player implements Runnable {
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
-	public boolean runeCheck(int spell) {
-		if (playerHasItem(565)) {
+	public boolean runeCheck() {
+		if (playerHasItem(565))
 			return true;
-		}
 		send(new SendMessage("This spell requires 1 blood rune"));
 		return false;
 	}
@@ -6419,9 +6360,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void replaceDoors() {
-    /*if(getGameWorldId() > 1){
-      return;
-    }*/
 		for (int d = 0; d < DoorHandler.doorX.length; d++) {
 			if (DoorHandler.doorX[d] > 0 && DoorHandler.doorHeight[d] == getPosition().getZ()
 					&& Math.abs(DoorHandler.doorX[d] - getPosition().getX()) <= 120
@@ -7080,9 +7018,9 @@ public class Client extends Player implements Runnable {
 		if (tradeLocked && other.playerRights < 1) {
 			return;
 		}
-		if (other.connectedFrom.equals(connectedFrom)) {
-			// duelRequested = false;
-			// return;
+		if (other.connectedFrom.equals(connectedFrom)) { //We do not wish for others to duel?!
+			duelRequested = false;
+			return;
 		}
 		if (duelRequested && other.duelRequested && duel_with == other.getSlot() && other.duel_with == getSlot()) {
 			openDuel();
@@ -7251,8 +7189,6 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-			// duelConfirmed = false;
-			// other.duelConfirmed = false;
 			for (int i = 0; i < duelButtons.length; i++) {
 				if (button == duelButtons[i]) {
 					found = true;
@@ -7741,19 +7677,8 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void mining(int index) {
-		/*
-		 * if (getEquipment()[Equipment.Slot.WEAPON.getId()] !=
-		 * Utils.picks[minePick]) { send(new SendMessage(
-		 * "You must have a pickaxe wielded to mine")); resetAction(true); return; }
-		 */
 		boolean hasPick = false;
 		int pickaxe = -1;
-		// for (int p = 0; p < misc.picks.length; p++) {
-		// if (myEquipment.getId(3) == misc.picks[p]) {
-		// minePick = p;
-		// hasPick = true;
-		// }
-		// }
 		pickaxe = findPick();
 		if (pickaxe < 0) {
 			minePick = -1;
@@ -7826,15 +7751,13 @@ public class Client extends Player implements Runnable {
 
 	public void startAttackNpc(int npcIndex) {
 		Npc npc = Server.npcManager.getNpc(npcIndex);
-		if (npc != null) {
-			if (npc.isAttackable()) {
+			if (npc != null && npc.isAttackable()) {
 				selectedNpc = npc;
 				attackingNpc = true;
 				faceNPC(npcIndex);
 			} else {
 				send(new SendMessage("You can't attack that!"));
 			}
-		}
 	}
 
 	public void resetAttackNpc() {
@@ -8047,8 +7970,6 @@ public class Client extends Player implements Runnable {
 	 */
 	public void sendArmour() {
 		for (int e = 0; e < getEquipment().length; e++) {
-			// if(getEquipmentN()[e] < 1)
-			// continue;
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(13824);
 			getOutputStream().writeByte(e);
@@ -8900,7 +8821,7 @@ public class Client extends Player implements Runnable {
 			if (travel[i][0] == actionButtonId) { //Initiate the teleport!
 				/* Check conditions! */
 				if ((!home && i == 0) || (home && i != 0)) {
-					send(new SendMessage(!home && i == 0 ? "You are already here!" : "Please select Catherby!"));
+					send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));
 					return;
 				}
 				if (travel[i][1] == -1) {

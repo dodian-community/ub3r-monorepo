@@ -428,7 +428,7 @@ public class ClickingButtons implements Packet {
                     if (client.actionButtonId == client.ancientButton[index]) {
                         client.autocast_spellIndex = index;
                         CombatStyleHandler.setWeaponHandler(client, -1);
-                        client.debug("autocast_spellIndex=" + client.autocast_spellIndex);
+                        //client.debug("autocast_spellIndex=" + client.autocast_spellIndex);
                         break;
                     }
                 }
