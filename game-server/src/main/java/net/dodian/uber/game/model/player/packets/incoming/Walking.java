@@ -51,7 +51,8 @@ public class Walking implements Packet {
             client.send(new SendMessage("You can't move on this account"));
             return;
         }
-        client.resetAttackNpc();
+        if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
+            client.resetAttack();
         client.send(new RemoveInterfaces());
         client.rerequestAnim();
         if (client.deathStage == 0) {
@@ -95,10 +96,6 @@ public class Walking implements Packet {
             if (client.woodcuttingIndex >= 0) {
                 client.rerequestAnim();
                 client.resetWC();
-            }
-            // attack check
-            if (client.IsAttacking == true) {
-                client.ResetAttack();
             }
             // smithing check
             if (client.smithing[0] > 0) {

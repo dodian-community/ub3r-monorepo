@@ -22,7 +22,7 @@ public class UseItemOnNpc implements Packet {
             return;
         }
         int npcId = tempNpc.getId();
-        client.faceNPC(npcIndex);
+        client.faceNpc(npcIndex);
         if (item == 5733) {
             client.playerPotato.clear();
             client.playerPotato.add(0, 2);

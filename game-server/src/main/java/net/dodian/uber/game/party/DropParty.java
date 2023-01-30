@@ -46,7 +46,7 @@ public class DropParty implements Runnable {
 
             int dropX = 2658 + (int) (Math.random() * 9);
             int dropY = 3299 + (int) (Math.random() * 15);
-            Ground.items.add(new GroundItem(dropX, dropY, dropItem.getId(), dropItem.getAmount(), -1, -1));
+            Ground.items.add(new GroundItem(dropX, dropY, 0, dropItem.getId(), dropItem.getAmount(), -1, -1));
 
             try {
                 Thread.sleep(3000);

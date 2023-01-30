@@ -11,7 +11,7 @@ public class TradeRequest implements Packet {
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int tw = client.getInputStream().readUnsignedWord();
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
-            client.faceNPC(32768 + tw);
+            client.facePlayer(tw);
             client.requestAnim(1833, 0);
             client.animationReset = System.currentTimeMillis() + 1200;
             return;

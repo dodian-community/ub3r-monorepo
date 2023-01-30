@@ -346,7 +346,6 @@ public class Stream {
     public int bitPosition = 0;
 
     public static int bitMaskOut[] = new int[32];
-
     static {
         for (int i = 0; i < 32; i++)
             bitMaskOut[i] = (1 << i) - 1;

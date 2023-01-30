@@ -1,6 +1,9 @@
 package net.dodian.uber.game.combat
 
+import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 
 
@@ -10,7 +13,6 @@ fun Client.canAttackNpc(npcId: Int): Boolean {
 
     if (npcId == 4130 && determineCombatLevel() < 50) {
         send(SendMessage("You must be level 50 combat or higher to attack Dad!"))
-        resetAttackNpc()
         return false
     }
     if (!requireKey(1545, 1443, 289))
@@ -24,12 +26,20 @@ fun Client.canAttackNpc(npcId: Int): Boolean {
 
     return true
 }
-fun Client.attackNpc(): Boolean {
-    val npcId = selectedNpc.id
-
-    if (selectedNpc.currentHealth < 1 || deathTimer > 0 || !canAttackNpc(npcId)) {
-        resetAttackNpc()
-        return false
+fun Client.attackTarget(): Boolean {
+    if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        if (npc.currentHealth < 1 || deathTimer > 0 || !canAttackNpc(npc.id)) {
+            resetAttack()
+            return false
+        }
+    }
+    if (target is Player) {
+        val plr = Server.playerHandler.getClient(target.slot)
+        if (plr.currentHealth < 1 || deathTimer > 0) {
+            resetAttack()
+            return false
+        }
     }
 
     when (handleMagic()) {

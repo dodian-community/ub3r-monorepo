@@ -305,12 +305,12 @@ public class Commands implements Packet {
                                 return;
                             }
                             if (item == null) {
-                                item = new GroundItem(client.getPosition().getX(), client.getPosition().getY(), test, 1, client.clientPid, -1);
-                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y)));
+                                item = new GroundItem(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ(), test, 1, client.clientPid, -1);
+                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             } else {
                                 Ground.deleteItem(item);
-                                item = new GroundItem(client.getPosition().getX() + 1, client.getPosition().getY(), test, 1, client.clientPid, -1);
-                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y)));
+                                item = new GroundItem(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ(), test, 1, client.clientPid, -1);
+                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             }
                             client.send(new SendMessage("Setting item..." + test));
                             test++;

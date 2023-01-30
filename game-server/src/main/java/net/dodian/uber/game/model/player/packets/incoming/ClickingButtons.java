@@ -397,7 +397,7 @@ public class ClickingButtons implements Packet {
                     client.randomed = false;
                     client.send(new RemoveInterfaces());
                     if (!client.addItem(2528, 1)) {
-                        GroundItem item = new GroundItem(client.getPosition().getX(), client.getPosition().getY(), 2528, 1, client.getSlot(), -1);
+                        GroundItem item = new GroundItem(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ(), 2528, 1, client.getSlot(), -1);
                         Ground.items.add(item);
                         client.send(new SendMessage("You dropped the lamp on the floor!"));
                     }

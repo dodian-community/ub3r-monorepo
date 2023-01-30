@@ -12,14 +12,14 @@ public class AttackNpc implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
+        int npcIndex = client.getInputStream().readUnsignedWordA();
         if (client.deathStage < 1) {
-            int npcIndex = client.getInputStream().readUnsignedWordA();
             Npc tempNpc = Server.npcManager.getNpc(npcIndex);
-            if (tempNpc == null)
+            if (tempNpc == null) {
                 return;
-            int NPCID = tempNpc.getId();
+            }
 
-            final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, NPCID, tempNpc.getPosition());
+            final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, tempNpc.getPosition());
             client.setWalkToTask(task);
             EventManager.getInstance().registerEvent(new Event(600) {
 
@@ -35,11 +35,8 @@ public class AttackNpc implements Packet {
                         this.stop();
                         return;
                     }
-
-                    if (!client.goodDistanceEntity(tempNpc, client.usingBow || client.autocast_spellIndex != -1 ? 5 : 1)) {
-                        return;
-                    }
-                    client.startAttackNpc(npcIndex);
+                    client.resetWalkingQueue();
+                    client.startAttack(tempNpc);
                     client.setWalkToTask(null);
                     this.stop();
                 }

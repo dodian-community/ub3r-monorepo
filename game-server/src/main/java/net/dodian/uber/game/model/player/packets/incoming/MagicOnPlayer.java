@@ -1,9 +1,11 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -18,20 +20,18 @@ public class MagicOnPlayer implements Packet {
                 || PlayerHandler.players[playerIndex] == null) {
             return;
         }
+        int EnemyX3 = PlayerHandler.players[playerIndex].getPosition().getX();
+        int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
+        Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];
+        int EnemyHP2 = castOnPlayer.getCurrentHealth();
+        if (castOnPlayer == null) {
+            return;
+        }
         if (!client.canAttack) {
             client.send(new SendMessage("You cannot attack your oppenent yet!"));
             return;
         }
-        int EnemyX3 = PlayerHandler.players[playerIndex].getPosition().getX();
-        int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
-        Player pl2 = PlayerHandler.players[playerIndex];
-        Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];
-        int EnemyHP = castOnPlayer.getLevel(Skill.HITPOINTS);
-        client.resetWalkingQueue();
-        int spellID = client.getInputStream().readSignedWordBigEndian();
-        if (pl2 == null) {
-            return;
-        }
+        int magicID = client.getInputStream().readSignedWordBigEndian();
         if (!client.GoodDistance(EnemyX3, EnemyY3, client.getPosition().getX(), client.getPosition().getY(), 5)) {
             return;
         }
@@ -45,91 +45,53 @@ public class MagicOnPlayer implements Packet {
             client.send(new SendMessage("Pking has been disabled"));
             return;
         }
-        if (castOnPlayer.immune) {
-            client.send(new SendMessage("That player is immune"));
-            return;
-        }
-        client.setHitDiff(0);
         if (client.duelFight && client.duelRule[2]) {
             client.send(new SendMessage("Magic has been disabled for this duel!"));
             return;
         }
-        System.currentTimeMillis();
-
         int wildLevel = client.getWildLevel();
-        if ((playerIndex == client.duel_with && client.duelFight) || wildLevel > 0) { //TODO: Fix magic on players!
-            /*for (int i2 = 0; i2 < client.ancientId.length; i2++) {
-                if (spellID == client.ancientId[i2]) {
-                    if (System.currentTimeMillis() - client.lastAttack < client.coolDown[client.coolDownGroup[i2]]) {
-                        // send(new SendMessage("You must wait before casting this
-                        // kind of spell again");
-                        break;
-                    }
-                    if (!client.runeCheck(spellID)) {
-                        client.send(new SendMessage("You are missing some of the runes required by this spell"));
-                        break;
-                    }
-                    client.deleteItem(565, 1);
-                    client.setInCombat(true);
-                    client.lastPlayerCombat = System.currentTimeMillis();
-                    if (client.getLevel(Skill.MAGIC) >= client.requiredLevel[i2]) {
-                        client.setFocus(EnemyX3, EnemyY3);
-                        double dmg = client.baseDamage[i2] * client.magicDmg();
-                        int hit = Utils.random((int)dmg);
-                        if (hit >= EnemyHP)
-                            hit = EnemyHP;
-                        client.requestAnim(1979, 0);
-                        client.AnimationReset = true;
-                        client.lastAttack = System.currentTimeMillis();
-                        int EnemyX = castOnPlayer.getPosition().getX();
-                        int EnemyY = castOnPlayer.getPosition().getY();
-                        if (spellID == 1572) {
-                            if (!client.playerHasItem(555, 3) || !client.playerHasItem(557, 3) || !client.playerHasItem(561, 2)) {
-                                client.send(new SendMessage("You are missing runes required for this spell"));
-                                break;
-                            }
-                            castOnPlayer.setSnared(5000);
-                            client.deleteItem(555, 3);
-                            client.deleteItem(557, 3);
-                            client.deleteItem(561, 2);
-                        } else if (spellID == 1582) {
-                            if (!client.playerHasItem(555, 4) || !client.playerHasItem(557, 4) || !client.playerHasItem(561, 3)) {
-                                client.send(new SendMessage("You are missing runes required for this spell"));
-                                break;
-                            }
-                            castOnPlayer.setSnared(10000);
-                            client.deleteItem(555, 4);
-                            client.deleteItem(557, 4);
-                            client.deleteItem(561, 3);
-                        }
-                        if (client.ancientType[i2] == 4) {
-                            client.stillgfx(617, EnemyY, EnemyX);
-                        } else if (client.ancientType[i2] == 3) {
-                            // coolDown[coolDownGroup[i2]] = 35;
-                            castOnPlayer.effects[0] = 15;
-                            client.stillgfx(369, EnemyY, EnemyX);
-                        } else if (client.ancientType[i2] == 2) {
-                            // coolDown[coolDownGroup[i2]] = 12;
-                            client.stillgfx(377, EnemyY, EnemyX);
-                            client.setCurrentHealth(client.getCurrentHealth() + (hit / 4));
-                            if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                                client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                            }
-                        } else {
-                            client.animation(78, EnemyY, EnemyX);
-                        }
-                        castOnPlayer.send(new SendMessage(client.getPlayerName() + " is shooting you!"));
-                        castOnPlayer.receieveDamage(client, (int) hit, false);
-                        client.resetWalkingQueue();
-                        break;
-                    } else {
-                        client.send(new SendMessage("You need a magic level of " + client.requiredLevel[i2]));
-                    }
+        if ((playerIndex == client.duel_with && client.duelFight) || wildLevel > 0) {
+            int slot = -1, type = 0;
+            for (int i2 = 0; i2 < client.ancientId.length && slot == -1; i2++) {
+                if(magicID == client.ancientId[i2]) {
+                    slot = i2;
+                    type = i2%4;
                 }
-            }*/
-        } else {
+            }
+            if (System.currentTimeMillis() - client.lastAttack < client.coolDown[type]) {
+                return;
+            }
+            if (client.getLevel(Skill.MAGIC) >= client.requiredLevel[slot]) {
+                if (client.runeCheck()) {
+                    int hitDiff = 0;
+                    double extra = client.getLevel(Skill.MAGIC) * 0.195;
+                    double critChance = client.getLevel(Skill.AGILITY) / 9;
+                    boolean hitCrit = Math.random() * 100 <= critChance * (client.getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 1.5 : 1);
+                    client.deleteItem(565, 1);
+                    double dmg = client.baseDamage[slot] * client.magicDmg();
+                    hitDiff = Utils.random((int) dmg);
+                    hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
+                    if (hitDiff >= EnemyHP2)
+                        hitDiff = EnemyHP2;
+                    client.requestAnim(1979, 0);
+                    if(type == 2) { //Blood effect!
+                        client.stillgfx(377, EnemyY3, EnemyX3);
+                        int newHealth = client.getCurrentHealth() + (int) (hitDiff / 3);
+                        client.setCurrentHealth(newHealth >= client.getLevel(Skill.HITPOINTS) ? client.getLevel(Skill.HITPOINTS) : newHealth);
+                    } else if (type == 3) { //Freeze effect!
+                        client.stillgfx(369, EnemyY3, EnemyX3);
+                    } else
+                        client.stillgfx(78, EnemyY3, EnemyX3);
+                    client.lastAttack = System.currentTimeMillis();
+                    castOnPlayer.target = client;
+                    client.target = castOnPlayer;
+                    client.setFocus(EnemyX3, EnemyY3);
+                    castOnPlayer.dealDamage(hitDiff, hitCrit);
+                }
+            } else
+                client.send(new SendMessage("You need a magic level of " + client.requiredLevel[slot]));
+        } else
             client.send(new SendMessage("You can't attack here!"));
-        }
     }
 
 }

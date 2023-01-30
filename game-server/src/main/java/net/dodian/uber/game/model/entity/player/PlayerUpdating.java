@@ -191,7 +191,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendFaceCharacter(Player player, Stream stream) {
-        stream.writeWordBigEndian(player.getFaceNpc());
+        stream.writeWordBigEndian(player.getFaceTarget());
     }
 
     public static void appendPlayerAppearance(Player player, Stream str) {
