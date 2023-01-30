@@ -142,7 +142,7 @@ public class Npc extends Entity {
         requestAnim(data.getAttackEmote(), 0);
         setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-        for (int i = 0; i < PlayerHandler.getPlayerCount() + 1; i++) {
+        /*for (int i = 0; i < PlayerHandler.getPlayerCount() + 1; i++) {
             Client c = getClient(i);
             if (!validClient(i))
                 continue;
@@ -151,7 +151,7 @@ public class Npc extends Entity {
                 int damage = Utils.random(maxHit);
                 c.dealDamage(damage, false);
             }
-        }
+        }*/ //TODO: Fix multi hit shiet!
         magicList.clear();
         lastAttack = System.currentTimeMillis();
     }
@@ -424,11 +424,11 @@ public class Npc extends Entity {
                         if (target.checkItem(drop.getId()))
                             continue;
                     if (Server.itemManager.isStackable(drop.getId())) {
-                        GroundItem item = new GroundItem(getPosition().getX(), getPosition().getY(), drop.getId(), drop.getAmount(), pid, getId());
+                        GroundItem item = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), drop.getId(), drop.getAmount(), pid, getId());
                         Ground.items.add(item);
                     } else {
                         for (int i = 0; i < drop.getAmount(); i++) {
-                            GroundItem item = new GroundItem(getPosition().getX(), getPosition().getY(), drop.getId(), 1, pid, getId());
+                            GroundItem item = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), drop.getId(), 1, pid, getId());
                             Ground.items.add(item);
                         }
                     }

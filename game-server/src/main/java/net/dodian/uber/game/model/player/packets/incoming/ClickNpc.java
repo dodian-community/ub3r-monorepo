@@ -62,7 +62,7 @@ public class ClickNpc implements Packet {
 
     public void clickNpc(Client client, Npc tempNpc) {
         int npcId = tempNpc.getId();
-        client.faceNPC(tempNpc.getSlot());
+        client.faceNpc(tempNpc.getSlot());
         // TurnPlayerTo(tempNpc.getX(), tempNpc.getY());
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());

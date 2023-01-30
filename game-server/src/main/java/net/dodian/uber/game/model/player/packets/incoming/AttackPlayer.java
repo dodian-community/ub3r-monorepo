@@ -1,5 +1,10 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
+import net.dodian.uber.game.Server;
+import net.dodian.uber.game.event.Event;
+import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
@@ -10,19 +15,38 @@ public class AttackPlayer implements Packet {
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int victim = client.getInputStream().readSignedWordBigEndian();
-        // client.getCombat().initialize(PlayerHandler.players[victim]);
-        client.AttackingOn = victim;
-        if (!client.canAttack) {
-            client.send(new SendMessage("You cannot attack your oppenent yet!"));
-            return;
+        if (client.deathStage < 1) {
+            Client plr = Server.playerHandler.getClient(victim);
+            if (plr == null) {
+                return;
+            }
+            final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victim, plr.getPosition());
+            client.setWalkToTask(task);
+            EventManager.getInstance().registerEvent(new Event(600) {
+
+                @Override
+                public void execute() {
+
+                    if (client == null || client.disconnected) {
+                        this.stop();
+                        return;
+                    }
+
+                    if (client.getWalkToTask() != task) {
+                        this.stop();
+                        return;
+                    }
+                    if (!client.canAttack) {
+                        client.send(new SendMessage("You cannot attack your oppenent yet!"));
+                    } else {
+                        client.resetWalkingQueue();
+                        client.startAttack(plr);
+                        client.setWalkToTask(null);
+                    }
+                    this.stop();
+                }
+            });
         }
-        client.faceNPC(32768 + client.AttackingOn);
-        if (client.AttackingOn >= PlayerHandler.players.length || client.AttackingOn < 1) {
-            client.AttackingOn = -1;
-            client.IsAttacking = false;
-            return;
-        }
-        client.IsAttacking = true;
     }
 
 }

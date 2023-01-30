@@ -51,7 +51,7 @@ public class ClickNpc2 implements Packet {
 
     public void clickNpc2(Client client, Npc tempNpc) {
         int npcId = tempNpc.getId();
-        client.faceNPC(tempNpc.getSlot());
+        client.faceNpc(tempNpc.getSlot());
         long time = System.currentTimeMillis();
         if (time - client.globalCooldown[0] <= 50) {
             client.send(new SendMessage("Action throttled... please wait longer before acting!"));

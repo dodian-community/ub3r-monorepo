@@ -40,13 +40,14 @@ public class NpcProcessor implements Job {
             }
             int attackTimer = npc.enraged(20000) ? 600 : npc.boss ? 1800 : 2400;
             if (npc.alive && npc.isFighting() && now - npc.getLastAttack() >= attackTimer) {
-                if (npc.getId() == 430 || npc.getId() == 1977)
+                npc.attack();
+                npc.setLastAttack(System.currentTimeMillis());
+                /*if (npc.getId() == 430 || npc.getId() == 1977)
                     npc.attack_new();
                 else if (npc.getId() == 3200)
                     npc.bossAttack();
                 else
-                    npc.attack();
-                npc.setLastAttack(System.currentTimeMillis());
+                    npc.attack();*/
                 if(npc.getId() == 2261) {
                     int hp = (int)(npc.getMaxHealth() * 0.40);
                     if(npc.enraged(20000)) {

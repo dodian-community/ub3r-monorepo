@@ -13,12 +13,12 @@ public class Ground {
         item.setTaken(true);
         for (int i = 0; i < PlayerHandler.players.length; i++) {
             Client p = Server.playerHandler.getClient(i);
-            if (p == null || !p.isActive || p.outputStream == null) { //Incase!
+            if (p == null || !p.isActive) {
             } else if (!item.canDespawn) {
-                p.removeGroundItem(item.x, item.y, item.id);
+                p.removeGroundItem(item.x, item.y, item.z, item.id);
                 item.dropped = System.currentTimeMillis();
             } else if (Server.itemManager.isTradable(item.id) || (p.dbId == item.playerId && !Server.itemManager.isTradable(item.id))) {
-                p.removeGroundItem(item.x, item.y, item.id);
+                p.removeGroundItem(item.x, item.y, item.z, item.id);
             }
         }
         if (item.canDespawn)

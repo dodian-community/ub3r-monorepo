@@ -23,13 +23,12 @@ public class GroundItemProcessor implements Job {
                 item.taken = false;
                 item.visible = false;
             }
-            if ((!item.visible || (!item.visible && !item.canDespawn && !item.taken))
-                    && (now - item.dropped >= item.timeDisplay || !item.canDespawn)) {
+            if (!item.visible && (now - item.dropped >= item.timeDisplay || !item.canDespawn) || (!item.visible && !item.canDespawn && !item.taken) && (now - item.dropped >= item.timeDisplay || !item.canDespawn)) {
                 for (int i = 0; i < PlayerHandler.players.length; i++) {
                     Client p = Server.playerHandler.getClient(i);
                     if (p != null && Server.itemManager.isTradable(item.id) && p.dbId != item.playerId
                             && Math.abs(p.getPosition().getX() - item.x) < 114 && Math.abs(p.getPosition().getY() - item.y) < 114) {
-                        p.createGroundItem(item.id, item.x, item.y, item.amount);
+                        p.createGroundItem(item.id, item.x, item.y, item.z, item.amount);
                     }
                 }
                 item.visible = true;

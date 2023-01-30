@@ -17,6 +17,7 @@ public class ItemHandler {
     public static int[] globalItemID = new int[8001];
     public static int[] globalItemX = new int[8001];
     public static int[] globalItemY = new int[8001];
+    public static int[] globalItemZ = new int[8001];
     public static int[] globalItemAmount = new int[8001];
     public static boolean[] globalItemStatic = new boolean[8001];
 
@@ -28,6 +29,7 @@ public class ItemHandler {
             globalItemID[i] = 0;
             globalItemX[i] = 0;
             globalItemY[i] = 0;
+            globalItemZ[i] = 0;
             globalItemAmount[i] = 0;
             globalItemTicks[i] = 0;
             globalItemStatic[i] = false;
@@ -37,7 +39,7 @@ public class ItemHandler {
         }
     }
 
-    public static void createItemAll(int itemID, int itemX, int itemY, int itemAmount, int itemController) {
+    public static void createItemAll(int itemID, int itemX, int itemY, int itemZ, int itemAmount, int itemController) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
             Player p = PlayerHandler.players[i];
             if (p != null) {
@@ -45,14 +47,14 @@ public class ItemHandler {
                 if ((person.getPlayerName() != null || person.getPlayerName() != "null")
                         && !(person.getSlot() == itemController)) {
                     if (person.distanceToPoint(itemX, itemY) <= 60) {
-                        person.send(new CreateGroundItem(new GameItem(itemID, itemAmount), new Position(itemX, itemY)));
+                        person.send(new CreateGroundItem(new GameItem(itemID, itemAmount), new Position(itemX, itemY, itemZ)));
                     }
                 }
             }
         }
     }
 
-    public static void removeItemAll(int itemID, int itemX, int itemY) {
+    public static void removeItemAll(int itemID, int itemX, int itemY, int itemZ) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
             Player p = PlayerHandler.players[i];
             if (p != null) {
@@ -61,7 +63,7 @@ public class ItemHandler {
                     // misc.println("distance to remove "+person.distanceToPoint(itemX,
                     // itemY));
                     if (person.distanceToPoint(itemX, itemY) <= 60) {
-                        person.removeGroundItem(itemX, itemY, itemID);
+                        person.removeGroundItem(itemX, itemY, itemZ, itemID);
                     }
                 }
             }

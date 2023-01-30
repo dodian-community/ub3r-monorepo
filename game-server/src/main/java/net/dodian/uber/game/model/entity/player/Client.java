@@ -45,7 +45,7 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.DotEnvKt.*;
-import static net.dodian.uber.game.combat.PlayerOnNpcCombatKt.attackNpc;
+import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Client extends Player implements Runnable {
@@ -57,6 +57,7 @@ public class Client extends Player implements Runnable {
 	public long lastSave, lastProgressSave, snaredUntil = 0;
 	public boolean checkTime = false;
 	public Npc selectedNpc = null;
+	public Entity target = null;
 	int otherdbId = -1;
 	public int convoId = -1, nextDiag = -1, npcFace = 591;
 	public boolean pLoaded = false;
@@ -86,16 +87,13 @@ public class Client extends Player implements Runnable {
 	/*
 	 * Danno: Last row all disabled. As none have effect.
 	 */
-	public int[] duelButtons = {26069, 26070, 26071, 30136,
-			2158 /*
-            * , 26065, 26072, 26073, 26074, 26066, 26076
-            */};
-	public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Gear Change", "Fun Weapons", "No Retreat",
+	public int[] duelButtons = {26069, 26070, 26071, 30136, 2158, 26065 /* 26072, 26073, 26074, 26066, 26076 */};
+	public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Gear Change", "Fun Weapons", "No Deflect Damage",
 			"No Drinks", "No Food", "No prayer", "No Movement", "Obstacles"};
 	/*
 	 * Danno: Last row all disabled. As none have effect.
 	 */
-	public boolean[] duelRule = {false, false, false, false, false, true, true, true, true, true, true};
+	public boolean[] duelRule = {false, false, false, false, false, false, true, true, true, true, true};
 
 	/*
 	 * Danno: Testing for armor restriction rules.
@@ -467,7 +465,6 @@ public class Client extends Player implements Runnable {
 	public int WanneBank = 0;
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
-	public int AttackingOn = 0;
 
 	public static final int bufferSize = 1000000;
 	private java.net.Socket mySock;
@@ -570,15 +567,12 @@ public class Client extends Player implements Runnable {
 	// two methods that are only used for login procedure
 	private void directFlushOutStream() throws java.io.IOException {
 		mySocketHandler.getOutput().write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
-		//out.write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
 		getOutputStream().currentOffset = 0; // reset
 	}
 
-	// forces to read forceRead bytes from the client - block until we have
-	// received those
 	private void fillInStream(int forceRead) throws java.io.IOException {
-		inputStream.currentOffset = 0;
-		mySocketHandler.getInput().read(inputStream.buffer, 0, forceRead);
+		getInputStream().currentOffset = 0;
+		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
 	}
 
 	private void fillInStream(PacketData pData) throws java.io.IOException {
@@ -636,7 +630,7 @@ public class Client extends Player implements Runnable {
 			}
 			getInputStream().readUnsignedByte();
 			for (int i = 0; i < 9; i++) { //Client shiet?!
-				Integer.toHexString(getInputStream().readDWord());
+				getInputStream().readDWord();
 			}
 
 			loginEncryptPacketSize--; // don't count length byte
@@ -1958,30 +1952,28 @@ public class Client extends Player implements Runnable {
 		 */
 		send(new Sound(376));
 		deleteItem(id, slot, amount);
-		GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), id, amount, getSlot(), -1);
+		GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), id, amount, getSlot(), -1);
 		Ground.items.add(drop);
 		DropLog.recordDrop(this, drop.id, drop.amount, "Player", getPosition().copy());
 	}
 
-	public void removeGroundItem(int itemX, int itemY, int itemID) { // Phate:
-		getOutputStream().createFrame(85); // Phate: Item Position Frame
-		getOutputStream().writeByteC((itemY - 8 * mapRegionY));
-		getOutputStream().writeByteC((itemX - 8 * mapRegionX));
-		getOutputStream().createFrame(156); // Phate: Item Action: Delete
-		getOutputStream().writeByteS(0); // Height, but we have all set to 0!
-		getOutputStream().writeWord(itemID); // Phate: Item ID
+	public void removeGroundItem(int itemX, int itemY, int height, int itemID) {
+			getOutputStream().createFrame(85);
+			getOutputStream().writeByteC(itemY - 8 * mapRegionY);
+			getOutputStream().writeByteC(itemX - 8 * mapRegionX);
+			getOutputStream().createFrame(156);
+			getOutputStream().writeByteS(height);
+			getOutputStream().writeWord(itemID);
 	}
 
-	public void createGroundItem(int itemID, int itemX, int itemY, int itemAmount) { // Phate: Omg fucking sexy! creates
-		// item at
-		// absolute X and Y
-		getOutputStream().createFrame(85); // Phate: Spawn ground item
-		getOutputStream().writeByteC((itemY - 8 * mapRegionY));
-		getOutputStream().writeByteC((itemX - 8 * mapRegionX));
-		getOutputStream().createFrame(44);
-		getOutputStream().writeWordBigEndianA(itemID);
-		getOutputStream().writeWord(itemAmount);
-		getOutputStream().writeByte(0); //Height but we got this set to 0 by default!
+	public void createGroundItem(int itemID, int itemX, int itemY, int height, int itemAmount) {
+			getOutputStream().createFrame(85);
+			getOutputStream().writeByteC(itemY - 8 * mapRegionY);
+			getOutputStream().writeByteC(itemX - 8 * mapRegionX);
+			getOutputStream().createFrame(44);
+			getOutputStream().writeWordBigEndianA(itemID);
+			getOutputStream().writeWord(itemAmount);
+			getOutputStream().writeByte(height);
 	}
 
 	public void deleteItem(int id, int amount) {
@@ -2602,34 +2594,25 @@ public class Client extends Player implements Runnable {
 		}
 
 		// Attacking in wilderness
-		if (IsAttacking && !attackingNpc && deathStage == 0) {
-			if (PlayerHandler.players[AttackingOn] != null) {
-				if (PlayerHandler.players[AttackingOn].getCurrentHealth() > 0) {
-					// TODO: Handle PVP!
-					//Attack();
-				} else {
-					ResetAttack();
-				}
-			} else {
-				ResetAttack();
-			}
+		if (attackingPlayer && deathStage == 0) {
+			attackTarget(this);
 		}
 		// Attacking an NPC
 		else if (attackingNpc && deathStage == 0) {
-			attackNpc(this);
+			attackTarget(this);
 		}
 		// If killed apply dead
 		if (deathStage == 0 && getCurrentHealth() < 1) {
-			if (selectedNpc != null) {
-				selectedNpc.getDamage().remove(this);
-				selectedNpc.removeEnemy(this);
-				resetAttackNpc();
-			} else if (IsAttacking)
-				ResetAttack();
-			Client p = getClient(duel_with);
-			if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
-				p.duelWin = true;
-				p.DuelVictory();
+			resetAttack();
+			if(target instanceof Npc) {
+				Npc npc = Server.npcManager.getNpc(target.getSlot());
+				npc.removeEnemy(this);
+			} else {
+				Client p = getClient(duel_with);
+				if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
+					p.duelWin = true;
+					p.DuelVictory();
+				}
 			}
 			requestAnim(836, 5);
 			setCurrentHealth(0);
@@ -3587,14 +3570,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean usingBow = false;
-
-	public boolean ResetAttack() {
-		IsAttacking = false;
-		AttackingOn = 0;
-		rerequestAnim();
-		faceNPC(65535);
-		return true;
-	}
 
 	public boolean IsItemInBag(int ItemID) {
 		for (int playerItem : playerItems) {
@@ -5575,7 +5550,7 @@ public class Client extends Player implements Runnable {
 				stake = true;
 			}
 		}
-		ResetAttack();
+		resetAttack();
 
 		if (stake) {
 			DuelLog.recordDuel(this.getPlayerName(), other.getPlayerName(), playerStake, opponentStake, this.getPlayerName());
@@ -6287,6 +6262,7 @@ public class Client extends Player implements Runnable {
 		fishing = false;
 		stringing = false;
 		mining = false;
+		minePick = -1;
 		cooking = false;
 		filling = false;
 		mixPots = false;
@@ -6839,7 +6815,7 @@ public class Client extends Player implements Runnable {
 
 	public void tradeReq(int id) {
 		// followPlayer(id);
-		faceNPC(32768 + id);
+		facePlayer(id);
 		if (!Server.trading) {
 			send(new SendMessage("Trading has been temporarily disabled"));
 			return;
@@ -6987,7 +6963,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void duelReq(int pid) {
-		faceNPC(32768 + pid);
+		facePlayer(pid);
 		Client other = getClient(pid);
 		if (inWildy() || other.inWildy()) {
 			send(new SendMessage("You cant duel in the wilderness!"));
@@ -7018,7 +6994,7 @@ public class Client extends Player implements Runnable {
 		if (tradeLocked && other.playerRights < 1) {
 			return;
 		}
-		if (other.connectedFrom.equals(connectedFrom)) { //We do not wish for others to duel?!
+		if (other.connectedFrom.equals(connectedFrom) && getGameWorldId() == 1) { //We do not wish for others to duel?!
 			duelRequested = false;
 			return;
 		}
@@ -7677,7 +7653,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void mining(int index) {
-		boolean hasPick = false;
 		int pickaxe = -1;
 		pickaxe = findPick();
 		if (pickaxe < 0) {
@@ -7685,11 +7660,9 @@ public class Client extends Player implements Runnable {
 			resetAction();
 			send(new SendMessage("You do not have an pickaxe that you can use."));
 			return;
-		} else {
+		} else
 			minePick = pickaxe;
-			hasPick = true;
-		}
-		if (hasPick) {
+		if (minePick >= 0) {
 			requestAnim(getMiningEmote(Utils.picks[pickaxe]), 0);
 		} else {
 			resetAction();
@@ -7749,24 +7722,28 @@ public class Client extends Player implements Runnable {
 		AddToCords(X, Y);
 	}
 
-	public void startAttackNpc(int npcIndex) {
-		Npc npc = Server.npcManager.getNpc(npcIndex);
-			if (npc != null && npc.isAttackable()) {
-				selectedNpc = npc;
-				attackingNpc = true;
-				faceNPC(npcIndex);
-			} else {
-				send(new SendMessage("You can't attack that!"));
-			}
+	public void startAttack(Entity enemy) {
+		target = enemy;
+		if(target instanceof Npc) {
+			attackingNpc = true;
+			faceNpc(target.getSlot());
+			//System.out.println("test for npc slot: " + target.getSlot());
+		} else {
+			Server.playerHandler.getClient(target.getSlot()).target = this;
+			attackingPlayer = true;
+			facePlayer(target.getSlot());
+			//System.out.println("test for player slot: " + target.getSlot());
+		}
 	}
 
-	public void resetAttackNpc() {
+	public void resetAttack() {
 		rerequestAnim();
-		attackingNpc = false;
-		selectedNpc = null;
-		setFaceNpc(65535);
-		getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
-
+		if (target instanceof Npc)
+			attackingNpc = false;
+		else
+			attackingPlayer = false;
+		target = null;
+		faceTarget(65535);
 	}
 
 	private void requestAnims(int wearID) {
@@ -7853,12 +7830,16 @@ public class Client extends Player implements Runnable {
 				slot = e.getSlot();
 			}
 		}
-		Ground.items.add(new GroundItem(getPosition().getX(), getPosition().getY(), 526, 1, slot, -1));
-		if (validClient(slot)) {
-			getClient(slot).send(new SendMessage("You have defeated " + getPlayerName() + "!"));
-			yellKilled(getClient(slot).getPlayerName() + " has just slain " + getPlayerName() + " in the wild!");
-			Client other = getClient(slot);
-			playerKilled(other);
+		getDamage().clear();
+		if(slot >= 0) {
+			Ground.items.add(new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), 526, 1, slot, -1));
+			if (validClient(slot)) {
+				getClient(slot).send(new SendMessage("You have defeated " + getPlayerName() + "!"));
+				yellKilled(getClient(slot).getPlayerName() + " has just slain " + getPlayerName() + " in the wild!");
+				Client other = getClient(slot);
+				playerKilled(other);
+			}
+		}
 			/* Stuff dropped to the floor! */
       /*for (int i = 0; i < getEquipment().length; i++) {
         if (getEquipment()[i] > 0) {
@@ -7884,8 +7865,6 @@ public class Client extends Player implements Runnable {
         }
         deleteItem((playerItems[i] - 1), i, playerItemsN[i]);
       }*/
-		}
-		getDamage().clear();
 	}
 
 	public void acceptDuelWon() {
@@ -8541,21 +8520,21 @@ public class Client extends Player implements Runnable {
 	public void updateItems() {
 		if (displayItems.size() > 0) {
 			for (GroundItem display : displayItems) {
-				removeGroundItem(display.x, display.y, display.id);
+				removeGroundItem(display.x, display.y, display.z, display.id);
 			}
 			displayItems.clear();
 		}
 		for (GroundItem ground : Ground.items) {
 			if (Math.abs(getPosition().getX() - ground.x) <= 114 && Math.abs(getPosition().getY() - ground.y) <= 114) {
 				if (!ground.canDespawn && !ground.taken) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.amount);
+					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
 				} else if (dbId == ground.playerId && ground.canDespawn) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.amount);
+					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
 				} else if (ground.canDespawn && ground.visible && ground.playerId != dbId
 						&& Server.itemManager.isTradable(ground.id)) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.amount);
+					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
 				}
 			}
@@ -8860,9 +8839,5 @@ public class Client extends Player implements Runnable {
 
 	public int rangedMaxHit() {
 		return ClientExtensionsKt.rangedMaxHit(this);
-	}
-
-	public int magicMaxHit() {
-		return ClientExtensionsKt.magicMaxHit(this);
 	}
 }

@@ -19,7 +19,7 @@ public class ItemProcessor implements Job {
             if ((ItemHandler.hideItemTimer + ItemHandler.showItemTimer) == ItemHandler.globalItemTicks[i]) {
                 if (!ItemHandler.globalItemStatic[i]) {
                     ItemHandler.removeItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemX[i],
-                            ItemHandler.globalItemY[i]);
+                            ItemHandler.globalItemY[i], ItemHandler.globalItemZ[i]);
                 } else {
                     Utils.println("Item is static");
                 }
@@ -33,7 +33,7 @@ public class ItemProcessor implements Job {
                 // to
                 // all
                 if (!ItemHandler.globalItemStatic[i]) {
-                    ItemHandler.createItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemX[i], ItemHandler.globalItemY[i],
+                    ItemHandler.createItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemX[i], ItemHandler.globalItemY[i], ItemHandler.globalItemZ[i],
                             ItemHandler.globalItemAmount[i], ItemHandler.globalItemController[i]);
                 } else
                     Utils.println("Item is static");

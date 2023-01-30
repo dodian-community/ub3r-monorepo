@@ -71,7 +71,7 @@ public abstract class Player extends Entity {
     private int playerSER = 0x338; // SER = Standard Emotion Run
     public boolean IsCutting = false;
     public boolean isFiremaking = false;
-    public boolean IsAttacking = false, attackingNpc = false;
+    public boolean attackingPlayer = false, attackingNpc = false;
     public int attacknpc = -1;
     public int Essence;
     public boolean IsShopping = false;
@@ -129,7 +129,7 @@ public abstract class Player extends Entity {
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
     public boolean loaded = false;
     private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
-    private int faceNPC = -1;
+    private int faceTarget = -1;
     public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
     public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
     public int[] tmpNWCX = new int[WALKING_QUEUE_SIZE];
@@ -625,14 +625,18 @@ public abstract class Player extends Entity {
 
     public void clearUpdateFlags() {
         getUpdateFlags().clear();
-        IsStair = false;
-        faceNPC = 65535;
-
+        IsStair = false; //What is this?!
     }
 
-    public void faceNPC(int index) {
-        faceNPC = index;
+    public void faceTarget(int index) {
+        this.faceTarget = index;
         getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
+    }
+    public void faceNpc(int index) {
+        faceTarget(index);
+    }
+    public void facePlayer(int index) {
+        faceTarget(32768 + index);
     }
 
     public void gfx0(int gfx) {
@@ -641,12 +645,8 @@ public abstract class Player extends Entity {
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
     }
 
-    public int getFaceNpc() {
-        return this.faceNPC;
-    }
-
-    public void setFaceNpc(int faceNpc) {
-        this.faceNPC = faceNpc;
+    public int getFaceTarget() {
+        return this.faceTarget;
     }
     public abstract void process(); //Send every 600 ms
 
@@ -779,7 +779,8 @@ public abstract class Player extends Entity {
     public abstract void sendpm(long name, int rights, byte[] chatmessage, int messagesize);
 
     public void dealDamage(int amt, boolean crit) {
-        ((Client) this).debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
+        Client plr = ((Client) this);
+        plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
         double rolledChance = Math.random() * 1;
         double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
         double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
@@ -787,13 +788,22 @@ public abstract class Player extends Entity {
         double reduceDamage = 1.0 - (dmg / 100);
         int oldDmg = amt;
         //System.out.println("test..." + (rolledChance * 100) + "%, " + (chance * 100) + "%, " + (rolledChance <= chance) + ", " + level);
-        if (rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
+        if (!(plr.inDuel && plr.duelRule[5]) && rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
             amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
             if(amt != oldDmg)
                 ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
         }
         currentHealth -= amt;
         hitDiff = amt;
+        if (plr.target != null && plr.target instanceof Player) { //Pvp damage profile!
+            int totalDmg = 0;
+            if (getDamage().containsKey(plr.target)) {
+                totalDmg = getDamage().get(plr.target) + hitDiff;
+                getDamage().remove(plr.target);
+            } else
+                totalDmg = hitDiff;
+            getDamage().put(plr.target, totalDmg);
+        }
         this.crit = crit;
         getUpdateFlags().setRequired(UpdateFlag.HIT, true);
     }

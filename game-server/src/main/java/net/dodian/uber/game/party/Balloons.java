@@ -176,7 +176,7 @@ public class Balloons {
                         if (!droppedItems.isEmpty()) {
                             for (int i = 0; i < droppedItems.size(); i++) {
                                 if (droppedItems.get(i).getPosition().equals(pos)) {
-                                    GroundItem drop = new GroundItem(pos.getX(), pos.getY(), droppedItems.get(i).getId(), droppedItems.get(i).getAmount(), c.getSlot(), -1);
+                                    GroundItem drop = new GroundItem(pos.getX(), pos.getY(), pos.getZ(), droppedItems.get(i).getId(), droppedItems.get(i).getAmount(), c.getSlot(), -1);
                                     Ground.items.add(drop);
                                     c.send(new SendMessage("<col=664400>Something odd appears on the ground."));
                                     droppedItems.remove(i);
