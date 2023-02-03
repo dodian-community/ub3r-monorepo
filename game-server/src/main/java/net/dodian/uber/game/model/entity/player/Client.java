@@ -8793,7 +8793,7 @@ public class Client extends Player implements Runnable {
 				{3058, -1, -1, 0}, //Mountain!
 				{3059, -1, -1, 0}, //Castle!
 				{3060, -1, -1, 0}, //Tent!
-				{3056, 2875, 2972, 0}, //Tree aka shilo
+				{3056, 2863, 2971, 0}, //Tree aka shilo
 				{48054, 2772, 3234, 0} //Totem
 		};
 		for (int i = 0; i < travel.length; i++)

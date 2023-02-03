@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -72,18 +73,21 @@ fun Client.handleRanged(): Int {
     val extra = getLevel(Skill.RANGED) * 0.195
     val hitCrit = hit + Utils.dRandom2(extra).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
+    var landHit = landHitRanged(this, target);
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        if (landCrit)
+        if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
+        else if(!landHit) hit = 0
         if(hit >= npc.currentHealth)
             hit = npc.currentHealth
         npc.dealDamage(this, hit, landCrit)
     }
     if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)
-        if (landCrit)
+        if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
+        else if(!landHit) hit = 0
         if(hit >= player.currentHealth)
             hit = player.currentHealth
         player.dealDamage(hit, landCrit)
@@ -101,4 +105,34 @@ fun Client.handleRanged(): Int {
     lastAttack = System.currentTimeMillis()
 
     return 1
+}
+
+fun landHitRanged(p: Client, t: Entity): Boolean {
+    var maxChance = 80.0
+    var minChance = 20.0
+    var hitChance = 60.0
+    var chance = Math.random() * 100;
+    if(t is Client) { //Pvp
+        var atkBonus = p.playerBonus[3]
+        var atkLevel = p.getLevel(Skill.RANGED) + (atkBonus / 10)
+        var defBonus = t.playerBonus[8]
+        var defLevel = t.getLevel(Skill.DEFENCE) + (defBonus / 10)
+        hitChance += (atkLevel - defLevel)
+        if(hitChance < minChance)
+            hitChance = minChance;
+        if(hitChance > maxChance)
+            hitChance = maxChance;
+        return chance < hitChance;
+    } else if(t is Npc) { //Pve
+        var atkBonus = p.playerBonus[3]
+        var atkLevel = p.getLevel(Skill.RANGED) + (atkBonus / 10)
+        var defLevel = t.defence
+        hitChance += (atkLevel - defLevel)
+        if(hitChance < minChance)
+            hitChance = minChance;
+        if(hitChance > maxChance)
+            hitChance = maxChance;
+        return chance < hitChance;
+    }
+    return true;
 }

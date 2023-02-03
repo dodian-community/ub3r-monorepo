@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -8,11 +9,8 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.item.SpecialsHandler
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.entity.player.*
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
-import kotlin.math.roundToInt
-import kotlin.random.Random
 
 fun Client.handleMelee(): Int {
     if (!canReach(target, 1))
@@ -48,21 +46,24 @@ fun Client.handleMelee(): Int {
         val extra = getLevel(Skill.STRENGTH) * 0.195
         val hitCrit = hit + Utils.dRandom2(extra).toInt()
         val landCrit = Math.random() * 100 <= criticalChance
+        var landHit = landHit(this, target);
         if (target is Npc) {
             val npc = Server.npcManager.getNpc(target.slot)
-            if (landCrit)
+            if (landCrit && landHit)
                 hit + Utils.dRandom2(extra).toInt()
+            else if(!landHit) hit = 0
             if(hit >= npc.currentHealth)
                 hit = npc.currentHealth
-            npc.dealDamage(this, hit, landCrit)
+            npc.dealDamage(this, hit, landCrit && landHit)
         }
         if (target is Player) {
             val player = Server.playerHandler.getClient(target.slot)
-            if (landCrit)
+            if (landCrit && landHit)
                 hit + Utils.dRandom2(extra).toInt()
+            else if(!landHit) hit = 0
             if(hit >= player.currentHealth)
                 hit = player.currentHealth
-            player.dealDamage(hit, landCrit)
+            player.dealDamage(hit, landCrit && landHit)
         }
 
         if (target is Npc) {
@@ -79,6 +80,52 @@ fun Client.handleMelee(): Int {
     lastAttack = System.currentTimeMillis()
 
     return 1
+}
+
+fun highestAttackBonus(p: Client): Int {
+    var bonus = 0;
+    for (i in 0..2) {
+        if (p.playerBonus[i] > bonus)
+            bonus = p.playerBonus[i]
+    }
+    return bonus;
+    }
+    fun highestDefensiveBonus(p: Client): Int {
+        var bonus = 0;
+        for (i in 5..7) {
+            if (p.playerBonus[i] > bonus)
+                bonus = p.playerBonus[i]
+        }
+            return bonus;
+        }
+fun landHit(p: Client, t: Entity): Boolean {
+    var maxChance = 80.0
+    var minChance = 20.0
+    var hitChance = 60.0
+    var chance = Math.random() * 100;
+    if(t is Client) { //Pvp
+        var atkBonus = highestAttackBonus(p)
+        var atkLevel = p.getLevel(Skill.ATTACK) + (atkBonus / 10)
+        var defBonus = highestDefensiveBonus(t)
+        var defLevel = t.getLevel(Skill.DEFENCE) + (defBonus / 10)
+        hitChance += (atkLevel - defLevel)
+        if(hitChance < minChance)
+            hitChance = minChance;
+        if(hitChance > maxChance)
+            hitChance = maxChance;
+        return chance < hitChance;
+    } else if(t is Npc) { //Pve
+        var atkBonus = highestAttackBonus(p)
+        var atkLevel = p.getLevel(Skill.ATTACK) + (atkBonus / 10)
+        var defLevel = t.defence
+        hitChance += (atkLevel - defLevel)
+        if(hitChance < minChance)
+            hitChance = minChance;
+        if(hitChance > maxChance)
+            hitChance = maxChance;
+        return chance < hitChance;
+    }
+    return true;
 }
 
 fun Client.handleSpecial(hit: Int): Int {

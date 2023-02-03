@@ -21,8 +21,8 @@ public class ShopProcessor implements Job {
                         if (j <= ShopHandler.ShopItemsStandard[i]
                                 && ShopHandler.ShopItemsN[i][j] <= ShopHandler.ShopItemsSN[i][j]) {
                             if (ShopHandler.ShopItemsN[i][j] < ShopHandler.ShopItemsSN[i][j]) {
-                                ShopHandler.ShopItemsN[i][j] += 1; // if amount lower then
-                                // standard, increase it !
+                                double restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j])*0.05;
+                                ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? restockAmount : 1;
                             }
                         } else {
                             Server.shopHandler.DiscountItem(i, j);

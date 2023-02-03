@@ -32,9 +32,19 @@ public class BankAll implements Packet {
         } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
             client.fromTrade(removeID, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (interfaceID == 3823) { // Show value to sell items
-            client.sellItem(removeID, removeSlot, 10);
+            if(client.playerRights < 2) {
+                client.sellItem(removeID, removeSlot, 10);
+            } else {
+                client.getOutputStream().createFrame(27);
+                client.XinterfaceID = interfaceID;
+                client.XremoveID = removeID;
+                client.XremoveSlot = removeSlot;
+            }
         } else if (interfaceID == 3900) { // Show value to buy items
-            client.buyItem(removeID, removeSlot, 10);
+            client.getOutputStream().createFrame(27);
+            client.XinterfaceID = interfaceID;
+            client.XremoveID = removeID;
+            client.XremoveSlot = removeSlot;
         }
 
     }

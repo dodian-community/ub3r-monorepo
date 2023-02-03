@@ -57,8 +57,8 @@ public abstract class Player extends Entity {
     public int duelChatTimer = -1, iconTimer = 6;
     public boolean startDuel = false;
     public String forcedChat = "";
-    private int headIcon = -1;
-    private int skullIcon = -1;
+    private int headIcon = -1, skullIcon = -1;
+    public int customCombat = -1;
     private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember;
@@ -72,7 +72,6 @@ public abstract class Player extends Entity {
     public boolean IsCutting = false;
     public boolean isFiremaking = false;
     public boolean attackingPlayer = false, attackingNpc = false;
-    public int attacknpc = -1;
     public int Essence;
     public boolean IsShopping = false;
     public int MyShopID = 0;
@@ -626,6 +625,7 @@ public abstract class Player extends Entity {
     public void clearUpdateFlags() {
         getUpdateFlags().clear();
         IsStair = false; //What is this?!
+        faceTarget(65535);
     }
 
     public void faceTarget(int index) {
@@ -1143,7 +1143,7 @@ public abstract class Player extends Entity {
         } else {
             combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
         }
-        return (int) combatLevel;
+        return customCombat > 0 ? customCombat : (int)combatLevel;
     }
 
     public enum positions {
