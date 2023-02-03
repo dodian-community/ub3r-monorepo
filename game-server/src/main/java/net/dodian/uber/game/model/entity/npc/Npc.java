@@ -86,8 +86,9 @@ public class Npc extends Entity {
                 boss = true;
             } else if (id == 2266) { //Daganoth prime
                 boss = true;
+            } else if (id == 3127) { //Jad
+                boss = true;
             }
-            //3375, 2475 bosses?
         }
         alive = true;
     }
@@ -323,28 +324,49 @@ public class Npc extends Entity {
 
     public void attack() {
         requestAnim(data.getAttackEmote(), 0);
-        Client enemy = getTarget(true);
-        if (enemy == null) {
-            fighting = false;
-            return;
+        if(this.getId() != 3127) {
+            Client enemy = getTarget(true);
+            if (enemy == null) {
+                fighting = false;
+                return;
+            }
+            setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
+            getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
+            int hitDiff = landHit(enemy) ? Utils.random(maxHit) : 0;
+            enemy.dealDamage(hitDiff, false);
+        } else { //Jad!
+            Client enemy = null;
+            Client target = getTarget(true);
+            for (Entity e : getDamage().keySet()) {
+                if (e instanceof Player) {
+                    if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1))
+                        continue;
+                    enemy = Server.playerHandler.getClient(e.getSlot());
+                    setFocus(target.getPosition().getX(), target.getPosition().getY());
+                    getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
+                    int hitDiff = landHit(enemy) ? Utils.random(maxHit) : 0;
+                    enemy.dealDamage(hitDiff, false);
+                }
+            }
+            if(enemy == null) fighting = false;
         }
-        setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
-        getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-        int def_bonus = enemy.checkObsidianWeapons() ? (int) (enemy.playerBonus[6] * 0.9) : enemy.playerBonus[6];
-        int def = enemy.getLevel(Skill.DEFENCE);
-        int rand = Utils.random(def + (def_bonus / 5));
-        int rand_npc = Utils.random(getAttack());
-        double blocked = (0.08 * (double) def_bonus) / 100;
-        int hitDiff = 0;
-        double bonus = getId() == 2261 && enraged(20000) ? 1.15 : 1.0;
-        if (rand_npc > rand) {
-            int new_max_hit = (int) Math.ceil(maxHit * (1 - blocked) * bonus);
-            hitDiff = Utils.random(new_max_hit);
-        }
-        if (hitDiff < 0)
-            hitDiff = 0;
-        enemy.dealDamage(hitDiff, false);
         lastAttack = System.currentTimeMillis();
+    }
+
+    public boolean landHit(Client p) {
+        double defLevel = p.getLevel(Skill.DEFENCE);
+        double defBonus = 0.0;
+        double atkLevel = getAttack() * (getId() == 2261 && enraged(20000) ? 1.15 : 1.0);
+        for(int i = 5; i <= 7; i++)
+            if(p.playerBonus[i] > defBonus)
+                defBonus = p.checkObsidianWeapons() ? (int) (p.playerBonus[i] * 0.9) : p.playerBonus[i];
+        defLevel += defBonus / 2;
+        double hitChance = 20.00;
+        double levelDiff = atkLevel - defLevel;
+        hitChance += levelDiff;
+        hitChance = hitChance > 80.0 ? 80.0 : hitChance < 20.0 ? 20.0 : hitChance;
+        double chance = Math.random() * 100;
+        return chance < hitChance;
     }
 
     public void addBossCount(Player p, int ID) {
@@ -384,16 +406,23 @@ public class Npc extends Entity {
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);
-                if (p.getSlayerData().get(3) == 0) {
-                    p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
-                    p.giveExperience(p.getSlayerData().get(2) * maxHealth, Skill.SLAYER);
-                    p.send(new SendMessage("You have completed your slayer task and gained some bonus experience!"));
-                    p.triggerRandom(p.getSlayerData().get(2) * maxHealth);
-                } else {
-                    p.giveExperience(maxHealth * 10, Skill.SLAYER);
-                    p.triggerRandom(maxHealth * 10);
+                p.giveExperience(maxHealth * 11, Skill.SLAYER);
+                p.triggerRandom(maxHealth * 11);
+                    if(p.getSlayerData().get(3) == 0) { // Finish task!
+                        p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
+                        /* Bonus slayer experience 1k, 500, 250, 100, 50 and 10 tasks! */
+                        int[] taskStreak = {1000, 500, 250, 100, 50, 10};
+                        int[] experience = {50, 30, 20, 11, 6, 2};
+                        int bonusXp = -1;
+                        p.send(new SendMessage("You have completed your slayer task!"));
+                        for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
+                            if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
+                                bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;
+                                p.giveExperience(bonusXp, Skill.SLAYER);
+                                p.send(new SendMessage("You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
+                            }
+                    }
                 }
-            }
         }
     }
 
@@ -490,7 +519,7 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1))
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), 12) || ((Player) e).getCurrentHealth() < 1))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
@@ -501,7 +530,6 @@ public class Npc extends Entity {
         }
         return killer;
     }
-
     public int getNextWalkingDirection() {
         int dir;
         dir = Utils.direction(getPosition().getX(), getPosition().getY(), (getPosition().getX() + moveX),

@@ -43,6 +43,10 @@ public class BankX2 implements Packet {
             client.stakeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 6669 && client.inDuel) { // remove from duel window
             client.fromDuel(client.XremoveID, client.XremoveSlot, EnteredAmount);
+        } else if (client.XinterfaceID == 3900) { // Shop interface
+            client.buyItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
+        } else if (client.XinterfaceID == 3823) { // Shop interface
+            client.sellItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 3322 && client.inTrade) { // remove from bag to trade window
             if (client.XremoveID == 1543) {
                 return;

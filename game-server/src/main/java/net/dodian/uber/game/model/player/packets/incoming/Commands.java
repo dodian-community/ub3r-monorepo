@@ -212,6 +212,19 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("travel")) {
                     client.setTravelMenu();
                 }
+                if (cmd[0].equals("combat")) {
+                    try {
+                        int level = Integer.parseInt(cmd[1]);
+                        client.customCombat = level > 256 || level < 1 ? -1 : level;
+                        if(client.customCombat == -1)
+                            client.send(new SendMessage(level == 0 ? "You reset back to normal combat!" : "Need to set a interval between 0-256! (256 = 0 combat, 0 = reset combat)"));
+                        else
+                            client.send(new SendMessage("You set your own combat to level: " + (level == 256 ? "0" : level)));
+                        client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " combat"));
+                    }
+                }
                 if (cmd[0].equals("remitem")) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
@@ -912,6 +925,23 @@ public class Commands implements Packet {
             }
             if (command.startsWith("noclip") && client.playerRights < 2 && getGameWorldId() == 1) {
                 client.kick();
+            }
+            if (command.startsWith("jad") && getGameWorldId() > 1) {
+                client.triggerTele(2393, 5090, 0,true);
+            }
+            if (command.startsWith("slay_sim") && getGameWorldId() > 1) {
+                int[] taskStreak = {1000, 500, 250, 100, 50, 10};
+                int[] experience = {50, 30, 20, 11, 6, 2};
+                int totalTimes = 0;
+                for(int task = 1; task <= 1000; task++) {
+                    int bonusXp = -1;
+                    for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
+                        if(task%taskStreak[i] == 0) {
+                            totalTimes+= experience[i];
+                            bonusXp = 0;
+                        }
+                }
+                client.send(new SendMessage("Total amount of times: " + totalTimes + " out of 1000!"));
             }
             if (cmd[0].equalsIgnoreCase("boss")) {
                 client.send(new SendString("@dre@Uber Server 3.0 - Boss Log", 8144));

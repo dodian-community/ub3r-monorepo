@@ -10,7 +10,7 @@ import java.io.IOException;
 public class ShopHandler {
     public static int MaxShops = 101; // 1 more because we don't use [0] !
     public static int MaxShopItems = 40;
-    public static int MaxShowDelay = 90;
+    public static int MaxShowDelay = 100;
     public static int TotalShops = 0;
     public static int[][] ShopItems = new int[MaxShops][MaxShopItems];
     public static int[][] ShopItemsN = new int[MaxShops][MaxShopItems];

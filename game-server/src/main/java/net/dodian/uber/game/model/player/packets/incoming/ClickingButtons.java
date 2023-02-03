@@ -93,7 +93,7 @@ public class ClickingButtons implements Packet {
             case 3060: //Tent
             case 48054: //totem!
                 int pos = client.skillX == 2772 && client.skillY == 3235 ? 5:
-                client.skillX == 2876 && client.skillY == 2972 ? 4: 0;
+                client.skillX == 2864 && client.skillY == 2971 ? 4: 0;
                 client.travelTrigger(pos);
                 break;
             case 84237: //Home teleport aka Yanille

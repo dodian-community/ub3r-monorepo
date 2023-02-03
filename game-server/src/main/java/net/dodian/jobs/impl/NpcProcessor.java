@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.utilities.Misc;
@@ -34,6 +35,21 @@ public class NpcProcessor implements Job {
         if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
              npc.setVisible(false);
              npc.drop();
+             Client p = npc.getTarget(false);
+            /* Jad loot table, up to 5 players */
+            if(npc.getId() == 3127)
+                for(int i = 0; i < 4 && p != null; i++) {
+                    npc.removeEnemy(p);
+                    p = npc.getTarget(false);
+                    if(p != null) {
+                        double chance = (npc.getDamage().get(p) / (double)npc.getMaxHealth()) * 100;
+                        double rate = Misc.chance(100000) / 1000D;
+                        if(rate <= chance) {
+                            npc.drop();
+                            p.send(new SendMessage("You managed to roll for the loot!"));
+                        } else p.send(new SendMessage("Unlucky! Better luck next time."));
+                    }
+                }
         }
             if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
                 npc.respawn();

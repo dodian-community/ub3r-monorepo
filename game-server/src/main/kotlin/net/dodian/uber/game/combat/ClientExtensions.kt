@@ -1,6 +1,8 @@
 package net.dodian.uber.game.combat
 
+import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
+import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
@@ -12,12 +14,12 @@ fun Client.distance(entity: Entity) = Utils.getDistance(position.x, position.y, 
 fun Client.canReach(entity: Entity, distance: Int) = distance(entity) <= distance
 
 fun Client.requireKey(keyId: Int, vararg npcId: Int): Boolean {
-    if (!checkItem(keyId) && getPositionName(selectedNpc.position) == Player.positions.KEYDUNG && selectedNpc.id in npcId) {
+    if(target is Client) return true; //No player check!
+    if (!checkItem(keyId) && getPositionName(target.position) == Player.positions.KEYDUNG && Server.npcManager.getNpc(target.slot).id in npcId) {
         resetPos()
         resetAttack()
         return false
     }
-
     return true
 }
 
