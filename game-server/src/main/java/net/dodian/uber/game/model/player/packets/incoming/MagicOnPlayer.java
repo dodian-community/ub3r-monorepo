@@ -76,8 +76,7 @@ public class MagicOnPlayer implements Packet {
                     client.requestAnim(1979, 0);
                     if(type == 2) { //Blood effect!
                         client.stillgfx(377, EnemyY3, EnemyX3);
-                        int newHealth = client.getCurrentHealth() + (int) (hitDiff / 3);
-                        client.setCurrentHealth(newHealth >= client.getLevel(Skill.HITPOINTS) ? client.getLevel(Skill.HITPOINTS) : newHealth);
+                        client.heal(hitDiff/3);
                     } else if (type == 3) { //Freeze effect!
                         client.stillgfx(369, EnemyY3, EnemyX3);
                     } else

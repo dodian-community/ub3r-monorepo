@@ -1,7 +1,6 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.Equipment;
@@ -58,11 +57,9 @@ public class MagicOnNpc implements Packet {
                     if (hitDiff >= EnemyHP2)
                         hitDiff = EnemyHP2;
                     client.requestAnim(1979, 0);
-                    //System.out.println("test..." + slot + ", " + type);
                     if(type == 2) { //Blood effect!
                         client.stillgfx(377, EnemyY2, EnemyX2);
-                        int newHealth = client.getCurrentHealth() + (int) (hit / 3);
-                        client.setCurrentHealth(newHealth >= client.getLevel(Skill.HITPOINTS) ? client.getLevel(Skill.HITPOINTS) : newHealth);
+                        client.heal(hitDiff/3);
                     } else if (type == 3) { //Freeze effect!
                         client.stillgfx(369, EnemyY2, EnemyX2);
                     } else

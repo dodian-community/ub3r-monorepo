@@ -6,11 +6,14 @@ package net.dodian.uber.game.model.player.skills.prayer;
 public enum Bones {
 
     BONES(526, 45),
+    BAT_BONES(530, 85),
     BIG_BONES(532, 150),
-    JOGRE_BONES(3125, 300),
-    DRAGON_BONES(536, 720),
-    OURG_BONES(4834, 920),
-    DAGANNOTH_BONES(6729, 1200);
+    ZOGRE_BONES(4812, 265),
+    JOGRE_BONES(3125, 395),
+    RAURG_BONES(4832, 585),
+    DRAGON_BONES(536, 735),
+    DAGANNOTH_BONES(6729, 1050),
+    OURG_BONES(4834, 1200); //Ourg bones = boss bones!
 
     private int itemId, experience;
 

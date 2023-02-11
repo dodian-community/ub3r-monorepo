@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -148,6 +149,43 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("I already have a " + client.GetItemName(989).toLowerCase() + " in " + (client.playerHasItem(989) ? "my inventory!" : "my bank!")));
             }
         }
+
+        boolean rainbowHat = Server.itemManager.getName(itemUsed).endsWith("partyhat") && Server.itemManager.getName(otherItem).endsWith("partyhat") && Server.itemManager.isNote(itemUsed) && Server.itemManager.isNote(otherItem);
+        if(rainbowHat) {
+            boolean hasItems = true;
+            for(int i = 1038; i <= 1048 && hasItems; i += 2)
+                if(!client.playerHasItem(i))
+                    hasItems = false;
+            if(hasItems) {
+                for(int i = 1038; i <= 1048; i += 2)
+                    client.deleteItem(i, 1);
+                client.addItemSlot(11863, 1, itemUsedSlot);
+            } else client.send(new SendMessage("You need one of each partyhat to combine it into the rainbow partyhat!"));
+        }
+        if (knife && (itemUsed == 11863 || otherItem == 11863)) {
+            int slotRemain = 5 - client.getFreeSpace();
+            if(slotRemain <= 0) {
+                client.deleteItem(11863, 1);
+                for(int i = 1038; i <= 1048; i += 2)
+                    client.addItem(i, 1);
+                client.send(new SendMessage("You gentle used the knife on the paper hat and cut it into different color partyhats."));
+            } else client.send(new SendMessage("You need to have " + (slotRemain == 1 ? "one" : slotRemain) + " empty slot"+ (slotRemain != 1 ? "s" : "")+" to tear the rainbow partyhat apart."));
+        }
+
+        int[][] dyes = {{-1, 1019}, {1763, 1007}, {1765, 1023}, {1767, 1021}, {1769, 1031}, {1771, 1027}, {1773, 1029}}; //Black, Red, yellow, blue, orange, green, purple
+        for(int i = 0; i < dyes.length; i++)
+            if(itemUsed == dyes[i][0] || otherItem == dyes[i][0]) {
+                for(int dye = 0; dye < dyes.length; dye++)
+                    if(itemUsed == dyes[dye][1] || otherItem == dyes[dye][1]) {
+                        if(dyes[dye][1] != dyes[i][1]) {
+                            client.deleteItem(itemUsed, 1);
+                            client.deleteItem(otherItem, 1);
+                            client.addItemSlot(dyes[i][1], 1, itemUsed == dyes[dye][1] ? itemUsedSlot : usedWithSlot);
+                        } else client.send(new SendMessage("There is no point in using the same color as the cape!"));
+                    break;
+                    }
+            }
+
 
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();

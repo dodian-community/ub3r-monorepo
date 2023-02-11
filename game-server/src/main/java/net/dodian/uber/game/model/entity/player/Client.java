@@ -214,14 +214,11 @@ public class Client extends Player implements Runnable {
 				out = (int) ((1 + (rangePot / 100)) * getLevel(skill));
 			}
 			setSkillLevel(skill.getId(), out, getExperience(skill));
+			setLevel(out, skill);
 			getOutputStream().createFrame(134);
 			getOutputStream().writeByte(skill.getId());
 			getOutputStream().writeDWord_v1(getExperience(skill));
-			if (skill == Skill.HITPOINTS)
-				getOutputStream().writeByte(getCurrentHealth());
-			else
-				getOutputStream().writeByte(out);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			getOutputStream().writeByte(out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1127,7 +1124,7 @@ public class Client extends Player implements Runnable {
 						}
 					}
 				} else {
-					send(new SendMessage("Item can't be drawn as note."));
+					send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
 					if (Server.itemManager.isStackable(itemID)) {
 						if (bankItemsN[fromSlot] > amount) {
 							if (addItem(itemID, amount)) {
@@ -2357,10 +2354,8 @@ public class Client extends Player implements Runnable {
 			iconTimer = 6;
 		QuestSend.questInterface(this);
 		// RubberCheck();
-		if (reloadHp) {
-			setCurrentHealth(getLevel(Skill.HITPOINTS));
-			refreshSkill(Skill.HITPOINTS);
-		}
+		if (reloadHp)
+			heal(getMaxHealth());
 		long now = System.currentTimeMillis();
 		if (now >= walkBlock && UsingAgility) {
 			UsingAgility = false;
@@ -2625,7 +2620,7 @@ public class Client extends Player implements Runnable {
 			getPosition().setZ(0);
 			deathStage = 0;
 			deathTimer = 0;
-			setCurrentHealth(getLevel(Skill.HITPOINTS));
+			heal(Skills.getLevelForExperience(getExperience(Skill.HITPOINTS)));
 			requestAnims(getEquipment()[3]);
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			if (inWildy())
@@ -3109,9 +3104,9 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
+			String[] s = {"Shrimps", "Rat meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem};
-			String[] s1 = {"1", "20", "30", "40", "50", "60", "70", "85", "95"};
+			String[] s1 = {"1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -3119,7 +3114,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {315, 333, 329, 379, 373, 7946, 385, 397, 391};
+			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == 16) {
 			send(new SendString("Agility", 8846));
@@ -4532,18 +4527,10 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You cannot sell " + GetItemName(itemID).toLowerCase() + " in this store."));
 			return false;
 		}
-		if (ShopHandler.ShopBModifier[MyShopID] == 2) {
-			int itemSlot = -1;
-			for (int i = 0; i < ShopHandler.MaxShopItems && itemSlot == -1; i++) {
-				if (itemID == ShopHandler.ShopItems[MyShopID][i] - 1)
-					itemSlot = i;
-			}
-			if (itemSlot == -1) { //If we do not have a slot means the store is full!
+		if (ShopHandler.ShopBModifier[MyShopID] == 2 && !ShopHandler.findDefaultItem(MyShopID, itemID)) {
 				send(new SendMessage("Can't sell that item to the store!"));
 				return false;
-			}
 		}
-
 		int slot = -1;
 		for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
 			if (ShopHandler.ShopItems[MyShopID][i] <= 0 && slot == -1)
@@ -5570,8 +5557,7 @@ public class Client extends Player implements Runnable {
 		/*
 		 * Danno: Reset health.
 		 */
-		setCurrentHealth(getLevel(Skill.HITPOINTS));
-		refreshSkill(Skill.HITPOINTS);
+		heal(getMaxHealth());
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 
 	}
@@ -6680,13 +6666,20 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		if (getLevel(Skill.COOKING) < Utils.cookLevel[index]) {
-			send(new SendMessage("You need " + Utils.cookLevel[index] + " cooking to cook this"));
+			send(new SendMessage("You need " + Utils.cookLevel[index] + " cooking to cook the " + Server.itemManager.getName(id).toLowerCase() + "."));
 			resetAction(true);
 			return;
 		}
 		switch (id) {
+			case 2134:
 			case 317:
 				ran = 30 - getLevel(Skill.COOKING);
+				break;
+			case 2307:
+				ran = 36 - getLevel(Skill.COOKING);
+				break;
+			case 3363:
+				ran = 42 - getLevel(Skill.COOKING);
 				break;
 			case 335:
 				ran = 50 - getLevel(Skill.COOKING);

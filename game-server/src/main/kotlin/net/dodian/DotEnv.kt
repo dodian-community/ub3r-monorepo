@@ -7,16 +7,16 @@ private val dotenv = dotenv()
 // Server Settings
 val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
 val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
-val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: false
+val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: true
 val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
 
 // Database Settings
-val databaseHost = dotenv["DATABASE_HOST"] ?: "localhost"
+val databaseHost = dotenv["DATABASE_HOST"] ?: "dodian.net"
 val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
 val databaseName = dotenv["DATABASE_NAME"] ?: "dodiannet"
 val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
-val databaseUsername = dotenv["DATABASE_USERNAME"] ?: "dodian_game"
-val databasePassword = dotenv["DATABASE_PASSWORD"] ?: "abcd1234"
+val databaseUsername = dotenv["DATABASE_USERNAME"] ?: "moo"
+val databasePassword = dotenv["DATABASE_PASSWORD"] ?: "hehe"
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 // Game Settings - Various

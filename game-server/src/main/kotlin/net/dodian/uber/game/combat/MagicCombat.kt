@@ -11,15 +11,15 @@ import net.dodian.utilities.Utils
 import kotlin.math.min
 
 fun Client.handleMagic(): Int {
-    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914)
-    if (equipment[Equipment.Slot.WEAPON.id] !in staves || autocast_spellIndex < 0)
-        return -1
     if (!canReach(target, 5))
         return 0
 
+    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914)
+    if (equipment[Equipment.Slot.WEAPON.id] !in staves || autocast_spellIndex < 0)
+        return -1
 
     val time = System.currentTimeMillis()
-    val slot = autocast_spellIndex%4;
+    val slot = autocast_spellIndex%4
     if (time - lastAttack > coolDown[slot]) {
         isInCombat = true
         lastCombat = System.currentTimeMillis()
@@ -34,13 +34,13 @@ fun Client.handleMagic(): Int {
         return 0
     }
     if (target is Player && duelFight && duelRule[2]) {
-        send(SendMessage("Magic has been disabled for this duel!"));
+        send(SendMessage("Magic has been disabled for this duel!"))
         resetAttack()
         return 0
     }
     deleteItem(565, 1)
     requestAnim(1979, 0)
-    var maxHit = baseDamage[autocast_spellIndex] * magicDmg()
+    val maxHit = baseDamage[autocast_spellIndex] * magicDmg()
     if (target is Npc) { // Slayer damage!
         val npcId = Server.npcManager.getNpc(target.slot).id
         if(getSlayerDamage(npcId, true) == 2)
@@ -49,10 +49,9 @@ fun Client.handleMagic(): Int {
     var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9
     val extra = getLevel(Skill.MAGIC) * 0.195
-    val hitCrit = hit + Utils.dRandom2(extra).toInt()
+    val landCrit = Math.random() * 100 <= criticalChance
     if(equipment[Equipment.Slot.SHIELD.id]==4224)
         criticalChance * 1.5
-    val landCrit = Math.random() * 100 <= criticalChance
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit)
@@ -60,8 +59,7 @@ fun Client.handleMagic(): Int {
         if(hit >= npc.currentHealth)
             hit = npc.currentHealth
         if(slot == 2) { //Heal effect!
-            currentHealth = min(getLevel(Skill.HITPOINTS), currentHealth + (hit / 3))
-            refreshSkill(Skill.HITPOINTS)
+            heal(hit / 3)
         }
         npc.dealDamage(this, hit, landCrit)
     }

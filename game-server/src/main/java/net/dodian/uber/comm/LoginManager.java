@@ -30,15 +30,15 @@ public class LoginManager {
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
                 p.dbId = results.getInt("userid");
+                p.playerGroup = results.getInt("usergroupid");
                 if (results.getString("username").equals(playerName)
                         || results.getString("username").equalsIgnoreCase(playerName)) {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
                     if (!md5pass.equals(results.getString("password"))
-                    && (!getServerEnv().equals("dev") || !getServerDebugMode())) {
+                    && (!getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
                         return 3;
                     }
-                    p.playerGroup = results.getInt("usergroupid");
                     p.otherGroups = results.getString("membergroupids").split(",");
                     p.newPms = (results.getInt("pmunread"));
                 } else

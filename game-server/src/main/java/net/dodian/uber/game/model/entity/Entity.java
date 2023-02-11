@@ -19,6 +19,7 @@ public abstract class Entity {
     private final Position originalPosition;
     private final Position facePosition;
     private final int slot;
+    private int gfxId, gfxHeight;
     private final Type type;
 
     private final UpdateFlags updateFlags;
@@ -27,6 +28,7 @@ public abstract class Entity {
 
     private int animationDelay;
     private int animationId;
+    private String text;
 
     private Map<Entity, Integer> damage = new HashMap<Entity, Integer>();
 
@@ -42,9 +44,29 @@ public abstract class Entity {
     }
 
     public void requestAnim(int id, int delay) {
+        setAnimationId(id);
         setAnimationDelay(delay * 10);
-        this.setAnimationId(id);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
+    }
+
+    public void setGfx(int id, int height) {
+        this.gfxId = id;
+        this.gfxHeight = height;
+        getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+    }
+    public int getGfxHeight() {
+        return this.gfxHeight;
+    }
+    public int getGfxId() {
+        return this.gfxId;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+        getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
+    }
+    public String getText() {
+        return text;
     }
 
     public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {

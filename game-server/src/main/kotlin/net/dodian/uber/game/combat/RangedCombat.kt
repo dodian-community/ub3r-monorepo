@@ -8,10 +8,12 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
 fun Client.handleRanged(): Int {
     if (!usingBow) return -1
+
     if (!canReach(target, 5))
         return 0
 
@@ -37,7 +39,7 @@ fun Client.handleRanged(): Int {
     } else return 0
     setFocus(target.position.x, target.position.y)
     if (target is Player && duelFight && duelRule[0]) {
-        send(SendMessage("Ranged has been disabled for this duel!"));
+        send(SendMessage("Ranged has been disabled for this duel!"))
         resetAttack()
         return 0
     }
@@ -60,7 +62,7 @@ fun Client.handleRanged(): Int {
         send(SendMessage("You're out of arrows!"))
         return 0
     }
-    var maxHit = rangedMaxHit()
+    val maxHit = rangedMaxHit()
     if (target is Npc) { // Slayer damage!
         val npcId = Server.npcManager.getNpc(target.slot).id
         if(getSlayerDamage(npcId, true) == 2)
@@ -71,9 +73,8 @@ fun Client.handleRanged(): Int {
     if(equipment[Equipment.Slot.SHIELD.id]==4224)
         criticalChance * 1.5
     val extra = getLevel(Skill.RANGED) * 0.195
-    val hitCrit = hit + Utils.dRandom2(extra).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
-    var landHit = landHitRanged(this, target);
+    val landHit = landHitRanged(this, target)
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit && landHit)
@@ -108,31 +109,34 @@ fun Client.handleRanged(): Int {
 }
 
 fun landHitRanged(p: Client, t: Entity): Boolean {
-    var maxChance = 80.0
-    var minChance = 20.0
-    var hitChance = 60.0
-    var chance = Math.random() * 100;
+    val hitChance: Double
+    val chance = Misc.chance(100000) / 1000
     if(t is Client) { //Pvp
-        var atkBonus = p.playerBonus[3]
-        var atkLevel = p.getLevel(Skill.RANGED) + (atkBonus / 10)
-        var defBonus = t.playerBonus[8]
-        var defLevel = t.getLevel(Skill.DEFENCE) + (defBonus / 10)
-        hitChance += (atkLevel - defLevel)
-        if(hitChance < minChance)
-            hitChance = minChance;
-        if(hitChance > maxChance)
-            hitChance = maxChance;
-        return chance < hitChance;
+        val atkBonus = p.playerBonus[3]
+        val atkLevel = p.getLevel(Skill.RANGED)
+        val defBonus = t.playerBonus[8]
+        val defLevel = t.getLevel(Skill.DEFENCE)
+        val playerDef = defLevel * (defBonus + 64.0)
+        val npcAccuracy = atkLevel * (atkBonus + 64.0)
+        if (npcAccuracy > playerDef)
+            hitChance = 1 - ((playerDef + 2) / (2 * (npcAccuracy + 1)))
+        else
+            hitChance = npcAccuracy / (2 * (playerDef + 1))
+        p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
+        return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
-        var atkBonus = p.playerBonus[3]
-        var atkLevel = p.getLevel(Skill.RANGED) + (atkBonus / 10)
-        var defLevel = t.defence
-        hitChance += (atkLevel - defLevel)
-        if(hitChance < minChance)
-            hitChance = minChance;
-        if(hitChance > maxChance)
-            hitChance = maxChance;
-        return chance < hitChance;
+        val atkBonus = p.playerBonus[3]
+        val atkLevel = p.getLevel(Skill.RANGED)
+        val defLevel = t.defence
+        val defBonus = 0.0
+        val npcDef = defLevel * (defBonus + 64.0)
+        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        if (playerAccuracy > npcDef)
+            hitChance = 1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
+        else
+            hitChance = playerAccuracy / (2 * (npcDef + 1))
+        p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
+        return chance < (hitChance*100)
     }
-    return true;
+    return true
 }

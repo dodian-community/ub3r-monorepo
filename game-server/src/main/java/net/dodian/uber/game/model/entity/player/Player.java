@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -14,6 +15,7 @@ import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
@@ -45,10 +47,10 @@ public abstract class Player extends Entity {
     public long lastPlayerCombat = 0;
     public static int id = -1;// dbId = -1; //mysql userid
     public static int localId = -1;
-    public int[] killers = new int[Constants.maxPlayers];
     public boolean busy = false, invis = false;
     public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
-            "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime"};
+            "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
+    "TzTok-Jad"};
     public int[] boss_amount = new int[boss_name.length];
     // dueling
     public int duelStatus = -1; // 0 = Requesting duel, 1 = in duel screen, 2 =
@@ -438,11 +440,9 @@ public abstract class Player extends Entity {
         mapRegionDidChange = false;
         didTeleport = false;
         primaryDirection = secondaryDirection = -1;
-
         if (teleportToX != -1 && teleportToY != -1) {
-            Balloons.updateBalloons(temp);
-            GlobalObject.updateObject(temp);
             mapRegionDidChange = true;
+            didTeleport = true;
             if (mapRegionX != -1 && mapRegionY != -1) {
                 // check, whether destination is within current map region
                 int relX = teleportToX - mapRegionX * 8, relY = teleportToY - mapRegionY * 8;
@@ -454,7 +454,6 @@ public abstract class Player extends Entity {
                 // between 48 - 55
                 mapRegionX = (teleportToX >> 3) - 6;
                 mapRegionY = (teleportToY >> 3) - 6;
-
                 // playerListSize = 0; // completely rebuild playerList after
                 // teleport AND map region change
                 if (firstSend) {
@@ -463,13 +462,13 @@ public abstract class Player extends Entity {
                     firstSend = true;
                 }
             }
-
             currentX = teleportToX - 8 * mapRegionX;
             currentY = teleportToY - 8 * mapRegionY;
-            getPosition().moveTo(teleportToX, teleportToY);
             resetWalkingQueue();
+            getPosition().moveTo(teleportToX, teleportToY);
+            Balloons.updateBalloons(temp);
+            GlobalObject.updateObject(temp);
             teleportToX = teleportToY = -1;
-            didTeleport = true;
         } else {
             primaryDirection = getNextWalkingDirection();
             if (primaryDirection == -1)
@@ -513,7 +512,6 @@ public abstract class Player extends Entity {
                     walkingQueueY[i] += deltaY;
                 }
             }
-
         }
     }
 
@@ -781,13 +779,12 @@ public abstract class Player extends Entity {
     public void dealDamage(int amt, boolean crit) {
         Client plr = ((Client) this);
         plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
-        double rolledChance = Math.random() * 1;
+        double rolledChance = Math.random();
         double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
         double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
         double dmg = ((Client) this).neglectDmg() / 10D;
         double reduceDamage = 1.0 - (dmg / 100);
         int oldDmg = amt;
-        //System.out.println("test..." + (rolledChance * 100) + "%, " + (chance * 100) + "%, " + (rolledChance <= chance) + ", " + level);
         if (!(plr.inDuel && plr.duelRule[5]) && rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
             amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
             if(amt != oldDmg)
@@ -1094,6 +1091,24 @@ public abstract class Player extends Entity {
     public void setCurrentHealth(int currentHealth) {
         this.currentHealth = currentHealth;
     }
+    public void heal(int healing) {
+        Client c = (Client) this;
+        int maxLevel = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
+        c.setCurrentHealth(c.getCurrentHealth() + healing > maxLevel ? maxLevel : c.getCurrentHealth() + healing);
+        c.refreshSkill(Skill.HITPOINTS);
+    }
+    public void eat(int healing, int removeId, int removeSlot) {
+        Client c = (Client) this;
+        if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) { //TODO: Add a way to not heal during a duel!
+            return;
+        }
+        if(c.getCurrentHealth() < c.getMaxHealth()) {
+            c.requestAnim(829, 0);
+            c.deleteItem(removeId, removeSlot, 1);
+            c.send(new SendMessage("You eat the " + Server.itemManager.getName(removeId).toLowerCase() + "."));
+            c.heal(healing);
+        } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
+    }
 
     public int getMaxHealth() {
         return this.maxHealth;
@@ -1240,6 +1255,19 @@ public abstract class Player extends Entity {
 
     public boolean inEdgeville() {
         return getPositionName(getPosition()) == positions.EDGEVILLE;
+    }
+
+    public void respawnBoss(int id) {
+        Client c = (Client) this;
+        int status = -1;
+        for(Npc n : Server.npcManager.getNpcs()) {
+            if(n.getId() == id && status == -1) {
+                n.respawn();
+                status = !n.alive ? 0 : 1;
+            }
+        }
+        String npcName = Server.npcManager.getName(id);
+        c.send(new SendMessage(status == -1 ? "Could not found the npc with the name of '" + npcName + "'." : status == 0 ? "You respawn " + npcName + "!" : npcName + " is already alive!"));
     }
 
 }
