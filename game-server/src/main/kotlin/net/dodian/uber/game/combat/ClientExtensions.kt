@@ -2,7 +2,6 @@ package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
-import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
@@ -14,7 +13,7 @@ fun Client.distance(entity: Entity) = Utils.getDistance(position.x, position.y, 
 fun Client.canReach(entity: Entity, distance: Int) = distance(entity) <= distance
 
 fun Client.requireKey(keyId: Int, vararg npcId: Int): Boolean {
-    if(target is Client) return true; //No player check!
+    if(target is Client) return true //No player check!
     if (!checkItem(keyId) && getPositionName(target.position) == Player.positions.KEYDUNG && Server.npcManager.getNpc(target.slot).id in npcId) {
         resetPos()
         resetAttack()
@@ -27,22 +26,22 @@ fun Client.slayerLevelRequired(npcId: Int): Boolean {
     when (npcId) {
         2266 -> if(getLevel(Skill.SLAYER) < 90) {
             send(SendMessage("You need a slayer level of 90 to harm this monster."))
-            return false;
+            return false
         }
         3209 -> if(getLevel(Skill.SLAYER) < 65) {
             send(SendMessage("You need a slayer level of 65 to harm this monster."))
-            return false;
+            return false
         }
         3204 -> if(getLevel(Skill.SLAYER) < 45) {
             send(SendMessage("You need a slayer level of 45 to harm this monster."))
-            return false;
+            return false
         }
         3201 -> if(getLevel(Skill.SLAYER) < 25) {
             send(SendMessage("You need a slayer level of 25 to harm this monster."))
-            return false;
+            return false
         }
     }
-    return true;
+    return true
 }
 
 fun Client.checkSlayerTask(npcId: Int): Boolean {
@@ -58,12 +57,13 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
 
     if(!slayerLevelRequired(npcId)) {
         resetAttack()
-        return false;
+        return false
     }
 
     return true
 }
 
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.meleeMaxHit(): Int {
     val potionBonus = 0.0 // TODO: Calculate potion bonus
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
@@ -85,6 +85,7 @@ fun Client.meleeMaxHit(): Int {
     return (baseDamage * (1 + specialBonus)).toInt()
 }
 
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.rangedMaxHit(): Int {
     val potionBonus = 0.0 // TODO: Calculate potion bonus
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
@@ -107,8 +108,8 @@ fun Client.rangedMaxHit(): Int {
 
 fun Client.getSlayerDamage(npcId: Int, range: Boolean): Int {
     if(!range && blackMaskEffect(npcId))
-        return 1;
+        return 1
     else if(blackMaskImbueEffect(npcId) || (range && blackMaskImbueEffect(npcId)))
-        return 2;
-    return 0;
+        return 2
+    return 0
 }

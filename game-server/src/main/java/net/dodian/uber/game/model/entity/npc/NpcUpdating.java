@@ -98,20 +98,21 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public void appendBlockUpdate(Npc npc, Stream stream) {
         if(!npc.getUpdateFlags().isUpdateRequired())
             return;
-        int updateMask = 0x0;
+        int updateMask = 0;
         for (UpdateFlag flag : npc.getUpdateFlags().keySet()) {
             if (npc.getUpdateFlags().isRequired(flag)) {
                 updateMask |= flag.getMask(npc.getType());
             }
         }
         stream.writeByte(updateMask);
-
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendTextUpdate(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
             appendAnimationRequest(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
             appendPrimaryHit(npc, stream);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
+            appendGfxUpdate(npc, stream);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
+            appendTextUpdate(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
             appendFaceCoordinates(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
@@ -122,6 +123,11 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeString(npc.getText());
     }
 
+    public void appendGfxUpdate(Npc npc, Stream stream) {
+        stream.writeWord(npc.getGfxId());
+        stream.writeDWord(npc.getGfxHeight());
+    }
+
     @Override
     public void appendAnimationRequest(Npc npc, Stream stream) {
         stream.writeWordBigEndian(npc.getAnimationId());
@@ -130,7 +136,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendPrimaryHit(Npc npc, Stream stream) {
-        stream.writeByteC(npc.getDamageDealt());
+        stream.writeByteC(npc.getDamageDealt() > 255 ? 255 : npc.getDamageDealt());
         if (npc.getDamageDealt() == 0) {
             stream.writeByteS(0);
         } else if (!npc.isCrit()) {

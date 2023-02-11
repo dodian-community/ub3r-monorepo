@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.item.SpecialsHandler
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
 
@@ -26,12 +27,12 @@ fun Client.handleMelee(): Int {
         val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
         setFocus(target.position.x, target.position.y)
         if (target is Player && duelFight && duelRule[1]) {
-            send(SendMessage("Melee has been disabled for this duel!"));
+            send(SendMessage("Melee has been disabled for this duel!"))
             resetAttack()
             return 0
         }
         sendAnimation(emote)
-        var maxHit = meleeMaxHit()
+        val maxHit = meleeMaxHit()
          if (target is Npc) { // Slayer damage!
              val npcId = Server.npcManager.getNpc(target.slot).id
              if(getSlayerDamage(npcId, false) == 1)
@@ -44,9 +45,8 @@ fun Client.handleMelee(): Int {
         if(equipment[Equipment.Slot.SHIELD.id]==4224)
             criticalChance * 1.5
         val extra = getLevel(Skill.STRENGTH) * 0.195
-        val hitCrit = hit + Utils.dRandom2(extra).toInt()
         val landCrit = Math.random() * 100 <= criticalChance
-        var landHit = landHit(this, target);
+        val landHit = landHit(this, target)
         if (target is Npc) {
             val npc = Server.npcManager.getNpc(target.slot)
             if (landCrit && landHit)
@@ -83,49 +83,52 @@ fun Client.handleMelee(): Int {
 }
 
 fun highestAttackBonus(p: Client): Int {
-    var bonus = 0;
+    var bonus = 0
     for (i in 0..2) {
         if (p.playerBonus[i] > bonus)
             bonus = p.playerBonus[i]
     }
-    return bonus;
+    return bonus
     }
     fun highestDefensiveBonus(p: Client): Int {
-        var bonus = 0;
+        var bonus = 0
         for (i in 5..7) {
             if (p.playerBonus[i] > bonus)
                 bonus = p.playerBonus[i]
         }
-            return bonus;
+            return bonus
         }
 fun landHit(p: Client, t: Entity): Boolean {
-    var maxChance = 80.0
-    var minChance = 20.0
-    var hitChance = 60.0
-    var chance = Math.random() * 100;
+    val hitChance: Double
+    val chance = Misc.chance(100000) / 1000
     if(t is Client) { //Pvp
-        var atkBonus = highestAttackBonus(p)
-        var atkLevel = p.getLevel(Skill.ATTACK) + (atkBonus / 10)
-        var defBonus = highestDefensiveBonus(t)
-        var defLevel = t.getLevel(Skill.DEFENCE) + (defBonus / 10)
-        hitChance += (atkLevel - defLevel)
-        if(hitChance < minChance)
-            hitChance = minChance;
-        if(hitChance > maxChance)
-            hitChance = maxChance;
-        return chance < hitChance;
+        val atkLevel = p.getLevel(Skill.ATTACK)
+        val atkBonus = highestAttackBonus(p)
+        val defLevel = t.getLevel(Skill.DEFENCE)
+        val defBonus = highestDefensiveBonus(t)
+        val playerDef = defLevel * (defBonus + 64.0)
+        val npcAccuracy = atkLevel * (atkBonus + 64.0)
+        hitChance = if (npcAccuracy > playerDef)
+            1 - ((playerDef + 2) / (2 * (npcAccuracy + 1)))
+        else
+            npcAccuracy / (2 * (playerDef + 1))
+        p.debug("Melee Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
+        return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
-        var atkBonus = highestAttackBonus(p)
-        var atkLevel = p.getLevel(Skill.ATTACK) + (atkBonus / 10)
-        var defLevel = t.defence
-        hitChance += (atkLevel - defLevel)
-        if(hitChance < minChance)
-            hitChance = minChance;
-        if(hitChance > maxChance)
-            hitChance = maxChance;
-        return chance < hitChance;
+        val atkBonus = highestAttackBonus(p)
+        val atkLevel = p.getLevel(Skill.ATTACK)
+        val defLevel = t.defence
+        val defBonus = 0.0
+        val npcDef = defLevel * (defBonus + 64.0)
+        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        hitChance = if (playerAccuracy > npcDef)
+            1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
+        else
+            playerAccuracy / (2 * (npcDef + 1))
+        p.debug("Melee Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%%")
+        return chance < (hitChance*100)
     }
-    return true;
+    return true
 }
 
 fun Client.handleSpecial(hit: Int): Int {
@@ -145,6 +148,5 @@ fun Client.handleSpecial(hit: Int): Int {
             }
         } else requestAnim(emote, 0)
     } else resetAttack()
-
     return newHit
 }

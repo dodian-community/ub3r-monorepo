@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.herblore.Herblore;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.utilities.DbTables;
@@ -111,163 +112,57 @@ public class ClickItem implements Packet {
                         }
                         client.addExperience(Utils.grimy_herbs_xp[i] * 5, Skill.HERBLORE);
                     }
-                    break;
-                case 315:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 3);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the shrimps"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 333:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 5);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the trout"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 329:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 7);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the salmon"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 379:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 12);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the lobster"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 373:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 14);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the swordfish"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 7946:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 16);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the monkfish"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 385:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 20);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the shark"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 397:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 22);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the sea turtle"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 391:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 24);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the manta ray"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 2309:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 5);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the bread"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 1959:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 2);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the pumpkin"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 1961:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 2);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the easter egg"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
+                break;
+                case 315: //Shrimp
+                case 2142: //Meat
+                    client.eat(3, item, slot);
+                    used = false;
+                break;
+                case 2309: //Bread
+                    client.eat(5, item, slot);
+                    used = false;
+                break;
+                case 3369: //Thin Snail
+                    client.eat(7, item, slot);
+                    used = false;
+                break;
+                case 333: //Trout
+                    client.eat(8, item, slot);
+                    used = false;
+                break;
+                case 329: //Salmon
+                    client.eat(10, item, slot);
+                    used = false;
+                break;
+                case 379: //Lobster
+                    client.eat(12, item, slot);
+                    used = false;
+                break;
+                case 373: //Swordfish
+                    client.eat(14, item, slot);
+                    used = false;
+                break;
+                case 7946: //Monkfish
+                    client.eat(16, item, slot);
+                    used = false;
+                break;
+                case 385: //Shark
+                    client.eat(20, item, slot);
+                    used = false;
+                break;
+                case 397: //Sea turtle
+                    client.eat(22, item, slot);
+                    used = false;
+                break;
+                case 391: //Manta ray
+                    client.eat(24, item, slot);
+                    used = false;
+                break;
+                case 1961: //Pumpkin
+                case 1959: //Easter egg
+                    client.eat(2, item, slot);
+                    used = false;
+                break;
                 case 121: // regular attack potion
                 case 123:
                 case 125:

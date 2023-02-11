@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.event.Event;
+import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -31,9 +33,11 @@ public class Npc extends Entity {
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, maxHit;
     public boolean alive = true, visible = true, boss = false;
     private long deathTime = 0, lastAttack = 0;
+    public int[] boostedStat = {0, 0, 0, 0, 0}; //defence, attack, strength, magic dmg, range
+    public int[] boostedStatOrig = {0, 0, 0, 0, 0}; //defence, attack, strength, magic dmg, range
+    public long lastBoostedStat = System.currentTimeMillis();
     private int moveX = 0, moveY = 0, direction = -1, defaultFace, viewX, viewY;
     private int damageDealt = 0;
-    private String text = "";
     private int deathEmote;
     public NpcData data;
     private boolean fighting = false;
@@ -41,7 +45,6 @@ public class Npc extends Entity {
     private final int TIME_ON_FLOOR = 500;
     private int[] level = new int[7];
     private boolean walking = false;
-    private long lastChatMessage;
 
     public Npc(int slot, int id, Position position, int face) {
         super(position.copy(), slot, Entity.Type.NPC);
@@ -55,12 +58,14 @@ public class Npc extends Entity {
             for (int i = 0; i < data.getLevel().length; i++) {
                 level[i] = data.getLevel()[i];
             }
-            CalculateMaxHit();
+            CalculateMaxHit(true);
             this.currentHealth = data.getHP();
             this.maxHealth = data.getHP();
 
             //Boss?
             if (id == 4130) { //Dad
+                boss = true;
+            } else if (id == 3957) { //Ungadulu
                 boss = true;
             } else if (id == 2585) { //Abyssal Guardian
                 boss = true;
@@ -74,17 +79,15 @@ public class Npc extends Entity {
                 boss = true;
             } else if (id == 4922) { //Ice queen
                 boss = true;
-            } else if (id == 3957) { //Ungadulu
-                boss = true;
             } else if (id == 239) { //King black dragon
                 boss = true;
             } else if (id == 5311) { //Head Mourner
                 boss = true;
             } else if (id == 1432) { //Black demon
                 boss = true;
-            } else if (id == 2261) { //Rock crab boss
-                boss = true;
             } else if (id == 2266) { //Daganoth prime
+                boss = true;
+            } else if (id == 2261) { //Rock crab boss
                 boss = true;
             } else if (id == 3127) { //Jad
                 boss = true;
@@ -102,20 +105,17 @@ public class Npc extends Entity {
             for (int i = 0; i < data.getLevel().length; i++) {
                 level[i] = data.getLevel()[i];
             }
-            CalculateMaxHit();
+            CalculateMaxHit(true);
             this.currentHealth = data.getHP() < 1 ? 0 : data.getHP() > this.currentHealth ? this.currentHealth + (data.getHP() - this.currentHealth) :
                     data.getHP() < this.currentHealth ? this.currentHealth - (this.currentHealth - data.getHP()) : this.currentHealth;
             this.maxHealth = data.getHP();
         }
     }
 
-    private ArrayList<Client> magicList = new ArrayList<Client>();
-
-    public void CalculateMaxHit() {
-        double MaxHit = 0;
-        int Strength = getStrength(); // Strength
-        MaxHit += (double) (Strength * 0.12);
-        maxHit = (int) Math.floor(MaxHit);
+    public void CalculateMaxHit(boolean melee) {
+        double effectiveStrength = melee ? ((getStrength() + 1) + 8) : ((getRange() + 1) + 8);
+        double maximumHit = 0.5 + effectiveStrength * (64 / 640D);
+        this.maxHit = (int) Math.floor(maximumHit);
     }
 
     public Client getClient(int index) {
@@ -124,80 +124,7 @@ public class Npc extends Entity {
 
     public boolean validClient(int index) {
         Client p = (Client) PlayerHandler.players[index];
-        if (p != null && !p.disconnected && p.dbId > 0) {
-            return true;
-        }
-        return false;
-    }
-
-    public void bossAttack() {
-        Client enemy = getTarget(true);
-        if (enemy == null) {
-            fighting = false;
-            return;
-        }
-        if (enemy.deathStage > 0) {
-            fighting = false;
-            return;
-        }
-        requestAnim(data.getAttackEmote(), 0);
-        setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
-        getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-        /*for (int i = 0; i < PlayerHandler.getPlayerCount() + 1; i++) {
-            Client c = getClient(i);
-            if (!validClient(i))
-                continue;
-            if ((c.selectedNpc != null && c.selectedNpc.getSlot() == getSlot() && c.attackingNpc)
-                    || (!magicList.isEmpty() && magicList.contains(c))) {
-                int damage = Utils.random(maxHit);
-                c.dealDamage(damage, false);
-            }
-        }*/ //TODO: Fix multi hit shiet!
-        magicList.clear();
-        lastAttack = System.currentTimeMillis();
-    }
-
-    public void attack_new() {
-        requestAnim(data.getAttackEmote(), 0);
-        Client enemy = getTarget(true);
-        if (enemy == null) {
-            fighting = false;
-            return;
-        }
-        if (enemy.deathStage > 0) {
-            fighting = false;
-            return;
-        }
-        setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
-        getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-        int def = enemy.playerBonus[6];
-        double blocked = Utils.dRandom(def / 17);
-        int hitDiff = Utils.random2(maxHit);
-        int hitChance = (int) ((combat * 1.5) - enemy.getLevel(Skill.DEFENCE) * 1.3); // Chance
-        // to
-        // hit
-        // ;)
-        if (hitChance < 15)
-            hitChance = 15;
-        if (hitChance > 70)
-            hitChance = 70;
-        double roll = Math.random() * 100;
-        if (roll <= hitChance) {
-        } else {
-            hitDiff = 0;
-        }
-        hitDiff -= (int) blocked;
-        if (hitDiff < 0)
-            hitDiff = 0;
-        enemy.send(new SendMessage("npc's % of hit = " + hitChance + ", hit = " + hitDiff));
-        enemy.dealDamage(hitDiff, false);
-        lastAttack = System.currentTimeMillis();
-    }
-
-    public boolean isAttackable() {
-        if (maxHealth > 0)
-            return true;
-        return false;
+        return p != null && !p.disconnected && p.dbId > 0;
     }
 
     public int getId() {
@@ -218,11 +145,6 @@ public class Npc extends Entity {
         getUpdateFlags().clear();
         crit = false;
         direction = -1;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-        getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
     }
 
     public static int getCurrentHP(int i, int i1, int i2) {
@@ -253,6 +175,10 @@ public class Npc extends Entity {
     private boolean crit;
 
     public void showConfig(Client client) {
+        int magicDamage = (int) Math.floor(maxHit * this.getMagic());
+        CalculateMaxHit(false);
+        int rangeMaxHit = maxHit;
+        CalculateMaxHit(true);
         String[] commando = {
                 "id - " + this.getId(),
                 "name - " + data.getName(),
@@ -265,9 +191,10 @@ public class Npc extends Entity {
                 "attack - " + this.getAttack(),
                 "strength - " + this.getStrength(),
                 "defence - " + this.getDefence(),
-                "magic - " + this.getMagic(),
+                "magic dmg - " + String.format("%3.1f", this.getMagic() * 100D) + "% (maxHit: " + magicDamage + ")",
                 "ranged - " + this.getRange(),
-                "Max hit: " + this.maxHit
+                "Max hit Range: " + rangeMaxHit,
+                "Max hit Melee: " + this.maxHit
         };
         client.send(new SendString("@dre@               Uber 3.0 Npc Configs", 8144));
         client.clearQuestInterface();
@@ -290,11 +217,6 @@ public class Npc extends Entity {
     }
 
     public void dealDamage(Client client, int hitDiff, boolean crit) {
-		/*if (client.morph) {
-			return;
-		}*/
-        //hitDiff = client.instaKo ? hitDiff = currentHealth
-        //	: GlobalEvents.event.equals(DifferentEvents.DOUBLE_NPC_DAMAGE) ? hitDiff * 2 : hitDiff;
         if (!alive || (currentHealth < 1 && maxHealth > 0))
             hitDiff = 0;
         else if (hitDiff > currentHealth)
@@ -304,7 +226,6 @@ public class Npc extends Entity {
         currentHealth -= hitDiff;
         damageDealt = hitDiff;
         int dmg = damageDealt;
-
         if (validClient(client)) {
             if (getDamage().containsKey(client)) {
                 dmg += getDamage().get(client);
@@ -313,7 +234,6 @@ public class Npc extends Entity {
             getDamage().put(client, dmg);
             fighting = true;
         }
-
         if (currentHealth <= 0 && maxHealth > 0) {
             alive = false;
             if (currentHealth < 0)
@@ -323,17 +243,21 @@ public class Npc extends Entity {
     }
 
     public void attack() {
-        requestAnim(data.getAttackEmote(), 0);
         if(this.getId() != 3127) {
             Client enemy = getTarget(true);
             if (enemy == null) {
                 fighting = false;
                 return;
             }
+            if(!specialCondition(enemy)) {
+                CalculateMaxHit(true);
+                int hitDiff = landHit(enemy, true) ? Utils.random(maxHit) : 0;
+                requestAnim(data.getAttackEmote(), 0);
+                enemy.dealDamage(hitDiff, false);
+                setLastAttack(System.currentTimeMillis());
+            }
             setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
             getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-            int hitDiff = landHit(enemy) ? Utils.random(maxHit) : 0;
-            enemy.dealDamage(hitDiff, false);
         } else { //Jad!
             Client enemy = null;
             Client target = getTarget(true);
@@ -344,29 +268,34 @@ public class Npc extends Entity {
                     enemy = Server.playerHandler.getClient(e.getSlot());
                     setFocus(target.getPosition().getX(), target.getPosition().getY());
                     getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-                    int hitDiff = landHit(enemy) ? Utils.random(maxHit) : 0;
+                    int hitDiff = landHit(enemy, true) ? Utils.random(maxHit) : 0;
                     enemy.dealDamage(hitDiff, false);
                 }
             }
             if(enemy == null) fighting = false;
+            setLastAttack(System.currentTimeMillis());
         }
-        lastAttack = System.currentTimeMillis();
     }
 
-    public boolean landHit(Client p) {
+    public boolean landHit(Client p, boolean melee) {
         double defLevel = p.getLevel(Skill.DEFENCE);
         double defBonus = 0.0;
-        double atkLevel = getAttack() * (getId() == 2261 && enraged(20000) ? 1.15 : 1.0);
+        double atkLevel = (melee ? getAttack() : getRange()) * (getId() == 2261 && enraged(20000) ? 1.15 : 1.0);
+        double atkBonus = 0.0;
+        double NpcHitChance = 0.0;
         for(int i = 5; i <= 7; i++)
             if(p.playerBonus[i] > defBonus)
                 defBonus = p.checkObsidianWeapons() ? (int) (p.playerBonus[i] * 0.9) : p.playerBonus[i];
-        defLevel += defBonus / 2;
-        double hitChance = 20.00;
-        double levelDiff = atkLevel - defLevel;
-        hitChance += levelDiff;
-        hitChance = hitChance > 80.0 ? 80.0 : hitChance < 20.0 ? 20.0 : hitChance;
-        double chance = Math.random() * 100;
-        return chance < hitChance;
+        defBonus = !melee ? p.playerBonus[9] : defBonus;
+        double playerDef = defLevel * (defBonus + 64D);
+        double npcAccuracy = atkLevel * (atkBonus + 64D);
+        if (npcAccuracy > playerDef)
+            NpcHitChance = 1 - ((playerDef + 2) / (2 * (npcAccuracy + 1)));
+        else
+            NpcHitChance = npcAccuracy / (2 * (playerDef + 1));
+        double chance = Misc.chance(100000) / 1000D;
+        p.debug("Npc Accuracy Hit: " + (NpcHitChance*100) + "% out of " + chance + "%");
+        return chance < (NpcHitChance*100);
     }
 
     public void addBossCount(Player p, int ID) {
@@ -486,31 +415,11 @@ public class Npc extends Entity {
         inFrenzy = -1;
         getDamage().clear();
         enemies.clear();
-    }
-
-  /*public Client getTarget() {
-    for (int i = 0; i < 5; i++) {
-      int maxDmg = 0, maxId = 0;
-      if (getDamage().isEmpty()) {
-        return null;
-      }
-      for (int id : getDamage().keySet()) {
-        if (getDamage().get(id) > maxDmg && validClient(enemies.get(id))) {
-          maxDmg = getDamage().get(id);
-          maxId = id;
+        for(int i = 0; i < boostedStat.length; i++) {
+            boostedStatOrig[i] = 0;
+            boostedStat[i] = 0;
         }
-      }
-      if (!getDamage().containsKey(maxId))
-        continue;
-      Client enemy = enemies.get(maxId);
-      if (!validClient(enemy) || distanceToPlayer(enemy) > 5) {
-        getDamage().remove(maxId);
-        enemies.remove(maxId);
-      }
-      return enemy;
     }
-    return null;
-  }*/
 
     public Client getTarget(boolean fighting) {
         int highest = -1;
@@ -519,7 +428,7 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), 12) || ((Player) e).getCurrentHealth() < 1))
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
@@ -622,6 +531,10 @@ public class Npc extends Entity {
         this.lastAttack = lastAttack;
     }
 
+    public int getAttackTimer() {
+        return getId() == 2261 && enraged(20000) ? 1200 : 2400;
+    }
+
     public int distanceToPlayer(Client p) {
         return (int) Math.sqrt(Math.pow(p.getPosition().getX() - getPosition().getX(), 2)
                 + Math.pow(p.getPosition().getY() - getPosition().getY(), 2));
@@ -641,31 +554,38 @@ public class Npc extends Entity {
     }
 
     public int getAttack() {
-        return level[1];
+        return level[1] + boostedStat[1];
     }
 
     public int getStrength() {
-        return level[2];
+        return level[2] + boostedStat[2];
     }
 
     public int getDefence() {
-        return level[0];
+        return level[0] + boostedStat[0];
     }
 
     public int getRange() {
-        return level[4];
+        return level[4] + boostedStat[4];
     }
 
-    public int getMagic() {
-        return level[6];
+    public double getMagic() {
+        double bonus = (level[6] + boostedStat[3]) / 10D;
+        return bonus <= 0.0 ? 1.0 : (1.0 + (bonus / 100D));
+    }
+
+    public void boostedStat(int stat, int amount) {
+        boostedStatOrig[stat] = amount;
+        boostedStat[stat] = amount;
+    }
+    public void changeStat() {
+        for(int i = 0; i < boostedStat.length; i++)
+            boostedStat[i] = boostedStat[i] > 0 ? --boostedStat[i] : boostedStat[i] < 0 ? ++boostedStat[i] : 0;
+        lastBoostedStat = System.currentTimeMillis();
     }
 
     public String npcName() {
         return Server.npcManager.getName(id).replace("_", " ");
-    }
-
-    public String getText() {
-        return this.text;
     }
 
     public int getDamageDealt() {
@@ -680,20 +600,6 @@ public class Npc extends Entity {
         return this.maxHealth;
     }
 
-    public void addMagicHit(Client client) {
-        synchronized (magicList) {
-            magicList.add(client);
-        }
-    }
-
-    public long getLastChatMessage() {
-        return this.lastChatMessage;
-    }
-
-    public void setLastChatMessage() {
-        lastChatMessage = System.currentTimeMillis();
-    }
-
     public int getTimeOnFloor() {
         return id == 3127 ? 2500 : TIME_ON_FLOOR;
     }
@@ -703,7 +609,11 @@ public class Npc extends Entity {
     }
 
     public boolean enraged(int timer) {
-        return inFrenzy != -1 && System.currentTimeMillis() - inFrenzy >= timer;
+        return inFrenzy != -1 && !(System.currentTimeMillis() - inFrenzy >= timer);
+    }
+    public void calmedDown() {
+        inFrenzy = -1;
+        hadFrenzy = true;
     }
 
     public void sendFightMessage(String msg) {
@@ -714,6 +624,161 @@ public class Npc extends Entity {
                 ((Client) e).send(new SendMessage(msg));
             }
         }
+    }
+
+    public void heal(int heal) {
+        int maxHealth = getMaxHealth();
+        currentHealth = currentHealth + heal > maxHealth ? maxHealth : currentHealth + heal;
+    }
+
+    public boolean specialCondition(Client c) {
+        boolean attack = true;
+        switch(getId()) {
+            case 1611: //Battle mage
+            case 2585: // Abyssal guardian boss!
+                if(Misc.chance(3) == 1) {
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    requestAnim(data.getAttackEmote() + 1, 0);
+                    c.callGfxMask(getId() == 2585 ? 89 : 76, 100);
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+            break;
+            case 1432: //Black demon
+                if(Misc.chance(4) == 1) { //Cast magic attack!
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    requestAnim(69, 0);
+                    c.stillgfx(381, c.getPosition().getY(), c.getPosition().getX());
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+                break;
+            case 1443: //Jungle demon
+                if(Misc.chance(3) == 1) { //Cast magic attack!
+                    boolean heal = Misc.random(2) == 1;
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    requestAnim(69, 0);
+                    c.stillgfx(heal ? 377 : 78, c.getPosition().getY(), c.getPosition().getX());
+                    if(heal)
+                        heal(hitDiff);
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+            break;
+            case 4922: //Ice queen
+                if(Misc.chance(4) == 1) { //Cast magic attack!
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    requestAnim(1979, 0);
+                    c.stillgfx(369, c.getPosition().getY(), c.getPosition().getX());
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+            break;
+            case 3957: //Ungadulu
+                if(Misc.chance(4) == 1) { //Cast range Attack
+                    CalculateMaxHit(false);
+                    int hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
+                    requestAnim(1978, 0);
+                    c.stillgfx(180, c.getPosition().getY(), c.getPosition().getX());
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+            break;
+            case 3964: //San Tojalon
+                if(Misc.chance(5) == 1 && (boostedStat[0] <= boostedStatOrig[0] / 2)) { //Cast boost
+                    setText("Let the shadow protect me!");
+                    requestAnim(5489, 0);
+                    lastAttack += 600; //1 tick drink delay!
+                    boostedStat(0, 60);
+                } else attack = false;
+                break;
+            case 4067: //Black knight titan
+                if(Misc.chance(5) == 1 && (boostedStat[2] <= boostedStatOrig[2] / 2)) { //Cast boost
+                    setText("GRRRRR!");
+                    requestAnim(129, 0);
+                    lastAttack += 600; //1 tick drink delay!
+                    boostedStat(2, 60);
+                } else attack = false;
+                break;
+            case 8: //Nechrayel
+                if(Misc.chance(6) == 1 && (boostedStat[0] <= boostedStatOrig[0] / 2)) { //Cast boost
+                    setText("I HAVE AWAKEN!");
+                    requestAnim(1529, 0);
+                    lastAttack += 600; //1 tick drink delay!
+                    for(int i = 0; i <= 2; i++)
+                        boostedStat(i, 40);
+                } else attack = false;
+                break;
+            case 2266: //Prime
+                if(Misc.chance(5) == 1 && (boostedStat[4] <= boostedStatOrig[4] / 2)) { //Cast boost
+                    setText("Rawr!");
+                    requestAnim(2855, 0);
+                    lastAttack += 600; //1 tick drink delay!
+                    boostedStat(1, 60);
+                    boostedStat(4, 60);
+                } else if(Misc.chance(4) == 1) {
+                    CalculateMaxHit(false);
+                    int hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
+                    requestAnim(2854, 0);
+                    c.stillgfx(406, c.getPosition().getY(), c.getPosition().getX());
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+                break;
+            case 5311: //Head Mourner
+                if(Misc.chance(5) == 1) { //True melee damage!
+                    setText("Get out of my farm!");
+                    requestAnim(1203, 0);
+                    c.dealDamage((int)(maxHit * 0.8), true);
+                } else attack = false;
+                break;
+            case 239: //King black dragon
+                int landChance = Misc.chance(15);
+                if(landChance == 1) { //Fire breath, guarantee hit as crit with 50% reduce dmg as melee
+                    setText("GRRRR!");
+                    delayGfx(c, 81, 393, 2, (int)(maxHit * 0.5), true);
+                    setLastAttack(System.currentTimeMillis());
+                } else if(landChance == 5) { //Blue breath, magic dmg
+                    setText("Grrrr!");
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    delayGfx(c, 82, 396, 2, hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else if(landChance == 10) { //Green breath, range dmg
+                    setText("RAWR!!");
+                    CalculateMaxHit(false);
+                    int hitDiff = Utils.random((int)Math.floor(maxHit));
+                    delayGfx(c, 83, 394, 2, landHit(c, false) ? hitDiff : 0, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else if(landChance == 15) { //White breath, melee dmg check with 20% increase dmg
+                    setText("Rawr!!");
+                    CalculateMaxHit(true);
+                    int hitDiff = Utils.random((int)Math.floor(maxHit * 1.2));
+                    delayGfx(c, 84, 395, 2, landHit(c, true) ? hitDiff : 0, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+                break;
+            default: attack = false;
+        }
+        if(!attack)
+            setLastAttack(System.currentTimeMillis());
+        return attack;
+    }
+
+    public void delayGfx(Client c, int anim, int gfx, int delay, int dmg, boolean crit) {
+        requestAnim(anim, 0);
+        EventManager.getInstance().registerEvent(new Event(delay * 600) {
+
+            public void execute() {
+                if(c.disconnected) {
+                    stop();
+                    return;
+                }
+                c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
+                c.dealDamage(dmg, crit);
+                stop();
+            }
+
+        });
     }
 
 }

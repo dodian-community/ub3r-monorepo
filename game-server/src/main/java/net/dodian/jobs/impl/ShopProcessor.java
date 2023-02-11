@@ -19,13 +19,11 @@ public class ShopProcessor implements Job {
                 if (ShopHandler.ShopItems[i][j] > 0) {
                     if (ShopHandler.ShopItemsDelay[i][j] >= ShopHandler.MaxShowDelay) {
                         if (j <= ShopHandler.ShopItemsStandard[i]
-                                && ShopHandler.ShopItemsN[i][j] <= ShopHandler.ShopItemsSN[i][j]) {
+                                && ShopHandler.ShopItemsN[i][j] != ShopHandler.ShopItemsSN[i][j]) {
                             if (ShopHandler.ShopItemsN[i][j] < ShopHandler.ShopItemsSN[i][j]) {
                                 double restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j])*0.05;
                                 ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? restockAmount : 1;
-                            }
-                        } else {
-                            Server.shopHandler.DiscountItem(i, j);
+                            } else Server.shopHandler.DiscountItem(i, j);
                         }
                         ShopHandler.ShopItemsDelay[i][j] = 0;
                         DidUpdate = true;

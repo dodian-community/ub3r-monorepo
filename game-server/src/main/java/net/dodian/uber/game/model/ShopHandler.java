@@ -38,7 +38,7 @@ public class ShopHandler {
 
     public void DiscountItem(int ShopID, int ArrayID) {
         ShopItemsN[ShopID][ArrayID] -= 1;
-        if (ShopItemsN[ShopID][ArrayID] <= 0) {
+        if (ShopItemsN[ShopID][ArrayID] <= 0 && ArrayID >= ShopHandler.ShopItemsStandard[ShopID]) {
             ShopItemsN[ShopID][ArrayID] = 0;
             ResetItem(ShopID, ArrayID);
         }
@@ -54,6 +54,13 @@ public class ShopHandler {
         ShopItems[ShopID][ArrayID] = -1;
         ShopItemsN[ShopID][ArrayID] = 0;
         ShopItemsDelay[ShopID][ArrayID] = 0;
+    }
+
+    public static boolean findDefaultItem(int shopId, int id) {
+        for(int i = 0; i < ShopItemsStandard[shopId]; i++)
+            if(ShopItems[shopId][i] -1 == id)
+                return true;
+        return false;
     }
 
     @SuppressWarnings("resource")
