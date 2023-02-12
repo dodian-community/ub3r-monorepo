@@ -64,7 +64,6 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
     return true
 }
 
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.meleeMaxHit(): Int {
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
@@ -85,7 +84,6 @@ fun Client.meleeMaxHit(): Int {
     return (baseDamage * (1 + specialBonus)).toInt()
 }
 
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.rangedMaxHit(): Int {
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while

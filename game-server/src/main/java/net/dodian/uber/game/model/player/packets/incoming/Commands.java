@@ -37,7 +37,8 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Commands implements Packet {
@@ -977,8 +978,8 @@ public class Commands implements Packet {
                 Server.itemManager.getItemName(client, name);
             }
             if (cmd[0].equalsIgnoreCase("max")) {
-                client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.meleeMaxHit() + " (MeleeStr: " + client.playerBonus[10] + ")"));
-                client.send(new SendMessage("<col=0B610B>Range max hit: " + client.rangedMaxHit(false) + " (RangeStr: " + client.rangedMaxHit(true) + ")"));
+                client.send(new SendMessage("<col=FF8000>Melee max hit: " + meleeMaxHit(client) + " (MeleeStr: " + client.playerBonus[10] + ")"));
+                client.send(new SendMessage("<col=0B610B>Range max hit: " + rangedMaxHit(client) + " (RangeStr: " + getRangedStr(client) + ")"));
                 if (client.autocast_spellIndex == -1)
                     client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg()) + " (Magic damage increase: " + String.format("%3.1f", (client.magicDmg() - 1.0) * 100D) + "%)"));
                 else

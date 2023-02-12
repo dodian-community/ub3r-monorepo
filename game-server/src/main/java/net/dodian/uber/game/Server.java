@@ -9,7 +9,6 @@ import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
@@ -37,16 +36,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
-import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.utilities.DatabaseInitializerKt.*;
+import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.utilities.DatabaseKt.*;
 
-/**
- * Testing..
- *
- * @author Arch337
- */
 public class Server implements Runnable {
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
@@ -122,7 +115,7 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
         /* Done loading */
         System.gc();
-        System.out.println("Server is now running on world " + getGameWorldId() + "!");
+        System.out.println("Server is now running on world " + net.dodian.utilities.DotEnvKt.getGameWorldId() + "!");
     }
 
     public static Server clientHandler = null; // handles all the clients
@@ -140,7 +133,7 @@ public class Server implements Runnable {
         // setup the listener
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(getServerPort(), 1, null);
+            clientListener = new java.net.ServerSocket(net.dodian.utilities.DotEnvKt.getServerPort(), 1, null);
             while (true) {
                 try {
                     if (clientListener == null)

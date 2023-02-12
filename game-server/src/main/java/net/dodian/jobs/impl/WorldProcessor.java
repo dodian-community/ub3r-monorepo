@@ -13,7 +13,7 @@ import org.quartz.JobExecutionException;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class WorldProcessor implements Job {

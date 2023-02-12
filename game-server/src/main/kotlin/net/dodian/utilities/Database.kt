@@ -1,11 +1,10 @@
 package net.dodian.utilities
 
-import net.dodian.*
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 
-val jdbcUrl = "jdbc:mysql://${databaseHost}:${databasePort}/${databaseName}?serverTimezone=UTC"
+val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC"
 
 val dbConnection: Connection = connect()
 

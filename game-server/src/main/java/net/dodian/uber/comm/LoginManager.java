@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import static net.dodian.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
@@ -36,14 +35,14 @@ public class LoginManager {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
                     if (!md5pass.equals(results.getString("password"))
-                    && (!getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
+                    && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
                         return 3;
                     }
                     p.otherGroups = results.getString("membergroupids").split(",");
                     p.newPms = (results.getInt("pmunread"));
                 } else
                     return 12;
-            } else if (getServerEnv().equals("dev") && getServerDebugMode()) {
+            } else if (net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") && net.dodian.utilities.DotEnvKt.getServerDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
                 getDbConnection().createStatement().executeUpdate(newUserQuery);
                 return loadCharacterGame(p, playerName, playerPass);

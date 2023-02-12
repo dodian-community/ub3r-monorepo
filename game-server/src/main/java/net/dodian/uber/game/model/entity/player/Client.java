@@ -6,7 +6,6 @@ import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.combat.ClientExtensionsKt;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
@@ -44,9 +43,9 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.DotEnvKt.*;
+import net.dodian.uber.game.combat.ClientExtensionsKt;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.utilities.DatabaseKt.*;
 
 public class Client extends Player implements Runnable {
 
@@ -603,7 +602,7 @@ public class Client extends Player implements Runnable {
 			}
 			getInputStream().readUnsignedByte();
 			for (int i = 0; i < 8; i++) {
-				mySocketHandler.getOutput().write(9 + getGameWorldId());
+				mySocketHandler.getOutput().write(9 + net.dodian.utilities.DotEnvKt.getGameWorldId());
 			}
 			mySocketHandler.getOutput().write(0);
 			//out.write(0);
@@ -646,7 +645,7 @@ public class Client extends Player implements Runnable {
 			serverSessionKey = getInputStream().readQWord();
 
 			String customClientVersion = getInputStream().readString();
-			officialClient = customClientVersion.equals(getGameClientCustomVersion());
+			officialClient = customClientVersion.equals(net.dodian.utilities.DotEnvKt.getGameClientCustomVersion());
 
 			setPlayerName(getInputStream().readString());
 			if (getPlayerName() == null || getPlayerName().length() == 0) {
@@ -783,7 +782,7 @@ public class Client extends Player implements Runnable {
 					mySocketHandler.getOutput().write(loginDelay);
 			}
 
-			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
+			mySocketHandler.getOutput().write(net.dodian.utilities.DotEnvKt.getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
 			mySocketHandler.getOutput().write(0);
 		} catch (java.lang.Exception __ex) {
 			__ex.printStackTrace();
@@ -953,7 +952,7 @@ public class Client extends Player implements Runnable {
         }
       }*/ //TODO: Fix this pvp shiet
 
-			if (getGameWorldId() < 2) {
+			if (net.dodian.utilities.DotEnvKt.getGameWorldId() < 2) {
 				long elapsed = System.currentTimeMillis() - start;
 				int minutes = (int) (elapsed / 60000);
 				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
@@ -975,7 +974,7 @@ public class Client extends Player implements Runnable {
 			p.DuelVictory();
 		}
 		// TODO: Look into improving this, and potentially a system to configure player saving per world id...
-		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
+		if (net.dodian.utilities.DotEnvKt.getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
 			try {
 				Statement statement = getDbConnection().createStatement();
 				long allxp = 0;
@@ -1186,7 +1185,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You must answer the genie before you can gain experience!"));
 			return false;
 		}
-		amount = amount * getGameMultiplierGlobalXp();
+		amount = amount * net.dodian.utilities.DotEnvKt.getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
 				newXP = Math.min(getExperience(skill) + amount, 200000000);
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
@@ -6987,7 +6986,7 @@ public class Client extends Player implements Runnable {
 		if (tradeLocked && other.playerRights < 1) {
 			return;
 		}
-		if (other.connectedFrom.equals(connectedFrom) && getGameWorldId() == 1) { //We do not wish for others to duel?!
+		if (other.connectedFrom.equals(connectedFrom) && net.dodian.utilities.DotEnvKt.getGameWorldId() == 1) { //We do not wish for others to duel?!
 			duelRequested = false;
 			return;
 		}
@@ -7294,7 +7293,7 @@ public class Client extends Player implements Runnable {
 	public void refreshFriends() {
 		for (Friend f : friends) {
 			if (PlayerHandler.playersOnline.containsKey(f.name)) {
-				loadpm(f.name, getGameWorldId());
+				loadpm(f.name, net.dodian.utilities.DotEnvKt.getGameWorldId());
 			} else {
 				loadpm(f.name, 0);
 			}
@@ -7797,7 +7796,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void updatePlayerDisplay() {
-		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
+		String serverName = net.dodian.utilities.DotEnvKt.getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
 		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
 		send(new SendString("", 6664));
 		setInterfaceWalkable(6673);
@@ -8824,12 +8823,5 @@ public class Client extends Player implements Runnable {
 					}
 				});
 			}
-	}
-
-	public int meleeMaxHit() {
-		return ClientExtensionsKt.meleeMaxHit(this);
-	}
-	public int rangedMaxHit(boolean str) {
-		return str ? ClientExtensionsKt.getRangedStr(this) : ClientExtensionsKt.rangedMaxHit(this);
 	}
 }

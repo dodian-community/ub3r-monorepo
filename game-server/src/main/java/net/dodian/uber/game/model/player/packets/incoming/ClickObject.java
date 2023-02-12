@@ -26,7 +26,7 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject implements Packet {
 

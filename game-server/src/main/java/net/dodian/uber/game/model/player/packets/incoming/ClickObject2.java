@@ -18,7 +18,7 @@ import net.dodian.utilities.Misc;
 
 import java.util.Random;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject2 implements Packet {
 

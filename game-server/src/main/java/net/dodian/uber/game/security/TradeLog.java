@@ -9,9 +9,8 @@ import java.sql.Statement;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 /**
  * Saves all duels that take place.
