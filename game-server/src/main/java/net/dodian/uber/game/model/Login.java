@@ -1,29 +1,18 @@
 package net.dodian.uber.game.model;
 
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.DbTables;
 
 import java.io.*;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
             getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
-                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + getGameWorldId() + "'");
+                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + net.dodian.utilities.DotEnvKt.getGameWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

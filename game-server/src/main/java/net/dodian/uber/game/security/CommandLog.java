@@ -7,7 +7,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**

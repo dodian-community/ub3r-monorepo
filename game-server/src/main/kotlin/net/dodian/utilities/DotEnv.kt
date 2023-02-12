@@ -1,4 +1,4 @@
-package net.dodian
+package net.dodian.utilities
 
 import io.github.cdimascio.dotenv.dotenv
 

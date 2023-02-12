@@ -1,14 +1,12 @@
 package net.dodian.uber.comm;
 
-import net.dodian.uber.game.Server;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class SocketPoolEntry {
     private Socket socket;

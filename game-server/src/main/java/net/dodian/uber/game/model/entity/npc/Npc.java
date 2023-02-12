@@ -674,6 +674,16 @@ public class Npc extends Entity {
                     setLastAttack(System.currentTimeMillis());
                 } else attack = false;
             break;
+            case 3209: //Cave Horror
+                if(Misc.chance(5) == 1) { //Cast range Attack
+                    CalculateMaxHit(false);
+                    int hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
+                    requestAnim(4237, 0);
+                    c.stillgfx(378, c.getPosition().getY(), c.getPosition().getX());
+                    c.dealDamage(hitDiff, false);
+                    setLastAttack(System.currentTimeMillis());
+                } else attack = false;
+                break;
             case 3957: //Ungadulu
                 if(Misc.chance(4) == 1) { //Cast range Attack
                     CalculateMaxHit(false);
