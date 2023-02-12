@@ -596,7 +596,7 @@ public class Commands implements Packet {
                 }
                 if (command.startsWith("master") && client.playerRights > 1) {
                     for (int i = 0; i < 21; i++) {
-                        client.giveExperience(15000000, Skill.getSkill(i));
+                        client.giveExperience(14000000, Skill.getSkill(i));
                     }
                 }
             } //End of Special rank commands
@@ -977,13 +977,13 @@ public class Commands implements Packet {
                 Server.itemManager.getItemName(client, name);
             }
             if (cmd[0].equalsIgnoreCase("max")) {
-                client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.meleeMaxHit()));
-                client.send(new SendMessage("<col=0B610B>Range max hit: " + client.rangedMaxHit()));
+                client.send(new SendMessage("<col=FF8000>Melee max hit: " + client.meleeMaxHit() + " (MeleeStr: " + client.playerBonus[10] + ")"));
+                client.send(new SendMessage("<col=0B610B>Range max hit: " + client.rangedMaxHit(false) + " (RangeStr: " + client.rangedMaxHit(true) + ")"));
                 if (client.autocast_spellIndex == -1)
-                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg())));
+                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg()) + " (Magic damage increase: " + String.format("%3.1f", (client.magicDmg() - 1.0) * 100D) + "%)"));
                 else
                     client.send(new SendMessage("<col=292BA3>Magic max hit (" + client.spellName[client.autocast_spellIndex]
-                            + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * client.magicDmg())));
+                            + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * client.magicDmg()) + " (Magic damage increase: " + String.format("%3.1f", (client.magicDmg() - 1.0) * 100D) + "%)"));
             }
             if (cmd[0].equalsIgnoreCase("yell") && command.length() > 5) {
                 if (!client.premium) {
