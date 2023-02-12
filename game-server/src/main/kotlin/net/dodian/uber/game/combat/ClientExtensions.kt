@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
@@ -65,7 +66,6 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.meleeMaxHit(): Int {
-    val potionBonus = 0.0 // TODO: Calculate potion bonus
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     val specialBonus = 0.0 // TODO: Calculate special bonus
@@ -76,10 +76,10 @@ fun Client.meleeMaxHit(): Int {
         3 -> 1 // Controlled
         else -> error("Fight style ID '$FightType' was unexpected!")
     }
-    val strengthBonus = playerBonus[10]
 
+    val strengthBonus = playerBonus[10]
     val strength = getLevel(Skill.STRENGTH)
-    val effectiveStrength = (((strength + (1 + potionBonus)) * (1 + prayerBonus)) + styleBonus + 8) * (1 + voidBonus)
+    val effectiveStrength = ((strength * (1 + prayerBonus)) + styleBonus + 8) * (1 + voidBonus)
     val baseDamage = 0.5 + effectiveStrength * (strengthBonus + 64) / 640
 
     return (baseDamage * (1 + specialBonus)).toInt()
@@ -87,23 +87,92 @@ fun Client.meleeMaxHit(): Int {
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun Client.rangedMaxHit(): Int {
-    val potionBonus = 0.0 // TODO: Calculate potion bonus
     val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
-    val otherBonus = 0.0 // TODO: Not sure what this is
+    val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     val specialBonus = 0.0 // TODO: Calculate special bonus
 
     val styleBonus = when (FightType) {
-        1 -> 3 // Accurate
-        2, 3 -> 0 // Long Range & Rapid
+        2 -> 3 // Rapid
+        0, 3 -> 0 // Accuracy and Long range
         else -> error("Fight style ID '$FightType' was unexpected!")
     }
-    val rangedBonus = playerBonus[4]
-
-    val ranged = getLevel(Skill.STRENGTH)
-    val effectiveStrength = ((ranged + (1 + potionBonus)) * (1 + prayerBonus) * (1 + otherBonus)) + styleBonus
-    val baseDamage = 1.3 + (effectiveStrength / 10) + (rangedBonus / 80) + ((effectiveStrength * ranged) / 640)
-
+    val ranged = getLevel(Skill.RANGED)
+    val effectiveStrength = ((ranged * (1 + prayerBonus)) + styleBonus + 8) * (1 + voidBonus)
+    val baseDamage = 0.5 + (effectiveStrength * (getRangedStr() + 64) / 640)
     return (baseDamage * (1 + specialBonus)).toInt()
+}
+
+fun Client.getRangedStr(): Int {
+    var rangedStr = when(equipment[Equipment.Slot.ARROWS.id]) {
+        882 -> 7
+        884 -> 10
+        886 -> 16
+        888 -> 22
+        890 -> 31
+        892 -> 49
+        11212 -> 60
+        else -> 0
+    }
+    rangedStr += when(equipment[Equipment.Slot.WEAPON.id]) {
+        843 -> 10
+        845 -> 15
+        849 -> 15
+        847 -> 20
+        853 -> 20
+        851 -> 25
+        857 -> 25
+        855 -> 30
+        861 -> 30
+        859 -> 35
+        4212 -> 72
+        6724 -> 83
+        else -> 0
+    }
+    /* Head */
+    rangedStr += when(equipment[Equipment.Slot.HEAD.id]) {
+        1169 -> 1
+        2581 -> 3
+        6131 -> 3
+        else -> 0
+    }
+    /* Body */
+    rangedStr += when(equipment[Equipment.Slot.CHEST.id]) {
+        1129 -> 1
+        1743 -> 2
+        1135 -> 5
+        2499 -> 7
+        2501 -> 9
+        2503 -> 11
+        6133 -> 13
+        else -> 0
+    }
+    /* Legs */
+    rangedStr += when(equipment[Equipment.Slot.LEGS.id]) {
+        1095 -> 1
+        1097 -> 2
+        1099 -> 4
+        2493 -> 5
+        2495 -> 6
+        2497 -> 7
+        6135 -> 9
+        else -> 0
+    }
+    /* Boots */
+    rangedStr += when(equipment[Equipment.Slot.FEET.id]) {
+        2577 -> 3
+        6143 -> 3
+        else -> 0
+    }
+    /* Hands */
+    rangedStr += when(equipment[Equipment.Slot.HANDS.id]) {
+        1065 -> 1
+        2487 -> 2
+        2489 -> 3
+        2491 -> 4
+        6149 -> 4
+        else -> 0
+    }
+    return rangedStr
 }
 
 fun Client.getSlayerDamage(npcId: Int, range: Boolean): Int {

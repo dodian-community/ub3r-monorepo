@@ -117,11 +117,11 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         val defBonus = t.playerBonus[8]
         val defLevel = t.getLevel(Skill.DEFENCE)
         val playerDef = defLevel * (defBonus + 64.0)
-        val npcAccuracy = atkLevel * (atkBonus + 64.0)
-        if (npcAccuracy > playerDef)
-            hitChance = 1 - ((playerDef + 2) / (2 * (npcAccuracy + 1)))
+        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        if (playerAccuracy > playerDef)
+            hitChance = 1 - ((playerDef + 2) / (2 * (playerAccuracy + 1)))
         else
-            hitChance = npcAccuracy / (2 * (playerDef + 1))
+            hitChance = playerAccuracy / (2 * (playerDef + 1))
         p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
@@ -130,7 +130,8 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         val defLevel = t.defence
         val defBonus = 0.0
         val npcDef = defLevel * (defBonus + 64.0)
-        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        var playerAccuracy = atkLevel * (atkBonus + 64.0)
+        playerAccuracy = if(p.getSlayerDamage(t.id, true) == 2) playerAccuracy * 1.2 else playerAccuracy
         if (playerAccuracy > npcDef)
             hitChance = 1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
         else

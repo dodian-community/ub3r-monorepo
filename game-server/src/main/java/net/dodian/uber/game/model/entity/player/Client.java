@@ -8829,8 +8829,7 @@ public class Client extends Player implements Runnable {
 	public int meleeMaxHit() {
 		return ClientExtensionsKt.meleeMaxHit(this);
 	}
-
-	public int rangedMaxHit() {
-		return ClientExtensionsKt.rangedMaxHit(this);
+	public int rangedMaxHit(boolean str) {
+		return str ? ClientExtensionsKt.getRangedStr(this) : ClientExtensionsKt.rangedMaxHit(this);
 	}
 }

@@ -107,11 +107,11 @@ fun landHit(p: Client, t: Entity): Boolean {
         val defLevel = t.getLevel(Skill.DEFENCE)
         val defBonus = highestDefensiveBonus(t)
         val playerDef = defLevel * (defBonus + 64.0)
-        val npcAccuracy = atkLevel * (atkBonus + 64.0)
-        hitChance = if (npcAccuracy > playerDef)
-            1 - ((playerDef + 2) / (2 * (npcAccuracy + 1)))
+        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        hitChance = if (playerAccuracy > playerDef)
+            1 - ((playerDef + 2) / (2 * (playerAccuracy + 1)))
         else
-            npcAccuracy / (2 * (playerDef + 1))
+            playerAccuracy / (2 * (playerDef + 1))
         p.debug("Melee Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
@@ -120,7 +120,9 @@ fun landHit(p: Client, t: Entity): Boolean {
         val defLevel = t.defence
         val defBonus = 0.0
         val npcDef = defLevel * (defBonus + 64.0)
-        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        var playerAccuracy = atkLevel * (atkBonus + 64.0)
+        playerAccuracy = if(p.getSlayerDamage(t.id, false) == 1) playerAccuracy * 1.15
+        else if(p.getSlayerDamage(t.id, false) == 2) playerAccuracy * 1.20 else playerAccuracy
         hitChance = if (playerAccuracy > npcDef)
             1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
         else
