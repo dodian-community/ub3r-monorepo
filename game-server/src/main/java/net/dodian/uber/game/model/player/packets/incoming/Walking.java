@@ -116,6 +116,10 @@ public class Walking implements Packet {
                 client.IsBanking = false;
                 client.send(new RemoveInterfaces());
             }
+            if(client.checkBankInterface) {
+                client.checkBankInterface = false;
+                client.send(new RemoveInterfaces());
+            }
             if (client.isPartyInterface) {
                 client.isPartyInterface = false;
                 client.send(new RemoveInterfaces());

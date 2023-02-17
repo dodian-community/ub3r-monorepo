@@ -18,7 +18,7 @@ public class ItemProcessor implements Job {
 
             if ((ItemHandler.hideItemTimer + ItemHandler.showItemTimer) == ItemHandler.globalItemTicks[i]) {
                 if (!ItemHandler.globalItemStatic[i]) {
-                    ItemHandler.removeItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemX[i],
+                    ItemHandler.removeItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemAmount[i], ItemHandler.globalItemX[i],
                             ItemHandler.globalItemY[i], ItemHandler.globalItemZ[i]);
                 } else {
                     Utils.println("Item is static");

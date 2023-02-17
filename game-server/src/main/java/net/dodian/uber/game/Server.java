@@ -9,6 +9,7 @@ import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
+import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
@@ -36,9 +37,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.utilities.DatabaseInitializerKt.*;
 import static net.dodian.utilities.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseKt.*;
+import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Server implements Runnable {
 
@@ -115,7 +117,7 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
         /* Done loading */
         System.gc();
-        System.out.println("Server is now running on world " + net.dodian.utilities.DotEnvKt.getGameWorldId() + "!");
+        System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
     public static Server clientHandler = null; // handles all the clients

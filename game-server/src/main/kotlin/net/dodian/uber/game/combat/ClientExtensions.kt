@@ -123,7 +123,8 @@ fun Client.getRangedStr(): Int {
         861 -> 30
         859 -> 35
         4212 -> 72
-        6724 -> 83
+        6724 -> 80
+        20997 -> 90
         else -> 0
     }
     /* Head */
@@ -168,6 +169,11 @@ fun Client.getRangedStr(): Int {
         2489 -> 3
         2491 -> 4
         6149 -> 4
+        else -> 0
+    }
+    /* Shield */
+    rangedStr += when(equipment[Equipment.Slot.SHIELD.id]) {
+        3844 -> 10
         else -> 0
     }
     return rangedStr

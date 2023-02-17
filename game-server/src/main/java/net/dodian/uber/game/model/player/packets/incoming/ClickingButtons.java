@@ -384,7 +384,7 @@ public class ClickingButtons implements Packet {
                     };
                     client.send(new RemoveInterfaces());
                     client.genie = false;
-                    if (client.inDuel || client.duelFight || client.IsBanking || !client.playerHasItem(2528)) //To prevent stuff!
+                    if (client.inDuel || client.duelFight || client.IsBanking || client.checkBankInterface || !client.playerHasItem(2528)) //To prevent stuff!
                         break;
                     for (int i = 0; i < skillTrain.length; i++)
                         if (skillTrain[i] == client.actionButtonId && client.actionButtonId != 54090) {
@@ -712,8 +712,8 @@ public class ClickingButtons implements Packet {
                     break;
                 }
                 Client o = client.getClient(client.duel_with);
-                boolean sendMsgToOther = o.getCurrentHealth() != o.getMaxHealth() && client.getCurrentHealth() == client.getMaxHealth();
-                if (o.getCurrentHealth() != o.getMaxHealth() || client.getCurrentHealth() != client.getMaxHealth()) {
+                boolean sendMsgToOther = client.getMaxHealth() - client.getCurrentHealth() == 0 && o.getMaxHealth() - o.getCurrentHealth() != 0;
+                if (o.getMaxHealth() - o.getCurrentHealth() != 0 || client.getMaxHealth() - client.getCurrentHealth() != 0) {
                     client.send(new SendMessage(sendMsgToOther ? "Your opponent is low on health!" : "You are low on health, so please heal up!"));
                     if(sendMsgToOther)
                         o.send(new SendMessage("You are low on health, so please heal up!"));
@@ -777,6 +777,13 @@ public class ClickingButtons implements Packet {
             case 33206:
                 try {
                     client.showSkillMenu(0, 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 33207:
+                try {
+                    client.showSkillMenu(3, 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

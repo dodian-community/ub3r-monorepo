@@ -1,10 +1,13 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.item.GameItem;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
+import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -28,7 +31,7 @@ public class GroundItemProcessor implements Job {
                     Client p = Server.playerHandler.getClient(i);
                     if (p != null && Server.itemManager.isTradable(item.id) && p.dbId != item.playerId
                             && Math.abs(p.getPosition().getX() - item.x) < 114 && Math.abs(p.getPosition().getY() - item.y) < 114) {
-                        p.createGroundItem(item.id, item.x, item.y, item.z, item.amount);
+                        p.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                     }
                 }
                 item.visible = true;

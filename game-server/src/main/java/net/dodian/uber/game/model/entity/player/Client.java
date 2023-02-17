@@ -9,6 +9,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
@@ -43,9 +44,9 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import net.dodian.uber.game.combat.ClientExtensionsKt;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 import static net.dodian.utilities.DatabaseKt.*;
+import static net.dodian.utilities.DotEnvKt.getGameClientCustomVersion;
 
 public class Client extends Player implements Runnable {
 
@@ -580,7 +581,7 @@ public class Client extends Player implements Runnable {
 	public void run() {
 		// we just accepted a new connection - handle the login stuff
 		isActive = false;
-		long serverSessionKey, clientSessionKey;
+		long serverSessionKey = 0, clientSessionKey = 0;
 
 //	if (!KeyServer.verifiedKeys()){
 //		System.out.println("User rejected due to unverified client.");
@@ -602,7 +603,7 @@ public class Client extends Player implements Runnable {
 			}
 			getInputStream().readUnsignedByte();
 			for (int i = 0; i < 8; i++) {
-				mySocketHandler.getOutput().write(9 + net.dodian.utilities.DotEnvKt.getGameWorldId());
+				mySocketHandler.getOutput().write(10);
 			}
 			mySocketHandler.getOutput().write(0);
 			//out.write(0);
@@ -645,8 +646,7 @@ public class Client extends Player implements Runnable {
 			serverSessionKey = getInputStream().readQWord();
 
 			String customClientVersion = getInputStream().readString();
-			officialClient = customClientVersion.equals(net.dodian.utilities.DotEnvKt.getGameClientCustomVersion());
-
+			officialClient = customClientVersion.equals(getGameClientCustomVersion());
 			setPlayerName(getInputStream().readString());
 			if (getPlayerName() == null || getPlayerName().length() == 0) {
 				setPlayerName("player" + getSlot());
@@ -666,18 +666,16 @@ public class Client extends Player implements Runnable {
 					'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
 					'_', ' '};
 			setPlayerName(getPlayerName().trim());
-			int[] sessionKey = new int[4];
 
+			int[] sessionKey = new int[4];
 			sessionKey[0] = (int) (clientSessionKey >> 32);
 			sessionKey[1] = (int) clientSessionKey;
 			sessionKey[2] = (int) (serverSessionKey >> 32);
 			sessionKey[3] = (int) serverSessionKey;
-
 			inStreamDecryption = new Cryption(sessionKey);
 			for (int i = 0; i < 4; i++) {
 				sessionKey[i] += 50;
 			}
-
 			outStreamDecryption = new Cryption(sessionKey);
 			getOutputStream().packetEncryption = outStreamDecryption;
 
@@ -1772,7 +1770,7 @@ public class Client extends Player implements Runnable {
 					if (addItem(item.id, item.amount)) { //Fixed so stackable items can be added with full inv as long as you got it.
 						item.setTaken(true);
 						Ground.deleteItem(item);
-						send(new Sound(356));
+						//send(new Sound(356)); //TODO: fix sounds!
 						PickupLog.recordPickup(this, item.id, item.amount, item.npc ? Server.npcManager.getName(item.npcId) : item.canDespawn ? "" + item.playerId : "Global Item Pickup", getPosition().copy());
 					}
 					break;
@@ -1793,6 +1791,7 @@ public class Client extends Player implements Runnable {
 		send(new SendString("Bank All", 5391));
 		send(new SendString("Bank of " + getPlayerName(), 5383));
 		IsBanking = true;
+		checkBankInterface = false;
 		send(new InventoryInterface(5292, 5063));
 	}
 
@@ -1818,7 +1817,7 @@ public class Client extends Player implements Runnable {
 	private void checkItemUpdate() {
 		if (IsShopping) {
 			resetItems(3823);
-		} else if (IsBanking) {
+		} else if (IsBanking || checkBankInterface) {
 			resetItems(5064);
 			send(new InventoryInterface(5292, 5063));
 		} else if (isPartyInterface) {
@@ -1946,30 +1945,11 @@ public class Client extends Player implements Runnable {
 		 * "WARNING: dropping this item will DELETE it, not drop it"); send(new
 		 * SendMessage( "To confirm, drop again"); return; } }
 		 */
-		send(new Sound(376));
+		//send(new Sound(376));
 		deleteItem(id, slot, amount);
 		GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), id, amount, getSlot(), -1);
 		Ground.items.add(drop);
 		DropLog.recordDrop(this, drop.id, drop.amount, "Player", getPosition().copy());
-	}
-
-	public void removeGroundItem(int itemX, int itemY, int height, int itemID) {
-			getOutputStream().createFrame(85);
-			getOutputStream().writeByteC(itemY - 8 * mapRegionY);
-			getOutputStream().writeByteC(itemX - 8 * mapRegionX);
-			getOutputStream().createFrame(156);
-			getOutputStream().writeByteS(height);
-			getOutputStream().writeWord(itemID);
-	}
-
-	public void createGroundItem(int itemID, int itemX, int itemY, int height, int itemAmount) {
-			getOutputStream().createFrame(85);
-			getOutputStream().writeByteC(itemY - 8 * mapRegionY);
-			getOutputStream().writeByteC(itemX - 8 * mapRegionX);
-			getOutputStream().createFrame(44);
-			getOutputStream().writeWordBigEndianA(itemID);
-			getOutputStream().writeWord(itemAmount);
-			getOutputStream().writeByte(height);
 	}
 
 	public void deleteItem(int id, int amount) {
@@ -2007,7 +1987,8 @@ public class Client extends Player implements Runnable {
 		getOutputStream().endFrameVarSizeWord();
 		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 			CombatStyleHandler.setWeaponHandler(this, -1);
-			requestAnims(Equipment.Slot.WEAPON.getId());
+			CheckGear();
+			requestAnims(wearID); // This caused lagg wtf?!
 		}
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
@@ -2037,9 +2018,7 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need to be assigned a task!"));
 			return false;
 		}
-		int shield = getEquipment()[Equipment.Slot.SHIELD.getId()];
 		int targetSlot = Server.itemManager.getSlot(wearID);
-		//println("Item: " + wearID + ", slot: " + targetSlot);
 		if (!canUse(wearID)) {
 			send(new SendMessage("You must be a premium member to use this item"));
 			return false;
@@ -2048,78 +2027,10 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Current duel rules restrict this from being worn!"));
 			return false;
 		}
-		Skillcape skillcape = Skillcape.getSkillCape(wearID);
-		if (skillcape != null) {
-			if (Skillcape.isTrimmed(wearID) && getExperience(skillcape.getSkill()) < 50000000) {
-				send(new SendMessage("This cape requires 50 million " + skillcape.getSkill().getName() + " experience to wear."));
-				return false;
-			} else if (getLevel(skillcape.getSkill()) < 99) {
-				send(new SendMessage("This cape requires level 99 " + skillcape.getSkill().getName() + " to wear."));
-				return false;
-			}
-		}
-
-		if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
-			if (Server.itemManager.isTwoHanded(wearID)) {
-				if (getEquipment()[Equipment.Slot.SHIELD.getId()] > 0) {
-					if (hasSpace()) {
-						remove(Equipment.Slot.SHIELD.getId(), true);
-					} else {
-						send(new SendMessage("You can't wear this weapon with a shield"));
-						return false;
-					}
-				}
-			}
-		if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
-			if (Server.itemManager.getSlot(wearID) == Equipment.Slot.SHIELD.getId()) {
-				if (Server.itemManager.isTwoHanded(getEquipment()[Equipment.Slot.WEAPON.getId()])) {
-					if (hasSpace()) {
-						remove(Equipment.Slot.WEAPON.getId(), true);
-					} else {
-						send(new SendMessage("You can't wear this shield with a two-handed weapon"));
-						return false;
-					}
-				}
-			}
-
 		if ((playerItems[slot] - 1) == wearID) {
-			// targetSlot = itemType(wearID);
-			targetSlot = Server.itemManager.getSlot(wearID);
-			int CLAttack = GetCLAttack(wearID);
-			int CLDefence = GetCLDefence(wearID);
-			int CLStrength = GetCLStrength(wearID);
-			int CLMagic = GetCLMagic(wearID);
-			int CLRanged = GetCLRanged(wearID);
-			boolean GoFalse = false;
-			if (CLAttack > getLevel(Skill.ATTACK)) {
-				send(new SendMessage("You need " + CLAttack + " Attack to equip this item."));
-				GoFalse = true;
-			}
-			if (CLDefence > getLevel(Skill.DEFENCE)) {
-				send(new SendMessage("You need " + CLDefence + " Defence to equip this item."));
-				GoFalse = true;
-			}
-			if (CLStrength > getLevel(Skill.STRENGTH)) {
-				send(new SendMessage("You need " + CLStrength + " Strength to equip this item."));
-				GoFalse = true;
-			}
-			if (CLMagic > getLevel(Skill.MAGIC)) {
-				send(new SendMessage("You need " + CLMagic + " Magic to equip this item."));
-				GoFalse = true;
-			}
-			if (CLRanged > getLevel(Skill.RANGED)) {
-				send(new SendMessage("You need " + CLRanged + " Ranged to equip this item."));
-				GoFalse = true;
-			}
-			if (getLevel(Skill.AGILITY) < 60 && wearID == 4224) {
-				send(new SendMessage("You need 60 Agility to equip this item."));
-				GoFalse = true;
-			}
-			if (GoFalse) {
+			if(!checkEquip(wearID, targetSlot, slot))
 				return false;
-			}
 			int wearAmount = playerItemsN[slot];
-
 			if (wearAmount < 1) {
 				return false;
 			}
@@ -2136,44 +2047,142 @@ public class Client extends Player implements Runnable {
 			getEquipment()[targetSlot] = wearID;
 			getEquipmentN()[targetSlot] = wearAmount;
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
-			if((bowWeapon(wearID) || usingBow) && wearID != 4224 && wearID != 3844 && shield != 4224 && shield != 3844)
-				if (targetSlot == Equipment.Slot.WEAPON.getId() && getEquipment()[Equipment.Slot.SHIELD.getId()] != -1
-						&& Server.itemManager.isTwoHanded(wearID)) {
-					remove(Equipment.Slot.SHIELD.getId(), false);
-				}
-
-			if (targetSlot == Equipment.Slot.WEAPON.getId()) {
-				CombatStyleHandler.setWeaponHandler(this, -1);
-				CheckGear();
-				requestAnims(wearID); // This caused lagg wtf?!
-			}
 			GetBonus();
-			wearing = false;
 			WriteBonus();
+			wearing = false;
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			return true;
 		}
 		return false;
 	}
 
-	public void remove(int slot, boolean force) {
+	public boolean checkEquip(int id, int slot, int invSlot) {
+			int CLAttack = GetCLAttack(id);
+			int CLDefence = GetCLDefence(id);
+			int CLStrength = GetCLStrength(id);
+			int CLMagic = GetCLMagic(id);
+			int CLRanged = GetCLRanged(id);
+			boolean failCheck = false;
+			String itemName = Server.itemManager.getName(id);
+			if (CLAttack > getLevel(Skill.ATTACK)) {
+				send(new SendMessage("You need " + CLAttack + " Attack to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+			if (CLDefence > getLevel(Skill.DEFENCE)) {
+				send(new SendMessage("You need " + CLDefence + " Defence to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+			if (CLStrength > getLevel(Skill.STRENGTH)) {
+				send(new SendMessage("You need " + CLStrength + " Strength to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+			if (CLMagic > getLevel(Skill.MAGIC)) {
+				send(new SendMessage("You need " + CLMagic + " Magic to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+			if (CLRanged > getLevel(Skill.RANGED)) {
+				send(new SendMessage("You need " + CLRanged + " Ranged to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+			if (getLevel(Skill.AGILITY) < 60 && id == 4224) {
+				send(new SendMessage("You need 60 Agility to equip " + itemName.toLowerCase() + "."));
+				failCheck = true;
+			}
+		Skillcape skillcape = Skillcape.getSkillCape(id);
+		if (skillcape != null) {
+			if (Skillcape.isTrimmed(id) && getExperience(skillcape.getSkill()) < 50000000) {
+				send(new SendMessage("This cape requires 50 million " + skillcape.getSkill().getName() + " experience to wear."));
+				failCheck = true;
+			} else if (getLevel(skillcape.getSkill()) < 99) {
+				send(new SendMessage("This cape requires level 99 " + skillcape.getSkill().getName() + " to wear."));
+				failCheck = true;
+			}
+		}
+		/* 2handed check! */
+		int shield = getEquipment()[Equipment.Slot.SHIELD.getId()];
+		int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
+		boolean twoHanded = Server.itemManager.isTwoHanded(id) || Server.itemManager.isTwoHanded(weapon);
+		if(twoHanded && !failCheck) {
+			if (slot == Equipment.Slot.WEAPON.getId()) {
+				if (shield > 0 && hasSpace()) {
+					remove(slot, true);
+					remove(Equipment.Slot.SHIELD.getId(), true);
+					if(invSlot == -1)
+						addItem(weapon, 1);
+					else
+						addItemSlot(weapon, 1, invSlot);
+					addItem(shield, 1);
+				} else if (shield > 0) {
+					send(new SendMessage("Not enough space to equip this item!"));
+					failCheck = true;
+				}
+			} else if (slot == Equipment.Slot.SHIELD.getId()) {
+				remove(Equipment.Slot.WEAPON.getId(), true);
+				if(invSlot == -1)
+					addItem(weapon, 1);
+				else
+					addItemSlot(weapon, 1, invSlot);
+			}
+		}
+		/* Bow check! */
+		boolean check = (id == 4212 || id == 6724 || id == 20997) || (weapon == 4212 || weapon == 6724 || weapon == 20997);
+		if(check && !failCheck) {
+			if(slot == 5 && id != 3844 && id != 4224) {
+				if (shield > 0 && hasSpace()) {
+					remove(slot, true);
+					remove(Equipment.Slot.WEAPON.getId(), true);
+					if(invSlot == -1)
+						addItem(weapon, 1);
+					else
+						addItemSlot(weapon, 1, invSlot);
+					addItem(shield, 1);
+				} else if(shield > 0) {
+					send(new SendMessage("Not enough space to equip this item!"));
+					failCheck = true;
+				} else if (shield < 1 && invSlot != -1) {
+					remove(Equipment.Slot.WEAPON.getId(), true);
+					addItemSlot(weapon, 1, invSlot);
+				} else if (invSlot == -1) failCheck = true;
+			}
+			if(slot == 3 && invSlot != -1 && (id == 4212 || id == 6724 || id == 20997)) {
+				boolean shieldCheck = shield == 3844 || shield == 4224;
+				if(!shieldCheck && shield > 0 && weapon > 0 && hasSpace()) {
+					remove(slot, true);
+					remove(Equipment.Slot.SHIELD.getId(), true);
+					addItemSlot(weapon, 1, invSlot);
+					addItem(shield, 1);
+				} else if(shield > 0 && weapon > 0 && !hasSpace()) {
+					send(new SendMessage("Not enough space to equip this item!"));
+					failCheck = true;
+				} else if(shield > 0 && !shieldCheck) {
+					remove(Equipment.Slot.SHIELD.getId(), true);
+					addItemSlot(shield, 1, invSlot);
+				}
+			}
+		}
+		return !failCheck;
+	}
+
+	public boolean remove(int slot, boolean force) {
 		if (duelFight && duelRule[3] && !force) {
 			send(new SendMessage("Equipment changing has been disabled in this duel!"));
-			return;
+			return false;
 		}
 		if (duelConfirmed && !force) {
-			return;
+			return false;
 		}
-		if (addItem(getEquipment()[slot], getEquipmentN()[slot])) {
 			getEquipment()[slot] = -1;
 			getEquipmentN()[slot] = 0;
 			setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
+			if (slot == Equipment.Slot.WEAPON.getId()) {
+				CheckGear();
+				requestAnims(-1);
+				CombatStyleHandler.setWeaponHandler(this, -1);
+			}
 			GetBonus();
 			WriteBonus();
-			if (slot == Equipment.Slot.WEAPON.getId()) {
-				checkBow();
-			}
-		}
+		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+		return true;
 	}
 
 	public void deleteequiment(int wearID, int slot) {
@@ -2303,10 +2312,9 @@ public class Client extends Player implements Runnable {
 				Equipment.Slot.RING.getId());
 		setEquipment(getEquipment()[Equipment.Slot.WEAPON.getId()], getEquipmentN()[Equipment.Slot.WEAPON.getId()],
 				Equipment.Slot.WEAPON.getId());
+		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		resetItems(3214);
 		resetBank();
-		GetBonus();
-		WriteBonus();
 		replaceDoors();
 		pmstatus(2);
 		send(new SendString("Using this will send a notification to all online mods", 5967));
@@ -2800,9 +2808,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Abyssal Whip", "Granite Maul", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Dragon",
+			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Granite longsword", "Dragon",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "1", "10", "20", "30", "40", "60", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "50", "60", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2810,7 +2818,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {4151, 4153, 1291, 1293, 1295, 1299, 1301, 1303, 1305, 9747};
+			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 21646, 1305, 9747};
 			setMenuItems(items);
 		} else if (skillID == 1) {
 			send(new SendString("Attack", 8846));
@@ -2819,9 +2827,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
+			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Granite", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "60", "70", "75", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "50", "60", "70", "75", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2829,7 +2837,38 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 3140, 4224, 11284, 9753};
+			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 10564, 3140, 4224, 11284, 9753};
+			setMenuItems(items);
+		} else if (skillID == 2) {
+			send(new SendString("Strength", 8846));
+			changeInterfaceStatus(8825, false);
+			changeInterfaceStatus(8813, false);
+			slot = 8760;
+			String prem = " @red@(Premium only)";
+			String[] s = {"Unholy book", "Granite maul", "Obsidian maul", "Skillcape" + prem};
+			String[] s1 = {"45", "50", "60", "99"};
+			for (int i = 0; i < s.length; i++) {
+				send(new SendString(s[i], slot++));
+			}
+			slot = 8720;
+			for (int i = 0; i < s1.length; i++) {
+				send(new SendString(s1[i], slot++));
+			}
+			int[] items = {3842, 4153, 6528, 9750};
+			setMenuItems(items);
+		} else if (skillID == 3) {
+			send(new SendString("Hitpoints", 8846));
+			changeInterfaceStatus(8825, false);
+			changeInterfaceStatus(8813, false);
+			send(new SendString("Health restore", 8716));
+			slot = 8760;
+			String prem = " @red@(Premium only)";
+			String[] s = {"Shrimps (3 health)", "Rat meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
+					"Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
+			for (int i = 0; i < s.length; i++) {
+				send(new SendString(s[i], slot++));
+			}
+			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == 4) {
 			changeInterfaceStatus(8825, false);
@@ -2841,15 +2880,15 @@ public class Client extends Player implements Runnable {
 			String[] s = new String[0];
 			String[] s1 = new String[0];
 			if (child == 0) {
-				s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Seercull"};
-				s1 = new String[]{"1", "20", "30", "40", "50", "70", "75"};
+				s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Seercull", "Twisted bow"};
+				s1 = new String[]{"1", "20", "30", "40", "50", "70", "75", "85"};
 			} else if (child == 1) {
 				s = new String[]{"Leather", "Green dragonhide body (with 40 defence)", "Green dragonhide chaps",
-						"Green dragonhide vambraces", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
+						"Green dragonhide vambraces", "Book of balance", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
 						"Blue dragonhide vambraces", "Red dragonhide body (with 40 defence)", "Red dragonhide chaps",
 						"Red dragonhide vambraces", "Black dragonhide body (with 40 defence)", "Black dragonhide chaps",
 						"Black dragonhide vambraces", "Spined"};
-				s1 = new String[]{"1", "40", "40", "40", "50", "50", "50", "60", "60", "60", "70", "70", "70", "75"};
+				s1 = new String[]{"1", "40", "40", "40", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "75"};
 			} else if (child == 2) {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
@@ -2862,9 +2901,9 @@ public class Client extends Player implements Runnable {
 				send(new SendString(s1[i], slot++));
 			}
 			if (child == 0)
-				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 6724});
+				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 6724, 20997});
 			else if (child == 1)
-				setMenuItems(new int[]{1129, 1135, 1099, 1065, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 6133});
+				setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 6133});
 			else if (child == 2)
 				setMenuItems(new int[]{9756});
 		} else if (skillID == 6) { // Magic need to be done?
@@ -2880,11 +2919,11 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
 				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
 			} else if (child == 1) {
-				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Infinity"};
-				s1 = new String[]{"1", "20", "20", "35", "50"};
+				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Infinity"};
+				s1 = new String[]{"1", "20", "20", "35", "45", "50"};
 			} else if (child == 2) {
-				s = new String[]{"Zamorak staff", "Saradomin staff", "Guthix staff", "Master wand", "Skillcape" + prem};
-				s1 = new String[]{"1", "1", "1", "50", "99"};
+				s = new String[]{"Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Master wand", "Skillcape" + prem};
+				s1 = new String[]{"1", "1", "1", "25", "50", "99"};
 			}
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
@@ -2897,26 +2936,9 @@ public class Client extends Player implements Runnable {
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
 						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
 			else if (child == 1)
-				setMenuItems(new int[]{4089, 4109, 3385, 4099, 6918});
+				setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 6918});
 			else if (child == 2)
-				setMenuItems(new int[]{2417, 2415, 2416, 6914, 9762});
-		} else if (skillID == 2) {
-			send(new SendString("Strength", 8846));
-			changeInterfaceStatus(8825, false);
-			changeInterfaceStatus(8813, false);
-			slot = 8760;
-			String prem = " @red@(Premium only)";
-			String[] s = {"Obsidian maul", "Skillcape" + prem};
-			String[] s1 = {"60", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
-			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
-			int[] items = {6528, 9750};
-			setMenuItems(items);
+				setMenuItems(new int[]{2417, 2415, 2416, 4675, 6914, 9762});
 		} else if (skillID == 17) {
 			send(new SendString("Thieving", 8846));
 			changeInterfaceStatus(8825, false);
@@ -5281,7 +5303,7 @@ public class Client extends Player implements Runnable {
 		if (ItemName2.startsWith("claws") || ItemName2.startsWith("dagger") || ItemName2.startsWith("sword")
 				|| ItemName2.startsWith("scimitar") || ItemName2.startsWith("mace") || ItemName2.startsWith("longsword")
 				|| ItemName2.startsWith("battleaxe") || ItemName2.startsWith("warhammer") || ItemName2.startsWith("2h sword")
-				|| ItemName2.startsWith("halberd") || ItemName2.endsWith("axe")) {
+				|| ItemName2.startsWith("halberd") || ItemName2.endsWith("axe") || ItemName2.endsWith("pickaxe")) {
 			if (ItemName.startsWith("Bronze")) {
 				return 1;
 			} else if (ItemName.startsWith("Iron")) {
@@ -5300,18 +5322,20 @@ public class Client extends Player implements Runnable {
 				return 60;
 			}
 		}
+		if (ItemID == 21646)
+			return 50;
+		if (ItemID == 3842)
+			return 45;
 		return 1;
 	}
 
 	public int GetCLDefence(int ItemID) {
-		if (ItemID == -1) {
-			return 1;
-		}
+		if (ItemID == -1) return 1;
 		String checkName = GetItemName(ItemID).toLowerCase();
-		if (checkName.endsWith("arrow") || checkName.endsWith("pickaxe") || checkName.endsWith("mask") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
+		if (checkName.endsWith("arrow") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
 			return 1;
 		String ItemName = GetItemName(ItemID);
-		if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier"))
+		if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("h'ween") || checkName.contains("partyhat"))
 			return 1;
 		String ItemName2 = ItemName.replaceAll("Bronze", "");
 		ItemName2 = ItemName2.replaceAll("Iron", "");
@@ -5327,7 +5351,7 @@ public class Client extends Player implements Runnable {
 		if (ItemName2.startsWith("claws") || ItemName2.startsWith("dagger") || ItemName2.startsWith("sword")
 				|| ItemName2.startsWith("scimitar") || ItemName2.startsWith("mace") || ItemName2.startsWith("longsword")
 				|| ItemName2.startsWith("battleaxe") || ItemName2.startsWith("warhammer") || ItemName2.startsWith("2h sword")
-				|| ItemName2.startsWith("harlberd")) {// It's a weapon,
+				|| ItemName2.startsWith("harlberd") || ItemName2.startsWith("pickaxe")) {// It's a weapon,
 			return 1;
 		} else if (ItemName.startsWith("Ahrims") || ItemName.startsWith("Karil") || ItemName.startsWith("Torag")
 				|| ItemName.startsWith("Verac") || ItemName.endsWith("Guthan") || ItemName.endsWith("Dharok") ||
@@ -5348,7 +5372,9 @@ public class Client extends Player implements Runnable {
 				return 1;
 			} else if (ItemName.startsWith("Steel") && !ItemName.contains("arrow")) {
 				return 5;
-			} else if (ItemName.startsWith("Black") && !ItemName.contains("hide") && !ItemName.contains("cavalier")) {
+			} else if (ItemName.startsWith("Black") && !ItemName.contains("hide")) {
+				return 10;
+			} else if (ItemName.startsWith("Slayer helmet")) {
 				return 10;
 			} else if (ItemName.startsWith("Mithril") && !ItemName.contains("arrow")) {
 				return 20;
@@ -5358,6 +5384,8 @@ public class Client extends Player implements Runnable {
 				return 30;
 			} else if (ItemName.startsWith("Rune") && !ItemName.endsWith("cape") && !ItemName.contains("arrow")) {
 				return 40;
+			} else if (ItemName.startsWith("Granite") && ItemID != 4153 && ItemID != 21646) {
+				return 50;
 			} else if (ItemName.startsWith("Dragon") && !ItemName.contains("hide") && !ItemName.toLowerCase().contains("ring") && !ItemName.toLowerCase().contains("necklace") && !ItemName.toLowerCase().contains("amulet")) {
 				return 60;
 			} else if (ItemName.startsWith("Rock-shell")) {
@@ -5370,13 +5398,7 @@ public class Client extends Player implements Runnable {
 			return 1;
 		if (ItemName.startsWith("Snakeskin body") || ItemName.startsWith("Snakeskin chaps"))
 			return 60;
-		if (ItemID == 1135)
-			return 40;
-		if (ItemID == 2499)
-			return 40;
-		if (ItemID == 2501)
-			return 40;
-		if (ItemID == 2503)
+		if (ItemID == 1135 || ItemID == 2499 || ItemID == 2501 || ItemID == 2503)
 			return 40;
 		if (ItemID == 6524)
 			return 60;
@@ -5385,46 +5407,38 @@ public class Client extends Player implements Runnable {
 
 	public int GetCLStrength(int ItemID) {
 		if (ItemID == -1) return 1;
-		String ItemName = GetItemName(ItemID);
-
-		if (ItemName.startsWith("Granite")) {
+		if (ItemID == 3842)
+			return 45;
+		if (ItemID == 4153)
 			return 50;
-		} else if (ItemName.startsWith("Tzhaar-ket-om")) {
+		if (ItemID == 6528)
 			return 60;
-		} else if (ItemName.startsWith("Torags hammers") || ItemName.endsWith("Dharoks greataxe")) {
-			return 1;
-		}
 		return 1;
 	}
 
 	public int GetCLMagic(int ItemID) {
-		if (ItemID == -1) {
-			return 1;
-		}
+		if (ItemID == -1) return 1;
 		String ItemName = GetItemName(ItemID);
+		if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark"))
+			return 20;
+		if(ItemID == 4675)
+			return 25;
+		if (ItemName.startsWith("Black Mystic"))
+			return 35;
+		if(ItemID == 3840)
+			return 45;
+		if (ItemName.startsWith("Infinity") || ItemID == 6914)
+			return 50;
 		if (ItemName.toLowerCase().contains("ghostly"))
 			return 70;
-		if (ItemName.startsWith("Ahrim")) {
-			return 90;
-		}
-		if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark")) {
-			return 20;
-		}
-		if (ItemName.startsWith("Black Mystic")) {
-			return 35;
-		}
-		if (ItemName.startsWith("Infinity") || ItemID == 6914) {
-			return 50;
-		}
+		if (ItemName.startsWith("Ahrim"))
+			return 80;
 		return 1;
 	}
 
 	public int GetCLRanged(int ItemID) {
-		if (ItemID == -1) {
-			return 1;
-		}
+		if (ItemID == -1) return 1;
 		String ItemName = GetItemName(ItemID);
-
 		if (ItemName.startsWith("Karil")) {
 			return 90;
 		}
@@ -5479,8 +5493,12 @@ public class Client extends Player implements Runnable {
 		if (ItemName.startsWith("Steel arr")) {
 			return 10;
 		}
+		if (ItemID == 3844)
+			return 45;
 		if (ItemID == 6724)
 			return 75;
+		if (ItemID == 20997)
+			return 85;
 		return 1;
 	}
 
@@ -8043,7 +8061,10 @@ public class Client extends Player implements Runnable {
 			if (!duelBodyRules[i])
 				continue;
 			if (getEquipmentN()[trueSlots[i]] > 0) {
-				remove(trueSlots[i], true);
+				int id = getEquipment()[trueSlots[i]];
+				int amount = getEquipmentN()[trueSlots[i]];
+				if(remove(trueSlots[i], true))
+					addItem(id, amount);
 			}
 		}
 	}
@@ -8348,22 +8369,17 @@ public class Client extends Player implements Runnable {
 
 	public void checkBow() {
 		int weaponId = getEquipment()[Equipment.Slot.WEAPON.getId()];
-		usingBow = false;
-		for (int i = 0; i < Constants.shortbow.length &&!usingBow; i++) {
-			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
-				usingBow = true;
-			}
-		}
-		if (weaponId == 4212 || weaponId == 6724 || weaponId == 841 || weaponId == 839 || weaponId == 20997 ||
-				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768)) {
-			usingBow = true;
-		}
+		usingBow = bowWeapon(weaponId);
 	}
 	public boolean bowWeapon(int weaponId) {
+		boolean bow = false;
+		for (int i = 0; i < Constants.shortbow.length &&!usingBow; i++)
+			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i])
+				bow = true;
 		if (weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
 				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768))
-			return true;
-		return false;
+			bow = true;
+		return bow;
 	}
 
 	public void RottenTomato(final Client c) {
@@ -8468,6 +8484,7 @@ public class Client extends Player implements Runnable {
 			sendBank(5382, otherBank);
 			send(new InventoryInterface(5292, 5063));
 			IsBanking = false;
+			checkBankInterface = true;
 		} else {
 			try {
 				java.sql.Connection conn = getDbConnection();
@@ -8496,6 +8513,7 @@ public class Client extends Player implements Runnable {
 						send(new SendString("Examine the bank of " + player, 5383));
 						sendBank(5382, otherBank);
 						send(new InventoryInterface(5292, 5063));
+						checkBankInterface = true;
 					} else
 						send(new SendMessage("username '" + player + "' have yet to login!"));
 				} else
@@ -8512,22 +8530,22 @@ public class Client extends Player implements Runnable {
 	public void updateItems() {
 		if (displayItems.size() > 0) {
 			for (GroundItem display : displayItems) {
-				removeGroundItem(display.x, display.y, display.z, display.id);
+				send(new RemoveGroundItem(new GameItem(display.id, display.amount), new Position(display.x, display.y, display.z)));
 			}
 			displayItems.clear();
 		}
 		for (GroundItem ground : Ground.items) {
 			if (Math.abs(getPosition().getX() - ground.x) <= 114 && Math.abs(getPosition().getY() - ground.y) <= 114) {
 				if (!ground.canDespawn && !ground.taken) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
+					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
 				} else if (dbId == ground.playerId && ground.canDespawn) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
+					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
 				} else if (ground.canDespawn && ground.visible && ground.playerId != dbId
 						&& Server.itemManager.isTradable(ground.id)) {
-					createGroundItem(ground.id, ground.x, ground.y, ground.z, ground.amount);
 					displayItems.add(ground);
+					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
 				}
 			}
 		}
@@ -8616,7 +8634,7 @@ public class Client extends Player implements Runnable {
 					totalItemRemoved += canRemove;
 					if (other.playerItemsN[i] <= 0)
 						other.playerItems[i] = 0;
-					if (other.IsBanking || other.isPartyInterface)
+					if (other.IsBanking || other.isPartyInterface || other.checkBankInterface)
 						other.resetItems(5064);
 					else if (other.IsShopping)
 						other.resetItems(3823);

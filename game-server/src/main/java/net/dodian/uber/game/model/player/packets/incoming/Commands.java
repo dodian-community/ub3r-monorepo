@@ -351,6 +351,10 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Skull : " + icon));
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
+                if (cmd[0].equalsIgnoreCase("sound") && client.playerRights > 1) {
+                    int icon = Integer.parseInt(cmd[1]);
+                    client.send(new Sound(icon));
+                }
                 if (cmd[0].equalsIgnoreCase("event")) {
                     Balloons.triggerBalloonEvent(client);
                 }
@@ -1087,7 +1091,9 @@ public class Commands implements Packet {
                         }
                         for (int i = 0; i < lootedItem.size(); i++)
                             client.send(new SendString("Loot from " + amount + " " + n.getName() + ", ID: " + npcId, 5383));
+                        client.checkBankInterface = true;
                         client.sendBank(lootedItem, lootedAmount);
+                        client.resetItems(5064);
                         client.send(new InventoryInterface(5292, 5063));
                         if (wealth)
                             client.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
@@ -1351,9 +1357,8 @@ public class Commands implements Packet {
                         client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(i));
                         client.setLevel(level, Skill.getSkill(i));
                         if(i == 3)
-                            client.heal(level);
-                        else
-                            client.refreshSkill(Skill.getSkill(i));
+                            client.heal(client.getLevel(Skill.HITPOINTS));
+                        client.refreshSkill(Skill.getSkill(i));
                     }
                     client.getEquipment()[0] = 1161;
                     client.getEquipmentN()[0] = 1;

@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveGroundItem;
 
 public class ItemHandler {
     // Phate: Setting VARS
@@ -54,7 +55,7 @@ public class ItemHandler {
         }
     }
 
-    public static void removeItemAll(int itemID, int itemX, int itemY, int itemZ) {
+    public static void removeItemAll(int itemID, int amount, int itemX, int itemY, int itemZ) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
             Player p = PlayerHandler.players[i];
             if (p != null) {
@@ -62,9 +63,8 @@ public class ItemHandler {
                 if (person.getPlayerName() != null || person.getPlayerName() != "null") {
                     // misc.println("distance to remove "+person.distanceToPoint(itemX,
                     // itemY));
-                    if (person.distanceToPoint(itemX, itemY) <= 60) {
-                        person.removeGroundItem(itemX, itemY, itemZ, itemID);
-                    }
+                    if (person.distanceToPoint(itemX, itemY) <= 60)
+                        person.send(new RemoveGroundItem(new GameItem(itemID, amount), new Position(itemX, itemY, itemZ)));
                 }
             }
         }

@@ -142,9 +142,9 @@ public class Npc extends Entity {
     }
 
     public void clearUpdateFlags() {
-        getUpdateFlags().clear();
-        crit = false;
         direction = -1;
+        crit = false;
+        getUpdateFlags().clear();
     }
 
     public static int getCurrentHP(int i, int i1, int i2) {
