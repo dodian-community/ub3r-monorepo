@@ -225,7 +225,7 @@ public class Thieving {
                             stop();
                         }
                     }
-                    player.send(new Sound(356));
+                    //player.send(new Sound(356));
                     player.triggerRandom(data.getReceivedExperience());
                     stop();
                     return;

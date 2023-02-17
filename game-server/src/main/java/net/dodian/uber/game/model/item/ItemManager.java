@@ -13,7 +13,6 @@ import java.util.Map;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ItemManager {
-    // public ArrayList<Item> items = new ArrayList<Item>();
     public Map<Integer, Item> items = new HashMap<Integer, Item>();
     final int defaultStandAnim = 808, defaultWalkAnim = 819, defaultRunAnim = 824, defaultAttackAnim = 806;
 
@@ -54,12 +53,8 @@ public class ItemManager {
     }
 
     public boolean isTwoHanded(int id) {
-        if (id < 0)
-            return false;
         Item i = items.get(id);
-        if (i == null)
-            return false;
-        return i.getTwoHanded();
+        return id >= 0 && i != null && i.getTwoHanded();
     }
 
     public int getSlot(int id) {

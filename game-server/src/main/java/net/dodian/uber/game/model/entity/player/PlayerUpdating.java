@@ -296,7 +296,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void appendPrimaryHit(Player player, Stream stream) {
         try {
-            stream.writeByte(player.getHitDiff() > 255 ? 255 : player.getHitDiff()); // What the perseon got 'hit' for
+            stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
             if (player.getHitDiff() == 0) {
                 stream.writeByteA(0);
             } else {
@@ -314,7 +314,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public void appendPrimaryHit2(Player player, Stream stream) {
         try {
-            stream.writeByte(player.getHitDiff() > 255 ? 255 : player.getHitDiff()); // What the perseon got 'hit' for
+            stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
             if (player.getHitDiff() == 0) {
                 stream.writeByteS(0);
             } else {

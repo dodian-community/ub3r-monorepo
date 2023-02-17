@@ -22,6 +22,9 @@ public class ClickingStuff implements Packet {
         if (client.IsBanking) {
             client.IsBanking = false;
         }
+        if (client.checkBankInterface) {
+            client.checkBankInterface = false;
+        }
         if (client.isPartyInterface) {
             client.isPartyInterface = false;
         }

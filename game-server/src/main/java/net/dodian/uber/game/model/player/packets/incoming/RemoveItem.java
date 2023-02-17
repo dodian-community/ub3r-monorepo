@@ -23,9 +23,13 @@ public class RemoveItem implements Packet {
         } else if (interfaceID == 6669 && client.inDuel) { // remove from duel window
             client.fromDuel(removeID, removeSlot, 1);
         } else if (interfaceID == 1688) {
-            if (client.getEquipment()[removeSlot] > 0) {
-                client.remove(removeSlot, false);
-            }
+            if(client.hasSpace()) {
+                int id = client.getEquipment()[removeSlot];
+                int amount = client.getEquipmentN()[removeSlot];
+                    if(client.remove(removeSlot, false))
+                        client.addItem(id, amount);
+            } else client.send(
+                    new SendMessage("Not enough space to unequip this item!"));
         } else if (interfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
                 client.bankItem(removeID, removeSlot, 1);

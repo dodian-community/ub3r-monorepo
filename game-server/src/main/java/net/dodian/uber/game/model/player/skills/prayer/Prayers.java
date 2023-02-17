@@ -188,7 +188,7 @@ public class Prayers {
             c.send(new SendMessage(
                     "You need a Prayer level of at least " + prayer.getPrayerLevel() + " to use " + formatEnum(prayer)));
             c.frame87(prayer.getConfigId(), 0);
-            c.send(new Sound(447));
+            //c.send(new Sound(447));
             return;
         }
         if (isPrayerOn(prayer)) {

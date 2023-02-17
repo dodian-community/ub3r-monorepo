@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -26,7 +27,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public void update(Player player, Stream stream) {
         Stream block = new Stream(new byte[10000]);
         block.currentOffset = 0;
-
         stream.createFrameVarSizeWord(65);
         stream.initBitAccess();
 
@@ -49,7 +49,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
             if (player.getLocalNpcs().add(npc)) {
                 if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                    npc.setId(((Client) player).getGender() == 0 ? 1306 : 1307);
+                    npc.setId(player.getGender() == 0 ? 1306 : 1307);
                 addNpc(player, npc, stream);
                 appendBlockUpdate(npc, block);
                 npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
@@ -59,7 +59,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (block.currentOffset > 0) {
             stream.writeBits(14, 16383);
             stream.finishBitAccess();
-
             stream.writeBytes(block.buffer, block.currentOffset, 0);
         } else {
             stream.finishBitAccess();
@@ -70,9 +69,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public static boolean removeNpc(Player player, Npc npc) {
         Client c = ((Client) player);
         if(c == null || npc == null) return false;
-        if(c.quests[0] > 0 && npc.getId() == 555 && npc.getPosition().getX() == 2604 && npc.getPosition().getY() == 3092)
-            return true;
-        return false;
+        boolean check = c.quests[0] > 0 && npc.getId() == 555 && npc.getPosition().getX() == 2604 && npc.getPosition().getY() == 3092;
+        if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
+            check = true;
+        return check;
     }
 
 
@@ -92,6 +92,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeBits(1, 0); // something??
         stream.writeBits(14, npc.getId());
         stream.writeBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+        /* Not sure we can do it here! */
+        npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
     }
 
     @Override
@@ -136,7 +138,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendPrimaryHit(Npc npc, Stream stream) {
-        stream.writeByteC(npc.getDamageDealt() > 255 ? 255 : npc.getDamageDealt());
+        stream.writeByteC(Math.min(npc.getDamageDealt(), 255));
         if (npc.getDamageDealt() == 0) {
             stream.writeByteS(0);
         } else if (!npc.isCrit()) {
@@ -144,7 +146,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         } else {
             stream.writeByteS(3);
         }
-        stream.writeByteS(Npc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth(), 100));
+        double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
+        int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
+        stream.writeByteS(value);
         stream.writeByteC(100);
     }
 

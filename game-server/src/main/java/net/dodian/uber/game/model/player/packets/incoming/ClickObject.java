@@ -805,7 +805,7 @@ public class ClickObject implements Packet {
                         DoorHandler.doorState[d] = 0;
                         DoorHandler.doorFace[d] = newFace;
                     }
-                    client.send(new Sound(326));
+                    //client.send(new Sound(326));
                     for (int p = 0; p < Constants.maxPlayers; p++) {
                         Client player = (Client) PlayerHandler.players[p];
                         if (player == null) {

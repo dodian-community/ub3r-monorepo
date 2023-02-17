@@ -82,7 +82,7 @@ public abstract class Player extends Entity {
     public int NpcTalkTo = 0;
     public boolean NpcDialogueSend = false;
     public int NpcWanneTalk = 0;
-    public boolean IsBanking = false, isPartyInterface = false;
+    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface;
     public boolean debug = false;
     private boolean crit;
     private boolean isNpc;
@@ -1111,7 +1111,7 @@ public abstract class Player extends Entity {
     }
 
     public int getMaxHealth() {
-        return this.maxHealth;
+        return getLevel(Skill.HITPOINTS) > this.maxHealth ? getLevel(Skill.HITPOINTS) : this.maxHealth;
     }
 
     public void setCrit(boolean crit) {
