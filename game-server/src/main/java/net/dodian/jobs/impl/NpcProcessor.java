@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.utilities.Misc;
+import net.dodian.utilities.Utils;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -23,8 +24,10 @@ public class NpcProcessor implements Job {
             /* Clear the npc update! */
             try {
                 npc.clearUpdateFlags();
-                if(!npc.isFighting() && npc.isAlive())
+                if(!npc.isFighting() && npc.isAlive()) {
+                    npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
                     npc.getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

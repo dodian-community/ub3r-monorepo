@@ -176,16 +176,15 @@ public class ItemOnItem implements Packet {
         for(int i = 0; i < dyes.length; i++)
             if(itemUsed == dyes[i][0] || otherItem == dyes[i][0]) {
                 for(int dye = 0; dye < dyes.length; dye++)
-                    if(itemUsed == dyes[dye][1] || otherItem == dyes[dye][1]) {
+                    if((itemUsed == dyes[i][0] && otherItem == dyes[dye][1]) || (otherItem == dyes[i][0] && itemUsed == dyes[dye][1])) {
                         if(dyes[dye][1] != dyes[i][1]) {
-                            client.deleteItem(itemUsed, 1);
-                            client.deleteItem(otherItem, 1);
+                            client.deleteItem(itemUsed, itemUsedSlot, 1);
+                            client.deleteItem(otherItem, usedWithSlot,1);
                             client.addItemSlot(dyes[i][1], 1, itemUsed == dyes[dye][1] ? itemUsedSlot : usedWithSlot);
                         } else client.send(new SendMessage("There is no point in using the same color as the cape!"));
                     break;
                     }
             }
-
 
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();

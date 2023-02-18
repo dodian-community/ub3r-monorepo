@@ -112,9 +112,9 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
     val hitChance: Double
     val chance = Misc.chance(100000) / 1000
     if(t is Client) { //Pvp
-        val atkBonus = p.playerBonus[3]
+        val atkBonus = p.playerBonus[4]
         val atkLevel = p.getLevel(Skill.RANGED)
-        val defBonus = t.playerBonus[8]
+        val defBonus = t.playerBonus[9]
         val defLevel = t.getLevel(Skill.DEFENCE)
         val playerDef = defLevel * (defBonus + 64.0)
         val playerAccuracy = atkLevel * (atkBonus + 64.0)
@@ -125,7 +125,7 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
-        val atkBonus = p.playerBonus[3]
+        val atkBonus = p.playerBonus[4]
         val atkLevel = p.getLevel(Skill.RANGED)
         val defLevel = t.defence
         val defBonus = 0.0
