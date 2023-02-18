@@ -92,8 +92,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeBits(1, 0); // something??
         stream.writeBits(14, npc.getId());
         stream.writeBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
-        /* Not sure we can do it here! */
-        npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
     }
 
     @Override

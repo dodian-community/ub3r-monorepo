@@ -1111,7 +1111,8 @@ public abstract class Player extends Entity {
     }
 
     public int getMaxHealth() {
-        return getLevel(Skill.HITPOINTS) > this.maxHealth ? getLevel(Skill.HITPOINTS) : this.maxHealth;
+        int max = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
+        return max > this.maxHealth ? max : this.maxHealth;
     }
 
     public void setCrit(boolean crit) {
@@ -1140,13 +1141,13 @@ public abstract class Player extends Entity {
      * @return the combat level.
      */
     public int determineCombatLevel() {
-        int magLvl = getLevel(Skill.MAGIC);
-        int ranLvl = getLevel(Skill.RANGED);
-        int attLvl = getLevel(Skill.ATTACK);
-        int strLvl = getLevel(Skill.STRENGTH);
-        int defLvl = getLevel(Skill.DEFENCE);
-        int hitLvl = getLevel(Skill.HITPOINTS);
-        int prayLvl = getLevel(Skill.PRAYER);
+        int magLvl = Skills.getLevelForExperience(getExperience(Skill.MAGIC));
+        int ranLvl = Skills.getLevelForExperience(getExperience(Skill.RANGED));
+        int attLvl = Skills.getLevelForExperience(getExperience(Skill.ATTACK));
+        int strLvl = Skills.getLevelForExperience(getExperience(Skill.STRENGTH));
+        int defLvl = Skills.getLevelForExperience(getExperience(Skill.DEFENCE));
+        int hitLvl = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
+        int prayLvl = Skills.getLevelForExperience(getExperience(Skill.PRAYER));
         double mag = magLvl * 1.5;
         double ran = ranLvl * 1.5;
         double attstr = attLvl + strLvl;

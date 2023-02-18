@@ -171,9 +171,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the attack potion"));
-                    client.attackPot = 12.5;
+                    client.attackPot = 13.5;
                     client.refreshSkill(Skill.ATTACK);
                     if (item < 125) {
                         nextId = item + 2;
@@ -183,14 +182,6 @@ public class ClickItem implements Packet {
                         nextId = 229;
                     }
                     break;
-                case 757:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.send(new SendMessage("You drink the attack potion"));
-                    client.attackPot = 30;
-                    client.refreshSkill(Skill.ATTACK);
-                    break;
                 case 113:
                 case 115: // regular str
                 case 117:
@@ -199,9 +190,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the strength potion"));
-                    client.strengthPot = 12.5;
+                    client.strengthPot = 13.5;
                     client.refreshSkill(Skill.STRENGTH);
                     if (item < 119) {
                         nextId = item + 2;
@@ -217,9 +207,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the defense potion"));
-                    client.defensePot = 12.5;
+                    client.defensePot = 13.5;
                     client.refreshSkill(Skill.DEFENCE);
                     if (item < 137) {
                         nextId = item + 2;
@@ -237,9 +226,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the super strength potion"));
-                    client.strengthPot = 20.0;
+                    client.strengthPot = 21.0;
                     client.refreshSkill(Skill.STRENGTH);
                     if (item < 161) {
                         nextId = item + 2;
@@ -257,9 +245,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the super attack potion"));
-                    client.attackPot = 20.0;
+                    client.attackPot = 21.0;
                     client.refreshSkill(Skill.ATTACK);
                     if (item < 149) {
                         nextId = item + 2;
@@ -277,9 +264,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the ranging potion"));
-                    client.rangePot = 20.0;
+                    client.rangePot = 21.0;
                     client.refreshSkill(Skill.RANGED);
                     if (item < 173) {
                         nextId = item + 2;
@@ -297,9 +283,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
                     client.send(new SendMessage("You drink the super defense potion"));
-                    client.defensePot = 20.0;
+                    client.defensePot = 21.0;
                     client.refreshSkill(Skill.DEFENCE);
                     if (item < 167) {
                         nextId = item + 2;

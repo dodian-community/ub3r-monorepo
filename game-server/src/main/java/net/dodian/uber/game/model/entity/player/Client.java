@@ -93,7 +93,7 @@ public class Client extends Player implements Runnable {
 	/*
 	 * Danno: Last row all disabled. As none have effect.
 	 */
-	public boolean[] duelRule = {false, false, false, false, false, false, true, true, true, true, true};
+	public boolean[] duelRule = {false, false, false, false, false, true, true, true, true, true, true};
 
 	/*
 	 * Danno: Testing for armor restriction rules.
@@ -202,16 +202,17 @@ public class Client extends Player implements Runnable {
 	public void refreshSkill(Skill skill) {
 		try {
 			int out = getLevel(skill);
+			int level = Skills.getLevelForExperience(getExperience(skill));
 			if (skill == Skill.HITPOINTS) {
 				out = getCurrentHealth();
 			} else if (skill == Skill.ATTACK) {
-				out = (int) ((1 + (attackPot / 100)) * getLevel(skill));
+				out = (int) ((1 + (attackPot / 100)) * level);
 			} else if (skill == Skill.DEFENCE) {
-				out = (int) ((1 + (defensePot / 100)) * getLevel(skill));
+				out = (int) ((1 + (defensePot / 100)) * level);
 			} else if (skill == Skill.STRENGTH) {
-				out = (int) ((1 + (strengthPot / 100)) * getLevel(skill));
+				out = (int) ((1 + (strengthPot / 100)) * level);
 			} else if (skill == Skill.RANGED) {
-				out = (int) ((1 + (rangePot / 100)) * getLevel(skill));
+				out = (int) ((1 + (rangePot / 100)) * level);
 			}
 			setSkillLevel(skill.getId(), out, getExperience(skill));
 			setLevel(out, skill);
@@ -2289,7 +2290,6 @@ public class Client extends Player implements Runnable {
 		send(new SendString("", 6067));
 		send(new SendString("", 6071));
 		CombatStyleHandler.setWeaponHandler(this, -1);
-		PlayerUpdating.getInstance().update(this, getOutputStream());
 		setEquipment(getEquipment()[Equipment.Slot.HEAD.getId()], getEquipmentN()[Equipment.Slot.HEAD.getId()],
 				Equipment.Slot.HEAD.getId());
 		setEquipment(getEquipment()[Equipment.Slot.CAPE.getId()], getEquipmentN()[Equipment.Slot.CAPE.getId()],
@@ -2312,7 +2312,10 @@ public class Client extends Player implements Runnable {
 				Equipment.Slot.RING.getId());
 		setEquipment(getEquipment()[Equipment.Slot.WEAPON.getId()], getEquipmentN()[Equipment.Slot.WEAPON.getId()],
 				Equipment.Slot.WEAPON.getId());
-		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+		/* Bonus on gear! */
+		GetBonus();
+		WriteBonus();
+		//getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		resetItems(3214);
 		resetBank();
 		replaceDoors();
@@ -2328,6 +2331,7 @@ public class Client extends Player implements Runnable {
 		//RegionMusic.sendSongSettings(this); //Music from client 2.95
 		setConfigIds();
 		send(new SendMessage("Welcome to Uber Server"));
+		PlayerUpdating.getInstance().update(this, getOutputStream());
 		//initialized = true;
 	}
 
@@ -2437,7 +2441,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Time's up (went " + (now - lastAction) + " over)"));
 			checkTime = false;
 		}
-		if ((attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) && now - potionUpdate >= 30000) {
+		if ((attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) && now - potionUpdate >= 60000) {
 			updatePotions();
 		}
 		if (pickupWanted) {
@@ -7778,38 +7782,22 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void updatePotions() {
-		int attack = (int) ((1 + (attackPot / 100)) * getLevel(Skill.ATTACK));
-		int defense = (int) ((1 + (defensePot / 100)) * getLevel(Skill.DEFENCE));
-		int strength = (int) ((1 + (strengthPot / 100)) * getLevel(Skill.STRENGTH));
-		int range = (int) ((1 + (rangePot / 100)) * getLevel(Skill.RANGED));
-		send(new SendString(String.valueOf(attack), 4004));
-		send(new SendString(String.valueOf(strength), 4006));
-		send(new SendString(String.valueOf(defense), 4008));
-		send(new SendString(String.valueOf(range), 4010));
 		potionUpdate = System.currentTimeMillis();
 		if (attackPot > 0.0) {
-			attackPot -= 1;
+			attackPot = attackPot - 1 > 0 ? attackPot-1 : 0.0;
+			refreshSkill(Skill.ATTACK);
 		}
 		if (defensePot > 0.0) {
-			defensePot -= 1;
+			defensePot = defensePot - 1 > 0 ? defensePot-1 : 0.0;
+			refreshSkill(Skill.DEFENCE);
 		}
 		if (strengthPot > 0.0) {
-			strengthPot -= 1;
+			strengthPot = strengthPot - 1 > 0 ? strengthPot-1 : 0.0;
+			refreshSkill(Skill.STRENGTH);
 		}
 		if (rangePot > 0.0) {
-			rangePot -= 1;
-		}
-		if (attackPot < 0.0) {
-			attackPot = 0.0;
-		}
-		if (defensePot < 0.0) {
-			defensePot = 0.0;
-		}
-		if (strengthPot < 0.0) {
-			strengthPot = 0.0;
-		}
-		if (rangePot < 0.0) {
-			rangePot = 0.0;
+			rangePot = rangePot - 1 > 0 ? rangePot-1 : 0.0;
+			refreshSkill(Skill.RANGED);
 		}
 	}
 

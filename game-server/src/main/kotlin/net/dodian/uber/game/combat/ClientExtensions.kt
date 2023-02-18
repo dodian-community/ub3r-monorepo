@@ -176,6 +176,12 @@ fun Client.getRangedStr(): Int {
         3844 -> 10
         else -> 0
     }
+    /* Ring */
+    rangedStr += when(equipment[Equipment.Slot.RING.id]) {
+        773 -> 1000
+        4202 -> 4
+        else -> 0
+    }
     return rangedStr
 }
 
