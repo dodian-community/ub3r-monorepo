@@ -5,8 +5,11 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.party.Balloons;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -25,6 +28,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void update(Player player, Stream stream) {
+        Client c = ((Client) player);
         Stream updateBlock = new Stream(new byte[10000]);
         updateBlock.currentOffset = 0;
 
@@ -32,13 +36,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.createFrame(114);
             stream.writeWordBigEndian(Server.updateSeconds * 50 / 30);
         }
-        if (player.didMapRegionChange()) {
-            stream.createFrame(73);
-            stream.writeWordA(player.mapRegionX + 6);
-            stream.writeWord(player.mapRegionY + 6);
-            ((Client) player).updateItems();
+        if(player.didMapRegionChange()) {
+            c.getOutputStream().createFrame(73);
+            c.getOutputStream().writeWordA(player.mapRegionX + 6);
+            c.getOutputStream().writeWord(player.mapRegionY + 6);
         }
-        PlayerUpdating.updateLocalPlayerMovement(player, stream);
+        updateLocalPlayerMovement(player, stream);
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
         player.getUpdateFlags().setRequired(UpdateFlag.CHAT, false);
         appendBlockUpdate(player, updateBlock);
@@ -87,10 +90,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
 
-    public static void updateLocalPlayerMovement(Player player, Stream stream) {
+    public void updateLocalPlayerMovement(Player player, Stream stream) {
+        stream.createFrameVarSizeWord(81);
+        stream.initBitAccess();
         if (player.didTeleport()) {
-            stream.createFrameVarSizeWord(81);
-            stream.initBitAccess();
             stream.writeBits(1, 1);
             stream.writeBits(2, 3); // updateType
             stream.writeBits(2, player.getPosition().getZ());
@@ -98,32 +101,26 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
             stream.writeBits(7, player.getCurrentY());
             stream.writeBits(7, player.getCurrentX());
-            return;
-        }
+        } else
         if (player.getPrimaryDirection() == -1) {
-            stream.createFrameVarSizeWord(81);
-            stream.initBitAccess();
             if (player.getUpdateFlags().isUpdateRequired()) {
                 stream.writeBits(1, 1);
                 stream.writeBits(2, 0);
             } else
                 stream.writeBits(1, 0);
-        } else {
-            stream.createFrameVarSizeWord(81);
-            stream.initBitAccess();
-            stream.writeBits(1, 1);
+        } else
             if (player.getSecondaryDirection() == -1) {
+                stream.writeBits(1, 1);
                 stream.writeBits(2, 1);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
                 stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
             } else {
+                stream.writeBits(1, 1);
                 stream.writeBits(2, 2);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
                 stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
-                /* Run energy if need be! */
             }
-        }
     }
 
 
@@ -302,8 +299,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             } else {
                 stream.writeByteA(player.isCrit() ? 3 : 1);
             }
-            stream.writeByteC(player.getCurrentHealth()); // Their current hp, for HP bar
-            stream.writeByte(Skills.getLevelForExperience(player.getExperience(Skill.HITPOINTS))); // Their
+            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
+            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
+            stream.writeByteC(value);
+            stream.writeByte(100);
             player.setCrit(false); // bar
             player.setInCombat(true);
             player.setLastCombat(System.currentTimeMillis());
@@ -320,8 +319,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             } else {
                 stream.writeByteS(player.isCrit() ? 3 : 1);
             }
-            stream.writeByte(player.getCurrentHealth()); // Their current hp, for HP bar
-            stream.writeByte(Skills.getLevelForExperience(player.getExperience(Skill.HITPOINTS))); // Their
+            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
+            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
+            stream.writeByte(value);
+            stream.writeByte(100);
             player.setCrit(false); // bar
             player.setInCombat(true);
             player.setLastCombat(System.currentTimeMillis());

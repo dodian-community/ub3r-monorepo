@@ -30,7 +30,7 @@ public class GroundItemProcessor implements Job {
                 for (int i = 0; i < PlayerHandler.players.length; i++) {
                     Client p = Server.playerHandler.getClient(i);
                     if (p != null && Server.itemManager.isTradable(item.id) && p.dbId != item.playerId
-                            && Math.abs(p.getPosition().getX() - item.x) < 114 && Math.abs(p.getPosition().getY() - item.y) < 114) {
+                            && Math.abs(p.getPosition().getX() - item.x) <= 114 && Math.abs(p.getPosition().getY() - item.y) <= 114 && p.getPosition().getZ() == item.z) {
                         p.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                     }
                 }

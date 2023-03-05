@@ -3,6 +3,8 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.item.ItemHandler;
+import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
@@ -34,7 +36,7 @@ public class ItemOnItem implements Packet {
         int otherItem = client.playerItems[usedWithSlot] - 1;
         boolean knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605) ? true : false;
         if ((itemUsed == 2383 && useWith == 2382) || (itemUsed == 2382 && useWith == 2383)) {
-            if (client.getLevel(Skill.CRAFTING) >= 60) {
+            if (client.getSkillLevel(Skill.CRAFTING) >= 60) {
                 client.deleteItem(itemUsed, itemUsedSlot, 1);
                 client.deleteItem(otherItem, usedWithSlot, 1);
                 client.addItem(989, 1);
@@ -53,7 +55,7 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("Need premium to mix these pots!"));
                     return;
                 }
-                if (client.getLevel(Skill.HERBLORE) < Utils.req[h]) {
+                if (client.getSkillLevel(Skill.HERBLORE) < Utils.req[h]) {
                     client.send(new SendMessage("Requires herblore level " + Utils.req[h]));
                     return;
                 }
@@ -185,6 +187,30 @@ public class ItemOnItem implements Packet {
                     break;
                     }
             }
+
+        int[] otherSlayerItems = {8923, 6708, 4166};
+        boolean maskCreation = false, blackmask = (itemUsed == 8921 && otherItem != 11784) || (itemUsed == 11784 && otherItem != 8921) || (otherItem == 8921 && itemUsed != 11784) || (otherItem == 11784 && itemUsed != 8921);
+        if(blackmask) {
+            for(int i = 0; i < otherSlayerItems.length && !maskCreation; i++)
+                if(itemUsed == otherSlayerItems[i] || otherItem == otherSlayerItems[i])
+                    maskCreation = true;
+            if(maskCreation) {
+                if(client.getSkillLevel(Skill.CRAFTING) >= 70) {
+                    boolean gotItems = true;
+                    for(int i = 0; i < otherSlayerItems.length && gotItems; i++)
+                        if(!client.playerHasItem(otherSlayerItems[i])) {
+                            gotItems = false;
+                            client.send(new SendMessage("You are missing " + Server.itemManager.getName(otherSlayerItems[i]).toLowerCase() + " in order to craft the " + Server.itemManager.getName(itemUsed == 8921 || otherItem == 8921 ? 11864 : 11865).toLowerCase() + "!"));
+                        }
+                    if(gotItems) {
+                        for(int i = 0; i < otherSlayerItems.length && gotItems; i++)
+                            client.deleteItem(otherSlayerItems[i], 1);
+                        client.deleteItem(itemUsed == 8921 || otherItem == 8921 ? 8921: 11784, 1);
+                        client.addItem(itemUsed == 8921 || otherItem == 8921 ? 11864 : 11865, 1);
+                    }
+                } else client.send(new SendMessage("You need level 70 crafting to combine these items!"));
+            }
+        }
 
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();

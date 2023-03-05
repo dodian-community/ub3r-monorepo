@@ -33,7 +33,7 @@ public class Agility {
             c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
             EventManager.getInstance().registerEvent(new Event(time) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -92,7 +92,7 @@ public class Agility {
         c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -147,7 +147,7 @@ public class Agility {
             int part = 0;
 
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -195,7 +195,7 @@ public class Agility {
         c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -212,9 +212,6 @@ public class Agility {
         if (c.UsingAgility) {
             return;
         }
-		/*if (c.getPosition().getX() != 2551 && c.getPosition().getY() != 3546) {
-			return;
-		}*/
         if (c.getLevel(Skill.AGILITY) < 40) {
             c.send(new SendMessage("You need level 40 agility to use this!"));
             return;
@@ -228,7 +225,7 @@ public class Agility {
                 int stage = 0;
 
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -243,7 +240,7 @@ public class Agility {
                         c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
                         EventManager.getInstance().registerEvent(new Event(time) {
                             public void execute() {
-                                if (c == null || c.disconnected) {
+                                if (c.disconnected) {
                                     stop();
                                     return;
                                 }
@@ -265,7 +262,7 @@ public class Agility {
             c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
             EventManager.getInstance().registerEvent(new Event(time) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -316,7 +313,7 @@ public class Agility {
         c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -354,7 +351,7 @@ public class Agility {
         c.agilityCourseStage = c.agilityCourseStage >= 4 ? 5 : c.agilityCourseStage;
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -387,7 +384,7 @@ public class Agility {
         c.agilityCourseStage = c.agilityCourseStage >= 5 ? 6 : c.agilityCourseStage;
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -419,7 +416,7 @@ public class Agility {
         c.AddToCords(2, 0, time);
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -449,33 +446,33 @@ public class Agility {
                 c.send(new SendMessage("You need level 70 agility to use this!"));
                 return;
             }
-            final int oldEmote = c.getWalkAnim();
-            c.setWalkAnim(746);
-            c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-            c.AddToCords(0, 13, 7800);
-            c.UsingAgility = true;
-            c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                int part = 0;
+            if(c.getPosition().getX() == 3004 && c.getPosition().getY() == 3937) {
+                final int oldWalk = c.getWalkAnim(), oldRun = c.getRunAnim();
+                int distance = 13;
+                c.requestAnim(746, 0);
+                c.setAgilityEmote(747, 747);
+                c.AddToCords(0, distance, distance * 600);
+                c.UsingAgility = true;
+                c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
+                EventManager.getInstance().registerEvent(new Event(600) {
+                    int part = 0;
 
-                public void execute() {
-                    if (c == null || c.disconnected) {
-                        stop();
-                        return;
+                    public void execute() {
+                        if (c.disconnected) {
+                            stop();
+                            return;
+                        }
+                        part++;
+                        if (part == distance - 1) {
+                            c.requestAnim(748, 1);
+                            c.setAgilityEmote(oldWalk, oldRun);
+                            giveEndExperience(1000);
+                            c.triggerRandom(1000);
+                            stop();
+                        }
                     }
-                    part++;
-                    if (part == 1)
-                        c.setWalkAnim(747);
-                    else if (part == 14) {
-                        c.requestAnim(748, 0);
-                        c.setWalkAnim(oldEmote);
-                        c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                        giveEndExperience(1000);
-                        c.triggerRandom(1000);
-                        stop();
-                    }
-                }
-            });
+                });
+            }
         }
     }
 
@@ -487,53 +484,32 @@ public class Agility {
             c.send(new SendMessage("You need level 70 agility to use this!"));
             return;
         }
-
-        int time = 3500;
         c.UsingAgility = true;
-        final int oldEmote = c.getWalkAnim();
-        if (c.getPosition().getY() >= 3950 && c.getPosition().getY() <= 3952 && c.getPosition().getX() >= 3003 && c.getPosition().getX() <= 3006) {
-            int distance = 3953 - c.getPosition().getY();
-            c.AddToCords(0, distance, time);
-            EventManager.getInstance().registerEvent(new Event((distance * 600) + 600) {
+        final int oldWalk = c.getWalkAnim(), oldRun = c.getRunAnim();
+        if (c.getPosition().getY() == 3953 && c.getPosition().getX() >= 3003 && c.getPosition().getX() <= 3006) {
+            System.out.println("test..." + c.getPosition().getY() + ", " + c.getPosition().getX());
+            int distance = 3958 - c.getPosition().getY();
+            c.setAgilityEmote(1501, 1501);
+            c.AddToCords(0, distance, distance * 600);
+            EventManager.getInstance().registerEvent(new Event(distance * 600) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
-                    c.setWalkAnim(1501);
-                    c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                    c.AddToCords(0, 5, time);
                     c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                    EventManager.getInstance().registerEvent(new Event(time) {
+                    EventManager.getInstance().registerEvent(new Event(distance * 600) {
                         public void execute() {
-                            if (c == null || c.disconnected) {
+                            if (c.disconnected) {
                                 stop();
                                 return;
                             }
                             giveEndExperience(500);
-                            c.setWalkAnim(oldEmote);
+                            c.setAgilityEmote(oldWalk, oldRun);
                             c.triggerRandom(500);
                             stop();
                         }
                     });
-                    stop();
-                }
-            });
-        } else if (c.getPosition().getY() == 3953 && c.getPosition().getX() >= 3003 && c.getPosition().getX() <= 3006) {
-            c.setWalkAnim(1501);
-            c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-            c.AddToCords(0, 5, time);
-            c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-            EventManager.getInstance().registerEvent(new Event(time) {
-                public void execute() {
-                    if (c == null || c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    giveEndExperience(500);
-                    c.setWalkAnim(oldEmote);
-                    c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                    c.triggerRandom(500);
                     stop();
                 }
             });
@@ -561,7 +537,7 @@ public class Agility {
             c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
             EventManager.getInstance().registerEvent(new Event(4000) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -585,7 +561,7 @@ public class Agility {
                 int stage = 0;
 
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -600,7 +576,7 @@ public class Agility {
                         c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
                         EventManager.getInstance().registerEvent(new Event(time) {
                             public void execute() {
-                                if (c == null || c.disconnected) {
+                                if (c.disconnected) {
                                     stop();
                                     return;
                                 }
@@ -622,7 +598,7 @@ public class Agility {
             c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
             EventManager.getInstance().registerEvent(new Event(time) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
@@ -637,14 +613,7 @@ public class Agility {
     }
 
     public void WildyClimb() {
-        int[] x = {2993, 2994, 2995};
-        boolean bool = false;
-        for (int i = 0; i < x.length; i++) {
-            if (c.getPosition().getX() == x[i] && c.getPosition().getY() == 3937) {
-                bool = true;
-            }
-        }
-        if (bool) {
+        if (c.getPosition().getX() >= 2993 && c.getPosition().getX() <= 2996 && c.getPosition().getY() == 3937) {
             if (c.UsingAgility) {
                 return;
             }
@@ -654,17 +623,16 @@ public class Agility {
             }
             final int oldEmote = c.getWalkAnim();
             c.setWalkAnim(737);
-            c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+            //c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             c.UsingAgility = true;
-            c.AddToCords(0, -5, 3500);
+            c.AddToCords(0, -4, 3500);
             EventManager.getInstance().registerEvent(new Event(3500) {
                 public void execute() {
-                    if (c == null || c.disconnected) {
+                    if (c.disconnected) {
                         stop();
                         return;
                     }
                     c.setWalkAnim(oldEmote);
-                    c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                     if (c.agilityCourseStage == 4) {
                         giveEndExperience(2700);
                         c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33));
@@ -695,7 +663,7 @@ public class Agility {
             int stage = 0;
 
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -715,7 +683,7 @@ public class Agility {
                     c.AddToCords(0, distance, time);
                     EventManager.getInstance().registerEvent(new Event(time) {
                         public void execute() {
-                            if (c == null || c.disconnected) {
+                            if (c.disconnected) {
                                 stop();
                                 return;
                             }
@@ -751,7 +719,7 @@ public class Agility {
         c.AddToCords(0, distance, time);
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }
@@ -778,7 +746,7 @@ public class Agility {
         c.AddToCords(distance, 0, time);
         EventManager.getInstance().registerEvent(new Event(time) {
             public void execute() {
-                if (c == null || c.disconnected) {
+                if (c.disconnected) {
                     stop();
                     return;
                 }

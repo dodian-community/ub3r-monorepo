@@ -62,13 +62,13 @@ fun Client.handleRanged(): Int {
         send(SendMessage("You're out of arrows!"))
         return 0
     }
-    val maxHit = rangedMaxHit()
+    var maxHit = rangedMaxHit().toDouble()
     if (target is Npc) { // Slayer damage!
         val npcId = Server.npcManager.getNpc(target.slot).id
         if(getSlayerDamage(npcId, true) == 2)
-            maxHit * 1.2
+            maxHit *= 1.2
     }
-    var hit = Utils.random(maxHit)
+    var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9
     if(equipment[Equipment.Slot.SHIELD.id]==4224)
         criticalChance * 1.5

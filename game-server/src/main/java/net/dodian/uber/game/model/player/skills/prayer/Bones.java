@@ -13,7 +13,7 @@ public enum Bones {
     RAURG_BONES(4832, 585),
     DRAGON_BONES(536, 735),
     DAGANNOTH_BONES(6729, 1050),
-    OURG_BONES(4834, 1200); //Ourg bones = boss bones!
+    OURG_BONES(4834, 1200);
 
     private int itemId, experience;
 

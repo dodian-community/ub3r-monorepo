@@ -22,15 +22,10 @@ public class NpcProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         for (Npc npc : Server.npcManager.getNpcs()) {
             /* Clear the npc update! */
-            try {
-                npc.clearUpdateFlags();
-                if(!npc.isFighting() && npc.isAlive()) {
-                    npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
-                    npc.getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            npc.clearUpdateFlags();
+            if(!npc.isFighting() && npc.isAlive())
+                npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
+
             long now = System.currentTimeMillis();
         if(now - npc.lastBoostedStat >= 30000) { //Stat boost!
             npc.changeStat();

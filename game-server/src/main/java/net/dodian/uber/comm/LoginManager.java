@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.security.DropLog;
 import net.dodian.utilities.DbTables;
 
 import java.sql.ResultSet;
@@ -177,6 +178,7 @@ public class LoginManager {
                                 } else if(p.freeSlots() == 0 || !p.addItem(id, amount)) {
                                     GroundItem item = new GroundItem(p.getPosition().getX(), p.getPosition().getY(), p.getPosition().getZ(), Integer.parseInt(parse2[1]), Integer.parseInt(parse2[2]), p.getSlot(), -1);
                                     Ground.items.add(item);
+                                    DropLog.recordDrop(p, item.id, item.amount, "Player", p.getPosition().copy(), "Equipment check drop");
                                     p.send(new SendMessage("<col=FF0000>You dropped the " + Server.itemManager.getName(Integer.parseInt(parse2[1])).toLowerCase() + " on the floor!!!"));
                                 }
                             }
