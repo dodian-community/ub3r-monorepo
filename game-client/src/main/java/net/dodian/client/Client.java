@@ -12861,4 +12861,5 @@ public class Client extends RSApplet {
         this.anInt1186 += i * 3;
         this.anInt1187 += (j << 1);
     }
+
 }

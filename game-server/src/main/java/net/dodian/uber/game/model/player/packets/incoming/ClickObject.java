@@ -7,7 +7,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -18,7 +17,6 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.Sound;
 import net.dodian.uber.game.model.player.skills.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Thieving;
@@ -98,7 +96,6 @@ public class ClickObject implements Packet {
         }
         client.resetAction(false);
         client.setFocus(objectPosition.getX(), objectPosition.getY());
-        client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         if (xDiff > 5 || yDiff > 5) {
             return;
         }
@@ -840,6 +837,14 @@ public class ClickObject implements Packet {
         if (objectID == 15656) {
             client.teleportToX = 2614;
             client.teleportToY = 9505;
+        }
+        if(objectID == 409) {
+            System.out.println("test.." + client.getMaxPrayer() + ", " + client.getCurrentPrayer());
+            if(client.getCurrentPrayer() != client.getMaxPrayer()) {
+                client.setCurrentPrayer(client.getMaxPrayer());
+                client.refreshSkill(Skill.PRAYER);
+                client.send(new SendMessage("You restore your prayer points!"));
+            } else client.send(new SendMessage("You are at maximum prayer points!"));
         }
         //if (objectID == 6836) {
         //  client.skillX = objectPosition.getX();

@@ -192,4 +192,8 @@ public class Position {
         return other.getX() == this.getX() && other.getY() == this.getY() && other.getZ() == this.getZ();
     }
 
+    public String toString() {
+        return "x=" + this.x + " y=" + this.y + " z=" + this.z;
+    }
+
 }

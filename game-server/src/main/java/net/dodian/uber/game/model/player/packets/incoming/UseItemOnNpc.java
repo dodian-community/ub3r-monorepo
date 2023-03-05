@@ -34,6 +34,10 @@ public class UseItemOnNpc implements Packet {
             client.NpcDialogueSend = true;
             return;
         }
+        if (item == 4155) {
+            tempNpc.showGemConfig(client);
+            return;
+        }
 
         if (npcId == 2794) {
             if (item == 1735) {

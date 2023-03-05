@@ -116,6 +116,8 @@ create table if not exists characters
     kc              int                  default 0                                            null,
     dc              int                  default 0                                            null,
     explock         tinyint(2)           default 0                                            null,
+    travel          varchar(10)         default '0:0:0:0:0'                                          not null,
+    unlocks          varchar(10)         default ''                                          not null,
     INDEX (id, name)
 )
     engine = InnoDB;

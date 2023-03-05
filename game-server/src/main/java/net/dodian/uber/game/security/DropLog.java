@@ -30,14 +30,14 @@ public class DropLog extends LogEntry {
      * @param player The player dropping the item.
      * @param id   The item being dropped.
      */
-    public static void recordDrop(Player player, int id, int amount, String type, Position pos) {
+    public static void recordDrop(Player player, int id, int amount, String type, Position pos, String reason) {
         if (getGameWorldId() > 1) {
             return;
         }
         try {
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO " + DbTables.GAME_LOGS_ITEM_DROPS + "(username, item, amount, type, timestamp, x, y, z) VALUES ('" + player.getPlayerName()
-                    + "', '" + id + "', '" + amount + "', '" + type.replaceAll("_", " ") + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "')";
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_ITEM_DROPS + "(username, item, amount, type, timestamp, x, y, z, reason) VALUES ('" + player.getPlayerName()
+                    + "', '" + id + "', '" + amount + "', '" + type.replaceAll("_", " ") + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '"+reason+"')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {

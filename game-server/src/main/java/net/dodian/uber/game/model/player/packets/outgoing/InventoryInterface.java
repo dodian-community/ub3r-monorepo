@@ -17,7 +17,7 @@ public class InventoryInterface implements OutgoingPacket {
         client.getOutputStream().createFrame(248);
         client.getOutputStream().writeWordA(interfaceId);
         client.getOutputStream().writeWord(inventoryId);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -49,7 +50,7 @@ public class ItemOnObject implements Packet {
             client.lastAction = System.currentTimeMillis();
             client.skillX = UsedOnX;
             client.setSkillY(UsedOnY);
-            client.stillgfx(624, client.skillY, client.skillX, 15, 0);
+            client.stillgfx(624, new Position(client.skillY, client.skillX, client.getPosition().getZ()), 0);
             client.boneItem = ItemID;
         }
         if (UsedOnObjectID == 2781 || UsedOnObjectID == 2728 || UsedOnObjectID == 26181) { // Cooking range!

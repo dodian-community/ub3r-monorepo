@@ -155,7 +155,7 @@ public class Balloons {
             if (p != null) {
                 Client person = (Client) p;
                 if (person.distanceToPoint(pos.getX(), pos.getY()) <= 104) {
-                    person.ReplaceObject2(pos.getX(), pos.getY(), id, 0, 10);
+                    person.ReplaceObject2(pos, id, 0, 10);
                     if (person.isPartyInterface)
                         displayItems(person);
                 }
@@ -169,7 +169,7 @@ public class Balloons {
             if (pos.getX() == balloon.x && pos.getY() == balloon.y) {
                 balloons.remove(balloon);
                 c.requestAnim(794, 0);
-                c.ReplaceObject2(balloon.x, balloon.y, balloon.id + 8, 0, 10);
+                c.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10);
                 EventManager.getInstance().registerEvent(new Event(600) {
                     @Override
                     public void execute() {
@@ -193,12 +193,12 @@ public class Balloons {
                     Player p = PlayerHandler.players[slot];
                     if (p != null || p == c) {
                         Client person = (Client) p;
-                        if (person.distanceToPoint(balloon.x, balloon.y) <= 104) {
-                            person.ReplaceObject2(balloon.x, balloon.y, balloon.id + 8, 0, 10);
+                        if (person.distanceToPoint(balloon.x, balloon.y) <= 104 && person.getPosition().getZ() == balloon.z) {
+                            person.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10);
                             EventManager.getInstance().registerEvent(new Event(1200) {
                                 @Override
                                 public void execute() { //To delete the object after 2 ticks!
-                                    person.ReplaceObject2(balloon.x, balloon.y, -1, 0, 10);
+                                    person.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), -1, 0, 10);
                                     stop();
                                 }
                             });
@@ -372,8 +372,8 @@ public class Balloons {
 
     public static void updateBalloons(Client c) {
         for (Object balloon : balloons) {
-            if (c.distanceToPoint(balloon.x, balloon.y) <= 104)
-                c.ReplaceObject2(balloon.x, balloon.y, balloon.id, 0, 10);
+            if (c.distanceToPoint(balloon.x, balloon.y) <= 104 && c.getPosition().getZ() == balloon.z)
+                c.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), balloon.id, 0, 10);
         }
     }
 

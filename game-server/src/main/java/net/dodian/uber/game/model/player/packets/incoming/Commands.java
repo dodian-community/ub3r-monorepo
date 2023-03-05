@@ -137,6 +137,16 @@ public class Commands implements Packet {
                     client.reloadHp = !client.reloadHp;
                     client.send(new SendMessage("You set reload hp as " + client.reloadHp));
                 }
+                if (cmd[0].equalsIgnoreCase("herbs")) {
+                    boolean found = false;
+                    String query = "select * from " + DbTables.GAME_NPC_DROPS + " where itemid='217' || itemid='218' || itemid='267' || itemid='268'";
+                    ResultSet results = getDbConnection().createStatement().executeQuery(query);
+                    while (results.next()) {
+                        int itemId = results.getInt("itemid");
+                        String itemName = Server.itemManager.getName(itemId);
+                        System.out.println(Server.npcManager.getName(results.getInt("npcid")) + " drops "+results.getInt("amt_min")+" - "+results.getInt("amt_max")+" of " + itemName.toLowerCase() + " "+ (!Server.itemManager.isNote(itemId) ? "(note)" : "") +" with a chance of " + (results.getDouble("percent") + "%"));
+                    }
+                }
                 if (cmd[0].equals("testboss")) {
                     client.triggerTele(3349,3343,0,false);
                 }
@@ -294,7 +304,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("gfx")) {
                     int id = Integer.parseInt(cmd[1]);
-                    client.animation(id, client.getPosition().getY(), client.getPosition().getX());
+                    client.animation(id, client.getPosition());
                     client.send(new SendMessage("You set gfx to: " + id));
                 }
                 if (command.startsWith("random")) {
@@ -1295,6 +1305,9 @@ public class Commands implements Packet {
                         client.respawnBoss(2266);
                     else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                         client.respawnBoss(3127);
+                }
+                if (command.startsWith("wild")) {
+                    client.triggerTele(3086, 3538, 0,false);
                 }
                 if (command.startsWith("bosstele")) {
                     String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");

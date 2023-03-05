@@ -215,6 +215,42 @@ public class Npc extends Entity {
         client.showInterface(8134);
         client.flushOutStream();
     }
+    public void showGemConfig(Client client) {
+        int magicDamage = (int) Math.floor(maxHit * this.getMagic());
+        CalculateMaxHit(false);
+        int rangeMaxHit = maxHit;
+        CalculateMaxHit(true);
+        String[] commando = {
+                "combat - " + data.getCombat(),
+                "hitpoints - " + data.getHP(),
+                "respawn - " + data.getRespawn() + " seconds",
+                "attack - " + this.getAttack(),
+                "strength - " + this.getStrength(),
+                "defence - " + this.getDefence(),
+                "ranged - " + this.getRange(),
+                "magic dmg - " + String.format("%3.1f", this.getMagic() * 100D) + "% (maxHit: " + magicDamage + ")",
+                "Max hit Range: " + rangeMaxHit,
+                "Max hit Melee: " + this.maxHit
+        };
+        client.send(new SendString("@dre@               Uber 3.0 Npc Data", 8144));
+        client.clearQuestInterface();
+        int line = 8145;
+        int count = 0;
+        for (int i = 0; i < commando.length; i++) {
+            client.send(new SendString(commando[i], line));
+            line++;
+            count++;
+            if (line == 8146)
+                line = 8147;
+            if (line == 8196)
+                line = 12174;
+            if (count > 100)
+                break;
+        }
+        client.sendQuestSomething(8143);
+        client.showInterface(8134);
+        client.flushOutStream();
+    }
 
     public void dealDamage(Client client, int hitDiff, boolean crit) {
         if (!alive || (currentHealth < 1 && maxHealth > 0))
@@ -399,7 +435,7 @@ public class Npc extends Entity {
                                 + target.GetItemName(drop.getId()).toLowerCase() + " from " + npcName().toLowerCase() + (killCount(target) > 0 && boss ? " (Kill: " + killCount(target) + ")" : "");
                         target.yell("<col=FFFF00>System<col=000000> <col=FFFF00>" + yell);
                     }
-                    DropLog.recordDrop(target, drop.getId(), drop.getAmount(), Server.npcManager.getName(id), getPosition().copy());
+                    DropLog.recordDrop(target, drop.getId(), drop.getAmount(), Server.npcManager.getName(id), getPosition().copy(), "Npc Drop");
                 } else if (!itemDropped && checkChance < 100.0)
                     currentChance += checkChance;
             }
@@ -636,7 +672,7 @@ public class Npc extends Entity {
         switch(getId()) {
             case 1611: //Battle mage
             case 2585: // Abyssal guardian boss!
-                if(Misc.chance(3) == 1) {
+                if(Misc.chance(5) == 1) {
                     int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     requestAnim(data.getAttackEmote() + 1, 0);
                     c.callGfxMask(getId() == 2585 ? 89 : 76, 100);
@@ -645,7 +681,7 @@ public class Npc extends Entity {
                 } else attack = false;
             break;
             case 1432: //Black demon
-                if(Misc.chance(4) == 1) { //Cast magic attack!
+                if(Misc.chance(5) == 1) { //Cast magic attack!
                     int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     requestAnim(69, 0);
                     c.stillgfx(381, c.getPosition().getY(), c.getPosition().getX());
@@ -654,7 +690,7 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 1443: //Jungle demon
-                if(Misc.chance(3) == 1) { //Cast magic attack!
+                if(Misc.chance(5) == 1) { //Cast magic attack!
                     boolean heal = Misc.random(2) == 1;
                     int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     requestAnim(69, 0);
@@ -666,7 +702,7 @@ public class Npc extends Entity {
                 } else attack = false;
             break;
             case 4922: //Ice queen
-                if(Misc.chance(4) == 1) { //Cast magic attack!
+                if(Misc.chance(5) == 1) { //Cast magic attack!
                     int hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     requestAnim(1979, 0);
                     c.stillgfx(369, c.getPosition().getY(), c.getPosition().getX());

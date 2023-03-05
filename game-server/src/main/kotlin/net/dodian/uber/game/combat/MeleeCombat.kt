@@ -32,15 +32,15 @@ fun Client.handleMelee(): Int {
             return 0
         }
         sendAnimation(emote)
-        val maxHit = meleeMaxHit()
+        var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
              val npcId = Server.npcManager.getNpc(target.slot).id
              if(getSlayerDamage(npcId, false) == 1)
-                 maxHit * 1.15
+                 maxHit *= 1.15
              else if(getSlayerDamage(npcId, false) == 2)
-                 maxHit * 1.2
+                 maxHit *= 1.2
          }
-        var hit = Utils.random(maxHit)
+        var hit = Utils.random(maxHit.toInt())
         val criticalChance = getLevel(Skill.AGILITY) / 9
         if(equipment[Equipment.Slot.SHIELD.id]==4224)
             criticalChance * 1.5
@@ -145,7 +145,7 @@ fun Client.handleSpecial(hit: Int): Int {
                     newHit += bonusSpec
                     requestAnim(emoteSpec, 0)
                     // TODO: Uhm? Why y then x?
-                    animation(animationSpec, selectedNpc.position.y, selectedNpc.position.x)
+                    animation(animationSpec, selectedNpc.position)
                 }
             }
         } else requestAnim(emote, 0)

@@ -44,9 +44,10 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 import static net.dodian.utilities.DatabaseKt.*;
-import static net.dodian.utilities.DotEnvKt.getGameClientCustomVersion;
+import static net.dodian.utilities.DotEnvKt.*;
 
 public class Client extends Player implements Runnable {
 
@@ -114,7 +115,6 @@ public class Client extends Player implements Runnable {
 	public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
 	public boolean adding = false;
 	public ArrayList<RS2Object> objects = new ArrayList<>();
-	public String[] lastMessage = new String[3];
 	public long animationReset = 0, lastButton = 0;
 	public int cookAmount = 0, cookIndex = 0, enterAmountId = 0;
 	public boolean cooking = false;
@@ -167,12 +167,11 @@ public class Client extends Player implements Runnable {
 	public long[] globalCooldown = new long[10];
 	public boolean validLogin = false;
 
-	public void ReplaceObject2(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
-		if (!withinDistance(new int[]{objectX, objectY, 60}))
+	public void ReplaceObject2(Position pos, int NewObjectID, int Face, int ObjectType) {
+		if (!withinDistance(new int[]{pos.getX(), pos.getY(), 60}) || getPosition().getZ() != pos.getZ())
 			return;
-		getOutputStream().createFrame(85);
-		getOutputStream().writeByteC(objectY - (mapRegionY * 8));
-		getOutputStream().writeByteC(objectX - (mapRegionX * 8));
+
+		setMap(pos);
 		getOutputStream().createFrame(101);
 		getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
 		getOutputStream().writeByte(0);
@@ -183,7 +182,6 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeWordBigEndian(NewObjectID);
 			getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
 		}
-		flushOutStream();
 	}
 
 	/**
@@ -205,6 +203,8 @@ public class Client extends Player implements Runnable {
 			int level = Skills.getLevelForExperience(getExperience(skill));
 			if (skill == Skill.HITPOINTS) {
 				out = getCurrentHealth();
+			} else if (skill == Skill.PRAYER) {
+				out = getCurrentPrayer();
 			} else if (skill == Skill.ATTACK) {
 				out = (int) ((1 + (attackPot / 100)) * level);
 			} else if (skill == Skill.DEFENCE) {
@@ -261,21 +261,19 @@ public class Client extends Player implements Runnable {
 		return (int) Math.sqrt(Math.pow(getPosition().getX() - pointX, 2) + Math.pow(getPosition().getY() - pointY, 2));
 	}
 
-	public void animation(int id, int Y, int X) {
+	public void animation(int id, Position pos) {
 		for (int i = 0; i < PlayerHandler.players.length; i++) {
 			Player p = PlayerHandler.players[i];
 			if (p != null) {
 				Client person = (Client) p;
-				if (person.distanceToPoint(X, Y) <= 60)
-					person.animation2(id, Y, X);
+				if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
+					person.animation2(id, pos);
 			}
 		}
 	}
 
-	public void animation2(int id, int Y, int X) {
-		getOutputStream().createFrame(85);
-		getOutputStream().writeByteC(Y - (mapRegionY * 8));
-		getOutputStream().writeByteC(X - (mapRegionX * 8));
+	public void animation2(int id, Position pos) {
+		setMap(pos);
 		getOutputStream().createFrame(4);
 		getOutputStream().writeByte(0);
 		getOutputStream().writeWord(id);
@@ -283,30 +281,28 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWord(0);
 	}
 
-	public void stillgfx(int id, int Y, int X, int height, int time) {
+	public void stillgfx(int id, Position pos, int time) {
 		// for (Player p : server.playerHandler.players) {
 		for (int i = 0; i < PlayerHandler.players.length; i++) {
 			Player p = PlayerHandler.players[i];
 			if (p != null) {
 				Client person = (Client) p;
-				if (person.distanceToPoint(X, Y) <= 60)
-					person.stillgfx2(id, Y, X, height, time);
+				if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
+					person.stillgfx2(id, pos, time);
 			}
 		}
 	}
 
 	public void stillgfx(int id, int y, int x) {
-		stillgfx(id, y, x, 0, 0);
+		stillgfx(id, new Position(x, y, getPosition().getZ()), 0);
 	}
 
-	public void stillgfx2(int id, int Y, int X, int height, int time) {
-		getOutputStream().createFrame(85);
-		getOutputStream().writeByteC(Y - (mapRegionY * 8));
-		getOutputStream().writeByteC(X - (mapRegionX * 8));
+	public void stillgfx2(int id, Position pos, int time) {
+		setMap(pos);
 		getOutputStream().createFrame(4);
 		getOutputStream().writeByte(0); // Tiles away (X >> 4 + Y & 7)
 		getOutputStream().writeWord(id); // Graphic id
-		getOutputStream().writeByte(height); // height of the spell above it's basic
+		getOutputStream().writeByte(pos.getZ()); // height of the spell above it's basic
 		// place, i think it's written in pixels
 		// 100 pixels higher
 		getOutputStream().writeWord(time); // Time before casting the graphic
@@ -348,8 +344,8 @@ public class Client extends Player implements Runnable {
 		for (int a = 0; a < Constants.maxPlayers; a++) {
 			Client projCheck = (Client) PlayerHandler.players[a];
 			if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) < 60
-					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) < 60) {
+					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 60
+					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 60) {
 				projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
 						startHeight, endHeight, index, begin, slope, 64);
 			}
@@ -438,7 +434,7 @@ public class Client extends Player implements Runnable {
 
 	public int[] statId = {10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011, 11013, 11014, 11010, 11012, 11006,
 			11009, 11008, 11004, 11003, 11005, 47002, 54090, 11007};
-	public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range",
+	public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Prayer", "Range",
 			"Str", "Spell Dmg"};
 
 	// public int pGender;
@@ -582,7 +578,7 @@ public class Client extends Player implements Runnable {
 	public void run() {
 		// we just accepted a new connection - handle the login stuff
 		isActive = false;
-		long serverSessionKey = 0, clientSessionKey = 0;
+		long serverSessionKey, clientSessionKey;
 
 //	if (!KeyServer.verifiedKeys()){
 //		System.out.println("User rejected due to unverified client.");
@@ -781,7 +777,7 @@ public class Client extends Player implements Runnable {
 					mySocketHandler.getOutput().write(loginDelay);
 			}
 
-			mySocketHandler.getOutput().write(net.dodian.utilities.DotEnvKt.getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
+			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
 			mySocketHandler.getOutput().write(0);
 		} catch (java.lang.Exception __ex) {
 			__ex.printStackTrace();
@@ -951,7 +947,7 @@ public class Client extends Player implements Runnable {
         }
       }*/ //TODO: Fix this pvp shiet
 
-			if (net.dodian.utilities.DotEnvKt.getGameWorldId() < 2) {
+			if (getGameWorldId() < 2) {
 				long elapsed = System.currentTimeMillis() - start;
 				int minutes = (int) (elapsed / 60000);
 				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
@@ -973,7 +969,7 @@ public class Client extends Player implements Runnable {
 			p.DuelVictory();
 		}
 		// TODO: Look into improving this, and potentially a system to configure player saving per world id...
-		if (net.dodian.utilities.DotEnvKt.getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
+		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
 			try {
 				Statement statement = getDbConnection().createStatement();
 				long allxp = 0;
@@ -984,7 +980,7 @@ public class Client extends Player implements Runnable {
 				}
 				int totallvl = 0;
 				for (int i = 0; i < 21; i++) {
-					totallvl += getLevel(Skill.getSkill(i));
+					totallvl += Skills.getLevelForExperience(getExperience(Skill.getSkill(i)));
 				}
 				String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ");
@@ -1184,7 +1180,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You must answer the genie before you can gain experience!"));
 			return false;
 		}
-		amount = amount * net.dodian.utilities.DotEnvKt.getGameMultiplierGlobalXp();
+		amount = amount * getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
 				newXP = Math.min(getExperience(skill) + amount, 200000000);
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
@@ -1239,7 +1235,7 @@ public class Client extends Player implements Runnable {
 		if(skill == Skill.FIREMAKING)
 			updateBonus(11);
 		if(animation != -1)
-			animation(animation, getPosition().getY(), getPosition().getX());
+			animation(animation, getPosition());
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		return true;
 	}
@@ -1950,7 +1946,7 @@ public class Client extends Player implements Runnable {
 		deleteItem(id, slot, amount);
 		GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), id, amount, getSlot(), -1);
 		Ground.items.add(drop);
-		DropLog.recordDrop(this, drop.id, drop.amount, "Player", getPosition().copy());
+		DropLog.recordDrop(this, drop.id, drop.amount, "Player", getPosition().copy(), "Inventory Drop");
 	}
 
 	public void deleteItem(int id, int amount) {
@@ -1985,12 +1981,14 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeDWord(amount);
 		} else
 			getOutputStream().writeByte(amount); // amount
-		getOutputStream().endFrameVarSizeWord();
+			getOutputStream().endFrameVarSizeWord();
 		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
-			CombatStyleHandler.setWeaponHandler(this, -1);
 			CheckGear();
-			requestAnims(wearID); // This caused lagg wtf?!
+			CombatStyleHandler.setWeaponHandler(this, -1);
+			requestAnims(wearID);
 		}
+		GetBonus();
+		WriteBonus();
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
@@ -2024,7 +2022,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You must be a premium member to use this item"));
 			return false;
 		}
-		if (duelBodyRules[falseSlots[targetSlot]]) {
+		if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
 			send(new SendMessage("Current duel rules restrict this from being worn!"));
 			return false;
 		}
@@ -2048,8 +2046,6 @@ public class Client extends Player implements Runnable {
 			getEquipment()[targetSlot] = wearID;
 			getEquipmentN()[targetSlot] = wearAmount;
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
-			GetBonus();
-			WriteBonus();
 			wearing = false;
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			return true;
@@ -2065,27 +2061,27 @@ public class Client extends Player implements Runnable {
 			int CLRanged = GetCLRanged(id);
 			boolean failCheck = false;
 			String itemName = Server.itemManager.getName(id);
-			if (CLAttack > getLevel(Skill.ATTACK)) {
+			if (CLAttack > Skills.getLevelForExperience(getExperience(Skill.ATTACK))) {
 				send(new SendMessage("You need " + CLAttack + " Attack to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
-			if (CLDefence > getLevel(Skill.DEFENCE)) {
+			if (CLDefence > Skills.getLevelForExperience(getExperience(Skill.DEFENCE))) {
 				send(new SendMessage("You need " + CLDefence + " Defence to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
-			if (CLStrength > getLevel(Skill.STRENGTH)) {
+			if (CLStrength > Skills.getLevelForExperience(getExperience(Skill.STRENGTH))) {
 				send(new SendMessage("You need " + CLStrength + " Strength to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
-			if (CLMagic > getLevel(Skill.MAGIC)) {
+			if (CLMagic > Skills.getLevelForExperience(getExperience(Skill.MAGIC))) {
 				send(new SendMessage("You need " + CLMagic + " Magic to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
-			if (CLRanged > getLevel(Skill.RANGED)) {
+			if (CLRanged > Skills.getLevelForExperience(getExperience(Skill.RANGED))) {
 				send(new SendMessage("You need " + CLRanged + " Ranged to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
-			if (getLevel(Skill.AGILITY) < 60 && id == 4224) {
+			if (Skills.getLevelForExperience(getExperience(Skill.AGILITY)) < 60 && id == 4224) {
 				send(new SendMessage("You need 60 Agility to equip " + itemName.toLowerCase() + "."));
 				failCheck = true;
 			}
@@ -2094,7 +2090,7 @@ public class Client extends Player implements Runnable {
 			if (Skillcape.isTrimmed(id) && getExperience(skillcape.getSkill()) < 50000000) {
 				send(new SendMessage("This cape requires 50 million " + skillcape.getSkill().getName() + " experience to wear."));
 				failCheck = true;
-			} else if (getLevel(skillcape.getSkill()) < 99) {
+			} else if (Skills.getLevelForExperience(getExperience(skillcape.getSkill())) < 99) {
 				send(new SendMessage("This cape requires level 99 " + skillcape.getSkill().getName() + " to wear."));
 				failCheck = true;
 			}
@@ -2175,13 +2171,6 @@ public class Client extends Player implements Runnable {
 			getEquipment()[slot] = -1;
 			getEquipmentN()[slot] = 0;
 			setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
-			if (slot == Equipment.Slot.WEAPON.getId()) {
-				CheckGear();
-				requestAnims(-1);
-				CombatStyleHandler.setWeaponHandler(this, -1);
-			}
-			GetBonus();
-			WriteBonus();
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		return true;
 	}
@@ -2190,15 +2179,7 @@ public class Client extends Player implements Runnable {
 		if (getEquipment()[slot] == wearID) {
 			getEquipment()[slot] = -1;
 			getEquipmentN()[slot] = 0;
-			getOutputStream().createFrame(34);
-			getOutputStream().writeWord(6);
-			getOutputStream().writeWord(1688);
-			getOutputStream().writeByte(slot);
-			getOutputStream().writeWord(0);
-			getOutputStream().writeByte(0);
-			GetBonus();
-			WriteBonus();
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
 		}
 	}
 
@@ -2214,21 +2195,16 @@ public class Client extends Player implements Runnable {
 	// prior to starting the regular communication
 	public void initialize() {
 		getOutputStream().createFrame(249);
-		getOutputStream().writeByteA(playerIsMember); // 1 for members, zero for
-		// free
+		getOutputStream().writeByteA(playerIsMember); // 1 = member, 0 = f2p
 		getOutputStream().writeWordBigEndianA(getSlot());
-
+		getOutputStream().createFrame(107); // resets something in the client
 		// here is the place for seting up the UI, stats, etc...
 		setChatOptions(0, 0, 0);
+		frame36(287, 1); //SPLIT PRIVATE CHAT ON/OFF
 		/*
 		 * for (int i = 0; i < 25; i++) { if(i != 3) setSkillLevel(i,
 		 * playerLevel[i], playerXP[i]); }
 		 */
-		for (int i = 0; i < 21; i++) {
-			refreshSkill(Skill.getSkill(i));
-		}
-
-		getOutputStream().createFrame(107); // resets something in the client
 		setSidebarInterface(0, 2423); // attack tab
 		setSidebarInterface(1, 3917); // skills tab
 		setSidebarInterface(2, 638); // quest tab
@@ -2256,40 +2232,31 @@ public class Client extends Player implements Runnable {
         getOutputStream().writeString("null");
         getOutputStream().endFrameVarSize();
       }*/ //We want this for snowballs????
-		CheckGear();
 		//send(new SendMessage("Please vote! You can earn your reward by doing ::redeem "+getPlayerName()+" every 6hrs."));
 //    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
 //    send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
 //    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
-		//addItem(4084, 1);
-		Login.banUid();
 		/* Sets look! */
 		if (lookNeeded) {
 			defaultCharacterLook(this);
 			showInterface(3559);
 		} else
 			setLook(playerLooks);
-		//TODO: add check if need this message!
-		//send(new SendMessage("Make sure you're running the latest client found under 'play now' on the forums!"));
-		refreshSkill(Skill.HITPOINTS);
-		requestAnims(getEquipment()[Equipment.Slot.WEAPON.getId()]);
-		loaded = true;
-		Arrays.fill(lastMessage, "");
-		if (newPms > 0) {
-			send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
+		for (int i = 0; i < 21; i++) {
+			refreshSkill(Skill.getSkill(i));
 		}
-		frame36(287, 1);
-		// setSidebarInterface(6, 1151);
-		send(new SendString("Old magic", 12585));
+		//Arrays.fill(lastMessage, ""); //We need this?!
+		/* Friend configs! */
 		for (Client c : PlayerHandler.playersOnline.values()) {
 			if (c.hasFriend(longName)) {
 				c.refreshFriends();
 			}
 		}
+		Login.banUid();
+		frame36(287, 1);
+		pmstatus(2);
+
 		WriteEnergy();
-		send(new SendString("", 6067));
-		send(new SendString("", 6071));
-		CombatStyleHandler.setWeaponHandler(this, -1);
 		setEquipment(getEquipment()[Equipment.Slot.HEAD.getId()], getEquipmentN()[Equipment.Slot.HEAD.getId()],
 				Equipment.Slot.HEAD.getId());
 		setEquipment(getEquipment()[Equipment.Slot.CAPE.getId()], getEquipmentN()[Equipment.Slot.CAPE.getId()],
@@ -2312,14 +2279,10 @@ public class Client extends Player implements Runnable {
 				Equipment.Slot.RING.getId());
 		setEquipment(getEquipment()[Equipment.Slot.WEAPON.getId()], getEquipmentN()[Equipment.Slot.WEAPON.getId()],
 				Equipment.Slot.WEAPON.getId());
-		/* Bonus on gear! */
-		GetBonus();
-		WriteBonus();
-		//getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+		/* Reset values for items*/
 		resetItems(3214);
 		resetBank();
-		replaceDoors();
-		pmstatus(2);
+		//replaceDoors(); //Not sure we need this at this point!
 		send(new SendString("Using this will send a notification to all online mods", 5967));
 		send(new SendString("@yel@Then click below to indicate which of our rules is being broken.", 5969));
 		send(new SendString("4: Bug abuse (includes noclip)", 5974));
@@ -2328,9 +2291,19 @@ public class Client extends Player implements Runnable {
 		send(new SendString("8: Item Duplication", 5978));
 		send(new SendString("10: Misuse of yell channel", 5980));
 		send(new SendString("12: Possible duped items", 5982));
+		send(new SendString("Old magic", 12585));
+		send(new SendString("", 6067));
+		send(new SendString("", 6071));
 		//RegionMusic.sendSongSettings(this); //Music from client 2.95
+		/* Set configurations! */
 		setConfigIds();
+		prayers.reset();
+		/* Done loading in a character! */
 		send(new SendMessage("Welcome to Uber Server"));
+		if (newPms > 0) {
+			send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
+		}
+		loaded = true;
 		PlayerUpdating.getInstance().update(this, getOutputStream());
 		//initialized = true;
 	}
@@ -2344,7 +2317,7 @@ public class Client extends Player implements Runnable {
 	public int packetSize = 0, packetType = -1;
 	public boolean canAttack = true;
 
-	public void process() {// is being called regularily every 500ms
+	public void process() {// is being called regularily every 600 ms
 		//RegionMusic.handleRegionMusic(this);
 		if (mutedTill * 1000 <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
@@ -2363,10 +2336,18 @@ public class Client extends Player implements Runnable {
 			} else iconTimer = 6;
 		} else
 			iconTimer = 6;
-		QuestSend.questInterface(this);
-		// RubberCheck();
+		/* Prayer drain*/
+		if(prayers.getDrainRate() > 0.0) {
+			prayers.drainRate += 0.6;
+			if(prayers.drainRate >= prayers.getDrainRate()) {
+				drainPrayer(1);
+				prayers.drainRate = 0.0;
+			}
+		} else prayers.drainRate = 0.0;
 		if (reloadHp)
 			heal(getMaxHealth());
+		// RubberCheck();
+		QuestSend.questInterface(this);
 		long now = System.currentTimeMillis();
 		if (now >= walkBlock && UsingAgility) {
 			UsingAgility = false;
@@ -2486,7 +2467,7 @@ public class Client extends Player implements Runnable {
 		}
 		if (tStage == 1) { //Set emote for teleport!
 			requestAnim(tEmote, 0);
-			animation(308, getPosition().getY(), getPosition().getX());
+			animation(308, getPosition());
 			tStage = 2;
 		} else if (tStage == 2 && System.currentTimeMillis() - lastTeleport >= 1200) {
 			teleportToX = tX;
@@ -2667,7 +2648,7 @@ public class Client extends Player implements Runnable {
 			spin();
 		} else if (boneItem > 0 && now - lastAction >= 1800) {
 			lastAction = now;
-			stillgfx(624, skillY, skillX, 15, 0);
+			stillgfx(624, new Position(skillY, skillX, getPosition().getZ()), 0);
 			Prayer.altarBones(this, boneItem);
 		} else if (mixPots && now - lastAction >= potTime) {
 			lastAction = now;
@@ -2722,7 +2703,6 @@ public class Client extends Player implements Runnable {
 		if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
 			logout();
 		}
-		/* Incase a player disconnect! */
 	}
 
 	public boolean packetProcess() { //Packet fixed?!
@@ -2730,12 +2710,15 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		Queue<PacketData> data = mySocketHandler.getPackets();
-		if (data == null || data.isEmpty() || data.stream() == null)
+		if (data == null || data.isEmpty())
 			return false;
 		try {
 			fillInStream(data.poll());
 		} catch (IOException e) {
 			e.printStackTrace();
+			//System.out.println("Player" + getPlayerName() + " disconnected.");
+			System.out.println(e);
+			saveStats(true);
 			disconnected = true;
 			return false;
 		}
@@ -3287,9 +3270,9 @@ public class Client extends Player implements Runnable {
 			String[] s = new String[0];
 			String[] s1 = new String[0];
 			if (child == 0) {
-				s = new String[]{"Attack Potion", "Strength Potion", "Defence Potion", "Super Attack Potion" + prem,
-						"Super Strength Potion" + prem, "Super Defence Potion" + prem, "Ranging Potion"};
-				s1 = new String[]{"1", "10", "30", "45", "55", "65", "75"};
+				s = new String[]{"Attack Potion", "Strength Potion", "Defence Potion", "Prayer potion", "Super Attack Potion" + prem,
+						"Super Strength Potion" + prem, "Super Restore Potion", "Super Defence Potion" + prem, "Ranging Potion"};
+				s1 = new String[]{"1", "10", "30", "40", "45", "55", "60", "65", "75"};
 			} else if (child == 1) {
 				s = new String[]{"Guam", "Tarromin", "Ranarr", "Irit", "Kwuarm", "Cadantine", "Dwarf weed"};
 				s1 = new String[]{"1", "10", "30", "45", "55", "65", "75"};
@@ -3305,7 +3288,7 @@ public class Client extends Player implements Runnable {
 				send(new SendString(s1[i], slot++));
 			}
 			if (child == 0)
-				setMenuItems(new int[]{121, 115, 133, 157, 145, 163, 169});
+				setMenuItems(new int[]{121, 115, 133, 139, 145, 157, 3026, 163, 169});
 			else if (child == 1)
 				setMenuItems(new int[]{249, 253, 257, 263, 259, 265, 267});
 			else if (child == 2)
@@ -3379,9 +3362,7 @@ public class Client extends Player implements Runnable {
 		 * SendString(s1[i], slot++)); } int items[] = { 4443, 2309, 314, 950, 253,
 		 * 1631 }; setMenuItems(items); }
 		 */
-		getOutputStream().createFrame(79);
-		getOutputStream().writeWordBigEndian(8717);
-		getOutputStream().writeWordA(0);
+		sendQuestSomething(8717);
 		if (currentSkill != skillID)
 			showInterface(8714);
 		currentSkill = skillID;
@@ -3733,9 +3714,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void ReplaceObject(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
-		getOutputStream().createFrame(85);
-		getOutputStream().writeByteC(objectY - (mapRegionY * 8));
-		getOutputStream().writeByteC(objectX - (mapRegionX * 8));
+		setMap(new Position(objectX, objectY));
 
 		getOutputStream().createFrame(101);
 		getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
@@ -3843,6 +3822,8 @@ public class Client extends Player implements Runnable {
 			send = "Spell Dmg: " + String.format("%3.1f", dmg) + "%";
 		} else if(id == 11)
 			send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
+		else if(id == 10)
+			send = (usingBow ? "Ranged str: " : "Melee str: ") + "" + (usingBow && getRangedStr(this) >= 0 ? "+" : playerBonus[id] >= 0 ? "+" : "-") + "" + (usingBow ? getRangedStr(this) : playerBonus[id]);
 		else
 			send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
 		send(new SendString(send, 1675 + (id >= 10 ? id + 1 : id)));
@@ -5339,7 +5320,7 @@ public class Client extends Player implements Runnable {
 		if (checkName.endsWith("arrow") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
 			return 1;
 		String ItemName = GetItemName(ItemID);
-		if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("h'ween") || checkName.contains("partyhat"))
+		if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("mask") || checkName.contains("partyhat"))
 			return 1;
 		String ItemName2 = ItemName.replaceAll("Bronze", "");
 		ItemName2 = ItemName2.replaceAll("Iron", "");
@@ -5433,6 +5414,8 @@ public class Client extends Player implements Runnable {
 			return 45;
 		if (ItemName.startsWith("Infinity") || ItemID == 6914)
 			return 50;
+		if (ItemID == 13235)
+			return 60;
 		if (ItemName.toLowerCase().contains("ghostly"))
 			return 70;
 		if (ItemName.startsWith("Ahrim"))
@@ -7008,7 +6991,7 @@ public class Client extends Player implements Runnable {
 		if (tradeLocked && other.playerRights < 1) {
 			return;
 		}
-		if (other.connectedFrom.equals(connectedFrom) && net.dodian.utilities.DotEnvKt.getGameWorldId() == 1) { //We do not wish for others to duel?!
+		if (other.connectedFrom.equals(connectedFrom) && getGameWorldId() == 1) { //We do not wish for others to duel?!
 			duelRequested = false;
 			return;
 		}
@@ -7104,6 +7087,7 @@ public class Client extends Player implements Runnable {
 		canOffer = false;
 		send(new RemoveInterfaces());
 		duelFight = true;
+		prayers.reset();
 		if (attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) {
 			attackPot = 0.0;
 			defensePot = 0.0;
@@ -7315,7 +7299,7 @@ public class Client extends Player implements Runnable {
 	public void refreshFriends() {
 		for (Friend f : friends) {
 			if (PlayerHandler.playersOnline.containsKey(f.name)) {
-				loadpm(f.name, net.dodian.utilities.DotEnvKt.getGameWorldId());
+				loadpm(f.name, getGameWorldId());
 			} else {
 				loadpm(f.name, 0);
 			}
@@ -7761,6 +7745,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	private void requestAnims(int wearID) {
+
 		setStandAnim(Server.itemManager.getStandAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
 		setWalkAnim(Server.itemManager.getWalkAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
 		setRunAnim(Server.itemManager.getRunAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
@@ -7802,7 +7787,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void updatePlayerDisplay() {
-		String serverName = net.dodian.utilities.DotEnvKt.getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
+		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
 		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
 		send(new SendString("", 6664));
 		setInterfaceWalkable(6673);
@@ -8513,7 +8498,7 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-	private ArrayList<GroundItem> displayItems = new ArrayList<GroundItem>();
+	private ArrayList<GroundItem> displayItems = new ArrayList<>();
 
 	public void updateItems() {
 		if (displayItems.size() > 0) {
@@ -8525,15 +8510,15 @@ public class Client extends Player implements Runnable {
 		for (GroundItem ground : Ground.items) {
 			if (Math.abs(getPosition().getX() - ground.x) <= 114 && Math.abs(getPosition().getY() - ground.y) <= 114) {
 				if (!ground.canDespawn && !ground.taken) {
-					displayItems.add(ground);
 					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
+					displayItems.add(ground);
 				} else if (dbId == ground.playerId && ground.canDespawn) {
-					displayItems.add(ground);
 					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
+					displayItems.add(ground);
 				} else if (ground.canDespawn && ground.visible && ground.playerId != dbId
 						&& Server.itemManager.isTradable(ground.id)) {
-					displayItems.add(ground);
 					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
+					displayItems.add(ground);
 				}
 			}
 		}
@@ -8789,7 +8774,7 @@ public class Client extends Player implements Runnable {
 		int[][] travel = {
 				{3057, 2803, 3421, 0}, //Home!
 				{3058, -1, -1, 0}, //Mountain!
-				{3059, -1, -1, 0}, //Castle!
+				{3059, 3511, 3506, 0}, //Castle!
 				{3060, -1, -1, 0}, //Tent!
 				{3056, 2863, 2971, 0}, //Tree aka shilo
 				{48054, 2772, 3234, 0} //Totem
@@ -8801,7 +8786,7 @@ public class Client extends Player implements Runnable {
 					send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));
 					return;
 				}
-				if (travel[i][1] == -1) {
+				if (travel[i][1] == -1 || (i == 2 && playerRights < 2)) {
 					send(new SendMessage("This will lead you to nothing!"));
 					return;
 				}
@@ -8829,5 +8814,11 @@ public class Client extends Player implements Runnable {
 					}
 				});
 			}
+	}
+
+	public void setMap(Position pos) {
+			getOutputStream().createFrame(85);
+			getOutputStream().writeByteC(pos.getY() - (mapRegionY * 8));
+			getOutputStream().writeByteC(pos.getX() - (mapRegionX * 8));
 	}
 }

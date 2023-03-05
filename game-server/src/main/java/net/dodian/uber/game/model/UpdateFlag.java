@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.Entity;
  * @author Dashboard
  */
 public enum UpdateFlag {
-    ANIM(0x8, 0x10),
+    ANIM(8, 0x10),
     HIT2(0x200, 0x8),
     GRAPHICS(0x100, 0x80),
     FORCED_CHAT(0x4, 1),

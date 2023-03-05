@@ -122,12 +122,14 @@ public abstract class Player extends Entity {
     private final int[] playerLevel = new int[21];
     private final int[] playerXP = new int[21];
     private int currentHealth = getLevel(Skill.HITPOINTS);
-    public int maxHealth = getLevel(Skill.HITPOINTS);
+    public int maxHealth = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
+    private int currentPrayer = 1;
+    public int maxPrayer = 0;
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
     public ArrayList<Player> playersUpdating = new ArrayList<>();
-    private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
+    private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     public boolean loaded = false;
     private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
     private int faceTarget = -1;
@@ -340,7 +342,7 @@ public abstract class Player extends Entity {
             return false;
         int deltaX = otherPlr.getPosition().getX() - getPosition().getX(),
                 deltaY = otherPlr.getPosition().getY() - getPosition().getY();
-        return deltaX <= 16 && deltaX >= -16 && deltaY <= 16 && deltaY >= -16;
+        return deltaX <= 15 && deltaX >= -16 && deltaY <= 15 && deltaY >= -16;
     }
 
     public boolean withinDistance(Npc npc) {
@@ -461,6 +463,7 @@ public abstract class Player extends Entity {
                 } else {
                     firstSend = true;
                 }
+                temp.updateItems();
             }
             currentX = teleportToX - 8 * mapRegionX;
             currentY = teleportToY - 8 * mapRegionY;
@@ -860,7 +863,7 @@ public abstract class Player extends Entity {
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
-    Prayers prayers = new Prayers(this, (Client) this);
+    Prayers prayers = new Prayers(this);
 
     public void setSkullIcon(int id) {
         skullIcon = id;
@@ -1044,6 +1047,12 @@ public abstract class Player extends Entity {
         return this.playerSEW;
     }
 
+    public void setAgilityEmote(int walk, int run) {
+        setWalkAnim(walk);
+        setRunAnim(run);
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+    }
+
     public void setWalkAnim(int playerSEW) {
         this.playerSEW = playerSEW;
     }
@@ -1087,7 +1096,9 @@ public abstract class Player extends Entity {
     public int getCurrentHealth() {
         return this.currentHealth;
     }
-
+    public int getMaxHealth() {
+        return this.maxHealth;
+    }
     public void setCurrentHealth(int currentHealth) {
         this.currentHealth = currentHealth;
     }
@@ -1110,9 +1121,23 @@ public abstract class Player extends Entity {
         } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
     }
 
-    public int getMaxHealth() {
-        int max = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
-        return max > this.maxHealth ? max : this.maxHealth;
+    public void setCurrentPrayer(int amount) {
+        this.currentPrayer = amount;
+    }
+    public int getCurrentPrayer() {
+        return this.currentPrayer;
+    }
+    public int getMaxPrayer() {
+        return Skills.getLevelForExperience(getExperience(Skill.PRAYER));
+    }
+    public void drainPrayer(int amount) {
+        int changeValue = getCurrentPrayer() - amount;
+        if(changeValue <= 0) {
+            setCurrentPrayer(0);
+            prayers.reset();
+            ((Client) this).send(new SendMessage("<col=8B8000>Your prayer has ran out! Please recharge at a nearby altar!"));
+        } else setCurrentPrayer(changeValue);
+        ((Client) this).refreshSkill(Skill.PRAYER);
     }
 
     public void setCrit(boolean crit) {
@@ -1160,6 +1185,10 @@ public abstract class Player extends Entity {
             combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
         }
         return customCombat > 0 ? customCombat : (int)combatLevel;
+    }
+
+    public int getSkillLevel(Skill skill) {
+        return Skills.getLevelForExperience(getExperience(skill));
     }
 
     public enum positions {
