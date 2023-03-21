@@ -147,7 +147,7 @@ public class LoginManager {
                     for(int i = 1; i < prayer_prase.length; i++)
                         p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayer_prase[i])));
                 }
-                if(!boosted_prase.equals("")) {
+                if(!boosted.equals("")) {
                     p.lastRecover = Integer.parseInt(boosted_prase[0]);
                     for(int i = 0; i < boosted_prase.length - 1; i++)
                         p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));

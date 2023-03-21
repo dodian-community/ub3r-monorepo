@@ -75,7 +75,6 @@ public class Client extends Player implements Runnable {
 	public boolean filling = false;
 	public int boneItem = -1;
 	public int mineIndex = 0, minePick = 0;
-	public double attackPot = 0.0, defensePot = 0.0, strengthPot = 0.0, rangePot = 0.0;
 	public long potionUpdate = 0, lastDoor = 0;
 	public int clientPid = -1;
 	public long session_start = 0;
@@ -1001,7 +1000,6 @@ public class Client extends Player implements Runnable {
 				}
 
 				System.currentTimeMillis();
-				prayers.reset();
 				StringBuilder inventory = new StringBuilder();
 				StringBuilder equipment = new StringBuilder();
 				StringBuilder bank = new StringBuilder();
@@ -1037,7 +1035,6 @@ public class Client extends Player implements Runnable {
 				boosted.append(lastRecover);
 				for(int boost : boostedLevel.clone()) {
 					boosted.append(":").append(boost);
-					System.out.println("boosted = " + boost);
 				}
 				int num = 0;
 				for (Friend f : friends) {
@@ -1059,7 +1056,7 @@ public class Client extends Player implements Runnable {
 						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
 						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Boss_Log='"
 						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
-						", prayer='"+prayer+"'" + last
+						", prayer='"+prayer+"', boosted='"+boosted+"'" + last
 						+ " WHERE id = " + dbId);
 				statement.close();
 				//println_debug("Save:  " + getPlayerName() + " (" + (System.currentTimeMillis() - start) + "ms)");
@@ -2458,9 +2455,6 @@ public class Client extends Player implements Runnable {
 		if (checkTime && now >= lastAction) {
 			send(new SendMessage("Time's up (went " + (now - lastAction) + " over)"));
 			checkTime = false;
-		}
-		if ((attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) && now - potionUpdate >= 60000) {
-			updatePotions();
 		}
 		if (pickupWanted) {
 			if (pickTries < 1) {
@@ -7135,12 +7129,9 @@ public class Client extends Player implements Runnable {
 		send(new RemoveInterfaces());
 		duelFight = true;
 		prayers.reset();
-		if (attackPot > 0.0 || defensePot > 0.0 || strengthPot > 0.0 || rangePot > 0.0) {
-			attackPot = 0.0;
-			defensePot = 0.0;
-			strengthPot = 0.0;
-			rangePot = 0.0;
-			updatePotions();
+		for(int i = 0; i < boostedLevel.length; i++) {
+			boostedLevel[i] = 0;
+			refreshSkill(Skill.getSkill(i));
 		}
 		Client other = getClient(duel_with);
 		for (GameItem item : other.offeredItems) {
@@ -7844,26 +7835,6 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrame(208);
 		getOutputStream().writeWordBigEndian_dup(197);
 		send(new SendString("Level: " + wildyLevel, 199));
-	}
-
-	public void updatePotions() {
-		potionUpdate = System.currentTimeMillis();
-		if (attackPot > 0.0) {
-			attackPot = attackPot - 1 > 0 ? attackPot-1 : 0.0;
-			refreshSkill(Skill.ATTACK);
-		}
-		if (defensePot > 0.0) {
-			defensePot = defensePot - 1 > 0 ? defensePot-1 : 0.0;
-			refreshSkill(Skill.DEFENCE);
-		}
-		if (strengthPot > 0.0) {
-			strengthPot = strengthPot - 1 > 0 ? strengthPot-1 : 0.0;
-			refreshSkill(Skill.STRENGTH);
-		}
-		if (rangePot > 0.0) {
-			rangePot = rangePot - 1 > 0 ? rangePot-1 : 0.0;
-			refreshSkill(Skill.RANGED);
-		}
 	}
 
 	public void updatePlayerDisplay() {

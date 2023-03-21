@@ -173,7 +173,18 @@ public class Commands implements Packet {
                     Balloons.triggerPartyEvent(client);
                 }
                 if (cmd[0].equals("boost")) {
-                    client.boost(20, Skill.STRENGTH);
+                    client.boost(1337, Skill.STRENGTH);
+                    client.boost(1337, Skill.DEFENCE);
+                    client.boost(1337, Skill.ATTACK);
+                    client.boost(1337, Skill.RANGED);
+                    client.boost(1337, Skill.MAGIC);
+                }
+                if (cmd[0].equals("boost_off")) {
+                    for(int i = 0; i < 7; i++)
+                        if(i != 3 && i != 5) {
+                            client.boostedLevel[i] = 0;
+                            client.refreshSkill(Skill.getSkill(i));
+                        }
                 }
                 if (command.startsWith("bosspawn")) {
                     String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
