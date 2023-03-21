@@ -185,11 +185,11 @@ public class Prayers {
         }
         if(c.getCurrentPrayer() < 1) { //Can't use prayer with no prayer points!
             c.send(new SendMessage("You have no prayer points currently! Recharge at a nearby altar"));
-            c.frame87(prayer.getConfigId(), 0);
+            reset();
             return;
         }
-        if(c.duelFight || prayer.getPrayerLevel() == -1) { //Can't use prayer during a duel!
-            c.frame87(prayer.getConfigId(), 0);
+        if(c.duelFight || prayer.getPrayerLevel() == -1) { //No prayer during a duel and prayer that has yet to be added!
+            reset();
             return;
         }
 
