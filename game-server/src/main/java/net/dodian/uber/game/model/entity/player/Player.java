@@ -43,10 +43,8 @@ public abstract class Player extends Entity {
     public boolean saveNeeded = true, lookNeeded = false;
     private boolean inCombat = false;
     private long lastCombat = 0;
-    public long start = 0;
-    public long lastPlayerCombat = 0;
-    public static int id = -1;// dbId = -1; //mysql userid
-    public static int localId = -1;
+    public long start = 0, lastPlayerCombat = 0;
+    public static int id = -1, localId = -1;// dbId = -1; //mysql userid
     public boolean busy = false, invis = false;
     public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
             "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
@@ -64,8 +62,6 @@ public abstract class Player extends Entity {
     private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember;
-    public int playerEnergy;
-    public int playerEnergyGian;
     public int[] playerBonus = new int[12];
     public int FightType = 1;
     private int playerSE = 0x328; // SE = Standard Emotion
@@ -121,10 +117,8 @@ public abstract class Player extends Entity {
     private final int[] playerEquipmentN = new int[14];
     private final int[] playerLevel = new int[21];
     private final int[] playerXP = new int[21];
-    private int currentHealth = getLevel(Skill.HITPOINTS);
-    public int maxHealth = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
-    private int currentPrayer = 1;
-    public int maxPrayer = 0;
+    public int maxHealth = 10, currentHealth = getLevel(Skill.HITPOINTS);
+    public int maxPrayer = 1, currentPrayer = getLevel(Skill.PRAYER);
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
@@ -173,6 +167,9 @@ public abstract class Player extends Entity {
     private final ArrayList<Boolean> travelData = new ArrayList<>();
     private final ArrayList<Integer> paid = new ArrayList<>();
     private final ArrayList<Boolean> unlocked = new ArrayList<>();
+    public int unlockLength = 2;
+    public int lastRecoverEffect = 0, lastRecover = 4;
+    public int boostedLevel[] = new int[21];
 
 
     public Player(int slot) {
@@ -265,7 +262,7 @@ public abstract class Player extends Entity {
     }
     public void addUnlocks(int i, String... check) {
             if(check.length == 1) {
-                if(unlocked.isEmpty() || unlocked.size() < i) {
+                if(unlocked.isEmpty() || i == unlocked.size()) {
                     paid.add(i, -1);
                     unlocked.add(i, check[0].equals("1"));
                 } else {
@@ -273,7 +270,7 @@ public abstract class Player extends Entity {
                     unlocked.set(i, check[0].equals("1"));
                 }
             } else if (check.length == 2) {
-                if(unlocked.isEmpty() || unlocked.size() < i) {
+                if(unlocked.isEmpty() || i == unlocked.size()) {
                     unlocked.add(i, check[1].equals("1"));
                     paid.add(i, check[0].equals("1") ? 1 : 0);
                 } else {
@@ -463,7 +460,6 @@ public abstract class Player extends Entity {
                 } else {
                     firstSend = true;
                 }
-                temp.updateItems();
             }
             currentX = teleportToX - 8 * mapRegionX;
             currentY = teleportToY - 8 * mapRegionY;
@@ -805,7 +801,24 @@ public abstract class Player extends Entity {
             getDamage().put(plr.target, totalDmg);
         }
         this.crit = crit;
+        ((Client) this).refreshSkill(Skill.HITPOINTS);
         getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+    }
+
+    public void dealDamage(int amt, boolean crit, Entity.damageType dmg) {
+        Client plr = ((Client) this);
+        if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
+            boolean gotAntiEffect = plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
+                    || plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
+                    || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC);
+            if(plr.target instanceof  Npc && ((Npc) plr.target).getId() == 239) amt /= 2;
+            else if (plr.target instanceof  Npc && ((Npc) plr.target).getId() != 239 && gotAntiEffect) {
+                amt *= 3; amt /= 10; //Ugly way to write reduce dmg by 70%
+            } else plr.send(new SendMessage("You are badly burnt by the dragon fire!"));
+        } else if(dmg.equals(damageType.MELEE) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) amt /= 2;
+        else if(dmg.equals(damageType.RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt /= 2;
+        else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
+        dealDamage(amt, crit);
     }
 
     private void delayedHit(Entity source, Entity target, final int damage, final boolean b, int delay) {
@@ -1104,7 +1117,7 @@ public abstract class Player extends Entity {
     }
     public void heal(int healing) {
         Client c = (Client) this;
-        int maxLevel = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
+        int maxLevel = getMaxHealth();
         c.setCurrentHealth(c.getCurrentHealth() + healing > maxLevel ? maxLevel : c.getCurrentHealth() + healing);
         c.refreshSkill(Skill.HITPOINTS);
     }
@@ -1121,23 +1134,53 @@ public abstract class Player extends Entity {
         } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
     }
 
-    public void setCurrentPrayer(int amount) {
-        this.currentPrayer = amount;
+    public void boost(int boosted, Skill skill) {
+        if(skill.getId() == 3 || skill.getId() == 5) { //Cant do health or prayer with this method!
+            return;
+        }
+        Client c = (Client) this;
+        int lvl = Skills.getLevelForExperience(getExperience(skill));
+        int currentLevel = c.getLevel(skill);
+        boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
+        boostedLevel[skill.getId()] = boosted;
+        c.refreshSkill(skill);
     }
+
+    /*public void statBoost(int stat, boolean overBoost, int value) {
+        int lvl = getLevelForXP(playerXP[stat]);
+        int maxLevel = lvl + value;
+        value = !overBoost && playerLevel[stat] + value >= lvl && playerLevel[stat] <= lvl ? (lvl - playerLevel[stat])
+                : !overBoost && playerLevel[stat] > lvl ? 0
+                : playerLevel[stat] >= lvl ? value - (playerLevel[stat] - lvl) : value;
+        value = overBoost && playerLevel[stat] >= maxLevel ? 0
+                : overBoost && playerLevel[stat] >= lvl && playerLevel[stat] < maxLevel ? (maxLevel - playerLevel[stat])
+                : value;
+        playerLevel[stat] += value;
+        refreshSkill(stat);
+    }*/
+
     public int getCurrentPrayer() {
         return this.currentPrayer;
     }
     public int getMaxPrayer() {
-        return Skills.getLevelForExperience(getExperience(Skill.PRAYER));
+        return this.maxPrayer;
+    }
+    public void setCurrentPrayer(int amount) {
+        this.currentPrayer = amount;
     }
     public void drainPrayer(int amount) {
-        int changeValue = getCurrentPrayer() - amount;
-        if(changeValue <= 0) {
+        pray(-amount);
+        if(getCurrentPrayer() <= 0) {
             setCurrentPrayer(0);
             prayers.reset();
             ((Client) this).send(new SendMessage("<col=8B8000>Your prayer has ran out! Please recharge at a nearby altar!"));
-        } else setCurrentPrayer(changeValue);
-        ((Client) this).refreshSkill(Skill.PRAYER);
+        }
+    }
+    public void pray(int healing) {
+        Client c = (Client) this;
+        int maxLevel = getMaxPrayer();
+        c.setCurrentPrayer(c.getCurrentPrayer() + healing > maxLevel ? maxLevel : c.getCurrentPrayer() + healing);
+        c.refreshSkill(Skill.PRAYER);
     }
 
     public void setCrit(boolean crit) {

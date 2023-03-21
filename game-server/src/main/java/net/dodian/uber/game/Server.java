@@ -14,6 +14,7 @@ import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -253,15 +254,24 @@ public class Server implements Runnable {
 		Ground.items.add(new GroundItem(2842, 3432, 401, 1, 30 * 1000));
 		*/
         /* Troll items */
-        Ground.items.add(new GroundItem(2611, 3096, 20997, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2612, 3096, 11863, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2563, 9511, 1631, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2564, 9511, 6571, 1, 30 * 1000));
-        /* End of troll */
-        Ground.items.add(new GroundItem(2605, 3104, 1277, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2607, 3104, 1171, 1, 30 * 1000));
+        Ground.items.add(new GroundItem(new Position(2611, 3096, 0), 11862, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2612, 3096, 0), 11863, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2563, 9511, 0), 1631, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2564, 9511, 0), 6571, 1, 60 * 1000));
+        /* Yanille starter items */
+        Ground.items.add(new GroundItem(new Position(2605, 3104, 0), 1277, 1, 20 * 1000));
+        Ground.items.add(new GroundItem(new Position(2607, 3104, 0), 1171, 1, 20 * 1000));
+        /* Snape grass spawns!*/
+        Ground.items.add(new GroundItem(new Position(2810, 3203, 0), 231, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2807, 3204, 0), 231, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2804, 3207, 0), 231, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2801, 3210, 0), 231, 1, 60 * 1000));
+        /* Limpwurt spawns!*/
+        Ground.items.add(new GroundItem(new Position(2874, 3475, 0), 225, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2876, 3001, 0), 225, 1, 60 * 1000));
+        /* White berries spawns!*/
+        Ground.items.add(new GroundItem(new Position(2935, 3489, 0), 239, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(2877, 3000, 0), 239, 1, 60 * 1000));
     }
-
-    public static int EnergyRegian = 60;
 
 }

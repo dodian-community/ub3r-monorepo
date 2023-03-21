@@ -12,6 +12,7 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
+import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -170,6 +171,90 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equals("party")) {
                     Balloons.triggerPartyEvent(client);
+                }
+                if (cmd[0].equals("boost")) {
+                    client.boost(20, Skill.STRENGTH);
+                }
+                if (command.startsWith("bosspawn")) {
+                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
+                    if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
+                        client.respawnBoss(4130);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                        client.respawnBoss(4067);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
+                        client.respawnBoss(3964);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                        client.respawnBoss(8);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Ice queen
+                        client.respawnBoss(4922);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
+                        client.respawnBoss(3957);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                        client.respawnBoss(2585);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                        client.respawnBoss(5311);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
+                        client.respawnBoss(239);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                        client.respawnBoss(1443);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
+                        client.respawnBoss(1432);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
+                        client.respawnBoss(2261);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                        client.respawnBoss(2266);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
+                        client.respawnBoss(3127);
+                }
+                if (command.startsWith("bosstele")) {
+                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
+                    if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
+                        client.triggerTele(2543, 3091, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                        client.triggerTele(2566, 9507, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
+                        client.triggerTele(2613, 9521, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                        client.triggerTele(2698, 9771, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Nechrayel
+                        client.triggerTele(2866, 9951, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
+                        client.triggerTele(2889, 3426, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                        client.triggerTele(2626, 3084, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                        client.triggerTele(2554, 3278, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
+                        client.triggerTele(3315, 9374, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                        client.triggerTele(2572, 9529, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
+                        client.triggerTele(2907, 9805, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
+                        client.triggerTele(2776, 3206, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                        client.triggerTele(2905, 9727, 0,false);
+                    else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
+                        client.triggerTele(2393, 5090, 0,false);
+                }
+                if (command.startsWith("telemob")) {
+                    int mobId = Integer.parseInt(cmd[1]);
+                    for (Npc npc : Server.npcManager.getNpcs()) {
+                        if(npc.getId() == mobId) {
+                            client.triggerTele(npc.getPosition().getX(), npc.getPosition().getY(), npc.getPosition().getZ(),false);
+                            return;
+                        }
+                    }
+                }
+                if (command.startsWith("findmob")) {
+                    String npcName = command.substring(cmd[0].length() + 1).replaceAll("_", " ");
+                    for (Npc npc : Server.npcManager.getNpcs()) {
+                        String npcCheckName = npc.npcName().replaceAll("_", " ");
+                        if(npcName.equalsIgnoreCase(npcCheckName)) {
+                            client.send(new SendMessage("Found "+ npcCheckName +" ("+ npc.getId() +") at " + npc.getPosition().toString()));
+                            return;
+                        }
+                    }
                 }
                 if (cmd[0].equals("rank")) {
                     try {
@@ -995,10 +1080,10 @@ public class Commands implements Packet {
                 client.send(new SendMessage("<col=FF8000>Melee max hit: " + meleeMaxHit(client) + " (MeleeStr: " + client.playerBonus[10] + ")"));
                 client.send(new SendMessage("<col=0B610B>Range max hit: " + rangedMaxHit(client) + " (RangeStr: " + getRangedStr(client) + ")"));
                 if (client.autocast_spellIndex == -1)
-                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * client.magicDmg()) + " (Magic damage increase: " + String.format("%3.1f", (client.magicDmg() - 1.0) * 100D) + "%)"));
+                    client.send(new SendMessage("<col=292BA3>Magic max hit (smoke rush): " + (int)(client.baseDamage[0] * magicBonusDamage(client)) + " (Magic damage increase: " + String.format("%3.1f", (magicBonusDamage(client) - 1.0) * 100D) + "%)"));
                 else
                     client.send(new SendMessage("<col=292BA3>Magic max hit (" + client.spellName[client.autocast_spellIndex]
-                            + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * client.magicDmg()) + " (Magic damage increase: " + String.format("%3.1f", (client.magicDmg() - 1.0) * 100D) + "%)"));
+                            + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * magicBonusDamage(client)) + " (Magic damage increase: " + String.format("%3.1f", (magicBonusDamage(client) - 1.0) * 100D) + "%)"));
             }
             if (cmd[0].equalsIgnoreCase("yell") && command.length() > 5) {
                 if (!client.premium) {
@@ -1275,7 +1360,7 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid"));
                     }
                 }
-                if (command.startsWith("bosspawn")) {
+                if (command.startsWith("bosspawn") && !specialRights) {
                     String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
                     if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
                         client.respawnBoss(4130);
@@ -1306,10 +1391,7 @@ public class Commands implements Packet {
                     else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                         client.respawnBoss(3127);
                 }
-                if (command.startsWith("wild")) {
-                    client.triggerTele(3086, 3538, 0,false);
-                }
-                if (command.startsWith("bosstele")) {
+                if (command.startsWith("bosstele") && !specialRights) {
                     String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
                         if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
                             client.triggerTele(2543, 3091, 0,false);
@@ -1340,6 +1422,9 @@ public class Commands implements Packet {
                         else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                             client.triggerTele(2393, 5090, 0,false);
                 }
+                if (command.startsWith("wild")) {
+                    client.triggerTele(3086, 3538, 0,false);
+                }
                 if (cmd[0].equalsIgnoreCase("item") && !specialRights) {
                     int newItemID = Integer.parseInt(cmd[1]);
                     int newItemAmount = Integer.parseInt(cmd[2]);
@@ -1364,28 +1449,40 @@ public class Commands implements Packet {
                 if (!specialRights && (cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b"))) {
                     client.openUpBank();
                 }
-                if(cmd[0].equalsIgnoreCase("setup") && client.getPlayerName().equalsIgnoreCase("noob cow")) {
+                if(cmd[0].equalsIgnoreCase("setup")) {
                     for(int i = 0; i < 7; i++) {
-                        int level = i == 3 ? 55 : 50;
+                        int level = i == 3 ? 78 : 75;
                         client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(i));
                         client.setLevel(level, Skill.getSkill(i));
-                        if(i == 3)
-                            client.heal(client.getLevel(Skill.HITPOINTS));
                         client.refreshSkill(Skill.getSkill(i));
+                        if(i == 3) {
+                            client.maxHealth = level;
+                            client.heal(client.maxHealth);
+                        }
                     }
-                    client.getEquipment()[0] = 1161;
+                    client.getEquipment()[0] = 3751;
                     client.getEquipmentN()[0] = 1;
-                    client.getEquipment()[3] = 1331;
+                    client.getEquipment()[1] = 1007;
+                    client.getEquipmentN()[1] = 1;
+                    client.getEquipment()[2] = 1725;
+                    client.getEquipmentN()[2] = 1;
+                    client.getEquipment()[3] = 4587;
                     client.getEquipmentN()[3] = 1;
-                    client.getEquipment()[4] = 1123;
+                    client.getEquipment()[4] = 3140;
                     client.getEquipmentN()[4] = 1;
-                    client.getEquipment()[5] = 1199;
+                    client.getEquipment()[5] = 1540;
                     client.getEquipmentN()[5] = 1;
-                    client.getEquipment()[7] = 1073;
+                    client.getEquipment()[7] = 4087;
                     client.getEquipmentN()[7] = 1;
-                    for(int i = 0; i < 8; i++)
+                    client.getEquipment()[9] = 7459;
+                    client.getEquipmentN()[9] = 1;
+                    client.getEquipment()[10] = 4129;
+                    client.getEquipmentN()[10] = 1;
+                    for(int i = 0; i < 14; i++)
                         client.setEquipment(client.getEquipment()[i], client.getEquipmentN()[i], i);
                     client.addItem(5733, 1);
+                    for(int i = 0; i < 27; i++)
+                        client.addItem(385, 1);
                 }
             }
         } catch (Exception e) { //end of commands!

@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
@@ -41,7 +42,7 @@ fun Client.handleMagic(): Int {
     }
     deleteItem(565, 1)
     requestAnim(1979, 0)
-    var maxHit = baseDamage[autocast_spellIndex] * magicDmg()
+    var maxHit = baseDamage[autocast_spellIndex] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
         if(getSlayerDamage(checkNpc.id, true) == 2)
@@ -52,6 +53,10 @@ fun Client.handleMagic(): Int {
             maxHit *= 1.0 - value
             //System.out.println("reduce value: $value and defence $reduceDefence to be new max hit $maxHit")
         }
+    }
+    if(target is Player) {
+        val player = Server.playerHandler.getClient(target.slot)
+        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) maxHit /= 2.0
     }
     var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9

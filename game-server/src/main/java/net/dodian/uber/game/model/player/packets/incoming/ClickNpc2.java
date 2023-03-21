@@ -80,12 +80,9 @@ public class ClickNpc2 implements Packet {
                 Thieving.attemptSteal(client, npcId, tempNpc.getPosition());
                 break;
         }
-        if (npcId == 394 || npcId == 495 || npcId == 2619) { /* Banking */
+        if (npcId == 394 || npcId == 395 || npcId == 7677) { /* Banking */
             client.WanneBank = 1;
-        } else if (npcId == 5034 || npcId == 844
-                || npcId == 462) { /*
-         * Essence Mine Guys
-         */
+        } else if (npcId == 5034 || npcId == 844 || npcId == 462) {
             client.stairs = 26;
             client.stairDistance = 1;
             client.Essence = npcId == 5034 ? 1 : npcId == 844 ? 2 : 3;
@@ -93,6 +90,8 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 39;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId + 1;
+        /*} else if (npcId == 2180) {
+            client.NpcWanneTalk = npcId + 1;*/
         } else if (npcId == 3648) {
             client.setTravelMenu();
         } else if (npcId == 637) { // Aubury rune shop

@@ -28,9 +28,10 @@ public class GroundItem {
         }
     }
 
-    public GroundItem(int x, int y, int id, int amount, int display) {
-        this.x = x;
-        this.y = y;
+    public GroundItem(Position pos, int id, int amount, int display) {
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
         this.id = id;
         this.amount = amount;
         this.canDespawn = false;

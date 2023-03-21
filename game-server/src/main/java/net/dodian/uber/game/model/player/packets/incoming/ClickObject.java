@@ -71,6 +71,8 @@ public class ClickObject implements Packet {
                 }
                 if (objectID == 23131)
                     objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
+                if(objectID == 16466)
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 2972, client.getPosition().getX(), client.getPosition().getY(), 1, 3, client.getPosition().getZ());
                 if (objectPosition == null)
                     return;
                 atObject(client, task.getWalkToId(), task.getWalkToPosition(), object);
@@ -150,16 +152,6 @@ public class ClickObject implements Packet {
             client.teleportToY = 9912;
             client.newheightLevel = 0;
         }
-        if (objectID == 14914) {
-            client.teleportToX = 2444;
-            client.teleportToY = 5169;
-            client.newheightLevel = 0;
-        }
-        if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
-            client.teleportToX = 2848;
-            client.teleportToY = 2991;
-            client.newheightLevel = 0;
-        }
         if (objectID == 17384 && objectPosition.getX() == 2892 && objectPosition.getY() == 3507) {
             client.teleportToX = 2893;
             client.teleportToY = 3507 + 6400;
@@ -202,6 +194,32 @@ public class ClickObject implements Packet {
             client.teleportToY = 3153;
             client.newheightLevel = 0;
             client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
+        }
+        if (objectID == 14914) {
+            if (!client.checkUnlock(1) && client.checkUnlockPaid(1) != 1) {
+                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my cave."});
+                return;
+            }
+            client.addUnlocks(1, "0", client.checkUnlock(1) ? "1" : "0");
+            client.teleportToX = 2444;
+            client.teleportToY = 5169;
+            client.newheightLevel = 0;
+            client.showNPCChat(2180, 592, new String[]{"Welcome to my cave."});
+        }
+        if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
+            client.teleportToX = 2848;
+            client.teleportToY = 2991;
+            client.newheightLevel = 0;
+            client.showNPCChat(2180, 593, new String[]{"Welcome back out from my cave."});
+        }
+        if (objectID == 16466) {
+            if (client.getLevel(Skill.AGILITY) < 75) {
+                client.send(new SendMessage("You need level 75 agility to use this shortcut!"));
+                return;
+            }
+            client.teleportToX = 2863;
+            client.teleportToY = client.getPosition().getY() == 2971 ? 2976 : 2971;
+            client.newheightLevel = 0;
         }
         if (objectID == 882 && objectPosition.getX() == 2899 && objectPosition.getY() == 9728) {
             if (client.getLevel(Skill.AGILITY) < 85) {
@@ -839,10 +857,8 @@ public class ClickObject implements Packet {
             client.teleportToY = 9505;
         }
         if(objectID == 409) {
-            System.out.println("test.." + client.getMaxPrayer() + ", " + client.getCurrentPrayer());
             if(client.getCurrentPrayer() != client.getMaxPrayer()) {
-                client.setCurrentPrayer(client.getMaxPrayer());
-                client.refreshSkill(Skill.PRAYER);
+                client.pray(client.getMaxPrayer());
                 client.send(new SendMessage("You restore your prayer points!"));
             } else client.send(new SendMessage("You are at maximum prayer points!"));
         }
@@ -913,13 +929,12 @@ public class ClickObject implements Packet {
             client.teleportToY = 5117;
             client.send(new SendMessage("You have entered the Jad Cave."));
         }
-        if (objectID == 11833 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
+        if (objectID == 11834 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
         {
             client.teleportToX = 2438;
             client.teleportToY = 5168;
             client.send(new SendMessage("You have left the Jad Cave."));
         }
-
         // End of Tzhaar Objects
 
         if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)

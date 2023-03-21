@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
@@ -89,6 +90,7 @@ fun Client.handleRanged(): Int {
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
+        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) hit /= 2
         if(hit >= player.currentHealth)
             hit = player.currentHealth
         player.dealDamage(hit, landCrit)
@@ -111,13 +113,23 @@ fun Client.handleRanged(): Int {
 fun landHitRanged(p: Client, t: Entity): Boolean {
     val hitChance: Double
     val chance = Misc.chance(100000) / 1000
+    val prayerBonus = if(p.prayerManager.isPrayerOn(Prayers.Prayer.SHARP_EYE)) 1.025
+    else if(p.prayerManager.isPrayerOn(Prayers.Prayer.HAWK_EYE)) 1.05
+    else if(p.prayerManager.isPrayerOn(Prayers.Prayer.EAGLE_EYE)) 1.075
+    else 1.0
     if(t is Client) { //Pvp
         val atkBonus = p.playerBonus[4]
         val atkLevel = p.getLevel(Skill.RANGED)
         val defBonus = t.playerBonus[9]
         val defLevel = t.getLevel(Skill.DEFENCE)
-        val playerDef = defLevel * (defBonus + 64.0)
-        val playerAccuracy = atkLevel * (atkBonus + 64.0)
+        val prayerDefBonus = if(t.prayerManager.isPrayerOn(Prayers.Prayer.THICK_SKIN)) 1.05
+        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.ROCK_SKIN)) 1.1
+        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.STEEL_SKIN)) 1.15
+        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.CHIVALRY)) 1.18
+        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 1.22
+        else 1.0
+        val playerDef = (defLevel * (defBonus + 64.0)) * prayerDefBonus
+        val playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         if (playerAccuracy > playerDef)
             hitChance = 1 - ((playerDef + 2) / (2 * (playerAccuracy + 1)))
         else
@@ -130,7 +142,7 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         val defLevel = t.defence
         val defBonus = 0.0
         val npcDef = defLevel * (defBonus + 64.0)
-        var playerAccuracy = atkLevel * (atkBonus + 64.0)
+        var playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         playerAccuracy = if(p.getSlayerDamage(t.id, true) == 2) playerAccuracy * 1.2 else playerAccuracy
         if (playerAccuracy > npcDef)
             hitChance = 1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))

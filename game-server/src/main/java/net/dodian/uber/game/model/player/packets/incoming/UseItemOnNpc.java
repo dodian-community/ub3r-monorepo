@@ -38,6 +38,18 @@ public class UseItemOnNpc implements Packet {
             tempNpc.showGemConfig(client);
             return;
         }
+        if(npcId == 535 && (item == 1540 || item == 11286)) {
+            if (item == 1540 && !client.playerHasItem(11286)) client.showNPCChat(npcId, 596, new String[]{"You need a draconic visage!"});
+            else if (item == 11286 && !client.playerHasItem(1540)) client.showNPCChat(npcId, 596, new String[]{"You need a anti-dragon shield!"});
+            else if (!client.playerHasItem(995, 1500000)) client.showNPCChat(npcId, 596, new String[]{"You need 1.5 million coins!"});
+            else {
+                client.deleteItem(item, slot, 1);
+                client.deleteItem(item == 1540 ? 11286 : 1540, 1);
+                client.deleteItem(995, 1500000);
+                client.addItemSlot(11284, 1, slot);
+                client.showNPCChat(npcId, 591, new String[]{"Here you go.", "Your shield is done."});
+            }
+        }
 
         if (npcId == 2794) {
             if (item == 1735) {

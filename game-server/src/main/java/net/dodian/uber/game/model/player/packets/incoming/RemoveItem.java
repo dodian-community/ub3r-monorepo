@@ -67,7 +67,7 @@ public class RemoveItem implements Packet {
             } else {
                 IsIn = true;
             }
-            if (IsIn == false) {
+            if (IsIn == false && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
                 client.send(new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
             } else {
                 int currency = client.MyShopID == 55 ? 11997 : 995;

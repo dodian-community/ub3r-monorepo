@@ -89,7 +89,7 @@ public class ClickNpc implements Packet {
             client.showNPCChat(3306, 590, new String[]{"There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild!", "There is " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!"});
         }
         client.startFishing(npcId, 1);
-        if (npcId == 494 || npcId == 495) { /* Banking */
+        if (npcId == 394 || npcId == 395 || npcId == 7677) { /* Banking */
             client.NpcWanneTalk = 1;
             client.convoId = 0;
         } else if (npcId == 637) { /* Aubury */
@@ -101,6 +101,8 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 21;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId;
+        /*} else if (npcId == 2180) {
+            client.NpcWanneTalk = npcId;*/
         } else if (npcId == 555) {
                 client.quests[0]++;
                 client.send(new SendMessage(client.playerRights > 1 ? "Set your quest to: " + client.quests[0] : "Suddenly the monk had an urge to dissapear!"));

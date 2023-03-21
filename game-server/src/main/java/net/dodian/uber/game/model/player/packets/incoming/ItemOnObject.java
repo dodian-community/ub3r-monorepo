@@ -4,6 +4,8 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.utilities.Utils;
 
@@ -52,6 +54,20 @@ public class ItemOnObject implements Packet {
             client.setSkillY(UsedOnY);
             client.stillgfx(624, new Position(client.skillY, client.skillX, client.getPosition().getZ()), 0);
             client.boneItem = ItemID;
+        }
+        if(UsedOnObjectID == 2097 && (ItemID == 1540 || ItemID == 11286)) {
+            client.setFocus(UsedOnX, UsedOnY);
+            if(!client.playerHasItem(2347)) client.send(new SendMessage("You need a hammer!"));
+            else if (ItemID == 1540 && !client.playerHasItem(11286)) client.send(new SendMessage("You need a draconic visage!"));
+            else if (ItemID == 11286 && !client.playerHasItem(1540)) client.send(new SendMessage("You need a anti-dragon shield!"));
+            else if(Skills.getLevelForExperience(client.getExperience(Skill.SMITHING)) < 90) client.send(new SendMessage("You need level 90 smithing to do this!"));
+            else { //Preforming action!
+                client.deleteItem(ItemID, ItemSlot, 1);
+                client.deleteItem(ItemID == 1540 ? 11286 : 1540, 1);
+                client.addItemSlot(11284, 1, ItemSlot);
+                client.giveExperience(15000, Skill.SMITHING);
+                client.send(new SendMessage("Your smithing craft made a Dragonfire shield out of the visage."));
+            }
         }
         if (UsedOnObjectID == 2781 || UsedOnObjectID == 2728 || UsedOnObjectID == 26181) { // Cooking range!
             client.skillX = UsedOnX;
