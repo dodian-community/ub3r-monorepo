@@ -24,7 +24,7 @@ public class SlayerTask {
         DRUID("Druids", false, new Range(1, 30), new Range(20, 35), 3098),
         GREATER_DEMON("Greater Demon", true, new Range(55, 200), new Range(30, 60), 2025),
         BERSERK_BARBARIAN_SPIRIT("Berserk Barbarian Spirits", true, new Range(70, 200), new Range(25, 60), 5565),
-        MITHRIL_DRAGON("Mithril Dragons", true, new Range(83, 200), new Range(15, 40), 2919),
+        MITHRIL_DRAGON("Mithril Dragons", true, new Range(83, 200), new Range(10, 25), 2919),
         BLOODVELD("Bloodveld", true, new Range(53, 93), new Range(25, 60), 484),
         GARGOYLES("Gargoyles", true, new Range(63, 200), new Range(25, 60), 412),
         ABERRANT_SPECTRE("Aberrant spectre", true, new Range(73, 200), new Range(25, 60), 2),

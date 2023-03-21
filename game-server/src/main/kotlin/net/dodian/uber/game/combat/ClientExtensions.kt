@@ -7,6 +7,8 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.model.player.skills.prayer.Prayer
+import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
 import net.dodian.utilities.Utils
 
@@ -64,8 +66,21 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
     return true
 }
 
+fun Client.magicBonusDamage(): Double {
+    val prayerBonus = if(prayerManager.isPrayerOn(Prayers.Prayer.MYSTIC_WILL)) 0.05
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.MYSTIC_LORE)) 0.1
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.MYSTIC_MIGHT)) 0.15
+    else 0.0
+    return magicDmg() + prayerBonus
+}
+
 fun Client.meleeMaxHit(): Int {
-    val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
+    val prayerBonus = if(prayerManager.isPrayerOn(Prayers.Prayer.BURST_OF_STRENGTH)) 0.05
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.SUPERHUMAN_STRENGTH)) 0.1
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.ULTIMATE_STRENGTH)) 0.15
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.CHIVALRY)) 0.18
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 0.22
+    else 0.0
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     val specialBonus = 0.0 // TODO: Calculate special bonus
 
@@ -85,7 +100,10 @@ fun Client.meleeMaxHit(): Int {
 }
 
 fun Client.rangedMaxHit(): Int {
-    val prayerBonus = 0.0 // TODO: Implement prayer? and calculate bonus?
+    val prayerBonus = if(prayerManager.isPrayerOn(Prayers.Prayer.SHARP_EYE)) 0.05
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.HAWK_EYE)) 0.1
+    else if(prayerManager.isPrayerOn(Prayers.Prayer.EAGLE_EYE)) 0.15
+    else 0.0
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     val specialBonus = 0.0 // TODO: Calculate special bonus
 
@@ -122,9 +140,9 @@ fun Client.getRangedStr(): Int {
         855 -> 30
         861 -> 30
         859 -> 35
-        4212 -> 72
-        6724 -> 80
-        20997 -> 90
+        4212 -> 68
+        6724 -> 78
+        20997 -> 88
         else -> 0
     }
     /* Head */

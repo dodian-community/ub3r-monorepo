@@ -40,6 +40,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             c.getOutputStream().createFrame(73);
             c.getOutputStream().writeWordA(player.mapRegionX + 6);
             c.getOutputStream().writeWord(player.mapRegionY + 6);
+            c.updateItems();
         }
         updateLocalPlayerMovement(player, stream);
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);

@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.DropLog;
 import net.dodian.utilities.DbTables;
 
@@ -102,21 +103,27 @@ public class LoginManager {
                 }
                 /* Set stats */
                 int health = (results.getInt("health"));
+                String prayer = results.getString("prayer").trim();
+                String boosted = results.getString("boosted").trim();
+                String[] prayer_prase = prayer.split(":");
+                String[] boosted_prase = boosted.split(":");
+                int prayerLevel = !prayer.equals("") ? Integer.parseInt(prayer_prase[0]) : 0;
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
                     for (int i = 0; i < 21; i++) {
                         Skill skill = Skill.getSkill(i);
                         if (skill != null) {
-                            // p.playerXP[i] = (Integer)(results.getInt("skill" + i));
                             p.setExperience(results2.getInt(skill.getName()), skill);
-                            // p.playerLevel[i] = p.getLevelForXP(p.playerXP[i]);
                             p.setLevel(Skills.getLevelForExperience(p.getExperience(skill)), skill);
                             if (i == 3) {
-                                p.maxHealth = p.getLevel(Skill.HITPOINTS);
+                                p.maxHealth = Skills.getLevelForExperience(p.getExperience(skill));
                                 p.setCurrentHealth(health < 1 || health > p.maxHealth ? p.maxHealth : health);
-                            } else
-                                p.refreshSkill(skill);
+                            } else if (i == 5) {
+                                p.maxPrayer = Skills.getLevelForExperience(p.getExperience(skill));
+                                p.setCurrentPrayer(prayerLevel < 1 || prayerLevel > p.maxPrayer ? p.maxPrayer : prayerLevel);
+                            }
+                            p.refreshSkill(skill);
                         }
                     }
                 } else {
@@ -130,9 +137,20 @@ public class LoginManager {
                             p.setExperience(i == 3 ? 1155 : 0, skill);
                             p.setLevel(i == 3 ? 10 : 1, skill);
                             p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
+                            p.maxPrayer = 1;
+                            p.maxHealth = 10;
                             p.refreshSkill(skill);
                         }
                     }
+                }
+                if(!prayer.equals("")) {
+                    for(int i = 1; i < prayer_prase.length; i++)
+                        p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayer_prase[i])));
+                }
+                if(!boosted_prase.equals("")) {
+                    p.lastRecover = Integer.parseInt(boosted_prase[0]);
+                    for(int i = 0; i < boosted_prase.length - 1; i++)
+                        p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
                 }
                 results2.close();
                 /* Sets Inventory */
@@ -193,11 +211,13 @@ public class LoginManager {
                 p.setTravel(results.getString("travel"));
                 /* Sets Unlocks */
                 String unlocks = (results.getString("unlocks")).trim();
-                if(!unlocks.equals("")) {
-                    String[] parse = unlocks.split(":");
-                    for (int i = 0; i < parse.length; i++) {
-                        p.addUnlocks(i, parse[i].split(","));
-                    }
+                for(int i = 0; i < p.unlockLength; i++) {
+                    if(!unlocks.equals("")) {
+                        String[] parse = unlocks.split(":");
+                        if(i < parse.length)  {
+                            p.addUnlocks(i, parse[i].split(","));
+                        } else p.addUnlocks(i, "0", "0");
+                    } else p.addUnlocks(i, "0", "0");
                 }
                 /* Sets Bank */
                 String bank = (results.getString("bank")).trim();

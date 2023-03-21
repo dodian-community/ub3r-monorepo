@@ -69,16 +69,14 @@ public class ChangeRegion implements Packet {
             client.ReplaceObject2(new Position(2772, 3141, 0), 2050, 0, 10);
             client.ReplaceObject2(new Position(2772, 3142, 0), 2050, 0, 10);
             client.ReplaceObject2(new Position(2772, 3143, 0), 2050, 0, 10);
-            /* Shilo - Plague Block! */
-            client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2831, 2971, 0), 2050, 0, 10);
+            /* Blocking object! */
+            //client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
             /* ? */
             client.ReplaceObject2(new Position(2998, 3931, 0), 6951, 0, 0);
             client.ReplaceObject2(new Position(2904, 9678, 0), 6951, 0, 10);
             // slayer update
             // ReplaceObject2(2904, 9678, -1, -1, 11);
             // ReplaceObject2(2691, 9774, 2107, 0, 11);
-
             // Ancient slayer dunegon
             client.ReplaceObject(2661, 9815, 2391, 0, 0);
             client.ReplaceObject(2662, 9815, 2392, -2, 0);

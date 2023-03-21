@@ -61,7 +61,7 @@ public class ItemOnItem implements Packet {
                 }
                 int xp = 0;
                 if (client.premium)
-                    xp = Utils.grimy_herbs_xp[h] * 10;
+                    xp = Utils.grimy_herbs_xp[h];
                 client.setPots(600, itemUsed, otherItem, Utils.unfinished[h], xp);
                 return;
             }

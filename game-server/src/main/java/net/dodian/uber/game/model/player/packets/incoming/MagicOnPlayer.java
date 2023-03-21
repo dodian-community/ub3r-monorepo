@@ -9,7 +9,10 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.utilities.Utils;
+
+import static net.dodian.uber.game.combat.ClientExtensionsKt.magicBonusDamage;
 
 public class MagicOnPlayer implements Packet {
 
@@ -68,7 +71,8 @@ public class MagicOnPlayer implements Packet {
                     double critChance = client.getLevel(Skill.AGILITY) / 9;
                     boolean hitCrit = Math.random() * 100 <= critChance * (client.getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 1.5 : 1);
                     client.deleteItem(565, 1);
-                    double dmg = client.baseDamage[slot] * client.magicDmg();
+                    double dmg = client.baseDamage[slot] * magicBonusDamage(client);
+                    if(castOnPlayer.getPrayerManager().isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) dmg /= 2;
                     hitDiff = Utils.random((int) dmg);
                     hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;
                     if (hitDiff >= EnemyHP2)

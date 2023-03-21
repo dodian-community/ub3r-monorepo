@@ -170,4 +170,8 @@ public abstract class Entity {
         NPC, PLAYER;
     }
 
+    public enum damageType {
+        MELEE, RANGED, MAGIC, FIRE_BREATH;
+    }
+
 }
