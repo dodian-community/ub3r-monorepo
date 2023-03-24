@@ -230,7 +230,7 @@ public class ItemOnItem implements Packet {
             client.fletchOtherId1 = itemUsed;
             client.fletchOtherId2 = otherItem;
             client.fletchOtherId3 = 53;
-            client.fletchOtherXp = 125;
+            client.fletchOtherXp = 5;
             client.fletchOtherTime = 600;
         }
         for (int d = 0; d < Constants.darttip.length; d++) {
@@ -273,7 +273,7 @@ public class ItemOnItem implements Packet {
                 client.fletchOtherId1 = itemUsed;
                 client.fletchOtherId2 = otherItem;
                 client.fletchOtherId3 = Constants.arrows[h];
-                client.fletchOtherXp = Constants.xp[h] * 5;
+                client.fletchOtherXp = Constants.xp[h];
                 client.fletchOtherTime = 1200;
                 break;
             }

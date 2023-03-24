@@ -32,6 +32,7 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.net.InetAddress;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -171,6 +172,18 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equals("party")) {
                     Balloons.triggerPartyEvent(client);
+                }
+                if (cmd[0].equals("gem")) {
+                    /* Shilo village gem rock? */
+                    double[] chance = new double[] {23.4, 11.7, 7.03, 3.91, 3.91, 3.12};
+                    int[] gemId = new int[] {1625, 1627, 1629, 1623, 1621, 1619, 1617};
+                        int rolledChance = 0, gem = -1, roll = Misc.chance(10000);
+                        for (int i = 0; i < chance.length && gem == -1; i++) {
+                            rolledChance += (int)(chance[i] * 100);
+                            if (roll <= rolledChance) gem = gemId[i + 1];
+                            else if (i + 1 == chance.length) gem = gemId[0];
+                        }
+                    client.send(new SendMessage("You found gem.." + client.GetItemName(gem) + "(" + gem + ")"));
                 }
                 if (cmd[0].equals("boost")) {
                     client.boost(1337, Skill.STRENGTH);
