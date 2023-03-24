@@ -27,8 +27,8 @@ public class Fletching {
             player.deleteItem(player.fletchOtherId1, player.fletchOtherAmt);
             player.deleteItem(player.fletchOtherId2, player.fletchOtherAmt);
             player.addItem(player.fletchOtherId3, player.fletchOtherAmt);
-            player.giveExperience(player.fletchOtherXp, Skill.FLETCHING);
-            player.triggerRandom(player.fletchOtherXp);
+            player.giveExperience(player.fletchOtherXp * player.fletchOtherAmt, Skill.FLETCHING);
+            player.triggerRandom(player.fletchOtherXp * player.fletchOtherAmt);
         } else {
             if (player.fletchOtherAmt == 15)
                 player.send(new SendMessage("You need atleast 15 " + player.GetItemName(player.fletchOtherId1).toLowerCase() + " and " + player.GetItemName(player.fletchOtherId2).toLowerCase() + ""));

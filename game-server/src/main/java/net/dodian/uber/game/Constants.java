@@ -13,10 +13,10 @@ public class Constants {
     public static int[] longreq = {25, 40, 55, 70, 85};
     public static int[] longexp = {150, 252, 348, 450, 552};
     public static int[] longbow = {845, 847, 851, 855, 859};
-    public static int[] heads = {39, 40, 41, 42, 43, 44};
-    public static int[] arrows = {882, 884, 886, 888, 890, 892};
-    public static int[] required = {1, 15, 30, 45, 60, 75};
-    public static int[] xp = {20, 38, 75, 113, 150, 188};
+    public static int[] heads = {39, 40, 41, 42, 43, 44, 11237};
+    public static int[] arrows = {882, 884, 886, 888, 890, 892, 11212};
+    public static int[] required = {1, 15, 30, 45, 60, 75, 90};
+    public static int[] xp = {7, 13, 25, 38, 50, 63, 75};
     public static int[] darttip = {819, 820, 821, 822, 823, 824};
     public static int[] darts = {806, 807, 808, 809, 810, 811};
     public static int[] darttip_required = {1, 22, 37, 52, 67, 81};
