@@ -111,6 +111,8 @@ public class Walking implements Packet {
                 client.NpcDialogueSend = false;
                 client.send(new RemoveInterfaces());
             }
+            if(client.refundSlot != -1)
+                client.refundSlot = -1;
             // banking
             if (client.IsBanking) {
                 client.IsBanking = false;

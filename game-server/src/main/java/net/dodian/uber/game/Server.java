@@ -28,6 +28,7 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.DbTables;
+import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
@@ -136,7 +137,7 @@ public class Server implements Runnable {
         // setup the listener
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(net.dodian.utilities.DotEnvKt.getServerPort(), 1, null);
+            clientListener = new java.net.ServerSocket(DotEnvKt.getServerPort(), 1, null);
             while (true) {
                 try {
                     if (clientListener == null)

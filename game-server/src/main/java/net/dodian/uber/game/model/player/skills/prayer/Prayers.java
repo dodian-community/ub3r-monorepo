@@ -188,7 +188,7 @@ public class Prayers {
             reset();
             return;
         }
-        if(c.duelFight || prayer.getPrayerLevel() == -1) { //No prayer during a duel and prayer that has yet to be added!
+        if(c.duelFight || prayer.getPrayerLevel() == -1 || c.deathStage > 0) { //No prayer during a duel and prayer that has yet to be added!
             reset();
             return;
         }

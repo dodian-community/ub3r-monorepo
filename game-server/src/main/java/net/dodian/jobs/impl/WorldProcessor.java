@@ -52,6 +52,24 @@ public class WorldProcessor implements Job {
                     System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
                     e.printStackTrace();
                 }
+                try {
+                    for (Player p : PlayerHandler.players) {
+                        if(p != null) {
+                            Client c = ((Client) p);
+                            String query = "SELECT * FROM uber3_refunds WHERE receiver='"+c.dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+                            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+                            boolean gotResult = stm.executeQuery(query).next();
+                            if(gotResult) {
+                                c.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
+                                stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
+                            }
+                            stm.close();
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+                    e.printStackTrace();
+                }
                 Server.chat.clear(); //Not sure what this do, but empty it just incase!
         } catch (Exception e) {
             e.printStackTrace();

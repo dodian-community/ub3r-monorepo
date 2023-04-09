@@ -22,7 +22,6 @@ public class ClickObject3 implements Packet {
         int objectX = client.getInputStream().readSignedWordBigEndian();
         int objectY = client.getInputStream().readUnsignedWord();
         int objectID = client.getInputStream().readUnsignedWordBigEndianA();
-
         final WalkToTask task = new WalkToTask(WalkToTask.Action.OBJECT_THIRD_CLICK, objectID,
                 new Position(objectX, objectY));
         GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
@@ -75,6 +74,12 @@ public class ClickObject3 implements Packet {
         }
         if (objectID == 1739) {
             client.moveTo(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ() - 1);
+        }
+        if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
+                || (objectID == 6084) || objectName.contains("bank booth")) {
+                client.setRefundList();
+                client.refundSlot = 0;
+                client.setRefundOptions();
         }
     }
 

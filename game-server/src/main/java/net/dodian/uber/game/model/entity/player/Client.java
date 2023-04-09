@@ -32,6 +32,7 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
@@ -39,10 +40,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
@@ -75,7 +73,7 @@ public class Client extends Player implements Runnable {
 	public boolean filling = false;
 	public int boneItem = -1;
 	public int mineIndex = 0, minePick = 0;
-	public long potionUpdate = 0, lastDoor = 0;
+	public long lastDoor = 0;
 	public int clientPid = -1;
 	public long session_start = 0;
 	public boolean pickupWanted = false, duelWin = false;
@@ -199,22 +197,10 @@ public class Client extends Player implements Runnable {
 
 	public void refreshSkill(Skill skill) {
 		try {
-			int level = Skills.getLevelForExperience(getExperience(skill));
-			int out = level;
-			if (skill == Skill.HITPOINTS) {
-				out = getCurrentHealth();
-			} else if (skill == Skill.PRAYER) {
-				out = getCurrentPrayer();
-			} else if(boostedLevel[skill.getId()] < 0 || boostedLevel[skill.getId()] > 0) out += boostedLevel[skill.getId()];
-			/*} else if (skill == Skill.ATTACK) {
-				out = (int) ((1 + (attackPot / 100)) * level);
-			} else if (skill == Skill.DEFENCE) {
-				out = (int) ((1 + (defensePot / 100)) * level);
-			} else if (skill == Skill.STRENGTH) {
-				out = (int) ((1 + (strengthPot / 100)) * level);
-			} else if (skill == Skill.RANGED) {
-				out = (int) ((1 + (rangePot / 100)) * level);
-			}*/
+			int out = Skills.getLevelForExperience(getExperience(skill));
+			if (skill == Skill.HITPOINTS) out = getCurrentHealth();
+			else if (skill == Skill.PRAYER) out = getCurrentPrayer();
+			else if(boostedLevel[skill.getId()] != 0) out += boostedLevel[skill.getId()];
 			setSkillLevel(skill.getId(), out, getExperience(skill));
 			setLevel(out, skill);
 			getOutputStream().createFrame(134);
@@ -463,11 +449,9 @@ public class Client extends Player implements Runnable {
 
 	public static final int bufferSize = 1000000;
 	private java.net.Socket mySock;
-	private java.io.InputStream in;
-	private java.io.OutputStream out;
+	public Stream inputStream, outputStream;
 	public byte[] buffer;
 	public int readPtr, writePtr;
-	public Stream inputStream, outputStream;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
 
 	public int timeOutCounter = 0; // to detect timeouts on the connection to
@@ -475,17 +459,10 @@ public class Client extends Player implements Runnable {
 
 	public int returnCode = 2; // Tells the client if the login was successfull
 
-	private final SocketHandler mySocketHandler;
+	private SocketHandler mySocketHandler;
 
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
-		try {
-			in = s.getInputStream();
-			out = s.getOutputStream();
-		} catch (java.io.IOException ioe) {
-			System.out.println("Dodian (1): Exception!");
-			System.out.println(ioe.getMessage());
-		}
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[bufferSize]);
@@ -510,24 +487,13 @@ public class Client extends Player implements Runnable {
 			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			}
-			if (in != null) {
-				in.close();
-			}
-			if (out != null) {
-				out.close();
-			}
 			ConnectionList.getInstance().remove(mySock.getInetAddress());
 			mySock.close();
 			mySock = null;
-			in = null;
-			out = null;
-			//mySocketHandler = null;
-			this.inputStream = null;
-			this.outputStream = null;
+			mySocketHandler = null;
+			inputStream = null;
+			outputStream = null;
 			isActive = false;
-			synchronized (this) {
-				notify();
-			} // make sure this threads gets control so it can terminate
 			buffer = null;
 		} catch (java.io.IOException ioe) {
 			ioe.printStackTrace();
@@ -540,7 +506,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public Stream getOutputStream() {
-		return outputStream;
+		return this.outputStream;
 	}
 
 	public void send(OutgoingPacket packet) {
@@ -806,88 +772,88 @@ public class Client extends Player implements Runnable {
 
 	public void setSkillLevel(int skillNum, int currentLevel, int XP) {
 		if (skillNum == 0) {
-			send(new SendString("" + currentLevel + "", 4004));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4005));
+			send(new SendString(String.valueOf(currentLevel), 4004));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4005));
 		}
 		if (skillNum == 2) {
-			send(new SendString("" + currentLevel + "", 4006));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4007));
+			send(new SendString(String.valueOf(currentLevel), 4006));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4007));
 		}
 		if (skillNum == 1) {
-			send(new SendString("" + currentLevel + "", 4008));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4009));
+			send(new SendString(String.valueOf(currentLevel), 4008));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4009));
 		}
 		if (skillNum == 4) {
-			send(new SendString("" + currentLevel + "", 4010));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4011));
+			send(new SendString(String.valueOf(currentLevel), 4010));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4011));
 		}
 		if (skillNum == 5) {
-			send(new SendString("" + currentLevel + "", 4012));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4013));
+			send(new SendString(String.valueOf(currentLevel), 4012));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4013));
 		}
 		if (skillNum == 6) {
-			send(new SendString("" + currentLevel + "", 4014));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4015));
+			send(new SendString(String.valueOf(currentLevel), 4014));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4015));
 		}
 		if (skillNum == 3) {
-			send(new SendString("" + currentLevel + "", 4016));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4017));
+			send(new SendString(String.valueOf(currentLevel), 4016));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4017));
 		}
 		if (skillNum == 16) {
-			send(new SendString("" + currentLevel + "", 4018));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4019));
+			send(new SendString(String.valueOf(currentLevel), 4018));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4019));
 		}
 		if (skillNum == 15) {
-			send(new SendString("" + currentLevel + "", 4020));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4021));
+			send(new SendString(String.valueOf(currentLevel), 4020));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4021));
 		}
 		if (skillNum == 17) {
-			send(new SendString("" + currentLevel + "", 4022));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4023));
+			send(new SendString(String.valueOf(currentLevel), 4022));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4023));
 		}
 		if (skillNum == 12) {
-			send(new SendString("" + currentLevel + "", 4024));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4025));
+			send(new SendString(String.valueOf(currentLevel), 4024));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4025));
 		}
 		if (skillNum == 9) {
-			send(new SendString("" + currentLevel + "", 4026));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4027));
+			send(new SendString(String.valueOf(currentLevel), 4026));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4027));
 		}
 		if (skillNum == 14) {
-			send(new SendString("" + currentLevel + "", 4028));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4029));
+			send(new SendString(String.valueOf(currentLevel), 4028));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4029));
 		}
 		if (skillNum == 13) {
-			send(new SendString("" + currentLevel + "", 4030));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4031));
+			send(new SendString(String.valueOf(currentLevel), 4030));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4031));
 		}
 		if (skillNum == 10) {
-			send(new SendString("" + currentLevel + "", 4032));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4033));
+			send(new SendString(String.valueOf(currentLevel), 4032));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4033));
 		}
 		if (skillNum == 7) {
-			send(new SendString("" + currentLevel + "", 4034));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4035));
+			send(new SendString(String.valueOf(currentLevel), 4034));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4035));
 		}
 		if (skillNum == 11) {
-			send(new SendString("" + currentLevel + "", 4036));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4037));
+			send(new SendString(String.valueOf(currentLevel), 4036));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4037));
 		}
 		if (skillNum == 8) {
-			send(new SendString("" + currentLevel + "", 4038));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4039));
+			send(new SendString(String.valueOf(currentLevel), 4038));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4039));
 		}
 		if (skillNum == 20) {
-			send(new SendString("" + currentLevel + "", 4152));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 4153));
+			send(new SendString(String.valueOf(currentLevel), 4152));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4153));
 		}
 		if (skillNum == 18) {
-			send(new SendString("" + currentLevel + "", 12166));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 12167));
+			send(new SendString(String.valueOf(currentLevel), 12166));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 12167));
 		}
 		if (skillNum == 19) {
-			send(new SendString("" + currentLevel + "", 13926));
-			send(new SendString("" + Skills.getLevelForExperience(XP) + "", 13927));
+			send(new SendString(String.valueOf(currentLevel), 13926));
+			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 13927));
 		}
 	}
 
@@ -987,7 +953,7 @@ public class Client extends Player implements Runnable {
 				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ");
 				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
 				for (int i = 0; i < 21; i++) {
-					query.append(Skill.getSkill(i).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
+					query.append(Objects.requireNonNull(Skill.getSkill(i)).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
 					query2.append(Skill.getSkill(i).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
 				}
 				query.append("totalxp=").append(allxp).append(" WHERE uid=").append(dbId);
@@ -1987,6 +1953,27 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
+	public void deleteItemBank(int id, int slot, int amount) {
+		if (slot > -1 && slot < bankItems.length) {
+			if ((bankItems[slot] - 1) == id) {
+				if (bankItemsN[slot] > amount) {
+					bankItemsN[slot] -= amount;
+				} else {
+					bankItemsN[slot] = 0;
+					bankItems[slot] = 0;
+				}
+				resetItems(3214);
+				if (IsBanking) {
+					send(new InventoryInterface(5292, 5063)); // 5292
+					resetItems(5064);
+				}
+			}
+		}
+	}
+	public void deleteItemBank(int id, int amount) {
+		deleteItemBank(id, GetBankItemSlot(id), amount);
+	}
+
 	public void setEquipment(int wearID, int amount, int targetSlot) {
 		getOutputStream().createFrameVarSizeWord(34);
 		getOutputStream().writeWord(1688);
@@ -2316,6 +2303,20 @@ public class Client extends Player implements Runnable {
 		if (newPms > 0) {
 			send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
 		}
+		/* Check for refunded items! */
+		try {
+			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+			boolean gotResult = stm.executeQuery(query).next();
+			if(gotResult) {
+				send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
+				stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
+			}
+			stm.close();
+		} catch (Exception e) {
+			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+			e.printStackTrace();
+		}
 		loaded = true;
 		PlayerUpdating.getInstance().update(this, getOutputStream());
 		//initialized = true;
@@ -2378,8 +2379,10 @@ public class Client extends Player implements Runnable {
 					}
 				}
 			}
-		if (reloadHp)
+		if (reloadHp) {
 			heal(getMaxHealth());
+			setCurrentPrayer(getMaxPrayer());
+		}
 		// RubberCheck();
 		QuestSend.questInterface(this);
 		long now = System.currentTimeMillis();
@@ -2620,22 +2623,34 @@ public class Client extends Player implements Runnable {
 			}
 			requestAnim(836, 5);
 			setCurrentHealth(0);
-			send(new SendMessage("Oh dear you have died!"));
 			deathStage++;
 			deathTimer = System.currentTimeMillis();
+			prayers.reset();
+			send(new SendMessage("Oh dear you have died!"));
 		} else if (deathStage == 1 && now - deathTimer >= 1800) {
 			teleportToX = 2606;
 			teleportToY = 3102;
 			getPosition().setZ(0);
 			deathStage = 0;
 			deathTimer = 0;
-			heal(Skills.getLevelForExperience(getExperience(Skill.HITPOINTS)));
-			requestAnims(getEquipment()[3]);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			/* Stats check! */
+			for(int i = 0; i < boostedLevel.length; i++) {
+				if(i == 3)
+					heal(Skills.getLevelForExperience(getExperience(Skill.HITPOINTS)));
+				else if (i == 5)
+					setCurrentPrayer(Skills.getLevelForExperience(getExperience(Skill.PRAYER)));
+				else
+					boostedLevel[i] = 0;
+				refreshSkill(Skill.getSkill(i));
+			}
+			/* Death in other content! */
 			if (inWildy())
 				died();
 			if (getSkullIcon() >= 0)
 				setSkullIcon(-1);
+			/* Animation check !*/
+			requestAnims(getEquipment()[3]);
+			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		}
 		if (smithing[0] > 0) {
 			if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
@@ -2727,7 +2742,7 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		Queue<PacketData> data = mySocketHandler.getPackets();
-		if (data == null || data.isEmpty())
+		if (data == null || data.isEmpty() || data.stream() == null)
 			return false;
 		try {
 			fillInStream(data.poll());
@@ -2735,7 +2750,7 @@ public class Client extends Player implements Runnable {
 			e.printStackTrace();
 			//System.out.println("Player" + getPlayerName() + " disconnected.");
 			System.out.println(e);
-			saveStats(true);
+			//saveStats(true); //Not sure if needed yet!
 			disconnected = true;
 			return false;
 		}
@@ -3621,6 +3636,14 @@ public class Client extends Player implements Runnable {
 	public int GetItemSlot(int ItemID) {
 		for (int i = 0; i < playerItems.length; i++) {
 			if ((playerItems[i] - 1) == ItemID) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	public int GetBankItemSlot(int ItemID) {
+		for (int i = 0; i < bankItems.length; i++) {
+			if ((bankItems[i] - 1) == ItemID) {
 				return i;
 			}
 		}
@@ -5188,42 +5211,45 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 2345:
-				showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", checkUnlock(0) ? "You can enter for free." : "You have to pay a ship ticket to enter.", checkUnlock(0) ? "" : "You can also pay a one time fee of 20 ship tickets."});
-				nextDiag = ++NpcDialogue;
+				if(!checkUnlock(0)) {
+					showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", "You have to pay a to enter.", "You can also pay a one time fee."});
+					nextDiag = ++NpcDialogue;
+				} else
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
 				NpcDialogueSend = true;
 			break;
 			case 2346:
 				if(!checkUnlock(0) && checkUnlockPaid(0) != 1)
 					showPlayerOption(new String[]{
-							"Select a option", "One Ship Ticket", "One Time Fee", "Nevermind"});
+							"Select a option", "Enter fee", "Permanent unlock", "Nevermind"});
 				else if(checkUnlock(0))
 					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
 				else
 					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid.", "Just enter the dungeon now."});
 				NpcDialogueSend = true;
 			break;
-			case 2347:
-				showNPCChat(NpcTalkTo, 596, new String[]{"You do not have 20 ship tickets."});
-				nextDiag = 2345;
+			case 2182: //Jad cave
+			case 2347: //Cave horror dungeon
+				showPlayerOption(new String[]{"Select a option", "Ship ticket", "Coins"});
+				NpcDialogueSend = true;
 			break;
 			case 2180:
-				showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my cave?", checkUnlock(1) ? "You can enter for free." : "You have to pay a ship ticket to enter.", checkUnlock(1) ? "" : "You can also pay a one time fee of 20 ship tickets."});
-				nextDiag = ++NpcDialogue;
+				if(!checkUnlock(1)) {
+					showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my cave?", "You have to pay a to enter.", "You can also pay a one time fee."});
+					nextDiag = ++NpcDialogue;
+				} else
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
 				NpcDialogueSend = true;
 			break;
 			case 2181:
 				if(!checkUnlock(1) && checkUnlockPaid(1) != 1)
 					showPlayerOption(new String[]{
-							"Select a option", "One Ship Ticket", "One Time Fee", "Nevermind"});
+							"Select a option", "Enter fee", "Permanent unlock", "Nevermind"});
 				else if(checkUnlock(1))
 					showNPCChat(NpcTalkTo, 591, new String[]{"You can enter freely, no need to pay me anything."});
 				else
 					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid.", "Just enter the cave now."});
 				NpcDialogueSend = true;
-			break;
-			case 2182:
-				showNPCChat(NpcTalkTo, 596, new String[]{"You do not have 20 ship tickets."});
-				nextDiag = 2180;
 			break;
 			case 3648:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Hello dear.", "Would you like to travel?"});
@@ -7511,50 +7537,108 @@ public class Client extends Player implements Runnable {
 			NpcDialogue = -1;
 		} else if (NpcDialogue == 2346) {
 			if (button == 1) { //One time pay!
-				if(checkUnlockPaid(0) != 1) {
-					if(playerHasItem(621)) {
-						deleteItem(621, 1);
-						addUnlocks(0, "1", checkUnlock(0) ? "1" : "0");
-						showNPCChat(NpcTalkTo, 591, new String[]{"You Can now step into the dungeon"});
-					} else
-						showNPCChat(NpcTalkTo, 596, new String[]{"You need a ship ticket to enter my dungeon!"});
-				} else
-					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my dungeon."});
+				nextDiag = 2347;
 			} else if (button == 2) { //One time fee
-				if(!checkUnlock(0) && playerHasItem(621, 20)) {
-					deleteItem(621, 20);
-					addUnlocks(0, checkUnlockPaid(0) + "", "1");
-					showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the ship tickets.", "You may enter freely into my dungeon."});
-				} else if(!playerHasItem(621, 20)) {
-					nextDiag = 2347;
+				if(!checkUnlock(0)) {
+					int maximumTickets = 10, minimumTicket = 1, ticketValue = 300_000;
+					int missing = (maximumTickets - minimumTicket) * ticketValue;
+					if(!playerHasItem(621, minimumTicket)) {
+						showNPCChat(NpcTalkTo, 591, new String[]{"You need a minimum of " + minimumTicket + " ship ticket", "to unlock permanent!"});
+						return;
+					}
+					missing -= (getInvAmt(621) - 1) * ticketValue;
+					if(missing > 0) {
+						if(getInvAmt(995) >= missing) {
+							deleteItem(621, getInvAmt(621) < maximumTickets ? getInvAmt(621) : maximumTickets);
+							deleteItem(995, missing);
+							addUnlocks(0, checkUnlockPaid(0) + "", "1");
+							showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the payment.", "You may enter freely into my dungeon."});
+						} else showNPCChat(NpcTalkTo, 591, new String[]{"You do not have enough coins to do this!", "You are currently missing "+(missing - getInvAmt(995))+" coins or", (int)Math.ceil((missing - getInvAmt(995))/300_000D) + " ship tickets."});
+					} else { //Using ship tickets as payment!
+						deleteItem(621, maximumTickets);
+						addUnlocks(0, checkUnlockPaid(0) + "", "1");
+						showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the ship tickets.", "You may enter freely into my dungeon."});
+					}
 				}
 			} else if (button == 3) { //Nevermind!
-				showPlayerChat(new String[]{ "I do not want anything." }, 614);
+				showPlayerChat(new String[]{"I do not want anything."}, 614);
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 2347) {
+			if(checkUnlockPaid(0) > 0 || checkUnlock(0)) {
+				showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my dungeon."});
+			} else if(button == 1) {
+				if(getInvAmt(621) > 0 || getBankAmt(621) > 0) {
+					addUnlocks(0, "1", checkUnlock(0) ? "1" : "0");
+					if(getInvAmt(621) > 0)
+						deleteItem(621, 1);
+					else deleteItemBank(621, 1);
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the dungeon."});
+				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need a ship ticket to enter my dungeon!"});
+			} else if (button == 2) {
+				long amount = getInvAmt(995) + getBankAmt(995);
+				int total = 300_000;
+				if(amount >= total) {
+					addUnlocks(0, "1", checkUnlock(0) ? "1" : "0");
+					int remain = total - getInvAmt(995);
+					deleteItem(995, total);
+					if(remain > 0)
+						deleteItemBank(995, remain);
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the dungeon."});
+				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need atleast "+(300_000 - amount)+" more coins to enter my dungeon!"});
+			}
 		} else if (NpcDialogue == 2181) {
 			if (button == 1) { //One time pay!
-				if(checkUnlockPaid(1) != 1) {
-					if(playerHasItem(621)) {
-						deleteItem(621, 1);
-						addUnlocks(1, "1", checkUnlock(0) ? "1" : "0");
-						showNPCChat(NpcTalkTo, 591, new String[]{"You Can now step into the cave"});
-					} else
-						showNPCChat(NpcTalkTo, 596, new String[]{"You need a ship ticket to enter my cave!"});
-				} else
-					showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my cave."});
+				nextDiag = 2182;
 			} else if (button == 2) { //One time fee
-				if(!checkUnlock(1) && playerHasItem(621, 20)) {
-					deleteItem(621, 20);
-					addUnlocks(1, checkUnlockPaid(1) + "", "1");
-					showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the ship tickets.", "You may enter freely into my cave."});
-				} else if(!playerHasItem(621, 20)) {
-					nextDiag = 2182;
+				if(!checkUnlock(1)) {
+					int maximumTickets = 20, minimumTicket = 3, ticketValue = 300_000;
+					int missing = (maximumTickets - minimumTicket) * ticketValue;
+					if(!playerHasItem(621, minimumTicket)) {
+						showNPCChat(NpcTalkTo, 591, new String[]{"You need a minimum of " + minimumTicket + " ship ticket", "to unlock permanent!"});
+						return;
+					}
+					missing -= (getInvAmt(621) - 1) * ticketValue;
+					if(missing > 0) {
+						if(getInvAmt(995) >= missing) {
+							deleteItem(621, getInvAmt(621) < maximumTickets ? getInvAmt(621) : maximumTickets);
+							deleteItem(995, missing);
+							addUnlocks(1, checkUnlockPaid(1) + "", "1");
+							showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the payment.", "You may enter freely into my cave."});
+						} else showNPCChat(NpcTalkTo, 591, new String[]{"You do not have enough coins to do this!", "You are currently missing "+(missing - getInvAmt(995))+" coins or", (int)Math.ceil((missing - getInvAmt(995))/300_000D) + " ship tickets."});
+					} else { //Using ship tickets as payment!
+						deleteItem(621, maximumTickets);
+						addUnlocks(1, checkUnlockPaid(1) + "", "1");
+						showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the ship tickets.", "You may enter freely into my cave."});
+					}
 				}
 			} else if (button == 3) { //Nevermind!
-				showPlayerChat(new String[]{ "I do not want anything." }, 614);
+				showPlayerChat(new String[]{"I do not want anything."}, 614);
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 2182) {
+			if(checkUnlockPaid(1) > 0 || checkUnlock(1)) {
+				showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my cave."});
+			} else if(button == 1) {
+				if(getInvAmt(621) > 0 || getBankAmt(621) > 0) {
+					addUnlocks(1, "1", checkUnlock(1) ? "1" : "0");
+					if(getInvAmt(621) > 0)
+						deleteItem(621, 1);
+					else deleteItemBank(621, 1);
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the cave."});
+				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need a ship ticket to enter my cave!"});
+			} else if (button == 2) {
+				long amount = getInvAmt(995) + getBankAmt(995);
+				int total = 300_000;
+				if(amount >= total) {
+					addUnlocks(1, "1", checkUnlock(1) ? "1" : "0");
+					int remain = total - getInvAmt(995);
+					deleteItem(995, total);
+					if(remain > 0)
+						deleteItemBank(995, remain);
+					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the cave."});
+				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need atleast "+(300_000 - amount)+" more coins to enter my cave!"});
+			}
 		} else if (NpcDialogue == 8053) {
 			if (button == 1) {
 				send(new RemoveInterfaces());
@@ -8865,5 +8949,86 @@ public class Client extends Player implements Runnable {
 			getOutputStream().createFrame(85);
 			getOutputStream().writeByteC(pos.getY() - (mapRegionY * 8));
 			getOutputStream().writeByteC(pos.getX() - (mapRegionX * 8));
+	}
+
+	public int refundSlot = -1;
+	public ArrayList<RewardItem> rewardList = new ArrayList<>();
+	public void setRefundList() {
+		rewardList.clear();
+		try {
+			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
+			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+			ResultSet result = stm.executeQuery(query);
+			while(result.next()) {
+				rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
+			}
+			stm.close();
+		} catch (Exception e) {
+			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+			e.printStackTrace();
+		}
+	}
+	public void setRefundOptions() {
+		if(rewardList.isEmpty()) {
+			refundSlot = -1;
+			send(new SendMessage("You got no items to collect!"));
+			return;
+		}
+		int slot = refundSlot;
+		String[] text = new String[rewardList.size() < 4 ? rewardList.size() + 2 : rewardList.size() - slot <= 3 ? rewardList.size() - slot + 2 : 6];
+		text[0] = "Refund Item List";
+		int position = Math.min(3, rewardList.size() - slot);
+			for(int i = 0; i < position; i++)
+				text[i + 1] = "Claim "+ rewardList.get(slot + i).getAmount() +" of " + GetItemName(rewardList.get(slot + i).getId());
+				text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
+			if(text.length == 6)
+				text[position + 2] = slot == 0 ? "Close" : "Previous";
+			showPlayerOption(text);
+	}
+	public void reclaim(int position) {
+		int slot = refundSlot + position;
+		try {
+			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
+			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+			ResultSet result = stm.executeQuery(query);
+			String date = "";
+			RewardItem item = rewardList.get(slot - 1);
+			while(result.next() && date.equals("")) {
+				if(result.getRow() == slot) {
+					date = result.getString("date");
+				}
+			}
+			stm.executeUpdate("UPDATE uber3_refunds SET claimed='"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"' where date='"+date+"'");
+			stm.close();
+			/* Set back options! */
+			setRefundList();
+			if(!rewardList.isEmpty()) {
+				refundSlot = 0;
+				setRefundOptions();
+			} else send(new RemoveInterfaces());
+			/* Refund item function */
+			int amount = item.getAmount() - getFreeSpace();
+			if(Server.itemManager.isStackable(item.getId())) {
+				if(getFreeSpace() == 0) {
+					GroundItem groundItem = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), item.getId(), item.getAmount(), getSlot(), -1);
+					Ground.items.add(groundItem);
+					send(new SendMessage("Some items have been dropped to the ground!"));
+				} else addItem(item.getId(), item.getAmount());
+			} else if (amount > 0) {
+				addItem(item.getId(), getFreeSpace());
+				for(int i = 0; i < getFreeSpace(); i++)
+					addItem(item.getId(), 1);
+				for(int i = 0; i < amount; i++) {
+					GroundItem groundItem = new GroundItem(getPosition().getX(), getPosition().getY(), getPosition().getZ(), item.getId(), 1, getSlot(), -1);
+					Ground.items.add(groundItem);
+				}
+				send(new SendMessage("Some items have been dropped to the ground!"));
+			} else
+				for(int i = 0; i < item.getAmount(); i++)
+					addItem(item.getId(), 1);
+		} catch (Exception e) {
+			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+			e.printStackTrace();
+		}
 	}
 }
