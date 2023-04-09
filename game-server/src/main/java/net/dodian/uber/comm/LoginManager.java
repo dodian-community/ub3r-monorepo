@@ -121,7 +121,7 @@ public class LoginManager {
                                 p.setCurrentHealth(health < 1 || health > p.maxHealth ? p.maxHealth : health);
                             } else if (i == 5) {
                                 p.maxPrayer = Skills.getLevelForExperience(p.getExperience(skill));
-                                p.setCurrentPrayer(prayerLevel < 1 || prayerLevel > p.maxPrayer ? p.maxPrayer : prayerLevel);
+                                p.setCurrentPrayer(prayerLevel < 0 || prayerLevel > p.maxPrayer ? p.maxPrayer : prayerLevel);
                             }
                             p.refreshSkill(skill);
                         }

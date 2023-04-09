@@ -197,7 +197,7 @@ public class ClickObject implements Packet {
         }
         if (objectID == 14914) {
             if (!client.checkUnlock(1) && client.checkUnlockPaid(1) != 1) {
-                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my cave."});
+                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my dungeon."});
                 return;
             }
             client.addUnlocks(1, "0", client.checkUnlock(1) ? "1" : "0");
@@ -925,9 +925,11 @@ public class ClickObject implements Packet {
             client.openUpBank();
         if (objectID == 11833 && objectPosition.getX() == 2437 && objectPosition.getY() == 5166) // Jad entrance
         {
-            client.teleportToX = 2413;
-            client.teleportToY = 5117;
-            client.send(new SendMessage("You have entered the Jad Cave."));
+            if(getGameWorldId() > 1) {
+                client.teleportToX = 2413;
+                client.teleportToY = 5117;
+                client.send(new SendMessage("You have entered the Jad Cave."));
+            } else client.send(new SendMessage("Jad coming out in May! Please be patient!"));
         }
         if (objectID == 11834 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
         {

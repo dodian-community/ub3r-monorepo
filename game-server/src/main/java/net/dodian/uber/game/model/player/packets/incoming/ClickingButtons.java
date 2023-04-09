@@ -15,6 +15,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Utils;
@@ -31,7 +32,8 @@ public class ClickingButtons implements Packet {
         if (getServerDebugMode()) {
             client.println("button=" + actionButton);
         }
-        if (!client.validClient) {
+        if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) { //To prevent some shiez!
+            client.lastButton = System.currentTimeMillis();
             return;
         }
         if(!(actionButton >= 9157 && actionButton <= 9194))
@@ -47,6 +49,30 @@ public class ClickingButtons implements Packet {
             return;
         }
         if(QuestSend.questMenu(client)) {
+            return;
+        }
+        if(client.refundSlot != -1) { //Refund code!
+            int size = client.rewardList.size();
+            int checkSlot = 1;
+            int position = size - client.refundSlot;
+            if(actionButton == 9158 || actionButton == 9168 || actionButton == 9179 || actionButton == 9191)
+                checkSlot = 2;
+            else if(actionButton == 9169 || actionButton == 9180 || actionButton == 9192)
+                checkSlot = 3;
+            else if(actionButton == 9181 || actionButton == 9193)
+                checkSlot = 4;
+            else if(actionButton == 9194)
+                checkSlot = 5;
+            if(client.refundSlot == 0 && ((size > 3 && checkSlot == 5) || (size == 3 && checkSlot == 4) || (size == 1 && checkSlot == 2) || (size == 2 && checkSlot == 3))) { //Close!
+                client.refundSlot = -1;
+                client.send(new RemoveInterfaces());
+            } else if(((client.refundSlot == 0 && position > 3) || position > 3) && checkSlot == 4)
+                client.refundSlot += 3;
+            else if(client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5)))
+                client.refundSlot -= 3;
+            else client.reclaim(checkSlot);
+            if(!client.rewardList.isEmpty())
+                client.setRefundOptions();
             return;
         }
         Emotes.doEmote(actionButton, client);
@@ -387,13 +413,16 @@ public class ClickingButtons implements Packet {
                     client.genie = false;
                     if (client.inDuel || client.duelFight || client.IsBanking || client.checkBankInterface || !client.playerHasItem(2528)) //To prevent stuff!
                         break;
-                    for (int i = 0; i < skillTrain.length; i++)
-                        if (skillTrain[i] == client.actionButtonId && client.actionButtonId != 54090) {
+                    for (int i = 0; i < skillTrain.length; i++) {
+                        Skill trainedSkill = Skill.getSkill(i);
+                        if (trainedSkill != null && skillTrain[i] == client.actionButtonId && client.actionButtonId != 54090) {
                             client.deleteItem(2528, 1);
-                            int experience = 250 * client.getLevel(Skill.getSkill(i));
-                            client.giveExperience(experience, Skill.getSkill(i));
-                            client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + Skill.getSkill(i).getName() + ""));
+                            int level = Skills.getLevelForExperience(client.getExperience(trainedSkill));
+                            int experience = 250 * level;
+                            client.giveExperience(experience, trainedSkill);
+                            client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + trainedSkill.getName() + "."));
                         }
+                    }
                 } else if (client.randomed && client.actionButtonId == client.statId[client.random_skill]) {
                     client.randomed = false;
                     client.send(new RemoveInterfaces());
@@ -575,7 +604,7 @@ public class ClickingButtons implements Packet {
                             break;
                         }
                         client.send(new SendString("Waiting for other player...", 3431));
-                        if (client.validClient(client.trade_reqId)) {
+                        if (other != null && client.validClient(client.trade_reqId)) {
                             other.send(new SendString("Other player has accepted", 3431));
                         }
                     }

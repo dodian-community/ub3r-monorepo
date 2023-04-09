@@ -81,6 +81,12 @@ public class PlayerProcessor implements Job {
                     }
                 }
             }
+            // post processing
+            for (int i = 0; i < Constants.maxPlayers; i++) {
+                if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
+                    continue;
+                PlayerHandler.players[i].clearUpdateFlags();
+            }
             /* Server update! */
             if (Server.updateRunning && !Server.updateAnnounced) {
                 Server.updateAnnounced = true;
@@ -90,12 +96,6 @@ public class PlayerProcessor implements Job {
                 if (PlayerHandler.getPlayerCount() < 1) {
                     System.exit(0);
                 }
-            }
-            // post processing
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive)
-                    continue;
-                PlayerHandler.players[i].clearUpdateFlags();
             }
         } catch(Exception e){
             e.printStackTrace();

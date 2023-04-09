@@ -10,9 +10,9 @@ public class MouseClicks implements Packet {
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int in = client.getInputStream().readDWord();
-        if (getGameWorldId() == 6)
+        /*if (getGameWorldId() == 6)
             System.out.println("click " + in);
-        client.updatePlayerDisplay();
+        client.updatePlayerDisplay();*/
     }
 
 }

@@ -53,7 +53,7 @@ public class ClickItem implements Packet {
                 statement.close();
                 Server.npcManager.createNpc(client.getPlayerNpc(), new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()), 0);
                 client.send(new SendMessage("Npc added = " + client.getPlayerNpc() + ", at x = " + client.getPosition().getX()
-                        + " y = " + client.getPosition().getY() + ""));
+                        + " y = " + client.getPosition().getY() + "."));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -102,7 +102,8 @@ public class ClickItem implements Packet {
                 case 215:
                 case 217:
                 case 219:
-                case 3051:
+                case 3049: //Toadflax
+                case 3051: //Snapdragon
                     for (int i = 0; i < Utils.grimy_herbs.length && used; i++) {
                         if(Utils.grimy_herbs[i] == item) {
                             used = false;
@@ -111,7 +112,7 @@ public class ClickItem implements Packet {
                             } else {
                                 client.addExperience(Utils.grimy_herbs_xp[i], Skill.HERBLORE);
                                 client.deleteItem(item, slot, 1);
-                                client.addItemSlot(item != 3051 && item != 3049 ? item + 50 : item - 51, 1, slot);
+                                client.addItemSlot(item == 3051 || item == 3049 ? item - 51 : item + 50, 1, slot);
                                 client.send(new SendMessage("You clean the "+client.GetItemName(item)+"."));
                             }
                         }

@@ -46,15 +46,17 @@ public class JobScheduler {
         }
     }
 
-    public static void ScheduleStaticRepeatForeverJob(int milliSeconds, Class<? extends Job> object)
-            throws SchedulerException {
+    public static void ScheduleStaticRepeatForeverJob(int milliSeconds, Class<? extends Job> object) {
         JobDetail job = JobBuilder.newJob(object).build();
 
         Trigger trigger = TriggerBuilder.newTrigger()
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMilliseconds(milliSeconds).repeatForever())
                 .build();
-
-        scheduler.scheduleJob(job, trigger);
+        try {
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException e) {
+            //TODO: Add exceptions stored debug!
+        }
     }
 
     public Scheduler getScheduler() {

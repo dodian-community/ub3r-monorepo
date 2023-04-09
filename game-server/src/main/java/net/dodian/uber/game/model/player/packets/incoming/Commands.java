@@ -37,7 +37,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -131,7 +133,6 @@ public class Commands implements Packet {
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("test..." + e.getMessage());
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
                     }
                 }
@@ -148,9 +149,6 @@ public class Commands implements Packet {
                         String itemName = Server.itemManager.getName(itemId);
                         System.out.println(Server.npcManager.getName(results.getInt("npcid")) + " drops "+results.getInt("amt_min")+" - "+results.getInt("amt_max")+" of " + itemName.toLowerCase() + " "+ (!Server.itemManager.isNote(itemId) ? "(note)" : "") +" with a chance of " + (results.getDouble("percent") + "%"));
                     }
-                }
-                if (cmd[0].equals("testboss")) {
-                    client.triggerTele(3349,3343,0,false);
                 }
                 if (cmd[0].equalsIgnoreCase("split")) { //Magic armour split!
                     int chance = Integer.parseInt(cmd[1]);
@@ -185,7 +183,7 @@ public class Commands implements Packet {
                         }
                     client.send(new SendMessage("You found gem.." + client.GetItemName(gem) + "(" + gem + ")"));
                 }
-                if (cmd[0].equals("boost")) {
+                if (cmd[0].equals("boost_on")) {
                     client.boost(1337, Skill.STRENGTH);
                     client.boost(1337, Skill.DEFENCE);
                     client.boost(1337, Skill.ATTACK);
@@ -376,6 +374,89 @@ public class Commands implements Packet {
                             client.addItem(5510 + (i * 2), 1);
                     } else
                         client.send(new SendMessage("Need 4 free slots!"));
+                }
+                if (cmd[0].equals("delete")) {
+                    try {
+                        String query = "DELETE FROM uber3_refunds WHERE receiver='"+client.dbId+"'";
+                        Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+                        stm.executeUpdate(query);
+                        stm.close();
+                    } catch (Exception e) {
+                        System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+                        e.printStackTrace();
+                    }
+                }
+                if (cmd[0].equals("refund_ticket")) {
+                    try {
+                        if (client.wildyLevel > 0 && !specialRights) {
+                            client.send(new SendMessage("Command can't be used in the wilderness!"));
+                            return;
+                        }
+                        String otherPName = command.substring(cmd[0].length() + 1);
+                        int otherPIndex = PlayerHandler.getPlayerID(otherPName);
+                        if (otherPIndex != -1) {
+                            Client p = (Client) PlayerHandler.players[otherPIndex];
+                            if(p.checkUnlock(0)) {
+                                try {
+                                    Statement stm = getDbConnection().createStatement();
+                                    String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + otherPName + "'";
+                                    ResultSet results = stm.executeQuery(query);
+                                    int userid = -1;
+                                    if (results.next())
+                                        userid = results.getInt("userid");
+                                    if(userid >= 0) {
+                                        stm.executeUpdate("INSERT INTO uber3_refunds(date, receiver, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+userid+"', '621', '20')");
+                                        p.addUnlocks(0, "0", "0");
+                                    }
+                                    stm.close();
+                                } catch (Exception e) {
+                                    System.out.println("issue: " + e.getMessage());
+                                }
+                            } else client.send(new SendMessage(otherPName + " have nothing to refund!"));
+                        } else {
+                            client.send(new SendMessage("Player " + otherPName + " is not online!"));
+                        }
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Try entering a name you want to refund ticket to!"));
+                    }
+                }
+                if (cmd[0].equals("refund")) {
+                    //TODO: Fix refund items!
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        int amt = Integer.parseInt(cmd[2]);
+                        String user = command.substring(cmd[0].length() + cmd[1].length() + cmd[2].length() + 3);
+                        try {
+                            Statement stm = getDbConnection().createStatement();
+                            String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
+                            ResultSet results = stm.executeQuery(query);
+                            int userid = -1;
+                            if (results.next())
+                                userid = results.getInt("userid");
+                            if(userid >= 0) {
+                                stm.executeUpdate("INSERT INTO uber3_refunds(date, receiver, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+userid+"', '"+id+"', '"+amt+"')");
+                                client.send(new SendMessage("Account '"+user+"'("+userid+") have receieved "+amt+" of "+client.GetItemName(id).toLowerCase()+"."));
+                            } else client.send(new SendMessage("Account '"+user+"' do not exist!"));
+                            stm.close();
+                        } catch (Exception e) {
+                            System.out.println("issue: " + e.getMessage());
+                        }
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id amount playername"));
+                    }
+                    /*try {
+                        String query = "SELECT * FROM uber3_refunds WHERE receiver='"+client.dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+                        Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
+                        boolean gotResult = stm.executeQuery(query).next();
+                        if(gotResult) {
+                            client.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
+                            stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
+                        }
+                        stm.close();
+                    } catch (Exception e) {
+                        System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+                        e.printStackTrace();
+                    }*/
                 }
                 if (cmd[0].equalsIgnoreCase("config36")) {
                     //173 = run config!
@@ -1165,6 +1246,7 @@ public class Commands implements Packet {
                     int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
                     int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
                     amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
+                    amount = getGameWorldId() > 1 ? 100 : amount;
                     NpcData n = Server.npcManager.getData(npcId);
                     if (n == null)
                         client.send(new SendMessage("This npc have no data!"));
@@ -1367,6 +1449,12 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("debug")) {
                     client.debug = !client.debug;
                     client.send(new SendMessage("You set debug as " + client.debug));
+                }
+                if (cmd[0].equals("boost")) {
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.STRENGTH)) * 0.15), Skill.STRENGTH);
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.15), Skill.DEFENCE);
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.ATTACK);
+                    client.boost(4 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.RANGED)) * 0.12), Skill.RANGED);
                 }
                 if ((cmd[0].equalsIgnoreCase("tool") || cmd[0].equalsIgnoreCase("potato")) && client.playerRights > 0) {
                     client.addItem(5733, 1);

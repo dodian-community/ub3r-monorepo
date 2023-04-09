@@ -805,14 +805,15 @@ public abstract class Player extends Entity {
         getUpdateFlags().setRequired(UpdateFlag.HIT, true);
     }
 
-    public void dealDamage(int amt, boolean crit, Entity.damageType dmg) {
+    public void dealDamage(int amt, boolean crit, Entity attacker, Entity.damageType dmg) {
         Client plr = ((Client) this);
+        Npc npc = ((Npc) attacker);
         if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
             boolean gotAntiEffect = plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
                     || plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
                     || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC);
-            if(plr.target instanceof  Npc && ((Npc) plr.target).getId() == 239) amt /= 2;
-            else if (plr.target instanceof  Npc && ((Npc) plr.target).getId() != 239 && gotAntiEffect) {
+            if(npc != null && npc.getId() == 239 && gotAntiEffect) amt /= 2;
+            else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
                 amt *= 3; amt /= 10; //Ugly way to write reduce dmg by 70%
             } else plr.send(new SendMessage("You are badly burnt by the dragon fire!"));
         } else if(dmg.equals(damageType.MELEE) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) amt /= 2;
@@ -1123,7 +1124,7 @@ public abstract class Player extends Entity {
     }
     public void eat(int healing, int removeId, int removeSlot) {
         Client c = (Client) this;
-        if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) { //TODO: Add a way to not heal during a duel!
+        if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) {
             return;
         }
         if(c.getCurrentHealth() < c.getMaxHealth()) {
@@ -1145,19 +1146,6 @@ public abstract class Player extends Entity {
         boostedLevel[skill.getId()] = boosted;
         c.refreshSkill(skill);
     }
-
-    /*public void statBoost(int stat, boolean overBoost, int value) {
-        int lvl = getLevelForXP(playerXP[stat]);
-        int maxLevel = lvl + value;
-        value = !overBoost && playerLevel[stat] + value >= lvl && playerLevel[stat] <= lvl ? (lvl - playerLevel[stat])
-                : !overBoost && playerLevel[stat] > lvl ? 0
-                : playerLevel[stat] >= lvl ? value - (playerLevel[stat] - lvl) : value;
-        value = overBoost && playerLevel[stat] >= maxLevel ? 0
-                : overBoost && playerLevel[stat] >= lvl && playerLevel[stat] < maxLevel ? (maxLevel - playerLevel[stat])
-                : value;
-        playerLevel[stat] += value;
-        refreshSkill(stat);
-    }*/
 
     public int getCurrentPrayer() {
         return this.currentPrayer;

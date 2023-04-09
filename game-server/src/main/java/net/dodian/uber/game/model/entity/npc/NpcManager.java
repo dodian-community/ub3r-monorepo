@@ -33,11 +33,7 @@ public class NpcManager extends Thread {
     public void run() {
         loadData();
         loadSpawns();
-        try {
-            Server.job.ScheduleStaticRepeatForeverJob(600, NpcProcessor.class);
-        } catch (SchedulerException e) {
-            e.printStackTrace();
-        }
+        Server.job.ScheduleStaticRepeatForeverJob(600, NpcProcessor.class);
     }
 
     public Collection<Npc> getNpcs() {

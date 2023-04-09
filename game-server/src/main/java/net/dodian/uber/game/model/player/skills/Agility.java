@@ -487,7 +487,6 @@ public class Agility {
         c.UsingAgility = true;
         final int oldWalk = c.getWalkAnim(), oldRun = c.getRunAnim();
         if (c.getPosition().getY() == 3953 && c.getPosition().getX() >= 3003 && c.getPosition().getX() <= 3006) {
-            System.out.println("test..." + c.getPosition().getY() + ", " + c.getPosition().getX());
             int distance = 3958 - c.getPosition().getY();
             c.setAgilityEmote(1501, 1501);
             c.AddToCords(0, distance, distance * 600);
