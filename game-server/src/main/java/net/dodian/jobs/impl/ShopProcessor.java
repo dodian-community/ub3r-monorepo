@@ -15,22 +15,21 @@ public class ShopProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         boolean DidUpdate = false;
         for (int i = 1; i <= ShopHandler.MaxShops; i++) {
-            for (int j = 0; j < ShopHandler.MaxShopItems; j++) {
-                if (ShopHandler.ShopItems[i][j] > 0) {
-                    if (ShopHandler.ShopItemsDelay[i][j] >= ShopHandler.MaxShowDelay) {
-                        if (j <= ShopHandler.ShopItemsStandard[i]
+            if (ShopHandler.ShopItemsDelay[i] >= ShopHandler.MaxShowDelay) {
+                for (int j = 0; j < ShopHandler.MaxShopItems; j++) {
+                    if (ShopHandler.ShopItems[i][j] > 0) {
+                        if (j < ShopHandler.ShopItemsStandard[i]
                                 && ShopHandler.ShopItemsN[i][j] != ShopHandler.ShopItemsSN[i][j]) {
                             if (ShopHandler.ShopItemsN[i][j] < ShopHandler.ShopItemsSN[i][j]) {
-                                double restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j])*0.05;
+                                double restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j]) * 0.05;
                                 ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? restockAmount : 1;
                             } else Server.shopHandler.DiscountItem(i, j);
                         }
-                        ShopHandler.ShopItemsDelay[i][j] = 0;
-                        DidUpdate = true;
+                            if (j >= ShopHandler.ShopItemsStandard[i]) Server.shopHandler.DiscountItem(i, j);
+                            DidUpdate = true;
+                        }
                     }
-                    ShopHandler.ShopItemsDelay[i][j]++;
-                }
-            }
+                } else ShopHandler.ShopItemsDelay[i]++;
             if (DidUpdate == true) {
                 for (int k = 1; k < Constants.maxPlayers; k++) {
                     if (PlayerHandler.players[k] != null) {
@@ -39,6 +38,7 @@ public class ShopProcessor implements Job {
                         }
                     }
                 }
+                ShopHandler.ShopItemsDelay[i] = 0;
                 DidUpdate = false;
             }
         }

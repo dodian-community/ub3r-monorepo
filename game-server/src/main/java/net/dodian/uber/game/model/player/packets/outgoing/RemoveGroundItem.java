@@ -17,9 +17,9 @@ public class RemoveGroundItem implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        client.setMap(position.copy());
+        client.send(new SetMap(position));
         client.getOutputStream().createFrame(156);
-        client.getOutputStream().writeByteS(position.getZ());
+        client.getOutputStream().writeByteS(0); //Cant enter height due to client bug!
         client.getOutputStream().writeWord(item.getId());
     }
 

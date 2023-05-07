@@ -2,6 +2,7 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -23,10 +24,10 @@ public class NpcProcessor implements Job {
         for (Npc npc : Server.npcManager.getNpcs()) {
             /* Clear the npc update! */
             npc.clearUpdateFlags();
-            if(!npc.isFighting() && npc.isAlive())
-                npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
-
+            npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true); //Dummy is needed?
             long now = System.currentTimeMillis();
+        if(!npc.isFighting() && npc.isAlive())
+           npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
         if(now - npc.lastBoostedStat >= 30000) { //Stat boost!
             npc.changeStat();
         }

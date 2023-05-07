@@ -52,7 +52,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                     npc.setId(player.getGender() == 0 ? 1306 : 1307);
                 addNpc(player, npc, stream);
                 appendBlockUpdate(npc, block);
-                //npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true);
             }
         }
         if (block.currentOffset > 0) {

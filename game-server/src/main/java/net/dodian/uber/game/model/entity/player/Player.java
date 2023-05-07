@@ -20,6 +20,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -67,7 +68,7 @@ public abstract class Player extends Entity {
     private int playerSE = 0x328; // SE = Standard Emotion
     private int playerSEW = 0x333; // SEW = Standard Emotion Walking
     private int playerSER = 0x338; // SER = Standard Emotion Run
-    public boolean IsCutting = false;
+    public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
     public boolean attackingPlayer = false, attackingNpc = false;
     public int Essence;
@@ -174,8 +175,8 @@ public abstract class Player extends Entity {
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
-        playerRights = 0; // player rights
         lastPacket = System.currentTimeMillis();
+        /*playerRights = 0; // player rights
         // Setting player items
         Arrays.fill(playerItems, 0);
         // Setting Item amounts
@@ -197,15 +198,9 @@ public abstract class Player extends Entity {
 
         for (int i = 0; i < playerBankSize; i++) { // Setting bank item amounts
             bankItemsN[i] = 0;
-        }
+        }*/
 
-        playerIsMember = 1;
-        //songUnlocked[RegionSong.THE_LONG_JOURNEY_HOME.getSongId()] = true;
-        // the first call to updateThisPlayerMovement() will craft the proper
-        // initialization packet
-        teleportToX = 2611;// 3072;
-        teleportToY = 3093;// 3312;
-
+        teleportToX = teleportToY = -1;
         mapRegionX = mapRegionY = -1;
         currentX = currentY = 0;
         resetWalkingQueue();
@@ -450,16 +445,16 @@ public abstract class Player extends Entity {
             }
             if (mapRegionDidChange) {
                 // after map region change the relative coordinates range
-                // between 48 - 55
+                // between 48 - 55+
                 mapRegionX = (teleportToX >> 3) - 6;
                 mapRegionY = (teleportToY >> 3) - 6;
-                // playerListSize = 0; // completely rebuild playerList after
-                // teleport AND map region change
                 if (firstSend) {
                     temp.pLoaded = false;
                 } else {
                     firstSend = true;
                 }
+                // playerListSize = 0; // completely rebuild playerList after
+                // teleport AND map region change
             }
             currentX = teleportToX - 8 * mapRegionX;
             currentY = teleportToY - 8 * mapRegionY;
@@ -620,9 +615,9 @@ public abstract class Player extends Entity {
     }
 
     public void clearUpdateFlags() {
-        getUpdateFlags().clear();
         IsStair = false; //What is this?!
         faceTarget(65535);
+        getUpdateFlags().clear();
     }
 
     public void faceTarget(int index) {
@@ -819,6 +814,8 @@ public abstract class Player extends Entity {
         } else if(dmg.equals(damageType.MELEE) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) amt /= 2;
         else if(dmg.equals(damageType.RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt /= 2;
         else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
+        else if(dmg.equals(damageType.JAD_RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt = 0;
+        else if(dmg.equals(damageType.JAD_MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt = 0;
         dealDamage(amt, crit);
     }
 
@@ -871,10 +868,9 @@ public abstract class Player extends Entity {
     }
 
     public void teleportTo(int x, int y, int z) {
-        teleportToX = x;
-        teleportToY = y;
-        super.moveTo(getPosition().getX(), getPosition().getY(), z);
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        getPosition().moveTo(x, y, z); //Update position!
+        teleportToX = getPosition().getX();
+        teleportToY = getPosition().getY();
     }
 
     Prayers prayers = new Prayers(this);
@@ -901,6 +897,19 @@ public abstract class Player extends Entity {
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         boolean maskEquip = (itemId >= 11774 && itemId <= 11784) || itemId == 11865;
         return maskEquip && onTask;
+    }
+
+    public boolean checkObsidianBonus(int id) {
+        int[] acceptedItems = {
+        11128, 6585, 6568, 6570, //Berserker necklace, fury, obsidian cape, fire cape,
+        6522, 6523, 6525, 6526, 6527, 6528, 6526, //Obsidian weapons
+        6524, 21298, 21301, 21304 //Obsidian armour
+        };
+        boolean inArea = getPositionName(getPosition()) == positions.TZHAAR  || getPositionName(getPosition()) == positions.JAD;
+        for(int i = 0; i < acceptedItems.length; i++)
+            if(inArea && id == acceptedItems[i])
+                return true;
+        return false;
     }
 
     public boolean areAllSongsUnlocked() {

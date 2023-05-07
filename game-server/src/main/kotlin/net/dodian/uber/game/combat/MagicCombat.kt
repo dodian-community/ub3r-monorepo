@@ -16,7 +16,7 @@ fun Client.handleMagic(): Int {
     if (!canReach(target, 5))
         return 0
 
-    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914)
+    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
     if (equipment[Equipment.Slot.WEAPON.id] !in staves || autocast_spellIndex < 0)
         return -1
 
@@ -48,8 +48,8 @@ fun Client.handleMagic(): Int {
         if(getSlayerDamage(checkNpc.id, true) == 2)
             maxHit *= 1.2
         if(checkNpc.boss) {
-            var reduceDefence = min(checkNpc.defence / 10, 25)
-            var value = (15.0 + Misc.random(reduceDefence.toInt())) / 100.0
+            var reduceDefence = min(checkNpc.defence / 15, 18)
+            var value = (12.0 + Misc.random(reduceDefence.toInt())) / 100.0
             maxHit *= 1.0 - value
             //System.out.println("reduce value: $value and defence $reduceDefence to be new max hit $maxHit")
         }

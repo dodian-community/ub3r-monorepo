@@ -134,6 +134,8 @@ public class Walking implements Packet {
                 client.send(new RemoveInterfaces());
             }
         }
+        //Reset npc face!
+        client.faceNpc(65535);
     }
 
 }

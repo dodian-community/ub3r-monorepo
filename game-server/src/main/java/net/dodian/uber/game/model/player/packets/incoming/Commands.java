@@ -81,6 +81,41 @@ public class Commands implements Packet {
                     int id = Integer.parseInt(cmd[1]);
                     client.callGfxMask(id, 100);
                 }
+                if (cmd[0].equalsIgnoreCase("cowitem")) {
+                    client.addItem(1039, 100);
+                    client.addItem(1041, 100);
+                    client.addItem(1043, 100);
+                    client.addItem(1045, 100);
+                    client.addItem(1047, 100);
+                    client.addItem(1049, 100);
+                    client.addItem(4152, 100);
+                    client.addItem(4154, 100);
+                    client.addItem(1292, 100);
+                    client.addItem(1294, 100);
+                    client.addItem(1296, 100);
+                    client.addItem(1298, 100);
+                    client.addItem(1300, 100);
+                    client.addItem(1302, 100);
+                    client.addItem(1304, 100);
+                    client.addItem(1306, 100);
+                    client.addItem(844, 100);
+                    client.addItem(850, 100);
+                    client.addItem(854, 100);
+                    client.addItem(858, 100);
+                    client.addItem(862, 100);
+                }
+                if (cmd[0].equalsIgnoreCase("goup")) {
+                    client.getPosition().setZ(client.getPosition().getZ() + 1);
+                    client.send(new SendMessage("You set your height to " + client.getPosition().getZ()));
+                    client.teleportToX = client.getPosition().getX();
+                    client.teleportToY = client.getPosition().getY();
+                }
+                if (cmd[0].equalsIgnoreCase("godown")) {
+                    client.getPosition().setZ(client.getPosition().getZ() - 1 < 0 ? 0 : client.getPosition().getZ() - 1);
+                    client.send(new SendMessage("You set your height to " + client.getPosition().getZ()));
+                    client.teleportToX = client.getPosition().getX();
+                    client.teleportToY = client.getPosition().getY();
+                }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
@@ -257,7 +292,7 @@ public class Commands implements Packet {
                     else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
                         client.triggerTele(2905, 9727, 0,false);
                     else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
-                        client.triggerTele(2393, 5090, 0,false);
+                        client.triggerTele(2395, 5098, 0,false);
                 }
                 if (command.startsWith("telemob")) {
                     int mobId = Integer.parseInt(cmd[1]);
@@ -519,11 +554,11 @@ public class Commands implements Packet {
                                 return;
                             }
                             if (item == null) {
-                                item = new GroundItem(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ(), test, 1, client.clientPid, -1);
+                                item = new GroundItem(client.getPosition().copy(), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             } else {
                                 Ground.deleteItem(item);
-                                item = new GroundItem(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ(), test, 1, client.clientPid, -1);
+                                item = new GroundItem(new Position(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ()), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             }
                             client.send(new SendMessage("Setting item..." + test));
@@ -918,7 +953,7 @@ public class Commands implements Packet {
                         client.send(new SendString("", 12150 + i));
                     client.sendFrame246(12145, 250, 4151);
                     client.showInterface(12140);
-                    client.flushOutStream();
+                    //client.flushOutStream();
                     client.stillgfx(199, client.getPosition().getY(), client.getPosition().getX());
                 }
                 if (cmd[0].equalsIgnoreCase("moooo") && client.playerRights > 1) {
@@ -929,7 +964,7 @@ public class Commands implements Packet {
                     client.send(new SendString("@lre@Tits3@lre@", 8151));
                     client.sendQuestSomething(8143);
                     client.showInterface(8134);
-                    client.flushOutStream();
+                    //client.flushOutStream();
                 }
                 if (cmd[0].equalsIgnoreCase("staffzone")) {
                     client.teleportTo(2936, 4688, 0);
@@ -1175,7 +1210,7 @@ public class Commands implements Packet {
                 }
                 client.sendQuestSomething(8143);
                 client.showInterface(8134);
-                client.flushOutStream();
+                //client.flushOutStream();
             }
             if (cmd[0].equalsIgnoreCase("price")) {
                 String name = command.substring(cmd[0].length() + 1);
@@ -1246,7 +1281,7 @@ public class Commands implements Packet {
                     int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
                     int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
                     amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
-                    amount = getGameWorldId() > 1 ? 100 : amount;
+                    amount = getGameWorldId() == 2 ? 100 : amount;
                     NpcData n = Server.npcManager.getData(npcId);
                     if (n == null)
                         client.send(new SendMessage("This npc have no data!"));
@@ -1386,7 +1421,7 @@ public class Commands implements Packet {
                 }
                 client.sendQuestSomething(8143);
                 client.showInterface(8134);
-                client.flushOutStream();
+                //client.flushOutStream();
             }
             if (command.startsWith("mod") && client.playerRights > 0) {
                 String text = command.substring(4);
@@ -1438,7 +1473,7 @@ public class Commands implements Packet {
                 }
                 client.sendQuestSomething(8143);
                 client.showInterface(8134);
-                client.flushOutStream();
+                //client.flushOutStream();
             }
             /* Beta commands*/
             if (getGameWorldId() > 1) {

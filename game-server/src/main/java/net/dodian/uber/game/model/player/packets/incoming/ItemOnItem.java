@@ -173,6 +173,19 @@ public class ItemOnItem implements Packet {
                 client.send(new SendMessage("You gentle used the knife on the paper hat and cut it into different color partyhats."));
             } else client.send(new SendMessage("You need to have " + (slotRemain == 1 ? "one" : slotRemain) + " empty slot"+ (slotRemain != 1 ? "s" : "")+" to tear the rainbow partyhat apart."));
         }
+        if((itemUsed == 962 || otherItem == 962) && (itemUsed == 11863 || otherItem == 11863)) {
+            client.deleteItem(962, itemUsed == 962 ? itemUsedSlot : usedWithSlot, 1);
+            client.deleteItem(11863, itemUsed == 11863 ? itemUsedSlot : usedWithSlot, 1);
+            client.addItemSlot(11862, 1, itemUsed == 11863 ? itemUsedSlot : usedWithSlot);
+        }
+        if (knife && (itemUsed == 11862 || otherItem == 11862)) {
+            if(client.getFreeSpace() > 0) {
+                client.deleteItem(11862, itemUsed == 11862 ? itemUsedSlot : usedWithSlot, 1);
+                client.addItemSlot(11863, 1, itemUsed == 11862 ? itemUsedSlot : usedWithSlot);
+                client.addItem(962, 1);
+                client.send(new SendMessage("You gentle used the knife on the paper hat and cut it into a cracker and a rainbow partyhat."));
+            } else client.send(new SendMessage("You need to have atleast one space to tear the black partyhat apart!"));
+        }
 
         int[][] dyes = {{-1, 1019}, {1763, 1007}, {1765, 1023}, {1767, 1021}, {1769, 1031}, {1771, 1027}, {1773, 1029}}; //Black, Red, yellow, blue, orange, green, purple
         for(int i = 0; i < dyes.length; i++)

@@ -15,7 +15,7 @@ public class PlayerDialogueHead implements OutgoingPacket {
     public void send(Client client) {
         client.getOutputStream().createFrame(185);
         client.getOutputStream().writeWordBigEndianA(mainFrame);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

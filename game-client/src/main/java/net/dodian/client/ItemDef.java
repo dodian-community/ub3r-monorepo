@@ -203,6 +203,9 @@ public final class ItemDef {
             case 7453:
                 def.name = "Hardleather gloves";
                 break;
+            case 11862:
+                def.name = "Nozemi";
+                break;
             case 7454:
                 def.name = "Bronze gloves";
                 break;
