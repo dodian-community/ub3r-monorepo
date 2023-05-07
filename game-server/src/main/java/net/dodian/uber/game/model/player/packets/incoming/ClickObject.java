@@ -197,7 +197,7 @@ public class ClickObject implements Packet {
         }
         if (objectID == 14914) {
             if (!client.checkUnlock(1) && client.checkUnlockPaid(1) != 1) {
-                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my dungeon."});
+                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my cave."});
                 return;
             }
             client.addUnlocks(1, "0", client.checkUnlock(1) ? "1" : "0");
@@ -205,12 +205,14 @@ public class ClickObject implements Packet {
             client.teleportToY = 5169;
             client.newheightLevel = 0;
             client.showNPCChat(2180, 592, new String[]{"Welcome to my cave."});
+            client.GetBonus(true);
         }
         if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
             client.teleportToX = 2848;
             client.teleportToY = 2991;
             client.newheightLevel = 0;
             client.showNPCChat(2180, 593, new String[]{"Welcome back out from my cave."});
+            client.GetBonus(true);
         }
         if (objectID == 16466) {
             if (client.getLevel(Skill.AGILITY) < 75) {
@@ -763,7 +765,7 @@ public class ClickObject implements Packet {
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
                 client.giveExperience(150, Skill.THIEVING);
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
-            client.triggerRandom(10000);
+            client.triggerRandom(150);
         }
         if (objectID == 6420 && objectPosition.getX() == 2733 && objectPosition.getY() == 3374) {
             if (!client.premium) {
@@ -908,16 +910,7 @@ public class ClickObject implements Packet {
 
             }
         }
-        if (objectID == 9368 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5168)) {
-            if (client.getPosition().getY() == 5167) {
-                client.teleportToX = 2399;
-                client.teleportToY = 5169;
-
-            }
-        }
-        if (objectID == 9391 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5172)) // Tzhaar
-        // Fight
-        // bank
+        if (objectID == 9391 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5172)) // Tzhaar bank?
         {
             client.openUpBank();
         }
@@ -1052,6 +1045,44 @@ public class ClickObject implements Packet {
         if (client.CheckObjectSkill(objectID, objectName)) {
             client.skillX = objectPosition.getX();
             client.setSkillY(objectPosition.getY());
+        }
+        /* Gnome Village stairs! */
+        if (objectID == 16675 && objectPosition.getX() == 2488 && objectPosition.getY() == 3407) // spinning wheel stairs 1
+        {
+            client.getPosition().setZ(1);
+            client.teleportToX = 2489;
+            client.teleportToY = 3409;
+        }
+        if (objectID == 16677 && objectPosition.getX() == 2489 && objectPosition.getY() == 3408) // spinning wheel stairs 1
+        {
+            client.getPosition().setZ(0);
+            client.teleportToX = 2488;
+            client.teleportToY = 3406;
+        }
+        if (objectID == 16675 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) // spinning wheel stairs 2
+        {
+            client.getPosition().setZ(1);
+            client.teleportToX = 2485;
+            client.teleportToY = 3401;
+        }
+        if (objectID == 16677 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) // spinning wheel stairs 2
+        {
+            client.getPosition().setZ(0);
+            client.teleportToX = 2485;
+            client.teleportToY = 3404;
+        }
+
+        if (objectID == 16675 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) // Bank staircase 1
+        {
+            client.getPosition().setZ(1);
+            client.teleportToX = 2445;
+            client.teleportToY = 3433;
+        }
+        if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) // Bank staircase 1
+        {
+            client.getPosition().setZ(0);
+            client.teleportToX = 2446;
+            client.teleportToY = 3436;
         }
         // }
         // go upstairs

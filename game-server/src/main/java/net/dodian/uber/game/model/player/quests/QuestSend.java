@@ -83,7 +83,7 @@ public enum QuestSend {
              }
              c.sendQuestSomething(8143);
              c.showInterface(8134);
-             c.flushOutStream();
+             //c.flushOutStream();
              return true;
          }
          return false;

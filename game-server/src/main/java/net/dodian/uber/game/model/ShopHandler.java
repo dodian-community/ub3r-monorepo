@@ -14,7 +14,7 @@ public class ShopHandler {
     public static int TotalShops = 0;
     public static int[][] ShopItems = new int[MaxShops][MaxShopItems];
     public static int[][] ShopItemsN = new int[MaxShops][MaxShopItems];
-    public static int[][] ShopItemsDelay = new int[MaxShops][MaxShopItems];
+    public static int[] ShopItemsDelay = new int[MaxShops];
     public static int[][] ShopItemsSN = new int[MaxShops][MaxShopItems];
     public static int[] ShopItemsStandard = new int[MaxShops];
     public static String[] ShopName = new String[MaxShops];
@@ -37,6 +37,7 @@ public class ShopHandler {
     }
 
     public void DiscountItem(int ShopID, int ArrayID) {
+        System.out.println("hello!");
         ShopItemsN[ShopID][ArrayID] -= 1;
         if (ShopItemsN[ShopID][ArrayID] <= 0 && ArrayID >= ShopHandler.ShopItemsStandard[ShopID]) {
             ShopItemsN[ShopID][ArrayID] = 0;
@@ -47,13 +48,13 @@ public class ShopHandler {
     public void ResetItem(int ShopID, int ArrayID) {
         ShopItems[ShopID][ArrayID] = 0;
         ShopItemsN[ShopID][ArrayID] = 0;
-        ShopItemsDelay[ShopID][ArrayID] = 0;
+        ShopItemsDelay[ShopID] = 0;
     }
 
     public static void resetAnItem(int ShopID, int ArrayID) {
         ShopItems[ShopID][ArrayID] = -1;
         ShopItemsN[ShopID][ArrayID] = 0;
-        ShopItemsDelay[ShopID][ArrayID] = 0;
+        ShopItemsDelay[ShopID] = 0;
     }
 
     public static boolean findDefaultItem(int shopId, int id) {

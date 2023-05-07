@@ -9,11 +9,11 @@ public class GroundItem {
     public long dropped = 0;
     public boolean visible = false, npc = false;
     public boolean taken = false, canDespawn = true;
-    public int timeDespawn = 120000, timeDisplay = 60000; //60k = 60 seconds!, 120000, 60000
-    public GroundItem(int x, int y, int z, int id, int amount, int dropper, int npcId) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    public int timeDespawn = 60000, timeDisplay = 120000; //60k = 60 seconds!, 120000, 60000
+    public GroundItem(Position pos, int id, int amount, int dropper, int npcId) {
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
         this.id = id;
         this.amount = amount;
         this.dropper = dropper;

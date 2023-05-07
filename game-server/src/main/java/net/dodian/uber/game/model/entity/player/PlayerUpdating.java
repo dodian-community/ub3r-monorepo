@@ -36,6 +36,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.createFrame(114);
             stream.writeWordBigEndian(Server.updateSeconds * 50 / 30);
         }
+
         if(player.didMapRegionChange()) {
             c.getOutputStream().createFrame(73);
             c.getOutputStream().writeWordA(player.mapRegionX + 6);

@@ -40,7 +40,6 @@ public class SocketHandler implements Runnable {
             /**
              * Send all output
              */
-            flush();
             if (lastProcess + 50 <= System.currentTimeMillis()) {
                 while (parsePackets())
                     ;
@@ -59,6 +58,7 @@ public class SocketHandler implements Runnable {
             }
             try {
                 Thread.sleep(50);
+                flush();
             } catch (java.lang.Exception _ex) {
 
             }

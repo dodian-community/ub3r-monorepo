@@ -7,7 +7,7 @@ public enum WeaponData {
     UNARMED(new String[]{"unarmed"}, 5855, new UnarmedHandler()),
     WHIP(new String[]{"whip", "scythe"}, 12290, new WhipHandler()),
     BOW(new String[]{"bow", "seercull"}, 1764, new BowHandler()),
-    WAND(new String[]{"wand", "staff"}, 328, new WandHandler()),
+    WAND(new String[]{"wand", "staff", "toktz-mej-tal"}, 328, new WandHandler()),
     THROWABLE(new String[]{"dart", "knife", "javelin"}, 4446, new ThrowableHandler()),
     SWORDS(new String[]{"dagger", "sword"}, 2276, new SwordsHandler()),
     LONGSWORDS(new String[]{"scimitar", "longsword"}, 2423, new LongSwordsHandler()),

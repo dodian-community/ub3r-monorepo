@@ -110,7 +110,7 @@ public class ClickItem implements Packet {
                             if (Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE)) < Utils.grimy_herbs_lvl[i]) {
                                 client.send(new SendMessage("You need level " + Utils.grimy_herbs_lvl[i] + " herblore to clean this herb."));
                             } else {
-                                client.addExperience(Utils.grimy_herbs_xp[i], Skill.HERBLORE);
+                                client.giveExperience(Utils.grimy_herbs_xp[i], Skill.HERBLORE);
                                 client.deleteItem(item, slot, 1);
                                 client.addItemSlot(item == 3051 || item == 3049 ? item - 51 : item + 50, 1, slot);
                                 client.send(new SendMessage("You clean the "+client.GetItemName(item)+"."));

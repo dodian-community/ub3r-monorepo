@@ -83,7 +83,7 @@ public class Constants {
                     {1127, 1, 99, 5, 1112, 1101}}};
     public static int[][] SmithingItems = new int[5][5];
 
-    public static final int[] PACKET_SIZES = {0, 0, 0, 1, -1, 0, 0, 0, 0, 0, // 0
+    public static final int[] PACKET_SIZES = { 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, // 0
             0, 0, 0, 0, 8, 0, 6, 2, 2, 0, // 10-19
             0, 2, 0, 6, 0, 12, 0, 0, 0, 0, // 20-29
             0, 0, 0, 0, 0, 8, 4, 0, 0, 2, // 30
