@@ -80,6 +80,9 @@ public class NpcProcessor implements Job {
             if (npc.getId() == 555 && Misc.chance(10) == 1) {
                npc.setText(Misc.chance(2) == 1 ? "The plague is coming!" : "Watch out for the plague!!");
             }
+            if (npc.getId() == 6797 && Misc.chance(10) == 1) {
+                npc.setText(Misc.chance(2) == 1 ? "Something is in there!" : "Keep the cave cloased!");
+            }
             if (npc.getId() == 5792 && Balloons.eventActive()) {
                     npc.requestAnim(866, 0);
                     npc.setText(Balloons.spawnedBalloons() ? "A party is going on right now!" : "A party is about to Start!!!!");

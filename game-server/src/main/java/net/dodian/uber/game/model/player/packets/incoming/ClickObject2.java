@@ -35,7 +35,7 @@ public class ClickObject2 implements Packet {
         client.setWalkToTask(task);
         if (getGameWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click2: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
-        if (objectID == 14896) {
+        if (objectID == 14896 || objectID == 14909) {
             client.addItem(1779, 1);
         }
         if (client.randomed) {
@@ -141,7 +141,7 @@ public class ClickObject2 implements Packet {
 			client.setSkillY(position.getY());
 			client.WanneThieve = 2562;
 		}*/
-        if (objectID == 25824) {
+        if (objectID == 25824 || objectID == 14889) {
             client.spinning = true;
             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         }

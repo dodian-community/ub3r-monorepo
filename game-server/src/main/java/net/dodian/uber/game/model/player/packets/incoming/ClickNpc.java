@@ -95,6 +95,9 @@ public class ClickNpc implements Packet {
         } else if (npcId == 637) { /* Aubury */
             client.NpcWanneTalk = 3;
             client.convoId = 3;
+        } else if (npcId == 1238) { /* Gnome shopkeeper */
+            client.NpcWanneTalk = 500;
+            client.convoId = 3;
         } else if (npcId == 3648) {
             client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 ||npcId == 1306) {
