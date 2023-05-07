@@ -186,6 +186,9 @@ public class ClickNpc2 implements Packet {
         } else if (npcId == 932) { // Legends General Store
 
             client.WanneShop = 38; // Legend's Gen. Store
+        } else if (npcId == 1238) { // Gnome general store
+
+            client.WanneShop = 99; //general store
         } else if (npcId == 5809) {
 
             client.WanneShop = 25; // Crafting shop
