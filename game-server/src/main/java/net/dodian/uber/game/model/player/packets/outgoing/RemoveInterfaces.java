@@ -11,7 +11,7 @@ public class RemoveInterfaces implements OutgoingPacket {
         client.checkBankInterface = false;
         client.currentSkill = -1;
         client.getOutputStream().createFrame(219);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

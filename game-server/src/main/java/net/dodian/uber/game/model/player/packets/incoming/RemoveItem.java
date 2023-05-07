@@ -102,7 +102,6 @@ public class RemoveItem implements Packet {
         } else if (interfaceID >= 1119 && interfaceID <= 1123) { // Smithing
             if (client.smithing[2] > 0) {
                 client.smithing[4] = removeID;
-                client.smithing[0] = 1;
                 client.smithing[5] = 1;
                 client.send(new RemoveInterfaces());
             } else {

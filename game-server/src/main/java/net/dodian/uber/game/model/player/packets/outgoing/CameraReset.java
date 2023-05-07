@@ -8,7 +8,6 @@ public class CameraReset implements OutgoingPacket {
     @Override
     public void send(Client client) {
         client.getOutputStream().createFrame(107);
-        client.flushOutStream();
     }
 
 }

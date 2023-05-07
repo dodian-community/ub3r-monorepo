@@ -17,11 +17,11 @@ public class CreateGroundItem implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        client.setMap(position);
+        client.send(new SetMap(position));
         client.getOutputStream().createFrame(44);
         client.getOutputStream().writeWordBigEndianA(item.getId());
         client.getOutputStream().writeWord(item.getAmount());
-        client.getOutputStream().writeByte(position.getZ());
+        client.getOutputStream().writeByte(0); //Cant enter height due to client bug!
     }
 
 }

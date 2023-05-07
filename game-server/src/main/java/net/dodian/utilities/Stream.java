@@ -1,12 +1,26 @@
 package net.dodian.utilities;
 
+import java.io.OutputStream;
+
 public class Stream {
 
+    private OutputStream out;
+    private Cryption cryption;
+
     public Stream() {
+        buffer = new byte[500];
+        currentOffset = 0;
     }
 
     public Stream(byte abyte0[]) {
         buffer = abyte0;
+        currentOffset = 0;
+    }
+
+    public Stream(OutputStream out, Cryption outStreamDecryption) {
+        this.out = out;
+        this.cryption = outStreamDecryption;
+        buffer = new byte[5000];
         currentOffset = 0;
     }
 
