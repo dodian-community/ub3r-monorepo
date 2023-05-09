@@ -120,6 +120,14 @@ public final class ObjectDef {
             def.name = "The Oaktree Fountain";
             def.actions = new String[5];
         }
+        if (def.type == 585) {
+            def.name = "Statue of king Nozemi";
+            def.actions = new String[5];
+        }
+        if (def.type == 586) {
+            def.name = "Statue of the holy Pro Noob";
+            def.actions = new String[5];
+        }
 
     }
 
