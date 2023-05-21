@@ -650,8 +650,6 @@ public class ClickingButtons implements Packet {
                     client.NpcDialogue = 0;
                     client.NpcDialogueSend = false;
                     client.openUpBank();
-                } else if (client.NpcDialogue == 501) { // Gnome shopkeeper
-                    client.openUpShop(99);
                 } else if (client.NpcDialogue == 4) { // Aubury
                     client.NpcDialogue = 0;
                     client.NpcDialogueSend = false;

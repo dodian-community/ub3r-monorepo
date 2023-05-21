@@ -931,106 +931,7 @@ public class ClickObject implements Packet {
             client.send(new SendMessage("You have left the Jad Cave."));
         }
         // End of Tzhaar Objects
-        //Start Tree Gnome Stronghold
-        //Bank Stairs
-        if (objectID == 16675 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) {
-            client.teleportToX = 2445;
-            client.teleportToY = 3433;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) {
-            client.teleportToX = 2445;
-            client.teleportToY = 3434;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 16675 && objectPosition.getX() == 2444 && objectPosition.getY() == 3414) {
-            client.teleportToX = 2445;
-            client.teleportToY = 3416;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3415) {
-            client.teleportToX = 2446;
-            client.teleportToY = 3415;
-            client.getPosition().setZ(0);
-        }
-        //South Spining wheels
-        if (objectID == 16675 && objectPosition.getX() == 2475 && objectPosition.getY() == 3400) {
-            client.teleportToX = 2475;
-            client.teleportToY = 3399;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2475 && objectPosition.getY() == 3400) {
-            client.teleportToX = 2474;
-            client.teleportToY = 3400;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 16675 && objectPosition.getX() == 2479 && objectPosition.getY() == 3408) {
-            client.teleportToX = 2479;
-            client.teleportToY = 3407;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2479 && objectPosition.getY() == 3408) {
-            client.teleportToX = 2478;
-            client.teleportToY = 3408;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 16675 && objectPosition.getX() == 2488 && objectPosition.getY() == 3407) {
-            client.teleportToX = 2489;
-            client.teleportToY = 3409;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2489 && objectPosition.getY() == 3408) {
-            client.teleportToX = 2490;
-            client.teleportToY = 3408;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 16675 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) {
-            client.teleportToX = 2485;
-            client.teleportToY = 3401;
-            client.getPosition().setZ(1);
-        }
-        if (objectID == 16677 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) {
-            client.teleportToX = 2484;
-            client.teleportToY = 3402;
-            client.getPosition().setZ(0);
-        }
-        //Slayer Cave
-        if (objectID == 26709 && objectPosition.getX() == 2428 && objectPosition.getY() == 3423) {
-            //client.teleportToX = 2429;
-            //client.teleportToY = 9824;
-            //client.getPosition().setZ(0);
-            client.send(new SendMessage("The slayer cave has been closed for now!"));
-        }
-        if (objectID == 27257 && objectPosition.getX() == 2430 && objectPosition.getY() == 9824) {
-            client.teleportToX = 2430;
-            client.teleportToY = 3424;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 27258 && objectPosition.getX() == 2430 && objectPosition.getY() == 9825) {
-            client.teleportToX = 2430;
-            client.teleportToY = 3424;
-            client.getPosition().setZ(0);
-        }
-        //Brimstail Cave
-        if (objectID == 17209 && objectPosition.getX() == 2403 && objectPosition.getY() == 3418) {
-            //client.teleportToX = 2409;
-            //client.teleportToY = 9812;
-            //client.getPosition().setZ(0);
-            client.send(new SendMessage("The doors are locked!"));
-        }
-        if (objectID == 17222 && objectPosition.getX() == 2408 && objectPosition.getY() == 9811) {
-            client.teleportToX = 2402;
-            client.teleportToY = 3419;
-            client.getPosition().setZ(0);
-        }
-        if (objectID == 17223 && objectPosition.getX() == 2409 && objectPosition.getY() == 9811) {
-            client.teleportToX = 2402;
-            client.teleportToY = 3419;
-            client.getPosition().setZ(0);
-        }
-        //Other stairs
-        //TO-DO for now
-        //End Tree Gnome Stronghold
+
         if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
                 || (objectID == 6084)) {
             //System.out.println("Banking..");
@@ -1274,7 +1175,6 @@ public class ClickObject implements Packet {
                     client.setSkillY(objectPosition.getY());
                 }
             }
-
     }
 
 }
