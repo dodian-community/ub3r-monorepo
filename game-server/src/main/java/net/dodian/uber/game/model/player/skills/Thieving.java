@@ -216,17 +216,9 @@ public class Thieving {
                         }
 
                     } else {
-                        int RandomTele = (int) (Math.random() * 1000) + 1;
-
-                        if (RandomTele < 50) {
-                            player.send(new SendMessage("The " + data.toString().toLowerCase().replace('_', ' ') + "caught you and reported you!"));
-                            player.send(new SendMessage("After that, a magical force has locked you in a cage!"));
-                            player.teleportTo(2606, 3105, 0);
-                        } else {
-                            player.addItem(data.getItemId()[0], data.getItemAmount()[0].getValue());
-                            player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase() + ""));
-                        }
-                        }
+                        player.addItem(data.getItemId()[0], data.getItemAmount()[0].getValue());
+                        player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase() + ""));
+                    }
                     if (data.getThievingType() == ThievingType.STALL_THIEVING) {
                         final Object o = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
                         if (!GlobalObject.addGlobalObject(o, data.getRespawnTime() * 1000)) {
