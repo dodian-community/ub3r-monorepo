@@ -4786,27 +4786,6 @@ public class Client extends Player implements Runnable {
 				sendFrame164(4882);
 				NpcDialogueSend = true;
 				break;
-			case 500:
-				sendFrame200(4883, 591);
-				send(new SendString(GetNpcName(NpcTalkTo), 4884));
-				send(new SendString("Do you want to buy or sell items?", 4885));
-				send(new SendString("Click here to continue", 4886));
-				send(new NpcDialogueHead(NpcTalkTo, 4883));
-				sendFrame164(4882);
-				NpcDialogueSend = true;
-				nextDiag = 501;
-				break;
-
-			case 501:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("Select an Option", 2460));
-				send(new SendString("Yes show me your store.", 2461));
-				send(new SendString("Oh it's a general store. No thank you.", 2462));
-				sendFrame164(2459);
-				NpcDialogueSend = true;
-				break;
-
 			case 1000:
 				sendFrame200(4883, npcFace);
 				send(new SendString(GetNpcName(NpcTalkTo).replace("_", " "), 4884));
@@ -7641,8 +7620,7 @@ public class Client extends Player implements Runnable {
 				send(new RemoveInterfaces());
 				openUpShop(55);
 				//TODO: Add reward shop
-			}
-			else
+			} else
 				send(new RemoveInterfaces());
 		} else if (NpcDialogue == 10000) {
 			if (button == 1) {
