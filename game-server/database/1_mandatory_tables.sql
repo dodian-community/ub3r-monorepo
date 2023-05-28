@@ -116,8 +116,11 @@ create table if not exists characters
     kc              int                  default 0                                            null,
     dc              int                  default 0                                            null,
     explock         tinyint(2)           default 0                                            null,
-    travel          varchar(10)         default '0:0:0:0:0'                                          not null,
-    unlocks          varchar(10)         default ''                                          not null,
+    travel          varchar(10)          default '0:0:0:0:0'                                  not null,
+    unlocks         varchar(10)          default ''                                           not null,
+    news            int                  default 0                                            not null,
+    prayer          varchar(255)         default ''                                           not null,
+    boosted         varchar(255)         default ''                                           not null,
     INDEX (id, name)
 )
     engine = InnoDB;
@@ -469,3 +472,56 @@ create table if not exists worlds
     `drop`  int                     not null
 )
     engine = InnoDB;
+
+create table if not exists thread
+(
+    threadid     int unsigned auto_increment
+        primary key,
+    title        varchar(250)      default '' not null,
+    prefixid     varchar(25)       default '' not null,
+    firstpostid  int unsigned      default 0  not null,
+    lastpostid   int unsigned      default 0  not null,
+    lastpost     int unsigned      default 0  not null,
+    forumid      smallint unsigned default 0  not null,
+    pollid       int unsigned      default 0  not null,
+    open         smallint          default 0  not null,
+    replycount   int unsigned      default 0  not null,
+    hiddencount  int unsigned      default 0  not null,
+    deletedcount int unsigned      default 0  not null,
+    postusername varchar(100)      default '' not null,
+    postuserid   int unsigned      default 0  not null,
+    lastposter   varchar(100)      default '' not null,
+    dateline     int unsigned      default 0  not null,
+    views        int unsigned      default 0  not null,
+    iconid       smallint unsigned default 0  not null,
+    notes        varchar(250)      default '' not null,
+    visible      smallint          default 0  not null,
+    sticky       smallint          default 0  not null,
+    votenum      smallint unsigned default 0  not null,
+    votetotal    smallint unsigned default 0  not null,
+    attach       smallint unsigned default 0  not null,
+    similar      varchar(55)       default '' not null,
+    taglist      mediumtext                   null
+)
+    engine = MyISAM;
+
+create index dateline
+    on thread (dateline);
+
+create index forumid
+    on thread (forumid, visible, sticky, lastpost);
+
+create index lastpost
+    on thread (lastpost, forumid);
+
+create index pollid
+    on thread (pollid);
+
+create index postuserid
+    on thread (postuserid);
+
+create index prefixid
+    on thread (prefixid, forumid);
+
+create fulltext index title
+    on thread (title);

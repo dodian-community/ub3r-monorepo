@@ -2,6 +2,7 @@ package net.dodian.utilities
 
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.SQLException
 import java.sql.Statement
 
 val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC"
@@ -13,7 +14,7 @@ val dbStatement: Statement = dbConnection.createStatement()
 private fun connect(): Connection {
     val con = DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword)
     if (!con.isValid(0))
-        error("Failed to connect to database...")
+        error("Failed to connect to database")
 
     return con;
 }
@@ -23,6 +24,8 @@ enum class DbTables(val table: String) {
     WEB_THREAD("thread"),
 
     GAME_PLAYER_SESSIONS("uber3_sessions"),
+
+    GAME_LOGS("uber3_log"),
 
     GAME_LOGS_PLAYER("uber3_logs"),
     GAME_LOGS_PLAYER_TRADES("uber3_trades"),
@@ -50,7 +53,8 @@ enum class DbTables(val table: String) {
     GAME_MISC("uber3_misc"),
 
     GAME_PETE_CO("pete_co"),
-    GAME_WORLDS("worlds")
+    GAME_WORLDS("worlds"),
+
     ;
 
     override fun toString() = databaseTablePrefix + this.table
