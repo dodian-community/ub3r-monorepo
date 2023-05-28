@@ -278,7 +278,7 @@ public class LoginManager {
                 String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
                         + p.dbId + "', '" + playerName + "', '', '', '', '', '0')";
                 statement.executeUpdate(newAccount);
-                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON CONFLICT (uid) DO NOTHING";
+                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON DUPLICATE (uid) DO NOTHING";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
                 results.close();
