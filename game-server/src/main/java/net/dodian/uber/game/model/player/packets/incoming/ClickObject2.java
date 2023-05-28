@@ -75,7 +75,7 @@ public class ClickObject2 implements Packet {
     }
 
     public void clickObject2(Client client, int objectID, Position position, GameObjectData obj) {
-        System.out.println("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
+        //System.out.println("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, position.getX(), position.getY(), 2));
         }

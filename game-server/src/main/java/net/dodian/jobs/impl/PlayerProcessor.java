@@ -22,7 +22,6 @@ public class PlayerProcessor implements Job {
             }
             PlayerHandler.cycle = PlayerHandler.cycle >= 10000 ? 0 : PlayerHandler.cycle + 1;
             for (int i = 0; i < Constants.maxPlayers; i++) {
-                try {
                     if (PlayerHandler.players[i] == null)
                         continue;
                     if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
@@ -35,13 +34,11 @@ public class PlayerProcessor implements Job {
                         }
                         continue;
                     }
-                    if (PlayerHandler.players[i].disconnected)
-                        continue;
                     if (PlayerHandler.players[i].dbId < 1
                             && System.currentTimeMillis() - PlayerHandler.players[i].lastPacket >= 30000) {
                         PlayerHandler.players[i].disconnected = true;
-                    }
-                    PlayerHandler.players[i].actionAmount--;
+                    } else
+                        try {
                     PlayerHandler.players[i].process();
                     while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
                     PlayerHandler.players[i].postProcessing();
@@ -50,9 +47,7 @@ public class PlayerProcessor implements Job {
                         PlayerHandler.players[i].kick();
                         PlayerHandler.kickNick = "";
                     }
-                } catch (Exception e) {
-                    if (!PlayerHandler.players[i].getPlayerName().equals("null"))
-                        System.out.println("Error with player " + i + ", " + PlayerHandler.players[i].getPlayerName());
+                } catch (Exception e) { //Added exception here!
                     e.printStackTrace();
                 }
             }

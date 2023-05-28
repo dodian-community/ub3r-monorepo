@@ -100,8 +100,11 @@ public class ClickNpc2 implements Packet {
             // Assistant
             client.WanneShop = 1; // Varrock General Store
         } else if (npcId == 506 || npcId == 527) { // Shop Keeper +
-            // Assistant
             client.WanneShop = 3; // Falador General Store
+        } else if (npcId == 4965) { // Gnome general store
+            client.WanneShop = 4;
+        } else if (npcId == 1032) { // Catherby general store
+            client.WanneShop = 5;
         } else if (npcId == 577) { // Cassie
             client.WanneShop = 4; // Falador Shield Shop
         } else if (npcId == 580) { // Flynn

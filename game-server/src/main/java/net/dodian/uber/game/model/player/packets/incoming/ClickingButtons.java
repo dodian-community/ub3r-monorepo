@@ -583,19 +583,19 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 13092:
-                if(client.getClient(client.trade_reqId) == null)
-                    break;
                 try {
-                    if (System.currentTimeMillis() - client.lastButton < 600)
+                    Client other = client.getClient(client.trade_reqId);
+                    if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {
                         break;
+                    }
                     client.lastButton = System.currentTimeMillis();
                     if (client.inTrade && !client.tradeConfirmed) {
-                        Client other = client.getClient(client.trade_reqId);
                         client.tradeConfirmed = true;
                         if (other != null && other.tradeConfirmed) {
                             if (!other.hasTradeSpace() || !client.hasTradeSpace()) {
                                 client.send(new SendMessage(client.failer));
                                 other.send(new SendMessage(client.failer));
+                                System.out.println("decline trade?!");
                                 client.declineTrade();
                                 return;
                             }
@@ -614,22 +614,13 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 13218:
-                if(client.getClient(client.trade_reqId) == null)
-                    break;
                 try {
                     Client other = client.getClient(client.trade_reqId);
-                    if (other == null || !client.validClient(client.trade_reqId)) {
+                    if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {
                         break;
-                    }
-                    if (System.currentTimeMillis() - client.lastButton < 600) {
-                        client.lastButton = System.currentTimeMillis();
-                        break;
-                    } else {
-                        client.lastButton = System.currentTimeMillis();
                     }
                     client.lastButton = System.currentTimeMillis();
                     if (client.inTrade && client.tradeConfirmed && other.tradeConfirmed && !client.tradeConfirmed2) {
-                        client.lastButton = System.currentTimeMillis();
                         client.tradeConfirmed2 = true;
                         if (other.tradeConfirmed2) {
                             client.giveItems();

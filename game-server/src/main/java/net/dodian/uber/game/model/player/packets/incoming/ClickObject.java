@@ -732,6 +732,9 @@ public class ClickObject implements Packet {
 //      }
 //    }
         if (objectID == 375 && objectPosition.getX() == 2593 && objectPosition.getY() == 3108 && client.getPosition().getZ() == 1) {
+            if(client.chestEventOccur) {
+                return;
+            }
             if (client.getLevel(Skill.THIEVING) < 70) {
                 client.send(new SendMessage("You must be level 70 thieving to open this chest"));
                 return;
@@ -763,11 +766,15 @@ public class ClickObject implements Packet {
                 client.addItem(995, coins);
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
-                client.giveExperience(150, Skill.THIEVING);
+                client.giveExperience(300, Skill.THIEVING);
+            client.chestEvent++;
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
-            client.triggerRandom(150);
+            client.triggerRandom(900);
         }
         if (objectID == 6420 && objectPosition.getX() == 2733 && objectPosition.getY() == 3374) {
+            if(client.chestEventOccur) {
+                return;
+            }
             if (!client.premium) {
                 client.resetPos();
                 return;
@@ -803,9 +810,10 @@ public class ClickObject implements Packet {
                 client.addItem(995, coins);
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
-                client.giveExperience(300, Skill.THIEVING);
+                client.giveExperience(500, Skill.THIEVING);
+            client.chestEvent++;
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
-            client.triggerRandom(15000);
+            client.triggerRandom(1500);
         }
         if (System.currentTimeMillis() - client.lastDoor > 1000) {
             client.lastDoor = System.currentTimeMillis();
@@ -984,6 +992,18 @@ public class ClickObject implements Packet {
             client.getPosition().setZ(0);
             client.teleportToX = 2446;
             client.teleportToY = 3436;
+        }
+        if (objectID == 16675 && objectPosition.getX() == 2444 && objectPosition.getY() == 3414) // Bank staircase 2
+        {
+            client.getPosition().setZ(1);
+            client.teleportToX = 2445;
+            client.teleportToY = 3416;
+        }
+        if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3415) // Bank staircase 2
+        {
+            client.getPosition().setZ(0);
+            client.teleportToX = 2444;
+            client.teleportToY = 3413;
         }
         // }
         // go upstairs

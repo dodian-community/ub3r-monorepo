@@ -22,10 +22,10 @@ public class Utils {
     public static int[] grimy_herbs_lvl = {1, 10, 25, 40, 54, 59, 65, 70, 75};
     public static int[] grimy_herbs_xp = {24, 40, 56, 72, 88, 96, 104, 120, 136}; //3 guam, 5 tarromin, 7 ranarr, 9 irit, kwuarm 11, snapdragon 12, cadantine 13, dwarfweed 15, torstol 17
 
-    public static int[] pot_1_dose = {119, 125, 137, 143, 149, 161, 167, 173, 143, 3030};
-    public static int[] pot_2_dose = {117, 123, 135, 141, 147, 159, 165, 171, 141, 3028};
-    public static int[] pot_3_dose = {115, 121, 133, 139, 145, 157, 163, 169, 139, 3026};
-    public static int[] pot_4_dose = {113, 2428, 2432, 2434, 2436, 2440, 2442, 2444, 2434, 3024};
+    public static int[] pot_1_dose = {119, 125, 137, 143, 149, 161, 167, 173, 3030};
+    public static int[] pot_2_dose = {117, 123, 135, 141, 147, 159, 165, 171, 3028};
+    public static int[] pot_3_dose = {115, 121, 133, 139, 145, 157, 163, 169, 3026};
+    public static int[] pot_4_dose = {113, 2428, 2432, 2434, 2436, 2440, 2442, 2444, 3024};
 
     public static int[] shortExp = {80, 120, 160, 200, 250, 320};
     public static int[] longExp = {90, 135, 180, 230, 290, 360};

@@ -422,7 +422,7 @@ public class Npc extends Entity {
         boolean wealth = target.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
         boolean itemDropped;
         pos = getId() == 33333 ? new Position(1,2,0) : pos;
-        System.out.println("dropped.." + getId() + ", at " + pos.toString());
+        //System.out.println("dropped.." + getId() + ", at " + pos.toString());
 
         for (int rolls = 0; rolls < roll; rolls++) {
             rolledChance = Misc.chance(100000) / 1000D; //100% = 100000 (1000 * 100)
