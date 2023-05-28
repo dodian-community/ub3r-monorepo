@@ -12,7 +12,6 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
-import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -32,7 +31,6 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.net.InetAddress;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -61,7 +59,6 @@ public class Commands implements Packet {
     }
 
     public void customCommand(Client client, String command) {
-        client.actionAmount++;
         String[] cmd = command.split(" ");
         boolean specialRights = client.playerGroup == 6 || client.playerGroup == 10 || client.playerGroup == 35;
         try {
@@ -1397,7 +1394,6 @@ public class Commands implements Packet {
                 int count = 0;
                 for (Player p : PlayerHandler.players) {
                     if (p != null) {
-                        if (client.playerRights == 0 && p.invis) continue;
                         String title = "";
                         if (p.playerRights == 1 && p.playerGroup == 5)
                             title = "@blu@Mod ";

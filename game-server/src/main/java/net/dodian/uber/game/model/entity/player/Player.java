@@ -87,7 +87,6 @@ public abstract class Player extends Entity {
     public boolean isActive = false;
     public boolean isKicked = false;
     public int actionTimer = 0;
-    public int actionAmount = 0;
     public String connectedFrom = "";
     public String UUID = "";
     public boolean takeAsNote = false;
@@ -95,7 +94,7 @@ public abstract class Player extends Entity {
     public String playerPass = null; // name of the connecting client
     public int playerRights; // 0=normal player, 1=player mod, 2=real mod,
     public PlayerHandler handler = null;
-    public int maxItemAmount = 2147483647;
+    public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
     public int playerBankSize = 350;
@@ -171,6 +170,8 @@ public abstract class Player extends Entity {
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int boostedLevel[] = new int[21];
+    public int chestEvent = 0;
+    public boolean chestEventOccur = true;
 
 
     public Player(int slot) {

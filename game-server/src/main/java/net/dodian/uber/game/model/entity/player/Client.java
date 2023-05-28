@@ -474,10 +474,10 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			disconnected = true;
 			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			}
+			disconnected = true;
 			ConnectionList.getInstance().remove(mySock.getInetAddress());
 			mySock.close();
 			mySock = null;
@@ -485,6 +485,9 @@ public class Client extends Player implements Runnable {
 			inputStream = null;
 			outputStream = null;
 			isActive = false;
+			synchronized (this) { //??
+				notify();
+			}
 			buffer = null;
 		} catch (java.io.IOException ioe) {
 			ioe.printStackTrace();
@@ -878,13 +881,11 @@ public class Client extends Player implements Runnable {
 	 */
 
 	public void saveStats(boolean logout, boolean updateProgress) {
-		if (!loadingDone)
-			return;
-		if (loginDelay > 0) {
-			println("Incomplete login, aborting save");
+		if (!loadingDone || !validLogin) {
 			return;
 		}
-		if (!validLogin) {
+		if (loginDelay > 0) {
+			println("Incomplete login, aborting save");
 			return;
 		}
 		if (getPlayerName() == null || getPlayerName().equals("null") || dbId < 1) {
@@ -904,7 +905,6 @@ public class Client extends Player implements Runnable {
           }
         }
       }*/ //TODO: Fix this pvp shiet
-
 			if (getGameWorldId() < 2) {
 				long elapsed = System.currentTimeMillis() - start;
 				int minutes = (int) (elapsed / 60000);
@@ -916,15 +916,13 @@ public class Client extends Player implements Runnable {
 					c.refreshFriends();
 				}
 			}
-		}
-		if (logout && inTrade) {
-			declineTrade();
-		} else if (logout && inDuel && !duelFight) {
-			declineDuel();
-		} else if (logout && duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
-			Client p = getClient(duel_with);
-			p.duelWin = true;
-			p.DuelVictory();
+			if(inTrade) declineTrade();
+			else if(inDuel && !duelFight) declineDuel();
+			else if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
+				Client p = getClient(duel_with);
+				p.duelWin = true;
+				p.DuelVictory();
+			}
 		}
 		// TODO: Look into improving this, and potentially a system to configure player saving per world id...
 		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
@@ -951,11 +949,7 @@ public class Client extends Player implements Runnable {
 				query2.append("totalxp=").append(allxp);
 
 				statement.executeUpdate(query.toString());
-
-				if (updateProgress) {
-					statement.executeUpdate(query2.toString());
-				}
-
+				if (updateProgress) statement.executeUpdate(query2.toString());
 				System.currentTimeMillis();
 				StringBuilder inventory = new StringBuilder();
 				StringBuilder equipment = new StringBuilder();
@@ -1002,6 +996,7 @@ public class Client extends Player implements Runnable {
 				}
 				if (logout)
 					saveNeeded = false;
+
 				String last = "";
 				long elapsed = System.currentTimeMillis() - session_start;
 				if (elapsed > 10000) {
@@ -2462,19 +2457,6 @@ public class Client extends Player implements Runnable {
 				pickupWanted = false;
 			}
 		}
-		if (spamButton && System.currentTimeMillis() - lastButton > 2000) {
-			lastButton = System.currentTimeMillis();
-			if (currentButton >= 700) {
-				currentButton = 1;
-				currentStatus++;
-			}
-			if (currentStatus >= 2) {
-				spamButton = false;
-			}
-			println("sending button " + currentButton + ", " + currentStatus);
-			frame36(currentButton, currentStatus);
-			currentButton++;
-		}
 		if (animationReset > 0 && System.currentTimeMillis() >= animationReset) {
 			animationReset = 0;
 			rerequestAnim();
@@ -2536,9 +2518,6 @@ public class Client extends Player implements Runnable {
 			rerequestAnim();
 			AnimationReset = false;
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-		}
-		if (actionAmount < 0) {
-			actionAmount = 0;
 		}
 		if (actionTimer > 0) {
 			actionTimer -= 1;
@@ -4299,13 +4278,14 @@ public class Client extends Player implements Runnable {
 			return false;
 		}
 		if (woodcuttingLevels[woodcuttingIndex] > getLevel(Skill.WOODCUTTING)) {
-			resetAction();
 			send(new SendMessage(
 					"You need a woodcutting level of " + woodcuttingLevels[woodcuttingIndex] + " to cut this tree."));
+			resetAction();
 			return false;
 		}
 		if (freeSlots() < 1) {
-			resetAction(true);
+			send(new SendMessage("You got full inventory!"));
+			resetAction();
 			return false;
 		}
 		if (System.currentTimeMillis() - lastAction >= 600 && !IsCutting) {
@@ -4392,7 +4372,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void resetWC() {
-		if(IsCutting) {
 			woodcutting[0] = 0;
 			woodcutting[1] = 0;
 			woodcutting[2] = 0;
@@ -4402,7 +4381,6 @@ public class Client extends Player implements Runnable {
 			woodcuttingIndex = -1;
 			IsCutting = false;
 			rerequestAnim();
-		}
 	}
 
 	public boolean fromTrade(int itemID, int fromSlot, int amount) {
@@ -5918,22 +5896,17 @@ public class Client extends Player implements Runnable {
 		//System.out.println("testing..." + reduceChance + ", " + Math.min(reduceChance, 7000));
 		if (Misc.chance(6500 - Math.min(reduceChance, 6000)) == 1) {
 			showRandomEvent();
+			chestEvent = 0;
 		}
-    /*int reduceChance = Math.min(1 + (totalXpGained / 15000), 10000);
-    System.out.println("test: " + totalXpGained + ", " + reduceChance);
-    if(Misc.chance(10000 / reduceChance) == 1) {
-      showRandomEvent();
-      totalXpGained = 0;
-    }*/
-    /*int chance = Misc.chance(20);
-    if(chance == 1) { //Event shiet!
-      if(!addItem(11996, 1)) {
-        GroundItem item = new GroundItem(getPosition().getX(), getPosition().getY(), 11996, 1, getSlot(), -1);
-        Ground.items.add(item);
-        send(new SendMessage("You dropped the "+ GetItemName(11996).toLowerCase() +" on the floor!"));
-      } else
-        send(new SendMessage("Something sneaked into your inventory!"));
-    }*/ //Old event!
+		if(chestEvent >= 50) { //Prevent auto clicking I believe!
+			int chance = Misc.chance(100);
+			int trigger = (chestEvent - 50) * 2;
+			if(trigger >= chance) {
+				chestEventOccur = true;
+				chestEvent = 0;
+				send(new SendMessage("The chest randomly detect you standing still for to long! Please move!"));
+			}
+		}
 	}
 
 	public void openGenie() {
@@ -6302,8 +6275,15 @@ public class Client extends Player implements Runnable {
 		cooking = false;
 		filling = false;
 		mixPots = false;
-		resetWC();
-		resetSM();
+		// woodcutting check
+		if (woodcuttingIndex >= 0) {
+			resetWC();
+		}
+		// smithing check
+		if (smithing[0] > 0) {
+			resetSM();
+			send(new RemoveInterfaces());
+		}
 		if (fletchings || fletchingOther) {
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		}
@@ -6783,15 +6763,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void openTrade() {
-		if (TradeDupeFix.contains(this, (Client) PlayerHandler.players[trade_reqId])) {
-			System.out.println("dupe prevented");
-			return;
-		}
 		if (inHeat()) {
 			send(new SendMessage("It would not be a wise idea to trade with the heat in the background!"));
 			return;
 		}
-		TradeDupeFix.add(this, (Client) PlayerHandler.players[trade_reqId]);
 		send(new InventoryInterface(3323, 3321)); // trading window + bag
 		inTrade = true;
 		tradeRequested = false;
@@ -6814,33 +6789,31 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void declineTrade(boolean tellOther) {
-		send(new RemoveInterfaces());
 		Client other = getClient(trade_reqId);
-		TradeDupeFix.remove(this, other);
-		TradeDupeFix.remove(other, this);
+		/* Prevent a dupe? */
+		inTrade = false;
 		if (tellOther && validClient(trade_reqId)) {
-			// other.send(new SendMessage(playerName + " declined the trade");
 			other.declineTrade(false);
+			other.inTrade = false;
 		}
-
+		/* Clear the trade! */
 		for (GameItem item : offeredItems) {
-			if (item.getAmount() < 1) {
-				continue;
-			}
-			//println("returning item " + item.getId() + ", " + item.getAmount());
-			if (Server.itemManager.isStackable(item.getId())) {
-				addItem(item.getId(), item.getAmount());
-			} else {
-				for (int i = 0; i < item.getAmount(); i++) {
-					addItem(item.getId(), 1);
+			if (item.getAmount() > 0) {
+				if (Server.itemManager.isStackable(item.getId())) {
+					addItem(item.getId(), item.getAmount());
+				} else {
+					for (int i = 0; i < item.getAmount(); i++) {
+						addItem(item.getId(), 1);
+					}
 				}
 			}
 		}
+		System.out.println("decline trade for: " + getPlayerName() + " and traded with " + other.getPlayerName());
+		send(new RemoveInterfaces());
 		canOffer = true;
 		tradeConfirmed = false;
 		tradeConfirmed2 = false;
 		offeredItems.clear();
-		inTrade = false;
 		trade_reqId = -1;
 	}
 
@@ -6959,8 +6932,6 @@ public class Client extends Player implements Runnable {
 
 	public void giveItems() {
 		Client other = getClient(trade_reqId);
-		TradeDupeFix.remove(this, other);
-		TradeDupeFix.remove(other, this);
 		if (validClient(trade_reqId)) {
 			try {
 				CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();

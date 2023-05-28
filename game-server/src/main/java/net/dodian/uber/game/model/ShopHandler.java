@@ -37,7 +37,6 @@ public class ShopHandler {
     }
 
     public void DiscountItem(int ShopID, int ArrayID) {
-        System.out.println("hello!");
         ShopItemsN[ShopID][ArrayID] -= 1;
         if (ShopItemsN[ShopID][ArrayID] <= 0 && ArrayID >= ShopHandler.ShopItemsStandard[ShopID]) {
             ShopItemsN[ShopID][ArrayID] = 0;

@@ -9,9 +9,17 @@ public class ClickingStuff implements Packet {
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         //int interfaceID = client.getInputStream().readSignedByte(); //Do not exist!!
         if (client.inDuel && !client.duelFight) {
+            Client other = client.getClient(client.duel_with);
+            if (other == null || !client.validClient(client.duel_with) || System.currentTimeMillis() - client.lastButton < 600) {
+                return;
+            }
             client.declineDuel();
         }
-        if (client.inTrade && (!client.tradeConfirmed || !client.tradeConfirmed2)) {
+        if (client.inTrade) {
+            Client other = client.getClient(client.trade_reqId);
+            if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600) {
+                return;
+            }
             client.declineTrade();
         }
         if (client.IsShopping) {

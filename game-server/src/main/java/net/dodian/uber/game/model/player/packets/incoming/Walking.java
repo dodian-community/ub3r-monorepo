@@ -27,9 +27,11 @@ public class Walking implements Packet {
         if (client.randomed) {
             return;
         }
-        if (client.inTrade) {
-            return;
-        }
+        if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
+        /* Auto decline when walk away from trade! */
+        if(client.inTrade && packetType != 164) client.declineTrade();
+        else if(client.inDuel && !client.duelFight && packetType != 164) client.declineDuel();
+        /* Check a players inventory! */
         if (client.checkInv) {
             client.checkInv = false;
             client.resetItems(3214);
@@ -41,7 +43,6 @@ public class Walking implements Packet {
         if (client.NpcDialogue == 1001)
             client.setInterfaceWalkable(-1);
         client.convoId = -1;
-        client.resetAction();
         long currentTime = System.currentTimeMillis();
         if (currentTime < client.snaredUntil) {
             client.send(new SendMessage("You are ensnared!"));
@@ -53,8 +54,11 @@ public class Walking implements Packet {
         }
         if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
             client.resetAttack();
+        /* ? */
         client.send(new RemoveInterfaces());
         client.rerequestAnim();
+        client.resetAction();
+        /* Death Stage */
         if (client.deathStage == 0) {
             client.newWalkCmdSteps = packetSize - 5;
             if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
@@ -91,18 +95,6 @@ public class Walking implements Packet {
             // stairs check
             if (client.stairs > 0) {
                 client.resetStairs();
-            }
-            // woodcutting check
-            if (client.woodcuttingIndex >= 0) {
-                client.rerequestAnim();
-                client.resetWC();
-            }
-            // smithing check
-            if (client.smithing[0] > 0) {
-                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                client.rerequestAnim();
-                client.resetSM();
-                client.send(new RemoveInterfaces());
             }
             // Npc Talking
             if (client.NpcDialogue > 0) {
