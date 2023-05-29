@@ -171,7 +171,7 @@ public abstract class Player extends Entity {
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int boostedLevel[] = new int[21];
     public int chestEvent = 0;
-    public boolean chestEventOccur = true;
+    public boolean chestEventOccur = false;
 
 
     public Player(int slot) {

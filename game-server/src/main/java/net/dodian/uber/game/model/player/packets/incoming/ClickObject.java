@@ -926,11 +926,9 @@ public class ClickObject implements Packet {
             client.openUpBank();
         if (objectID == 11833 && objectPosition.getX() == 2437 && objectPosition.getY() == 5166) // Jad entrance
         {
-            if(getGameWorldId() > 1) {
-                client.teleportToX = 2413;
-                client.teleportToY = 5117;
-                client.send(new SendMessage("You have entered the Jad Cave."));
-            } else client.send(new SendMessage("Jad coming out in May! Please be patient!"));
+            client.teleportToX = 2413;
+            client.teleportToY = 5117;
+            client.send(new SendMessage("You have entered the Jad Cave."));
         }
         if (objectID == 11834 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
         {

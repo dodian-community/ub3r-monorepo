@@ -6808,7 +6808,6 @@ public class Client extends Player implements Runnable {
 				}
 			}
 		}
-		System.out.println("decline trade for: " + getPlayerName() + " and traded with " + other.getPlayerName());
 		send(new RemoveInterfaces());
 		canOffer = true;
 		tradeConfirmed = false;
