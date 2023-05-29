@@ -595,7 +595,6 @@ public class ClickingButtons implements Packet {
                             if (!other.hasTradeSpace() || !client.hasTradeSpace()) {
                                 client.send(new SendMessage(client.failer));
                                 other.send(new SendMessage(client.failer));
-                                System.out.println("decline trade?!");
                                 client.declineTrade();
                                 return;
                             }
