@@ -80,6 +80,9 @@ public class ChangeRegion implements Packet {
             // Ancient slayer dunegon
             client.ReplaceObject(2661, 9815, 2391, 0, 0);
             client.ReplaceObject(2662, 9815, 2392, -2, 0);
+            /* Gnome mining cavern */
+            client.ReplaceObject2(new Position(2492, 9916, 0), 7491, 0, 10);
+            client.ReplaceObject2(new Position(2493, 9915, 0), 7491, 0, 10);
 
         if (client.inWildy() || client.duelFight) {
             client.getOutputStream().createFrameVarSize(104);

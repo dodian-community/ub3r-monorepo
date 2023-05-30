@@ -15,6 +15,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.Misc;
+import net.dodian.utilities.Utils;
 
 import java.util.Random;
 
@@ -135,6 +136,12 @@ public class ClickObject2 implements Packet {
         if (objectID == 3994 || objectID == 11666) { //Gold craft
             client.showItemsGold();
             client.showInterface(4161);
+        }
+        if (objectID == 16469) { //For now smelt! Later adding gold craft!
+            for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
+                client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
+            }
+            client.sendFrame164(2400);
         }
 		/*if (objectID == 2562) {
 			client.skillX = position.getX();

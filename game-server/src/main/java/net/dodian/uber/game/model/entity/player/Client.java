@@ -2783,9 +2783,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Granite longsword", "Dragon",
+			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Unholy blessing", "Granite longsword", "Dragon",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "50", "60", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "45", "50", "60", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2793,7 +2793,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 21646, 1305, 9747};
+			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 20223, 21646, 1305, 9747};
 			setMenuItems(items);
 		} else if (skillID == 1) {
 			send(new SendString("Attack", 8846));
@@ -2802,9 +2802,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Granite", "Obsidian", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
+			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "50", "55", "60", "70", "75", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "75", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2812,7 +2812,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 10564, 21301, 3140, 4224, 11284, 9753};
+			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4224, 11284, 9753};
 			setMenuItems(items);
 		} else if (skillID == 2) {
 			send(new SendString("Strength", 8846));
@@ -2820,8 +2820,8 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Unholy book", "Granite maul", "Obsidian maul", "Skillcape" + prem};
-			String[] s1 = {"45", "50", "60", "99"};
+			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Skillcape" + prem};
+			String[] s1 = {"45", "45", "45", "50", "60", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2829,7 +2829,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {3842, 4153, 6528, 9750};
+			int[] items = {3842, 20223, 20232, 4153, 6528, 9750};
 			setMenuItems(items);
 		} else if (skillID == 3) {
 			send(new SendString("Hitpoints", 8846));
@@ -2859,11 +2859,11 @@ public class Client extends Player implements Runnable {
 				s1 = new String[]{"1", "20", "30", "40", "50", "65", "75"/*, "85"*/};
 			} else if (child == 1) {
 				s = new String[]{"Leather", "Green dragonhide body (with 40 defence)", "Green dragonhide chaps",
-						"Green dragonhide vambraces", "Book of balance", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
+						"Green dragonhide vambraces", "Book of balance", "Peaceful blessing", "Honourable blessing", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
 						"Blue dragonhide vambraces", "Red dragonhide body (with 40 defence)", "Red dragonhide chaps",
 						"Red dragonhide vambraces", "Black dragonhide body (with 40 defence)", "Black dragonhide chaps",
 						"Black dragonhide vambraces", "Spined"};
-				s1 = new String[]{"1", "40", "40", "40", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "75"};
+				s1 = new String[]{"1", "40", "40", "40", "45", "45", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "75"};
 			} else if (child == 2) {
 				s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
@@ -2878,7 +2878,7 @@ public class Client extends Player implements Runnable {
 			if (child == 0)
 				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 6724/*, 20997*/});
 			else if (child == 1)
-				setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 6133});
+				setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 20226, 20229, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 6133});
 			else if (child == 2)
 				setMenuItems(new int[]{882, 884, 886, 888, 890, 892, 11212, 9756});
 		} else if (skillID == 6) { // Magic need to be done?
@@ -2894,8 +2894,8 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
 				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
 			} else if (child == 1) {
-				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Infinity"};
-				s1 = new String[]{"1", "20", "20", "35", "45", "50"};
+				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Holy blessing", "Infinity"};
+				s1 = new String[]{"1", "20", "20", "35", "45", "45", "50"};
 			} else if (child == 2) {
 				s = new String[]{"Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "1", "25", "40", "50", "99"};
@@ -2911,7 +2911,7 @@ public class Client extends Player implements Runnable {
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
 						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
 			else if (child == 1)
-				setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 6918});
+				setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 20220, 6918});
 			else if (child == 2)
 				setMenuItems(new int[]{2417, 2415, 2416, 4675, 6526, 6914, 9762});
 		} else if (skillID == 17) {
@@ -3790,6 +3790,7 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < 14; i++) {
 			if (getEquipment()[i] > -1) {
 				int timed = checkObsidianBonus(getEquipment()[i]) ? 2 : 1;
+				if(!(duelFight && i == 8))
 				for (int k = 0; k < playerBonus.length; k++) {
 					int bonus = Server.itemManager.getBonus(getEquipment()[i], k);
 					playerBonus[k] += bonus * timed;
@@ -5328,7 +5329,7 @@ public class Client extends Player implements Runnable {
 		}
 		if (ItemID == 21646)
 			return 50;
-		if (ItemID == 3842)
+		if (ItemID == 3842 ||ItemID == 20223)
 			return 45;
 		return 1;
 	}
@@ -5404,6 +5405,8 @@ public class Client extends Player implements Runnable {
 			return 60;
 		if (ItemID == 1135 || ItemID == 2499 || ItemID == 2501 || ItemID == 2503)
 			return 40;
+		if(ItemID == 20235)
+			return 45;
 		if (ItemID == 6524 || ItemID == 21298 || ItemID == 21301 || ItemID == 21304) //Obsidian
 			return 55;
 		return 1;
@@ -5411,7 +5414,7 @@ public class Client extends Player implements Runnable {
 
 	public int GetCLStrength(int ItemID) {
 		if (ItemID == -1) return 1;
-		if (ItemID == 3842)
+		if (ItemID == 3842 || ItemID == 20223 || ItemID == 20232)
 			return 45;
 		if (ItemID == 4153)
 			return 50;
@@ -5431,7 +5434,7 @@ public class Client extends Player implements Runnable {
 			return 35;
 		if(ItemID == 6526)
 			return 40;
-		if(ItemID == 3840)
+		if(ItemID == 3840 || ItemID == 20220)
 			return 45;
 		if (ItemName.startsWith("Infinity") || ItemID == 6914)
 			return 50;
@@ -5501,7 +5504,7 @@ public class Client extends Player implements Runnable {
 		if (ItemName.startsWith("Steel arr")) {
 			return 10;
 		}
-		if (ItemID == 3844)
+		if (ItemID == 3844 || ItemID == 20226 || ItemID == 20229)
 			return 45;
 		if (ItemID == 6724)
 			return 75;
@@ -7101,6 +7104,7 @@ public class Client extends Player implements Runnable {
 		send(new RemoveInterfaces());
 		duelFight = true;
 		prayers.reset();
+		GetBonus(true); //Set bonus due to blessing!
 		for(int i = 0; i < boostedLevel.length; i++) {
 			boostedLevel[i] = 0;
 			refreshSkill(Skill.getSkill(i));
@@ -7965,9 +7969,11 @@ public class Client extends Player implements Runnable {
 			if (this.dbId > other.dbId)
 				TradeLog.recordTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);
 			resetDuel();
+			GetBonus(true);
 			saveStats(false);
 			if (validClient(duel_with)) {
 				other.resetDuel();
+				GetBonus(true);
 				other.saveStats(false);
 			}
 		}

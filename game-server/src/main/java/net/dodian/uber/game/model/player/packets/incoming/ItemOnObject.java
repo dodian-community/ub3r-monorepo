@@ -37,7 +37,7 @@ public class ItemOnObject implements Packet {
             client.deleteItem(ItemID, 1);
             client.addItem(ItemID + 2, 1);
         }
-        if (UsedOnObjectID == 3994 || UsedOnObjectID == 11666) {
+        if (UsedOnObjectID == 3994 || UsedOnObjectID == 11666 || UsedOnObjectID == 16469) {
             if (ItemID == 2357) { // 2357 = gold
                 client.showItemsGold();
                 client.showInterface(4161);
