@@ -276,7 +276,7 @@ public class ClickObject implements Packet {
             client.teleportToY = 9366;
             client.send(new SendMessage("Welcome to the dragon lair!"));
         }
-        if (objectID == 3994 || objectID == 11666) {
+        if (objectID == 3994 || objectID == 11666 || objectID == 16469) {
             for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
                 client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
             }
@@ -761,7 +761,7 @@ public class ClickObject implements Packet {
                 client.yell("[Server] - " + client.getPlayerName() + " has just received from the chest a  "
                         + client.GetItemName(items[r]));
             } else {
-                int coins = 500 + Utils.random(3000);
+                int coins = 300 + Utils.random(1200);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
             }
@@ -805,7 +805,7 @@ public class ClickObject implements Packet {
                 client.yell("[Server] - " + client.getPlayerName() + " has just received from the premium chest a  "
                         + client.GetItemName(items[r]));
             } else {
-                int coins = 1000 + Utils.random(6000);
+                int coins = 500 + Utils.random(2000);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
             }

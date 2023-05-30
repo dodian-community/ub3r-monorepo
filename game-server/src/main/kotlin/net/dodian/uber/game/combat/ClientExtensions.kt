@@ -191,7 +191,13 @@ fun Client.getRangedStr(): Int {
     }
     /* Shield */
     rangedStr += when(equipment[Equipment.Slot.SHIELD.id]) {
-        3844 -> 10
+        3844 -> 9
+        else -> 0
+    }
+    /* Blessing */
+    rangedStr += when(equipment[Equipment.Slot.BLESSING.id]) {
+        20226 -> 9
+        20229 -> 18
         else -> 0
     }
     /* Ring */
