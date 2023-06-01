@@ -35,14 +35,13 @@ public class SocketHandler implements Runnable {
                 myPackets.clear();
                 break;
             }
-            while (writeOutput())
-                ;
+            while (writeOutput());
             /**
              * Send all output
              */
+            flush(); //Flush should be here.
             if (lastProcess + 50 <= System.currentTimeMillis()) {
-                while (parsePackets())
-                    ;
+                while (parsePackets());
                 /**
                  * Grabs temp packets from packetQueue
                  */
@@ -58,9 +57,7 @@ public class SocketHandler implements Runnable {
             }
             try {
                 Thread.sleep(50);
-                flush();
-            } catch (java.lang.Exception _ex) {
-
+            } catch (java.lang.Exception _ex) { //Grabbing some exceptions apperently!
             }
         }
     }
