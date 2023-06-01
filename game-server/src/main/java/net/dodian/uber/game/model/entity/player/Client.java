@@ -440,7 +440,7 @@ public class Client extends Player implements Runnable {
 	public int WanneThieve = 0;
 
 	public static final int bufferSize = 1000000;
-	private java.net.Socket mySock;
+	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
 	public int readPtr, writePtr;
@@ -2783,9 +2783,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Unholy blessing", "Granite longsword", "Dragon",
+			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "45", "50", "60", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "45", "50", "55", "60", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2793,7 +2793,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 20223, 21646, 1305, 9747};
+			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 20223, 21646, 6523, 1305, 9747};
 			setMenuItems(items);
 		} else if (skillID == 1) {
 			send(new SendString("Attack", 8846));
@@ -2821,7 +2821,7 @@ public class Client extends Player implements Runnable {
 			slot = 8760;
 			String prem = " @red@(Premium only)";
 			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Skillcape" + prem};
-			String[] s1 = {"45", "45", "45", "50", "60", "99"};
+			String[] s1 = {"45", "45", "45", "50", "55", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -5329,6 +5329,8 @@ public class Client extends Player implements Runnable {
 		}
 		if (ItemID == 21646)
 			return 50;
+		if (ItemID == 6523 || ItemID == 6525 || ItemID == 6527)
+			return 55;
 		if (ItemID == 3842 ||ItemID == 20223)
 			return 45;
 		return 1;
@@ -5419,7 +5421,7 @@ public class Client extends Player implements Runnable {
 		if (ItemID == 4153)
 			return 50;
 		if (ItemID == 6528)
-			return 60;
+			return 55;
 		return 1;
 	}
 

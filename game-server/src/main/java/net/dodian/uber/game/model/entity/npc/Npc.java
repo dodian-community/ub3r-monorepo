@@ -223,7 +223,7 @@ public class Npc extends Entity {
                 "Max hit Range: " + rangeMaxHit,
                 "Max hit Melee: " + this.maxHit
         };
-        client.send(new SendString("@dre@               Uber 3.0 Npc Data", 8144));
+        client.send(new SendString("@dre@               Data for " + npcName(), 8144));
         client.clearQuestInterface();
         int line = 8145;
         int count = 0;
