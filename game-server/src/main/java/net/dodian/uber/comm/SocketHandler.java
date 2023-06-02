@@ -55,10 +55,6 @@ public class SocketHandler implements Runnable {
                     myPackets.addAll(temp);
                 lastProcess = System.currentTimeMillis();
             }
-            try {
-                Thread.sleep(50);
-            } catch (java.lang.Exception _ex) { //Grabbing some exceptions apperently!
-            }
         }
     }
 

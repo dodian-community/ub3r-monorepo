@@ -292,26 +292,29 @@ public class Npc extends Entity {
             setFocus(target.getPosition().getX(), target.getPosition().getY());
             getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
             if(getId() == 3127) {
+                boolean fightingJad = false;
+                requestAnim(-1, 0); //Not sure why we need to reset animation?!
                 int type = 0, chance = Misc.chance(6);
                 type = chance == 6 ? Misc.chance(2) : type;
                 for (Entity e : getDamage().keySet()) {
                     if (e instanceof Player) {
                         if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
                             continue;
-                        enemy = Server.playerHandler.getClient(e.getSlot());
-                        int hitDiff = 0;
-                        if (type == 1) {
-                            delayGfx(enemy, 2656, 446, 2, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
-                            setGfx(-1, 0); //Not sure why needed but oh well!
-                            setGfx(444, 0);
-                        } else if (type == 2) {
-                            CalculateMaxHit(false);
-                            delayGfx(enemy, 2652, 451, 2, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
-                        } else {
-                            requestAnim(data.getAttackEmote(), 0);
-                            enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, false, this, damageType.MELEE);
+                        if(((Client) e).attackingNpc) {
+                            enemy = Server.playerHandler.getClient(e.getSlot());
+                            int hitDiff = 0;
+                            if (type == 1) {
+                                delayGfx(enemy, 2656, 446, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
+                                setGfx(-1, 0); //This causing freezes ?!
+                                setGfx(444, 0);
+                            } else if (type == 2) {
+                                CalculateMaxHit(false);
+                                delayGfx(enemy, 2652, 451, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
+                            } else {
+                                requestAnim(data.getAttackEmote(), 0);
+                                enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, false, this, damageType.MELEE);
+                            }
                         }
-                        //delayGfx(c, 81, 393, 2, (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
                     }
                 }
             } else {
