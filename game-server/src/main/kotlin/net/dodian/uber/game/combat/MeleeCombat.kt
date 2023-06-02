@@ -154,7 +154,10 @@ fun landHit(p: Client, t: Entity): Boolean {
 fun Client.handleSpecial(hit: Int): Int {
     var newHit = hit
     val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
-    if (selectedNpc.isAlive) {
+    if(target is Client) {
+
+    }
+    if (target is Npc) {
         val chance = Range(1, 8).value
         if (chance == 1 && specsOn) {
             when (equipment[Equipment.Slot.WEAPON.id]) {
@@ -163,7 +166,7 @@ fun Client.handleSpecial(hit: Int): Int {
                     newHit += bonusSpec
                     requestAnim(emoteSpec, 0)
                     // TODO: Uhm? Why y then x?
-                    animation(animationSpec, selectedNpc.position)
+                    animation(animationSpec, target.position)
                 }
             }
         } else requestAnim(emote, 0)

@@ -56,7 +56,7 @@ public class Client extends Player implements Runnable {
 	long lastBar = 0;
 	public long lastSave, lastProgressSave, snaredUntil = 0;
 	public boolean checkTime = false;
-	public Npc selectedNpc = null;
+
 	public Entity target = null;
 	int otherdbId = -1;
 	public int convoId = -1, nextDiag = -1, npcFace = 591;
@@ -3865,7 +3865,7 @@ public class Client extends Player implements Runnable {
 			objectID = 1309;
 		else if (name.contains("magic tree"))
 			objectID = 1306;
-		else if (name.contains("tree"))
+		else if (name.equalsIgnoreCase("tree"))
 			objectID = 1276;
 
 		switch (objectID) {

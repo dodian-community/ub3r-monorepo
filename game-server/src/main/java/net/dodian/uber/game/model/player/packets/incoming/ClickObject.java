@@ -425,7 +425,7 @@ public class ClickObject implements Packet {
         } else if (objectID == 23557) {
             agility.GnomeRope();
             return;
-        } else if (objectID == 23560) {
+        } else if (objectID == 23560 || objectID == 23561) {
             agility.GnomeTreebranch2();
             return;
         } else if (objectID == 23135 && client.distanceToPoint(objectPosition.getX(), objectPosition.getY()) < 3) {
