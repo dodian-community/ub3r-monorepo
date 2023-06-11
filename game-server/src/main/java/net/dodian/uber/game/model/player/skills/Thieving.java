@@ -7,7 +7,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.Sound;
 import net.dodian.utilities.Range;
 
 
@@ -18,8 +17,6 @@ public class Thieving {
     public static final int STALL_THIEVING_EMOTE = 832;
 
     public static final int EMPTY_STALL_ID = 634;
-
-    public boolean isThieving;
 
     public enum ThievingType {
         PICKPOCKETING,
@@ -38,7 +35,7 @@ public class Thieving {
         GEM_STALL(11731, 90, 5800, new int[]{1617, 1619, 1621, 1623, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1200, 2500)}, new int[]{2, 5, 8, 15, 100}, 38, ThievingType.STALL_THIEVING);
         //RINGBELL(6847, 1, 0, new int[] {4084}, new int[] {1}, new int[] {100}, 25000000, ThievingType.OTHER);
 
-        private ThievingData(int entityId, int requiredLevel, int receivedExperience, int[] item, Range[] itemAmount, int[] itemChance, int respawnTime, ThievingType type) {
+        ThievingData(int entityId, int requiredLevel, int receivedExperience, int[] item, Range[] itemAmount, int[] itemChance, int respawnTime, ThievingType type) {
             this.entityId = entityId;
             this.requiredLevel = requiredLevel;
             this.receivedExperience = receivedExperience;
@@ -50,15 +47,15 @@ public class Thieving {
             this.type = type;
         }
 
-        public int entityId, requiredLevel, receivedExperience, respawnTime;
+        public final int entityId, requiredLevel, receivedExperience, respawnTime;
 
-        public int item[];
+        public final int[] item;
 
-        public Range itemAmount[];
+        public final Range[] itemAmount;
 
-        public int itemChance[];
+        public final int[] itemChance;
 
-        public ThievingType type;
+        public final ThievingType type;
 
         public int getEntityId() {
             return entityId;
@@ -97,8 +94,7 @@ public class Thieving {
     /**
      * This method is used to determine what information should be gathered if the entity you're thieving from exists in the Enum.
      *
-     * @param entityId
-     * @return
+     * @return id
      */
     public static ThievingData forId(int entityId) {
         for (ThievingData data : ThievingData.values()) {
@@ -121,8 +117,7 @@ public class Thieving {
     /**
      * This method is used to determine whether to use a, an, or some depending on the received item's name.
      *
-     * @param itemName
-     * @return
+     * @return name
      */
     private static String aAnOrSome(String itemName) {
         if ((itemName.startsWith("a") || itemName.startsWith("e") || itemName.startsWith("i") || itemName.startsWith("o") || itemName.startsWith("u")) && !itemName.endsWith("s")) {
@@ -144,8 +139,7 @@ public class Thieving {
         final int failChance = generateFailChance();
 
         //final GameObjectDef definition = Misc.getObject(entityId, position.getX(), position.getY(), player.getPosition().getZ());
-
-        if (data == null) {
+        if (data == null || player.chestEventOccur) {
             return;
         }
         int face = (position.getX() == 2658 && position.getY() == 3297) || (position.getX() == 2663 && position.getY() == 3296) ? 0 :
@@ -171,7 +165,7 @@ public class Thieving {
             player.requestAnim(PICKPOCKET_EMOTE, 0);
             player.send(new SendMessage("You attempt to steal from the " + data.toString().toLowerCase().replace('_', ' ') + "..."));
         } else {
-            if (o != null && GlobalObject.hasGlobalObject(o)) {
+            if (GlobalObject.hasGlobalObject(o)) {
                 return;
             }
             player.requestAnim(STALL_THIEVING_EMOTE, 0);
@@ -189,13 +183,13 @@ public class Thieving {
 
             @Override
             public void execute() {
-                if (player == null || player.disconnected) {
+                if (player.disconnected) {
                     this.stop();
                     return;
                 }
 
                 if (failChance > 75) {
-                    player.send(new SendMessage("You fail to thieve from the " + data.toString().toLowerCase().replace('_', ' ') + ""));
+                    player.send(new SendMessage("You fail to thieve from the " + data.toString().toLowerCase().replace('_', ' ')));
                     this.stop();
                     return;
                 }
@@ -210,14 +204,14 @@ public class Thieving {
                         for (int i = 0; i < data.getItemId().length; i++) {
                             if (rollChance < data.getItemItemChance()[i]) {
                                 player.addItem(data.getItemId()[i], data.getItemAmount()[i].getValue());
-                                player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[i])) + " " + player.GetItemName(data.getItemId()[i]).toLowerCase() + ""));
+                                player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[i])) + " " + player.GetItemName(data.getItemId()[i]).toLowerCase()));
                                 break;
                             }
                         }
 
                     } else {
                         player.addItem(data.getItemId()[0], data.getItemAmount()[0].getValue());
-                        player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase() + ""));
+                        player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase()));
                     }
                     if (data.getThievingType() == ThievingType.STALL_THIEVING) {
                         final Object o = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
@@ -227,13 +221,12 @@ public class Thieving {
                     }
                     //player.send(new Sound(356));
                     player.triggerRandom(data.getReceivedExperience());
+                    player.chestEvent++;
                     stop();
-                    return;
 
                 } else {
                     player.send(new SendMessage("You don't have enough inventory space!"));
                     stop();
-                    return;
                 }
             }
         });

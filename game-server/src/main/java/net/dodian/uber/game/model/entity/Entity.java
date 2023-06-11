@@ -47,6 +47,7 @@ public abstract class Entity {
         setAnimationId(id);
         setAnimationDelay(delay * 10);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
+
     }
 
     public void setGfx(int id, int height) {

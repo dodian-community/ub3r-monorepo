@@ -662,10 +662,9 @@ public class Client extends Player implements Runnable {
 			properName = Character.toUpperCase(first) + getPlayerName().substring(1).toLowerCase();
 			setPlayerName(properName.replace("_", " "));
 			longName = Utils.playerNameToInt64(getPlayerName());
-			if (Server.updateRunning) {
+			if (Server.updateRunning && (Server.updateStartTime + (Server.updateSeconds * 1000L)) - System.currentTimeMillis() < 60000) { //Checks if update!
 				returnCode = 14;
 				disconnected = true;
-				println_debug(getPlayerName() + " refused - update is running !");
 			}
 			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
 			switch (playerGroup) {
@@ -719,7 +718,6 @@ public class Client extends Player implements Runnable {
 			} else {
 				if (returnCode != 6 && returnCode != 5)
 					returnCode = loadgame;
-				//setPlayerName("_");
 				disconnected = true;
 				teleportToX = 0;
 				teleportToY = 0;
@@ -1198,9 +1196,9 @@ public class Client extends Player implements Runnable {
 		refreshSkill(skill);
 		if(skill == Skill.FIREMAKING)
 			updateBonus(11);
-		if(skill == Skill.HITPOINTS && maxHealth > newLevel)
+		if(skill == Skill.HITPOINTS && newLevel > maxHealth)
 			maxHealth = newLevel;
-		else if(skill == Skill.PRAYER && maxPrayer > newLevel)
+		else if(skill == Skill.PRAYER && newLevel > maxPrayer)
 			maxPrayer = newLevel;
 		if(animation != -1)
 			animation(animation, getPosition());
@@ -1985,13 +1983,7 @@ public class Client extends Player implements Runnable {
 		if (inTrade) {
 			return false;
 		}
-		if (duelFight && duelRule[3]) {
-			send(new SendMessage("Equipment changing has been disabled in this duel"));
-			return false;
-		}
-		if (duelConfirmed && !duelFight)
-			return false;
-		if (!playerHasItem(wearID)) {
+		if (emptyEssencePouch(wearID)) { //Runecrafting Pouches
 			return false;
 		}
 		if (wearID == 5733) { //Potato
@@ -2004,6 +1996,15 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need to kill " + getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
 			else
 				send(new SendMessage("You need to be assigned a task!"));
+			return false;
+		}
+		if (duelFight && duelRule[3]) {
+			send(new SendMessage("Equipment changing has been disabled in this duel"));
+			return false;
+		}
+		if (duelConfirmed && !duelFight)
+			return false;
+		if (!playerHasItem(wearID)) {
 			return false;
 		}
 		int targetSlot = Server.itemManager.getSlot(wearID);
@@ -2310,10 +2311,8 @@ public class Client extends Player implements Runnable {
 
 	public void update() {
 		PlayerUpdating.getInstance().update(this, getOutputStream());
-		flushOutStream();
 		NpcUpdating.getInstance().update(this, getOutputStream());
 		flushOutStream();
-		//flushOutStream();
 	}
 
 	public int packetSize = 0, packetType = -1;
@@ -2703,6 +2702,7 @@ public class Client extends Player implements Runnable {
 			return false;
 		try {
 			fillInStream(data.poll());
+			parseIncomingPackets();
 		} catch (IOException e) {
 			e.printStackTrace();
 			//System.out.println("Player" + getPlayerName() + " disconnected.");
@@ -2711,7 +2711,6 @@ public class Client extends Player implements Runnable {
 			disconnected = true;
 			return false;
 		}
-		parseIncomingPackets();
 		return true;
 	}
 
@@ -5909,7 +5908,7 @@ public class Client extends Player implements Runnable {
 			if(trigger >= chance) {
 				chestEventOccur = true;
 				chestEvent = 0;
-				send(new SendMessage("The chest randomly detect you standing still for to long! Please move!"));
+				send(new SendMessage("The server randomly detect you standing still for to long! Please move!"));
 			}
 		}
 	}

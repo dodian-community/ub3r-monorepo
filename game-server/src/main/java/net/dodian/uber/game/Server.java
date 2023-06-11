@@ -49,9 +49,9 @@ public class Server implements Runnable {
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     private static int delay = 0;
     public static long lastRunite = 0;
-    public static boolean updateAnnounced;
     public static boolean updateRunning;
     public static int updateSeconds;
+    public static double updateElapsed = 0.0;
     public static long updateStartTime;
     public Player player;
     public Client c;
