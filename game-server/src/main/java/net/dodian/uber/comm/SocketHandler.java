@@ -1,6 +1,7 @@
 package net.dodian.uber.comm;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
 
 import java.io.IOException;
@@ -29,32 +30,25 @@ public class SocketHandler implements Runnable {
     }
 
     public void run() {
-        long lastProcess = System.currentTimeMillis();
-        while (processRunning) {
-            if (!isConnected()) {
-                myPackets.clear();
-                break;
-            }
-            while (writeOutput());
-            /**
-             * Send all output
-             */
-            flush(); //Flush should be here.
-            if (lastProcess + 50 <= System.currentTimeMillis()) {
-                while (parsePackets());
-                /**
-                 * Grabs temp packets from packetQueue
-                 */
-                LinkedList<PacketData> temp = packets.getPackets();
-                /**
-                 * Adds the packets to the myPackets queue
-                 */
-                if (myPackets == null)
+        try {
+            while (processRunning) {
+                if (!isConnected()) {
                     myPackets.clear();
-                if (temp != null)
-                    myPackets.addAll(temp);
-                lastProcess = System.currentTimeMillis();
+                    break;
+                }
+                while (writeOutput());
+                flush();
+                while (parsePackets());
+            LinkedList<PacketData> temp = packets.getPackets();
+            if (myPackets == null)
+                myPackets.clear();
+            if (temp != null)
+                myPackets.addAll(temp);
             }
+            Thread.sleep(50);
+        } catch (Exception e) {
+            YellSystem.alertStaff("Something is up with socket handler!");
+            System.out.println("SocketHandling is throwing errors: " + e.getMessage());
         }
     }
 
@@ -201,7 +195,7 @@ public class SocketHandler implements Runnable {
         for (int i = 0; i < 20; i++) {
             if (outData.isEmpty())
                 return false;
-            byte[] data = (byte[]) outData.poll();
+            byte[] data = outData.poll();
             if (data == null)
                 continue;
             write(data);

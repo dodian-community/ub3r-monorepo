@@ -79,7 +79,6 @@ public class Receiver {
                 break;
             case 7:
                 Server.updateSeconds = value;
-                Server.updateAnnounced = false;
                 Server.updateRunning = true;
                 Server.updateStartTime = System.currentTimeMillis();
                 Server.trading = false;

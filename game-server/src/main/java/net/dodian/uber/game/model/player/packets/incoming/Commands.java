@@ -565,7 +565,6 @@ public class Commands implements Packet {
                 }
                 if (command.startsWith("update") && command.length() > 7) {
                     Server.updateSeconds = (Integer.parseInt(command.substring(7)) + 1);
-                    Server.updateAnnounced = false;
                     Server.updateRunning = true;
                     Server.updateStartTime = System.currentTimeMillis();
                     Server.trading = false;

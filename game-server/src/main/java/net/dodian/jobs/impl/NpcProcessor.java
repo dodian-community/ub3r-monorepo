@@ -3,7 +3,6 @@ package net.dodian.jobs.impl;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -11,31 +10,28 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
-@DisallowConcurrentExecution
 
 public class NpcProcessor implements Job {
 
     public void execute(JobExecutionContext context) throws JobExecutionException {
         for (Npc npc : Server.npcManager.getNpcs()) {
-            /* Clear the npc update! */
             npc.clearUpdateFlags();
-            npc.getUpdateFlags().setRequired(UpdateFlag.DUMMY, true); //Dummy is needed?
-            long now = System.currentTimeMillis();
-        if(!npc.isFighting() && npc.isAlive())
-           npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
-        if(now - npc.lastBoostedStat >= 30000) { //Stat boost!
-            npc.changeStat();
-        }
-        if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
-             npc.setVisible(false);
-             npc.drop();
-             Client p = npc.getTarget(false);
-             npc.removeEnemy(p);
+            /* Facing of npc! */
+            if(!npc.isFighting() && npc.isAlive())
+                npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
+            /* Timer check for boosted stats!*/
+        long now = System.currentTimeMillis();
+            if(now - npc.lastBoostedStat >= 30000) { //Stat boost!
+                npc.changeStat();
+            }
+            if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
+                npc.setVisible(false);
+                npc.drop();
+                Client p = npc.getTarget(false);
+                npc.removeEnemy(p);
             /* Jad loot table, up to 5 players */
             if(npc.getId() == 3127)
                 for(int i = 1; i <= 4 && !npc.getDamage().isEmpty(); i++) { //4 more players if damage not empty.
@@ -51,11 +47,13 @@ public class NpcProcessor implements Job {
                     }
                     npc.removeEnemy(p); //Need to remove the enemy if we done with the check values!
                 }
-        }
+            }
             if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
                 npc.respawn();
             }
-            if (npc.alive && npc.isFighting() && now - npc.getLastAttack() >= npc.getAttackTimer()) {
+            if(npc.getLastAttack() > 0)
+                npc.setLastAttack(npc.getLastAttack() - 1); //Remove one tick of attack timer every 600 ms!
+            if (npc.alive && npc.isFighting() && npc.getLastAttack() == 0) {
                 npc.attack();
                 if(npc.getId() == 2261) { //Dwayne effect
                     int hp = (int)(npc.getMaxHealth() * 0.40);
@@ -99,14 +97,6 @@ public class NpcProcessor implements Job {
                 }
                 npc.setText("There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild and " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!");
             }
-//      if (npc.getId() == 2676) {
-//        if (npc.getLastChatMessage() < System.currentTimeMillis() - 45000) {
-//          npc.setText((VotingIncentiveManager.getMilestone() - VotingIncentiveManager.getVotes()) + " votes left until the next drop party!");
-//          npc.setLastChatMessage();
-//        } else if(System.currentTimeMillis() - npc.getLastChatMessage() < 5000) {
-//          npc.setText((VotingIncentiveManager.getMilestone() - VotingIncentiveManager.getVotes()) + " votes left until the next drop party!");
-//        }
-//      }
         }
     }
 

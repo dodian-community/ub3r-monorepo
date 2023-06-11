@@ -32,9 +32,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         Stream updateBlock = new Stream(new byte[10000]);
         updateBlock.currentOffset = 0;
 
-        if (Server.updateRunning && !Server.updateAnnounced) {
+        if (Server.updateRunning) {
             stream.createFrame(114);
-            stream.writeWordBigEndian(Server.updateSeconds * 50 / 30);
+            int seconds = Server.updateSeconds - (int)Server.updateElapsed;
+            stream.writeWordBigEndian(seconds * 50 / 30);
         }
 
         if(player.didMapRegionChange()) {
@@ -137,6 +138,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 updateMask |= flag.getMask(player.getType());
             }
         }
+
         if (updateMask >= 0x100) {
             updateMask |= 0x40;
             stream.writeByte(updateMask & 0xFF);
@@ -144,8 +146,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         } else
             stream.writeByte(updateMask);
 
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGraphic(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
@@ -154,6 +154,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             appendForcedChatText(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
             appendPlayerChatText(player, stream);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
+            player.appendMask400Update(stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
             appendFaceCharacter(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))

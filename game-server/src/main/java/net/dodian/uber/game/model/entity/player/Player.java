@@ -20,7 +20,6 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
-import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -35,7 +34,7 @@ public abstract class Player extends Entity {
     public long lastPickAction = 0;
     public long lastTeleport = 0;
     private int playerNpc = -1;
-    public int dbId = -1, violations = 0;
+    public int dbId = -1;
     public boolean premium = false, randomed = false;
     public int latestNews = 0;
     public int playerGroup = 3;
@@ -171,7 +170,7 @@ public abstract class Player extends Entity {
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int boostedLevel[] = new int[21];
     public int chestEvent = 0;
-    public boolean chestEventOccur = false;
+    public boolean chestEventOccur = false, updateAnnounced = false;
 
 
     public Player(int slot) {
@@ -1129,7 +1128,7 @@ public abstract class Player extends Entity {
     public void heal(int healing) {
         Client c = (Client) this;
         int maxLevel = getMaxHealth();
-        c.setCurrentHealth(c.getCurrentHealth() + healing > maxLevel ? maxLevel : c.getCurrentHealth() + healing);
+        setCurrentHealth(getCurrentHealth() + healing > maxLevel ? maxLevel : getCurrentHealth() + healing);
         c.refreshSkill(Skill.HITPOINTS);
     }
     public void eat(int healing, int removeId, int removeSlot) {
@@ -1137,11 +1136,11 @@ public abstract class Player extends Entity {
         if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) {
             return;
         }
-        if(c.getCurrentHealth() < c.getMaxHealth()) {
+        if(getCurrentHealth() < getMaxHealth()) {
             c.requestAnim(829, 0);
             c.deleteItem(removeId, removeSlot, 1);
             c.send(new SendMessage("You eat the " + Server.itemManager.getName(removeId).toLowerCase() + "."));
-            c.heal(healing);
+            heal(healing);
         } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
     }
 
@@ -1177,7 +1176,7 @@ public abstract class Player extends Entity {
     public void pray(int healing) {
         Client c = (Client) this;
         int maxLevel = getMaxPrayer();
-        c.setCurrentPrayer(c.getCurrentPrayer() + healing > maxLevel ? maxLevel : c.getCurrentPrayer() + healing);
+        setCurrentPrayer(getCurrentPrayer() + healing > maxLevel ? maxLevel : getCurrentPrayer() + healing);
         c.refreshSkill(Skill.PRAYER);
     }
 

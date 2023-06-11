@@ -72,7 +72,7 @@ public class PlayerHandler {
                 playersCurrentlyOn[i] = players[i].getPlayerName();
                 playerCount++;
             } else
-                playersCurrentlyOn[i] = "";
+                playersCurrentlyOn[i] = null;
         }
     }
 
