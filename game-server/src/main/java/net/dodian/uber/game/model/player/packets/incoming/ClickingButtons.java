@@ -22,14 +22,14 @@ import net.dodian.utilities.Utils;
 
 import java.io.IOException;
 
-import static net.dodian.utilities.DotEnvKt.getServerDebugMode;
+import static net.dodian.config.ConfigHelpersKt.getDebugMode;
 
 public class ClickingButtons implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int actionButton = Utils.HexToInt(client.getInputStream().buffer, 0, packetSize);
-        if (getServerDebugMode()) {
+        if (getDebugMode()) {
             client.println("button=" + actionButton);
         }
         if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) { //To prevent some shiez!

@@ -21,6 +21,7 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.utilities.Misc;
+import net.dodian.utilities.RightsFlag;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -39,6 +40,7 @@ public abstract class Player extends Entity {
     public boolean premium = false, randomed = false;
     public int latestNews = 0;
     public int playerGroup = 3;
+    public ArrayList<Integer> playerMemberGroups = new ArrayList<>();
     public long lastPacket;
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false;
@@ -92,6 +94,7 @@ public abstract class Player extends Entity {
     public boolean takeAsNote = false;
     private String playerName = null; // name of the connecting client
     public String playerPass = null; // name of the connecting client
+    public ArrayList<RightsFlag> rightsFlags = new ArrayList<>();
     public int playerRights; // 0=normal player, 1=player mod, 2=real mod,
     public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;

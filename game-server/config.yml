@@ -1,0 +1,58 @@
+############################################################################
+##                                                                        ##
+##       ____            ___                                              ##
+##      / __ \____  ____/ (_)___ _____                                    ##
+##     / / / / __ \/ __  / / __ `/ __ \                                   ##
+##    / /_/ / /_/ / /_/ / / /_/ / / / /                                   ##
+##   /_____/\____/\____/_/\____/_/ /_/                                    ##
+##                                                                        ##
+############################################################################
+# --------------- EXAMPLE config.toml FILE FOR REFERENCE ----------------- #
+# This file contains all available configurations, required or not.        #
+# The optional ones will be using the default value as example.            #
+############################################################################
+
+server:
+  name: Uber Server
+  port: 43594
+  debugMode: true
+  environment: Development
+
+game:
+  worldId: 1
+  connectionsPerIp: 2
+  forumFeaturesEnabled: false  # This disabled features that relies on the forums
+
+  xpMultiplierGlobal: 1.0
+
+webApi:
+  scheme: http
+  port: 8080
+  hostname: 127.0.0.1
+  jwtSecret: dodian-super-secret-jwt-secret
+
+# A list of group IDs to configure for each of the group flags.
+# Normally only one per though, but multiple is supported.
+groups:
+  banned: [8]
+  muted: [16]
+  tradeLocked: [17]
+
+  premium: [2, 3, 4, 11, 27, 34, 40]
+  betaTester: [34]
+  retiredStaff: [27]
+
+  trialModerator: [9]
+  moderator: [5]
+  developer: [10]
+  administrator: [6]
+  hiddenAdministrator: [39]
+
+database:
+  host: localhost
+  port: 3306
+  name: dodiannet
+  user: root
+  pass: abc123
+  tablePrefix: ""
+  initialize: true

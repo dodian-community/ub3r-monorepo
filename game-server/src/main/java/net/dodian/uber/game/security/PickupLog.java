@@ -8,7 +8,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -32,7 +32,7 @@ public class PickupLog extends LogEntry {
      */
     public static void recordPickup(Player player, int item, int amount, String type, Position pos) {
         try {
-            if (getGameWorldId() > 1) {
+            if (getWorldId() > 1) {
                 return;
             }
             Statement statement = getDbConnection().createStatement();

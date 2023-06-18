@@ -24,7 +24,7 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 
 public class ClickObject implements Packet {
 
@@ -39,7 +39,7 @@ public class ClickObject implements Packet {
         GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
         GameObjectData object = GameObjectData.forId(task.getWalkToId());
         client.setWalkToTask(task);
-        if (getGameWorldId() > 1 && object != null)
+        if (getWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click1: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
         if (client.randomed) {
             return;

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 
 public class SocketPoolEntry {
     private Socket socket;
@@ -46,7 +46,7 @@ public class SocketPoolEntry {
         DataOutputStream out = getOut();
         try {
             out.writeInt(5);
-            out.writeInt(getGameWorldId());
+            out.writeInt(getWorldId());
             out.flush();
         } catch (Exception e) {
             e.printStackTrace();

@@ -6,13 +6,14 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
             getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
-                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + net.dodian.utilities.DotEnvKt.getGameWorldId() + "'");
+                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + getWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -41,7 +42,7 @@ public class Login extends Thread {
             }
             w.flush();
             w.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
     public static Collection<String> bannedUid = new ArrayList<String>();

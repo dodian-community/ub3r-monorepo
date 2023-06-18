@@ -1,5 +1,6 @@
 package net.dodian.uber.comm;
 
+import net.dodian.config.Environment;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -18,9 +19,12 @@ import net.dodian.utilities.DbTables;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Date;
 
+import static net.dodian.config.ConfigHelpersKt.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.utilities.PlayerUtilsKt.populatePlayerFlags;
 
 public class LoginManager {
 
@@ -35,19 +39,30 @@ public class LoginManager {
             if (results.next()) {
                 p.dbId = results.getInt("userid");
                 p.playerGroup = results.getInt("usergroupid");
+
+                Arrays.stream(results.getString("membergroupids").trim().split(","))
+                        .forEach(num -> {
+                            if (!num.equals("")) {
+                                p.playerMemberGroups.add(Integer.parseInt(num));
+                            }
+                        });
+
+                populatePlayerFlags(p);
+
                 if (results.getString("username").equals(playerName)
                         || results.getString("username").equalsIgnoreCase(playerName)) {
+
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
-                    if (!md5pass.equals(results.getString("password"))
-                    && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
+
+                    if (!getDebugMode() || getServerEnvironment() != Environment.Development && !md5pass.equals(results.getString("password"))) {
                         return 3;
                     }
-                    p.otherGroups = results.getString("membergroupids").split(",");
+
                     p.newPms = (results.getInt("pmunread"));
                 } else
                     return 12;
-            } else if (net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") && net.dodian.utilities.DotEnvKt.getServerDebugMode()) {
+            } else if (getServerEnvironment() == Environment.Development && getDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
                 getDbConnection().createStatement().executeUpdate(newUserQuery);
                 return loadCharacterGame(p, playerName, playerPass);
@@ -77,7 +92,7 @@ public class LoginManager {
                 if (isBanned(p.dbId)) {
                     return 4;
                 }
-                if(Login.isUidBanned(LoginManager.UUID)) {
+                if (Login.isUidBanned(LoginManager.UUID)) {
                     return 22;
                 }
                 String[] look = results.getString("look").length() == 0 ? null : results.getString("look").split(" ");
@@ -103,11 +118,19 @@ public class LoginManager {
                 }
                 /* Set stats */
                 int health = (results.getInt("health"));
-                String prayer = results.getString("prayer").trim();
-                String boosted = results.getString("boosted").trim();
-                String[] prayer_prase = prayer.split(":");
-                String[] boosted_prase = boosted.split(":");
-                int prayerLevel = !prayer.equals("") ? Integer.parseInt(prayer_prase[0]) : 0;
+                String prayer = results.getString("prayer");
+                String boosted = results.getString("boosted");
+
+                String[] prayerParse = new String[]{};
+                String[] boostedParse = new String[]{};
+
+                if (prayer != null)
+                    prayerParse = prayer.trim().split(":");
+
+                if (boosted != null)
+                    boostedParse = boosted.trim().split(":");
+
+                int prayerLevel = !prayer.equals("") ? Integer.parseInt(prayerParse[0]) : 0;
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
@@ -143,19 +166,19 @@ public class LoginManager {
                         }
                     }
                 }
-                if(!prayer.equals("")) {
-                    for(int i = 1; i < prayer_prase.length; i++)
-                        p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayer_prase[i])));
+                if (prayerParse.length > 0) {
+                    for (int i = 1; i < prayerParse.length; i++)
+                        p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayerParse[i])));
                 }
-                if(!boosted.equals("")) {
-                    p.lastRecover = Integer.parseInt(boosted_prase[0]);
-                    for(int i = 0; i < boosted_prase.length - 1; i++)
-                        p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
+                if (boostedParse.length > 0) {
+                    p.lastRecover = Integer.parseInt(boostedParse[0]);
+                    for (int i = 0; i < boostedParse.length - 1; i++)
+                        p.boost(Integer.parseInt(boostedParse[i + 1]), Skill.getSkill(i));
                 }
                 results2.close();
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
-                if(!inventory.equals("")) {
+                if (!inventory.equals("")) {
                     String[] parse = inventory.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -181,7 +204,7 @@ public class LoginManager {
                 }
                 /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();
-                if(!equip.equals("")) {
+                if (!equip.equals("")) {
                     String[] parse = equip.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -190,10 +213,10 @@ public class LoginManager {
                             int id = Integer.parseInt(parse2[1]);
                             int amount = Integer.parseInt(parse2[2]);
                             if (id <= 24000) {
-                                if(p.checkEquip(id, slot, -1)) {
+                                if (p.checkEquip(id, slot, -1)) {
                                     p.getEquipment()[slot] = id;
                                     p.getEquipmentN()[slot] = amount;
-                                } else if(p.freeSlots() == 0 || !p.addItem(id, amount)) {
+                                } else if (p.freeSlots() == 0 || !p.addItem(id, amount)) {
                                     GroundItem item = new GroundItem(p.getPosition().copy(), Integer.parseInt(parse2[1]), Integer.parseInt(parse2[2]), p.getSlot(), -1);
                                     Ground.items.add(item);
                                     DropLog.recordDrop(p, item.id, item.amount, "Player", p.getPosition().copy(), "Equipment check drop");
@@ -211,17 +234,17 @@ public class LoginManager {
                 p.setTravel(results.getString("travel"));
                 /* Sets Unlocks */
                 String unlocks = (results.getString("unlocks")).trim();
-                for(int i = 0; i < p.unlockLength; i++) {
-                    if(!unlocks.equals("")) {
+                for (int i = 0; i < p.unlockLength; i++) {
+                    if (!unlocks.equals("")) {
                         String[] parse = unlocks.split(":");
-                        if(i < parse.length)  {
+                        if (i < parse.length) {
                             p.addUnlocks(i, parse[i].split(","));
                         } else p.addUnlocks(i, "0", "0");
                     } else p.addUnlocks(i, "0", "0");
                 }
                 /* Sets Bank */
                 String bank = (results.getString("bank")).trim();
-                if(!bank.equals("")) {
+                if (!bank.equals("")) {
                     String[] parse = bank.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -275,10 +298,10 @@ public class LoginManager {
                 return 0;
             } else {
                 Statement statement = getDbConnection().createStatement();
-                String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
-                        + p.dbId + "', '" + playerName + "', '', '', '', '', '0')";
+                String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked, prayer)" + " VALUES ('"
+                        + p.dbId + "', '" + playerName + "', '', '', '', '', '0', '0')";
                 statement.executeUpdate(newAccount);
-                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON DUPLICATE (uid) DO NOTHING";
+                String newStatsAccount = "INSERT IGNORE INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "')";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
                 results.close();
@@ -293,10 +316,10 @@ public class LoginManager {
 
     public void updatePlayerForumRegistration(Client p) {
         try {
-        Statement statement = getDbConnection().createStatement();
-        String newStatsAccount = "UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='40' WHERE userid = '" + p.dbId + "'";
-        statement.executeUpdate(newStatsAccount);
-        statement.close();
+            Statement statement = getDbConnection().createStatement();
+            String newStatsAccount = "UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='40' WHERE userid = '" + p.dbId + "'";
+            statement.executeUpdate(newStatsAccount);
+            statement.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

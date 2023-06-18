@@ -14,7 +14,7 @@ import org.quartz.JobExecutionException;
 public class ShopProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         boolean DidUpdate = false;
-        for (int i = 1; i <= ShopHandler.MaxShops; i++) {
+        for (int i = 1; i < ShopHandler.MaxShops; i++) {
             if (ShopHandler.ShopItemsDelay[i] >= ShopHandler.MaxShowDelay) {
                 for (int j = 0; j < ShopHandler.MaxShopItems; j++) {
                     if (ShopHandler.ShopItems[i][j] > 0) {

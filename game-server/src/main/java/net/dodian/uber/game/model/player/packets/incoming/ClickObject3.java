@@ -13,7 +13,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 
 public class ClickObject3 implements Packet {
 
@@ -27,7 +27,7 @@ public class ClickObject3 implements Packet {
         GameObjectDef def = Misc.getObject(objectID, objectX, objectY, client.getPosition().getZ());
         GameObjectData object = GameObjectData.forId(task.getWalkToId());
         client.setWalkToTask(task);
-        if (getGameWorldId() > 1 && object != null)
+        if (getWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click3: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", def: " + (def == null ? "Def is null!" : def.getType())));
         if (client.randomed) {
             return;

@@ -5,11 +5,11 @@ import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
 import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
+import net.dodian.config.InstanceConfig;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
@@ -28,24 +28,23 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.DbTables;
-import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.config.ConfigHelpersKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Server implements Runnable {
-
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     private static int delay = 0;
     public static long lastRunite = 0;
@@ -67,9 +66,10 @@ public class Server implements Runnable {
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map<String, Long> tempConns = new HashMap<>();
+    public static LocalDateTime serverStartup;
 
 
-    public static void main(String args[]) throws Exception {
+    public static void startDodian() throws Exception {
         System.out.println();
         System.out.println("    ____            ___               ");
         System.out.println("   / __ \\____  ____/ (_)___ _____    ");
@@ -78,7 +78,7 @@ public class Server implements Runnable {
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
 
-        if (getDatabaseInitialize() && !isDatabaseInitialized()) {
+        if (getInitializeDatabase() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
         ConnectionList.getInstance();
@@ -103,6 +103,7 @@ public class Server implements Runnable {
         loadObjects();
         new DoorHandler();
         setGlobalItems();
+        job = new JobScheduler();
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
         new Thread(npcManager).start();
@@ -110,7 +111,6 @@ public class Server implements Runnable {
         new Thread(login).start();
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
-        job = new JobScheduler();
         job.ScheduleStaticRepeatForeverJob(60000, WorldProcessor.class);
         job.ScheduleStaticRepeatForeverJob(600, PlayerProcessor.class);
         job.ScheduleStaticRepeatForeverJob(600, ItemProcessor.class);
@@ -119,7 +119,8 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
         /* Done loading */
         System.gc();
-        System.out.println("Server is now running on world " + getGameWorldId() + "!");
+        System.out.println("Server is now running on world " + getWorldId() + "!");
+        serverStartup = LocalDateTime.now();
     }
 
     public static Server clientHandler = null; // handles all the clients
@@ -137,7 +138,7 @@ public class Server implements Runnable {
         // setup the listener
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(DotEnvKt.getServerPort(), 1, null);
+            clientListener = new java.net.ServerSocket(getGamePort(), 1, null);
             while (true) {
                 try {
                     if (clientListener == null)

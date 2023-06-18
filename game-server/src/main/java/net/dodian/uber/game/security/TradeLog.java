@@ -9,7 +9,7 @@ import java.sql.Statement;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -35,7 +35,7 @@ public class TradeLog extends LogEntry {
 
     public static void recordTrade(int p1, int p2, CopyOnWriteArrayList<GameItem> items,
                 CopyOnWriteArrayList<GameItem> otherItems, boolean trade) {
-        if (getGameWorldId() > 1) {
+        if (getWorldId() > 1) {
             return;
         }
         try {

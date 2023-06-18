@@ -8,7 +8,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 /**
@@ -31,7 +31,7 @@ public class DropLog extends LogEntry {
      * @param id   The item being dropped.
      */
     public static void recordDrop(Player player, int id, int amount, String type, Position pos, String reason) {
-        if (getGameWorldId() > 1) {
+        if (getWorldId() > 1) {
             return;
         }
         try {

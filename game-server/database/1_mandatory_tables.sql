@@ -142,7 +142,8 @@ create table if not exists drop_log
     timestamp varchar(255) null,
     x         int(10)      null,
     y         int(10)      null,
-    z         int(10)      null
+    z         int(10)      null,
+    reason    longtext     null
 )
     engine = InnoDB;
 
@@ -525,3 +526,16 @@ create index prefixid
 
 create fulltext index title
     on thread (title);
+
+create table if not exists uber3_refunds
+(
+    date     datetime          not null
+        primary key,
+    receiver int               not null,
+    item     int               null,
+    amount   int               null,
+    message  tinyint default 0 null,
+    claimed  datetime          null
+)
+    charset = latin1;
+

@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 
 public class Bank5 implements Packet {
 
@@ -19,7 +19,7 @@ public class Bank5 implements Packet {
         int interfaceID = client.getInputStream().readSignedWordBigEndianA();
         int removeID = client.getInputStream().readSignedWordBigEndianA();
         int removeSlot = client.getInputStream().readSignedWordBigEndian();
-        if (getGameWorldId() > 1)
+        if (getWorldId() > 1)
             client.println_debug("RemoveItem 5: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
         if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, 5);

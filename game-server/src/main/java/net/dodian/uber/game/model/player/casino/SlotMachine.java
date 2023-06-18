@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.config.ConfigHelpersKt.getWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
@@ -126,9 +126,10 @@ public class SlotMachine {
     public int Coins_Win, Coins_Lose = 0;
 
     public void loadGamble() {
-        if (getGameWorldId() == 5) {
+        if (getWorldId() == 5) {
             return;
         }
+
         try {
             ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_PETE_CO);
             if (results.next()) {
@@ -149,9 +150,10 @@ public class SlotMachine {
     }
 
     public void trackDice(int id, int amt) {
-        if (getGameWorldId() == 5) {
+        if (getWorldId() == 5) {
             return;
         }
+
         try {
             Connection conn = getDbConnection();
             Statement statement = conn.createStatement();

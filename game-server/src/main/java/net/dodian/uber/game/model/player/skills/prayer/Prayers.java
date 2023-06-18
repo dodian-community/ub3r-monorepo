@@ -9,8 +9,6 @@ import net.dodian.uber.game.model.player.skills.Skills;
 
 import java.util.HashMap;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-
 public class Prayers {
 
     /**

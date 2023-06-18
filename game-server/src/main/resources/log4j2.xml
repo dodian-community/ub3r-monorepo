@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" packages="net.dodian">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%highlight{%p}] %d{MMM dd, yyyy H:mm:ss a}: %highlight{%msg} &lt;- %C{1}::%M()%n" disableAnsi="false"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef level="all" ref="Console"/>
+        </Root>
+        <Logger name="io.netty" level="warn" additivity="false"/>
+        <Logger name="net.dodian.jobs" level="warn" additivity="false"/>
+        <Logger name="org.quartz" level="warn" additivity="false"/>
+    </Loggers>
+</Configuration>

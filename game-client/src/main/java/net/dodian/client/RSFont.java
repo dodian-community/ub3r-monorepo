@@ -248,7 +248,7 @@ public class RSFont extends DrawingArea {
                     } else {
                         if (effectString.startsWith(startImage)) {
                             try {
-                                int imageId = Integer.valueOf(effectString.substring(4));
+                                int imageId = Integer.parseInt(effectString.substring(4));
                                 Sprite icon = chatImages[imageId];
                                 int iconModY = icon.anInt1445;
                                 //if (transparency == 256) {
