@@ -110,10 +110,16 @@ public final class Signlink implements Runnable {
         Path cacheDirectory = Paths.get(CACHE_LOCAL_DIRECTORY);
         if (Files.exists(cacheDirectory) && Files.isDirectory(cacheDirectory)) {
             cacheDir = CACHE_LOCAL_DIRECTORY;
-            return cacheDir;
+        } else {
+            try {
+                Files.createDirectories(cacheDirectory);
+                cacheDir = CACHE_LOCAL_DIRECTORY;
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create cache directory: " + cacheDirectory.toAbsolutePath(), e);
+            }
         }
 
-        throw new RuntimeException("Failed to find or create cache directory at: " + cacheDirectory.toAbsolutePath());
+        return cacheDir;
     }
 
     private static int getuid(String s) {
