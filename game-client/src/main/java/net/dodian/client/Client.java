@@ -2640,7 +2640,8 @@ public class Client extends RSApplet {
         toggleSize(0);
         socketStream = null;
         loggedIn = false;
-        loginScreenState = 0;
+        loginScreenState = 2;
+        loginMessage2 = "Enter your username & password.";
         // myUsername = "";
         // myPassword = "";
         unlinkMRUNodes();
@@ -2993,7 +2994,7 @@ public class Client extends RSApplet {
     }
 
     private void loadTitleScreen() {
-        aBackground_966 = new Background(titleStreamLoader, "titlebox", 0);
+//        aBackground_966 = new Background(titleStreamLoader, "titlebox", 0);
         aBackground_967 = new Background(titleStreamLoader, "titlebutton", 0);
         aBackgroundArray1152s = new Background[12];
         int j = 0;
@@ -3612,7 +3613,7 @@ public class Client extends RSApplet {
         DrawingArea.setAllPixelsToZero();
         aRSImageProducer_1108 = new RSImageProducer(360, 132, getGameComponent());
         DrawingArea.setAllPixelsToZero();
-        aRSImageProducer_1109 = new RSImageProducer(360, 200, getGameComponent());
+        aRSImageProducer_1109 = new RSImageProducer(400, 400, getGameComponent());
         DrawingArea.setAllPixelsToZero();
         aRSImageProducer_1112 = new RSImageProducer(202, 238, getGameComponent());
         DrawingArea.setAllPixelsToZero();
@@ -3656,7 +3657,7 @@ public class Client extends RSApplet {
                 aRSImageProducer_1111.drawGraphics(0, super.graphics, 637);
             }
             aRSImageProducer_1107.drawGraphics(0, super.graphics, 128);
-            aRSImageProducer_1108.drawGraphics(371, super.graphics, 202);
+//            aRSImageProducer_1108.drawGraphics(371, super.graphics, 202);
             aRSImageProducer_1112.drawGraphics(265, super.graphics, 0);
             aRSImageProducer_1113.drawGraphics(265, super.graphics, 562);
             aRSImageProducer_1114.drawGraphics(171, super.graphics, 128);
@@ -7535,6 +7536,7 @@ public class Client extends RSApplet {
             settings = new Settings();
             myUsername = settings == null ? "" : settings.get("username");
             myPassword = "";
+            loginScreenCursorPos = settings != null && !settings.get("username").isEmpty() ? 1 : 0;
             titleStreamLoader = streamLoaderForName(1, "title screen", "title",
                     expectedCRCs[1], 25);
             smallText = new TextDrawingArea(false, "p11_full", titleStreamLoader);
@@ -10258,8 +10260,9 @@ public class Client extends RSApplet {
 
     private void drawLoginScreen(boolean flag) {
         resetImageProducers();
+        drawLogo();
         aRSImageProducer_1109.initDrawingArea();
-        aBackground_966.drawBackground(0, 0);
+//        aBackground_966.drawBackground(0, 0);
         char c = '\u0168';
         char c1 = '\310';
         if (loginScreenState == 0) {
@@ -10283,22 +10286,24 @@ public class Client extends RSApplet {
                 chatTextDrawingArea.method382(0xffff00, c / 2, loginMessage2, j, true);
                 j += 30;
             } else {
-                chatTextDrawingArea.method382(0xffff00, c / 2, loginMessage2, j - 7, true);
+                chatTextDrawingArea.method382(0xffff00, c / 2, loginMessage2, j + 15, true);
                 j += 30;
             }
-            chatTextDrawingArea.method389(true, c / 2 - 90, 0xffffff, "Username: " + myUsername + ((loginScreenCursorPos == 0) & (loopCycle % 40 < 20) ? "@yel@|" : ""), j);
+            chatTextDrawingArea.method389(true, c / 2 + 10, 0xffffff, myUsername + ((loginScreenCursorPos == 0) & (loopCycle % 40 < 20) ? "@yel@|" : ""), 142);
             j += 15;
-            chatTextDrawingArea.method389(true, c / 2 - 88, 0xffffff, "Password: " + TextClass.passwordAsterisks(myPassword) + ((loginScreenCursorPos == 1) & (loopCycle % 40 < 20) ? "@yel@|" : ""), j);
-            j += 15;
-            if (!flag) {
-                int i1 = c / 2 - 80;
-                int l1 = c1 / 2 + 50;
-                aBackground_967.drawBackground(i1 - 73, l1 - 20);
-                chatTextDrawingArea.method382(0xffffff, i1, "Login", l1 + 5, true);
-                i1 = c / 2 + 80;
-                aBackground_967.drawBackground(i1 - 73, l1 - 20);
-                chatTextDrawingArea.method382(0xffffff, i1, "Cancel", l1 + 5, true);
-            }
+            chatTextDrawingArea.method389(true, c / 2 + 40, 0xffffff, TextClass.passwordAsterisks(myPassword) + ((loginScreenCursorPos == 1) & (loopCycle % 40 < 20) ? "@yel@|" : ""), 175);
+            chatTextDrawingArea.method389(true, c / 2 + 70, 0xffffff, server + ((loginScreenCursorPos == 2) & (loopCycle % 40 < 20) ? "@yel@|" : ""), 208);
+
+            // Disable RS Login + Cancel buttons
+//            if (!flag) {
+//                int i1 = c / 2 - 80;
+//                int l1 = c1 / 2 + 200;
+//                aBackground_967.drawBackground(i1 - 73, l1 - 20);
+//                chatTextDrawingArea.method382(0xffffff, i1, "Login", l1 + 5, true);
+//                i1 = c / 2 + 80;
+//                aBackground_967.drawBackground(i1 - 73, l1 - 20);
+//                chatTextDrawingArea.method382(0xffffff, i1, "Cancel", l1 + 5, true);
+//            }
         }
         if (loginScreenState == 3) {
             chatTextDrawingArea.method382(0xffff00, c / 2, "Create a free account", c1 / 2 - 60, true);
@@ -10313,14 +10318,14 @@ public class Client extends RSApplet {
             k += 15;
             int j1 = c / 2;
             int i2 = c1 / 2 + 50;
-            aBackground_967.drawBackground(j1 - 73, i2 - 20);
+            aBackground_967.drawBackground(0, 0);
             chatTextDrawingArea.method382(0xffffff, j1, "Cancel", i2 + 5, true);
         }
         aRSImageProducer_1109.drawGraphics(171, super.graphics, 202);
         if (welcomeScreenRaised) {
             welcomeScreenRaised = false;
             aRSImageProducer_1107.drawGraphics(0, super.graphics, 128);
-            aRSImageProducer_1108.drawGraphics(371, super.graphics, 202);
+//            aRSImageProducer_1108.drawGraphics(371, super.graphics, 202);
             aRSImageProducer_1112.drawGraphics(265, super.graphics, 0);
             aRSImageProducer_1113.drawGraphics(265, super.graphics, 562);
             aRSImageProducer_1114.drawGraphics(171, super.graphics, 128);
@@ -10696,28 +10701,27 @@ public class Client extends RSApplet {
             }
         } else {
             if (loginScreenState == 2) {
-                int j = super.myHeight / 2 - 40;
-                j += 30;
-                j += 25;
-                if (super.clickMode3 == 1 && super.saveClickY >= j - 15 && super.saveClickY < j)
+                if (super.clickMode3 == 1 && super.saveClickY >= 296 && super.saveClickY <= 319) {
                     loginScreenCursorPos = 0;
-                j += 15;
-                if (super.clickMode3 == 1 && super.saveClickY >= j - 15 && super.saveClickY < j)
+                } else if (super.clickMode3 == 1 && super.saveClickY >= 327 && super.saveClickY <= 351) {
                     loginScreenCursorPos = 1;
-                j += 15;
-                int i1 = super.myWidth / 2 - 80;
-                int k1 = super.myHeight / 2 + 50;
-                k1 += 20;
-                if (super.clickMode3 == 1 && super.saveClickX >= i1 - 75 && super.saveClickX <= i1 + 75 && super.saveClickY >= k1 - 20 && super.saveClickY <= k1 + 20) {
+                } else if (super.clickMode3 == 1 && super.saveClickX >= 215 && super.saveClickX <= 378 && super.saveClickY >= 423 && super.saveClickY <= 469) {
                     loginFailures = 0;
                     login(myUsername, myPassword, false);
                     if (loggedIn)
                         return;
+                } else if (super.clickMode3 == 1 && super.saveClickX >= 458 && super.saveClickX <= 622 && super.saveClickY >= 423 && super.saveClickY <= 469) {
+                    myUsername = "";
+                    settings.put("username", "");
+
+                    myPassword = "";
                 }
-                i1 = super.myWidth / 2 + 80;
-                if (super.clickMode3 == 1 && super.saveClickX >= i1 - 75 && super.saveClickX <= i1 + 75 && super.saveClickY >= k1 - 20 && super.saveClickY <= k1 + 20) {
-                    loginScreenState = 0;
-                }
+
+                // Disable RS cancel log in state change
+//                i1 = super.myWidth / 2 + 80;
+//                if (super.clickMode3 == 1 && super.saveClickX >= i1 - 75 && super.saveClickX <= i1 + 75 && super.saveClickY >= k1 - 20 && super.saveClickY <= k1 + 20) {
+//                    loginScreenState = 0;
+//                }
                 do {
                     int l1 = readChar(-796);
                     if (l1 == -1)
@@ -10742,23 +10746,38 @@ public class Client extends RSApplet {
                     } else if (loginScreenCursorPos == 1) {
                         if (l1 == 8 && myPassword.length() > 0)
                             myPassword = myPassword.substring(0, myPassword.length() - 1);
-                        if (l1 == 9 || l1 == 10 || l1 == 13)
+                        if (l1 == 9) {
+                            // Tab key will always alternate cursor position
                             loginScreenCursorPos = 0;
+                        }
                         if (flag1)
                             myPassword += (char) l1;
                         if (myPassword.length() > 20)
                             myPassword = myPassword.substring(0, 20);
+
+                        if (l1 == 10 || l1 == 13) {
+                            if (myPassword.isEmpty()) {
+                                // Enter key with no password, behave like current OSRS
+                                loginMessage2 = "Please enter your password.";
+                                loginScreenCursorPos = 0;
+                            } else {
+                                // Enter key with password, log in
+                                login(myUsername, myPassword, false);
+                            }
+                        }
                     }
                 } while (true);
                 return;
             }
-            if (loginScreenState == 3) {
-                int k = super.myWidth / 2;
-                int j1 = super.myHeight / 2 + 50;
-                j1 += 20;
-                if (super.clickMode3 == 1 && super.saveClickX >= k - 75 && super.saveClickX <= k + 75 && super.saveClickY >= j1 - 20 && super.saveClickY <= j1 + 20)
-                    loginScreenState = 0;
-            }
+
+            // Disable RS create account state change
+//            if (loginScreenState == 3) {
+//                int k = super.myWidth / 2;
+//                int j1 = super.myHeight / 2 + 50;
+//                j1 += 20;
+//                if (super.clickMode3 == 1 && super.saveClickX >= k - 75 && super.saveClickX <= k + 75 && super.saveClickY >= j1 - 20 && super.saveClickY <= j1 + 20)
+//                    loginScreenState = 0;
+//            }
         }
     }
 
@@ -12329,8 +12348,9 @@ public class Client extends RSApplet {
         rsAlreadyLoaded = false;
         welcomeScreenRaised = false;
         messagePromptRaised = false;
+        loginScreenState = 2;
         loginMessage1 = "";
-        loginMessage2 = "";
+        loginMessage2 = "Enter your username & password.";
         backDialogID = -1;
         anInt1279 = 2;
         bigX = new int[4000];
