@@ -1,9 +1,9 @@
 plugins {
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.9.10"
 }
 
 application {
-    mainClass.set("net.dodian.uber.game.Server")
+    mainClass.set("net.dodian.ServerBootstrapKt")
 }
 
 java {
@@ -45,8 +45,14 @@ dependencies {
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("org.mybatis:mybatis:3.5.10")
 
+    implementation("com.google.guava:guava:19.0")
+
+    implementation("ch.qos.logback:logback-classic:1.4.7")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.20.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("io.netty:netty-all:4.1.94.Final")
-    implementation("org.openrs2:openrs2-crypto:0.1.0-SNAPSHOT")
+
+    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.5")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -58,4 +64,13 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.register<JavaExec>("generateRsaKeypair") {
+    group = "dodian-utils"
+
+    workingDir = project.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("net.dodian.uber.service.RsaServiceKt")
+    args = listOf("16", "2048", "./data/rsa")
 }
