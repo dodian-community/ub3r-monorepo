@@ -27,6 +27,11 @@ tasks.jar {
     from(contents)
 }
 
+repositories {
+    maven { url = uri("https://repo.openrs2.org/repository/openrs2") }
+    maven { url = uri("https://repo.openrs2.org/repository/openrs2-snapshots") }
+}
+
 dependencies {
     implementation(kotlin("stdlib"))
 
@@ -39,6 +44,9 @@ dependencies {
 
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("org.mybatis:mybatis:3.5.10")
+
+    implementation("io.netty:netty-all:4.1.94.Final")
+    implementation("org.openrs2:openrs2-crypto:0.1.0-SNAPSHOT")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
