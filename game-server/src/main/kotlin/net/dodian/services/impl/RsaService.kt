@@ -1,6 +1,7 @@
 package net.dodian.services.impl
 
 import com.github.michaelbull.logging.InlineLogger
+import net.dodian.services.Service
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemObject
 import org.bouncycastle.util.io.pem.PemReader
@@ -21,7 +22,7 @@ import java.util.*
 import kotlin.io.path.Path
 
 private val logger = InlineLogger()
-class RsaService {
+class RsaService : Service() {
     lateinit var exponent: BigInteger
     lateinit var modulus: BigInteger
 
@@ -30,7 +31,7 @@ class RsaService {
         val radix = 16
 
         if (!Files.exists(path))
-            generateKeyPair(path = path, radix = radix)
+            generateKeyPair(path = path, radix = radix, bitCount = 1024)
 
         try {
             PemReader(Files.newBufferedReader(path)).use { reader ->
@@ -51,7 +52,7 @@ class RsaService {
         }
     }
 
-    fun generateKeyPair(bitCount: Int = 2048, radix: Int = 16, path: Path = Path("./data/rsa/")) {
+    fun generateKeyPair(bitCount: Int = 2048, radix: Int? = 16, path: Path = Path("./data/rsa/")) {
         Security.addProvider(BouncyCastleProvider())
 
         val generator = KeyPairGenerator.getInstance("RSA", "BC")
@@ -70,18 +71,30 @@ class RsaService {
             }
 
             val pubWriter = PrintWriter(path.resolve("key.pub").toFile())
+
+            val exponent: String
+            val modulus: String
+
+            if (radix != null) {
+                exponent = publicKey.publicExponent.toString(radix)
+                modulus = publicKey.modulus.toString(radix)
+            } else {
+                exponent = publicKey.publicExponent.toString()
+                modulus = publicKey.modulus.toString()
+            }
+
             pubWriter.println(
-                "/* Auto-generated file using ${this::class.java} ${
+                "/* Auto-generated file using ${this::class.simpleName} ${
                     SimpleDateFormat("dd/M/yyyy hh:mm:ss").format(
                         Date()
                     )
                 } */"
             )
             pubWriter.println("")
-            pubWriter.println("Place these keys in the client (find BigInteger(\"10001\" in client code):")
+            pubWriter.println("Place these keys in the client:")
             pubWriter.println("--------------------")
-            pubWriter.println("public key: " + publicKey.publicExponent.toString(radix))
-            pubWriter.println("modulus: " + publicKey.modulus.toString(radix))
+            pubWriter.println("exponent: $exponent")
+            pubWriter.println("modulus: $modulus")
             pubWriter.close()
         } catch (exception: Exception) {
             logger.error(exception) {
@@ -89,4 +102,6 @@ class RsaService {
             }
         }
     }
+
+    override fun start() {}
 }

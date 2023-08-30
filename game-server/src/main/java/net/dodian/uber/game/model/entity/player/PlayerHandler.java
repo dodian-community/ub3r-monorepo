@@ -41,9 +41,8 @@ public class PlayerHandler {
             }
         }
 
-        Client newClient = new Client(s, slot);
+        Client newClient = new Client(slot);
         newClient.handler = this;
-        (new Thread(newClient)).start();
         if (slot == -1)
             return;
         players[slot] = newClient;

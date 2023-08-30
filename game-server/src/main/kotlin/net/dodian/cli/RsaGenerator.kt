@@ -5,8 +5,12 @@ import kotlin.io.path.Path
 
 fun main(args: Array<String>) {
     RsaService().generateKeyPair(
-        radix = if (args.isNotEmpty()) args[0].toInt() else 16,
-        bitCount = if (args.size >= 2) args[1].toInt() else 2048,
-        path = if (args.size >= 3) Path(args[2]) else Path("./data/rsa")
+        radix = args.argument("radix")?.toIntOrNull(),
+        bitCount = args.argument("bitCount")?.toIntOrNull() ?: 1024,
+        path = Path(args.argument("path") ?: "./data/rsa/")
     )
 }
+
+fun Array<String>.argument(key: String) = this.firstOrNull {
+    it.lowercase().startsWith("--${key.lowercase()}=")
+}?.split("=")?.get(1)

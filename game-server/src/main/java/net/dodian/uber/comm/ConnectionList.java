@@ -25,7 +25,7 @@ public final class ConnectionList {
      * Private constructor for this class
      */
     private ConnectionList() {
-        connectionMap = new Hashtable<InetAddress, Integer>();
+        connectionMap = new Hashtable<>();
     }
 
     /**

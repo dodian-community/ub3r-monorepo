@@ -10,7 +10,7 @@ private val logger = InlineLogger()
 class LoginEncoder : MessageToByteEncoder<LoginResponse>(LoginResponse::class.java) {
 
     override fun encode(ctx: ChannelHandlerContext, response: LoginResponse, out: ByteBuf) {
-        logger.debug { "Encoding request; LoginEncoder." }
+        logger.debug { response }
 
         out.writeByte(response.status)
 

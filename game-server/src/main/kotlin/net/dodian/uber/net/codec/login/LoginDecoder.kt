@@ -31,8 +31,6 @@ class LoginDecoder(
     }
 
     override fun decode(ctx: ChannelHandlerContext, input: ByteBuf, out: MutableList<Any>, state: LoginDecoderState) {
-        logger.debug { "LoginDecoder: state=$state" }
-
         when (state) {
             LoginDecoderState.LOGIN_HANDSHAKE -> decodeHandshake(ctx, input)
             LoginDecoderState.LOGIN_HEADER -> decodeHeader(ctx, input)
@@ -131,7 +129,7 @@ class LoginDecoder(
         val remoteAddress = ctx.channel().remoteAddress() as InetSocketAddress
         val remoteHost = remoteAddress.hostName
 
-        if (password.length < 6 || password.length > 20 || username.isEmpty() || username.length > 12) {
+        if (password.isEmpty() || username.isEmpty()) {
             logger.warn { "Username ('$username') or password did not pass validation." }
             writeResponseCode(ctx, STATUS_INVALID_CREDENTIALS)
             return

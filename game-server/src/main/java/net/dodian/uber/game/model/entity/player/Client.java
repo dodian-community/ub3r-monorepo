@@ -48,7 +48,7 @@ import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 import static net.dodian.utilities.DatabaseKt.*;
 import static net.dodian.utilities.DotEnvKt.*;
 
-public class Client extends Player implements Runnable {
+public class Client extends Player {
 
 	public Fletching fletching = new Fletching();
 	public boolean immune = false, loggingOut = false, loadingDone = false, reloadHp = false;
@@ -453,15 +453,8 @@ public class Client extends Player implements Runnable {
 
 	private SocketHandler mySocketHandler;
 
-	public Client(java.net.Socket s, int _playerId) {
+	public Client(int _playerId) {
 		super(_playerId);
-		mySock = s;
-		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[bufferSize]);
-		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[bufferSize]);
-		inputStream.currentOffset = 0;
-		readPtr = writePtr = 0;
 	}
 
 	public void shutdownError(String errorMessage) {
@@ -2289,20 +2282,6 @@ public class Client extends Player implements Runnable {
 		send(new SendMessage("Welcome to Uber Server"));
 		if (newPms > 0) {
 			send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
-		}
-		/* Check for refunded items! */
-		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
-			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
-			boolean gotResult = stm.executeQuery(query).next();
-			if(gotResult) {
-				send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-				stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
-			}
-			stm.close();
-		} catch (Exception e) {
-			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
 		}
 		loaded = true;
 		PlayerUpdating.getInstance().update(this, getOutputStream());
@@ -8900,85 +8879,4 @@ public class Client extends Player implements Runnable {
 
 	public int refundSlot = -1;
 	public ArrayList<RewardItem> rewardList = new ArrayList<>();
-
-	public void setRefundList() {
-		rewardList.clear();
-		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
-			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
-			ResultSet result = stm.executeQuery(query);
-			while(result.next()) {
-				rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
-			}
-			stm.close();
-		} catch (Exception e) {
-			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
-		}
-	}
-
-	public void setRefundOptions() {
-		if(rewardList.isEmpty()) {
-			refundSlot = -1;
-			send(new SendMessage("You got no items to collect!"));
-			return;
-		}
-		int slot = refundSlot;
-		String[] text = new String[rewardList.size() < 4 ? rewardList.size() + 2 : rewardList.size() - slot <= 3 ? rewardList.size() - slot + 2 : 6];
-		text[0] = "Refund Item List";
-		int position = Math.min(3, rewardList.size() - slot);
-		for(int i = 0; i < position; i++)
-			text[i + 1] = "Claim "+ rewardList.get(slot + i).getAmount() +" of " + GetItemName(rewardList.get(slot + i).getId());
-		text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
-		if(text.length == 6)
-			text[position + 2] = slot == 0 ? "Close" : "Previous";
-		showPlayerOption(text);
-	}
-
-	public void reclaim(int position) {
-		int slot = refundSlot + position;
-		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
-			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
-			ResultSet result = stm.executeQuery(query);
-			String date = "";
-			RewardItem item = rewardList.get(slot - 1);
-			while(result.next() && date.equals("")) {
-				if(result.getRow() == slot) {
-					date = result.getString("date");
-				}
-			}
-			stm.executeUpdate("UPDATE uber3_refunds SET claimed='"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"' where date='"+date+"'");
-			stm.close();
-			/* Set back options! */
-			setRefundList();
-			if(!rewardList.isEmpty()) {
-				refundSlot = 0;
-				setRefundOptions();
-			} else send(new RemoveInterfaces());
-			/* Refund item function */
-			int amount = item.getAmount() - getFreeSpace();
-			if(Server.itemManager.isStackable(item.getId())) {
-				if(getFreeSpace() == 0) {
-					GroundItem groundItem = new GroundItem(getPosition().copy(), item.getId(), item.getAmount(), getSlot(), -1);
-					Ground.items.add(groundItem);
-					send(new SendMessage("Some items have been dropped to the ground!"));
-				} else addItem(item.getId(), item.getAmount());
-			} else if (amount > 0) {
-				addItem(item.getId(), getFreeSpace());
-				for(int i = 0; i < getFreeSpace(); i++)
-					addItem(item.getId(), 1);
-				for(int i = 0; i < amount; i++) {
-					GroundItem groundItem = new GroundItem(getPosition().copy(), item.getId(), 1, getSlot(), -1);
-					Ground.items.add(groundItem);
-				}
-				send(new SendMessage("Some items have been dropped to the ground!"));
-			} else
-				for(int i = 0; i < item.getAmount(); i++)
-					addItem(item.getId(), 1);
-		} catch (Exception e) {
-			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
-		}
-	}
 }

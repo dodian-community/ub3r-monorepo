@@ -20,12 +20,23 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.session.GameSession;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
 import java.util.*;
 
 public abstract class Player extends Entity {
+    private GameSession session = null;
+
+    public GameSession getSession() {
+        return session;
+    }
+
+    public void setSession(GameSession session) {
+        this.session = session;
+    }
+
     public boolean yellOn = true, genie = false;
     public boolean saving = false;
     public long disconnectAt = 0, longName = 0;

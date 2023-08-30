@@ -1,9 +1,9 @@
 package net.dodian.uber.net.codec.login
 
 data class LoginResponse(
-    val flagged: Boolean,
+    val status: Int,
     val rights: Int,
-    val status: Int
+    val flagged: Boolean
 ) {
     val isFlagged get() = flagged
 }

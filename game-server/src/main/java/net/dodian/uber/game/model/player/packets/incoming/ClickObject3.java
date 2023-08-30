@@ -75,12 +75,6 @@ public class ClickObject3 implements Packet {
         if (objectID == 1739) {
             client.moveTo(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ() - 1);
         }
-        if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
-                || (objectID == 6084) || objectName.contains("bank booth")) {
-                client.setRefundList();
-                client.refundSlot = 0;
-                client.setRefundOptions();
-        }
     }
 
 }

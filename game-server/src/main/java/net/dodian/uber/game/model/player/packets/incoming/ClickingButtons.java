@@ -70,9 +70,6 @@ public class ClickingButtons implements Packet {
                 client.refundSlot += 3;
             else if(client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5)))
                 client.refundSlot -= 3;
-            else client.reclaim(checkSlot);
-            if(!client.rewardList.isEmpty())
-                client.setRefundOptions();
             return;
         }
         Emotes.doEmote(actionButton, client);

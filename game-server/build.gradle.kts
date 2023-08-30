@@ -74,6 +74,6 @@ tasks {
         workingDir = project.projectDir
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("net.dodian.cli.RsaGeneratorKt")
-        args = listOf("16", "2048", "./data/rsa")
+        args = listOf("--bitCount=1024", "--path=./data/rsa")
     }
 }
