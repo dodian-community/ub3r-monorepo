@@ -1,4 +1,4 @@
-package net.dodian.uber.service
+package net.dodian.services.impl
 
 import com.github.michaelbull.logging.InlineLogger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -21,7 +21,6 @@ import java.util.*
 import kotlin.io.path.Path
 
 private val logger = InlineLogger()
-
 class RsaService {
     lateinit var exponent: BigInteger
     lateinit var modulus: BigInteger
@@ -90,12 +89,4 @@ class RsaService {
             }
         }
     }
-}
-
-fun main(args: Array<String>) {
-    RsaService().generateKeyPair(
-        radix = if (args.isNotEmpty()) args[0].toInt() else 16,
-        bitCount = if (args.size >= 2) args[1].toInt() else 2048,
-        path = if (args.size >= 3) Path(args[2]) else Path("./data/rsa")
-    )
 }

@@ -1,5 +1,6 @@
-package net.dodian.uber.service
+package net.dodian.services.impl
 
+import net.dodian.services.Service
 import net.dodian.uber.game.GamePulseHandler
 import net.dodian.uber.game.PULSE_DELAY
 import net.dodian.uber.game.model.entity.player.Player

@@ -1,4 +1,4 @@
-package net.dodian.uber.service
+package net.dodian.services
 
 abstract class Service {
     abstract fun start()

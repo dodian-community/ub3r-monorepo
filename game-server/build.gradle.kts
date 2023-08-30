@@ -66,11 +66,14 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-tasks.register<JavaExec>("generateRsaKeypair") {
-    group = "dodian-utils"
+tasks {
 
-    workingDir = project.projectDir
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("net.dodian.uber.service.RsaServiceKt")
-    args = listOf("16", "2048", "./data/rsa")
+    register<JavaExec>("generateRsaKeypair") {
+        group = "dodian-utils"
+
+        workingDir = project.projectDir
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set("net.dodian.cli.RsaGeneratorKt")
+        args = listOf("16", "2048", "./data/rsa")
+    }
 }

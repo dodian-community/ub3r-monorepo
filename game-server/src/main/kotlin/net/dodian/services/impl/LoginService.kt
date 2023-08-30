@@ -1,4 +1,4 @@
-package net.dodian.uber.service
+package net.dodian.services.impl
 
 import net.dodian.uber.game.session.LoginSession
 import net.dodian.uber.net.codec.login.LoginRequest
