@@ -1,10 +1,12 @@
 package net.dodian
 
+import net.dodian.server.scripting.ScriptPlugin
 import net.dodian.services.Service
 
 class ServerContext(
     val services: MutableList<Service> = mutableListOf(),
-    val handlers: MutableList<Any> = mutableListOf()
+    val handlers: MutableList<Any> = mutableListOf(),
+    val plugins: MutableList<ScriptPlugin> = mutableListOf()
 ) {
     inline fun <reified S : Service> service() = services.single { it is S } as S
     inline fun <reified H : Any> handler() = handlers.single { it is H } as H
@@ -30,5 +32,16 @@ class ServerContext(
 
     fun registerHandlers(vararg handlers: Any) {
         handlers.forEach { registerHandler(it) }
+    }
+
+    fun registerPlugin(plugin: ScriptPlugin): Boolean {
+        if (plugins.any { it::class == plugin::class })
+            return false
+
+        return plugins.add(plugin)
+    }
+
+    fun registerPlugins(vararg plugins: ScriptPlugin) {
+        plugins.forEach { registerPlugin(it) }
     }
 }

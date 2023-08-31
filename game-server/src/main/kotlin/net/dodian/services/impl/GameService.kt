@@ -1,6 +1,7 @@
 package net.dodian.services.impl
 
 import net.dodian.context
+import net.dodian.plugin.onLogin
 import net.dodian.services.Service
 import net.dodian.uber.game.GamePulseHandler
 import net.dodian.uber.game.PULSE_DELAY
@@ -82,9 +83,7 @@ class GameService(
         val loginService = context.service<LoginService>()
 
         for (i in 0 until DE_REGISTRATIONS_PER_CYCLE) {
-            val player = oldPlayers.poll()
-            if (player == null)
-                break
+            val player = oldPlayers.poll() ?: break
 
             loginService.submitSaveRequest(player.session, player)
         }

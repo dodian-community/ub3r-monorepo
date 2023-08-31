@@ -96,11 +96,44 @@ class RsaService : Service() {
             pubWriter.println("exponent: $exponent")
             pubWriter.println("modulus: $modulus")
             pubWriter.close()
+
+            replaceClientRSA(exponent, modulus)
         } catch (exception: Exception) {
             logger.error(exception) {
                 "Failed to write RSA keypair to: ${path.toAbsolutePath()}"
             }
         }
+    }
+
+    private fun replaceClientRSA(exponent: String, modulus: String) {
+        var tries = 0
+        var clientProjectPath = Path("data").toAbsolutePath()
+
+        while (tries < 5 && clientProjectPath.parent != null && !clientProjectPath.endsWith("game-server")) {
+            clientProjectPath = clientProjectPath.parent
+            tries++
+        }
+
+        val file = clientProjectPath.parent.resolve(
+            "game-client-new/src/main/java/net/dodian/client/ClientRSA.java"
+        ).toFile()
+
+        if (!file.exists())
+            error("Nope, couldn't find client's file :(")
+
+        val text = file.readText()
+        val lines = file.readLines()
+
+        val modLine = lines.single { it.contains("RSA_MODULUS") }
+        val newModLine = modLine.replace("BigInteger\\(\"[0-9]+\"\\)".toRegex(), "BigInteger(\"$modulus\")")
+
+        val expLine = lines.single { it.contains("RSA_EXPONENT") }
+        val newExpLine = expLine.replace("BigInteger\\(\"[0-9]+\"\\)".toRegex(), "BigInteger(\"$exponent\")")
+
+        file.writeText(
+            text.replace(modLine, newModLine)
+                .replace(expLine, newExpLine)
+        )
     }
 
     override fun start() {}

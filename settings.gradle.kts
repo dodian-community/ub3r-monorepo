@@ -1,6 +1,9 @@
 rootProject.name = "ub3r-monorepo"
 
 include(":game-server")
-include(":game-client")
-include(":game-launcher")
+//include(":game-server:server-cache")
+include(":game-server:server-scripting")
+
+include(":game-client-new")
+
 include(":game-launcher-seamless")
