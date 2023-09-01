@@ -14,7 +14,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 import org.quartz.SchedulerException;
 
 import java.sql.ResultSet;
@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.dodian.utilities.DatabaseKt.getDbStatement;
+import static net.dodian.uber.utilities.DatabaseKt.getDbStatement;
 
 public class NpcManager extends Thread {
     Map<Integer, Npc> npcs = new HashMap<>();

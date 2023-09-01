@@ -13,14 +13,15 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.DropLog;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
+import net.dodian.uber.utilities.DotEnvKt;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
 
@@ -40,14 +41,14 @@ public class LoginManager {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
                     if (!md5pass.equals(results.getString("password"))
-                    && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
+                    && (!DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
                         return 3;
                     }
                     p.otherGroups = results.getString("membergroupids").split(",");
                     p.newPms = (results.getInt("pmunread"));
                 } else
                     return 12;
-            } else if (net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") && net.dodian.utilities.DotEnvKt.getServerDebugMode()) {
+            } else if (DotEnvKt.getServerEnv().equals("dev") && DotEnvKt.getServerDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
                 getDbConnection().createStatement().executeUpdate(newUserQuery);
                 return loadCharacterGame(p, playerName, playerPass);

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
 
 public class SocketPoolEntry {
     private Socket socket;

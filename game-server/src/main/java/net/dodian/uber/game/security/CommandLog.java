@@ -2,13 +2,13 @@ package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves all the chat logs to the 'chat_log' database.

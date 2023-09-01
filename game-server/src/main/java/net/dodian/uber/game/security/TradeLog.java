@@ -2,15 +2,15 @@ package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 /**
  * Saves all duels that take place.

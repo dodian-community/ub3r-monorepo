@@ -1,4 +1,4 @@
-package net.dodian.utilities
+package net.dodian.uber.utilities
 
 import java.sql.Connection
 import java.sql.DriverManager

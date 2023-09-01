@@ -1,7 +1,7 @@
-package net.dodian
+package net.dodian.uber
 
 import net.dodian.server.scripting.ScriptPlugin
-import net.dodian.services.Service
+import net.dodian.uber.services.Service
 
 class ServerContext(
     val services: MutableList<Service> = mutableListOf(),

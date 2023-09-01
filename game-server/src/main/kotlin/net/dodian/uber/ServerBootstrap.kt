@@ -1,11 +1,11 @@
-package net.dodian
+package net.dodian.uber
 
 import com.github.michaelbull.logging.InlineLogger
 import net.dodian.server.scripting.KotlinScriptPlugin
 import net.dodian.server.scripting.ScriptPluginLoader
-import net.dodian.services.impl.GameService
-import net.dodian.services.impl.LoginService
-import net.dodian.services.impl.RsaService
+import net.dodian.uber.services.impl.GameService
+import net.dodian.uber.services.impl.LoginService
+import net.dodian.uber.services.impl.RsaService
 import net.dodian.uber.game.session.PlayerManager
 import net.dodian.uber.net.startChannel
 

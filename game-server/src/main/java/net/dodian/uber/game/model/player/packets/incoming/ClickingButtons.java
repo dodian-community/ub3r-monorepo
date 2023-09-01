@@ -22,7 +22,7 @@ import net.dodian.utilities.Utils;
 
 import java.io.IOException;
 
-import static net.dodian.utilities.DotEnvKt.getServerDebugMode;
+import static net.dodian.uber.utilities.DotEnvKt.getServerDebugMode;
 
 public class ClickingButtons implements Packet {
 

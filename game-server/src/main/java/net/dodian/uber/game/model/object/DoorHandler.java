@@ -1,12 +1,12 @@
 package net.dodian.uber.game.model.object;
 
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class DoorHandler {
     public static int[] doorX = new int[100];

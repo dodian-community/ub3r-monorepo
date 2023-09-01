@@ -1,8 +1,7 @@
-package net.dodian.services.impl
+package net.dodian.uber.services.impl
 
-import net.dodian.context
-import net.dodian.plugin.onLogin
-import net.dodian.services.Service
+import net.dodian.uber.context
+import net.dodian.uber.services.Service
 import net.dodian.uber.game.GamePulseHandler
 import net.dodian.uber.game.PULSE_DELAY
 import net.dodian.uber.game.extensions.sendInitialMessages

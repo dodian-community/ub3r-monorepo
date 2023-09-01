@@ -1,7 +1,7 @@
-package net.dodian.services.impl
+package net.dodian.uber.services.impl
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.services.Service
+import net.dodian.uber.services.Service
 import net.dodian.uber.game.io.player.DummyPlayerSerializer
 import net.dodian.uber.game.io.player.PlayerSerializer
 import net.dodian.uber.game.login.PlayerLoadWorker

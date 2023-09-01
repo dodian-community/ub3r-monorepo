@@ -1,4 +1,4 @@
-package net.dodian.utilities
+package net.dodian.uber.utilities
 
 import org.apache.ibatis.jdbc.ScriptRunner
 import java.nio.file.Path

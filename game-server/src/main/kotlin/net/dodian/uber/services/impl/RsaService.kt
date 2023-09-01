@@ -1,7 +1,7 @@
-package net.dodian.services.impl
+package net.dodian.uber.services.impl
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.services.Service
+import net.dodian.uber.services.Service
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemObject
 import org.bouncycastle.util.io.pem.PemReader

@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -13,8 +13,8 @@ import org.quartz.JobExecutionException;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class WorldProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {

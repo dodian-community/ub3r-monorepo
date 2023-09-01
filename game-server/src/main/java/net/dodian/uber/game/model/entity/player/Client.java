@@ -34,6 +34,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
+import net.dodian.uber.utilities.DbTables;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
@@ -45,8 +46,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
-import static net.dodian.utilities.DatabaseKt.*;
-import static net.dodian.utilities.DotEnvKt.*;
 
 public class Client extends Player {
 
@@ -597,7 +596,7 @@ public class Client extends Player {
 			serverSessionKey = getInputStream().readQWord();
 
 			String customClientVersion = getInputStream().readString();
-			officialClient = customClientVersion.equals(getGameClientCustomVersion());
+			officialClient = customClientVersion.equals(net.dodian.uber.utilities.DotEnvKt.getGameClientCustomVersion());
 			setPlayerName(getInputStream().readString());
 			if (getPlayerName() == null || getPlayerName().length() == 0) {
 				setPlayerName("player" + getSlot());
@@ -729,7 +728,7 @@ public class Client extends Player {
 					mySocketHandler.getOutput().write(loginDelay);
 			}
 
-			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
+			mySocketHandler.getOutput().write(net.dodian.uber.utilities.DotEnvKt.getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
 			mySocketHandler.getOutput().write(0);
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		} catch (java.lang.Exception __ex) {
@@ -896,7 +895,7 @@ public class Client extends Player {
           }
         }
       }*/ //TODO: Fix this pvp shiet
-			if (getGameWorldId() < 2) {
+			if (net.dodian.uber.utilities.DotEnvKt.getGameWorldId() < 2) {
 				long elapsed = System.currentTimeMillis() - start;
 				int minutes = (int) (elapsed / 60000);
 				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
@@ -916,9 +915,9 @@ public class Client extends Player {
 			}
 		}
 		// TODO: Look into improving this, and potentially a system to configure player saving per world id...
-		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
+		if (net.dodian.uber.utilities.DotEnvKt.getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
 			try {
-				Statement statement = getDbConnection().createStatement();
+				Statement statement = net.dodian.uber.utilities.DatabaseKt.getDbConnection().createStatement();
 				long allxp = 0;
 				for (int i = 0; i < 21; i++) {
 					if (i != 18) {
@@ -1135,7 +1134,7 @@ public class Client extends Player {
 			send(new SendMessage("You must answer the genie before you can gain experience!"));
 			return false;
 		}
-		amount = amount * getGameMultiplierGlobalXp();
+		amount = amount * net.dodian.uber.utilities.DotEnvKt.getGameMultiplierGlobalXp();
 		int oldXP = getExperience(skill),
 				newXP = Math.min(getExperience(skill) + amount, 200000000);
 		int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
@@ -6987,7 +6986,7 @@ public class Client extends Player {
 		if (tradeLocked && other.playerRights < 1) {
 			return;
 		}
-		if (other.connectedFrom.equals(connectedFrom) && getGameWorldId() == 1) { //We do not wish for others to duel?!
+		if (other.connectedFrom.equals(connectedFrom) && net.dodian.uber.utilities.DotEnvKt.getGameWorldId() == 1) { //We do not wish for others to duel?!
 			duelRequested = false;
 			return;
 		}
@@ -7293,7 +7292,7 @@ public class Client extends Player {
 	public void refreshFriends() {
 		for (Friend f : friends) {
 			if (PlayerHandler.playersOnline.containsKey(f.name)) {
-				loadpm(f.name, getGameWorldId());
+				loadpm(f.name, net.dodian.uber.utilities.DotEnvKt.getGameWorldId());
 			} else {
 				loadpm(f.name, 0);
 			}
@@ -7332,7 +7331,7 @@ public class Client extends Player {
 
 				if (button == 1) {
 					try {
-						java.sql.Connection conn = getDbConnection();
+						java.sql.Connection conn = net.dodian.uber.utilities.DatabaseKt.getDbConnection();
 						Statement statement = conn.createStatement();
 						String sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.getPosition().getX() + "' && y='" + tempNpc.getPosition().getY() + "' && height='" + tempNpc.getPosition().getZ() + "'";
 						if (statement.executeUpdate(sql) < 1)
@@ -7851,7 +7850,7 @@ public class Client extends Player {
 	}
 
 	public void updatePlayerDisplay() {
-		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
+		String serverName = net.dodian.uber.utilities.DotEnvKt.getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
 		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
 		send(new SendString("", 6664));
 		setInterfaceWalkable(6673);
@@ -8465,7 +8464,7 @@ public class Client extends Player {
 			checkInv = true;
 		} else {
 			try {
-				java.sql.Connection conn = getDbConnection();
+				java.sql.Connection conn = net.dodian.uber.utilities.DatabaseKt.getDbConnection();
 				Statement statement = conn.createStatement();
 				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
 				ResultSet results = statement.executeQuery(query);
@@ -8521,7 +8520,7 @@ public class Client extends Player {
 			checkBankInterface = true;
 		} else {
 			try {
-				java.sql.Connection conn = getDbConnection();
+				java.sql.Connection conn = net.dodian.uber.utilities.DatabaseKt.getDbConnection();
 				Statement statement = conn.createStatement();
 				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
 				ResultSet results = statement.executeQuery(query);
@@ -8611,7 +8610,7 @@ public class Client extends Player {
 			try {
 				boolean found = true;
 				int currentXp = 0, totalXp = 0, totalLevel = 0;
-				java.sql.Connection conn = getDbConnection();
+				java.sql.Connection conn = net.dodian.uber.utilities.DatabaseKt.getDbConnection();
 				Statement statement = conn.createStatement();
 				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
 				ResultSet results = statement.executeQuery(query);
@@ -8629,7 +8628,7 @@ public class Client extends Player {
 				} else
 					found = false;
 				if (found) {
-					statement = getDbConnection().createStatement();
+					statement = net.dodian.uber.utilities.DatabaseKt.getDbConnection().createStatement();
 					xp = currentXp >= xp ? xp : currentXp;
 					int newXp = currentXp - xp;
 					totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
@@ -8695,7 +8694,7 @@ public class Client extends Player {
 		} else { //Database check!
 			try {
 				boolean found = true;
-				java.sql.Connection conn = getDbConnection();
+				java.sql.Connection conn = net.dodian.uber.utilities.DatabaseKt.getDbConnection();
 				Statement statement = conn.createStatement();
 				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
 				ResultSet results = statement.executeQuery(query);
@@ -8758,7 +8757,7 @@ public class Client extends Player {
 					} else
 						found = false;
 					if (found) {
-						statement = getDbConnection().createStatement();
+						statement = net.dodian.uber.utilities.DatabaseKt.getDbConnection().createStatement();
 						statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
 						if (totalItemRemoved > 0)
 							send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));

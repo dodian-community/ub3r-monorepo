@@ -1,18 +1,19 @@
 package net.dodian.uber.game.model;
 
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
+import net.dodian.uber.utilities.DotEnvKt;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static net.dodian.utilities.DatabaseKt.getDbStatement;
+import static net.dodian.uber.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
         try {
             getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
-                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + net.dodian.utilities.DotEnvKt.getGameWorldId() + "'");
+                    + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + DotEnvKt.getGameWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

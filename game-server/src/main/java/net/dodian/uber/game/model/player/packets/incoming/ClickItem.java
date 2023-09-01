@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -16,7 +16,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class ClickItem implements Packet {
 

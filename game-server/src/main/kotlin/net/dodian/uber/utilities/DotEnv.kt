@@ -1,4 +1,4 @@
-package net.dodian.utilities
+package net.dodian.uber.utilities
 
 import io.github.cdimascio.dotenv.dotenv
 

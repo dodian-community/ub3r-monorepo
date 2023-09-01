@@ -1,7 +1,7 @@
 package net.dodian.uber.game
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.services.impl.GameService
+import net.dodian.uber.services.impl.GameService
 
 private val logger = InlineLogger()
 

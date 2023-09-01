@@ -27,8 +27,8 @@ import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
-import net.dodian.utilities.DbTables;
-import net.dodian.utilities.DotEnvKt;
+import net.dodian.uber.utilities.DbTables;
+import net.dodian.uber.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
@@ -39,10 +39,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.utilities.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
-import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.uber.utilities.DatabaseInitializerKt.isDatabaseInitialized;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class Server implements Runnable {
 
@@ -78,7 +77,7 @@ public class Server implements Runnable {
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
 
-        if (getDatabaseInitialize() && !isDatabaseInitialized()) {
+        if (net.dodian.uber.utilities.DotEnvKt.getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
         ConnectionList.getInstance();
@@ -119,7 +118,7 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
         /* Done loading */
         System.gc();
-        System.out.println("Server is now running on world " + getGameWorldId() + "!");
+        System.out.println("Server is now running on world " + net.dodian.uber.utilities.DotEnvKt.getGameWorldId() + "!");
     }
 
     public static Server clientHandler = null; // handles all the clients

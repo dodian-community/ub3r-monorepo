@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
 
 public class Bank10 implements Packet {
 

@@ -3,14 +3,14 @@ package net.dodian.uber.game.model.item;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class ItemManager {
     public Map<Integer, Item> items = new HashMap<Integer, Item>();

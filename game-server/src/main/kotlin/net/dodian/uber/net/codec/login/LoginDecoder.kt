@@ -8,7 +8,7 @@ import io.netty.channel.ChannelHandlerContext
 import net.dodian.uber.extensions.readString
 import net.dodian.uber.game.session.createPlayerCredentials
 import net.dodian.uber.net.util.StatefulFrameDecoder
-import net.dodian.services.impl.RsaService
+import net.dodian.uber.services.impl.RsaService
 import net.dodian.utilities.security.IsaacRandom
 import net.dodian.utilities.security.IsaacRandomPair
 import java.math.BigInteger

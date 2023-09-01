@@ -1,6 +1,6 @@
-package net.dodian.cli
+package net.dodian.uber.cli
 
-import net.dodian.services.impl.RsaService
+import net.dodian.uber.services.impl.RsaService
 import kotlin.io.path.Path
 
 fun main(args: Array<String>) {

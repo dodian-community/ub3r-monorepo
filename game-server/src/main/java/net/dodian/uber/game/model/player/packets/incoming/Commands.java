@@ -27,7 +27,7 @@ import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.CommandLog;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.net.InetAddress;
@@ -40,8 +40,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
 
 public class Commands implements Packet {
 

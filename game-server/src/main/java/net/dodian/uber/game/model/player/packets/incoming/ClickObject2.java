@@ -19,7 +19,7 @@ import net.dodian.utilities.Utils;
 
 import java.util.Random;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject2 implements Packet {
 

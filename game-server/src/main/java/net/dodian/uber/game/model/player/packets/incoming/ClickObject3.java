@@ -13,7 +13,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject3 implements Packet {
 

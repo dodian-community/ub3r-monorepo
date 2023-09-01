@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -14,9 +14,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DatabaseKt.getDbStatement;
+import static net.dodian.uber.utilities.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.utilities.DatabaseKt.getDbStatement;
 
 public class SlotMachine {
 
