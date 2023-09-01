@@ -74,6 +74,7 @@ allprojects {
 
         implementation("org.jetbrains.kotlin:kotlin-scripting-common:1.9.10")
         implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.9.10")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
 
         implementation("it.unimi.dsi:fastutil:8.5.12")
         implementation("org.openrs2:openrs2-crypto:0.1.0-SNAPSHOT")

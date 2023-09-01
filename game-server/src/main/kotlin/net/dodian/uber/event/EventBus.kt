@@ -1,4 +1,4 @@
-package net.dodian.uber.events
+package net.dodian.uber.event
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap

@@ -2,8 +2,10 @@ package net.dodian.uber
 
 import net.dodian.server.scripting.ScriptPlugin
 import net.dodian.uber.services.Service
+import net.dodian.uber.services.impl.GameService
 
 class ServerContext(
+    val gameService: GameService,
     val services: MutableList<Service> = mutableListOf(),
     val handlers: MutableList<Any> = mutableListOf(),
     val plugins: MutableList<ScriptPlugin> = mutableListOf()

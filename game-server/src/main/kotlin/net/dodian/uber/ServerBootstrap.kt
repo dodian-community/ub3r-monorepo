@@ -21,7 +21,6 @@ fun main() {
     context.registerPlugins(*plugins.toTypedArray())
 
     context.registerServices(
-        GameService(),
         LoginService(),
         RsaService()
     )
