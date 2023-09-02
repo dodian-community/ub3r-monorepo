@@ -12,6 +12,7 @@ private annotation class PacketBuilderDsl
 @PacketBuilderDsl
 class DownstreamPacketBuilder<T : DownstreamPacket> {
     private lateinit var encoder: (T, ByteBuf) -> Unit
+
     var opcode: Int = -1
     var length: Int = 0
 

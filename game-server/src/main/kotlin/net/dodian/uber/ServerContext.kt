@@ -1,11 +1,13 @@
 package net.dodian.uber
 
 import net.dodian.server.scripting.ScriptPlugin
+import net.dodian.uber.protocol.game.GamePacketMaps
 import net.dodian.uber.services.Service
-import net.dodian.uber.services.impl.GameService
+import net.dodian.uber.services.GameService
 
+@Suppress("MemberVisibilityCanBePrivate")
 class ServerContext(
-    val gameService: GameService,
+    val packetMap: GamePacketMaps = GamePacketMaps(),
     val services: MutableList<Service> = mutableListOf(),
     val handlers: MutableList<Any> = mutableListOf(),
     val plugins: MutableList<ScriptPlugin> = mutableListOf()
@@ -17,7 +19,7 @@ class ServerContext(
         if (services.any { it::class == service::class })
             return false
 
-        service.start()
+        service.startUp()
         return services.add(service)
     }
 

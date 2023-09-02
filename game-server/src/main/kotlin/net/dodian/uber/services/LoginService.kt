@@ -1,7 +1,6 @@
-package net.dodian.uber.services.impl
+package net.dodian.uber.services
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.uber.services.Service
 import net.dodian.uber.game.io.player.DummyPlayerSerializer
 import net.dodian.uber.game.io.player.PlayerSerializer
 import net.dodian.uber.game.login.PlayerLoadWorker
@@ -21,7 +20,7 @@ private val logger = InlineLogger()
 
 class LoginService(
     private val serializer: PlayerSerializer = DummyPlayerSerializer()
-) : Service() {
+) : Service {
 
     private val executor: ExecutorService = Executors.newCachedThreadPool(ThreadUtil.create("LoginService"))
 
@@ -58,5 +57,5 @@ class LoginService(
         return false
     }
 
-    override fun start() {}
+    override fun startUp() {}
 }

@@ -6,14 +6,14 @@ plugins {
 }
 
 application {
-    mainClass.set("net.dodian.ServerBootstrapKt")
+    mainClass.set("net.dodian.uber.ServerBootstrapKt")
 }
 
 tasks {
 
     jar {
         manifest {
-            attributes["Main-Class"] = "net.dodian.uber.game.Server"
+            attributes["Main-Class"] = "net.dodian.uber.ServerBootstrapKt"
         }
 
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -31,7 +31,7 @@ tasks {
 
         workingDir = project.projectDir
         classpath = sourceSets["main"].runtimeClasspath
-        mainClass.set("net.dodian.cli.RsaGeneratorKt")
+        mainClass.set("net.dodian.uber.cli.RsaGeneratorKt")
         args = listOf("--bitCount=1024", "--path=./data/rsa")
     }
 }

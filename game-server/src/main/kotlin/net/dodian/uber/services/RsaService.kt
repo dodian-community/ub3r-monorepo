@@ -1,7 +1,6 @@
-package net.dodian.uber.services.impl
+package net.dodian.uber.services
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.uber.services.Service
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemObject
 import org.bouncycastle.util.io.pem.PemReader
@@ -22,11 +21,16 @@ import java.util.*
 import kotlin.io.path.Path
 
 private val logger = InlineLogger()
-class RsaService : Service() {
+
+class RsaService : Service {
     lateinit var exponent: BigInteger
     lateinit var modulus: BigInteger
 
-    fun init() {
+    init {
+        init()
+    }
+
+    private fun init() {
         val path = Paths.get("./data/rsa/key.pem")
         val radix = 16
 
@@ -136,5 +140,5 @@ class RsaService : Service() {
         )
     }
 
-    override fun start() {}
+    override fun startUp() {}
 }

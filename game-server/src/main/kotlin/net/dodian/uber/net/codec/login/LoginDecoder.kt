@@ -8,7 +8,7 @@ import io.netty.channel.ChannelHandlerContext
 import net.dodian.uber.extensions.readString
 import net.dodian.uber.game.session.createPlayerCredentials
 import net.dodian.uber.net.util.StatefulFrameDecoder
-import net.dodian.uber.services.impl.RsaService
+import net.dodian.uber.services.RsaService
 import net.dodian.utilities.security.IsaacRandom
 import net.dodian.utilities.security.IsaacRandomPair
 import java.math.BigInteger
@@ -25,10 +25,6 @@ class LoginDecoder(
     private var usernameHash: Int = -1
     private var serverSeed: Long = -1
     private var loginLength: Int = -1
-
-    init {
-        rsaService.init()
-    }
 
     override fun decode(ctx: ChannelHandlerContext, input: ByteBuf, out: MutableList<Any>, state: LoginDecoderState) {
         when (state) {

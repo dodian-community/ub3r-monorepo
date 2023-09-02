@@ -4,7 +4,7 @@ import com.github.michaelbull.logging.InlineLogger
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
 import net.dodian.uber.context
-import net.dodian.uber.services.impl.GameService
+import net.dodian.uber.services.GameService
 import net.dodian.uber.game.MESSAGES_PER_PULSE
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.message.handlers.MessageHandlerChainSet
