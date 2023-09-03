@@ -45,7 +45,7 @@ dependencies {
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
-    implementation(project(":game-server:server-scripting"))
+    implementation(project(":game-server:server-plugins"))
 }
 
 allprojects {
