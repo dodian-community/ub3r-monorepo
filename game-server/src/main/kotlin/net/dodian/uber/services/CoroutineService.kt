@@ -32,7 +32,11 @@ class CoroutineService(
             } else {
                 delay - elapsedMillis
             }
-            if (overdue) logger.error { "Cycle took too long (elapsed=${elapsedMillis}ms, sleep=${sleepTime}ms)" }
+            if (overdue) {
+                logger.error { "Cycle took too long (elapsed=${elapsedMillis}ms, sleep=${sleepTime}ms)" }
+            } else {
+                //logger.debug { "Cycle took ${elapsedMillis}ms to complete, slept for ${sleepTime}ms" }
+            }
             excessCycleNanos = elapsedNanos - TimeUnit.MILLISECONDS.toNanos(elapsedMillis)
             delay(sleepTime)
         }

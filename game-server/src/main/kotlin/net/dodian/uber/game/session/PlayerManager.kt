@@ -1,5 +1,7 @@
 package net.dodian.uber.game.session
 
+import net.dodian.uber.context
+import net.dodian.uber.event.impl.PlayerSessionEvent
 import net.dodian.uber.game.model.entity.player.Player
 
 class PlayerManager(
@@ -7,6 +9,7 @@ class PlayerManager(
 ) {
 
     fun register(player: Player) {
+        context.eventBus.publish(player, PlayerSessionEvent.Login)
         players.add(player)
     }
 

@@ -1,12 +1,20 @@
 package net.dodian.uber
 
 import net.dodian.server.scripting.ScriptPlugin
+import net.dodian.uber.event.EventBus
+import net.dodian.uber.game.model.mob.list.ClientList
+import net.dodian.uber.game.model.mob.list.PlayerList
+import net.dodian.uber.game.process.WorldClock
 import net.dodian.uber.protocol.game.GamePacketMaps
 import net.dodian.uber.services.Service
 import net.dodian.uber.services.GameService
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ServerContext(
+    val eventBus: EventBus = EventBus(),
+    val clients: ClientList = ClientList(),
+    val players: PlayerList = PlayerList(),
+    val clock: WorldClock = WorldClock(),
     val packetMap: GamePacketMaps = GamePacketMaps(),
     val services: MutableList<Service> = mutableListOf(),
     val handlers: MutableList<Any> = mutableListOf(),
@@ -19,7 +27,6 @@ class ServerContext(
         if (services.any { it::class == service::class })
             return false
 
-        service.startUp()
         return services.add(service)
     }
 

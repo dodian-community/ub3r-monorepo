@@ -7,7 +7,6 @@ class GamePacketMaps(
     val downstream: DownstreamPacketMap = DownstreamPacketMap(),
     val upstream: UpstreamPacketMap = UpstreamPacketMap()
 ) {
-
     fun eagerInitialize() {
         downstream.getOrCreateProtocol()
         upstream.getOrCreateProtocol()

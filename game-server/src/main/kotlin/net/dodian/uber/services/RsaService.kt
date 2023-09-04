@@ -119,7 +119,7 @@ class RsaService : Service {
         }
 
         val file = clientProjectPath.parent.resolve(
-            "game-client-new/src/main/java/net/dodian/client/ClientRSA.java"
+            "game-client/src/main/java/net/dodian/client/ClientRSA.java"
         ).toFile()
 
         if (!file.exists())

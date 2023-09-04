@@ -1,13 +1,25 @@
 package net.dodian.uber
 
 import com.github.michaelbull.logging.InlineLogger
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import net.dodian.server.scripting.KotlinScriptPlugin
 import net.dodian.server.scripting.ScriptPluginLoader
+import net.dodian.uber.game.coroutines.GameCoroutineScope
+import net.dodian.uber.game.dispatcher.io.IOCoroutineScope
+import net.dodian.uber.game.dispatcher.main.MainCoroutineScope
+import net.dodian.uber.game.job.GameBootTaskScheduler
+import net.dodian.uber.game.process.GameProcess
+import net.dodian.uber.game.process.MainGameProcess
 import net.dodian.uber.services.LoginService
 import net.dodian.uber.services.RsaService
 import net.dodian.uber.game.session.PlayerManager
 import net.dodian.uber.net.startChannel
+import net.dodian.uber.services.CoroutineService
 import net.dodian.uber.services.GameService
+import java.util.concurrent.Executors
 
 private val logger = InlineLogger()
 
@@ -25,6 +37,24 @@ fun main() {
         RsaService(),
         GameService()
     )
+
+    val factory = ThreadFactoryBuilder().setDaemon(false).setNameFormat("GameExecutor").build()
+    val executor = Executors.newSingleThreadExecutor(factory)
+
+    val coroutineService = CoroutineService(
+        process = MainGameProcess(
+            GameCoroutineScope(),
+            context.eventBus,
+            context.clients,
+            context.players,
+            context.clock
+        ),
+        bootTasks = GameBootTaskScheduler(IOCoroutineScope(Dispatchers.IO)),
+        coroutineScope = MainCoroutineScope(executor.asCoroutineDispatcher())
+    )
+
+    context.registerService(coroutineService)
+    coroutineService.startUp()
 
     startChannel()
 }

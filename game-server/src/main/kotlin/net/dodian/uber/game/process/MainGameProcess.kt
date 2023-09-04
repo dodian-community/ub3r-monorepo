@@ -8,9 +8,9 @@ import net.dodian.uber.game.model.mob.list.PlayerList
 
 class MainGameProcess(
     @GameProcessScope private val coroutineScope: GameCoroutineScope,
+    private val eventBus: EventBus,
     private val clients: ClientList,
     private val players: PlayerList,
-    private val eventBus: EventBus,
     private val clock: WorldClock
 ) : GameProcess {
 
@@ -24,6 +24,11 @@ class MainGameProcess(
 
     override fun cycle() {
         startCycle()
+        worldCycle()
+        clientInput()
+        playerCycle()
+        clientOutput()
+        endCycle()
     }
 
     private fun startCycle() {

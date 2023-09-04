@@ -19,7 +19,7 @@ class UpstreamPacketMap(
         structures[T::class.java] = structure
     }
 
-    public fun getOrCreateProtocol(): Protocol {
+    fun getOrCreateProtocol(): Protocol {
         val protocol = protocol ?: toProtocol()
         this.protocol = protocol
         return protocol

@@ -4,6 +4,7 @@ import com.github.michaelbull.logging.InlineLogger
 import com.google.common.util.concurrent.AbstractIdleService
 import kotlinx.coroutines.*
 import net.dodian.uber.context
+import net.dodian.uber.event.impl.PlayerSessionEvent
 import net.dodian.uber.game.GamePulseHandler
 import net.dodian.uber.game.PULSE_DELAY
 import net.dodian.uber.game.dispatcher.main.MainCoroutineScope
@@ -76,6 +77,7 @@ class GameService(
             } else if (playerManager.isFull) {
                 request.session.sendLoginFailure(STATUS_SERVER_FULL)
             } else {
+                context.eventBus.publish(player, PlayerSessionEvent.Finalize)
                 request.session.sendLoginSuccess(player)
                 finalizePlayerRegistration(player)
             }
@@ -88,6 +90,7 @@ class GameService(
         for (i in 0 until DE_REGISTRATIONS_PER_CYCLE) {
             val player = oldPlayers.poll() ?: break
 
+            context.eventBus.publish(player, PlayerSessionEvent.Logout)
             loginService.submitSaveRequest(player.session, player)
         }
     }
@@ -102,7 +105,7 @@ class GameService(
     }
 
     override fun startUp() {
-        executor.scheduleAtFixedRate(GamePulseHandler(this), PULSE_DELAY, PULSE_DELAY, TimeUnit.MILLISECONDS)
+        //executor.scheduleAtFixedRate(GamePulseHandler(this), PULSE_DELAY, PULSE_DELAY, TimeUnit.MILLISECONDS)
     }
 
     fun registerPlayer(player: Player, session: LoginSession) {

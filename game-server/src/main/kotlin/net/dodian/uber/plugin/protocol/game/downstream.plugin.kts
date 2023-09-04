@@ -1,9 +1,9 @@
-package net.dodian.uber.plugin
+package net.dodian.uber.plugin.protocol.game
 
-import net.dodian.uber.context
+import net.dodian.uber.plugin.context
 import net.dodian.uber.protocol.downstream.*
 
-val packets = context.packetMap.downstream
+val packets = context().packetMap.downstream
 
 packets.register<SidebarOpen> {
     opcode = 106
