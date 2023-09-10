@@ -3,10 +3,29 @@ package net.dodian.uber.game.session
 import net.dodian.uber.context
 import net.dodian.uber.event.impl.PlayerSessionEvent
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.mob.list.PlayerList
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class PlayerManager(
-    val players: MutableList<Player> = mutableListOf()
+    val players: PlayerList
 ) {
+
+    data class LoginPlayerRequest(
+        val player: Player,
+        val session: LoginSession
+    )
+
+    val newPlayers: Queue<LoginPlayerRequest> = ConcurrentLinkedQueue()
+    val oldPlayers: Queue<Player> = ConcurrentLinkedQueue()
+
+    fun registerPlayer(player: Player, session: LoginSession) {
+        newPlayers.add(LoginPlayerRequest(player, session))
+    }
+
+    fun unregisterPlayer(player: Player) {
+        oldPlayers.add(player)
+    }
 
     fun register(player: Player) {
         context.eventBus.publish(player, PlayerSessionEvent.Login)

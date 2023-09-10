@@ -33,10 +33,8 @@ class LoginService(
         }
 
         if (response == STATUS_OK) {
-            logger.info { "Yep, we're supposed to load the player now..." }
             executor.submit(PlayerLoadWorker(serializer, session, request))
         } else {
-            logger.warn { "Player couldn't be loaded, status=$response" }
             session.handlePlayerLoaderResponse(request, PlayerLoaderResponse(response))
         }
     }

@@ -31,7 +31,6 @@ class DummyPlayerSerializer : PlayerSerializer() {
             "on" -> status = STATUS_ACCOUNT_ONLINE
         }
 
-        logger.debug { "Ah yeah, loaded player! (status=$status, rights = ${player.playerRights})" }
         return PlayerLoaderResponse(status, player)
     }
 

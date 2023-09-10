@@ -3,7 +3,7 @@ package net.dodian.uber.net.builder.downstream
 import io.netty.buffer.ByteBuf
 import net.dodian.uber.protocol.packet.DownstreamPacket
 import net.dodian.uber.protocol.packet.FixedLengthPacketCodec
-import org.openrs2.crypto.StreamCipher
+import net.dodian.utilities.security.IsaacRandom
 
 public class DownstreamFixedLengthPacketCodec<T : DownstreamPacket>(
     type: Class<T>,
@@ -12,11 +12,11 @@ public class DownstreamFixedLengthPacketCodec<T : DownstreamPacket>(
     private val encoder: (T, ByteBuf) -> Unit
 ) : FixedLengthPacketCodec<T>(type, opcode, length) {
 
-    override fun decode(buf: ByteBuf, cipher: StreamCipher): T {
+    override fun decode(buf: ByteBuf, random: IsaacRandom): T {
         throw NotImplementedError("Downstream packet cannot be decoded.")
     }
 
-    override fun encode(packet: T, buf: ByteBuf, cipher: StreamCipher) {
+    override fun encode(packet: T, buf: ByteBuf, random: IsaacRandom) {
         encoder.invoke(packet, buf)
     }
 }

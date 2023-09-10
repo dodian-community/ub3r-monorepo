@@ -2,15 +2,15 @@ package net.dodian.uber.protocol.packet
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufAllocator
-import org.openrs2.crypto.StreamCipher
+import net.dodian.utilities.security.IsaacRandom
 
 abstract class PacketCodec<T : Packet>(
     val type: Class<T>,
     val opcode: Int
 ) {
-    abstract fun decode(buf: ByteBuf, cipher: StreamCipher): T
+    abstract fun decode(buf: ByteBuf, random: IsaacRandom): T
 
-    abstract fun encode(packet: T, buf: ByteBuf, cipher: StreamCipher)
+    abstract fun encode(packet: T, buf: ByteBuf, random: IsaacRandom)
 
     abstract fun isLengthReadable(buf: ByteBuf): Boolean
 

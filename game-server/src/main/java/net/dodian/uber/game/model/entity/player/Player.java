@@ -1,12 +1,16 @@
 package net.dodian.uber.game.model.entity.player;
 
+import net.dodian.uber.event.EventList;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.coroutines.GameCoroutineScope;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.client.DownstreamList;
+import net.dodian.uber.game.model.client.UpstreamList;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.item.Equipment;
@@ -36,6 +40,11 @@ public abstract class Player extends Entity {
     public void setSession(GameSession session) {
         this.session = session;
     }
+
+    public UpstreamList upstream = new UpstreamList();
+    public DownstreamList downstream = new DownstreamList();
+    public EventList<Player> events = new EventList<>();
+    public GameCoroutineScope coroutineScope = new GameCoroutineScope();
 
     public boolean yellOn = true, genie = false;
     public boolean saving = false;

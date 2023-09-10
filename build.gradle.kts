@@ -5,3 +5,7 @@ subprojects {
         mavenCentral()
     }
 }
+
+allprojects {
+    group = "net.dodian"
+}

@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf
 import net.dodian.uber.protocol.packet.FixedLengthPacketCodec
 import net.dodian.uber.protocol.packet.UpstreamDiscardPacket
 import net.dodian.uber.protocol.packet.UpstreamPacket
-import org.openrs2.crypto.StreamCipher
+import net.dodian.utilities.security.IsaacRandom
 
 class UpstreamFixedLengthPacketCodec<T : UpstreamPacket>(
     type: Class<T>,
@@ -14,7 +14,7 @@ class UpstreamFixedLengthPacketCodec<T : UpstreamPacket>(
 ) : FixedLengthPacketCodec<T>(type, opcode, length) {
 
     @Suppress("UNCHECKED_CAST")
-    override fun decode(buf: ByteBuf, cipher: StreamCipher): T {
+    override fun decode(buf: ByteBuf, random: IsaacRandom): T {
         val packet = decoder.invoke(buf) as T
         if (buf.isReadable && packet is UpstreamDiscardPacket) {
             buf.readBytes(buf.readableBytes())
@@ -22,7 +22,7 @@ class UpstreamFixedLengthPacketCodec<T : UpstreamPacket>(
         return packet
     }
 
-    override fun encode(packet: T, buf: ByteBuf, cipher: StreamCipher) {
+    override fun encode(packet: T, buf: ByteBuf, random: IsaacRandom) {
         throw NotImplementedError("Upstream packet cannot be encoded.")
     }
 }

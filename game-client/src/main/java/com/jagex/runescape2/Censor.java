@@ -102,12 +102,13 @@ public class Censor {
     }
 
     public static boolean allowCharacter(char c) {
-        if (c >= ' ' && c <= '\u007F') return true;
-        if (c == ' ') return true;
-        if (c == '\n') return true;
-        if (c == '\t') return true;
-        if (c == '£') return true;
-        return c == '€';
+        //if (c >= ' ' && c <= '\u007F') return true;
+        //if (c == ' ') return true;
+        //if (c == '\n') return true;
+        //if (c == '\t') return true;
+        //if (c == '£') return true;
+        //return c == '€';
+        return true;
     }
 
     public static String filter(String in) {
@@ -672,25 +673,27 @@ public class Censor {
     }
 
     public static int getEmulatedDomainCharSize(char a, char b, char c) {
-        if (a == b) {
-            return 1;
-        }
-        if ((a == 'o') && (b == '0')) {
-            return 1;
-        }
-        if ((a == 'o') && (b == '(') && (c == ')')) {
-            return 2;
-        }
-        if ((a == 'c') && ((b == '(') || (b == '<') || (b == '['))) {
-            return 1;
-        }
-        if ((a == 'e') && (b == '€')) {
-            return 1;
-        }
-        if ((a == 's') && (b == '$')) {
-            return 1;
-        }
-        return ((a != 'l') || (b != 'i')) ? 0 : 1;
+       // if (a == b) {
+       //     return 1;
+       // }
+       // if ((a == 'o') && (b == '0')) {
+       //     return 1;
+       // }
+       // if ((a == 'o') && (b == '(') && (c == ')')) {
+       //     return 2;
+       // }
+       // if ((a == 'c') && ((b == '(') || (b == '<') || (b == '['))) {
+       //     return 1;
+       // }
+       // if ((a == 'e') && (b == '€')) {
+       //     return 1;
+       // }
+       // if ((a == 's') && (b == '$')) {
+       //     return 1;
+       // }
+       // return ((a != 'l') || (b != 'i')) ? 0 : 1;
+
+        return 1;
     }
 
     public static int getEmulatedSize(char original, char b, char c) {
@@ -718,13 +721,13 @@ public class Censor {
                 return (((b != '[') || (c != ')')) && ((b != 'i') || (c != ')'))) ? 0 : 2;
             }
             if (original == 'e') {
-                return ((b != '3') && (b != '€')) ? 0 : 1;
+                //return ((b != '3') && (b != '€')) ? 0 : 1;
             }
             if (original == 'f') {
                 if ((b == 'p') && (c == 'h')) {
                     return 2;
                 }
-                return (b != '£') ? 0 : 1;
+                //return (b != '£') ? 0 : 1;
             }
             if (original == 'g') {
                 return ((b != '9') && (b != '6') && (b != 'q')) ? 0 : 1;

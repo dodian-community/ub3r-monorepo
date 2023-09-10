@@ -4,18 +4,19 @@ import com.github.michaelbull.logging.InlineLogger
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
 import net.dodian.uber.context
-import net.dodian.uber.services.GameService
-import net.dodian.uber.services.LoginService
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.release.GameRelease
 import net.dodian.uber.net.codec.game.GameMessageDecoder
 import net.dodian.uber.net.codec.game.GameMessageEncoder
+import net.dodian.uber.net.codec.game.GamePacketDecoder
+import net.dodian.uber.net.codec.game.GamePacketEncoder
 import net.dodian.uber.net.codec.login.LoginRequest
 import net.dodian.uber.net.codec.login.LoginResponse
 import net.dodian.uber.net.codec.login.STATUS_LOGIN_SERVER_REJECTED_SESSION
 import net.dodian.uber.net.codec.login.STATUS_OK
-import net.dodian.uber.net.codec.game.GamePacketDecoder
-import net.dodian.uber.net.codec.game.GamePacketEncoder
+import net.dodian.uber.protocol.ProtocolDecoder
+import net.dodian.uber.protocol.ProtocolEncoder
+import net.dodian.uber.services.LoginService
 
 private val logger = InlineLogger()
 
@@ -32,7 +33,7 @@ class LoginSession(channel: Channel) : Session(channel) {
             return
         }
 
-        val service = context.service<GameService>()
+        val service = context.handler<PlayerManager>()
         val player = response.player
 
         if (player != null) {
@@ -58,13 +59,22 @@ class LoginSession(channel: Channel) : Session(channel) {
         val rights = 3
         channel.writeAndFlush(LoginResponse(STATUS_OK, rights, false))
 
-        val release = GameRelease()
+        val packetMap = context.packetMap
 
-        channel.pipeline().addFirst("messageEncoder", GameMessageEncoder(release))
-        channel.pipeline().addBefore("messageEncoder", "gameEncoder", GamePacketEncoder(randomPair.encodingRandom))
+        channel.pipeline().addFirst("gameEncoder", ProtocolEncoder(
+            packetMap.downstream.getOrCreateProtocol(),
+            randomPair.encodingRandom
+        ))
 
-        channel.pipeline().addBefore("handler", "gameDecoder", GamePacketDecoder(randomPair.decodingRandom, release))
-        channel.pipeline().addAfter("gameDecoder", "messageDecoder", GameMessageDecoder(release))
+        channel.pipeline().addBefore("handler", "gameDecoder", ProtocolDecoder(
+            packetMap.upstream.getOrCreateProtocol(),
+            randomPair.decodingRandom
+        ))
+        //channel.pipeline().addFirst("messageEncoder", GameMessageEncoder(release))
+        //channel.pipeline().addBefore("messageEncoder", "gameEncoder", GamePacketEncoder(randomPair.encodingRandom))
+
+        //channel.pipeline().addBefore("handler", "gameDecoder", GamePacketDecoder(randomPair.decodingRandom, release))
+        //channel.pipeline().addAfter("gameDecoder", "messageDecoder", GameMessageDecoder(release))
 
         channel.pipeline().remove("loginDecoder")
         channel.pipeline().remove("loginEncoder")

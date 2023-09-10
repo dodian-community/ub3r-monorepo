@@ -43,6 +43,9 @@ dependencies {
     implementation("org.quartz-scheduler:quartz:2.3.2")
     implementation("org.mybatis:mybatis:3.5.10")
 
+    implementation("com.google.inject:guice:7.0.0")
+
+
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
     implementation(project(":game-server:server-plugins"))
@@ -78,6 +81,7 @@ allprojects {
 
         implementation("it.unimi.dsi:fastutil:8.5.12")
         implementation("org.openrs2:openrs2-crypto:0.1.0-SNAPSHOT")
+        implementation("org.openrs2:openrs2-buffer:0.1.0-SNAPSHOT")
 
         implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.5")
     }

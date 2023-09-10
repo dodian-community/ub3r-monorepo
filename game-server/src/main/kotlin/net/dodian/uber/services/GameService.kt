@@ -46,11 +46,10 @@ class GameService(
     private val executor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor(ThreadUtil.create("GameService"))
 
-    private val newPlayers: Queue<LoginPlayerRequest> = ConcurrentLinkedQueue()
-    private val oldPlayers: Queue<Player> = ConcurrentLinkedQueue()
-
     @Synchronized
     fun pulse() {
+        logger.info { "Pulsing!" }
+
         finalizeRegistrations()
         finalizeDeregistrations()
 
@@ -66,33 +65,33 @@ class GameService(
     }
 
     private fun finalizeRegistrations() {
-        for (i in 0 until REGISTRATIONS_PER_CYCLE) {
-            val request = newPlayers.poll() ?: continue
+        //for (i in 0 until REGISTRATIONS_PER_CYCLE) {
+        //    val request = newPlayers.poll() ?: continue
 
-            val player = request.player
-            val playerManager = context.handler<PlayerManager>()
+        //    val player = request.player
+        //    val playerManager = context.handler<PlayerManager>()
 
-            if (playerManager.isPlayerOnline(player)) {
-                request.session.sendLoginFailure(STATUS_GAME_UPDATED)
-            } else if (playerManager.isFull) {
-                request.session.sendLoginFailure(STATUS_SERVER_FULL)
-            } else {
-                context.eventBus.publish(player, PlayerSessionEvent.Finalize)
-                request.session.sendLoginSuccess(player)
-                finalizePlayerRegistration(player)
-            }
-        }
+        //    if (playerManager.isPlayerOnline(player)) {
+        //        request.session.sendLoginFailure(STATUS_GAME_UPDATED)
+        //    } else if (playerManager.isFull) {
+        //        request.session.sendLoginFailure(STATUS_SERVER_FULL)
+        //    } else {
+        //        context.eventBus.publish(player, PlayerSessionEvent.Finalize)
+        //        request.session.sendLoginSuccess(player)
+        //        finalizePlayerRegistration(player)
+        //    }
+        //}
     }
 
     private fun finalizeDeregistrations() {
-        val loginService = context.service<LoginService>()
+        //val loginService = context.service<LoginService>()
 
-        for (i in 0 until DE_REGISTRATIONS_PER_CYCLE) {
-            val player = oldPlayers.poll() ?: break
+        //for (i in 0 until DE_REGISTRATIONS_PER_CYCLE) {
+        //    val player = oldPlayers.poll() ?: break
 
-            context.eventBus.publish(player, PlayerSessionEvent.Logout)
-            loginService.submitSaveRequest(player.session, player)
-        }
+        //    context.eventBus.publish(player, PlayerSessionEvent.Logout)
+        //    loginService.submitSaveRequest(player.session, player)
+        //}
     }
 
     @Synchronized
@@ -106,13 +105,5 @@ class GameService(
 
     override fun startUp() {
         //executor.scheduleAtFixedRate(GamePulseHandler(this), PULSE_DELAY, PULSE_DELAY, TimeUnit.MILLISECONDS)
-    }
-
-    fun registerPlayer(player: Player, session: LoginSession) {
-        newPlayers.add(LoginPlayerRequest(player, session))
-    }
-
-    fun unregisterPlayer(player: Player) {
-        oldPlayers.add(player)
     }
 }
