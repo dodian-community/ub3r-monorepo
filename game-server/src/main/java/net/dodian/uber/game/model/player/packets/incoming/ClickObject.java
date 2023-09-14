@@ -546,12 +546,12 @@ public class ClickObject implements Packet {
                 }
             }
         }
-        if (objectID == 2107) {
+        /*if (objectID == 2107) {
             if (System.currentTimeMillis() - Server.lastRunite < 60000) {
                 client.println("invalid timer");
                 return;
             }
-        }
+        }*/ //Eh..Old dodian code jizze!
         if (objectID == 2492) {
             client.teleportToX = 2591;
             client.teleportToY = 3087;

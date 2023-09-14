@@ -18,7 +18,7 @@ public class ItemManager {
 
     public ItemManager() {
         loadItems();
-        Server.slots.loadGamble(); // Gamble :D
+        //Server.slots.loadGamble(); // Gamble :D
     }
 
     public void loadItems() {

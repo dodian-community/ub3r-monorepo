@@ -99,6 +99,8 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 ||npcId == 1306) {
             client.NpcWanneTalk = 21;
+        } else if (npcId == 6481) {
+            client.NpcWanneTalk = npcId;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId;
         } else if (npcId == 2180) {

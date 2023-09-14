@@ -437,7 +437,7 @@ public class Npc extends Entity {
                 if (drop == null) continue;
                 checkChance = drop.getChance();
                 if (wealth && drop.getChance() < 10.0)
-                    checkChance += drop.getId() >= 5509 && drop.getId() <= 5515 ? 0.0 : drop.getChance() <= 1.0 ? 0.2 : 0.1;
+                    checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
 
                 if (checkChance >= 100.0 || (checkChance + currentChance >= rolledChance && !itemDropped)) { // 100% items!
                     if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!

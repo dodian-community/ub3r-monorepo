@@ -2,7 +2,7 @@ package net.dodian.uber.game;
 
 public class Constants {
 
-    public static final int maxPlayers = 2048;
+    public static final int maxPlayers = 2000;
 
     public static int[] logs = {1521, 1519, 1517, 1515, 1513};
     public static int[] shortbows = {54, 60, 64, 68, 72};

@@ -21,4 +21,6 @@ public class Skills {
         return output;
     }
 
+    public static int maxTotalLevel = 1980;
+
 }

@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.player.content;
 
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.utilities.Misc;
 
 /**
  * Stores relevant skillcape data
@@ -60,6 +61,10 @@ public enum Skillcape {
                 return skillcape;
         }
         return null;
+    }
+    public static Skillcape getRandomCape() {
+        int random = Misc.random(Skillcape.values().length - 1);
+        return Skillcape.values()[random];
     }
 
     public static boolean isTrimmed(int itemId) {

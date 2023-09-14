@@ -7,9 +7,7 @@ import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
-import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
@@ -47,8 +45,8 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 public class Server implements Runnable {
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
-    private static int delay = 0;
-    public static long lastRunite = 0;
+    private static int delay = 30;
+    public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
     public static double updateElapsed = 0.0;
@@ -81,16 +79,20 @@ public class Server implements Runnable {
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
-        ConnectionList.getInstance();
+        //ConnectionList.getInstance(); //Let us not utilize this for now!
+        /* NPC Data*/
+        npcManager = new NpcManager();
+        npcManager.loadSpawns();
+        System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
+        /* Player Stuff */
+        itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
-        npcManager = new NpcManager();
         clientHandler = new Server();
         login = new Login();
-        itemManager = new ItemManager();
-        //Memory.getSingleton().process(); //Not sure what this do, so removing!
+        setGlobalItems();
         /* Load cache */
         Cache.load();
         ObjectDef.loadConfig();
@@ -100,23 +102,21 @@ public class Server implements Runnable {
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
         GameObjectData.init();
-        loadObjects();
-        new DoorHandler();
-        setGlobalItems();
+        loadObjects(); //sql disabled
+        new DoorHandler(); //sql disabled
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
-        new Thread(npcManager).start();
         new Thread(clientHandler).start(); // launch server listener
         new Thread(login).start();
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
         job = new JobScheduler();
-        job.ScheduleStaticRepeatForeverJob(60000, WorldProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(600, PlayerProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(600, ItemProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(600, ShopProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(600, GroundItemProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
+        job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
+        //job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class); //Ground item revolved inside entity process!
+        job.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
+        job.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
+        job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
+        job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
         /* Done loading */
         System.gc();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
@@ -151,7 +151,7 @@ public class Server implements Runnable {
                     if (antiddos && !tempConns.containsKey(connectingHost)) {
                         s.close();
                     } else {
-                        ConnectionList.getInstance().addConnection(s.getInetAddress());
+                        //ConnectionList.getInstance().addConnection(s.getInetAddress());
                         tempConns.remove(connectingHost);
                         connections.add(connectingHost);
                         if (checkHost(connectingHost)) {
