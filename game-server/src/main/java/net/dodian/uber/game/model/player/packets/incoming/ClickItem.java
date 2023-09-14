@@ -257,7 +257,6 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.send(new SendMessage("You drink the super defense potion"));
                     client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.15), Skill.DEFENCE);
                     client.refreshSkill(Skill.DEFENCE);
                     for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
@@ -267,15 +266,14 @@ public class ClickItem implements Packet {
                                                 Utils.pot_1_dose[i] == item ? 229 : -1;
                     client.send(new SendMessage(nextId == 229 ? "You empty the super defense potion." : "You drink the super defense potion."));
                     break;
+                case 2444: //4 dose
                 case 169://ranging potion
                 case 171:
                 case 173:
-                case 2444:
                     if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.send(new SendMessage("You drink the ranging potion"));
                     client.boost(4 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.RANGED)) * 0.12), Skill.RANGED);
                     for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
                         nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :

@@ -17,10 +17,11 @@ import org.quartz.JobExecutionException;
 public class GroundItemProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
-        if (Ground.items.size() < 0) {
+        /*if (Ground.items.size() < 0) {
             return;
         }
         long now = System.currentTimeMillis();
+        if (!Ground.items.isEmpty())
         for (GroundItem item : Ground.items) {
             if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
                 item.taken = false;
@@ -39,7 +40,7 @@ public class GroundItemProcessor implements Job {
             if (item.canDespawn && item.visible && now - item.dropped >= (item.timeDisplay + item.timeDespawn)) {
                 Ground.deleteItem(item);
             }
-        }
+        }*/
     }
 
 }

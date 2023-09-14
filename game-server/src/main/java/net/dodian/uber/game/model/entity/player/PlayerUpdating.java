@@ -26,10 +26,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return instance;
     }
 
+    private Stream updateBlock = new Stream(new byte[10000]);
     @Override
     public void update(Player player, Stream stream) {
-        Client c = ((Client) player);
-        Stream updateBlock = new Stream(new byte[10000]);
         updateBlock.currentOffset = 0;
 
         if (Server.updateRunning) {
@@ -38,12 +37,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.writeWordBigEndian(seconds * 50 / 30);
         }
 
-        if(player.didMapRegionChange()) {
-            c.getOutputStream().createFrame(73);
-            c.getOutputStream().writeWordA(player.mapRegionX + 6);
-            c.getOutputStream().writeWord(player.mapRegionY + 6);
-            c.updateItems();
-        }
         updateLocalPlayerMovement(player, stream);
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
         player.getUpdateFlags().setRequired(UpdateFlag.CHAT, false);
@@ -84,7 +77,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (updateBlock.currentOffset > 0) {
             stream.writeBits(11, 2047);
             stream.finishBitAccess();
-
             stream.writeBytes(updateBlock.buffer, updateBlock.currentOffset, 0);
         } else {
             stream.finishBitAccess();
@@ -94,17 +86,26 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
 
     public void updateLocalPlayerMovement(Player player, Stream stream) {
+        /* Noob! */
+        if(player.didMapRegionChange()) {
+            stream.createFrame(73);
+            stream.writeWordA(player.mapRegionX + 6);
+            stream.writeWord(player.mapRegionY + 6);
+            ((Client)player).updateItems();
+        }
+
         stream.createFrameVarSizeWord(81);
         stream.initBitAccess();
-        if (player.didTeleport()) {
+        if (player.didTeleport() || player.didMapRegionChange()) {
             stream.writeBits(1, 1);
             stream.writeBits(2, 3); // updateType
             stream.writeBits(2, player.getPosition().getZ());
-            stream.writeBits(1, 1);
+            stream.writeBits(1, player.didTeleport() ? 1 : 0);
             stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
             stream.writeBits(7, player.getCurrentY());
             stream.writeBits(7, player.getCurrentX());
-        } else
+            return;
+        }
         if (player.getPrimaryDirection() == -1) {
             if (player.getUpdateFlags().isUpdateRequired()) {
                 stream.writeBits(1, 1);
@@ -296,7 +297,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendPrimaryHit(Player player, Stream stream) {
-        try {
+        synchronized(this) {
             stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
             if (player.getHitDiff() == 0) {
                 stream.writeByteA(0);
@@ -310,13 +311,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             player.setCrit(false); // bar
             player.setInCombat(true);
             player.setLastCombat(System.currentTimeMillis());
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     public void appendPrimaryHit2(Player player, Stream stream) {
-        try {
+        synchronized(this) {
             stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
             if (player.getHitDiff() == 0) {
                 stream.writeByteS(0);
@@ -326,12 +325,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
             stream.writeByte(value);
-            stream.writeByte(100);
+            stream.writeByteC(100);
             player.setCrit(false); // bar
             player.setInCombat(true);
             player.setLastCombat(System.currentTimeMillis());
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

@@ -7,15 +7,10 @@ package net.dodian.uber.game.model.entity.npc;
  * @author Owner
  *
  */
-
-import net.dodian.jobs.JobScheduler;
-import net.dodian.jobs.impl.NpcProcessor;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.DbTables;
-import org.quartz.SchedulerException;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -25,15 +20,13 @@ import java.util.Map;
 
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
-public class NpcManager extends Thread {
+public class NpcManager {
     Map<Integer, Npc> npcs = new HashMap<>();
     Map<Integer, NpcData> data = new HashMap<>();
     int nextIndex = 1;
 
-    public void run() {
+    public NpcManager() {
         loadData();
-        loadSpawns();
-        Server.job.ScheduleStaticRepeatForeverJob(600, NpcProcessor.class);
     }
 
     public Collection<Npc> getNpcs() {

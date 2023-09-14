@@ -891,8 +891,9 @@ public class Commands implements Packet {
                         int otherPIndex = PlayerHandler.getPlayerID(otherPName);
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
-                            p.logout();
+                            p.disconnected = true;
                             CommandLog.recordCommand(client, command);
+                            client.send(new SendMessage("Player " + p.getPlayerName() + " has been kicked!"));
                         } else {
                             client.send(new SendMessage("Player " + otherPName + " is not online!"));
                         }
@@ -1272,6 +1273,24 @@ public class Commands implements Packet {
                     client.send(new SendMessage("You are currently muted!"));
                 }
             }
+            //Command to test out item drops!
+            /*if (cmd[0].equalsIgnoreCase("moo")) {
+                for(int i = 0; i < 100; i++) {
+                    GroundItem item = new GroundItem(client.getPosition(), 4151, 1, client.getSlot(), -1);
+                    Ground.items.add(item);
+                }
+                System.out.println("Done!!!");
+            }*/
+            /*if (cmd[0].equalsIgnoreCase("moo")) {
+                try {
+                    int id = Integer.parseInt(cmd[1]);
+                    int amount = Integer.parseInt(cmd[2]);
+                    GroundItem item = new GroundItem(client.getPosition(), id, amount, client.getSlot(), -1);
+                    Ground.items.add(item);
+                } catch (Exception e) {
+                    client.send(new SendMessage("wrong usage! ::moo id amount"));
+                }
+            }*/
             if (cmd[0].equalsIgnoreCase("loot_new")) {
                 try {
                     int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
@@ -1287,16 +1306,16 @@ public class Commands implements Packet {
                         ArrayList<Integer> lootedItem = new ArrayList<>();
                         ArrayList<Integer> lootedAmount = new ArrayList<>();
                         boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
-                        double chance, currentChance;
+                        double chance, currentChance, checkChance;
                         for (int LOOP = 0; LOOP < amount; LOOP++) {
                             chance = Misc.chance(100000) / 1000D;
                             currentChance = 0.0;
                             itemDropped = false;
                             for (NpcDrop drop : n.getDrops()) {
                                 if (drop == null) continue;
-
-                                if (wealth && drop.getChance() < 10.0) //Ring of wealth effect!
-                                    currentChance += drop.getId() >= 5509 && drop.getId() <= 5515 ? 0.0 : drop.getChance() <= 1.0 ? 0.2 : 0.1;
+                                checkChance = drop.getChance();
+                                if (wealth && drop.getChance() < 10.0)
+                                    checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
 
                                 if (drop.getChance() >= 100.0) { // 100% items!
                                     int pos = lootedItem.lastIndexOf(drop.getId());
@@ -1305,7 +1324,7 @@ public class Commands implements Packet {
                                         lootedAmount.add(drop.getAmount());
                                     } else
                                         lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
-                                } else if (drop.getChance() + currentChance >= chance && !itemDropped) { // user won the roll
+                                } else if (checkChance + currentChance >= chance && !itemDropped) { // user won the roll
                                     if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
                                         if (client.checkItem(drop.getId()))
                                             continue;
@@ -1318,7 +1337,7 @@ public class Commands implements Packet {
                                     itemDropped = true;
                                 }
                                 if (!itemDropped && drop.getChance() < 100.0)
-                                    currentChance += drop.getChance();
+                                    currentChance += checkChance;
                             }
                         }
                         for (int i = 0; i < lootedItem.size(); i++)

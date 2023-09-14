@@ -477,17 +477,14 @@ public class Client extends Player implements Runnable {
 			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			}
+			//ConnectionList.getInstance().remove(mySock.getInetAddress()); //Do we need?!
 			disconnected = true;
-			ConnectionList.getInstance().remove(mySock.getInetAddress());
 			mySock.close();
 			mySock = null;
 			mySocketHandler = null;
 			inputStream = null;
 			outputStream = null;
 			isActive = false;
-			synchronized (this) { //??
-				notify();
-			}
 			buffer = null;
 		} catch (java.io.IOException ioe) {
 			ioe.printStackTrace();
@@ -512,11 +509,11 @@ public class Client extends Player implements Runnable {
 		if (disconnected || getOutputStream().currentOffset == 0) {
 			return;
 		}
-		Integer length = getOutputStream().currentOffset;
-		byte[] copy = new byte[length];
-		System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
-		mySocketHandler.queueOutput(copy);
-		getOutputStream().currentOffset = 0;
+			Integer length = getOutputStream().currentOffset;
+			byte[] copy = new byte[length];
+			System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
+			mySocketHandler.queueOutput(copy);
+			getOutputStream().currentOffset = 0;
 	}
 
 	// two methods that are only used for login procedure
@@ -735,7 +732,6 @@ public class Client extends Player implements Runnable {
 				if (returnCode == 21)
 					mySocketHandler.getOutput().write(loginDelay);
 			}
-
 			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
 			mySocketHandler.getOutput().write(0);
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
@@ -861,11 +857,11 @@ public class Client extends Player implements Runnable {
 		if (!validClient) {
 			return;
 		}
+		saveStats(true, true);
 		saveNeeded = false;
-		ConnectionList.getInstance().remove(mySock.getInetAddress());
+		//ConnectionList.getInstance().remove(mySock.getInetAddress());
 		send(new SendMessage("Please wait... logging out may take time"));
 		send(new SendString("     Please wait...", 2458));
-		saveStats(true, true);
 		send(new SendString("Click here to logout", 2458));
 		getOutputStream().createFrame(109);
 		loggingOut = true;
@@ -879,11 +875,11 @@ public class Client extends Player implements Runnable {
 	 */
 
 	public void saveStats(boolean logout, boolean updateProgress) {
-		if (!loadingDone || !validLogin) {
-			return;
-		}
 		if (loginDelay > 0) {
 			println("Incomplete login, aborting save");
+			return;
+		}
+		if (!loadingDone || !validLogin) {
 			return;
 		}
 		if (getPlayerName() == null || getPlayerName().equals("null") || dbId < 1) {
@@ -908,7 +904,9 @@ public class Client extends Player implements Runnable {
 				int minutes = (int) (elapsed / 60000);
 				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
 			}
+			//System.out.println("exorth save!");
 			PlayerHandler.playersOnline.remove(longName);
+			PlayerHandler.allOnline.remove(longName);
 			for (Client c : PlayerHandler.playersOnline.values()) {
 				if (c.hasFriend(longName)) {
 					c.refreshFriends();
@@ -932,10 +930,7 @@ public class Client extends Player implements Runnable {
 						allxp += getExperience(Skill.getSkill(i));
 					}
 				}
-				int totallvl = 0;
-				for (int i = 0; i < 21; i++) {
-					totallvl += Skills.getLevelForExperience(getExperience(Skill.getSkill(i)));
-				}
+				int totallvl = totalLevel();
 				String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ");
 				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
@@ -2226,12 +2221,16 @@ public class Client extends Player implements Runnable {
 //    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
 //    send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
 //    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
+		/* Set a player active to a world! */
+		PlayerHandler.playersOnline.put(longName, this);
+		PlayerHandler.allOnline.put(longName, getGameWorldId());
 		/* Sets look! */
 		if (lookNeeded) {
 			defaultCharacterLook(this);
 			showInterface(3559);
 		} else
 			setLook(playerLooks);
+		//Login.banUid(); //Not sure what this do!
 		//Arrays.fill(lastMessage, ""); //We need this?!
 		/* Friend configs! */
 		for (Client c : PlayerHandler.playersOnline.values()) {
@@ -2239,7 +2238,9 @@ public class Client extends Player implements Runnable {
 				c.refreshFriends();
 			}
 		}
-		Login.banUid();
+		/* Update of both player and npc! */
+		PlayerUpdating.getInstance().update(this, outputStream);
+		NpcUpdating.getInstance().update(this, outputStream);
 		/* Login write settings! */
 		frame36(287, 1);
 		WriteEnergy();
@@ -2305,13 +2306,12 @@ public class Client extends Player implements Runnable {
 			e.printStackTrace();
 		}
 		loaded = true;
-		PlayerUpdating.getInstance().update(this, getOutputStream());
-		//initialized = true;
 	}
 
-	public void update() {
-		PlayerUpdating.getInstance().update(this, getOutputStream());
-		NpcUpdating.getInstance().update(this, getOutputStream());
+	public void update() { //Update npc before player!
+		PlayerUpdating.getInstance().update(this, outputStream);
+		flushOutStream();
+		NpcUpdating.getInstance().update(this, outputStream);
 		flushOutStream();
 	}
 
@@ -2688,6 +2688,27 @@ public class Client extends Player implements Runnable {
 			getOutputStream().createFrame(109);
 		}
 
+		/* Items update! Might cause some lag if more than 500 items?! */
+		/* TODO: Add better way of handling ground items! */
+		if (!Ground.items.isEmpty() || !(Ground.items.size() < 0)) {
+			for (GroundItem item : Ground.items) {
+				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
+					item.taken = false;
+					item.visible = false;
+				}
+				if (!item.visible && (now - item.dropped >= item.timeDisplay || !item.canDespawn) || (!item.visible && !item.canDespawn && !item.taken) && (now - item.dropped >= item.timeDisplay || !item.canDespawn)) {
+						if (Server.itemManager.isTradable(item.id) && dbId != item.playerId
+								&& Math.abs(getPosition().getX() - item.x) <= 114 && Math.abs(getPosition().getY() - item.y) <= 114 && getPosition().getZ() == item.z) {
+							send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+						}
+					}
+					item.visible = true;
+					if (item.canDespawn && item.visible && now - item.dropped >= (item.timeDisplay + item.timeDespawn)) {
+						Ground.deleteItem(item);
+					}
+				}
+			}
+
 		if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
 			logout();
 		}
@@ -2702,7 +2723,6 @@ public class Client extends Player implements Runnable {
 			return false;
 		try {
 			fillInStream(data.poll());
-			parseIncomingPackets();
 		} catch (IOException e) {
 			e.printStackTrace();
 			//System.out.println("Player" + getPlayerName() + " disconnected.");
@@ -2711,6 +2731,7 @@ public class Client extends Player implements Runnable {
 			disconnected = true;
 			return false;
 		}
+		parseIncomingPackets();
 		return true;
 	}
 
@@ -5208,6 +5229,42 @@ public class Client extends Player implements Runnable {
 			case 3649:
 				showPlayerOption(new String[]{ "Do you wish to travel?", "Yes", "No" });
 				break;
+			case 6481:
+				if(totalLevel() >= Skills.maxTotalLevel)
+					showNPCChat(NpcTalkTo, 591, new String[]{"I see that you have trained up all your skills.", "I am utmost impressed!"});
+				else
+					showNPCChat(NpcTalkTo, 591, new String[]{"You are quite weak!"});
+				nextDiag = NpcDialogue + 1;
+				NpcDialogueSend = true;
+				break;
+			case 6482:
+				if(totalLevel() >= Skills.maxTotalLevel) {
+					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to purchase this cape on my back?", "It will cost you 13.37 million coins."});
+					nextDiag = NpcDialogue + 1;
+				} else
+					showNPCChat(NpcTalkTo, 591, new String[]{"Come back when you have trained up your skills!"});
+				NpcDialogueSend = true;
+				break;
+			case 6483:
+				showPlayerOption(new String[]{ "Purchase the max cape?", "Yes", "No" });
+				NpcDialogueSend = true;
+				break;
+			case 6484:
+				int coins = 13370000;
+				int freeSlot = getInvAmt(995) == coins ? 1 : 2;
+				if(freeSlots() < freeSlot) {
+					showNPCChat(NpcTalkTo, 591, new String[]{"You need atleast " + (freeSlot == 1 ? "one" : "two") + " free inventory slot" + (freeSlot != 1 ? "s" : "") + "."});
+					nextDiag = NpcTalkTo;
+				} else if(!playerHasItem(995, coins))
+					showNPCChat(NpcTalkTo, 591, new String[]{"You are missing " + (coins - getInvAmt(995)) + " amount of coins!"});
+				else {
+					showNPCChat(NpcTalkTo, 591, new String[]{"Here you go.", "Max cape just for you."});
+					deleteItem(995, coins);
+					addItem(13281, 1);
+					addItem(13280, 1);
+				}
+				NpcDialogueSend = true;
+				break;
 			case 8051:
 				showNPCChat(NpcTalkTo, 591, new String[]{"Happy Holidays adventurer!"});
 				nextDiag = 8052;
@@ -7282,6 +7339,7 @@ public class Client extends Player implements Runnable {
 			} else {
 				send(new SendMessage("That player is not available"));
 			}
+		} else if (PlayerHandler.allOnline.containsKey(friend)) { //Not sure why we need this code!
 		} else {
 			send(new SendMessage("That player is not online"));
 		}
@@ -7312,9 +7370,30 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void refreshFriends() {
-		for (Friend f : friends) {
+		/*for (Friend f : friends) {
 			if (PlayerHandler.playersOnline.containsKey(f.name)) {
 				loadpm(f.name, getGameWorldId());
+			} else {
+				loadpm(f.name, 0);
+			}
+		}*/
+		for (Friend f : friends) {
+			if (PlayerHandler.allOnline.containsKey(f.name)) {
+				boolean ignored = false;
+				for (Player p : PlayerHandler.players) {
+					if (p == null)
+						continue;
+					if (p.longName == f.name) {
+						Client player = (Client) p;
+						for (Friend ignore : player.ignores) {
+							ignored = ignore.name == this.longName;
+						}
+					}
+				}
+				if (!ignored)
+					loadpm(f.name, 1);
+				else
+					loadpm(f.name, 0);
 			} else {
 				loadpm(f.name, 0);
 			}
@@ -7332,16 +7411,57 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void removeIgnore(long name) {
-		for (Friend f : ignores) {
+		/*for (Friend f : ignores) {
 			if (f.name == name) {
 				ignores.remove(f);
 				refreshFriends();
 				return;
 			}
+		}*/
+		for (Friend f : ignores) {
+			if (f.name == name) {
+				ignores.remove(f);
+				refreshFriends();
+				if (PlayerHandler.allOnline.containsKey(f.name)) {
+					for (Player p : PlayerHandler.players) {
+						if (p == null)
+							continue;
+						if (p.longName == f.name) {
+							Client player = (Client) p;
+							player.refreshFriends();
+						}
+					}
+				}
+				break;
+			}
 		}
 	}
 
 	public void addIgnore(long name) {
+		boolean canAdd = true;
+		for (Friend f : ignores) {
+			if (f.name == name) {
+				send(new SendMessage("You already got this guy on your ignoreList!"));
+				canAdd = false;
+				break;
+			}
+		}
+		if (canAdd) {
+			if (ignores.size() < 100) {
+				ignores.add(new Friend(name, true));
+				if (PlayerHandler.allOnline.containsKey(name)) {
+					for (Player p : PlayerHandler.players) {
+						if (p == null)
+							continue;
+						if (p.longName == name) {
+							Client player = (Client) p;
+							player.refreshFriends();
+						}
+					}
+				}
+			} else
+			send(new SendMessage("Maximum ignores reached!"));
+		}
 	}
 
 	public void triggerChat(int button) {
@@ -7590,6 +7710,11 @@ public class Client extends Player implements Runnable {
 					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the cave."});
 				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need atleast "+(300_000 - amount)+" more coins to enter my cave!"});
 			}
+		} else if (NpcDialogue == 6483) {
+			if(button == 1)
+				nextDiag = NpcDialogue + 1;
+			else if(button == 2)
+				showPlayerChat(new String[]{ "No thank you." }, 614);
 		} else if (NpcDialogue == 8053) {
 			if (button == 1) {
 				send(new RemoveInterfaces());
@@ -8980,5 +9105,12 @@ public class Client extends Player implements Runnable {
 			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
 			e.printStackTrace();
 		}
+	}
+	public int totalLevel() {
+		int total = 0;
+		for(int i = 0; i < 21; i++)
+			if(i != 19)
+				total += Skills.getLevelForExperience(getExperience(Skill.getSkill(i)));
+		return total;
 	}
 }

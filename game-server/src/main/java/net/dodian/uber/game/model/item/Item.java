@@ -33,7 +33,8 @@ public class Item {
             full = row.getInt("full") == 1 == true;
             mask = row.getInt("full") == 2 == true;
             stackable = row.getBoolean("stackable");
-            name = row.getString("name").replace("_", " ");
+            if(row.getString("name") != null)
+                name = row.getString("name").replace("_", " ");
             for (int i = 0; i < bonuses.length; i++) {
                 bonuses[i] = row.getInt("bonus" + (i + 1));
             }

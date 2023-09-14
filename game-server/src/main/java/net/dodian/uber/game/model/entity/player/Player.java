@@ -29,7 +29,7 @@ public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false;
     public boolean saving = false;
     public long disconnectAt = 0, longName = 0;
-    public int wildyLevel = 0;
+    public int wildyLevel = 0, violations = 0;
     public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0;
     public long lastTeleport = 0;
@@ -87,6 +87,7 @@ public abstract class Player extends Entity {
     public boolean isKicked = false;
     public int actionTimer = 0;
     public String connectedFrom = "";
+    public int ip = 0;
     public String UUID = "";
     public boolean takeAsNote = false;
     private String playerName = null; // name of the connecting client
@@ -176,7 +177,7 @@ public abstract class Player extends Entity {
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
         lastPacket = System.currentTimeMillis();
-        /*playerRights = 0; // player rights
+        /*
         // Setting player items
         Arrays.fill(playerItems, 0);
         // Setting Item amounts
@@ -199,7 +200,6 @@ public abstract class Player extends Entity {
         for (int i = 0; i < playerBankSize; i++) { // Setting bank item amounts
             bankItemsN[i] = 0;
         }*/
-
         teleportToX = teleportToY = -1;
         mapRegionX = mapRegionY = -1;
         currentX = currentY = 0;
@@ -536,7 +536,7 @@ public abstract class Player extends Entity {
         if (primaryDirection == -1) {
             // don't have to update the character position, because the char is
             // just standing
-            if (getUpdateFlags().isUpdateRequired()) {
+            if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
                 // tell client there's an update block appended at the end
                 str.writeBits(1, 1);
                 str.writeBits(2, 0);

@@ -21,7 +21,8 @@ public class CreateGroundItem implements OutgoingPacket {
         client.getOutputStream().createFrame(44);
         client.getOutputStream().writeWordBigEndianA(item.getId());
         client.getOutputStream().writeWord(item.getAmount());
-        client.getOutputStream().writeByte(0); //Cant enter height due to client bug!
+        client.getOutputStream().writeByte(position.getY() > 4000 && position.getY() < 5500 ? 0 : position.getZ());
+        //Apperently in the essence zone we need to apply height '0'! Client shiez?!
     }
 
 }

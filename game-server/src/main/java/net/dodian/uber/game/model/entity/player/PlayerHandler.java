@@ -8,18 +8,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerHandler {
 
     public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
-    public static int cycle = 0;
+    public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<Long, Integer>();
+    public static int cycle = 1;
+    //Players online!
     public static Player[] players = new Player[Constants.maxPlayers];
-    public static int playerSlotSearchStart = 1; // where we start searching at when
-    // adding a new player
-    public static String kickNick = "";
-    public static int playerCount = 0;
     public static String[] playersCurrentlyOn = new String[Constants.maxPlayers];
+    public static int playerCount = 0;
 
     // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
     public boolean validClient(int index) {
         Client p = (Client) players[index];
-        return p != null && !p.disconnected && p.dbId > 0;
+        return p != null && !p.disconnected && p.dbId >= 0;
     }
 
     public Client getClient(int index) {
@@ -40,25 +39,30 @@ public class PlayerHandler {
                 break;
             }
         }
-
+        if (slot == -1)
+            return; // no free slot found - world is full
         Client newClient = new Client(s, slot);
         newClient.handler = this;
         (new Thread(newClient)).start();
-        if (slot == -1)
-            return;
         players[slot] = newClient;
         players[slot].connectedFrom = connectedFrom;
+        players[slot].ip = s.getInetAddress().hashCode();
         Player.localId = slot;
         players[slot].lastPacket = System.currentTimeMillis();
-        playerSlotSearchStart = slot + 1;
-        if (playerSlotSearchStart > Constants.maxPlayers)
-            playerSlotSearchStart = 1;
+    }
+    public void destruct() {
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            if (players[i] == null)
+                continue;
+            players[i].destruct();
+            players[i] = null;
+        }
     }
 
     public static int getPlayerCount() {
         int count = 0;
         for (Player player : players) {
-            if (player != null && !player.disconnected && player.dbId > 0) {
+            if (player != null && !player.disconnected) {
                 count++;
             }
         }
@@ -68,16 +72,22 @@ public class PlayerHandler {
     public void updatePlayerNames() {
         playerCount = 0;
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] != null) {
+            if (players[i] != null && !players[i].disconnected) {
                 playersCurrentlyOn[i] = players[i].getPlayerName();
                 playerCount++;
             } else
-                playersCurrentlyOn[i] = null;
+                playersCurrentlyOn[i] = "";
         }
     }
 
     public static boolean isPlayerOn(String playerName) {
-        return playersOnline.containsKey(Utils.playerNameToInt64(playerName));
+        if (PlayerHandler.allOnline.containsKey(playerName)) {
+            System.out.println("hello?!");
+        }
+        if (PlayerHandler.allOnline.containsKey(Utils.playerNameToLong(playerName))) {
+            System.out.println("hello 2?!");
+        }
+        return allOnline.containsKey(Utils.playerNameToLong(playerName));
     }
 
     public static int getPlayerID(String playerName) {
@@ -96,12 +106,12 @@ public class PlayerHandler {
         if (plr == null)
             return;
         Client temp = (Client) plr;
-        if (temp.dbId > 0 && temp.saveNeeded) {
+        if (temp != null && temp.dbId > 0 && temp.saveNeeded) {
             temp.saveStats(true);
-            Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
-            temp.setPlayerName(null);
+            //Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
         }
-        plr.destruct();
+        if (temp != null)
+            temp.destruct();
     }
 
     public static Player getPlayer(String name) {
@@ -110,7 +120,6 @@ public class PlayerHandler {
                 return players[i];
             }
         }
-
         return null;
     }
 

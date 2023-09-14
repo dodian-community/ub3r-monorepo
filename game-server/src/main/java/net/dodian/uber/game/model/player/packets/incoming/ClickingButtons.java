@@ -1030,9 +1030,13 @@ public class ClickingButtons implements Packet {
                 if (skillcape != null) {
                     client.requestAnim(skillcape.getEmote(), 0);
                     client.gfx0(skillcape.getGfx());
-                } else if (client.getEquipment()[Equipment.Slot.CAPE.getId()] == 9813) {
+                } else if (client.getEquipment()[Equipment.Slot.CAPE.getId()] == 9813) { //Questpoint cape
                     client.requestAnim(4945, 0);
                     client.gfx0(816);
+                } else if (client.getEquipment()[Equipment.Slot.CAPE.getId()] == 13280) { //Max cape
+                    skillcape = Skillcape.getRandomCape();
+                    client.requestAnim(skillcape.getEmote(), 0);
+                    client.gfx0(skillcape.getGfx());
                 } else {
                     client.send(new SendMessage("You need to be wearing a skillcape to do that!"));
                 }
