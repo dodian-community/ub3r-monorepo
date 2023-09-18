@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
@@ -8,7 +7,6 @@ import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
-import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -39,13 +37,17 @@ import net.dodian.utilities.*;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
-import static net.dodian.utilities.DatabaseKt.*;
+import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
 
 public class Client extends Player implements Runnable {
@@ -200,12 +202,13 @@ public class Client extends Player implements Runnable {
 			if (skill == Skill.HITPOINTS) out = getCurrentHealth();
 			else if (skill == Skill.PRAYER) out = getCurrentPrayer();
 			else if(boostedLevel[skill.getId()] != 0) out += boostedLevel[skill.getId()];
-			setSkillLevel(skill.getId(), out, getExperience(skill));
+			setSkillLevel(skill, out, getExperience(skill));
 			setLevel(out, skill);
 			getOutputStream().createFrame(134);
 			getOutputStream().writeByte(skill.getId());
 			getOutputStream().writeDWord_v1(getExperience(skill));
 			getOutputStream().writeByte(out);
+			//System.out.println(skill.getName() + " XP: " + getExperience(skill));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -758,91 +761,9 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeByteA(menuId);
 	}
 
-	public void setSkillLevel(int skillNum, int currentLevel, int XP) {
-		if (skillNum == 0) {
-			send(new SendString(String.valueOf(currentLevel), 4004));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4005));
-		}
-		if (skillNum == 2) {
-			send(new SendString(String.valueOf(currentLevel), 4006));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4007));
-		}
-		if (skillNum == 1) {
-			send(new SendString(String.valueOf(currentLevel), 4008));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4009));
-		}
-		if (skillNum == 4) {
-			send(new SendString(String.valueOf(currentLevel), 4010));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4011));
-		}
-		if (skillNum == 5) {
-			send(new SendString(String.valueOf(currentLevel), 4012));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4013));
-		}
-		if (skillNum == 6) {
-			send(new SendString(String.valueOf(currentLevel), 4014));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4015));
-		}
-		if (skillNum == 3) {
-			send(new SendString(String.valueOf(currentLevel), 4016));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4017));
-		}
-		if (skillNum == 16) {
-			send(new SendString(String.valueOf(currentLevel), 4018));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4019));
-		}
-		if (skillNum == 15) {
-			send(new SendString(String.valueOf(currentLevel), 4020));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4021));
-		}
-		if (skillNum == 17) {
-			send(new SendString(String.valueOf(currentLevel), 4022));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4023));
-		}
-		if (skillNum == 12) {
-			send(new SendString(String.valueOf(currentLevel), 4024));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4025));
-		}
-		if (skillNum == 9) {
-			send(new SendString(String.valueOf(currentLevel), 4026));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4027));
-		}
-		if (skillNum == 14) {
-			send(new SendString(String.valueOf(currentLevel), 4028));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4029));
-		}
-		if (skillNum == 13) {
-			send(new SendString(String.valueOf(currentLevel), 4030));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4031));
-		}
-		if (skillNum == 10) {
-			send(new SendString(String.valueOf(currentLevel), 4032));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4033));
-		}
-		if (skillNum == 7) {
-			send(new SendString(String.valueOf(currentLevel), 4034));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4035));
-		}
-		if (skillNum == 11) {
-			send(new SendString(String.valueOf(currentLevel), 4036));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4037));
-		}
-		if (skillNum == 8) {
-			send(new SendString(String.valueOf(currentLevel), 4038));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4039));
-		}
-		if (skillNum == 20) {
-			send(new SendString(String.valueOf(currentLevel), 4152));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 4153));
-		}
-		if (skillNum == 18) {
-			send(new SendString(String.valueOf(currentLevel), 12166));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 12167));
-		}
-		if (skillNum == 19) {
-			send(new SendString(String.valueOf(currentLevel), 13926));
-			send(new SendString(String.valueOf(Skills.getLevelForExperience(XP)), 13927));
-		}
+	public void setSkillLevel(Skill skill, int currentLevel, int XP) {
+		send(new SendString(String.valueOf(Math.max(currentLevel, 0)), skill.getCurrentComponent()));
+		send(new SendString(String.valueOf(Math.max(Skills.getLevelForExperience(XP), 1)), skill.getLevelComponent()));
 	}
 
 	public void logout() {
@@ -924,22 +845,22 @@ public class Client extends Player implements Runnable {
 		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
 			try {
 				Statement statement = getDbConnection().createStatement();
-				long allxp = 0;
-				for (int i = 0; i < 21; i++) {
-					if (i != 18) {
-						allxp += getExperience(Skill.getSkill(i));
-					}
-				}
-				int totallvl = totalLevel();
+
+				long allXp = Skill.enabledSkills()
+						.mapToInt(this::getExperience)
+						.sum();
+
+				int totalLevel = totalLevel();
 				String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totallvl + ", combat=" + determineCombatLevel() + ", ");
-				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totallvl + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
-				for (int i = 0; i < 21; i++) {
-					query.append(Objects.requireNonNull(Skill.getSkill(i)).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
-					query2.append(Skill.getSkill(i).getName()).append("=").append(getExperience(Skill.getSkill(i))).append(", ");
-				}
-				query.append("totalxp=").append(allxp).append(" WHERE uid=").append(dbId);
-				query2.append("totalxp=").append(allxp);
+				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totalLevel + ", combat=" + determineCombatLevel() + ", ");
+				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totalLevel + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
+				Skill.enabledSkills().forEach(skill -> {
+							query.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
+							query2.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
+						});
+
+				query.append("totalxp=").append(allXp).append(" WHERE uid=").append(dbId);
+				query2.append("totalxp=").append(allXp);
 
 				statement.executeUpdate(query.toString());
 				if (updateProgress) statement.executeUpdate(query2.toString());
@@ -2039,6 +1960,11 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean checkEquip(int id, int slot, int invSlot) {
+		if ((id == 13280 || id == 13281) && totalLevel() < Skills.maxTotalLevel()) {
+			send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip max cape and/or hood."));
+			return false;
+		}
+
 		int CLAttack = GetCLAttack(id);
 		int CLDefence = GetCLDefence(id);
 		int CLStrength = GetCLStrength(id);
@@ -2191,7 +2117,7 @@ public class Client extends Player implements Runnable {
 		 * playerLevel[i], playerXP[i]); }
 		 */
 		setSidebarInterface(0, 2423); // attack tab
-		setSidebarInterface(1, 3917); // skills tab
+		setSidebarInterface(1, 24126); // skills tab
 		setSidebarInterface(2, 638); // quest tab
 		setSidebarInterface(3, 3213); // backpack tab
 		setSidebarInterface(4, 1644); // items wearing tab
@@ -2352,18 +2278,20 @@ public class Client extends Player implements Runnable {
 			if (lastRecover == 0) {
 				lastRecoverEffect = 0;
 				lastRecover = 4;
-				for (int i = 0; i < 21; i++) {
-					Skill skill = Skill.getSkill(i);
-					if (skill == Skill.HITPOINTS)
-						heal(1);
-					else if (skill != Skill.PRAYER) {
-						if(boostedLevel[i] > 0)
-							boostedLevel[i]--;
-						else if(boostedLevel[i] < 0)
-							boostedLevel[i]++;
+
+				Skill.enabledSkills().forEach(skill -> {
+					switch (skill) {
+						case HITPOINTS:
+							heal(1);
+							break;
+						case PRAYER:
+							if (boostedLevel[skill.getId()] > 0)
+								boostedLevel[skill.getId()]--;
+							else boostedLevel[skill.getId()]++;
+							break;
 					}
 					refreshSkill(skill);
-				}
+				});
 			}
 		}
 		if (reloadHp) {
@@ -2782,6 +2710,12 @@ public class Client extends Player implements Runnable {
 			send(new SendString("", slot));
 			slot++;
 		}
+
+		String skillName = Skill.getSkill(skillID).getName();
+		skillName = skillName.substring(0, 1).toUpperCase() + skillName.substring(1);
+
+		send(new SendString(skillName, 8716));
+
 		if (skillID < 23) {
 			changeInterfaceStatus(15307, false);
 			changeInterfaceStatus(15304, false);
@@ -2855,7 +2789,6 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Hitpoints", 8846));
 			changeInterfaceStatus(8825, false);
 			changeInterfaceStatus(8813, false);
-			send(new SendString("Health restore", 8716));
 			slot = 8760;
 			String prem = " @red@(Premium only)";
 			String[] s = {"Shrimps (3 health)", "Rat meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
@@ -2951,7 +2884,7 @@ public class Client extends Player implements Runnable {
 			}
 			int[] items = {4443, 3243, 2309, 1739, 2349, 5068, 6759, 199, 6759, 1623};
 			setMenuItems(items);
-		} else if (skillID == 22) {
+		} else if (skillID == Skill.RUNECRAFTING.getId()) {
 			send(new SendString("Runecrafting", 8846));
 			changeInterfaceStatus(8825, false);
 			changeInterfaceStatus(8813, false);
@@ -5230,7 +5163,7 @@ public class Client extends Player implements Runnable {
 				showPlayerOption(new String[]{ "Do you wish to travel?", "Yes", "No" });
 				break;
 			case 6481:
-				if(totalLevel() >= Skills.maxTotalLevel)
+				if(totalLevel() >= Skills.maxTotalLevel())
 					showNPCChat(NpcTalkTo, 591, new String[]{"I see that you have trained up all your skills.", "I am utmost impressed!"});
 				else
 					showNPCChat(NpcTalkTo, 591, new String[]{"You are quite weak!"});
@@ -5238,7 +5171,7 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 6482:
-				if(totalLevel() >= Skills.maxTotalLevel) {
+				if(totalLevel() >= Skills.maxTotalLevel()) {
 					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to purchase this cape on my back?", "It will cost you 13.37 million coins."});
 					nextDiag = NpcDialogue + 1;
 				} else
@@ -5256,7 +5189,7 @@ public class Client extends Player implements Runnable {
 					showNPCChat(NpcTalkTo, 591, new String[]{"You need atleast " + (freeSlot == 1 ? "one" : "two") + " free inventory slot" + (freeSlot != 1 ? "s" : "") + "."});
 					nextDiag = NpcTalkTo;
 				} else if(!playerHasItem(995, coins))
-					showNPCChat(NpcTalkTo, 591, new String[]{"You are missing " + (coins - getInvAmt(995)) + " amount of coins!"});
+					showNPCChat(NpcTalkTo, 591, new String[]{"You are missing " + NumberFormat.getNumberInstance().format(coins - getInvAmt(995)) + " coins!"});
 				else {
 					showNPCChat(NpcTalkTo, 591, new String[]{"Here you go.", "Max cape just for you."});
 					deleteItem(995, coins);
@@ -9106,11 +9039,10 @@ public class Client extends Player implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	public int totalLevel() {
-		int total = 0;
-		for(int i = 0; i < 21; i++)
-			if(i != 19)
-				total += Skills.getLevelForExperience(getExperience(Skill.getSkill(i)));
-		return total;
-	}
+
+    public int totalLevel() {
+        return Skill.enabledSkills()
+				.mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
+				.sum();
+    }
 }

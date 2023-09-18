@@ -1145,9 +1145,12 @@ public abstract class Player extends Entity {
     }
 
     public void boost(int boosted, Skill skill) {
-        if(skill.getId() == 3 || skill.getId() == 5) { //Cant do health or prayer with this method!
+        if (skill == null)
             return;
-        }
+
+        if(skill == Skill.HITPOINTS || skill == Skill.PRAYER) //Cant do health or prayer with this method!
+            return;
+
         Client c = (Client) this;
         int lvl = Skills.getLevelForExperience(getExperience(skill));
         int currentLevel = c.getLevel(skill);

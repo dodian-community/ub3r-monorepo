@@ -822,18 +822,14 @@ public class Commands implements Packet {
                     client.refreshSkill(Skill.getSkill(skill));
                 }
                 if (command.equalsIgnoreCase("reset") && client.playerRights > 1/*&& client.getPlayerName().equalsIgnoreCase("Logan")*/) {
-                    for (int i = 0; i < 21; i++) {
-                        client.setExperience(0, Skill.getSkill(i));
-                        if (i == 3)
-                            client.setExperience(1155, Skill.HITPOINTS);
-                        client.setLevel(Skills.getLevelForExperience(i), Skill.getSkill(i));
-                        client.refreshSkill(Skill.getSkill(i));
-                    }
+                    Skill.enabledSkills().forEach(skill -> {
+                        client.setExperience(skill == Skill.HITPOINTS ? 1155 : 0, skill);
+                        client.setLevel(skill == Skill.HITPOINTS ? 10 : 1, skill);
+                        client.refreshSkill(skill);
+                    });
                 }
                 if (command.startsWith("master") && client.playerRights > 1) {
-                    for (int i = 0; i < 21; i++) {
-                        client.giveExperience(14000000, Skill.getSkill(i));
-                    }
+                    Skill.enabledSkills().forEach(skill -> client.giveExperience(14_000_000, skill));
                 }
             } //End of Special rank commands
             if (client.playerRights > 0) {

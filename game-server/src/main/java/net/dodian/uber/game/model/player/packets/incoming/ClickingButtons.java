@@ -22,6 +22,7 @@ import net.dodian.utilities.Utils;
 
 import java.io.IOException;
 
+import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DotEnvKt.getServerDebugMode;
 
 public class ClickingButtons implements Packet {
@@ -795,127 +796,145 @@ public class ClickingButtons implements Packet {
              */
 
             case 33206:
+            case 94167:
                 try {
-                    client.showSkillMenu(0, 0);
+                    client.showSkillMenu(ATTACK.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33207:
+            case 94168:
                 try {
-                    client.showSkillMenu(3, 0);
+                    client.showSkillMenu(HITPOINTS.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33208:
+            case 94169:
                 try {
-                    client.showSkillMenu(Skill.MINING.getId(), 0);
+                    client.showSkillMenu(MINING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33209:
+            case 94170:
                 try {
-                    client.showSkillMenu(2, 0);
+                    client.showSkillMenu(STRENGTH.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33210:
+            case 94171:
                 try {
-                    client.showSkillMenu(16, 0);
+                    client.showSkillMenu(AGILITY.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33212:
+            case 94173:
                 try {
-                    client.showSkillMenu(1, 0);
+                    client.showSkillMenu(DEFENCE.getId(), 0);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
                 break;
             case 33215:
+            case 94176:
                 try {
-                    client.showSkillMenu(4, 0);
+                    client.showSkillMenu(RANGED.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33216:
+            case 94177:
                 try {
-                    client.showSkillMenu(17, 0);
+                    client.showSkillMenu(THIEVING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33213:
+            case 94174:
                 try {
-                    client.showSkillMenu(Skill.HERBLORE.getId(), 0);
+                    client.showSkillMenu(HERBLORE.getId(), 0);
                 } catch (IOException e5) {
                     e5.printStackTrace();
                 }
                 break;
             case 33219: //Crafting
+            case 94180:
                 try {
-                    client.showSkillMenu(Skill.CRAFTING.getId(), 0);
+                    client.showSkillMenu(CRAFTING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33211: //Smithing
+            case 94172:
                 try {
-                    client.showSkillMenu(Skill.SMITHING.getId(), 0);
+                    client.showSkillMenu(SMITHING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33220:
+            case 94184:
                 try {
-                    client.showSkillMenu(8, 0);
+                    client.showSkillMenu(WOODCUTTING.getId(), 0);
                 } catch (IOException e4) {
                     e4.printStackTrace();
                 }
                 break;
             case 33221:
+            case 94182:
                 try {
-                    client.showSkillMenu(6, 0);
+                    client.showSkillMenu(MAGIC.getId(), 0);
                 } catch (IOException e3) {
                     e3.printStackTrace();
                 }
                 break;
             case 33222:
+            case 94181:
                 try {
-                    client.showSkillMenu(11, 0);
+                    client.showSkillMenu(FIREMAKING.getId(), 0);
                 } catch (IOException e2) {
                     e2.printStackTrace();
                 }
                 break;
             case 33223:
+            case 94178:
                 try {
-                    client.showSkillMenu(7, 0);
+                    client.showSkillMenu(COOKING.getId(), 0);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
                 break;
             case 33224:
+            case 95053:
                 try {
-                    client.showSkillMenu(22, 0);
+                    client.showSkillMenu(RUNECRAFTING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33214:
+            case 94183:
                 try {
-                    client.showSkillMenu(9, 0);
+                    client.showSkillMenu(FLETCHING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case 33217:
+            case 94175:
                 try {
-                    client.showSkillMenu(10, 0);
+                    client.showSkillMenu(FISHING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -923,7 +942,7 @@ public class ClickingButtons implements Packet {
             case 34142:
                 try {
                     if (client.currentSkill < 2)
-                        client.showSkillMenu(0, 0);
+                        client.showSkillMenu(ATTACK.getId(), 0);
                     else
                         client.showSkillMenu(client.currentSkill, 0);
                 } catch (IOException e) {
@@ -933,7 +952,7 @@ public class ClickingButtons implements Packet {
             case 34119:
                 try {
                     if (client.currentSkill < 2)
-                        client.showSkillMenu(1, 0);
+                        client.showSkillMenu(DEFENCE.getId(), 0);
                     else
                         client.showSkillMenu(client.currentSkill, 1);
                 } catch (IOException e) {
@@ -943,7 +962,7 @@ public class ClickingButtons implements Packet {
             case 34120:
                 if (client.currentSkill < 2)
                     try {
-                        client.showSkillMenu(4, 0);
+                        client.showSkillMenu(RANGED.getId(), 0);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -994,7 +1013,7 @@ public class ClickingButtons implements Packet {
                 break;
             case 47130:
                 try {
-                    client.showSkillMenu(18, 0);
+                    client.showSkillMenu(SLAYER.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
