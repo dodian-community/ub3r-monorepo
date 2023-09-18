@@ -24,6 +24,6 @@ public class Skills {
     }
 
     public static int maxTotalLevel() {
-        return ((int) Skill.enabledSkills().count()) * 99;
+        return (((int) Skill.enabledSkills().count()) * 99) + (int) Skill.disabledSkills().count();
     }
 }
