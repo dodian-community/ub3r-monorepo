@@ -9043,6 +9043,6 @@ public class Client extends Player implements Runnable {
     public int totalLevel() {
         return Skill.enabledSkills()
 				.mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
-				.sum();
+				.sum() + (int) Skill.disabledSkills().count();
     }
 }
