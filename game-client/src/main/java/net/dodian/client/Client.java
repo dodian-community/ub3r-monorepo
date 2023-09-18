@@ -4422,8 +4422,8 @@ public class Client extends RSApplet {
             stream.createFrame(185);
             stream.writeWord(k);
             RSInterface class9_2 = RSInterface.interfaceCache[k];
-            if (class9_2.valueIndexArray != null && class9_2.valueIndexArray[0][0] == 5) {
-                int i2 = class9_2.valueIndexArray[0][1];
+            if (class9_2.scripts != null && class9_2.scripts[0][0] == 5) {
+                int i2 = class9_2.scripts[0][1];
                 if (variousSettings[i2] != class9_2.anIntArray212[0]) {
                     variousSettings[i2] = class9_2.anIntArray212[0];
                     method33(i2);
@@ -4745,8 +4745,8 @@ public class Client extends RSApplet {
             stream.createFrame(185);
             stream.writeWord(k);
             RSInterface class9_3 = RSInterface.interfaceCache[k];
-            if (class9_3.valueIndexArray != null && class9_3.valueIndexArray[0][0] == 5) {
-                int l2 = class9_3.valueIndexArray[0][1];
+            if (class9_3.scripts != null && class9_3.scripts[0][0] == 5) {
+                int l2 = class9_3.scripts[0][1];
                 variousSettings[l2] = 1 - variousSettings[l2];
                 method33(l2);
                 needDrawTabArea = true;
@@ -9639,105 +9639,107 @@ public class Client extends RSApplet {
             Signlink.midi = "voladjust";
     }
 
-    private int extractInterfaceValues(RSInterface class9, int j) {
-        if (class9.valueIndexArray == null || j >= class9.valueIndexArray.length)
+    private int extractInterfaceValues(RSInterface rsInterface, int scriptId) {
+        //System.out.println("Script: " + rsInterface.id + ":" + scriptId);
+        if (rsInterface.scripts == null || scriptId >= rsInterface.scripts.length)
             return -2;
         try {
-            int ai[] = class9.valueIndexArray[j];
-            int k = 0;
-            int l = 0;
-            int i1 = 0;
+            int[] script = rsInterface.scripts[scriptId];
+            int acc = 0;
+            int pos = 0;
+            int arith = 0;
             do {
-                int j1 = ai[l++];
-                int k1 = 0;
-                byte byte0 = 0;
-                if (j1 == 0)
-                    return k;
-                if (j1 == 1)
-                    k1 = currentStats[ai[l++]];
-                if (j1 == 2)
-                    k1 = maxStats[ai[l++]];
-                if (j1 == 3)
-                    k1 = currentExp[ai[l++]];
-                if (j1 == 4) {
-                    RSInterface class9_1 = RSInterface.interfaceCache[ai[l++]];
-                    int k2 = ai[l++];
+                int code = script[pos++];
+                int register = 0;
+                byte nextArith = 0;
+                if (code == 0)
+                    return acc;
+                if (code == 1)
+                    register = currentStats[script[pos++]];
+                if (code == 2)
+                    register = maxStats[script[pos++]];
+                if (code == 3) {
+                    register = currentExp[script[pos++]];
+                }
+                if (code == 4) {
+                    RSInterface class9_1 = RSInterface.interfaceCache[script[pos++]];
+                    int k2 = script[pos++];
                     if (k2 >= 0 && k2 < ItemDef.totalItems && (!ItemDef.forID(k2).membersObject || isMembers)) {
                         for (int j3 = 0; j3 < class9_1.inv.length; j3++)
                             if (class9_1.inv[j3] == k2 + 1)
-                                k1 += class9_1.invStackSizes[j3];
+                                register += class9_1.invStackSizes[j3];
 
                     }
                 }
-                if (j1 == 5)
-                    k1 = variousSettings[ai[l++]];
-                if (j1 == 6)
-                    k1 = anIntArray1019[maxStats[ai[l++]] - 1];
-                if (j1 == 7)
-                    k1 = (variousSettings[ai[l++]] * 100) / 46875;
-                if (j1 == 8)
-                    k1 = myPlayer.combatLevel;
-                if (j1 == 9) {
+                if (code == 5)
+                    register = variousSettings[script[pos++]];
+                if (code == 6)
+                    register = anIntArray1019[maxStats[script[pos++]] - 1];
+                if (code == 7)
+                    register = (variousSettings[script[pos++]] * 100) / 46875;
+                if (code == 8)
+                    register = myPlayer.combatLevel;
+                if (code == 9) {
                     for (int l1 = 0; l1 < Skills.skillsCount; l1++)
                         if (Skills.skillEnabled[l1])
-                            k1 += maxStats[l1];
+                            register += maxStats[l1];
 
                 }
-                if (j1 == 10) {
-                    RSInterface class9_2 = RSInterface.interfaceCache[ai[l++]];
-                    int l2 = ai[l++] + 1;
+                if (code == 10) {
+                    RSInterface class9_2 = RSInterface.interfaceCache[script[pos++]];
+                    int l2 = script[pos++] + 1;
                     if (l2 >= 0 && l2 < ItemDef.totalItems && isMembers) {
                         for (int k3 = 0; k3 < class9_2.inv.length; k3++) {
                             if (class9_2.inv[k3] != l2)
                                 continue;
-                            k1 = 0x3b9ac9ff;
+                            register = 0x3b9ac9ff;
                             break;
                         }
 
                     }
                 }
-                if (j1 == 11)
-                    k1 = energy;
-                if (j1 == 12)
-                    k1 = weight;
-                if (j1 == 13) {
-                    int i2 = variousSettings[ai[l++]];
-                    int i3 = ai[l++];
-                    k1 = (i2 & 1 << i3) == 0 ? 0 : 1;
+                if (code == 11)
+                    register = energy;
+                if (code == 12)
+                    register = weight;
+                if (code == 13) {
+                    int i2 = variousSettings[script[pos++]];
+                    int i3 = script[pos++];
+                    register = (i2 & 1 << i3) == 0 ? 0 : 1;
                 }
-                if (j1 == 14) {
-                    int j2 = ai[l++];
+                if (code == 14) {
+                    int j2 = script[pos++];
                     VarBit varBit = VarBit.cache[j2];
                     int l3 = varBit.anInt648;
                     int i4 = varBit.anInt649;
                     int j4 = varBit.anInt650;
                     int k4 = anIntArray1232[j4 - i4];
-                    k1 = variousSettings[l3] >> i4 & k4;
+                    register = variousSettings[l3] >> i4 & k4;
                 }
-                if (j1 == 15)
-                    byte0 = 1;
-                if (j1 == 16)
-                    byte0 = 2;
-                if (j1 == 17)
-                    byte0 = 3;
-                if (j1 == 18)
-                    k1 = (myPlayer.x >> 7) + baseX;
-                if (j1 == 19)
-                    k1 = (myPlayer.y >> 7) + baseY;
-                if (j1 == 20)
-                    k1 = ai[l++];
-                if (byte0 == 0) {
-                    if (i1 == 0)
-                        k += k1;
-                    if (i1 == 1)
-                        k -= k1;
-                    if (i1 == 2 && k1 != 0)
-                        k /= k1;
-                    if (i1 == 3)
-                        k *= k1;
-                    i1 = 0;
+                if (code == 15)
+                    nextArith = 1;
+                if (code == 16)
+                    nextArith = 2;
+                if (code == 17)
+                    nextArith = 3;
+                if (code == 18)
+                    register = (myPlayer.x >> 7) + baseX;
+                if (code == 19)
+                    register = (myPlayer.y >> 7) + baseY;
+                if (code == 20)
+                    register = script[pos++];
+                if (nextArith == 0) {
+                    if (arith == 0)
+                        acc += register;
+                    if (arith == 1)
+                        acc -= register;
+                    if (arith == 2 && register != 0)
+                        acc /= register;
+                    if (arith == 3)
+                        acc *= register;
+                    arith = 0;
                 } else {
-                    i1 = byte0;
+                    arith = nextArith;
                 }
             } while (true);
         } catch (Exception _ex) {
@@ -9784,9 +9786,9 @@ public class Client extends RSApplet {
 
     public void drawHPOrb() {
         int health;
-        String cHP = RSInterface.interfaceCache[4016].message;
+        String cHP = RSInterface.interfaceCache[24140].message;
         int currentHP = Integer.parseInt(cHP);
-        String mHP = RSInterface.interfaceCache[4017].message;
+        String mHP = RSInterface.interfaceCache[24139].message;
         int maxHP2 = Integer.parseInt(mHP);
         health = (int) (((double) currentHP / (double) maxHP2) * 100D);
         /* Draws empty orb */
@@ -9820,9 +9822,9 @@ public class Client extends RSApplet {
 
     public void drawPrayerOrb() {
         int prayer;
-        String cP = RSInterface.interfaceCache[4012].message;
+        String cP = RSInterface.interfaceCache[24201].message;
         int currentPrayer = Integer.parseInt(cP);
-        String mP = RSInterface.interfaceCache[4013].message;
+        String mP = RSInterface.interfaceCache[24202].message;
         int maxPrayer = Integer.parseInt(mP);
         prayer = (int) (((double) currentPrayer / (double) maxPrayer) * 100D);
         /* Draws empty orb */
@@ -10952,7 +10954,7 @@ public class Client extends RSApplet {
                 stream.createFrame(185);
                 stream.writeWord(button);
                 RSInterface class9_2 = RSInterface.interfaceCache[button];
-                if (class9_2.valueIndexArray != null && class9_2.valueIndexArray[0][0] == 5) {
+                if (class9_2.scripts != null && class9_2.scripts[0][0] == 5) {
                     if (variousSettings[toggle] != class9_2.anIntArray212[0]) {
                         variousSettings[toggle] = class9_2.anIntArray212[0];
                         method33(toggle);
@@ -10964,7 +10966,7 @@ public class Client extends RSApplet {
                 stream.createFrame(185);
                 stream.writeWord(button);
                 RSInterface class9_3 = RSInterface.interfaceCache[button];
-                if (class9_3.valueIndexArray != null && class9_3.valueIndexArray[0][0] == 5) {
+                if (class9_3.scripts != null && class9_3.scripts[0][0] == 5) {
                     variousSettings[toggle] = 1 - variousSettings[toggle];
                     method33(toggle);
                     needDrawTabArea = true;

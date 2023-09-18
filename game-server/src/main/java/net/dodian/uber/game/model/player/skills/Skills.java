@@ -1,5 +1,7 @@
 package net.dodian.uber.game.model.player.skills;
 
+import java.util.Arrays;
+
 public class Skills {
     public static int getLevelForExperience(int exp) {
         double output = 0;
@@ -21,6 +23,7 @@ public class Skills {
         return output;
     }
 
-    public static int maxTotalLevel = 1980;
-
+    public static int maxTotalLevel() {
+        return ((int) Skill.enabledSkills().count()) * 99;
+    }
 }

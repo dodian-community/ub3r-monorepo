@@ -18,6 +18,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Date;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -110,37 +111,36 @@ public class LoginManager {
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
-                    for (int i = 0; i < 21; i++) {
-                        Skill skill = Skill.getSkill(i);
-                        if (skill != null) {
+                    Skill.enabledSkills().forEach(skill -> {
+                        try {
                             p.setExperience(results2.getInt(skill.getName()), skill);
                             p.setLevel(Skills.getLevelForExperience(p.getExperience(skill)), skill);
-                            if (i == 3) {
+                            if (skill == Skill.HITPOINTS) {
                                 p.maxHealth = Skills.getLevelForExperience(p.getExperience(skill));
                                 p.setCurrentHealth(health < 1 || health > p.maxHealth ? p.maxHealth : health);
-                            } else if (i == 5) {
+                            } else if (skill == Skill.PRAYER) {
                                 p.maxPrayer = Skills.getLevelForExperience(p.getExperience(skill));
                                 p.setCurrentPrayer(prayerLevel < 0 || prayerLevel > p.maxPrayer ? p.maxPrayer : prayerLevel);
                             }
                             p.refreshSkill(skill);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                    }
+                    });
                 } else {
                     Statement statement = getDbConnection().createStatement();
                     String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "')";
                     statement.executeUpdate(newStatsAccount);
                     statement.close();
-                    for (int i = 0; i < 21; i++) { //Default skills!
-                        Skill skill = Skill.getSkill(i);
-                        if (skill != null) {
-                            p.setExperience(i == 3 ? 1155 : 0, skill);
-                            p.setLevel(i == 3 ? 10 : 1, skill);
-                            p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
-                            p.maxPrayer = 1;
-                            p.maxHealth = 10;
-                            p.refreshSkill(skill);
-                        }
-                    }
+
+                    Skill.enabledSkills().forEach(skill -> {
+                        p.setExperience(skill == Skill.HITPOINTS ? 1155 : 0, skill);
+                        p.setLevel(skill == Skill.HITPOINTS ? 10 : 1, skill);
+                        p.setCurrentHealth(p.getLevel(Skill.HITPOINTS));
+                        p.maxPrayer = 1;
+                        p.maxHealth = 10;
+                        p.refreshSkill(skill);
+                    });
                 }
                 if(!prayer.equals("")) {
                     for(int i = 1; i < prayer_prase.length; i++)
