@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.entity;
 
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.utilities.Stream;
 
 /**

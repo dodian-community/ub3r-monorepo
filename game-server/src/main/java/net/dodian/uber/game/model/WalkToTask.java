@@ -1,5 +1,7 @@
 package net.dodian.uber.game.model;
 
+import net.dodian.uber.game.model.Position;
+
 /**
  * @author Dashboard
  */

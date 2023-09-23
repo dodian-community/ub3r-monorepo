@@ -467,6 +467,10 @@ public class Client extends Player implements Runnable {
 		readPtr = writePtr = 0;
 	}
 
+	public Client(int _playerId) {
+		super(_playerId);
+	}
+
 	public void shutdownError(String errorMessage) {
 		Utils.println(": " + errorMessage);
 		destruct();
@@ -500,6 +504,11 @@ public class Client extends Player implements Runnable {
 	}
 
 	public Stream getOutputStream() {
+		if (this.outputStream == null) {
+			this.logout();
+			return null;
+		}
+
 		return this.outputStream;
 	}
 
