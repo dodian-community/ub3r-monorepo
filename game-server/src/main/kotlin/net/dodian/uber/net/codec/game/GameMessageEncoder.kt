@@ -17,8 +17,6 @@ class GameMessageEncoder(
         val encoder = encoders[message::class]
             ?: return logger.debug { "No encoder found for message type: ${message::class.simpleName}" }
 
-        logger.debug { "Encoding message using: ${encoder::class.simpleName}" }
-
         out.add((encoder as MessageEncoder<Message>).encode(message))
     }
 }

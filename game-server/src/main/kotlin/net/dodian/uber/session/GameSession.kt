@@ -5,7 +5,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
 import net.dodian.context
 import net.dodian.uber.game.MESSAGES_PER_PULSE
-import net.dodian.uber.game.message.handler.MessageHandlerChainSet
+import net.dodian.uber.net.protocol.handlers.MessageHandlerChainSet
 import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.message.Message
 import net.dodian.uber.net.protocol.packets.server.LogoutMessage
@@ -35,13 +35,7 @@ class GameSession(
 
     fun handlePendingMessages(chainSet: MessageHandlerChainSet) {
         while (messages.isNotEmpty()) {
-            val message = messages.poll()
-
-            try {
-                chainSet.notify(player, message)
-            } catch(ex: Exception) {
-                logger.error(ex) { "Uncaught exception thrown while handling message..." }
-            }
+            chainSet.notify(player, messages.poll())
         }
     }
 

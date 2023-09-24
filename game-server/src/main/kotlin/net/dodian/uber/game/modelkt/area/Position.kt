@@ -53,6 +53,12 @@ data class Position(
         return max(deltaX, deltaY)
     }
 
+    fun isWithinDistance(other: Position, distance: Int): Boolean {
+        val deltaX = abs(x - other.x)
+        val deltaY = abs(y - other.y)
+        return deltaX <= distance && deltaY <= distance && height == other.height
+    }
+
     override fun hashCode(): Int {
         return packed()
     }
@@ -63,6 +69,12 @@ data class Position(
 
         return packed() == other.packed()
     }
+
+    fun step(number: Int, direction: Direction) = Position(
+        x + (number * direction.deltaX),
+        y + (number * direction.deltaY),
+        height
+    )
 
     companion object {
         const val HEIGHT_LEVELS = 4

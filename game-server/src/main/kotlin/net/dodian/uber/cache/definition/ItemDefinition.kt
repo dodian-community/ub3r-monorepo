@@ -6,7 +6,7 @@ import net.dodian.definitions
 data class ItemDefinition(
     override val id: Int,
     override val name: String,
-    override val examine: String = "Not sure what this item is...",
+    override val examine: String = "I don't know anything about this item...",
     val actionsInventory: List<String> = listOf(),
     val actionsGround: List<String> = listOf(),
     val members: Boolean = false,

@@ -23,4 +23,10 @@ class SynchronizationBlockSet(
     fun clear() {
         blocks.clear()
     }
+
+    public override fun clone(): SynchronizationBlockSet {
+        val copy = SynchronizationBlockSet()
+        copy.blocks.putAll(blocks)
+        return copy
+    }
 }

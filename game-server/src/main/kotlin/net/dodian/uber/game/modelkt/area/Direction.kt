@@ -61,7 +61,7 @@ enum class Direction(private val intValue: Int) {
     fun toInt() = this.intValue
 
     companion object {
-        val EMPTY_DIRECTION_ARRAY: Array<Direction?> = arrayOfNulls<Direction>(0)
+        val EMPTY_DIRECTION_ARRAY: Array<Direction> = arrayOf()
         val NESW: Array<Direction> = arrayOf(NORTH, EAST, SOUTH, WEST)
         val WNES: Array<Direction> = arrayOf(WEST, NORTH, EAST, SOUTH)
         val WNES_DIAGONAL: Array<Direction> = arrayOf(NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST)

@@ -1,13 +1,22 @@
-package net.dodian.uber.game.message.handler
+package net.dodian.uber.net.protocol.handlers
 
+import net.dodian.context
 import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.message.Message
+import net.dodian.uber.net.protocol.packets.client.WalkMessage
 import java.util.*
+import kotlin.reflect.KClass
 
+@Suppress("MemberVisibilityCanBePrivate")
 class MessageHandlerChainSet(
     private val classes: MutableMap<Class<out Message>, Deque<Class<out Message>>> = mutableMapOf(),
     private val chains: MutableMap<Class<out Message>, MessageHandlerChain<out Message>> = mutableMapOf()
 ) {
+
+    init {
+        val world = context.world
+        putHandler(WalkMessage::class, WalkMessageHandler(world))
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun <M : Message> notify(player: Player, message: M): Boolean {
@@ -17,12 +26,15 @@ class MessageHandlerChainSet(
 
         classes.forEach { type ->
             val chain = chains[type] as MessageHandlerChain<in M>?
-            if (chain != null && !chain.notify(player, message)) {
+            if (chain != null && !chain.notify(player, message))
                 return false
-            }
         }
 
         return true
+    }
+
+    fun <M : Message> putHandler(clazz: KClass<M>, handler: MessageHandler<out Message>) {
+        putHandler(clazz.java, handler)
     }
 
     @Suppress("UNCHECKED_CAST")

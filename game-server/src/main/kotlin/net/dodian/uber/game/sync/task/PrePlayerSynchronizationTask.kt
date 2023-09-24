@@ -17,6 +17,8 @@ class PrePlayerSynchronizationTask(
 
     override fun run() {
         val oldPosition = player.position
+        player.walkingQueue.pulse()
+
         var local = true
 
         if (player.isTeleporting) {

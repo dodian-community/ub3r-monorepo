@@ -38,7 +38,7 @@ data class Region(
         }
     }
 
-    val surrounding: Set<RegionCoordinates>
+    val surrounding: MutableSet<RegionCoordinates>
         get() {
             val localX = coordinates.x
             val localY = coordinates.y
@@ -73,10 +73,6 @@ data class Region(
             notifyListeners(entity, EntityUpdateType.ADD)
     }
 
-    fun addListener(listener: RegionListener) {
-        listeners.add(listener)
-    }
-
     fun removeEntity(entity: Entity) {
         val type = entity.entityType
         if (type.isTransient)
@@ -91,6 +87,12 @@ data class Region(
 
         notifyListeners(entity, EntityUpdateType.REMOVE)
     }
+
+    fun addListener(listener: RegionListener) {
+        listeners.add(listener)
+    }
+
+    fun contains(position: Position) = coordinates == position.regionCoordinates
 
     fun updates(height: Int): Set<RegionUpdateMessage> {
         val updates = this.updates[height]

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.message.handler
+package net.dodian.uber.net.protocol.handlers
 
 import net.dodian.uber.game.modelkt.World
 import net.dodian.uber.game.modelkt.entity.player.Player

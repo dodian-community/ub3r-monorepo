@@ -12,4 +12,12 @@ data class Appearance(
 
     val isFemale: Boolean get() = gender == Gender.FEMALE
     val isMale: Boolean get() = gender == Gender.MALE
+
+    companion object {
+        val DEFAULT = Appearance(
+            gender = Gender.MALE,
+            style = listOf(0, 10, 18, 26, 33, 36, 42),
+            colors = listOf(0, 0, 0, 0, 0)
+        )
+    }
 }
