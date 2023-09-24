@@ -54,6 +54,7 @@ class GameService(
 
         val players = world.playerRepository
         players.forEach {
+            it.updatePlayersOnlineOverlay()
             it.session?.handlePendingMessages(handlers)
         }
 
@@ -90,6 +91,9 @@ class GameService(
     }
 
     private fun finalizeUnregistrations() {
+        if (oldPlayers.isEmpty())
+            return
+
         val loginService = context.service<LoginService>()
 
         repeat(DEREGISTRATIONS_PER_CYCLE) {
@@ -106,6 +110,8 @@ class GameService(
         val world = context.world
 
         world.register(player)
+        val region = world.regions.fromPosition(player.position)
+        region.addEntity(player)
 
         if (player.session?.reconnecting != true)
             player.sendInitialMessages()

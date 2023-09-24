@@ -48,9 +48,8 @@ class GameSession(
             return
 
         val future = channel.writeAndFlush(message)
-        if (message is LogoutMessage) {
-            logger.debug { "Message was logout, adding future close listener..." }
+
+        if (message is LogoutMessage)
             future.addListeners(ChannelFutureListener.CLOSE)
-        }
     }
 }

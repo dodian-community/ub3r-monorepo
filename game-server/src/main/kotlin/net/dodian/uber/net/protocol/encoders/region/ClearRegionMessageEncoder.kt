@@ -1,13 +1,13 @@
-package net.dodian.uber.net.protocol.encoders
+package net.dodian.uber.net.protocol.encoders.region
 
 import net.dodian.uber.net.codec.game.DataTransformation
 import net.dodian.uber.net.codec.game.DataType
 import net.dodian.uber.net.codec.game.GamePacket
 import net.dodian.uber.net.codec.game.GamePacketBuilder
 import net.dodian.uber.net.message.MessageEncoder
-import net.dodian.uber.net.protocol.packets.server.ClearRegionMessage
+import net.dodian.uber.net.protocol.packets.server.region.ClearRegionMessage
 
-class ClearRegionEncoder : MessageEncoder<ClearRegionMessage>() {
+class ClearRegionMessageEncoder : MessageEncoder<ClearRegionMessage>() {
 
     override fun encode(message: ClearRegionMessage): GamePacket {
         val builder = GamePacketBuilder(64)

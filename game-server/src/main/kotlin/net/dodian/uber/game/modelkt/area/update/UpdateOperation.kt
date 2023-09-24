@@ -5,7 +5,7 @@ import net.dodian.uber.game.modelkt.area.EntityUpdateType.*
 import net.dodian.uber.game.modelkt.area.Position
 import net.dodian.uber.game.modelkt.area.Region
 import net.dodian.uber.game.modelkt.entity.Entity
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionUpdateMessage
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class UpdateOperation<E : Entity>(

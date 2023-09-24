@@ -14,12 +14,6 @@ class PlayerSaveWorker(
 ) : Runnable {
 
     override fun run() {
-        try {
-            serializer.savePlayer(player)
-            session.handlePlayerSaverResponse(true)
-        } catch (exception: Exception) {
-            logger.error(exception) { "Unable to save player's game..." }
-            session.handlePlayerSaverResponse(false)
-        }
+        session.handlePlayerSaverResponse(serializer.savePlayer(player))
     }
 }

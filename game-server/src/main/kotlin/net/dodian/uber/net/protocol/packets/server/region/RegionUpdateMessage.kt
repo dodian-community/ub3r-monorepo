@@ -1,4 +1,4 @@
-package net.dodian.uber.net.protocol.packets.server.regionupdate
+package net.dodian.uber.net.protocol.packets.server.region
 
 import net.dodian.uber.net.message.Message
 

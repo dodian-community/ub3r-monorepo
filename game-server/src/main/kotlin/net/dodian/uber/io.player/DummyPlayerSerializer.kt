@@ -16,7 +16,7 @@ class DummyPlayerSerializer : PlayerSerializer() {
     override fun loadPlayer(credentials: PlayerCredentials): PlayerLoaderResponse {
         var status = STATUS_OK
 
-        val player = Player(credentials, Position(3232, 3232), context.world)
+        val player = Player(credentials, Position(2606, 3102), context.world)
 
         player.playerRights = 0
         player.premium = true
@@ -32,7 +32,5 @@ class DummyPlayerSerializer : PlayerSerializer() {
         return PlayerLoaderResponse(status, player)
     }
 
-    override fun savePlayer(player: Player) {
-        
-    }
+    override fun savePlayer(player: Player) = true
 }

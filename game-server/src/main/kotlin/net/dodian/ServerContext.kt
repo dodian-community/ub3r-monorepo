@@ -26,11 +26,10 @@ class ServerContext(
 ) {
     inline fun <reified S : Service> service() = services.single { it is S } as S
 
-    fun registerService(service: Service, start: Boolean = true): Boolean {
+    fun registerService(service: Service, start: Boolean = false): Boolean {
         if (services.any { it::class == service::class })
             return false
 
-        if (start) service.start()
         return services.add(service)
     }
 

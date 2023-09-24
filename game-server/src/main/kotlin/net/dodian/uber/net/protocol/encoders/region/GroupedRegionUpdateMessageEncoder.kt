@@ -1,4 +1,4 @@
-package net.dodian.uber.net.protocol.encoders
+package net.dodian.uber.net.protocol.encoders.region
 
 import net.dodian.protocol
 import net.dodian.uber.net.codec.game.DataTransformation
@@ -7,10 +7,10 @@ import net.dodian.uber.net.codec.game.GamePacket
 import net.dodian.uber.net.codec.game.GamePacketBuilder
 import net.dodian.uber.net.message.MessageEncoder
 import net.dodian.uber.net.message.meta.PacketType
-import net.dodian.uber.net.protocol.packets.server.GroupedRegionUpdateMessage
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.GroupedRegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionUpdateMessage
 
-class GroupedRegionUpdateEncoder : MessageEncoder<GroupedRegionUpdateMessage>() {
+class GroupedRegionUpdateMessageEncoder : MessageEncoder<GroupedRegionUpdateMessage>() {
 
     @Suppress("UNCHECKED_CAST")
     override fun encode(message: GroupedRegionUpdateMessage): GamePacket {

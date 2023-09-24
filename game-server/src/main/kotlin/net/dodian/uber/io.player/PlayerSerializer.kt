@@ -5,5 +5,5 @@ import net.dodian.utilities.security.PlayerCredentials
 
 abstract class PlayerSerializer {
     abstract fun loadPlayer(credentials: PlayerCredentials): PlayerLoaderResponse
-    abstract fun savePlayer(player: Player)
+    abstract fun savePlayer(player: Player): Boolean
 }

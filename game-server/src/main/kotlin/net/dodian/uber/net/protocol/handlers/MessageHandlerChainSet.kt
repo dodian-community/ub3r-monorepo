@@ -3,6 +3,7 @@ package net.dodian.uber.net.protocol.handlers
 import net.dodian.context
 import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.message.Message
+import net.dodian.uber.net.protocol.packets.client.ButtonMessage
 import net.dodian.uber.net.protocol.packets.client.WalkMessage
 import java.util.*
 import kotlin.reflect.KClass
@@ -15,7 +16,9 @@ class MessageHandlerChainSet(
 
     init {
         val world = context.world
+
         putHandler(WalkMessage::class, WalkMessageHandler(world))
+        putHandler(ButtonMessage::class, ButtonMessageHandler(world))
     }
 
     @Suppress("UNCHECKED_CAST")

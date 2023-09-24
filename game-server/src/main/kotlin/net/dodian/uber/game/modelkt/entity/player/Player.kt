@@ -7,14 +7,13 @@ import net.dodian.uber.game.modelkt.area.Direction
 import net.dodian.uber.game.modelkt.area.Position
 import net.dodian.uber.game.modelkt.entity.EntityType
 import net.dodian.uber.game.modelkt.entity.Mob
+import net.dodian.uber.game.modelkt.inter.DEFAULT_INVENTORY_TABS
 import net.dodian.uber.game.modelkt.inter.InterfaceSet
 import net.dodian.uber.game.modelkt.inventory.Inventory
 import net.dodian.uber.game.sync.block.AppearanceBlock
 import net.dodian.uber.game.sync.block.SynchronizationBlockSet
 import net.dodian.uber.net.message.Message
-import net.dodian.uber.net.protocol.packets.server.ConfigMessage
-import net.dodian.uber.net.protocol.packets.server.IdAssignmentMessage
-import net.dodian.uber.net.protocol.packets.server.ServerChatMessage
+import net.dodian.uber.net.protocol.packets.server.*
 import net.dodian.uber.session.GameSession
 import net.dodian.utilities.CollectionUtil
 import net.dodian.utilities.security.PlayerCredentials
@@ -67,15 +66,24 @@ class Player(
         }
 
     fun sendInitialMessages() {
-        logger.info { "Sending initial messages to player, $username..." }
         updateAppearance()
         send(IdAssignmentMessage(index, premium))
-        sendMessage("Welcome to Dodian OSRS!")
+        sendMessage("Welcome to Dodian!")
+
+        val tabs = DEFAULT_INVENTORY_TABS
+        for (tab in tabs.indices) {
+            send(SwitchTabInterfaceMessage(tab, tabs[tab]))
+        }
+    }
+
+    fun updatePlayersOnlineOverlay() {
+        send(SetWidgetTextMessage(6570, "Dodian (${world.playerRepository.size} online)"))
+        send(SetWidgetTextMessage(6664, ""))
+        send(OpenOverlayMessage(6673))
     }
 
     fun send(message: Message) {
         if (!isActive) {
-            logger.info { "Player is inactive..." }
             queuedMessages.add(message)
             return
         }

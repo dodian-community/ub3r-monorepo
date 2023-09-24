@@ -3,8 +3,8 @@ package net.dodian.uber.game.modelkt.area.update
 import net.dodian.uber.game.modelkt.area.EntityUpdateType
 import net.dodian.uber.game.modelkt.area.Region
 import net.dodian.uber.game.modelkt.entity.Projectile
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RegionUpdateMessage
-import net.dodian.uber.net.protocol.packets.server.regionupdate.SendProjectileMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.SendProjectileMessage
 
 class ProjectileUpdateOperation(
     region: Region,

@@ -3,8 +3,8 @@ package net.dodian.uber.game.modelkt.area.update
 import net.dodian.uber.game.modelkt.area.EntityUpdateType
 import net.dodian.uber.game.modelkt.area.Region
 import net.dodian.uber.game.modelkt.entity.`object`.GameObject
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RemoveObjectMessage
-import net.dodian.uber.net.protocol.packets.server.regionupdate.SendObjectMessage
+import net.dodian.uber.net.protocol.packets.server.region.RemoveObjectMessage
+import net.dodian.uber.net.protocol.packets.server.region.SendObjectMessage
 
 class ObjectUpdateOperation(
     entity: GameObject,

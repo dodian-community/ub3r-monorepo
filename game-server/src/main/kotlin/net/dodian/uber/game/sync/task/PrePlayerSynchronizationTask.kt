@@ -4,10 +4,10 @@ import net.dodian.uber.game.modelkt.area.Position
 import net.dodian.uber.game.modelkt.area.Region
 import net.dodian.uber.game.modelkt.area.RegionCoordinates
 import net.dodian.uber.game.modelkt.entity.player.Player
-import net.dodian.uber.net.protocol.packets.server.ClearRegionMessage
-import net.dodian.uber.net.protocol.packets.server.GroupedRegionUpdateMessage
-import net.dodian.uber.net.protocol.packets.server.RegionChangeMessage
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.ClearRegionMessage
+import net.dodian.uber.net.protocol.packets.server.region.GroupedRegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionChangeMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionUpdateMessage
 
 class PrePlayerSynchronizationTask(
     private val player: Player,

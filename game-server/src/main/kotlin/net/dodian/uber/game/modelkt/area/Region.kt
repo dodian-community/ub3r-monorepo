@@ -1,5 +1,6 @@
 package net.dodian.uber.game.modelkt.area
 
+import com.github.michaelbull.logging.InlineLogger
 import com.google.common.collect.ImmutableSet
 import net.dodian.uber.game.modelkt.area.collision.CollisionMatrix
 import net.dodian.uber.game.modelkt.area.update.GroupableEntity
@@ -8,8 +9,10 @@ import net.dodian.uber.game.modelkt.entity.EntityType
 import net.dodian.uber.game.modelkt.entity.isMob
 import net.dodian.uber.game.modelkt.entity.isTransient
 import net.dodian.uber.game.modelkt.entity.`object`.DynamicGameObject
-import net.dodian.uber.net.protocol.packets.server.regionupdate.RegionUpdateMessage
+import net.dodian.uber.net.protocol.packets.server.region.RegionUpdateMessage
 import java.util.stream.Collectors
+
+private val logger = InlineLogger()
 
 @Suppress("MemberVisibilityCanBePrivate")
 data class Region(
@@ -58,19 +61,26 @@ data class Region(
 
     private val matrices: Array<CollisionMatrix> = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS, SIZE, SIZE)
 
+    fun addEntity(entity: Entity) {
+        addEntity(entity, true)
+    }
+
     fun addEntity(entity: Entity, notify: Boolean) {
         val type = entity.entityType
         val position = entity.position
         checkPosition(position)
 
         if (!type.isTransient) {
-            val local: MutableSet<Entity> =
-                entities.computeIfAbsent(position) { _ -> HashSet<Entity>(Region.DEFAULT_LIST_SIZE) }
-            local.add(entity)
+            val local = (entities[position] ?: HashSet<Entity>(Region.DEFAULT_LIST_SIZE)).apply {
+                add(entity)
+            }
+            entities[position] = local
+            logger.info { "Added entity to the region..." }
         }
 
-        if (notify)
-            notifyListeners(entity, EntityUpdateType.ADD)
+        if (!notify) return
+
+        notifyListeners(entity, EntityUpdateType.ADD)
     }
 
     fun removeEntity(entity: Entity) {
@@ -83,7 +93,7 @@ data class Region(
 
         val local = entities[position]
         if (local == null || !local.remove(entity))
-            error("$entity belongs in $this but does not exist.")
+            logger.warn { "Entity ${entity.entityType} belongs in $this, but does not exist..." }
 
         notifyListeners(entity, EntityUpdateType.REMOVE)
     }

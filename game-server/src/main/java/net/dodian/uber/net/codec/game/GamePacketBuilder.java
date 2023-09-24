@@ -31,7 +31,7 @@ public final class GamePacketBuilder {
 	/**
 	 * The opcode.
 	 */
-	private final int opcode;
+	public int opcode;
 
 	/**
 	 * The {@link PacketType}.
