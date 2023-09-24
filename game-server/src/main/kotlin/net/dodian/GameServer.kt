@@ -6,9 +6,11 @@ import io.netty.buffer.UnpooledByteBufAllocator
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import net.dodian.uber.cache.definition.GameDefinitions
 import net.dodian.uber.net.*
 import net.dodian.uber.session.Ub3rHandler
 import net.dodian.uber.net.codec.handshake.SERVICE_GAME
+import net.dodian.uber.net.message.GameProtocol
 import net.dodian.uber.services.GameService
 import net.dodian.uber.services.LoginService
 import net.dodian.uber.utils.RsaManager
@@ -21,6 +23,8 @@ private val logger = InlineLogger()
 const val TIMEOUT_SECONDS = 30L
 
 val context = ServerContext(RsaManager().getPair())
+val definitions: GameDefinitions get() = context.definitions
+val protocol: GameProtocol get() = context.protocol
 
 fun main() {
     logger.info { "Launching Uber Server 3.0..." }

@@ -75,5 +75,4 @@ public class RegionCoordinates {
         }
         return true;
     }
-
 }

@@ -2,10 +2,9 @@ package net.dodian
 
 import com.github.michaelbull.logging.InlineLogger
 import io.netty.bootstrap.ServerBootstrap
+import net.dodian.uber.cache.definition.GameDefinitions
 import net.dodian.uber.game.modelkt.World
 import net.dodian.uber.net.NetworkPorts
-import net.dodian.uber.net.codec.game.GameMessageDecoder
-import net.dodian.uber.net.codec.game.GameMessageEncoder
 import net.dodian.uber.net.message.GameProtocol
 import net.dodian.uber.services.Service
 import net.dodian.uber.utils.RsaKeyPair
@@ -22,7 +21,8 @@ class ServerContext(
     val jagGrabBootstrap: ServerBootstrap = ServerBootstrap(),
     val services: MutableList<Service> = mutableListOf(),
     val world: World = World(),
-    val protocol: GameProtocol = GameProtocol()
+    val protocol: GameProtocol = GameProtocol(),
+    val definitions: GameDefinitions = GameDefinitions()
 ) {
     inline fun <reified S : Service> service() = services.single { it is S } as S
 
@@ -30,6 +30,7 @@ class ServerContext(
         if (services.any { it::class == service::class })
             return false
 
+        if (start) service.start()
         return services.add(service)
     }
 
@@ -41,8 +42,8 @@ class ServerContext(
         val ports = NetworkPorts()
 
         val service = InetSocketAddress(ports.service)
-        val http = InetSocketAddress(ports.http)
-        val jagGrab = InetSocketAddress(ports.jaggrab)
+        //val http = InetSocketAddress(ports.http)
+        //val jagGrab = InetSocketAddress(ports.jaggrab)
 
         bind(serviceBootstrap, service)
         //bind(httpBootstrap, http)

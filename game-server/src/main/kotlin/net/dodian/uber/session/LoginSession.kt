@@ -4,7 +4,7 @@ import com.github.michaelbull.logging.InlineLogger
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
 import net.dodian.context
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.io.player.PlayerLoaderResponse
 import net.dodian.uber.net.codec.game.GameMessageDecoder
 import net.dodian.uber.net.codec.game.GameMessageEncoder

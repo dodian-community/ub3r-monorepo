@@ -1,5 +1,10 @@
 package net.dodian.uber.game.modelkt.entity
 
+import net.dodian.uber.game.modelkt.World
+import net.dodian.uber.game.modelkt.area.Position
+
 class Npc(
-    override val type: EntityType = EntityType.NPC
+    override var position: Position,
+    override val world: World,
+    override val entityType: EntityType = EntityType.NPC,
 ) : Mob()

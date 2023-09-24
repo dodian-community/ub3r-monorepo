@@ -5,7 +5,7 @@ import net.dodian.context
 import net.dodian.uber.game.GamePulseHandler
 import net.dodian.uber.game.PULSE_DELAY
 import net.dodian.uber.game.message.handler.MessageHandlerChainSet
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.game.sync.ClientSynchronizer
 import net.dodian.uber.game.sync.ParallelClientSynchronizer
 import net.dodian.uber.net.codec.login.STATUS_ACCOUNT_ONLINE

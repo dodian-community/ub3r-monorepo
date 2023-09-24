@@ -6,9 +6,9 @@ import io.netty.channel.ChannelFutureListener
 import net.dodian.context
 import net.dodian.uber.game.MESSAGES_PER_PULSE
 import net.dodian.uber.game.message.handler.MessageHandlerChainSet
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.message.Message
-import net.dodian.uber.net.protocol.packets.server.Logout
+import net.dodian.uber.net.protocol.packets.server.LogoutMessage
 import net.dodian.uber.services.GameService
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -54,7 +54,7 @@ class GameSession(
             return
 
         val future = channel.writeAndFlush(message)
-        if (message is Logout) {
+        if (message is LogoutMessage) {
             logger.debug { "Message was logout, adding future close listener..." }
             future.addListeners(ChannelFutureListener.CLOSE)
         }

@@ -1,8 +1,9 @@
 package net.dodian.uber.io.player
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.context
+import net.dodian.uber.game.modelkt.area.Position
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.codec.login.STATUS_ACCOUNT_ONLINE
 import net.dodian.uber.net.codec.login.STATUS_OK
 import net.dodian.uber.net.codec.login.STATUS_SERVER_FULL
@@ -15,7 +16,7 @@ class DummyPlayerSerializer : PlayerSerializer() {
     override fun loadPlayer(credentials: PlayerCredentials): PlayerLoaderResponse {
         var status = STATUS_OK
 
-        val player = Player(credentials)
+        val player = Player(credentials, Position(3232, 3232), context.world)
 
         player.playerRights = 0
         player.premium = true

@@ -1,7 +1,7 @@
 package net.dodian.uber.services
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.io.player.DummyPlayerSerializer
 import net.dodian.uber.io.player.PlayerSerializer
 import net.dodian.uber.login.PlayerLoadWorker

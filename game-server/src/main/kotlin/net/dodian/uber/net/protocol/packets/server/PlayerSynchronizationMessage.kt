@@ -1,9 +1,9 @@
 package net.dodian.uber.net.protocol.packets.server
 
-import net.dodian.uber.game.modelkt.Position
+import net.dodian.uber.game.modelkt.area.Position
 import net.dodian.uber.net.message.Message
 
-data class PlayerSynchronization(
+data class PlayerSynchronizationMessage(
     val lastKnownRegion: Position,
     val localPlayers: Int,
     val position: Position,

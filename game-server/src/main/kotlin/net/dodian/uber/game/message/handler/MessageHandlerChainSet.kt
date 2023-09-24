@@ -1,9 +1,8 @@
 package net.dodian.uber.game.message.handler
 
-import net.dodian.uber.game.modelkt.entity.Player
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.net.message.Message
 import java.util.*
-import java.util.function.Function
 
 class MessageHandlerChainSet(
     private val classes: MutableMap<Class<out Message>, Deque<Class<out Message>>> = mutableMapOf(),
