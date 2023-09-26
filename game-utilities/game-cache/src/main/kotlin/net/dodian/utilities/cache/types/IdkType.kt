@@ -36,9 +36,9 @@ data class IdkTypeBuilder(
     )
 }
 
-object IdkTypeLoader {
+object IdkTypeLoader : TypeLoader<IdkType> {
 
-    fun load(cache: CacheLibrary): List<IdkType> {
+    override fun load(cache: CacheLibrary): List<IdkType> {
         val types = mutableListOf<IdkType>()
 
         val data = cache.typeBuffer(ConfigType.Idk)

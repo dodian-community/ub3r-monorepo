@@ -49,15 +49,13 @@ data class SpotAnimTypeBuilder(
     )
 }
 
-object SpotAnimTypeLoader {
+object SpotAnimTypeLoader : TypeLoader<SpotAnimType> {
 
-    fun load(cache: CacheLibrary): List<SpotAnimType> {
+    override fun load(cache: CacheLibrary): List<SpotAnimType> {
         val types = mutableListOf<SpotAnimType>()
 
         val data = Buffer(cache.typeBuffer(ConfigType.SpotAnim).array())
         val count = data.readUnsignedShort()
-
-        logger.info { "Reading $count SpotAnim types..." }
 
         for (i in 0 until count)
             types += readType(data, i)
@@ -76,8 +74,6 @@ object SpotAnimTypeLoader {
     }
 
     private fun readBuffer(buf: Buffer, builder: SpotAnimTypeBuilder, instruction: Int) = with(builder) {
-        logger.debug { "Decoding instruction: $instruction, for SpotAnim ${builder.id}" }
-
         when (instruction) {
             1 -> modelId = buf.readUnsignedShort()
             2 -> seqId = buf.readUnsignedShort()

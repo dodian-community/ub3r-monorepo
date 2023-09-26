@@ -120,9 +120,9 @@ data class FloTypeBuilder(
     )
 }
 
-object FloTypeLoader {
+object FloTypeLoader : TypeLoader<FloType> {
 
-    fun load(cache: CacheLibrary): List<FloType> {
+    override fun load(cache: CacheLibrary): List<FloType> {
         val types = mutableListOf<FloType>()
 
         val data = Buffer(cache.typeBuffer(ConfigType.Flo).array())

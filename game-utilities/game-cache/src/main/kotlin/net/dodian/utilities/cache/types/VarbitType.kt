@@ -28,9 +28,9 @@ data class VarbitTypeBuilder(
     )
 }
 
-object VarbitTypeLoader {
+object VarbitTypeLoader : TypeLoader<VarbitType> {
 
-    fun load(cache: CacheLibrary): List<VarbitType> {
+    override fun load(cache: CacheLibrary): List<VarbitType> {
         val types = mutableListOf<VarbitType>()
 
         val data = cache.typeBuffer(ConfigType.Varbit)

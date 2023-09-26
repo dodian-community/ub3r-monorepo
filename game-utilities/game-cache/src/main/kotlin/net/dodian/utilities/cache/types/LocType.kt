@@ -128,9 +128,9 @@ data class LocTypeBuilder(
     )
 }
 
-object LocTypeLoader {
+object LocTypeLoader : TypeLoader<LocType> {
 
-    fun load(cache: CacheLibrary): List<LocType> {
+    override fun load(cache: CacheLibrary): List<LocType> {
         val types = mutableListOf<LocType>()
 
         val data = cache.typeBuffer(ConfigType.Loc)
