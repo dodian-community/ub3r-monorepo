@@ -3,6 +3,7 @@ package net.dodian
 import com.github.michaelbull.logging.InlineLogger
 import io.netty.bootstrap.ServerBootstrap
 import net.dodian.uber.cache.definition.GameDefinitions
+import net.dodian.uber.game.libraries.commands.CommandsLibrary
 import net.dodian.uber.game.modelkt.World
 import net.dodian.uber.net.NetworkPorts
 import net.dodian.uber.net.message.GameProtocol
@@ -22,11 +23,12 @@ class ServerContext(
     val services: MutableList<Service> = mutableListOf(),
     val world: World = World(),
     val protocol: GameProtocol = GameProtocol(),
-    val definitions: GameDefinitions = GameDefinitions()
+    val definitions: GameDefinitions = GameDefinitions(),
+    val commandsLibrary: CommandsLibrary = CommandsLibrary()
 ) {
     inline fun <reified S : Service> service() = services.single { it is S } as S
 
-    fun registerService(service: Service, start: Boolean = false): Boolean {
+    fun registerService(service: Service): Boolean {
         if (services.any { it::class == service::class })
             return false
 

@@ -39,7 +39,7 @@ class GameSession(
         }
     }
 
-    fun handlePlayerSaverResponse(success: Boolean) {
+    fun handlePlayerSaverResponse() {
         context.service<GameService>().finalizePlayerUnregistration(player)
     }
 

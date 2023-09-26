@@ -14,6 +14,6 @@ class PlayerSaveWorker(
 ) : Runnable {
 
     override fun run() {
-        session.handlePlayerSaverResponse(serializer.savePlayer(player))
+        session.handlePlayerSaverResponse()
     }
 }

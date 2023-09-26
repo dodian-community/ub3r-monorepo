@@ -33,7 +33,7 @@ fun CacheLibrary.typeMeta(config: ConfigType) = if (config.meta != null)
 fun CacheLibrary.typeBuffer(config: ConfigType) = data(0, ARCHIVE_CONFIG, config.data)?.toByteBuf()
     ?: error("Couldn't find data file for '$config'")
 
-private fun ByteArray.toByteBuf() = Unpooled.wrappedBuffer(this)
+fun ByteArray.toByteBuf() = Unpooled.wrappedBuffer(this)
 
 
 const val STRING_TERMINATOR = 10

@@ -16,6 +16,7 @@ import net.dodian.uber.net.message.Message
 import net.dodian.uber.net.protocol.packets.server.*
 import net.dodian.uber.session.GameSession
 import net.dodian.utilities.CollectionUtil
+import net.dodian.utilities.RightsFlag
 import net.dodian.utilities.security.PlayerCredentials
 import java.util.*
 import java.util.ArrayDeque
@@ -30,6 +31,8 @@ class Player(
     override val world: World,
     override val entityType: EntityType = EntityType.PLAYER
 ) : Mob() {
+    val rightsFlags: MutableList<RightsFlag> = mutableListOf()
+
     private val queuedMessages: Deque<Message> = ArrayDeque()
 
     val interfaceSet: InterfaceSet = InterfaceSet(this)

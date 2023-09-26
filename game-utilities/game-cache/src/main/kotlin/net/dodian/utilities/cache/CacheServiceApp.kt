@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.utilities.cache.services.CacheService
+import net.dodian.utilities.cache.extensions.ARCHIVE_CONFIG
+import net.dodian.utilities.cache.services.*
 import net.dodian.utilities.cache.types.*
-import java.nio.file.Files
 import kotlin.io.path.Path
 
 private val logger = InlineLogger()
@@ -42,15 +42,23 @@ fun main() {
     cache.index(0).cache()
     logger.info { "Cached up index 0 of the game cache" }
 
-    mapOf(
-        "flo" to FloTypeLoader,
-        "idk" to IdkTypeLoader,
-        "loc" to LocTypeLoader,
-        "npc" to NpcTypeLoader,
-        "obj" to ObjTypeLoader,
-        "seq" to SeqTypeLoader,
-        "spotanim" to SpotAnimTypeLoader,
-        "varbit" to VarbitTypeLoader,
-        "varp" to VarpTypeLoader,
-    ).dumpToJson(cache)
+    val decoderService = TypeDecoderService(cache)
+    val types = decoderService.load(TypeDecoderDefinition(
+        dataFile = "obj.dat",
+        metaFile = "obj.idx",
+        cacheIndex = 0,
+        cacheArchive = ARCHIVE_CONFIG,
+        startPosition = ARCHIVE_CONFIG,
+        opcodes = mutableMapOf(
+            0 to null,
+            1 to TypeDecoderInstructions("modelId", DecoderMethod.SHORT, unsigned = true),
+            2 to TypeDecoderInstructions("name", DecoderMethod.STRING),
+            3 to TypeDecoderInstructions("examine", DecoderMethod.STRING, defaultValue = "I don't know anything about this item."),
+            4 to TypeDecoderInstructions("iconZoom", DecoderMethod.INT, defaultValue = 2_000),
+            5 to TypeDecoderInstructions("iconPitch", DecoderMethod.INT, defaultValue = 0),
+            6 to TypeDecoderInstructions("iconYaw", DecoderMethod.INT, defaultValue = 0),
+        )
+    ))
+
+    objectMapper.writeValue(Path("./data/dumps/config/obj_test.json").toFile(), types)
 }

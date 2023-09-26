@@ -11,6 +11,8 @@ import net.dodian.uber.net.*
 import net.dodian.uber.session.Ub3rHandler
 import net.dodian.uber.net.codec.handshake.SERVICE_GAME
 import net.dodian.uber.net.message.GameProtocol
+import net.dodian.uber.scripting.KotlinScriptPlugin
+import net.dodian.uber.scripting.ScriptPluginLoader
 import net.dodian.uber.services.GameService
 import net.dodian.uber.services.LoginService
 import net.dodian.uber.utils.RsaManager
@@ -28,6 +30,9 @@ val protocol: GameProtocol get() = context.protocol
 
 fun main() {
     logger.info { "Launching Uber Server 3.0..." }
+
+    val plugins = ScriptPluginLoader.load(KotlinScriptPlugin::class.java)
+    logger.info { "Loaded ${plugins.size} plugin script${if (plugins.size == 1) "" else "s"}." }
 
     val gameService = GameService()
     val loginService = LoginService()

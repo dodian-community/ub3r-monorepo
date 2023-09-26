@@ -33,7 +33,7 @@ class GameService(
         executor.scheduleAtFixedRate(GamePulseHandler(this), PULSE_DELAY, PULSE_DELAY, TimeUnit.MILLISECONDS)
     }
 
-    fun shutdown(natural: Boolean) {
+    fun shutdown() {
         executor.shutdownNow()
     }
 

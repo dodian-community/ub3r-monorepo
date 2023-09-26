@@ -1,6 +1,5 @@
 plugins {
     application
-    kotlin("jvm") version "1.9.10"
 }
 
 application {
@@ -45,15 +44,30 @@ dependencies {
     implementation("io.netty:netty-all:4.1.94.Final")
     implementation("com.google.guava:guava:19.0")
 
-    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.5")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
+
+    implementation(project(":game-utilities:game-scripting"))
+}
+
+allprojects {
+
+    dependencies {
+        implementation("io.github.classgraph:classgraph:4.8.162")
+
+        implementation("org.jetbrains.kotlin:kotlin-scripting-common:1.9.10")
+        implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.9.10")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
+
+        implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.5")
+        implementation("com.michael-bull.kotlin-result:kotlin-result-jvm:1.1.16")
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
+        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xallow-any-scripts-in-source-roots")
         jvmTarget = "11"
     }
 }
