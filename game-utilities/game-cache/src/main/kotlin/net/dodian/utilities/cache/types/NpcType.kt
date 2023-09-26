@@ -39,9 +39,9 @@ data class NpcTypeBuilder(
     )
 }
 
-object NpcTypeLoader {
+object NpcTypeLoader : TypeLoader<NpcType> {
 
-    fun load(cache: CacheLibrary): List<NpcType> {
+    override fun load(cache: CacheLibrary): List<NpcType> {
         val types = mutableListOf<NpcType>()
 
         val data = cache.typeBuffer(ConfigType.Npc)

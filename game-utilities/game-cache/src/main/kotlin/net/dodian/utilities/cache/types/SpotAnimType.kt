@@ -27,9 +27,9 @@ data class SpotAnimTypeBuilder(
     var modelId: Int? = null,
     var scaleXY: Int = 128,
     var scaleZ: Int = 128,
-    var rotation: Int? = null,
-    var lightAmbient: Int? = null,
-    var lightAttenuation: Int? = null,
+    var rotation: Int = 0,
+    var lightAmbient: Int = 0,
+    var lightAttenuation: Int = 0,
     var seqId: Int = -1,
     var colorSrc: MutableList<Int> = IntArray(6).toMutableList(),
     var colorDst: MutableList<Int> = IntArray(6).toMutableList()
@@ -38,9 +38,9 @@ data class SpotAnimTypeBuilder(
     override fun build() = SpotAnimType(
         index = index ?: error("No value set for 'index'"),
         modelId = modelId ?: error("No value set for 'modelId'"),
-        rotation = rotation ?: error("No value set for 'rotation'"),
-        lightAmbient = lightAmbient ?: error("No value set for 'lightAmbient'"),
-        lightAttenuation = lightAttenuation ?: error("No value set for 'lightAttenuation'"),
+        rotation = rotation,
+        lightAmbient = lightAmbient,
+        lightAttenuation = lightAttenuation,
         scaleXY = scaleXY,
         scaleZ = scaleZ,
         seqId = seqId,
@@ -49,15 +49,13 @@ data class SpotAnimTypeBuilder(
     )
 }
 
-object SpotAnimTypeLoader {
+object SpotAnimTypeLoader : TypeLoader<SpotAnimType> {
 
-    fun load(cache: CacheLibrary): List<SpotAnimType> {
+    override fun load(cache: CacheLibrary): List<SpotAnimType> {
         val types = mutableListOf<SpotAnimType>()
 
         val data = Buffer(cache.typeBuffer(ConfigType.SpotAnim).array())
         val count = data.readUnsignedShort()
-
-        logger.info { "Reading $count SpotAnim types..." }
 
         for (i in 0 until count)
             types += readType(data, i)
@@ -76,8 +74,6 @@ object SpotAnimTypeLoader {
     }
 
     private fun readBuffer(buf: Buffer, builder: SpotAnimTypeBuilder, instruction: Int) = with(builder) {
-        logger.debug { "Decoding instruction: $instruction, for SpotAnim ${builder.index}" }
-
         when (instruction) {
             1 -> modelId = buf.readUnsignedShort()
             2 -> seqId = buf.readUnsignedShort()

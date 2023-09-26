@@ -20,9 +20,9 @@ data class VarpTypeBuilder(
     override fun build() = VarpType(type)
 }
 
-object VarpTypeLoader {
+object VarpTypeLoader : TypeLoader<VarpType> {
 
-    fun load(cache: CacheLibrary): List<VarpType> {
+    override fun load(cache: CacheLibrary): List<VarpType> {
         val types = mutableListOf<VarpType>()
 
         val data = cache.typeBuffer(ConfigType.Varp)

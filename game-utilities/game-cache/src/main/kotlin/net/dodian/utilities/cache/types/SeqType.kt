@@ -60,9 +60,9 @@ data class SeqTypeBuilder(
     )
 }
 
-object SeqTypeLoader {
+object SeqTypeLoader : TypeLoader<SeqType> {
 
-    fun load(cache: CacheLibrary): List<SeqType> {
+    override fun load(cache: CacheLibrary): List<SeqType> {
         val types = mutableListOf<SeqType>()
 
         val data = cache.typeBuffer(ConfigType.Seq)

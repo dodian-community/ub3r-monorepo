@@ -29,9 +29,9 @@ data class ObjTypeBuilder(
     )
 }
 
-object ObjTypeLoader {
+object ObjTypeLoader : TypeLoader<ObjType> {
 
-    fun load(cache: CacheLibrary): List<ObjType> {
+    override fun load(cache: CacheLibrary): List<ObjType> {
         val types = mutableListOf<ObjType>()
 
         val data = cache.typeBuffer(ConfigType.Obj)
