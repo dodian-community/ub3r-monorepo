@@ -15,7 +15,7 @@ private val logger = InlineLogger()
 fun main() {
     logger.debug { "Debug logging is enabled!" }
     logger.info { "Starting cache service app..." }
-    val service = CacheService()
+    val service = CacheService("./data/cache_317")
     val cache = service.cache
 
     logger.info { "Loaded game cache..." }
@@ -57,12 +57,12 @@ fun main() {
     objectMapper.writeValue(Path("./data/dumps/config/varbit.json").toFile(), varbitTypes)
     logger.info { "Wrote ${varbitTypes.size} VarBit types to file..." }
 
-    //println()
+    println()
 
-    //val spotAnimTypes = SpotAnimTypeLoader.load(cache)
-    //logger.info { "Loaded ${spotAnimTypes.size} spotanim types..." }
-    //objectMapper.writeValue(Path("./data/dumps/config/spotanim.json").toFile(), spotAnimTypes)
-    //logger.info { "Wrote ${spotAnimTypes.size} spotanim types to file..." }
+    val spotAnimTypes = SpotAnimTypeLoader.load(cache)
+    logger.info { "Loaded ${spotAnimTypes.size} spotanim types..." }
+    objectMapper.writeValue(Path("./data/dumps/config/spotanim.json").toFile(), spotAnimTypes)
+    logger.info { "Wrote ${spotAnimTypes.size} spotanim types to file..." }
 
     println()
 

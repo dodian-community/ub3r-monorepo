@@ -10,7 +10,7 @@ import net.dodian.utilities.cache.extensions.typeBuffer
 private val logger = InlineLogger()
 
 data class SpotAnimType(
-    val index: Int,
+    val id: Int,
     val modelId: Int,
     val scaleXY: Int,
     val scaleZ: Int,
@@ -23,24 +23,24 @@ data class SpotAnimType(
 ) : Type
 
 data class SpotAnimTypeBuilder(
-    var index: Int? = null,
+    var id: Int? = null,
     var modelId: Int? = null,
     var scaleXY: Int = 128,
     var scaleZ: Int = 128,
-    var rotation: Int? = null,
-    var lightAmbient: Int? = null,
-    var lightAttenuation: Int? = null,
+    var rotation: Int = 0,
+    var lightAmbient: Int = 0,
+    var lightAttenuation: Int = 0,
     var seqId: Int = -1,
     var colorSrc: MutableList<Int> = IntArray(6).toMutableList(),
     var colorDst: MutableList<Int> = IntArray(6).toMutableList()
 ) : TypeBuilder<SpotAnimType> {
 
     override fun build() = SpotAnimType(
-        index = index ?: error("No value set for 'index'"),
+        id = id ?: error("No value set for 'id'"),
         modelId = modelId ?: error("No value set for 'modelId'"),
-        rotation = rotation ?: error("No value set for 'rotation'"),
-        lightAmbient = lightAmbient ?: error("No value set for 'lightAmbient'"),
-        lightAttenuation = lightAttenuation ?: error("No value set for 'lightAttenuation'"),
+        rotation = rotation,
+        lightAmbient = lightAmbient,
+        lightAttenuation = lightAttenuation,
         scaleXY = scaleXY,
         scaleZ = scaleZ,
         seqId = seqId,
@@ -65,8 +65,8 @@ object SpotAnimTypeLoader {
         return types
     }
 
-    private fun readType(buf: Buffer, index: Int): SpotAnimType {
-        val builder = SpotAnimTypeBuilder(index)
+    private fun readType(buf: Buffer, id: Int): SpotAnimType {
+        val builder = SpotAnimTypeBuilder(id)
 
         var reading = true
         while (reading)
@@ -76,7 +76,7 @@ object SpotAnimTypeLoader {
     }
 
     private fun readBuffer(buf: Buffer, builder: SpotAnimTypeBuilder, instruction: Int) = with(builder) {
-        logger.debug { "Decoding instruction: $instruction, for SpotAnim ${builder.index}" }
+        logger.debug { "Decoding instruction: $instruction, for SpotAnim ${builder.id}" }
 
         when (instruction) {
             1 -> modelId = buf.readUnsignedShort()
