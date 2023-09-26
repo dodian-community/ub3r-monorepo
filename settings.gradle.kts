@@ -1,6 +1,6 @@
 rootProject.name = "ub3r"
 
 include(":game-server")
-include(":game-client")
+include(":game-utilities")
+include(":game-utilities:game-cache")
 include(":game-launcher")
-include(":game-launcher-seamless")
