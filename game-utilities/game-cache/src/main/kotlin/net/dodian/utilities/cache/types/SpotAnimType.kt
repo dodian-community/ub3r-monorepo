@@ -10,7 +10,7 @@ import net.dodian.utilities.cache.extensions.typeBuffer
 private val logger = InlineLogger()
 
 data class SpotAnimType(
-    val index: Int,
+    val id: Int,
     val modelId: Int,
     val scaleXY: Int,
     val scaleZ: Int,
@@ -23,7 +23,7 @@ data class SpotAnimType(
 ) : Type
 
 data class SpotAnimTypeBuilder(
-    var index: Int? = null,
+    var id: Int? = null,
     var modelId: Int? = null,
     var scaleXY: Int = 128,
     var scaleZ: Int = 128,
@@ -36,7 +36,7 @@ data class SpotAnimTypeBuilder(
 ) : TypeBuilder<SpotAnimType> {
 
     override fun build() = SpotAnimType(
-        index = index ?: error("No value set for 'index'"),
+        id = id ?: error("No value set for 'id'"),
         modelId = modelId ?: error("No value set for 'modelId'"),
         rotation = rotation,
         lightAmbient = lightAmbient,
@@ -63,8 +63,8 @@ object SpotAnimTypeLoader : TypeLoader<SpotAnimType> {
         return types
     }
 
-    private fun readType(buf: Buffer, index: Int): SpotAnimType {
-        val builder = SpotAnimTypeBuilder(index)
+    private fun readType(buf: Buffer, id: Int): SpotAnimType {
+        val builder = SpotAnimTypeBuilder(id)
 
         var reading = true
         while (reading)
