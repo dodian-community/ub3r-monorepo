@@ -139,6 +139,8 @@ object LocTypeLoader : TypeLoader<LocType> {
         val count = meta.readUnsignedShort()
         val indices = IntArray(count)
 
+        logger.info { "Loading $count LocTypes..." }
+
         var index = ARCHIVE_CONFIG
         for (i in 0 until count) {
             indices[i] = index
@@ -150,6 +152,8 @@ object LocTypeLoader : TypeLoader<LocType> {
             types += readType(data, typeId)
         }
 
+        logger.info { "Loaded $count LocTypes..." }
+        println()
         return types
     }
 

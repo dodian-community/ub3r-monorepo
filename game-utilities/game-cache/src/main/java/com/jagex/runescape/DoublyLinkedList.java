@@ -1,6 +1,5 @@
 package com.jagex.runescape;
 
-@SuppressWarnings("unused")
 public class DoublyLinkedList {
 
     public static class Node {

@@ -23,4 +23,15 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
 
     implementation("org.apache.commons:commons-math3:3.6.1")
+
+    implementation("io.ktor:ktor-server-core:2.3.4")
+    implementation("io.ktor:ktor-server-cors:2.3.4")
+    implementation("io.ktor:ktor-server-netty:2.3.4")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.4")
+    implementation("io.ktor:ktor-serialization-jackson:2.3.4")
+    implementation("io.ktor:ktor-server-auth:2.3.4")
+    implementation("io.ktor:ktor-server-auth-jwt:2.3.4")
+    implementation("io.ktor:ktor-server-auth:2.3.4")
+
+    implementation("com.twelvemonkeys.imageio:imageio-webp:3.8.2")
 }

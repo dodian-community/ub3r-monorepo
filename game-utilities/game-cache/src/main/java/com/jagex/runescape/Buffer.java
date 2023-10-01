@@ -243,7 +243,7 @@ public class Buffer extends DoublyLinkedList.Node {
         return ((data[position - 3] & 0xff) << 16) + ((data[position - 2] & 0xff) << 8) + (data[position - 1] & 0xff);
     }
 
-    public int readInt() {
+    public int read32() {
         position += 4;
         return ((data[position - 4] & 0xff) << 24) + ((data[position - 3] & 0xff) << 16) + ((data[position - 2] & 0xff) << 8) + (data[position - 1] & 0xff);
     }
@@ -259,8 +259,8 @@ public class Buffer extends DoublyLinkedList.Node {
     }
 
     public long read64() {
-        long msi = (long) readInt() & 0xffffffffL;
-        long lsi = (long) readInt() & 0xffffffffL;
+        long msi = (long) read32() & 0xffffffffL;
+        long lsi = (long) read32() & 0xffffffffL;
         return (msi << 32) + lsi;
     }
 

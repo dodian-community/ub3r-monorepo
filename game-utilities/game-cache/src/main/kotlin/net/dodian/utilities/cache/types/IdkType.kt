@@ -44,9 +44,13 @@ object IdkTypeLoader : TypeLoader<IdkType> {
         val data = cache.typeBuffer(ConfigType.Idk)
         val count = data.readUnsignedShort()
 
+        logger.info { "Loading $count IdkTypes..." }
+
         for (i in 0 until count)
             types += readType(data)
 
+        logger.info { "Loaded $count IdkTypes..." }
+        println()
         return types
     }
 

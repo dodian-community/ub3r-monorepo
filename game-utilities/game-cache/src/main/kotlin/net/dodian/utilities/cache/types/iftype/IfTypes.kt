@@ -8,5 +8,7 @@ enum class IfTypes {
     TEXT,
     IMAGE,
     MODEL,
-    INVENTORY_TEXT
+    INVENTORY_TEXT,
+    SPELL,
+    OTHER
 }

@@ -13,29 +13,95 @@ class NpcTypeList(
 
 data class NpcType(
     val id: Int,
+    val uid: Long,
     val name: String,
     val examine: String,
     val options: List<String>,
+    val level: Int,
+    val important: Boolean,
+    val showOnMinimap: Boolean,
+    val interactAble: Boolean,
+    val lightAmbient: Int,
+    val lightAttenuation: Int,
+    val colorSrc: List<Int>,
+    val colorDst: List<Int>,
+    val modelIds: List<Int>,
+    val headModelIds: List<Int>,
+    val headIcon: Int,
     val size: Int,
-    val modelIds: List<Int>
+    val scaleXY: Int,
+    val scaleZ: Int,
+    val seqTurnLeftId: Int,
+    val seqTurnRightId: Int,
+    val seqTurnAroundId: Int,
+    val seqStandId: Int,
+    val seqWalkId: Int,
+    val turnSpeed: Int,
+    val varpId: Int,
+    val varbitId: Int,
+    val overrides: List<Int>,
 ) : Type
 
 data class NpcTypeBuilder(
     var id: Int,
-    var name: String? = null,
-    var examine: String? = null,
-    var options: List<String>? = null,
-    var size: Int? = null,
-    var modelIds: List<Int>? = null
+    var uid: Long = -1L,
+    var name: String = "null",
+    var examine: String = "I don't anything about this NPC.",
+    var options: MutableList<String> = mutableListOf(),
+    var level: Int = -1,
+    var important: Boolean = false,
+    var showOnMinimap: Boolean = true,
+    var interactAble: Boolean = true,
+    var lightAmbient: Int = 0,
+    var lightAttenuation: Int = 0,
+    var colorSrc: MutableList<Int> = mutableListOf(),
+    var colorDst: MutableList<Int> = mutableListOf(),
+    var modelIds: MutableList<Int> = mutableListOf(),
+    var headModelIds: MutableList<Int> = mutableListOf(),
+    var headIcon: Int = -1,
+    var size: Int = 1,
+    var scaleXY: Int = 128,
+    var scaleZ: Int = 128,
+    var seqTurnLeftId: Int = -1,
+    var seqTurnRightId: Int = -1,
+    var seqTurnAroundId: Int = -1,
+    var seqStandId: Int = -1,
+    var seqWalkId: Int = -1,
+    var turnSpeed: Int = 32,
+    var varpId: Int = -1,
+    var varbitId: Int = -1,
+    var overrides: MutableList<Int> = mutableListOf()
 ) : TypeBuilder<NpcType> {
 
     override fun build() = NpcType(
         id = id,
-        name = name ?: "null",
-        examine = examine ?: "",
-        options = options ?: emptyList(),
-        size = size ?: 1,
-        modelIds = modelIds ?: emptyList()
+        uid = uid,
+        name = name,
+        examine = examine,
+        options = options,
+        level = level,
+        important = important,
+        showOnMinimap = showOnMinimap,
+        interactAble = interactAble,
+        lightAmbient = lightAmbient,
+        lightAttenuation = lightAttenuation,
+        colorSrc = colorSrc,
+        colorDst = colorDst,
+        modelIds = modelIds,
+        headModelIds = headModelIds,
+        headIcon = headIcon,
+        size = size,
+        scaleXY = scaleXY,
+        scaleZ = scaleZ,
+        seqTurnLeftId = seqTurnLeftId,
+        seqTurnRightId = seqTurnRightId,
+        seqTurnAroundId = seqTurnAroundId,
+        seqStandId = seqStandId,
+        seqWalkId = seqWalkId,
+        turnSpeed = turnSpeed,
+        varpId = varpId,
+        varbitId = varbitId,
+        overrides = overrides
     )
 }
 
@@ -49,6 +115,7 @@ object NpcTypeLoader : TypeLoader<NpcType> {
 
         val count = meta.readUnsignedShort()
         val indices = IntArray(count)
+        logger.info { "Loading $count NpcTypes..." }
 
         var index = ARCHIVE_CONFIG
         for (i in 0 until count) {
@@ -61,6 +128,8 @@ object NpcTypeLoader : TypeLoader<NpcType> {
             types += readType(data, typeId)
         }
 
+        logger.info { "Loaded $count NpcTypes..." }
+        println()
         return types
     }
 
@@ -81,67 +150,78 @@ object NpcTypeLoader : TypeLoader<NpcType> {
         when (instruction) {
             1 -> {
                 val count = buf.readUnsignedByte().toInt()
+                modelIds = IntArray(count).toMutableList()
                 for (i in 0 until count) {
-                    buf.readUnsignedShort()
+                    modelIds[i] = buf.readUnsignedShort()
                 }
             }
 
             2 -> name = buf.readString()
             3 -> examine = buf.readString()
             12 -> size = buf.readByte().toInt()
-            13 -> buf.readUnsignedShort()
-            14 -> buf.readUnsignedShort()
+            13 -> seqStandId = buf.readUnsignedShort()
+            14 -> seqWalkId = buf.readUnsignedShort()
             17 -> {
-                buf.readUnsignedShort()
-                buf.readUnsignedShort()
-                buf.readUnsignedShort()
-                buf.readUnsignedShort()
+                seqWalkId = buf.readUnsignedShort()
+                seqTurnAroundId = buf.readUnsignedShort()
+                seqTurnLeftId = buf.readUnsignedShort()
+                seqTurnRightId = buf.readUnsignedShort()
             }
 
             in 30..39 -> {
-                val opts = Array(5) { "" }
-                opts[instruction - 30] = buf.readString()
-                if (opts[instruction - 30].lowercase() == "hidden")
-                    opts[instruction - 30] = ""
-
-                options = opts.asList()
+                options = Array(5) { "" }.toMutableList()
+                options[instruction - 30] = buf.readString()
+                if (options[instruction - 30].lowercase() == "hidden")
+                    options[instruction - 30] = ""
             }
 
             40 -> {
                 val count = buf.readUnsignedByte().toInt()
+                val colorSrc = IntArray(count).toMutableList()
+                val colorDst = IntArray(count).toMutableList()
                 for (i in 0 until count) {
-                    buf.readUnsignedShort()
-                    buf.readUnsignedShort()
+                    colorSrc[i] = buf.readUnsignedShort()
+                    colorDst[i] = buf.readUnsignedShort()
                 }
             }
 
             60 -> {
                 val count = buf.readUnsignedByte().toInt()
+                headModelIds = IntArray(count).toMutableList()
                 for (i in 0 until count)
-                    buf.readUnsignedShort()
+                    headModelIds[i] = buf.readUnsignedShort()
             }
 
             90, 91, 92 -> buf.readUnsignedShort()
-            93 -> {}
-            95 -> buf.readUnsignedShort()
-            97 -> buf.readUnsignedShort()
-            98 -> buf.readUnsignedShort()
-            99 -> {}
-            100 -> buf.readByte()
-            101 -> buf.readByte()
-            102 -> buf.readUnsignedShort()
-            103 -> buf.readUnsignedShort()
+            93 -> showOnMinimap = false
+            95 -> level = buf.readUnsignedShort()
+            97 -> scaleXY = buf.readUnsignedShort()
+            98 -> scaleZ = buf.readUnsignedShort()
+            99 -> important = true
+            100 -> lightAmbient = buf.readByte().toInt()
+            101 -> lightAttenuation = buf.readByte().toInt()
+            102 -> headIcon = buf.readUnsignedShort()
+            103 -> turnSpeed = buf.readUnsignedShort()
             106 -> {
-                buf.readUnsignedShort()
-                buf.readUnsignedShort()
-                val count = buf.readUnsignedByte().toInt()
+                varbitId = buf.readUnsignedShort()
+                if (varbitId == 65535)
+                    varbitId = -1
 
-                for (i in 0 until count + 1) {
-                    buf.readUnsignedShort()
+                varpId = buf.readUnsignedShort()
+                if (varpId == 65535)
+                    varpId = -1
+
+                val overrideCount = buf.readUnsignedByte().toInt()
+                overrides = IntArray(overrideCount + 1).toMutableList()
+
+                for (i in 0 .. overrideCount) {
+                    overrides[i] = buf.readUnsignedShort()
+                    if (overrides[i] == 65535)
+                        overrides[i] = -1
                 }
             }
 
-            107 -> {}
+            107 -> interactAble = false
             0 -> return@with false
             else -> {
                 logger.debug { builder }

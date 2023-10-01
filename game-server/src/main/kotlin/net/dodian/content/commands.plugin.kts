@@ -2,6 +2,7 @@ package net.dodian.content
 
 import net.dodian.uber.game.libraries.commands.CommandSender
 import net.dodian.uber.game.libraries.commands.helpers.command
+import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.utilities.RightsFlag
 import kotlin.reflect.KFunction3
 
@@ -23,4 +24,16 @@ fun spawnItem(sender: CommandSender, itemId: Int, amount: Int?) {
     //) return sender.sendMessage("Not enough space in your inventory.")
 
     //player.addItem(itemId, amount ?: 1)
+}
+
+command<KFunction3<CommandSender, Player?, String?, Unit>, Unit> {
+    name = "kick"
+    description = "Kick a player, optionally providing a reason"
+    permissions = listOf(RightsFlag.Moderator)
+    onCommand = ::kickPlayer
+}
+
+fun kickPlayer(sender: CommandSender, player: Player?, reason: String?) {
+    if (player == null) sender.sendMessage("No player was found")
+
 }

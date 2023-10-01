@@ -68,9 +68,13 @@ object SeqTypeLoader : TypeLoader<SeqType> {
         val data = cache.typeBuffer(ConfigType.Seq)
         val count = data.readUnsignedShort()
 
+        logger.info { "Loading $count SeqTypes..." }
+
         for (i in 0 until count)
             types += readType(data)
 
+        logger.info { "Loaded $count SeqTypes..." }
+        println()
         return types
     }
 

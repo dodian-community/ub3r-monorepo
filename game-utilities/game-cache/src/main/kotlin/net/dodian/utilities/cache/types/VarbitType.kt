@@ -16,15 +16,15 @@ data class VarbitType(
 ) : Type
 
 data class VarbitTypeBuilder(
-    var varp: Int? = null,
-    var lsb: Int? = null,
-    var msb: Int? = null
+    var varp: Int = 0,
+    var lsb: Int = 0,
+    var msb: Int = 0
 ) : TypeBuilder<VarbitType> {
 
     override fun build() = VarbitType(
-        varp = varp ?: error("No value defined for 'varp'"),
-        lsb = lsb ?: error("No value defined for 'lsb'"),
-        msb = msb ?: error("No value defined for 'msb'")
+        varp = varp,
+        lsb = lsb,
+        msb = msb
     )
 }
 
@@ -36,10 +36,14 @@ object VarbitTypeLoader : TypeLoader<VarbitType> {
         val data = cache.typeBuffer(ConfigType.Varbit)
         val count = data.readUnsignedShort()
 
+        logger.info { "Loading $count VarbitTypes..." }
+
         for (i in 0 until count) {
             types += readType(data)
         }
 
+        logger.info { "Loaded $count VarbitTypes..." }
+        println()
         return types
     }
 

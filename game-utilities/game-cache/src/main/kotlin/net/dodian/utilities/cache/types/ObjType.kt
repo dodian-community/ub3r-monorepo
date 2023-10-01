@@ -16,16 +16,57 @@ data class ObjType(
 
 data class ObjTypeBuilder(
     var id: Int,
-    var name: String? = null,
-    var examine: String? = null,
-    var linkedId: Int? = null
+    var name: String = "null",
+    var examine: String = "I don't know anything about this item.",
+    var price: Int = 1,
+    var members: Boolean = false,
+    var team: Int = 0,
+
+    var options: MutableList<String?> = Array<String?>(5) { null }.toMutableList(),
+    var optionsInventory: MutableList<String?> = Array<String?>(5) { null }.toMutableList(),
+
+    var canStack: Boolean = false,
+    var stackId: MutableList<Int> = IntArray(10).toMutableList(),
+    var stackCount: MutableList<Int> = IntArray(10).toMutableList(),
+
+    var linkedId: Int = -1,
+    var certificateId: Int = -1,
+
+    var lightAmbient: Int = 0,
+    var lightAttenuation: Int = 0,
+    var colorSrc: MutableList<Int> = mutableListOf(),
+    var colorDst: MutableList<Int> = mutableListOf(),
+    var scaleX: Int = 128,
+    var scaleY: Int = 128,
+    var scaleZ: Int = 128,
+
+    var iconOffsetX: Int = 0,
+    var iconOffsetY: Int = 0,
+    var iconZoom: Int = 2000,
+    var iconYaw: Int = 0,
+    var iconPitch: Int = 0,
+    var iconRoll: Int = 0,
+
+    var femaleOffsetY: Int = 0,
+    var femaleModelId0: Int = -1,
+    var femaleModelId1: Int = -1,
+    var femaleModelId2: Int = -1,
+    var femaleHeadModelId0: Int = -1,
+    var femaleHeadModelId1: Int = -1,
+
+    var maleOffsetY: Int = 0,
+    var maleModelId0: Int = -1,
+    var maleModelId1: Int = -1,
+    var maleModelId2: Int = -1,
+    var maleHeadModelId0: Int = -1,
+    var maleHeadModelId1: Int = -1,
 ) : TypeBuilder<ObjType> {
 
     override fun build() = ObjType(
         id = id,
-        name = name ?: "null (F)",
-        examine = examine ?: "",
-        linkedId = linkedId ?: -1
+        name = name,
+        examine = examine,
+        linkedId = linkedId
     )
 }
 
@@ -39,6 +80,7 @@ object ObjTypeLoader : TypeLoader<ObjType> {
 
         val count = meta.readUnsignedShort()
         val indices = IntArray(count)
+        logger.info { "Loading $count ObjTypes..." }
 
         var index = ARCHIVE_CONFIG
         for (i in 0 until count) {
@@ -51,6 +93,8 @@ object ObjTypeLoader : TypeLoader<ObjType> {
             types += readType(data, typeId)
         }
 
+        logger.info { "Loaded $count ObjTypes..." }
+        println()
         return types
     }
 
@@ -65,64 +109,82 @@ object ObjTypeLoader : TypeLoader<ObjType> {
         return builder.build()
     }
 
-    private fun readBuffer(buf: ByteBuf, builder: ObjTypeBuilder, instruction: Int): Boolean = with(buf) {
+    private fun readBuffer(buf: ByteBuf, builder: ObjTypeBuilder, instruction: Int): Boolean = with(builder) {
         //logger.debug { "Decoding instruction: $instruction, for Obj ${builder.id}" }
 
         when (instruction) {
-            1 -> readUnsignedShort()
-            2 -> builder.name = readString()
-            3 -> builder.examine = readString()
-            4 -> readUnsignedShort()
-            5 -> readUnsignedShort()
-            6 -> readUnsignedShort()
-            7 -> readUnsignedShort()
-            8 -> readUnsignedShort()
-            10 -> readUnsignedShort()
-            11 -> {}
-            12 -> readInt()
-            16 -> {}
+            1 -> buf.readUnsignedShort()
+            2 -> name = buf.readString()
+            3 -> examine = buf.readString()
+            4 -> iconZoom = buf.readUnsignedShort()
+            5 -> iconPitch = buf.readUnsignedShort()
+            6 -> iconYaw = buf.readUnsignedShort()
+            7 -> {
+                iconOffsetX = buf.readUnsignedShort()
+                if (iconOffsetX > 32_767)
+                    iconOffsetX -= 65_536
+            }
+
+            8 -> {
+                iconOffsetY = buf.readUnsignedShort()
+                if (iconOffsetY > 32_767)
+                    iconOffsetY -= 65_536
+            }
+
+            10 -> buf.readUnsignedShort()
+            11 -> canStack = true
+            12 -> price = buf.readInt()
+            16 -> members = true
             23 -> {
-                readUnsignedShort()
-                readByte()
+                maleModelId0 = buf.readUnsignedShort()
+                maleOffsetY = buf.readByte().toInt()
             }
-            24 -> readUnsignedShort()
+
+            24 -> maleModelId1 = buf.readUnsignedShort()
             25 -> {
-                readUnsignedShort()
-                readByte()
+                femaleModelId0 = buf.readUnsignedShort()
+                femaleOffsetY = buf.readByte().toInt()
             }
-            26 -> readUnsignedShort()
+
+            26 -> femaleModelId1 = buf.readUnsignedShort()
             in 30..34 -> {
-                readString()
+                options[instruction - 30] = buf.readString()
+                if (options[instruction - 30].equals("hidden", ignoreCase = true))
+                    options[instruction - 30] = null
             }
-            in 35..39 -> {
-                readString()
-            }
+
+            in 35..39 -> optionsInventory[instruction - 35] = buf.readString()
+
             40 -> {
-                val count = readUnsignedByte().toInt()
+                val count = buf.readUnsignedByte().toInt()
+                colorSrc = IntArray(count).toMutableList()
+                colorDst = IntArray(count).toMutableList()
                 for (i in 0 until count) {
-                    readUnsignedShort()
-                    readUnsignedShort()
+                    colorSrc[i] = buf.readUnsignedShort()
+                    colorDst[i] = buf.readUnsignedShort()
                 }
             }
-            78 -> readUnsignedShort()
-            79 -> readUnsignedShort()
-            90 -> readUnsignedShort()
-            91 -> readUnsignedShort()
-            92 -> readUnsignedShort()
-            93 -> readUnsignedShort()
-            95 -> readUnsignedShort()
-            97 -> builder.linkedId = readUnsignedShort()
-            98 -> readUnsignedShort()
+
+            78 -> maleModelId2 = buf.readUnsignedShort()
+            79 -> femaleModelId2 = buf.readUnsignedShort()
+            90 -> maleHeadModelId0 = buf.readUnsignedShort()
+            91 -> femaleHeadModelId0 = buf.readUnsignedShort()
+            92 -> maleHeadModelId1 = buf.readUnsignedShort()
+            93 -> femaleHeadModelId1 = buf.readUnsignedShort()
+            95 -> iconRoll = buf.readUnsignedShort()
+            97 -> builder.linkedId = buf.readUnsignedShort()
+            98 -> certificateId = buf.readUnsignedShort()
             in 100..109 -> {
-                readUnsignedShort()
-                readUnsignedShort()
+                stackId[instruction - 100] = buf.readUnsignedShort()
+                stackCount[instruction - 100] = buf.readUnsignedShort()
             }
-            110 -> readUnsignedShort()
-            111 -> readUnsignedShort()
-            112 -> readUnsignedShort()
-            113 -> readByte()
-            114 -> readByte()
-            115 -> readUnsignedByte()
+
+            110 -> scaleX = buf.readUnsignedShort()
+            111 -> scaleZ = buf.readUnsignedShort()
+            112 -> scaleY = buf.readUnsignedShort()
+            113 -> lightAmbient = buf.readByte().toInt()
+            114 -> lightAttenuation = buf.readByte().toInt()
+            115 -> team = buf.readUnsignedByte().toInt()
 
             0 -> return false
             else -> {

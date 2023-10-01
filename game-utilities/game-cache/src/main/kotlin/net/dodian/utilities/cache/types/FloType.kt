@@ -2,7 +2,6 @@ package net.dodian.utilities.cache.types
 
 import com.displee.cache.CacheLibrary
 import com.github.michaelbull.logging.InlineLogger
-import com.jagex.runescape.Buffer
 import io.netty.buffer.ByteBuf
 import net.dodian.utilities.cache.extensions.ConfigType
 import net.dodian.utilities.cache.extensions.readString
@@ -125,36 +124,39 @@ object FloTypeLoader : TypeLoader<FloType> {
     override fun load(cache: CacheLibrary): List<FloType> {
         val types = mutableListOf<FloType>()
 
-        val data = Buffer(cache.typeBuffer(ConfigType.Flo).array())
+        val data = cache.typeBuffer(ConfigType.Flo)
         val count = data.readUnsignedShort()
+        logger.info { "Loading $count FloTypes..." }
 
         for (i in 0 until count) {
             types += readType(data)
         }
 
+        logger.info { "Loaded $count FloTypes..." }
+        println()
         return types
     }
 
-    private fun readType(buf: Buffer): FloType {
+    private fun readType(buf: ByteBuf): FloType {
         val builder = FloTypeBuilder()
 
         var reading = true
         while (reading)
-            reading = readBuffer(buf, builder, buf.readUnsignedByte())
+            reading = readBuffer(buf, builder, buf.readUnsignedByte().toInt())
 
         //logger.debug { builder }
         return builder.build()
     }
 
-    private fun readBuffer(buf: Buffer, builder: FloTypeBuilder, instruction: Int) = with(builder) {
+    private fun readBuffer(buf: ByteBuf, builder: FloTypeBuilder, instruction: Int) = with(builder) {
         //logger.debug { "Decoding instruction: $instruction, for FloType" }
 
         when (instruction) {
             1 -> {
-                rgb = buf.read24()
+                rgb = buf.readMedium()
                 updateColor(rgb)
             }
-            2 -> textureId = buf.readUnsignedByte()
+            2 -> textureId = buf.readUnsignedByte().toInt()
             3 -> {}
             5 -> occludes = false
             6 -> name = buf.readString()
@@ -163,7 +165,7 @@ object FloTypeLoader : TypeLoader<FloType> {
                 val s = saturation
                 val l = lightness
                 val c = chroma
-                updateColor(buf.read24())
+                updateColor(buf.readMedium())
 
                 hue = h
                 saturation = s

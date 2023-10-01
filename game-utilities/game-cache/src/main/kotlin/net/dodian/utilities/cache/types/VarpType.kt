@@ -27,11 +27,14 @@ object VarpTypeLoader : TypeLoader<VarpType> {
 
         val data = cache.typeBuffer(ConfigType.Varp)
         val count = data.readUnsignedShort()
+        logger.info { "Loading $count VarpTypes..." }
 
         for (i in 0 until count) {
             types += readType(data)
         }
 
+        logger.info { "Loaded $count VarpTypes..." }
+        println()
         return types
     }
 

@@ -6,5 +6,5 @@ enum class IfOptionTypes {
     CLOSE,
     TOGGLE,
     SELECT,
-    CONTINUE
+    CONTINUE;
 }
