@@ -7,6 +7,6 @@ class JagGrabRequestDecoder : MessageToMessageDecoder<String>() {
     override fun decode(ctx: ChannelHandlerContext, request: String, out: MutableList<Any>) {
         if (request.startsWith("JAGGRAB /"))
             out.add(JagGrabRequest(request.substring(8).trim()))
-        else error("Corrupted request line.")
+        else error("Corrupted request line:\n$request")
     }
 }

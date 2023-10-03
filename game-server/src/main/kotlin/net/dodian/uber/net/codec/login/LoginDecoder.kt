@@ -12,6 +12,7 @@ import net.dodian.uber.utils.StatefulFrameDecoder
 import net.dodian.utilities.security.IsaacRandom
 import net.dodian.utilities.security.IsaacRandomPair
 import net.dodian.utilities.security.createPlayerCredentials
+import org.apollo.cache.FileSystemConstants
 import java.math.BigInteger
 import java.net.InetSocketAddress
 import java.security.SecureRandom
@@ -86,10 +87,9 @@ class LoginDecoder(
 
         val lowMemory = memoryStatus == 1
 
-        // TODO: Implement CRC check?
-        val crcs = IntArray(9)
+        val crcs = IntArray(FileSystemConstants.ARCHIVE_COUNT)
         for (i in crcs.indices) {
-            payload.readInt()
+            crcs[i] = payload.readInt()
         }
 
         val length = payload.readUnsignedByte().toInt()

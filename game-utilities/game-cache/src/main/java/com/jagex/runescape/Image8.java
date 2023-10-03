@@ -3,6 +3,7 @@ package com.jagex.runescape;
 import com.displee.cache.index.archive.Archive;
 import com.displee.cache.index.archive.file.File;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 @SuppressWarnings("unused")
@@ -232,4 +233,18 @@ public class Image8 {
         }
     }
 
+    public BufferedImage toBufferedImage() {
+        int[] transPixels = new int[pixels.length];
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        for (int i = 0; i < pixels.length; i++) {
+            if (pixels[i] != 0) {
+                transPixels[i] = pixels[i] | 0xff000000;
+            }
+        }
+
+        img.setRGB(0, 0, width, height, transPixels, 0, width);
+
+        return img;
+    }
 }

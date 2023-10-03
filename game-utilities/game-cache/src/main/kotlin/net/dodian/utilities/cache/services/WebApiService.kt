@@ -65,54 +65,79 @@ fun Application.configureRoutes() {
                 call.respondBytes(imageBytes.toByteArray())
             }
 
-            route("/types/ifs") {
-                get {
-                    paginated(cacheService.ifTypes.filter { it.id == it.parentId || it.parentId == -1 })
+            route("/types") {
+                route("/obj") {
+                    get {
+                        paginated(cacheService.objTypes)
+                    }
+
+                    get("/{id}") {
+                        val id = call.parameters["id"]?.toIntOrNull()
+                        if (id == null) call.respond("'${call.parameters["id"]}' is not a valid if ID.")
+
+                        val objTypes = cacheService.objTypes
+
+                        val type = objTypes.singleOrNull { it.id == id }
+                            ?: return@get call.respond("No IfType found for ID '$id'.")
+
+                        call.respond(type)
+                    }
                 }
 
-                get("/page/{page}/limit/{limit}") {
-                    val page = call.parameters["page"]?.toIntOrNull() ?: 1
-                    val limit = call.parameters["limit"]?.toIntOrNull() ?: 25
+                route("/ifs") {
 
-                    paginated(cacheService.ifTypes.filter { it.id == it.parentId || it.parentId == -1 }, page = page, limit = limit)
-                }
+                    get {
+                        paginated(cacheService.ifTypes.filter { it.id == it.parentId || it.parentId == -1 })
+                    }
 
-                get("/transparency/{minimum}") {
-                    val minimum = call.parameters["minimum"]?.toIntOrNull() ?: 0
+                    get("/page/{page}/limit/{limit}") {
+                        val page = call.parameters["page"]?.toIntOrNull() ?: 1
+                        val limit = call.parameters["limit"]?.toIntOrNull() ?: 25
 
-                    call.respond(cacheService.ifTypes.filter { it.transparency >= minimum })
-                }
-
-                get("{id}") {
-                    val id = call.parameters["id"]?.toIntOrNull()
-                    if (id == null) call.respond("'${call.parameters["id"]}' is not a valid if ID.")
-
-                    val ifTypes = cacheService.ifTypes
-
-                    val type = ifTypes.singleOrNull { it.id == id }
-                        ?: return@get call.respond("No IfType found for ID '$id'.")
-
-                    val children = type.childrenFrom(ifTypes)
-
-
-                    //val children = ifTypes.filter { type.childId.contains(it.id) }.map { child ->
-                    //    IfTypeWithChildren(
-                    //        parent = child,
-                    //        children = ifTypes.filter { child.childId.contains(it.id) }
-                    //            .map { IfTypeWithChildren(parent = it, children = emptyList()) })
-                    //}
-                    //
-                    //val type2 = type.apply {
-                    //    x = 0
-                    //    y = 0
-                    //}
-
-                    call.respond(
-                        IfTypeWithChildren(
-                            parent = type,
-                            children = children
+                        paginated(
+                            cacheService.ifTypes.filter { it.id == it.parentId || it.parentId == -1 },
+                            page = page,
+                            limit = limit
                         )
-                    )
+                    }
+
+                    get("/transparency/{minimum}") {
+                        val minimum = call.parameters["minimum"]?.toIntOrNull() ?: 0
+
+                        call.respond(cacheService.ifTypes.filter { it.transparency >= minimum })
+                    }
+
+                    get("/{id}") {
+                        val id = call.parameters["id"]?.toIntOrNull()
+                        if (id == null) call.respond("'${call.parameters["id"]}' is not a valid if ID.")
+
+                        val ifTypes = cacheService.ifTypes
+
+                        val type = ifTypes.singleOrNull { it.id == id }
+                            ?: return@get call.respond("No IfType found for ID '$id'.")
+
+                        val children = type.childrenFrom(ifTypes)
+
+
+                        //val children = ifTypes.filter { type.childId.contains(it.id) }.map { child ->
+                        //    IfTypeWithChildren(
+                        //        parent = child,
+                        //        children = ifTypes.filter { child.childId.contains(it.id) }
+                        //            .map { IfTypeWithChildren(parent = it, children = emptyList()) })
+                        //}
+                        //
+                        //val type2 = type.apply {
+                        //    x = 0
+                        //    y = 0
+                        //}
+
+                        call.respond(
+                            IfTypeWithChildren(
+                                parent = type,
+                                children = children
+                            )
+                        )
+                    }
                 }
             }
         }

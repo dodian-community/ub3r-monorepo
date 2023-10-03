@@ -42,7 +42,7 @@ This is a document designed to explain some terms to prevent confusion about the
 
 This is the root directory of the project, and in this directory you'll among other things find these folders: `docs`, `game-client`, and `game-launcher`.
 
-### Game Server Root:** <small>_(`/game-server`)_</small>
+### com.jagex.runescape.Game Server Root:** <small>_(`/game-server`)_</small>
 
 This is the root directory of the game server's source code. In this directory you'll among other things find these files: `.example.env`, `Dockerfile`, and `docker-compose-exmaple.yml`.
 

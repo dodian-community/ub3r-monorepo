@@ -28,7 +28,7 @@ public class Image24 extends DoublyLinkedList.Node {
         File fileDat = archive.file(file + ".dat");
         File fileIdx = archive.file("index.dat");
         if (fileDat == null || fileIdx == null)
-            throw new RuntimeException("Failed to find file...");
+            throw new RuntimeException("Failed to find file... (" + file + "-" + index + ")");
 
         Buffer dat = new Buffer(fileDat.getData());
         Buffer idx = new Buffer(fileIdx.getData());

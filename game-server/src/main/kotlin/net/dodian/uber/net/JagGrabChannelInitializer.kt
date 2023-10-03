@@ -19,6 +19,10 @@ class JagGrabChannelInitializer(
     private val handler: ChannelInboundHandlerAdapter
 ) : ChannelInitializer<SocketChannel>() {
 
+	init {
+		DOUBLE_LINE_FEED_DELIMITER.writeByte(10).writeByte(10);
+	}
+
     override fun initChannel(ch: SocketChannel): Unit = with(ch.pipeline()) {
         addLast("farmer", DelimiterBasedFrameDecoder(MAX_REQUEST_LENGTH, DOUBLE_LINE_FEED_DELIMITER))
         addLast("string-decoder", StringDecoder(JAGGRAB_CHARSET))

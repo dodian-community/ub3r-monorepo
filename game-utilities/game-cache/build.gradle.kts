@@ -3,6 +3,7 @@ plugins {
 }
 
 application {
+    tasks.run.get().workingDir = rootProject.projectDir
     mainClass.set("net.dodian.utilities.cache.CacheServiceAppKt")
 }
 
@@ -34,4 +35,12 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:2.3.4")
 
     implementation("com.twelvemonkeys.imageio:imageio-webp:3.8.2")
+}
+
+tasks.register<JavaExec>("dump-all") {
+    group = "dodian-cache"
+
+    workingDir = rootProject.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("net.dodian.utilities.cache.services.CacheDumperServiceKt")
 }

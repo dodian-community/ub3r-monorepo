@@ -58,8 +58,8 @@ you should have your own copy of this project under your own GitHub account.
 9. Download the `server_data_latest.zip` from here: https://drive.google.com/drive/folders/1z_Ua4b4Gm666U0TVzZXrBCzViPyxfBZr
 10. Extract the contents of the ZIP file into a folder called `data` at the game server's root directory
 11. You should now be ready to start the server and run the client using the Gradle tasks to the right (little menu called Gradle)
-    * **Starting Game Server:** `ub3r-monorepo` -> `game-server` -> `Tasks` -> `application` -> `run`
-    * **Starting Game Client:** `ub3r-monorepo` -> `game-client` -> `Tasks` -> `application` -> `run`
+    * **Starting com.jagex.runescape.Game Server:** `ub3r-monorepo` -> `game-server` -> `Tasks` -> `application` -> `run`
+    * **Starting com.jagex.runescape.Game Client:** `ub3r-monorepo` -> `game-client` -> `Tasks` -> `application` -> `run`
 
 ### Useful Links
 

@@ -1,6 +1,7 @@
 package net.dodian.uber.services
 
 import com.github.michaelbull.logging.InlineLogger
+import net.dodian.context
 import net.dodian.uber.game.modelkt.entity.player.Player
 import net.dodian.uber.io.player.DummyPlayerSerializer
 import net.dodian.uber.io.player.PlayerSerializer
@@ -50,12 +51,12 @@ class LoginService(
 
     private fun requiresUpdate(request: LoginRequest): Boolean {
         val release = 317
-        if (release != request.releaseNumber) return true
+        if (release != request.releaseNumber)
+            return true
 
-        // TODO: Implement crc check?
         val clientCrcs = request.archiveCrcs
-        val serverCrcs = intArrayOf()
+        val serverCrcs = context.fileSystem.getCrcs()
 
-        return false
+        return !serverCrcs.toList().containsAll(clientCrcs)
     }
 }

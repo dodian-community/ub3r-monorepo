@@ -55,7 +55,7 @@ Submitted when something isn't working as intended. Either visually, functionall
         - Can for example be `visual`, `annoyance`, and/or `broken feature` at all
     - Happens When
         - Can for example be `when interacting with it`
-    - In-Game Requirements
+    - In-com.jagex.runescape.Game Requirements
         - Can for example be `levels` and/or `items`
             - **Example:** Agility level between 10 and 40
             - **Example:** Not have red key in your inventory or bank
@@ -92,4 +92,4 @@ Submitted when you have ideas for features that would improve the playing experi
 
 **_Feature Request Examples for Reference:_**
 - [#14 - Ability to use Complicated Passwords](https://github.com/dodian-community/ub3r-monorepo/issues/14)
-- [#13 - Self Updating Game Client](https://github.com/dodian-community/ub3r-monorepo/issues/13)
+- [#13 - Self Updating com.jagex.runescape.Game Client](https://github.com/dodian-community/ub3r-monorepo/issues/13)

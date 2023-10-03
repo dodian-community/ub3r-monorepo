@@ -3,7 +3,7 @@ package net.dodian.uber.net.codec.update
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
-import net.dodian.uber.cache.FileDescriptor
+import org.apollo.cache.FileDescriptor
 
 class UpdateDecoder : ByteToMessageDecoder() {
 

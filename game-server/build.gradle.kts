@@ -1,8 +1,11 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     application
 }
 
 application {
+    tasks.run.get().workingDir = rootProject.projectDir
     mainClass.set("net.dodian.GameServerKt")
 }
 
@@ -32,7 +35,7 @@ dependencies {
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
     implementation("org.quartz-scheduler:quartz:2.3.2")
@@ -48,7 +51,11 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
 
+    implementation("com.displee:disio:2.2")
+    implementation("com.displee:rs-cache-library:6.9")
+
     implementation(project(":game-utilities:game-scripting"))
+    implementation(project(":dodian-library"))
 }
 
 allprojects {
@@ -65,7 +72,7 @@ allprojects {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict", "-Xallow-any-scripts-in-source-roots")
         jvmTarget = "11"
@@ -77,7 +84,7 @@ tasks.withType<Test> {
 }
 
 tasks.register<JavaExec>("generateRsaKeypair") {
-    group = "dodian-utils"
+    group = "dodian-server"
 
     workingDir = project.projectDir
     classpath = sourceSets["main"].runtimeClasspath

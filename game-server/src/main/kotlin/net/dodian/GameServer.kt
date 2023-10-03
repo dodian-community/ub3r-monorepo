@@ -1,24 +1,22 @@
 package net.dodian
 
 import com.github.michaelbull.logging.InlineLogger
-import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.UnpooledByteBufAllocator
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import net.dodian.uber.cache.definition.GameDefinitions
-import net.dodian.uber.net.*
-import net.dodian.uber.session.Ub3rHandler
-import net.dodian.uber.net.codec.handshake.SERVICE_GAME
+import net.dodian.uber.net.HttpChannelInitializer
+import net.dodian.uber.net.JagGrabChannelInitializer
+import net.dodian.uber.net.ServiceChannelInitializer
 import net.dodian.uber.net.message.GameProtocol
 import net.dodian.uber.scripting.KotlinScriptPlugin
 import net.dodian.uber.scripting.ScriptPluginLoader
 import net.dodian.uber.services.GameService
 import net.dodian.uber.services.LoginService
+import net.dodian.uber.services.UpdateService
+import net.dodian.uber.session.Ub3rHandler
 import net.dodian.uber.utils.RsaManager
-import net.dodian.utilities.serverPort
-import java.net.InetSocketAddress
-import java.net.SocketAddress
 
 private val logger = InlineLogger()
 
@@ -36,9 +34,12 @@ fun main() {
 
     val gameService = GameService()
     val loginService = LoginService()
-    context.registerServices(gameService, loginService)
+    val updateService = UpdateService()
+
+    context.registerServices(gameService, loginService, updateService)
     gameService.start()
     loginService.start()
+    updateService.start()
 
     val loopGroup = NioEventLoopGroup()
     val handler = Ub3rHandler()

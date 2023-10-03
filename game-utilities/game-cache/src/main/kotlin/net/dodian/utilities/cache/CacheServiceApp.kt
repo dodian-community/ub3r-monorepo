@@ -1,6 +1,5 @@
 package net.dodian.utilities.cache
 
-import com.displee.cache.CacheLibrary
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,6 +11,8 @@ import net.dodian.utilities.cache.services.*
 import net.dodian.utilities.cache.types.*
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.notExists
 import kotlin.system.measureNanoTime
 
 private val logger = InlineLogger()
@@ -22,13 +23,18 @@ val objectMapper = ObjectMapper()
     .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
     .enable(SerializationFeature.INDENT_OUTPUT)
 
-fun Map<String, TypeLoader<*>>.dumpToJson(cache: CacheLibrary) {
+fun Map<String, TypeLoader<*>>.dumpToJson(cacheService: CacheService) {
     this.forEach { (name, loader) ->
-        val types = loader.load(cache)
+        val types = loader.load(cacheService.cache)
         if (types.isEmpty())
             return@forEach
 
-        objectMapper.writeValue(Path("./data/dumps/config/$name.json").toFile(), types)
+        val directory = Path(cacheService.path).resolve("dumps").resolve("config")
+
+        if (directory.notExists())
+            directory.createDirectories()
+
+        objectMapper.writeValue(directory.resolve("$name.json").toFile(), types)
         logger.info { "Wrote ${types.size} ${types.first()::class.simpleName}s to file..." }
     }
 }
@@ -42,7 +48,7 @@ suspend fun main() {
     println()
 
     val elapsedNanos = measureNanoTime {
-        cacheService = CacheService("./data/cache_317")
+        cacheService = CacheService()
     }
 
     val elapsed = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)

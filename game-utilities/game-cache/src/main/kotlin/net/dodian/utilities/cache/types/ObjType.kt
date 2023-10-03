@@ -11,7 +11,42 @@ data class ObjType(
     val id: Int,
     val name: String,
     val examine: String,
-    val linkedId: Int
+    val price: Int,
+    val members: Boolean,
+    val team: Int,
+    val modelId: Int,
+    val options: List<String?>,
+    val optionsInventory: List<String?>,
+    val canStack: Boolean,
+    val stackId: List<Int>,
+    val stackCount: List<Int>,
+    val linkedId: Int,
+    val certificateId: Int,
+    val lightAmbient: Int,
+    val lightAttenuation: Int,
+    val colorSrc: List<Int>,
+    val colorDst: List<Int>,
+    val scaleX: Int,
+    val scaleY: Int,
+    val scaleZ: Int,
+    val iconOffsetX: Int,
+    val iconOffsetY: Int,
+    val iconZoom: Int,
+    val iconYaw: Int,
+    val iconPitch: Int,
+    val iconRoll: Int,
+    val femaleOffsetY: Int,
+    val femaleModelId0: Int,
+    val femaleModelId1: Int,
+    val femaleModelId2: Int,
+    val femaleHeadModelId0: Int,
+    val femaleHeadModelId1: Int,
+    val maleOffsetY: Int,
+    val maleModelId0: Int,
+    val maleModelId1: Int,
+    val maleModelId2: Int,
+    val maleHeadModelId0: Int,
+    val maleHeadModelId1: Int,
 ) : Type
 
 data class ObjTypeBuilder(
@@ -21,6 +56,7 @@ data class ObjTypeBuilder(
     var price: Int = 1,
     var members: Boolean = false,
     var team: Int = 0,
+    var modelId: Int = -1,
 
     var options: MutableList<String?> = Array<String?>(5) { null }.toMutableList(),
     var optionsInventory: MutableList<String?> = Array<String?>(5) { null }.toMutableList(),
@@ -66,7 +102,42 @@ data class ObjTypeBuilder(
         id = id,
         name = name,
         examine = examine,
-        linkedId = linkedId
+        price = price,
+        members = members,
+        team = team,
+        options = options,
+        optionsInventory = optionsInventory,
+        canStack = canStack,
+        stackId = stackId,
+        stackCount = stackCount,
+        linkedId = linkedId,
+        certificateId = certificateId,
+        lightAmbient = lightAmbient,
+        lightAttenuation = lightAttenuation,
+        colorSrc = colorSrc,
+        colorDst = colorDst,
+        scaleX = scaleX,
+        scaleY = scaleY,
+        scaleZ = scaleZ,
+        iconOffsetX = iconOffsetX,
+        iconOffsetY = iconOffsetY,
+        iconZoom = iconZoom,
+        iconYaw = iconYaw,
+        iconPitch = iconPitch,
+        iconRoll = iconRoll,
+        femaleOffsetY = femaleOffsetY,
+        femaleModelId0 = femaleModelId0,
+        femaleModelId1 = femaleModelId1,
+        femaleModelId2 = femaleModelId2,
+        femaleHeadModelId0 = femaleHeadModelId0,
+        femaleHeadModelId1 = femaleHeadModelId1,
+        maleOffsetY = maleOffsetY,
+        maleModelId0 = maleModelId0,
+        maleModelId1 = maleModelId1,
+        maleModelId2 = maleModelId2,
+        maleHeadModelId0 = maleHeadModelId0,
+        maleHeadModelId1 = maleHeadModelId1,
+        modelId = modelId
     )
 }
 
@@ -113,7 +184,7 @@ object ObjTypeLoader : TypeLoader<ObjType> {
         //logger.debug { "Decoding instruction: $instruction, for Obj ${builder.id}" }
 
         when (instruction) {
-            1 -> buf.readUnsignedShort()
+            1 -> modelId = buf.readUnsignedShort()
             2 -> name = buf.readString()
             3 -> examine = buf.readString()
             4 -> iconZoom = buf.readUnsignedShort()
@@ -172,9 +243,9 @@ object ObjTypeLoader : TypeLoader<ObjType> {
             92 -> maleHeadModelId1 = buf.readUnsignedShort()
             93 -> femaleHeadModelId1 = buf.readUnsignedShort()
             95 -> iconRoll = buf.readUnsignedShort()
-            97 -> builder.linkedId = buf.readUnsignedShort()
+            97 -> linkedId = buf.readUnsignedShort()
             98 -> certificateId = buf.readUnsignedShort()
-            in 100..109 -> {
+            in 100 until 110 -> {
                 stackId[instruction - 100] = buf.readUnsignedShort()
                 stackCount[instruction - 100] = buf.readUnsignedShort()
             }

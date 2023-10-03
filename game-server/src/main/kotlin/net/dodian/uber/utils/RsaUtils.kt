@@ -1,8 +1,8 @@
 package net.dodian.uber.utils
 
 import com.github.michaelbull.logging.InlineLogger
-import net.dodian.extensions.argument
 import net.dodian.extensions.toPath
+import net.dodian.library.extensions.argument
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemObject
 import org.bouncycastle.util.io.pem.PemReader

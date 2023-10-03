@@ -6,6 +6,8 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
 import net.dodian.uber.net.codec.login.LoginDecoder
 import net.dodian.uber.net.codec.login.LoginEncoder
+import net.dodian.uber.net.codec.update.UpdateDecoder
+import net.dodian.uber.net.codec.update.UpdateEncoder
 
 private val logger = InlineLogger()
 
@@ -24,7 +26,11 @@ class HandshakeDecoder : ByteToMessageDecoder() {
             }
 
             SERVICE_UPDATE -> {
-                logger.debug { "Supposed to do client updating stuff..." }
+                ctx.pipeline().addFirst("updateEncoder", UpdateEncoder())
+                ctx.pipeline().addBefore("handler", "updateDecoder", UpdateDecoder())
+
+                val buf = ctx.alloc().buffer(8).writeLong(0)
+                ctx.channel().writeAndFlush(buf)
             }
 
             else -> {

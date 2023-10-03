@@ -9,14 +9,17 @@ import net.dodian.uber.net.NetworkPorts
 import net.dodian.uber.net.message.GameProtocol
 import net.dodian.uber.services.Service
 import net.dodian.uber.utils.RsaKeyPair
+import org.apollo.cache.IndexedFileSystem
 import java.net.InetSocketAddress
 import java.net.SocketAddress
+import java.nio.file.Paths
 
 private val logger = InlineLogger()
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ServerContext(
     val rsaKeys: RsaKeyPair,
+    val fileSystem: IndexedFileSystem = IndexedFileSystem(Paths.get("./data/cache"), true),
     val serviceBootstrap: ServerBootstrap = ServerBootstrap(),
     val httpBootstrap: ServerBootstrap = ServerBootstrap(),
     val jagGrabBootstrap: ServerBootstrap = ServerBootstrap(),
@@ -43,12 +46,12 @@ class ServerContext(
         val ports = NetworkPorts()
 
         val service = InetSocketAddress(ports.service)
-        //val http = InetSocketAddress(ports.http)
-        //val jagGrab = InetSocketAddress(ports.jaggrab)
+        val http = InetSocketAddress(ports.http)
+        val jagGrab = InetSocketAddress(ports.jaggrab)
 
         bind(serviceBootstrap, service)
-        //bind(httpBootstrap, http)
-        //bind(jagGrabBootstrap, jagGrab)
+        bind(httpBootstrap, http)
+        bind(jagGrabBootstrap, jagGrab)
 
         logger.info { "Game is ready for connections..." }
     }

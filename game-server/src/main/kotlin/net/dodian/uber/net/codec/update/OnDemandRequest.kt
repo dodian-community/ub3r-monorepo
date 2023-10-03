@@ -1,11 +1,10 @@
 package net.dodian.uber.net.codec.update
 
-import net.dodian.uber.cache.FileDescriptor
-
+import org.apollo.cache.FileDescriptor
 
 class OnDemandRequest(
-    private val descriptor: FileDescriptor,
-    private val priority: Priority
+    val descriptor: FileDescriptor,
+    val priority: Priority
 ) : Comparable<OnDemandRequest> {
 
     override fun compareTo(other: OnDemandRequest): Int {

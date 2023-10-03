@@ -1,6 +1,5 @@
 package net.dodian.uber.game.modelkt.entity
 
-import net.dodian.uber.cache.definition.NpcDefinition
 import net.dodian.uber.game.action.Action
 import net.dodian.uber.game.modelkt.World
 import net.dodian.uber.game.modelkt.area.Direction
@@ -9,6 +8,7 @@ import net.dodian.uber.game.modelkt.inventory.CAPACITY_EQUIPMENT
 import net.dodian.uber.game.modelkt.inventory.Inventory
 import net.dodian.uber.game.sync.block.InteractingMobBlock
 import net.dodian.uber.game.sync.block.SynchronizationBlockSet
+import org.apollo.cache.def.NpcDefinition
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class Mob : Entity {
