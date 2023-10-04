@@ -1,3 +1,7 @@
+plugins {
+    application
+}
+
 dependencies {
     implementation(project(":dodian-common:dodian-library"))
 
