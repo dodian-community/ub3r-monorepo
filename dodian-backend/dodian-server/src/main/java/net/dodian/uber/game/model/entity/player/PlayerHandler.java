@@ -41,7 +41,7 @@ public class PlayerHandler {
         }
         if (slot == -1)
             return; // no free slot found - world is full
-        Client newClient = new Client(s, slot);
+        Client newClient = new Client(slot);
         newClient.handler = this;
         (new Thread(newClient)).start();
         players[slot] = newClient;

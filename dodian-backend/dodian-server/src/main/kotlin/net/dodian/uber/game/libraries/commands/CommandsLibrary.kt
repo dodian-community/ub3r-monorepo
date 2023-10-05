@@ -22,7 +22,6 @@ class CommandsLibrary(
 ) : ICommandsLibrary {
     override fun registerCommand(vararg commands: ICommand<*>) {
         commands.forEach {
-            logger.debug { "Registered command: ${it.name}" }
             this.commands[it.name] = it
         }
     }

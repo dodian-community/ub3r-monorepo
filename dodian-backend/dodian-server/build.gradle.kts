@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 dependencies {
     implementation(project(":dodian-common:dodian-library"))
     implementation(project(":dodian-common:dodian-cache"))
+
     implementation(project(":dodian-backend:dodian-scripting"))
 
     implementation("com.michael-bull.kotlin-result:kotlin-result-jvm:1.1.16")
@@ -19,6 +20,8 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
     implementation("org.apache.commons:commons-compress:1.21")
 
+    implementation("org.pf4j:pf4j:3.10.0")
+
     // TODO: Remove these dependencies
     implementation("org.quartz-scheduler:quartz:2.3.2")
     implementation("mysql:mysql-connector-java:8.0.29")
@@ -28,13 +31,6 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xallow-any-scripts-in-source-roots")
-        jvmTarget = "17"
-    }
 }
 
 tasks.register<JavaExec>("launchServer") {

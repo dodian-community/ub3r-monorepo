@@ -17,6 +17,8 @@ import net.dodian.uber.services.LoginService
 import net.dodian.uber.services.UpdateService
 import net.dodian.uber.session.Ub3rHandler
 import net.dodian.uber.utils.RsaManager
+import org.pf4j.JarPluginManager
+import kotlin.io.path.Path
 
 private val logger = InlineLogger()
 
@@ -29,13 +31,25 @@ val protocol: GameProtocol get() = context.protocol
 fun main() {
     logger.info { "Launching Uber Server 3.0..." }
 
+
+    logger.info { "Starting SF4J plugins..." }
+    val pluginsDir = Path("./data/plugins")
+    val pluginManager = JarPluginManager(pluginsDir)
+
+    println()
+
+    pluginManager.loadPlugins()
+    pluginManager.startPlugins()
+
+    println()
+    logger.info { "Started ${pluginManager.startedPlugins.size} SF4J plugins..." }
+
     val plugins = ScriptPluginLoader.load(KotlinScriptPlugin::class.java)
     logger.info { "Loaded ${plugins.size} plugin script${if (plugins.size == 1) "" else "s"}." }
 
     val gameService = GameService()
     val loginService = LoginService()
     val updateService = UpdateService()
-
     context.registerServices(gameService, loginService, updateService)
     gameService.start()
     loginService.start()

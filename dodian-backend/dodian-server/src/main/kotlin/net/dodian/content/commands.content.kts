@@ -1,4 +1,4 @@
-package net.dodian.content
+import net.dodian.uber.game.libraries.commands.helpers.command
 
 import net.dodian.uber.game.libraries.commands.CommandSender
 import net.dodian.uber.game.libraries.commands.helpers.command
