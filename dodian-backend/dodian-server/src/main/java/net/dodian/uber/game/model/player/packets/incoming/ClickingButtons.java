@@ -37,7 +37,12 @@ public class ClickingButtons implements Packet {
             client.lastButton = System.currentTimeMillis();
             return;
         }
-        if(!(actionButton >= 9157 && actionButton <= 9194))
+
+        handleButton(client, actionButton);
+    }
+
+    public static void handleButton(Client client, int actionButton) {
+         if(!(actionButton >= 9157 && actionButton <= 9194))
             client.actionButtonId = actionButton;
         client.resetAction(false);
         CombatStyleHandler.setWeaponHandler(client, actionButton);
@@ -1069,5 +1074,4 @@ public class ClickingButtons implements Packet {
                 break;
         }
     }
-
 }

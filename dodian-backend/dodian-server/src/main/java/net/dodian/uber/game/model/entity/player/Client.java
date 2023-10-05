@@ -456,17 +456,6 @@ public class Client extends Player implements Runnable {
 
 	private SocketHandler mySocketHandler;
 
-	public Client(java.net.Socket s, int _playerId) {
-		super(_playerId);
-		mySock = s;
-		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[bufferSize]);
-		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[bufferSize]);
-		inputStream.currentOffset = 0;
-		readPtr = writePtr = 0;
-	}
-
 	public Client(int _playerId) {
 		super(_playerId);
 	}

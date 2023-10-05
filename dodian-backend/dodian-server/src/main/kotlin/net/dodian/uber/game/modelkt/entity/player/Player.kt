@@ -1,6 +1,8 @@
 package net.dodian.uber.game.modelkt.entity.player
 
 import com.github.michaelbull.logging.InlineLogger
+import net.dodian.typealiases.OldClient
+import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.modelkt.MAXIMUM_PLAYERS
 import net.dodian.uber.game.modelkt.World
 import net.dodian.uber.game.modelkt.area.Direction
@@ -31,6 +33,8 @@ class Player(
     override val world: World,
     override val entityType: EntityType = EntityType.PLAYER
 ) : Mob() {
+    val oldClient: OldClient get() = OldClient(index)
+
     val rightsFlags: MutableList<RightsFlag> = mutableListOf()
 
     private val queuedMessages: Deque<Message> = ArrayDeque()
