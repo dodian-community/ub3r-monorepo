@@ -37,15 +37,12 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-tasks {
+tasks.register<JavaExec>("launchServer") {
+    group = "dodian-server"
 
-    register<JavaExec>("launchServer") {
-        group = "dodian-server"
-
-        workingDir = project.projectDir
-        classpath = sourceSets["main"].runtimeClasspath
-        mainClass.set("net.dodian.GameServerKt")
-    }
+    workingDir = project.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("net.dodian.GameServerKt")
 }
 
 tasks.register<JavaExec>("generateRsa") {

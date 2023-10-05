@@ -1,4 +1,6 @@
 dependencies {
+    implementation(project(":dodian-common:dodian-library"))
+
     implementation("com.displee:disio:2.2")
     implementation("com.displee:rs-cache-library:6.9")
 
@@ -13,4 +15,13 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:2.3.4")
     implementation("io.ktor:ktor-server-auth-jwt:2.3.4")
     implementation("io.ktor:ktor-server-auth:2.3.4")
+}
+
+tasks.register<JavaExec>("dumpCache") {
+    group = "dodian-cache"
+
+    workingDir = project.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("net.dodian.utilities.cache.services.CacheDumperServiceKt")
+    args = listOf("--cacheDir=${project(":dodian-backend:dodian-server").projectDir.resolve("data").resolve("cache")}")
 }

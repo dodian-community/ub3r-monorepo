@@ -3,6 +3,7 @@ package net.dodian.utilities.cache.services
 import com.github.michaelbull.logging.InlineLogger
 import com.jagex.runescape.Image24
 import com.jagex.runescape.Image8
+import net.dodian.library.extensions.argument
 import net.dodian.utilities.cache.dumpToJson
 import net.dodian.utilities.cache.extensions.toByteBuf
 import net.dodian.utilities.cache.types.*
@@ -165,6 +166,6 @@ class CacheDumperService(private val cacheService: CacheService) {
     }
 }
 
-fun main() {
-    CacheDumperService(CacheService())
+fun main(args: Array<String>) {
+    CacheDumperService(CacheService(args.argument("cacheDir") ?: "./data/cache"))
 }

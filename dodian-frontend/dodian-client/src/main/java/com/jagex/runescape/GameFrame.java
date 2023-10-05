@@ -11,7 +11,7 @@ public class GameFrame extends JFrame {
 
     public GameFrame(GameShell shell) {
         this.shell = shell;
-        setTitle("Jagex");
+        setTitle("Uber Server 3.0 - Client Version 1.0.0");
         setResizable(false);
         setLayout(new BorderLayout());
         add(shell, BorderLayout.CENTER);
