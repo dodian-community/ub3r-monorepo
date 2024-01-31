@@ -65,7 +65,7 @@ public class ItemManager {
     }
 
     public int getStandAnim(int id) {
-        if (id < 0)
+        if (id < 1)
             return defaultStandAnim;
         Item i = items.get(id);
         if (i == null)
@@ -74,7 +74,7 @@ public class ItemManager {
     }
 
     public int getWalkAnim(int id) {
-        if (id < 0)
+        if (id < 1)
             return defaultWalkAnim;
         Item i = items.get(id);
         if (i == null)
@@ -83,7 +83,7 @@ public class ItemManager {
     }
 
     public int getRunAnim(int id) {
-        if (id < 0)
+        if (id < 1)
             return defaultRunAnim;
         Item i = items.get(id);
         if (i == null)
@@ -92,7 +92,7 @@ public class ItemManager {
     }
 
     public int getAttackAnim(int id) {
-        if (id < 0)
+        if (id < 1)
             return defaultAttackAnim;
         Item i = items.get(id);
         if (i == null)

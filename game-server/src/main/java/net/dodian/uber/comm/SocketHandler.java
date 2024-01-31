@@ -1,8 +1,10 @@
 package net.dodian.uber.comm;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.entity.player.PlayerHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -112,15 +114,10 @@ public class SocketHandler implements Runnable {
 
     public void logout() {
         this.processRunning = false;
-        if (player == null)
+        if(player == null || player.disconnected) { //Fuck this check!
             return;
-        if (player.disconnected) // Already disconnected.
-            return;
-        if (player.loggingOut) {
-            player.disconnected = true;
-        } else {
-            player.logout();
         }
+        player.logout();
     }
 
     public boolean parsePackets() {

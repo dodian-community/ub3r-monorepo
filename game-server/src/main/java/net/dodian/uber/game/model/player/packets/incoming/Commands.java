@@ -1407,7 +1407,7 @@ public class Commands implements Packet {
                 int line = 8147;
                 int count = 0;
                 for (Player p : PlayerHandler.players) {
-                    if (p != null) {
+                    if (p != null && p.dbId >= 0) {
                         String title = "";
                         if (p.playerRights == 1 && p.playerGroup == 5)
                             title = "@blu@Mod ";
@@ -1605,6 +1605,19 @@ public class Commands implements Packet {
                 }
                 if (!specialRights && (cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b"))) {
                     client.openUpBank();
+                }
+                if (cmd[0].equalsIgnoreCase("drain")) {
+                    Skill.enabledSkills().forEach(skill -> {
+                            client.boostedLevel[skill.getId()]--;
+                            client.refreshSkill(skill);
+                        });
+                        client.send(new SendMessage("You drained all your stats by 1!"));
+                }
+                if (cmd[0].equalsIgnoreCase("perk")) {
+                    client.send(new SendMessage("Checking perk...."));
+                    boolean equipCheck = client.skillcapePerk(Skill.WOODCUTTING, false);
+                    boolean invCheck = client.skillcapePerk(Skill.WOODCUTTING, true);
+                    client.send(new SendMessage("result = " + equipCheck + ", " + invCheck));
                 }
                 if(cmd[0].equalsIgnoreCase("setup")) {
                     for(int i = 0; i < 7; i++) {

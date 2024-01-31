@@ -3,6 +3,8 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerHandler {
@@ -80,14 +82,13 @@ public class PlayerHandler {
         }
     }
 
-    public static boolean isPlayerOn(String playerName) {
-        if (PlayerHandler.allOnline.containsKey(playerName)) {
-            System.out.println("hello?!");
-        }
+    public static boolean isPlayerOn(String playerName) { //Already logged in!
         if (PlayerHandler.allOnline.containsKey(Utils.playerNameToLong(playerName))) {
-            System.out.println("hello 2?!");
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
+            return true;
         }
-        return allOnline.containsKey(Utils.playerNameToLong(playerName));
+        return false;
     }
 
     public static int getPlayerID(String playerName) {
@@ -103,15 +104,15 @@ public class PlayerHandler {
     public int lastchatid = 1; // PM System
 
     public void removePlayer(Player plr) {
-        if (plr == null)
-            return;
         Client temp = (Client) plr;
-        if (temp != null && temp.dbId > 0 && temp.saveNeeded) {
-            temp.saveStats(true);
-            //Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
-        }
-        if (temp != null)
+        if (temp != null) {
+            if(temp.dbId > 0 && temp.saveNeeded)
+                temp.saveStats(true);
+            PlayerHandler.playersOnline.remove(temp.longName);
+            PlayerHandler.allOnline.remove(temp.longName);
+            temp.println_debug("Sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
             temp.destruct();
+        }
     }
 
     public static Player getPlayer(String name) {
