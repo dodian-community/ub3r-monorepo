@@ -1012,8 +1012,16 @@ public class ClickingButtons implements Packet {
                 }
                 break;
             case 47130:
+            case 95061:
                 try {
                     client.showSkillMenu(SLAYER.getId(), 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 95068:
+                try {
+                    client.showSkillMenu(FARMING.getId(), 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -1052,7 +1060,7 @@ public class ClickingButtons implements Packet {
                 } else if (client.getEquipment()[Equipment.Slot.CAPE.getId()] == 9813) { //Questpoint cape
                     client.requestAnim(4945, 0);
                     client.gfx0(816);
-                } else if (client.getEquipment()[Equipment.Slot.CAPE.getId()] == 13280) { //Max cape
+                } else if (client.GetItemName(client.getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape")) { //Max cape
                     skillcape = Skillcape.getRandomCape();
                     client.requestAnim(skillcape.getEmote(), 0);
                     client.gfx0(skillcape.getGfx());

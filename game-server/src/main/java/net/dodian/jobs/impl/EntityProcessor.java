@@ -126,7 +126,7 @@ public class EntityProcessor implements Job {
                 /* Some violation checks due to old code?! */
                 if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
                     if (PlayerHandler.players[i].violations > 100) {
-                        System.out.println("Disconnecting bugged player " + PlayerHandler.players[i].getPlayerName());
+                        PlayerHandler.players[i].println_debug("Disconnecting bugged player " + PlayerHandler.players[i].getPlayerName());
                         Server.playerHandler.removePlayer(PlayerHandler.players[i]);
                         PlayerHandler.players[i] = null;
                         continue;
@@ -161,7 +161,7 @@ public class EntityProcessor implements Job {
             }
             /* Disconnect a user check! If not disconnect update! */
             if (PlayerHandler.players[i].disconnected) {
-                //System.out.println("Remove player!.." + PlayerHandler.players[i].getPlayerName());
+                PlayerHandler.players[i].println_debug("Remove player " + PlayerHandler.players[i].getPlayerName());
                 Server.playerHandler.removePlayer(PlayerHandler.players[i]);
                 PlayerHandler.players[i] = null;
             } else {

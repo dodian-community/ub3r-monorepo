@@ -13,6 +13,7 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.music.RegionSong;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
+import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -1234,6 +1235,22 @@ public abstract class Player extends Entity {
         return Skills.getLevelForExperience(getExperience(skill));
     }
 
+    public boolean skillcapePerk(Skill skill, boolean checkInventory) {
+        Skillcape skillcape = Skillcape.getSkillCape(getEquipment()[Equipment.Slot.CAPE.getId()]);
+        boolean maxCape = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
+
+        if(checkInventory && (!maxCape || (skillcape != null && skillcape.getSkill() != skill))) {
+            for(int i = 0; i < 28 && !maxCape; i++) {
+                skillcape = Skillcape.getSkillCape(playerItems[i] - 1);
+                if(((Client) this).GetItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
+                || (skillcape != null && skillcape.getSkill() == skill))
+                    maxCape = true; //I am lazy and this is some shiet that could work :L
+            }
+        }
+
+        return maxCape || (skillcape != null && skillcape.getSkill() == skill); //prio list maxcape above all else!
+    }
+
     public enum positions {
         //name, x1, x2, y1, y2
         YANILLE("in Yanille.", 2562, 2620, 3072, 3110),
@@ -1274,6 +1291,15 @@ public abstract class Player extends Entity {
         KEYDUNG("in Key dungeon.", 2559, 2622, 9475, 9534),
         IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
         PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),
+        DESERT_NARDAH("in the Nardah.", 3396, 3452, 2885, 2942), //3396, 2942, 3452, 2885
+        DESERT_SOPHANEM("in the Sophanem.", 3271, 3322, 2747, 2809), //3322, 2747, 3271, 2809
+        DESERT_POLLNIVNEACH_MAIN("in the Pollnivneach.", 3334, 3372, 2958, 3004), //3334, 3004, 3372, 2958
+        DESERT_POLLNIVNEACH_OUTSKIRT_1("in the Pollnivneach.", 3373, 3380, 2961, 2992),
+        DESERT_POLLNIVNEACH_OUTSKIRT_2("in the Pollnivneach.", 3329, 3358, 2940, 2968),
+        DESERT_POLLNIVNEACH_OUTSKIRT_3("in the Pollnivneach.", 3359, 3373, 2957, 2964),
+        DESERT_POLLNIVNEACH_OUTSKIRT_4("in the Pollnivneach.", 3359, 3369, 2953, 2956),
+        DESERT_POLLNIVNEACH_OUTSKIRT_5("in the Pollnivneach.", 3359, 3364, 2949, 2952),
+        DESERT("in the Desert.", 3137, 3565, 2647, 3162) //3565, 2647, 3137, 3162
         ;
         final String name;
         final int[] coordValue;
