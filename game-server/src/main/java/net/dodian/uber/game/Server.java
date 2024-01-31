@@ -1,5 +1,6 @@
 package net.dodian.uber.game;
 
+import io.netty.bootstrap.ServerBootstrap;
 import net.dodian.cache.Cache;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
@@ -7,36 +8,31 @@ import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
-import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
-import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
+import net.dodian.uber.game.model.player.PlayerHandler;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.Thieving;
 import net.dodian.utilities.DbTables;
-import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.uber.game.GameThreadKt.runGameThread;
+import static net.dodian.uber.game.GameThreadKt.startClientListener;
 import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
@@ -51,23 +47,18 @@ public class Server implements Runnable {
     public static int updateSeconds;
     public static double updateElapsed = 0.0;
     public static long updateStartTime;
-    public Player player;
-    public Client c;
     public static ArrayList<String> connections = new ArrayList<>();
     public static ArrayList<String> banned = new ArrayList<>();
     public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
     public static int nullConnections = 0;
-    public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
-    public static LoginManager loginManager = null;
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
-    public static Map<String, Long> tempConns = new HashMap<>();
 
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         System.out.println();
         System.out.println("    ____            ___               ");
         System.out.println("   / __ \\____  ____/ (_)___ _____    ");
@@ -87,11 +78,8 @@ public class Server implements Runnable {
         /* Player Stuff */
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
-        loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
-        clientHandler = new Server();
-        login = new Login();
         setGlobalItems();
         /* Load cache */
         Cache.load();
@@ -106,73 +94,31 @@ public class Server implements Runnable {
         new DoorHandler(); //sql disabled
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
-        new Thread(clientHandler).start(); // launch server listener
-        new Thread(login).start();
+
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
         job = new JobScheduler();
-        job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
         //job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class); //Ground item revolved inside entity process!
-        job.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
-        job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
+        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, WorldProcessor.class);
         /* Done loading */
+
+        startClientListener();
+
         System.gc();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
-    public static Server clientHandler = null; // handles all the clients
-    public static java.net.ServerSocket clientListener = null;
-    public static boolean shutdownServer = false; // set this to true in order to
-    // shut down and kill the server
-    public static boolean shutdownClientHandler; // signals ClientHandler to shut
-    // down
+    public static boolean shutdownServer = false; // set this to true in order to shut down and kill the server
     public static PlayerHandler playerHandler = null;
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
-    public static boolean antiddos = false;
 
     public void run() {
-        // setup the listener
-        try {
-            shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(DotEnvKt.getServerPort(), 1, null);
-            while (true) {
-                try {
-                    if (clientListener == null)
-                        continue;
-                    java.net.Socket s = clientListener.accept();
-                    if (s == null)
-                        continue;
-                    s.setTcpNoDelay(true);
-                    String connectingHost = "" + s.getRemoteSocketAddress();
-                    connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
-                    if (antiddos && !tempConns.containsKey(connectingHost)) {
-                        s.close();
-                    } else {
-                        //ConnectionList.getInstance().addConnection(s.getInetAddress());
-                        tempConns.remove(connectingHost);
-                        connections.add(connectingHost);
-                        if (checkHost(connectingHost)) {
-                            nullConnections++;
-                            playerHandler.newPlayerClient(s, connectingHost);
-                        } else {
-                            s.close();
-                        }
-                    }
-                    Thread.sleep(delay);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (java.io.IOException ioe) {
-            if (!shutdownClientHandler) {
-                Utils.println("Server is already in use.");
-            } else {
-                Utils.println("ClientHandler was shut down.");
-            }
-        }
+        runGameThread();
     }
 
     public static Thread createNewConnection(SocketHandler socketHandler) {
@@ -181,46 +127,6 @@ public class Server implements Runnable {
 
     public static void logError(String message) {
         Utils.println(message);
-    }
-
-    public static int totalHostConnection(String host) {
-        int num = 0;
-        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
-            Player p = PlayerHandler.players[slot];
-            if (p != null) {
-                if (host.equals(p.connectedFrom))
-                    num++;
-            }
-        }
-        return num;
-    }
-
-    public boolean checkHost(String host) {
-        for (String h : banned) {
-            if (h.equals(host))
-                return false;
-        }
-        int num = 0;
-        for (String h : connections) {
-            if (host.equals(h)) {
-                num++;
-            }
-        }
-        if (num > 5) {
-            //anHost(host, num);
-            return false;
-        }
-        return true;
-    }
-
-    public void banHost(String host, int num) {
-        try {
-            Utils.println("BANNING HOST " + host + " (flooding)");
-            banned.add(host);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error banning host " + host);
-        }
     }
 
     public static void loadObjects() {

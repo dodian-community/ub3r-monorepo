@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.Server.playerHandler
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -55,7 +56,7 @@ fun Client.handleMagic(): Int {
         }
     }
     if(target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = playerHandler.getClient(target.slot)
         if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) maxHit /= 2.0
     }
     var hit = Utils.random(maxHit.toInt())
