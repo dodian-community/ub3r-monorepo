@@ -57,7 +57,8 @@ fun Client.handleMagic(): Int {
     }
     if(target is Player) {
         val player = playerHandler.getClient(target.slot)
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) maxHit /= 2.0
+        if (player?.prayerManager?.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC) == true)
+            maxHit /= 2.0
     }
     var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9
@@ -77,16 +78,16 @@ fun Client.handleMagic(): Int {
         npc.dealDamage(this, hit, landCrit)
     }
     if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = playerHandler.getClient(target.slot)
         if (landCrit)
             hit + Utils.dRandom2(extra).toInt()
-        if(hit >= player.currentHealth)
-            hit = player.currentHealth
+        if(hit >= (player?.currentHealth ?: 0))
+            hit = player?.currentHealth ?: 0
         if(slot == 2) { //Heal effect!
             currentHealth = min(getLevel(Skill.HITPOINTS), currentHealth + (hit / 3))
             refreshSkill(Skill.HITPOINTS)
         }
-        player.dealDamage(hit, landCrit)
+        player?.dealDamage(hit, landCrit)
     }
     /* Magic graphics! */
     if (slot == 2) //Blood effect

@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.Constants;
@@ -45,6 +44,7 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.uber.game.Server.playerHandler;
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -251,14 +251,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void animation(int id, Position pos) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Player p = PlayerHandler.players[i];
-			if (p != null) {
-				Client person = (Client) p;
-				if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
-					person.animation2(id, pos);
-			}
-		}
+
 	}
 
 	public void animation2(int id, Position pos) {
@@ -271,15 +264,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void stillgfx(int id, Position pos, int time) {
-		// for (Player p : server.playerHandler.players) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Player p = PlayerHandler.players[i];
-			if (p != null) {
-				Client person = (Client) p;
-				if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
-					person.stillgfx2(id, pos, 0, time);
-			}
-		}
+
 	}
 
 	public void stillgfx(int id, int y, int x) {
@@ -327,17 +312,8 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-	public void arrowGfx(int offsetY, int offsetX, int angle, int speed,
-						 int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
-		for (int a = 0; a < Constants.maxPlayers; a++) {
-			Client projCheck = (Client) PlayerHandler.players[a];
-			if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 60
-					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 60) {
-				projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
-						startHeight, endHeight, index, begin, slope, 64);
-			}
-		}
+	public void arrowGfx(int offsetY, int offsetX, int angle, int speed, int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
+
 	}
 
 	public void println_debug(String str) {
@@ -537,222 +513,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void run() {
-		// we just accepted a new connection - handle the login stuff
-		isActive = false;
-		long serverSessionKey, clientSessionKey;
 
-//	if (!KeyServer.verifiedKeys()){
-//		System.out.println("User rejected due to unverified client.");
-//		disconnected = true;
-//		returnCode = 4;
-//	}
-
-		// randomize server part of the session key
-		serverSessionKey = ((long) (java.lang.Math.random() * 99999999D) << 32)
-				+ (long) (java.lang.Math.random() * 99999999D);
-
-		try {
-			returnCode = 2;
-			fillInStream(2);
-			if (getInputStream().readUnsignedByte() != 14) {
-				shutdownError("Expected login Id 14 from client.");
-				disconnected = true;
-				return;
-			}
-			getInputStream().readUnsignedByte();
-			for (int i = 0; i < 8; i++) {
-				mySocketHandler.getOutput().write(10);
-			}
-			mySocketHandler.getOutput().write(0);
-			//out.write(0);
-			getOutputStream().writeQWord(serverSessionKey);
-			directFlushOutStream();
-			fillInStream(2);
-			int loginType = getInputStream().readUnsignedByte(); // this is either 16
-			if (loginType != 16 && loginType != 18) {
-				shutdownError("Unexpected login type " + loginType);
-				return;
-			}
-			int loginPacketSize = getInputStream().readUnsignedByte();
-			int loginEncryptPacketSize = loginPacketSize - (36 + 1 + 1 + 2); // the
-			if (loginEncryptPacketSize <= 0) {
-				shutdownError("Zero RSA packet size!");
-				return;
-			}
-			fillInStream(loginPacketSize);
-			if (getInputStream().readUnsignedByte() != 255 || getInputStream().readUnsignedWord() != 317) {
-				returnCode = 6;
-			}
-			getInputStream().readUnsignedByte();
-			for (int i = 0; i < 9; i++) { //Client shiet?!
-				getInputStream().readDWord();
-			}
-
-			loginEncryptPacketSize--; // don't count length byte
-			int tmp = getInputStream().readUnsignedByte();
-			if (loginEncryptPacketSize != tmp) {
-				shutdownError("Encrypted packet data length (" + loginEncryptPacketSize
-						+ ") different from length byte thereof (" + tmp + ")");
-				return;
-			}
-			tmp = getInputStream().readUnsignedByte();
-			if (tmp != 10) {
-				shutdownError("Encrypted packet Id was " + tmp + " but expected 10");
-				return;
-			}
-			clientSessionKey = getInputStream().readQWord();
-			serverSessionKey = getInputStream().readQWord();
-
-			String customClientVersion = getInputStream().readString();
-			officialClient = customClientVersion.equals(getGameClientCustomVersion());
-			setPlayerName(getInputStream().readString());
-			if (getPlayerName() == null || getPlayerName().length() == 0) {
-				setPlayerName("player" + getSlot());
-			}
-			playerPass = getInputStream().readString();
-			String playerServer;
-			try {
-				playerServer = getInputStream().readString();
-			} catch (Exception e) {
-				playerServer = "play.dodian.com";
-			}
-			setPlayerName(getPlayerName().toLowerCase());
-			// playerPass = playerPass.toLowerCase();
-			// System.out.println("valid chars");
-			char[] validChars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-					's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-					'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-					'_', ' '};
-			setPlayerName(getPlayerName().trim());
-
-			int[] sessionKey = new int[4];
-			sessionKey[0] = (int) (clientSessionKey >> 32);
-			sessionKey[1] = (int) clientSessionKey;
-			sessionKey[2] = (int) (serverSessionKey >> 32);
-			sessionKey[3] = (int) serverSessionKey;
-			inStreamDecryption = new Cryption(sessionKey);
-			for (int i = 0; i < 4; i++) {
-				sessionKey[i] += 50;
-			}
-			outStreamDecryption = new Cryption(sessionKey);
-			getOutputStream().packetEncryption = outStreamDecryption;
-
-			int letters = 0;
-			for (int i = 0; i < getPlayerName().length(); i++) {
-				boolean valid = false;
-				for (char validChar : validChars) {
-					if (getPlayerName().charAt(i) == validChar) {
-						valid = true;
-						// break;
-					}
-					if (valid && getPlayerName().charAt(i) != '_' && getPlayerName().charAt(i) != ' ') {
-						letters++;
-					}
-				}
-				if (!valid) {
-					returnCode = 4;
-					disconnected = true;
-				}
-			}
-			if (letters < 1) {
-				returnCode = 3;
-				disconnected = true;
-			}
-			char first = getPlayerName().charAt(0);
-			properName = Character.toUpperCase(first) + getPlayerName().substring(1).toLowerCase();
-			setPlayerName(properName.replace("_", " "));
-			longName = Utils.playerNameToInt64(getPlayerName());
-			if (Server.updateRunning && (Server.updateStartTime + (Server.updateSeconds * 1000L)) - System.currentTimeMillis() < 60000) { //Checks if update!
-				returnCode = 14;
-				disconnected = true;
-			}
-			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
-			switch (playerGroup) {
-				case 6: // root admin
-				case 18: // root admin
-				case 10: // content dev
-					playerRights = 2;
-					premium = true;
-					break;
-				case 9: // player moderator
-				case 5: // global mod
-					playerRights = 1;
-					premium = true;
-					break;
-				default:
-					if(playerGroup == 2)
-						Server.loginManager.updatePlayerForumRegistration(this);
-					premium = true;
-					playerRights = 0;
-			}
-			for (String otherGroup : otherGroups) {
-				if (otherGroup == null) {
-					continue;
-				}
-				String temp = otherGroup.trim();
-				if (temp.length() > 0) {
-					int group = Integer.parseInt(temp);
-					switch (group) {
-						case 14:
-							premium = true;
-							break;
-						case 3:
-						case 19:
-							playerRights = 1;
-							break;
-					}
-				}
-			}
-			for (int i = 0; i < getEquipment().length; i++) {
-				if (getEquipment()[i] == 0) {
-					getEquipment()[i] = -1;
-					getEquipmentN()[i] = 0;
-				}
-			}
-			if (loadgame == 0 && returnCode != 6) {
-				validLogin = true;
-				if (getPosition().getX() > 0 && getPosition().getY() > 0) {
-					teleportToX = getPosition().getX();
-					teleportToY = getPosition().getY();
-				}
-			} else {
-				if (returnCode != 6 && returnCode != 5)
-					returnCode = loadgame;
-				disconnected = true;
-				teleportToX = 0;
-				teleportToY = 0;
-			}
-			if (getSlot() == -1) {
-				mySocketHandler.getOutput().write(7);
-			} else if (playerServer.equals("INVALID")) {
-				mySocketHandler.getOutput().write(10);
-			} else {
-				if (mySocketHandler.getOutput() != null)
-					mySocketHandler.getOutput().write(returnCode); // login response (1: wait 2seconds,
-					// 2=login successfull, 4=ban :-)
-				else
-					returnCode = 21;
-				if (returnCode == 21)
-					mySocketHandler.getOutput().write(loginDelay);
-			}
-			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
-			mySocketHandler.getOutput().write(0);
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-		} catch (java.lang.Exception __ex) {
-			__ex.printStackTrace();
-			destruct();
-			return;
-		}
-		if (getSlot() == -1 || returnCode != 2) {
-			return;
-		}
-		isActive = true;
-		Thread mySocketThread = Server.createNewConnection(mySocketHandler);
-		mySocketThread.start();
-		packetSize = 0;
-		packetType = -1;
-		readPtr = 0;
-		writePtr = 0;
 	}
 
 	public void setSidebarInterface(int menuId, int form) {
@@ -823,15 +584,7 @@ public class Client extends Player implements Runnable {
 			if (getGameWorldId() < 2) {
 				long elapsed = System.currentTimeMillis() - start;
 				int minutes = (int) (elapsed / 60000);
-				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
-			}
-			//System.out.println("exorth save!");
-			PlayerHandler.playersOnline.remove(longName);
-			PlayerHandler.allOnline.remove(longName);
-			for (Client c : PlayerHandler.playersOnline.values()) {
-				if (c.hasFriend(longName)) {
-					c.refreshFriends();
-				}
+				//Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
 			}
 			if(inTrade) declineTrade();
 			else if(inDuel && !duelFight) declineDuel();
@@ -916,14 +669,6 @@ public class Client extends Player implements Runnable {
 				if (elapsed > 10000) {
 					last = ", lastlogin = '" + System.currentTimeMillis() + "'";
 				}
-				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
-						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
-						+ "', friends='" + list + "', fightStyle = " + FightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
-						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
-						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Boss_Log='"
-						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
-						", prayer='"+prayer+"', boosted='"+boosted+"'" + last
-						+ " WHERE id = " + dbId);
 				statement.close();
 				//println_debug("Save:  " + getPlayerName() + " (" + (System.currentTimeMillis() - start) + "ms)");
 			} catch (Exception e) {
@@ -2148,8 +1893,7 @@ public class Client extends Player implements Runnable {
 //    send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
 //    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
 		/* Set a player active to a world! */
-		PlayerHandler.playersOnline.put(longName, this);
-		PlayerHandler.allOnline.put(longName, getGameWorldId());
+
 		/* Sets look! */
 		if (lookNeeded) {
 			defaultCharacterLook(this);
@@ -2159,11 +1903,7 @@ public class Client extends Player implements Runnable {
 		//Login.banUid(); //Not sure what this do!
 		//Arrays.fill(lastMessage, ""); //We need this?!
 		/* Friend configs! */
-		for (Client c : PlayerHandler.playersOnline.values()) {
-			if (c.hasFriend(longName)) {
-				c.refreshFriends();
-			}
-		}
+
 		/* Update of both player and npc! */
 		PlayerUpdating.getInstance().update(this, outputStream);
 		NpcUpdating.getInstance().update(this, outputStream);
@@ -3316,35 +3056,12 @@ public class Client extends Player implements Runnable {
 	}
 
 	public static void publicyell(String message) {
-		for (Player p : PlayerHandler.players) {
-			if (p == null || !p.isActive) {
-				continue;
-			}
-			Client temp = (Client) p;
-			if (temp.getPosition().getX() > 0 && temp.getPosition().getY() > 0) {
-				if (temp != null && !temp.disconnected && p.isActive) {
-					temp.send(new SendMessage(message));
-				}
-			}
-		}
 	}
 
 	public void yell(String message) {
-		for (Player p : PlayerHandler.players) {
-			if (p == null || !p.isActive)
-				continue;
-			Client temp = (Client) p;
-			temp.send(new SendMessage(message + ":yell:"));
-		}
 	}
 
 	public void yellKilled(String message) {
-		for (Player p : PlayerHandler.players) {
-			if (p == null || !p.isActive || !(p.inWildy() || p.inEdgeville()))
-				continue;
-			Client temp = (Client) p;
-			temp.send(new SendMessage(message + ":yell:"));
-		}
 	}
 
 	public int[] EssenceMineX = {2893, 2921, 2911, 2926, 2899};
@@ -3625,7 +3342,6 @@ public class Client extends Player implements Runnable {
 	public void sendpm(long name, int rights, byte[] chatmessage, int messagesize) {
 		getOutputStream().createFrameVarSize(196);
 		getOutputStream().writeQWord(name);
-		getOutputStream().writeDWord(handler.lastchatid++); // must be different for
 		// each message
 		getOutputStream().writeByte(rights);
 		getOutputStream().writeBytes(chatmessage, messagesize, 0);
@@ -4602,14 +4318,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void UpdatePlayerShop() {
-		for (int i = 1; i < Constants.maxPlayers; i++) {
-			if (PlayerHandler.players[i] != null) {
-				if (PlayerHandler.players[i].IsShopping && PlayerHandler.players[i].MyShopID == MyShopID
-						&& i != getSlot()) {
-					PlayerHandler.players[i].UpdateShop = true;
-				}
-			}
-		}
 	}
 
 	/* NPC Talking */
@@ -6509,12 +6217,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void modYell(String msg) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Client p = (Client) PlayerHandler.players[i];
-			if (p != null && !p.disconnected && p.getPosition().getX() > 0 && p.dbId > 0 && p.playerRights > 0) {
-				p.send(new SendMessage(msg));
-			}
-		}
+
 	}
 
 	public void triggerTele(int x, int y, int height, boolean prem) {
@@ -6767,13 +6470,6 @@ public class Client extends Player implements Runnable {
 		resetItems(3322);
 		resetTItems(3415);
 		resetOTItems(3416);
-		String out = PlayerHandler.players[trade_reqId].getPlayerName();
-		if (PlayerHandler.players[trade_reqId].playerRights == 1) {
-			out = "@cr1@" + out;
-		} else if (PlayerHandler.players[trade_reqId].playerRights == 2) {
-			out = "@cr2@" + out;
-		}
-		send(new SendString("Trading With: " + PlayerHandler.players[trade_reqId].getPlayerName(), 3417));
 		send(new SendString("", 3431));
 		send(new SendString("Are you sure you want to make this trade?", 3535));
 	}
@@ -6811,56 +6507,16 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean validClient(int index) {
-		Client p = (Client) PlayerHandler.players[index];
+		Client p = playerHandler.getClient(index);
 		return p != null && !p.disconnected && p.dbId > 0;
 	}
 
 	public Client getClient(int index) {
-		return index < 0 ? null : ((Client) PlayerHandler.players[index]);
+		return playerHandler.getClient(index);
 	}
 
 	public void tradeReq(int id) {
-		// followPlayer(id);
-		facePlayer(id);
-		if (!Server.trading) {
-			send(new SendMessage("Trading has been temporarily disabled"));
-			return;
-		}
-		for (int a = 0; a < PlayerHandler.players.length; a++) {
-			Client o = getClient(a);
-			if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
-				logout();
-			}
-		}
-		Client other = (Client) PlayerHandler.players[id];
-		if (validClient(trade_reqId)) {
-			setFocus(other.getPosition().getX(), other.getPosition().getY());
-			if (inTrade || inDuel || other.inTrade || other.inDuel) {
-				send(new SendMessage("That player is busy at the moment"));
-				trade_reqId = 0;
-				return;
-			}
-			if (tradeLocked && other.playerRights < 1) {
-				return;
-			}
-		}
-		if (dbId == other.dbId) {
-			return;
-		}
-		/*
-		 * if(other.connectedFrom.equals(connectedFrom) &&
-		 * !connectedFrom.equals("127.0.0.1")){ tradeRequested = false; return; }
-		 */
-		if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
-			openTrade();
-			other.openTrade();
-		} else if (validClient(trade_reqId) && !inTrade && System.currentTimeMillis() - lastButton > 1000) {
-			lastButton = System.currentTimeMillis();
-			tradeRequested = true;
-			trade_reqId = id;
-			send(new SendMessage("Sending trade request..."));
-			other.send(new SendMessage(getPlayerName() + ":tradereq:"));
-		}
+
 	}
 
 	public void confirmScreen() {
@@ -6977,12 +6633,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Dueling has been temporarily disabled"));
 			return;
 		}
-		for (int a = 0; a < PlayerHandler.players.length; a++) {
-			Client o = getClient(a);
-			if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
-				logout();
-			}
-		}
+
 		duel_with = pid;
 		duelRequested = true;
 		if (!validClient(duel_with)) {
@@ -7235,11 +6886,6 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		friends.add(new Friend(name, true));
-		for (Client c : PlayerHandler.playersOnline.values()) {
-			if (c.hasFriend(longName)) {
-				c.refreshFriends();
-			}
-		}
 		refreshFriends();
 	}
 
@@ -7257,24 +6903,6 @@ public class Client extends Player implements Runnable {
 		if (!found) {
 			send(new SendMessage("That player is not on your friends list"));
 			return;
-		}
-		if (PlayerHandler.playersOnline.containsKey(friend)) {
-			Client to = PlayerHandler.playersOnline.get(friend);
-			boolean specialRights = to.playerGroup == 6 || to.playerGroup == 10 || to.playerGroup == 35;
-			if (specialRights && to.busy && playerRights < 1) {
-				send(new SendMessage("<col=FF0000>This player is busy and did not receive your message."));
-				//send(new SendMessage("Please only report glitch/bugs to him/her on the forums"));
-				return;
-			}
-			if (to.Privatechat == 0 || (to.Privatechat == 1 && to.hasFriend(longName))) {
-				to.sendpm(longName, playerRights, pmchatText, pmchatTextSize);
-				PmLog.recordPm(this.getPlayerName(), to.getPlayerName(), Utils.textUnpack(pmchatText, pmchatTextSize));
-			} else {
-				send(new SendMessage("That player is not available"));
-			}
-		} else if (PlayerHandler.allOnline.containsKey(friend)) { //Not sure why we need this code!
-		} else {
-			send(new SendMessage("That player is not online"));
 		}
 		/*
 		 * for (int i1 = 0; i1 < handler.players.length; i1++) { client to =
@@ -7303,34 +6931,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void refreshFriends() {
-		/*for (Friend f : friends) {
-			if (PlayerHandler.playersOnline.containsKey(f.name)) {
-				loadpm(f.name, getGameWorldId());
-			} else {
-				loadpm(f.name, 0);
-			}
-		}*/
-		for (Friend f : friends) {
-			if (PlayerHandler.allOnline.containsKey(f.name)) {
-				boolean ignored = false;
-				for (Player p : PlayerHandler.players) {
-					if (p == null)
-						continue;
-					if (p.longName == f.name) {
-						Client player = (Client) p;
-						for (Friend ignore : player.ignores) {
-							ignored = ignore.name == this.longName;
-						}
-					}
-				}
-				if (!ignored)
-					loadpm(f.name, 1);
-				else
-					loadpm(f.name, 0);
-			} else {
-				loadpm(f.name, 0);
-			}
-		}
+
 	}
 
 	public void removeFriend(long name) {
@@ -7344,57 +6945,11 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void removeIgnore(long name) {
-		/*for (Friend f : ignores) {
-			if (f.name == name) {
-				ignores.remove(f);
-				refreshFriends();
-				return;
-			}
-		}*/
-		for (Friend f : ignores) {
-			if (f.name == name) {
-				ignores.remove(f);
-				refreshFriends();
-				if (PlayerHandler.allOnline.containsKey(f.name)) {
-					for (Player p : PlayerHandler.players) {
-						if (p == null)
-							continue;
-						if (p.longName == f.name) {
-							Client player = (Client) p;
-							player.refreshFriends();
-						}
-					}
-				}
-				break;
-			}
-		}
+
 	}
 
 	public void addIgnore(long name) {
-		boolean canAdd = true;
-		for (Friend f : ignores) {
-			if (f.name == name) {
-				send(new SendMessage("You already got this guy on your ignoreList!"));
-				canAdd = false;
-				break;
-			}
-		}
-		if (canAdd) {
-			if (ignores.size() < 100) {
-				ignores.add(new Friend(name, true));
-				if (PlayerHandler.allOnline.containsKey(name)) {
-					for (Player p : PlayerHandler.players) {
-						if (p == null)
-							continue;
-						if (p.longName == name) {
-							Client player = (Client) p;
-							player.refreshFriends();
-						}
-					}
-				}
-			} else
-			send(new SendMessage("Maximum ignores reached!"));
-		}
+
 	}
 
 	public void triggerChat(int button) {
@@ -7890,7 +7445,7 @@ public class Client extends Player implements Runnable {
 			faceNpc(target.getSlot());
 			//System.out.println("test for npc slot: " + target.getSlot());
 		} else {
-			Server.playerHandler.getClient(target.getSlot()).target = this;
+			playerHandler.getClient(target.getSlot()).target = this;
 			attackingPlayer = true;
 			facePlayer(target.getSlot());
 			//System.out.println("test for player slot: " + target.getSlot());
@@ -7930,10 +7485,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void updatePlayerDisplay() {
-		String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
-		send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
-		send(new SendString("", 6664));
-		setInterfaceWalkable(6673);
+
 	}
 
 	public void playerKilled(Client other) {
@@ -8495,37 +8047,6 @@ public class Client extends Player implements Runnable {
 		return bow;
 	}
 
-	public void RottenTomato(final Client c) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Client o = (Client) PlayerHandler.players[i];
-			final int oX = c.getPosition().getX();
-			final int oY = c.getPosition().getY();
-			final int pX = o.getPosition().getX();
-			final int pY = o.getPosition().getY();
-			final int offX = (oY - pY) * -1;
-			final int offY = (oX - pX) * -1;
-			//createProjectile(oX, oY, offX, offY, 50, 90, 1281, 21, 21, 2518 - 1);
-			sendAnimation(2968);
-			//c.turnPlayerTo(pX, pY);
-			EventManager.getInstance().registerEvent(new Event(600) {
-
-				@Override
-				public void execute() {
-					//if (c == null || c.disconnected) {
-					o.gfx0(1282);
-					this.stop();
-					// }
-				}
-			});
-			if (playerHasItem(2518, 1)) {
-				deleteItem(2518, 1);
-			} else {
-				deleteItem(2518, Equipment.Slot.WEAPON.getId());
-				deleteItem(2518, 1);
-			}
-		}
-	}
-
 	public boolean checkInv = false;
 
 	public void openUpOtherInventory(String player) {
@@ -8533,108 +8054,12 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Please finish with what you are doing!"));
 			return;
 		}
-		ArrayList<GameItem> otherInv = new ArrayList<GameItem>();
-		if (PlayerHandler.getPlayer(player) != null) { //Online check
-			Client other = (Client) PlayerHandler.getPlayer(player);
-			for (int i = 0; i < other.playerItems.length; i++) {
-				otherInv.add(i, new GameItem(other.playerItems[i] - 1, other.playerItemsN[i]));
-			}
-			sendInventory(3214, otherInv);
-			send(new SendMessage("User " + player + "'s inventory is now being shown."));
-			checkInv = true;
-		} else {
-			try {
-				java.sql.Connection conn = getDbConnection();
-				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-				ResultSet results = statement.executeQuery(query);
-				int id = -1;
-				if (results.next())
-					id = results.getInt("userid");
-				if (id >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
-					results = statement.executeQuery(query);
-					if (results.next()) {
-						String text = results.getString("inventory");
-						if (text != null && text.length() > 2) {
-							String lines[] = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								@SuppressWarnings("unused")
-								int slot = Integer.parseInt(parts[0]);
-								int item = Integer.parseInt(parts[1]);
-								int amount = Integer.parseInt(parts[2]);
-								otherInv.add(new GameItem(item, amount));
-							}
-						}
-						sendInventory(3214, otherInv);
-						send(new SendMessage("User " + player + "'s inventory is now being shown."));
-						checkInv = true;
-					} else
-						send(new SendMessage("username '" + player + "' have yet to login!"));
-				} else
-					send(new SendMessage("username '" + player + "' do not exist in the database!"));
-				statement.close();
-			} catch (Exception e) {
-				System.out.println("issue: " + e.getMessage());
-			}
-		}
 	}
 
 	public void openUpOtherBank(String player) {
 		if (IsBanking || IsShopping || duelFight) {
 			send(new SendMessage("Please finish with what you are doing!"));
 			return;
-		}
-		ArrayList<GameItem> otherBank = new ArrayList<>();
-		IsBanking = false;
-		if (PlayerHandler.getPlayer(player) != null) { //Online check
-			Client other = (Client) PlayerHandler.getPlayer(player);
-			for (int i = 0; i < other.bankItems.length; i++) {
-				otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
-			}
-			send(new SendString("Examine the bank of " + player, 5383));
-			sendBank(5382, otherBank);
-			send(new InventoryInterface(5292, 5063));
-			IsBanking = false;
-			checkBankInterface = true;
-		} else {
-			try {
-				java.sql.Connection conn = getDbConnection();
-				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-				ResultSet results = statement.executeQuery(query);
-				int id = -1;
-				if (results.next())
-					id = results.getInt("userid");
-				if (id >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
-					results = statement.executeQuery(query);
-					if (results.next()) {
-						String text = results.getString("bank");
-						if (text != null && text.length() > 2) {
-							String lines[] = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								@SuppressWarnings("unused")
-								int slot = Integer.parseInt(parts[0]);
-								int item = Integer.parseInt(parts[1]);
-								int amount = Integer.parseInt(parts[2]);
-								otherBank.add(new GameItem(item, amount));
-							}
-						}
-						send(new SendString("Examine the bank of " + player, 5383));
-						sendBank(5382, otherBank);
-						send(new InventoryInterface(5292, 5063));
-						checkBankInterface = true;
-					} else
-						send(new SendMessage("username '" + player + "' have yet to login!"));
-				} else
-					send(new SendMessage("username '" + player + "' do not exist in the database!"));
-				statement.close();
-			} catch (Exception e) {
-				System.out.println("issue: " + e.getMessage());
-			}
 		}
 	}
 
@@ -8674,183 +8099,6 @@ public class Client extends Player implements Runnable {
 	@Override
 	public boolean equals(Object o) {
 		return ((Client) o).getPlayerName().equalsIgnoreCase(this.getPlayerName());
-	}
-
-	public void removeExperienceFromPlayer(String user, int id, int xp) {
-		String skillName = Skill.getSkill(id).getName();
-		if (PlayerHandler.getPlayer(user) != null) { //Online check
-			Client other = (Client) PlayerHandler.getPlayer(user);
-			int currentXp = other.getExperience(Skill.values()[id]);
-			xp = currentXp >= xp ? xp : currentXp;
-			other.setExperience(currentXp - xp, Skill.getSkill(id));
-			other.setLevel(Skills.getLevelForExperience(other.getExperience(Skill.values()[id])), Skill.getSkill(id));
-			other.refreshSkill(Skill.getSkill(id));
-			send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-		} else {
-			try {
-				boolean found = true;
-				int currentXp = 0, totalXp = 0, totalLevel = 0;
-				java.sql.Connection conn = getDbConnection();
-				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-				ResultSet results = statement.executeQuery(query);
-				int userid = -1;
-				if (results.next())
-					userid = results.getInt("userid");
-				if (userid >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid + "";
-					results = statement.executeQuery(query);
-					if (results.next()) {
-						currentXp = results.getInt(skillName);
-						totalXp = results.getInt("totalxp");
-						totalLevel = results.getInt("total");
-					}
-				} else
-					found = false;
-				if (found) {
-					statement = getDbConnection().createStatement();
-					xp = currentXp >= xp ? xp : currentXp;
-					int newXp = currentXp - xp;
-					totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
-					totalXp -= xp;
-					statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET " + skillName + "='" + newXp + "', totalxp='" + totalXp + "', total='" + totalLevel + "' WHERE uid = " + userid);
-					send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-				} else
-					send(new SendMessage("username '" + user + "' have yet to login!"));
-				statement.close();
-			} catch (Exception e) {
-				System.out.println("issue: " + e.getMessage());
-			}
-		}
-	}
-
-	public void removeItemsFromPlayer(String user, int id, int amount) {
-		int totalItemRemoved = 0;
-		if (PlayerHandler.getPlayer(user) != null) { //Online check
-			Client other = (Client) PlayerHandler.getPlayer(user);
-			for (int i = 0; i < other.bankItems.length; i++) {
-				if (other.bankItems[i] - 1 == id) {
-					int canRemove = other.bankItemsN[i] < amount ? other.bankItemsN[i] : amount;
-					other.bankItemsN[i] -= canRemove;
-					amount -= canRemove;
-					totalItemRemoved += canRemove;
-					if (other.bankItemsN[i] <= 0)
-						other.bankItems[i] = 0;
-					other.resetBank();
-				}
-			}
-			for (int i = 0; i < other.playerItems.length; i++) {
-				if (other.playerItems[i] - 1 == id) {
-					int canRemove = other.playerItemsN[i] < amount ? other.playerItemsN[i] : amount;
-					other.playerItemsN[i] -= canRemove;
-					amount -= canRemove;
-					totalItemRemoved += canRemove;
-					if (other.playerItemsN[i] <= 0)
-						other.playerItems[i] = 0;
-					if (other.IsBanking || other.isPartyInterface || other.checkBankInterface)
-						other.resetItems(5064);
-					else if (other.IsShopping)
-						other.resetItems(3823);
-					else
-						other.resetItems(3214);
-
-				}
-			}
-			for (int i = 0; i < getEquipment().length; i++) {
-				if (other.getEquipment()[i] == id) {
-					int canRemove = other.getEquipmentN()[i] < amount ? other.getEquipmentN()[i] : amount;
-					other.getEquipmentN()[i] -= canRemove;
-					amount -= canRemove;
-					totalItemRemoved += canRemove;
-					if (other.getEquipmentN()[i] <= 0)
-						other.getEquipment()[i] = -1;
-					other.deleteequiment(0, i);
-				}
-			}
-			if (totalItemRemoved > 0)
-				send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
-			else
-				send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
-		} else { //Database check!
-			try {
-				boolean found = true;
-				java.sql.Connection conn = getDbConnection();
-				Statement statement = conn.createStatement();
-				String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-				ResultSet results = statement.executeQuery(query);
-				int userid = -1;
-				if (results.next())
-					userid = results.getInt("userid");
-				if (userid >= 0) {
-					String bank = "", inventory = "", equipment = "";
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid + "";
-					results = statement.executeQuery(query);
-					if (results.next()) {
-						String text = results.getString("bank");
-						if (text != null && text.length() > 2) {
-							String[] lines = text.split(" ");
-							for (String line : lines) {
-								String[] parts = line.split("-");
-								int checkItem = Integer.parseInt(parts[1]);
-								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
-									if (canRemove < Integer.parseInt(parts[2]))
-										bank += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
-									amount -= canRemove;
-									totalItemRemoved += canRemove;
-								} else
-									bank += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
-							}
-						}
-						text = results.getString("inventory");
-						if (text != null && text.length() > 2) {
-							String[] lines = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								int checkItem = Integer.parseInt(parts[1]);
-								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
-									if (canRemove < Integer.parseInt(parts[2]))
-										inventory += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
-									amount -= canRemove;
-									totalItemRemoved += canRemove;
-								} else
-									inventory += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
-							}
-						}
-						text = results.getString("equipment");
-						if (text != null && text.length() > 2) {
-							String[] lines = text.split(" ");
-							for (String line : lines) {
-								String[] parts = line.split("-");
-								int checkItem = Integer.parseInt(parts[1]);
-								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
-									if (canRemove < Integer.parseInt(parts[2]))
-										equipment += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
-									amount -= canRemove;
-									totalItemRemoved += canRemove;
-								} else
-									equipment += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
-							}
-						}
-					} else
-						found = false;
-					if (found) {
-						statement = getDbConnection().createStatement();
-						statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
-						if (totalItemRemoved > 0)
-							send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
-						else
-							send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
-					} else
-						send(new SendMessage("username '" + user + "' have yet to login!"));
-					statement.close();
-				}
-			} catch (Exception e) {
-				System.out.println("issue: " + e.getMessage());
-			}
-		}
 	}
 
 	public void dropAllItems() {

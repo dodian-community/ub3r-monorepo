@@ -67,18 +67,18 @@ public class Server implements Runnable {
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
         System.out.println();
 
-        if (getDatabaseInitialize() && !isDatabaseInitialized()) {
-            initializeDatabase();
-        }
+        //if (getDatabaseInitialize() && !isDatabaseInitialized()) {
+        //    initializeDatabase();
+        //}
         //ConnectionList.getInstance(); //Let us not utilize this for now!
         /* NPC Data*/
-        npcManager = new NpcManager();
-        npcManager.loadSpawns();
+        //npcManager = new NpcManager();
+        //npcManager.loadSpawns();
         System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
         /* Player Stuff */
-        itemManager = new ItemManager();
-        playerHandler = new PlayerHandler();
-        shopHandler = new ShopHandler();
+        //itemManager = new ItemManager();
+        //playerHandler = new PlayerHandler();
+        //shopHandler = new ShopHandler();
         thieving = new Thieving();
         setGlobalItems();
         /* Load cache */
@@ -90,20 +90,20 @@ public class Server implements Runnable {
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
         GameObjectData.init();
-        loadObjects(); //sql disabled
-        new DoorHandler(); //sql disabled
+        //loadObjects(); //sql disabled
+        //new DoorHandler(); //sql disabled
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
 
         //new Thread(new VotingIncentiveManager()).start();
         /* Processes */
         job = new JobScheduler();
-        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
+        //JobScheduler.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
         //job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class); //Ground item revolved inside entity process!
-        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(TICK, WorldProcessor.class);
+        //JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
+        //JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
+        //JobScheduler.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
+        //JobScheduler.ScheduleStaticRepeatForeverJob(TICK, WorldProcessor.class);
         /* Done loading */
 
         startClientListener();

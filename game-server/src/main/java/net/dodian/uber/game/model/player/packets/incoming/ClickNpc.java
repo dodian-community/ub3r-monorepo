@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
@@ -78,13 +77,6 @@ public class ClickNpc implements Packet {
             int peopleInEdge = 0;
             int peopleInWild = 0;
             for (int a = 0; a < Constants.maxPlayers; a++) {
-                Client checkPlayer = (Client) PlayerHandler.players[a];
-                if (checkPlayer != null) {
-                    if (checkPlayer.inWildy())
-                        peopleInWild++;
-                    else if (checkPlayer.inEdgeville())
-                        peopleInEdge++;
-                }
             }
             client.showNPCChat(3306, 590, new String[]{"There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild!", "There is " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!"});
         }
@@ -142,10 +134,6 @@ public class ClickNpc implements Packet {
             client.convoId = 4;
         } else if (npcId == 943) {
             int num = 0;
-            for (Player p : PlayerHandler.players) {
-                if (p != null && p.wildyLevel > 0)
-                    num++;
-            }
             tempNpc.setText("There are currently " + num + " people in the wilderness");
         } else {
             client.println_debug("atNPC 1: " + npcId);

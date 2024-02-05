@@ -15,10 +15,14 @@ private val logger = InlineLogger()
 class HandshakeDecoder : ByteToMessageDecoder() {
 
     override fun decode(ctx: ChannelHandlerContext, request: ByteBuf, response: MutableList<Any>) {
+        logger.debug { "Decoding handshake..." }
+
         if (!request.isReadable)
             return
 
         val id = request.readUnsignedByte().toInt()
+
+        logger.debug { "HANDSHAKE ID: $id" }
 
         when (id) {
             SERVICE_GAME -> {

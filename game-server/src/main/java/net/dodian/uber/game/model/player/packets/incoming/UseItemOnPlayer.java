@@ -2,7 +2,6 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
@@ -15,7 +14,7 @@ public class UseItemOnPlayer implements Packet {
         int playerSlot = client.getInputStream().readSignedWord();
         int itemId = client.getInputStream().readSignedWord();
         int CrackerSlot = client.getInputStream().readSignedWordBigEndian();
-        Client player = ((Client) PlayerHandler.players[playerSlot]);
+        Client player = null;
 
         if (playerSlot < 0 || player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
             return;

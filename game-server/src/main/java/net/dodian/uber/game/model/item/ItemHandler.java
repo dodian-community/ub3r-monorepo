@@ -4,7 +4,6 @@ package net.dodian.uber.game.model.item;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveGroundItem;
 
@@ -41,33 +40,11 @@ public class ItemHandler {
     }
 
     public static void createItemAll(int itemID, int itemX, int itemY, int itemZ, int itemAmount, int itemController) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Player p = PlayerHandler.players[i];
-            if (p != null) {
-                Client person = (Client) p;
-                if ((person.getPlayerName() != null || person.getPlayerName() != "null")
-                        && !(person.getSlot() == itemController)) {
-                    if (person.distanceToPoint(itemX, itemY) <= 60) {
-                        person.send(new CreateGroundItem(new GameItem(itemID, itemAmount), new Position(itemX, itemY, itemZ)));
-                    }
-                }
-            }
-        }
+
     }
 
     public static void removeItemAll(int itemID, int amount, int itemX, int itemY, int itemZ) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Player p = PlayerHandler.players[i];
-            if (p != null) {
-                Client person = (Client) p;
-                if (person.getPlayerName() != null || person.getPlayerName() != "null") {
-                    // misc.println("distance to remove "+person.distanceToPoint(itemX,
-                    // itemY));
-                    if (person.distanceToPoint(itemX, itemY) <= 60)
-                        person.send(new RemoveGroundItem(new GameItem(itemID, amount), new Position(itemX, itemY, itemZ)));
-                }
-            }
-        }
+
     }
 
     public static int MaxDropItems = 100000;

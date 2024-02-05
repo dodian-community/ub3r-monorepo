@@ -3,7 +3,6 @@ package net.dodian.uber.game.model.object;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -16,25 +15,11 @@ public class GlobalObject {
     }
 
     public static void updateNewObject(Object o) {
-        for (Player p : PlayerHandler.players) {
-            if (p == null || !p.isActive) {
-                continue;
-            }
-            Client c = (Client) p;
-            if (c.withinDistance(o))
-                c.ReplaceObject2(new Position(o.x, o.y, o.z), o.id, o.face, o.type);
-        }
+
     }
 
     public static void updateOldObject(Object o) {
-        for (Player p : PlayerHandler.players) {
-            if (p == null || !p.isActive) {
-                continue;
-            }
-            Client c = (Client) p;
-            if (c.withinDistance(o))
-                c.ReplaceObject(o.x, o.y, o.oldId, o.face, o.type);
-        }
+
     }
 
     public static boolean addGlobalObject(final Object o, int time) {

@@ -9,7 +9,6 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.GlobalObject;
@@ -20,7 +19,6 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Thieving;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -99,17 +97,6 @@ public class ClickObject implements Packet {
         client.resetAction(false);
         client.setFocus(objectPosition.getX(), objectPosition.getY());
         if (xDiff > 5 || yDiff > 5) {
-            return;
-        }
-        if (Balloons.lootBalloon(client, objectPosition.copy()) && objectID >= 115 && objectID <= 122) {
-            return;
-        }
-        if (objectID == 26193) {
-            Balloons.openInterface(client);
-            return;
-        }
-        if (objectID == 26194 && client.playerRights > 1) {
-            Balloons.triggerPartyEvent(client);
             return;
         }
         if (objectID == 23271) {
@@ -831,17 +818,6 @@ public class ClickObject implements Packet {
                         DoorHandler.doorFace[d] = newFace;
                     }
                     //client.send(new Sound(326));
-                    for (int p = 0; p < Constants.maxPlayers; p++) {
-                        Client player = (Client) PlayerHandler.players[p];
-                        if (player == null) {
-                            continue;
-                        }
-                        if (player.getPlayerName() != null && player.getPosition().getZ() == client.getPosition().getZ()
-                                && !player.disconnected && player.getPosition().getY() > 0 && player.getPosition().getX() > 0
-                                && player.dbId > 0) {
-                            player.ReplaceObject(DoorHandler.doorX[d], DoorHandler.doorY[d], DoorHandler.doorId[d], newFace, 0);
-                        }
-                    }
                 }
             }
         }

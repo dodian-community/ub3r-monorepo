@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
@@ -19,6 +18,8 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.security.DropLog;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+
+import static net.dodian.uber.game.Server.playerHandler;
 
 /**
  * @author Owner
@@ -115,11 +116,11 @@ public class Npc extends Entity {
     }
 
     public Client getClient(int index) {
-        return ((Client) PlayerHandler.players[index]);
+        return playerHandler.getClient(index);
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) PlayerHandler.players[index];
+        Client p = getClient(index);
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
@@ -302,7 +303,7 @@ public class Npc extends Entity {
                         if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
                             continue;
                         if(((Client) e).attackingNpc) {
-                            enemy = Server.playerHandler.getClient(e.getSlot());
+                            enemy = playerHandler.getClient(e.getSlot());
                             int hitDiff = 0;
                             if (type == 1) {
                                 delayGfx(enemy, 2656, 446, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
@@ -562,7 +563,7 @@ public class Npc extends Entity {
      * @return the respawn
      */
     public int getRespawn() {
-        return boss ? respawn - Math.max(30, PlayerHandler.getPlayerCount() - 1) : respawn;
+        return 0;
     }
 
     /**

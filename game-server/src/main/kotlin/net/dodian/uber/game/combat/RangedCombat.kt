@@ -90,10 +90,11 @@ fun Client.handleRanged(): Int {
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) hit /= 2
-        if(hit >= player.currentHealth)
-            hit = player.currentHealth
-        player.dealDamage(hit, landCrit)
+        if (player?.prayerManager?.isPrayerOn(Prayers.Prayer.PROTECT_RANGE) == true)
+            hit /= 2
+        if(hit >= (player?.currentHealth ?: 0))
+            hit = player?.currentHealth ?: 0
+        player?.dealDamage(hit, landCrit)
     }
 
     if(target is Npc) {

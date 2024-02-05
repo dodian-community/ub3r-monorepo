@@ -18,7 +18,6 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
@@ -93,7 +92,6 @@ public abstract class Player extends Entity {
     private String playerName = null; // name of the connecting client
     public String playerPass = null; // name of the connecting client
     public int playerRights; // 0=normal player, 1=player mod, 2=real mod,
-    public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
@@ -460,7 +458,6 @@ public abstract class Player extends Entity {
             currentY = teleportToY - 8 * mapRegionY;
             resetWalkingQueue();
             getPosition().moveTo(teleportToX, teleportToY);
-            Balloons.updateBalloons(temp);
             GlobalObject.updateObject(temp);
             teleportToX = teleportToY = -1;
         } else {

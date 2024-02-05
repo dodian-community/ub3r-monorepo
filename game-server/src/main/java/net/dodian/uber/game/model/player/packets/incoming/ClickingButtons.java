@@ -17,7 +17,6 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Utils;
 
 import java.io.IOException;
@@ -90,7 +89,6 @@ public class ClickingButtons implements Packet {
                 client.NpcDialogueSend = false;
                 break;
             case 8198:
-                Balloons.acceptItems(client);
                 break;
             case 83093:
                 client.sendFrame248(21172, 3213);

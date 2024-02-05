@@ -4,7 +4,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.party.Balloons;
 
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
@@ -24,12 +23,10 @@ public class Bank10 implements Packet {
         } else if (interfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
                 client.bankItem(removeID, removeSlot, 10);
-            else if (client.isPartyInterface)
-                Balloons.offerItems(client, removeID, 10, removeSlot);
         } else if (interfaceID == 5382) { // remove from bank
             client.fromBank(removeID, removeSlot, 10);
         } else if (interfaceID == 2274) { // remove from party
-            Balloons.removeOfferItems(client, removeID, 10, removeSlot);
+
         } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, 10);
         } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window

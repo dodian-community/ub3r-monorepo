@@ -5,10 +5,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
@@ -60,15 +56,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 }
             }
 
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive || PlayerHandler.players[i] == player || !player.loaded)
-                    continue;
-                if (!player.withinDistance(PlayerHandler.players[i]) || (!player.didTeleport() && player.playersUpdating.contains(PlayerHandler.players[i])))
-                    continue;
-                if ((PlayerHandler.players[i].invis && !player.invis)) //Instance check!
-                    continue;
-                player.addNewPlayer(PlayerHandler.players[i], stream, updateBlock);
-            }
         } else {
             stream.writeBits(8, 0);
 

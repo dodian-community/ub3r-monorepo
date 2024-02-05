@@ -4,9 +4,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 

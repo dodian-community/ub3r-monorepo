@@ -3,6 +3,7 @@ package net.dodian.uber.game
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.UnpooledByteBufAllocator
 import io.netty.channel.ChannelOption
+import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import net.dodian.uber.net.ServiceChannelInitializer
 import net.dodian.uber.net.session.Ub3rHandler
@@ -19,6 +20,7 @@ fun startClientListener() {
 
     val service = ServiceChannelInitializer(Ub3rHandler())
 
+    bootstrap.group(NioEventLoopGroup())
     bootstrap.channel(NioServerSocketChannel::class.java)
     bootstrap.childHandler(service)
     bootstrap.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, TIMEOUT_SECONDS.toInt() * 1_000)
@@ -27,5 +29,5 @@ fun startClientListener() {
     bootstrap.childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator(false))
     bootstrap.option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator(false))
 
-    bootstrap.bind(InetSocketAddress(serverPort))
+    bootstrap.bind(InetSocketAddress(serverPort)).sync()
 }

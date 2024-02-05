@@ -4,6 +4,8 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
 
+import static net.dodian.uber.game.Server.playerHandler;
+
 public class GroundItem {
     public int x, y, z, id, amount, dropper, playerId = -1, npcId = -1;
     public long dropped = 0;
@@ -22,10 +24,7 @@ public class GroundItem {
             this.npcId = npcId;
         this.canDespawn = true;
         dropped = System.currentTimeMillis();
-        if (dropper > 0 && Server.playerHandler.validClient(dropper)) {
-            Server.playerHandler.getClient(dropper).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
-            playerId = Server.playerHandler.getClient(dropper).dbId;
-        }
+
     }
 
     public GroundItem(Position pos, int id, int amount, int display) {

@@ -30,7 +30,7 @@ fun Client.attackTarget(): Boolean {
     }
     if (target is Player) {
         val plr = Server.playerHandler.getClient(target.slot)
-        if (plr.currentHealth < 1 || deathTimer > 0) {
+        if (plr == null || plr.currentHealth < 1 || deathTimer > 0) {
             resetAttack()
             return false
         }

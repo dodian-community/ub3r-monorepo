@@ -4,7 +4,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.party.Balloons;
 
 public class BankX2 implements Packet {
 
@@ -33,12 +32,9 @@ public class BankX2 implements Packet {
         if (client.XinterfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
                 client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, EnteredAmount);
-            else if (client.isPartyInterface)
-                Balloons.offerItems(client, client.playerItems[client.XremoveSlot] - 1, EnteredAmount, client.XremoveSlot);
         } else if (client.XinterfaceID == 5382) { // remove from bank
             client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 2274) { // remove from party
-            Balloons.removeOfferItems(client, client.offeredPartyItems.get(client.XremoveSlot).getId(), EnteredAmount, client.XremoveSlot);
         } else if (client.XinterfaceID == 3322 && client.inDuel) { // remove from bag to duel window
             client.stakeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 6669 && client.inDuel) { // remove from duel window

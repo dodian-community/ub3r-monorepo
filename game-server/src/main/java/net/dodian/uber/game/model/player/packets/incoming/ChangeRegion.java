@@ -4,7 +4,6 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.player.packets.Packet;
-import net.dodian.uber.game.party.Balloons;
 
 public class ChangeRegion implements Packet {
 
@@ -24,7 +23,6 @@ public class ChangeRegion implements Packet {
             client.IsPMLoaded = true;
         }
         client.replaceDoors();
-        Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
             /* NMZ object removal!*/
             for (int x = 0; x <= 9; x++)
