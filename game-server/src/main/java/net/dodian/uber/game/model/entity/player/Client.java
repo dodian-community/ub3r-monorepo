@@ -674,7 +674,7 @@ public class Client extends Player implements Runnable {
 				returnCode = 14;
 				disconnected = true;
 			}
-			print_debug("Name check..." + longName + ":" + properName);
+			print_debug("Name check..." + longName + ":" + properName + " ");
 			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
 			switch (playerGroup) {
 				case 6: // root admin
@@ -1893,7 +1893,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().endFrameVarSizeWord();
 		if (targetSlot == Equipment.Slot.WEAPON.getId()) {
 			CheckGear();
-			CombatStyleHandler.setWeaponHandler(this, -1);
+			CombatStyleHandler.setWeaponHandler(this);
 			requestWeaponAnims();
 		}
 		GetBonus(true);
@@ -2117,7 +2117,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWordBigEndianA(getSlot());
 		getOutputStream().createFrame(107); // resets something in the client
 		setChatOptions(0, 0, 0);
-		frame36(287, 1); //SPLIT PRIVATE CHAT ON/OFF
+		varbit(287, 1); //SPLIT PRIVATE CHAT ON/OFF
 		WriteEnergy();
 		pmstatus(2);
 		setConfigIds();
@@ -2207,7 +2207,6 @@ public class Client extends Player implements Runnable {
 			e.printStackTrace();
 		}
 		loaded = true;
-		update(); //Update of players + npcs
 	}
 
 	public void update() { //Update npc before player!
@@ -5546,7 +5545,7 @@ public class Client extends Player implements Runnable {
 			if (duelBodyRules[i])
 				configValue += stakeConfigId[i];
 		}
-		frame87(286, configValue);
+		varbit(286, configValue);
 	}
 
 	public void DuelVictory() {
@@ -7188,16 +7187,16 @@ public class Client extends Player implements Runnable {
 		otherdbId = -1;
 	}
 
-	public void frame36(int Interface, int Status) {
-		getOutputStream().createFrame(36);
-		getOutputStream().writeWordBigEndian(Interface); // The button
-		getOutputStream().writeByte(Status); // The Status of the button
-	}
-
-	public void frame87(int Interface, int Status) {
-		getOutputStream().createFrame(87);
-		getOutputStream().writeWordBigEndian(Interface); // The button
-		getOutputStream().writeDWord_v1(Status); // The Status of the button
+	public void varbit(int id, int value) {
+		if(value < 128) {
+			getOutputStream().createFrame(36);
+			getOutputStream().writeWordBigEndian(id);
+			getOutputStream().writeByte(value);
+		} else {
+			getOutputStream().createFrame(87);
+			getOutputStream().writeWordBigEndian(id);
+			getOutputStream().writeDWord_v1(value);
+		}
 	}
 
 	public boolean duelButton(int button) {
@@ -8933,7 +8932,7 @@ public class Client extends Player implements Runnable {
 	private boolean travelInitiate = false;
 
 	public void setTravelMenu() {
-		frame36(153, 0);
+		varbit(153, 0);
 		send(new SendString("Brimhaven", 12338));
 		send(new SendString("Island", 12339));
 		for (int i = 0; i < 5; i++)
@@ -8974,7 +8973,7 @@ public class Client extends Player implements Runnable {
 				}
 				/* Set configs! */
 				final int pos = i;
-				frame36(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
+				varbit(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
 				travelInitiate = true;
 				EventManager.getInstance().registerEvent(new Event(1800) {
 					@Override

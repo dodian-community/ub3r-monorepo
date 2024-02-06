@@ -179,7 +179,7 @@ public class Prayers {
         if (prayer.getPrayerLevel() != -1 && Skills.getLevelForExperience(p.getExperience(Skill.PRAYER)) < prayer.getPrayerLevel()) {
             c.send(new SendMessage(
                     "You need a prayer level of at least " + prayer.getPrayerLevel() + " to use " + formatEnum(prayer).toLowerCase()));
-            c.frame87(prayer.getConfigId(), 0);
+            c.varbit(prayer.getConfigId(), 0);
             //c.send(new Sound(447));
             return;
         }
@@ -195,7 +195,7 @@ public class Prayers {
 
         if (isPrayerOn(prayer)) {
             set(prayer, false);
-            c.frame87(prayer.getConfigId(), 0);
+            c.varbit(prayer.getConfigId(), 0);
             if (!ifCheck()) {
                 p.setHeadIcon(HeadIcon.NONE.asInt());
                 p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
@@ -243,7 +243,7 @@ public class Prayers {
     public void reset() {
         for (Prayer prayer : Prayer.values()) {
             set(prayer, false);
-            c.frame87(prayer.getConfigId(), 0);
+            c.varbit(prayer.getConfigId(), 0);
         }
         p.setHeadIcon(HeadIcon.NONE.asInt());
         p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);

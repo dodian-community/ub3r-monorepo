@@ -40,7 +40,7 @@ public class ClickingButtons implements Packet {
         if(!(actionButton >= 9157 && actionButton <= 9194))
             client.actionButtonId = actionButton;
         client.resetAction(false);
-        CombatStyleHandler.setWeaponHandler(client, actionButton);
+        CombatStyleHandler.setWeaponHandler(client);
         if (client.duelButton(actionButton)) {
             return;
         }
@@ -458,14 +458,14 @@ public class ClickingButtons implements Packet {
                 for (int index = 0; index < client.ancientButton.length; index++) {
                     if (client.actionButtonId == client.ancientButton[index]) {
                         client.autocast_spellIndex = index;
-                        CombatStyleHandler.setWeaponHandler(client, -1);
+                        CombatStyleHandler.setWeaponHandler(client);
                         //client.debug("autocast_spellIndex=" + client.autocast_spellIndex);
                         break;
                     }
                 }
                 break;
             case 24017:
-                CombatStyleHandler.setWeaponHandler(client, -1);
+                CombatStyleHandler.setWeaponHandler(client);
                 break;
 
             case 2171: // Retribution
