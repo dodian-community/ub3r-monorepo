@@ -14,7 +14,6 @@ public class PlayerHandler {
     public static int cycle = 1;
     //Players online!
     public static Player[] players = new Player[Constants.maxPlayers];
-    public static String[] playersCurrentlyOn = new String[Constants.maxPlayers];
     public static int playerCount = 0;
 
     // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
@@ -71,19 +70,8 @@ public class PlayerHandler {
         return count;
     }
 
-    public void updatePlayerNames() {
-        playerCount = 0;
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] != null && !players[i].disconnected) {
-                playersCurrentlyOn[i] = players[i].getPlayerName();
-                playerCount++;
-            } else
-                playersCurrentlyOn[i] = "";
-        }
-    }
-
     public static boolean isPlayerOn(String playerName) { //Already logged in!
-        if (PlayerHandler.allOnline.containsKey(Utils.playerNameToLong(playerName))) {
+        if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) { //Old code test!
             String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
             return true;
@@ -92,11 +80,8 @@ public class PlayerHandler {
     }
 
     public static int getPlayerID(String playerName) {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (playersCurrentlyOn[i] != null) {
-                if (playersCurrentlyOn[i].equalsIgnoreCase(playerName))
-                    return i;
-            }
+        if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) {
+            return PlayerHandler.playersOnline.get(Utils.playerNameToLong(playerName)).getSlot();
         }
         return -1;
     }

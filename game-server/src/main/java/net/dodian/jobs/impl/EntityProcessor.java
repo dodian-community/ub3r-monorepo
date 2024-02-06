@@ -104,7 +104,6 @@ public class EntityProcessor implements Job {
         }
         /* Player */
         long currentTime = System.currentTimeMillis();
-        Server.playerHandler.updatePlayerNames();
         /* Cycle to clear some ol' shiez */
             if (PlayerHandler.cycle % 10 == 0) {
                 Server.connections.clear();
@@ -155,7 +154,7 @@ public class EntityProcessor implements Job {
                 continue;
             /* Removing non-responding player */
             long lp = currentTime - PlayerHandler.players[i].lastPacket;
-            if ((PlayerHandler.players[i].dbId < 1 && lp >= 15000) || (PlayerHandler.players[i].dbId > 0 && lp >= 60000)) { //Removing non-responding player
+            if ((PlayerHandler.players[i].dbId < 1 && lp >= 1200) || (PlayerHandler.players[i].dbId > 0 && lp >= 60000)) { //Removing non-responding player
                 PlayerHandler.players[i].disconnected = true;
                 //System.out.println("Remove disconnect from update!.." + PlayerHandler.players[i].getPlayerName());
             }
@@ -168,7 +167,8 @@ public class EntityProcessor implements Job {
                 if(!PlayerHandler.players[i].initialized) {
                     PlayerHandler.players[i].initialize();
                     PlayerHandler.players[i].initialized = true;
-                } else PlayerHandler.players[i].update();
+                }
+                    PlayerHandler.players[i].update();
                 if (Server.updateRunning && PlayerHandler.players[i].updateAnnounced)
                     PlayerHandler.players[i].updateAnnounced = true;
             }

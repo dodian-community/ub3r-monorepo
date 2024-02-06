@@ -15,21 +15,21 @@ public class SwordsHandler extends CombatStyleHandler {
                 case ACCURATE_MELEE:
                 case ACCURATE_RANGED:
                     client.setCombatStyle(CombatStyles.ACCURATE_MELEE);
-                    client.frame87(43, 0);
+                    client.varbit(43, 0);
                     break;
                 case AGGRESSIVE_MELEE:
                 case RAPID_RANGED:
                     client.setCombatStyle(CombatStyles.AGGRESSIVE_MELEE);
-                    client.frame87(43, 1);
+                    client.varbit(43, 1);
                     break;
                 case CONTROLLED_MELEE:
                     client.setCombatStyle(CombatStyles.AGGRESSIVE_MELEE);
-                    client.frame87(43, 2);
+                    client.varbit(43, 2);
                     break;
                 case DEFENSIVE_MELEE:
                 case LONGRANGE_RANGED:
                     client.setCombatStyle(CombatStyles.DEFENSIVE_MELEE);
-                    client.frame87(43, 3);
+                    client.varbit(43, 3);
                     break;
             }
         }

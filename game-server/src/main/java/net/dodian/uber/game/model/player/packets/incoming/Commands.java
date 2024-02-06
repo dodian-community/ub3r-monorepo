@@ -64,19 +64,60 @@ public class Commands implements Packet {
         try {
             if (specialRights) { //Special Rank Command
                 if (cmd[0].equalsIgnoreCase("npca")) {
-                    int id = Integer.parseInt(cmd[1]);
-                    Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid animationId"));
+                    }
                 }
                 if (cmd[0].equalsIgnoreCase("tobj")) {
-                    int id = Integer.parseInt(cmd[1]);
-                    Position pos = client.getPosition().copy();
-                    client.ReplaceObject(pos.getX(), pos.getY(), id, 0, 10);
-                    client.send(new SendMessage("Object temporary spawned = " + id + ", at x = " + pos.getX()
-                            + " y = " + pos.getY() + " with height " + pos.getZ() + ""));
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        Position pos = client.getPosition().copy();
+                        client.ReplaceObject(pos.getX(), pos.getY(), id, 0, 10);
+                        client.send(new SendMessage("Object temporary spawned = " + id + ", at x = " + pos.getX()
+                                + " y = " + pos.getY() + " with height " + pos.getZ() + ""));
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " objectId"));
+                    }
                 }
                 if (cmd[0].equalsIgnoreCase("gfx")) {
-                    int id = Integer.parseInt(cmd[1]);
-                    client.callGfxMask(id, 100);
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        client.callGfxMask(id, 100);
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("varbit")) {
+                    //173 = run config!
+                    //529 7000 - farming patch outside legends! 7000 = test plant!
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        int value = Integer.parseInt(cmd[2]);
+                        client.varbit(id, value);
+                        client.send(new SendMessage("You set varbit " + id + " with value " + value));
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id value"));
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("farm")) {
+                    //173 = run config!
+                    //529 7000 - farming patch outside legends! 7000 = test plant!
+                    //TODO: Fix correct check depending on patch!
+                    //529 = farm id in our cache, but now we need values!
+                    try {
+                        int value = Integer.parseInt(cmd[1]);
+                        client.varbit(529, value);
+                        client.send(new SendMessage("You set farming config to " + value));
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " enumPlace enumSpot patchOne patchTwo(only with Allotment!)"));
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("plist")) {
+                    System.out.println("test1..." + PlayerHandler.allOnline.toString());
+                    System.out.println("test2..." + PlayerHandler.playersOnline.toString());
                 }
                 if (cmd[0].equalsIgnoreCase("cowitem")) {
                     client.addItem(1039, 100);
@@ -129,28 +170,32 @@ public class Commands implements Packet {
                     client.send(new SendMessage("You set immune as " + client.immune));
                 }
                 if (cmd[0].equalsIgnoreCase("face")) {
-                    int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
-                    int face = 0; //Default face = 0
-                    Npc n = null;
                     try {
-                        String query = "SELECT * FROM uber3_spawn where x="+x+" && y="+y+" && height="+z+"";
-                        ResultSet results = getDbConnection().createStatement().executeQuery(query);
-                        if (results.next()) {
-                            face = results.getInt("face");
+                        int face = Integer.parseInt(cmd[1]);
+                        Npc n = null;
                             for (Npc npc : Server.npcManager.getNpcs()) {
-                                if(client.getPosition().equals(npc.getPosition()))
-                                    n = npc;
+                                if (client.getPosition().equals(npc.getPosition())) n = npc;
                             }
+                        if(n == null)
+                            client.send(new SendMessage("Could not find a npc on this spot!"));
+                        else {
+                            int x = n.getPosition().getX(), y = n.getPosition().getY(), z = n.getPosition().getZ();
+                            int faceCheck = n.getFace();
+                            if(faceCheck != face) { //Update face on the sql aswell as ingame!
+                                try {
+                                    Statement stm = getDbConnection().createStatement();
+                                    n.setFace(face);
+                                    client.send(new SendMessage("You set the face of the npc from " + faceCheck + " to " + face + "!"));
+                                    stm.executeUpdate("UPDATE uber3_spawn SET face='"+face+"' where x="+x+" && y="+y+" && height="+z+"");
+                                    stm.close();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            } else
+                                client.send(new SendMessage("'"+n.npcName()+"' is already facing the way you want it!"));
                         }
-                        results.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if(n == null)
-                        client.send(new SendMessage("Could not find a npc on this spot!"));
-                    else {
-                        client.send(new SendMessage(face == n.getFace() ? "This npc is already facing the way you want it" : "You set the face of the npc from " + n.getFace() + " to " + face + "!"));
-                        n.setFace(face);
+                            client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " face"));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("dumpdrop")) {
@@ -356,7 +401,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("ifc")) {
                     int id = Integer.parseInt(cmd[1]);
-                    client.frame36(153, id);
+                    client.varbit(153, id);
                     client.send(new SendMessage("You open interface config " + id));
                 }
                 if (cmd[0].equalsIgnoreCase("travel")) {
@@ -476,47 +521,14 @@ public class Commands implements Packet {
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id amount playername"));
                     }
-                    /*try {
-                        String query = "SELECT * FROM uber3_refunds WHERE receiver='"+client.dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
-                        Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
-                        boolean gotResult = stm.executeQuery(query).next();
-                        if(gotResult) {
-                            client.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-                            stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
-                        }
-                        stm.close();
-                    } catch (Exception e) {
-                        System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-                        e.printStackTrace();
-                    }*/
-                }
-                if (cmd[0].equalsIgnoreCase("config36")) {
-                    //173 = run config!
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        int value = Integer.parseInt(cmd[2]);
-                        client.frame36(id, value);
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::config36 id value"));
-                    }
                 }
                 if (cmd[0].equalsIgnoreCase("t")) {
                     //173 = run config!
                     try {
                         int id = Integer.parseInt(cmd[1]);
-                        client.frame36(153, id);
+                        client.varbit(153, id);
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::t id"));
-                    }
-                }
-                if (cmd[0].equalsIgnoreCase("config87")) {
-                    //173 = run config!
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        int value = Integer.parseInt(cmd[2]);
-                        client.frame87(id, value);
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::config87 id value"));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("emote")) {
