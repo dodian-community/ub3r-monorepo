@@ -48,6 +48,8 @@ enum class DbTables(val table: String) {
     GAME_NPC_DEFINITIONS("uber3_npcs"),
     GAME_OBJECT_DEFINITIONS("uber3_objects"),
 
+    GAME_REFUND_ITEMS("uber3_refunds"),
+
     GAME_NPC_SPAWNS("uber3_spawn"),
     GAME_NPC_DROPS("uber3_drops"),
     GAME_MISC("uber3_misc"),

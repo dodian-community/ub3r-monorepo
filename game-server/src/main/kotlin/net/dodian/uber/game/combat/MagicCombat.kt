@@ -13,13 +13,6 @@ import net.dodian.utilities.Utils
 import kotlin.math.min
 
 fun Client.handleMagic(): Int {
-    if (!canReach(target, 5))
-        return 0
-
-    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
-    if (equipment[Equipment.Slot.WEAPON.id] !in staves || autocast_spellIndex < 0)
-        return -1
-
     val time = System.currentTimeMillis()
     val slot = autocast_spellIndex%4
     if (time - lastAttack > coolDown[slot]) {

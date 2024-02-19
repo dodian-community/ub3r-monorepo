@@ -15,6 +15,7 @@ import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.security.DropLog;
 import net.dodian.utilities.Misc;
@@ -653,7 +654,7 @@ public class Npc extends Entity {
     }
 
     public int getTimeOnFloor() {
-        int TIME_ON_FLOOR = 600;
+        int TIME_ON_FLOOR = 1200;
         return id == 3127 ? 2400 : TIME_ON_FLOOR;
     }
 
@@ -820,7 +821,7 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 5311: //Head Mourner
-                if(Misc.chance(5) == 1) { //True melee damage!
+                if(Misc.chance(6) == 1) { //True melee damage!
                     setText("Get out of my farm!");
                     requestAnim(1203, 0);
                     c.dealDamage((int)(maxHit * 0.8), true, this, damageType.MELEE);
@@ -845,6 +846,34 @@ public class Npc extends Entity {
                     CalculateMaxHit(true);
                     hitDiff = Utils.random((int)Math.floor(maxHit * 1.2));
                     delayGfx(c, 84, 395, 2, landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                } else attack = false;
+            break;
+            case 3137: //Vampire effect!
+                int prayerBonus = c.playerBonus[8];
+                if(prayerBonus < 15) {
+                    setText("I'll suckie your bloodie!");
+                    hitDiff = 10 + Utils.random(20);
+                    c.dealDamage(hitDiff, hitDiff >= 28, this, damageType.BLOODATTACK);
+                    heal(hitDiff);
+                    setLastAttack(getAttackTimer());
+                } else attack = false;
+                break;
+            case 3021: //Deadly red spider!
+                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6708 || c.GetItemName(c.getEquipment()[0]).toLowerCase().contains("slayer helmet");
+                if(!protection) { //Sting the target!
+                    hitDiff = 5 + Utils.random(15);
+                    c.dealDamage(hitDiff, hitDiff >= 18, this, damageType.TRUEDAMAGE);
+                    setLastAttack(getAttackTimer());
+                    c.send(new SendMessage("The spider stung you. Ouch!"));
+                } else attack = false;
+                break;
+            case 414: //Banshee
+                protection = c.getEquipment()[0] == 4166 || c.GetItemName(c.getEquipment()[0]).toLowerCase().contains("slayer helmet");
+                if(!protection) { //Sting the target!
+                    hitDiff = 5 + Utils.random(15);
+                    c.dealDamage(hitDiff, hitDiff >= 18, this, damageType.TRUEDAMAGE);
+                    setLastAttack(getAttackTimer());
+                    c.send(new SendMessage("Banshees' screech echoes through your ears!"));
                 } else attack = false;
                 break;
             default: attack = false;

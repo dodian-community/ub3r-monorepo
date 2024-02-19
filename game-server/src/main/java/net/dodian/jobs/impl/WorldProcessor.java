@@ -56,12 +56,12 @@ public class WorldProcessor implements Job {
                     for (Player p : PlayerHandler.players) {
                         if(p != null) {
                             Client c = ((Client) p);
-                            String query = "SELECT * FROM uber3_refunds WHERE receiver='"+c.dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+                            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='"+c.dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
                             Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
                             boolean gotResult = stm.executeQuery(query).next();
                             if(gotResult) {
                                 c.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-                                stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
+                                stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
                             }
                             stm.close();
                         }

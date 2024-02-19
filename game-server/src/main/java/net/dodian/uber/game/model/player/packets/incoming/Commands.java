@@ -92,7 +92,6 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("varbit")) {
                     //173 = run config!
-                    //529 7000 - farming patch outside legends! 7000 = test plant!
                     try {
                         int id = Integer.parseInt(cmd[1]);
                         int value = Integer.parseInt(cmd[2]);
@@ -103,44 +102,99 @@ public class Commands implements Packet {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("farm")) {
-                    //173 = run config!
-                    //529 7000 - farming patch outside legends! 7000 = test plant!
-                    //TODO: Fix correct check depending on patch!
-                    //529 = farm id in our cache, but now we need values!
                     try {
+                        boolean gotValue = true;
                         int value = Integer.parseInt(cmd[1]);
-                        client.varbit(529, value);
-                        client.send(new SendMessage("You set farming config to " + value));
+                        switch(value) {
+                            case 0: //Reset default value
+                                client.varbit(529, 0); //Patches
+                                client.varbit(905, 0); //Gout tuber patch!
+                                client.varbit(1057, 0); //Compost bin
+                            break;
+                            case 1:
+                                client.varbit(529, 0 + 3); //Herb patch for trollheim!
+                                //client.varbit(905, 3 + 2 + (1 << 6 | 1 << 7));
+                                //client.varbit(905, 0); <- Gout tuber patch!
+                            break;
+                            case 2: //Empty test for trees!
+                                client.varbit(529, 7 + 5 + (0 << 6 | 0 << 7));
+                            break;
+                            case 3: //Empty test for fruit trees
+                                client.varbit(529, 7 + 25);
+                            break;
+                            case 4: //Empty test for cactus
+                                client.varbit(529, (4<< 24));
+                            break;
+                            case 5: //Empty test for mushroom
+                                client.varbit(529, (5<< 24));
+                            break;
+                            case 6: //empty test for spirit tree
+                                client.varbit(529, (6<< 24));
+                            break;
+                            case 7: //Bushes
+                                client.varbit(529, 4 + 246 + (0 << 6 | 0 << 7));
+                            break;
+                            case 8: //Test for various raking stages!
+                                //Empty for now!
+                            break;
+                            case 9: //Flowers
+                                client.varbit(529, 32 + 1 + (0 << 6 | 0 << 7) << 16);
+                            break;
+                            case 10: //Compost bin
+                                client.varbit(1057, 30);
+                            break;
+                            case 11:
+                                /*int config = 3 + 2 << 24 - (0 << 6 | 1 << 7);
+                                client.varbit(529, config);
+                                System.out.println("config: " + config);*/
+                                /*
+                                EventManager.getInstance().registerEvent(new Event(1200) {
+                                    int test = 103, config = 0;
+                                    @Override
+                                    public void execute() {
+
+                                        if (client.disconnected) {
+                                            this.stop();
+                                            return;
+                                        }
+                                        config = (test + 2) << 24;
+                                        client.varbit(529, config);
+                                        System.out.println("config: " + config);
+                                        client.send(new SendMessage("Setting config for..." + test));
+                                        test++;
+                                    }
+                                });*/
+
+                                /* Herb + Flower + Allotment South  + Allotment North  */
+                                int[] startConfig = {5 + 2, 5 + 2, 7 + 2}; //Allotment, Allotment, flower, herb
+                                int config = 0, configCheck = 0;
+                                for(int i = 0; i < startConfig.length; i++) {
+                                    int check = (i + 1) << 6;
+                                    config |= (startConfig[i] | check) << (i << 3);
+                                }
+                                config |= (102 + 2 | 3 << 6) << 24;
+                                System.out.println("be it config? " + config);
+                                client.varbit(529, config);
+                                //client.varbit(529, (102 + 2 | 0 << 6) << 24 | (7 + 2 | 0 << 6) << 16 | (5 + 2 | 0 << 6) << 8 | (5 + 2 | 0 << 6) << 0);
+                                //client.varbit(529, startConfig[3] << 24);
+                                /*
+                                        if (isEmpty() || needsWeeding()) {
+                                        return stage.ordinal();
+                                           }
+                                        return (state.ordinal() << 6) | (plant.getStartingState() + growth);
+                                 */
+                                //client.varbit(529, (3 + 1 + (0 << 6 | 0 << 7) << 24) | (7 + 1 + (0 << 6 | 0 << 7) << 16) | (5 + 1 + (0 << 6 | 0 << 7) << 8) | (5 + 1 + (0 << 6 | 0 << 7) << 0));
+                            break;
+                            default: gotValue = false;
+                        }
+                        client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
                     } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " enumPlace enumSpot patchOne patchTwo(only with Allotment!)"));
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("plist")) {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());
                     System.out.println("test2..." + PlayerHandler.playersOnline.toString());
-                }
-                if (cmd[0].equalsIgnoreCase("cowitem")) {
-                    client.addItem(1039, 100);
-                    client.addItem(1041, 100);
-                    client.addItem(1043, 100);
-                    client.addItem(1045, 100);
-                    client.addItem(1047, 100);
-                    client.addItem(1049, 100);
-                    client.addItem(4152, 100);
-                    client.addItem(4154, 100);
-                    client.addItem(1292, 100);
-                    client.addItem(1294, 100);
-                    client.addItem(1296, 100);
-                    client.addItem(1298, 100);
-                    client.addItem(1300, 100);
-                    client.addItem(1302, 100);
-                    client.addItem(1304, 100);
-                    client.addItem(1306, 100);
-                    client.addItem(844, 100);
-                    client.addItem(850, 100);
-                    client.addItem(854, 100);
-                    client.addItem(858, 100);
-                    client.addItem(862, 100);
                 }
                 if (cmd[0].equalsIgnoreCase("goup")) {
                     client.getPosition().setZ(client.getPosition().getZ() + 1);
@@ -168,6 +222,10 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("immune")) {
                     client.immune = !client.immune;
                     client.send(new SendMessage("You set immune as " + client.immune));
+                }
+                if (cmd[0].equalsIgnoreCase("rehp")) {
+                    client.reloadHp = !client.reloadHp;
+                    client.send(new SendMessage("You set reload hp as " + client.reloadHp));
                 }
                 if (cmd[0].equalsIgnoreCase("face")) {
                     try {
@@ -213,12 +271,7 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("rehp")) {
-                    client.reloadHp = !client.reloadHp;
-                    client.send(new SendMessage("You set reload hp as " + client.reloadHp));
-                }
                 if (cmd[0].equalsIgnoreCase("herbs")) {
-                    boolean found = false;
                     String query = "select * from " + DbTables.GAME_NPC_DROPS + " where itemid='217' || itemid='218' || itemid='267' || itemid='268'";
                     ResultSet results = getDbConnection().createStatement().executeQuery(query);
                     while (results.next()) {
@@ -399,22 +452,17 @@ public class Commands implements Packet {
                     client.showInterface(id);
                     client.send(new SendMessage("You open interface " + id));
                 }
-                if (cmd[0].equalsIgnoreCase("ifc")) {
-                    int id = Integer.parseInt(cmd[1]);
-                    client.varbit(153, id);
-                    client.send(new SendMessage("You open interface config " + id));
-                }
                 if (cmd[0].equalsIgnoreCase("travel")) {
                     client.setTravelMenu();
                 }
                 if (cmd[0].equals("combat")) {
                     try {
                         int level = Integer.parseInt(cmd[1]);
-                        client.customCombat = level > 256 || level < 1 ? -1 : level;
+                        client.customCombat = level > 255 || level < 0 ? -1 : level;
                         if(client.customCombat == -1)
-                            client.send(new SendMessage(level == 0 ? "You reset back to normal combat!" : "Need to set a interval between 0-256! (256 = 0 combat, 0 = reset combat)"));
+                            client.send(new SendMessage("You reset back to normal combat!"));
                         else
-                            client.send(new SendMessage("You set your own combat to level: " + (level == 256 ? "0" : level)));
+                            client.send(new SendMessage("You set your own combat to level: " + level));
                         client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " combat"));
@@ -452,53 +500,7 @@ public class Commands implements Packet {
                     } else
                         client.send(new SendMessage("Need 4 free slots!"));
                 }
-                if (cmd[0].equals("delete")) {
-                    try {
-                        String query = "DELETE FROM uber3_refunds WHERE receiver='"+client.dbId+"'";
-                        Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
-                        stm.executeUpdate(query);
-                        stm.close();
-                    } catch (Exception e) {
-                        System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-                        e.printStackTrace();
-                    }
-                }
-                if (cmd[0].equals("refund_ticket")) {
-                    try {
-                        if (client.wildyLevel > 0 && !specialRights) {
-                            client.send(new SendMessage("Command can't be used in the wilderness!"));
-                            return;
-                        }
-                        String otherPName = command.substring(cmd[0].length() + 1);
-                        int otherPIndex = PlayerHandler.getPlayerID(otherPName);
-                        if (otherPIndex != -1) {
-                            Client p = (Client) PlayerHandler.players[otherPIndex];
-                            if(p.checkUnlock(0)) {
-                                try {
-                                    Statement stm = getDbConnection().createStatement();
-                                    String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + otherPName + "'";
-                                    ResultSet results = stm.executeQuery(query);
-                                    int userid = -1;
-                                    if (results.next())
-                                        userid = results.getInt("userid");
-                                    if(userid >= 0) {
-                                        stm.executeUpdate("INSERT INTO uber3_refunds(date, receiver, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+userid+"', '621', '20')");
-                                        p.addUnlocks(0, "0", "0");
-                                    }
-                                    stm.close();
-                                } catch (Exception e) {
-                                    System.out.println("issue: " + e.getMessage());
-                                }
-                            } else client.send(new SendMessage(otherPName + " have nothing to refund!"));
-                        } else {
-                            client.send(new SendMessage("Player " + otherPName + " is not online!"));
-                        }
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Try entering a name you want to refund ticket to!"));
-                    }
-                }
-                if (cmd[0].equals("refund")) {
-                    //TODO: Fix refund items!
+                /*if (cmd[0].equals("refund")) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
                         int amt = Integer.parseInt(cmd[2]);
@@ -511,7 +513,7 @@ public class Commands implements Packet {
                             if (results.next())
                                 userid = results.getInt("userid");
                             if(userid >= 0) {
-                                stm.executeUpdate("INSERT INTO uber3_refunds(date, receiver, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+userid+"', '"+id+"', '"+amt+"')");
+                                stm.executeUpdate("INSERT INTO uber3_refunds(date, issuedBy, receivedBy, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+client.dbId+"', '"+userid+"', '"+id+"', '"+amt+"')");
                                 client.send(new SendMessage("Account '"+user+"'("+userid+") have receieved "+amt+" of "+client.GetItemName(id).toLowerCase()+"."));
                             } else client.send(new SendMessage("Account '"+user+"' do not exist!"));
                             stm.close();
@@ -521,16 +523,7 @@ public class Commands implements Packet {
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id amount playername"));
                     }
-                }
-                if (cmd[0].equalsIgnoreCase("t")) {
-                    //173 = run config!
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        client.varbit(153, id);
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::t id"));
-                    }
-                }
+                }*/
                 if (cmd[0].equalsIgnoreCase("emote")) {
                     int id = Integer.parseInt(cmd[1]);
                     client.requestAnim(id, 0);
@@ -788,31 +781,7 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("reloaditems")) {
                     Server.itemManager.reloadItems();
-                    client.send(new SendMessage("You reloaded all items!")); // Send msg to
-                    // playeR!
-                }
-                if (cmd[0].equalsIgnoreCase("item")) {
-                    int newItemID = Integer.parseInt(cmd[1]);
-                    int newItemAmount = Integer.parseInt(cmd[2]);
-                    if (newItemID < 1 || newItemID > 22376) {
-                        client.send(new SendMessage("Stop pulling a River! Maximum itemid = 22376!"));
-                        return;
-                    }
-                    if (Server.itemManager.isStackable(newItemID))
-                        if (client.freeSlots() <= 0 && !client.playerHasItem(newItemID))
-                            client.send(new SendMessage("Not enough space in your inventory."));
-                        else
-                            client.addItem(newItemID, newItemAmount);
-                    else {
-                        newItemAmount = Math.min(newItemAmount, client.freeSlots());
-                        if (newItemAmount > 0)
-                            for (int i = 0; i < newItemAmount; i++)
-                                client.addItem(newItemID, 1);
-                        else
-                            client.send(new SendMessage("Not enough space in your inventory."));
-                    }
-                    CommandLog.recordCommand(client, command);
-                    return;
+                    client.send(new SendMessage("You reloaded all items!"));
                 }
                 if (cmd[0].equalsIgnoreCase("setlevel")) {
                     int skill = Integer.parseInt(cmd[1]);
@@ -907,6 +876,7 @@ public class Commands implements Packet {
                         }
                     } catch (Exception e) {
                         client.send(new SendMessage("Try entering a name you wish to kick.."));
+                        client.send(new SendMessage(e.getMessage()));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("teletome") && client.playerRights > 0) {
@@ -962,6 +932,7 @@ public class Commands implements Packet {
                     client.stillgfx(199, client.getPosition().getY(), client.getPosition().getX());
                 }
                 if (cmd[0].equalsIgnoreCase("moooo") && client.playerRights > 1) {
+                    client.clearQuestInterface();
                     client.send(new SendString("@str@testing something@str@", 8147));
                     client.send(new SendString("Yes", 8148));
                     client.send(new SendString("@369@Tits1@369@", 8149));
@@ -1157,7 +1128,6 @@ public class Commands implements Packet {
             }
             if (cmd[0].equalsIgnoreCase("news")) {
                 Player.openPage(client, "https://dodian.net/showthread.php?t="+client.latestNews);
-                //client.openPage(client, "https://dodian.net/forumdisplay.php?f=99");
             }
             if (cmd[0].equalsIgnoreCase("thread")) {
                 try {
@@ -1230,7 +1200,7 @@ public class Commands implements Packet {
                     client.send(new SendMessage("<col=292BA3>Magic max hit (" + client.spellName[client.autocast_spellIndex]
                             + "): " + (int)(client.baseDamage[client.autocast_spellIndex] * magicBonusDamage(client)) + " (Magic damage increase: " + String.format("%3.1f", (magicBonusDamage(client) - 1.0) * 100D) + "%)"));
             }
-            if (cmd[0].equalsIgnoreCase("yell") && command.length() > 5) {
+            if ((command.startsWith("/") && command.length() > 0) || (cmd[0].equalsIgnoreCase("yell") && command.length() > 5)) {
                 if (!client.premium) {
                     client.send(new SendMessage("You must be a Premium Member to yell."));
                     client.send(new SendMessage("Use the Dodian.net Market Forums to post new threads to buy/sell."));
@@ -1249,7 +1219,7 @@ public class Commands implements Packet {
 				return;
 			}
 			client.lastYell = System.currentTimeMillis();*/ //TODO: Add timer if needed!
-                String text = command.substring(5);
+                String text = command.substring(command.startsWith("/") ? 1 : 5);
                 text = text.replace("<col", "<moo");
                 text = text.replace("<shad", "<moo");
                 text = text.replace("b:", "<col=292BA3>");
@@ -1594,7 +1564,7 @@ public class Commands implements Packet {
                 if (command.startsWith("wild")) {
                     client.triggerTele(3086, 3538, 0,false);
                 }
-                if (cmd[0].equalsIgnoreCase("item") && !specialRights) {
+                if (cmd[0].equalsIgnoreCase("item")) {
                     int newItemID = Integer.parseInt(cmd[1]);
                     int newItemAmount = Integer.parseInt(cmd[2]);
                     if (newItemID < 1 || newItemID > 22376) {

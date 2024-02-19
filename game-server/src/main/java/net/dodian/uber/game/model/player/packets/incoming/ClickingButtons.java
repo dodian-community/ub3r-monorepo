@@ -1068,6 +1068,9 @@ public class ClickingButtons implements Packet {
                     client.send(new SendMessage("You need to be wearing a skillcape to do that!"));
                 }
                 break;
+            case 83097:
+                client.questPage = client.questPage == 0 ? 1 : 0;
+            break;
 
             default:
                 // System.out.println("Player stands in: X="+absX+" Y="+absY);

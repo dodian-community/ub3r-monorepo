@@ -34,7 +34,7 @@ public class Bank10 implements Packet {
             client.tradeItem(removeID, removeSlot, 10);
         } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
             client.fromTrade(removeID, removeSlot, 10);
-        } else if (interfaceID >= 4233 && interfaceID <= 4245) {
+        } else if (interfaceID >= 4233 && interfaceID <= 4257) {
             client.startGoldCrafting(interfaceID, removeSlot, 10);
         } else if (interfaceID == 3823) { // Show value to sell items
             client.sellItem(removeID, removeSlot, 5);

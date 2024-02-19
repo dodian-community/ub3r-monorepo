@@ -101,9 +101,16 @@ public class EntityProcessor implements Job {
                 }
                 npc.setText("There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild and " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!");
             }
+            //npc.clearUpdateFlags();
         }
         /* Player */
         long currentTime = System.currentTimeMillis();
+        /* End server when update finished! */
+        if (Server.updateRunning
+                && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
+            if (PlayerHandler.getPlayerCount() < 1)
+                System.exit(0);
+        }
         /* Cycle to clear some ol' shiez */
             if (PlayerHandler.cycle % 10 == 0) {
                 Server.connections.clear();
@@ -120,8 +127,8 @@ public class EntityProcessor implements Job {
             PlayerHandler.cycle++;
         //Processing!
         for (int i = 0; i < Constants.maxPlayers; i++) {
-                if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
-                    continue;
+            if (PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket == -1) //Hate continue; in a loop! Dodian do it this way..*yikes*
+                continue;
                 /* Some violation checks due to old code?! */
                 if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
                     if (PlayerHandler.players[i].violations > 100) {
@@ -134,61 +141,46 @@ public class EntityProcessor implements Job {
                         continue;
                     }
                 }
-                /* Removing non-responding player */
-                long lp = currentTime - PlayerHandler.players[i].lastPacket;
-                if (PlayerHandler.players[i].dbId < 1 && lp >= 30000) { //Removing non-responding player
-                    PlayerHandler.players[i].disconnected = true;
-                    //System.out.println("Remove disconnect from main!.." + PlayerHandler.players[i].getPlayerName());
+                /* initialize the login! */
+                if (!PlayerHandler.players[i].disconnected) {
+                    if (!PlayerHandler.players[i].initialized) {
+                        PlayerHandler.players[i].initialize();
+                        PlayerHandler.players[i].initialized = true;
+                    }
+                        PlayerHandler.players[i].process();
+                        while (PlayerHandler.players[i].packetProcess()) ; //Dodian's way of handling packets..Omegalul!
+                        PlayerHandler.players[i].postProcessing();
+                        PlayerHandler.players[i].getNextPlayerMovement();
                 }
-                /* If not disconnected process a player! */
-                PlayerHandler.players[i].process();
-                while (PlayerHandler.players[i].packetProcess()) ; //Dodian's way of handling packets..Omegalul!
-                PlayerHandler.players[i].postProcessing();
-                PlayerHandler.players[i].getNextPlayerMovement();
         }
         // after processing update!
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket == -1) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
             if (!PlayerHandler.players[i].isActive || PlayerHandler.players[i].getPlayerName() == null || PlayerHandler.players[i].getPlayerName().equals("null")) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
             /* Removing non-responding player */
             long lp = currentTime - PlayerHandler.players[i].lastPacket;
-            if ((PlayerHandler.players[i].dbId < 1 && lp >= 1200) || (PlayerHandler.players[i].dbId > 0 && lp >= 60000)) { //Removing non-responding player
+            if (((PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket > 0) ||
+            (PlayerHandler.players[i] != null && PlayerHandler.players[i].dbId < 1)) && lp >= 60000) { //Removing non-responding player
                 PlayerHandler.players[i].disconnected = true;
-                //System.out.println("Remove disconnect from update!.." + PlayerHandler.players[i].getPlayerName());
+                PlayerHandler.players[i].println_debug("Remove non-responding player after process " + PlayerHandler.players[i].getPlayerName());
             }
             /* Disconnect a user check! If not disconnect update! */
             if (PlayerHandler.players[i].disconnected) {
-                PlayerHandler.players[i].println_debug("Remove player " + PlayerHandler.players[i].getPlayerName());
+                PlayerHandler.players[i].println_debug("Remove disconnected player " + PlayerHandler.players[i].getPlayerName());
                 Server.playerHandler.removePlayer(PlayerHandler.players[i]);
-                PlayerHandler.players[i] = null;
-            } else {
-                if(!PlayerHandler.players[i].initialized) {
-                    PlayerHandler.players[i].initialize();
-                    PlayerHandler.players[i].initialized = true;
-                }
-                    PlayerHandler.players[i].update();
-                if (Server.updateRunning && PlayerHandler.players[i].updateAnnounced)
-                    PlayerHandler.players[i].updateAnnounced = true;
-            }
-        }
-        /* Server update! */
-        if(Server.updateRunning) Server.updateElapsed += 0.6;
-        if (Server.updateRunning
-                && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
-            if (PlayerHandler.getPlayerCount() < 1) {
-                System.exit(0);
-            }
+                PlayerHandler.players[i] = null; //Remove player from list as above do not for whatever reason xD
+            } else PlayerHandler.players[i].update();
         }
         /* Clear all update! */
+        for (Npc npc : Server.npcManager.getNpcs()) {
+            npc.clearUpdateFlags();
+        }
         for (int i = 0; i < Constants.maxPlayers; i++) {
             if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
             PlayerHandler.players[i].clearUpdateFlags();
-        }
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            npc.clearUpdateFlags();
         }
     }
 

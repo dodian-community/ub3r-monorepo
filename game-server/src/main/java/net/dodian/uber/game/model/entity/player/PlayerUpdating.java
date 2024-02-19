@@ -33,7 +33,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
         if (Server.updateRunning) {
             stream.createFrame(114);
-            int seconds = Server.updateSeconds - (int)Server.updateElapsed;
+            int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
             stream.writeWordBigEndian(seconds * 50 / 30);
         }
 

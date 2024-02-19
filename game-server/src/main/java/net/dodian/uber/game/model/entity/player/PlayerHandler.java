@@ -14,7 +14,6 @@ public class PlayerHandler {
     public static int cycle = 1;
     //Players online!
     public static Player[] players = new Player[Constants.maxPlayers];
-    public static int playerCount = 0;
 
     // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
     public boolean validClient(int index) {
@@ -49,15 +48,6 @@ public class PlayerHandler {
         players[slot].connectedFrom = connectedFrom;
         players[slot].ip = s.getInetAddress().hashCode();
         Player.localId = slot;
-        players[slot].lastPacket = System.currentTimeMillis();
-    }
-    public void destruct() {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] == null)
-                continue;
-            players[i].destruct();
-            players[i] = null;
-        }
     }
 
     public static int getPlayerCount() {
@@ -95,9 +85,11 @@ public class PlayerHandler {
                 temp.saveStats(true);
             PlayerHandler.playersOnline.remove(temp.longName);
             PlayerHandler.allOnline.remove(temp.longName);
+            temp.lastPacket = -1; //Need to know the player got send no packets!
+            temp.disconnected = false; //Set it to false as we do not disconnect at this stage!
             temp.println_debug("Sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
             temp.destruct();
-        }
+        } else System.out.println("tried to remove nulled player!");
     }
 
     public static Player getPlayer(String name) {
