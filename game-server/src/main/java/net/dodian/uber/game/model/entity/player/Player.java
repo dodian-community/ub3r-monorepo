@@ -39,7 +39,7 @@ public abstract class Player extends Entity {
     public boolean premium = false, randomed = false;
     public int latestNews = 0;
     public int playerGroup = 3;
-    public long lastPacket;
+    public long lastPacket = -1;
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false;
     private boolean inCombat = false;
@@ -59,7 +59,7 @@ public abstract class Player extends Entity {
     public boolean startDuel = false;
     public String forcedChat = "";
     private int headIcon = -1, skullIcon = -1;
-    public int customCombat = -1;
+    public int customCombat = -1, questPage = 0;
     private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember;
@@ -177,7 +177,6 @@ public abstract class Player extends Entity {
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
-        lastPacket = System.currentTimeMillis();
         /*
         // Setting player items
         Arrays.fill(playerItems, 0);
@@ -386,6 +385,10 @@ public abstract class Player extends Entity {
             walkingQueueX[i] = currentX;
             walkingQueueY[i] = currentY;
         }
+    }
+    public void stopMovement() {
+        resetWalkingQueue();
+        newWalkCmdSteps = 0;
     }
 
     public void addToWalkingQueue(int x, int y) {
@@ -1228,7 +1231,7 @@ public abstract class Player extends Entity {
         } else {
             combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
         }
-        return customCombat > 0 ? customCombat : (int)combatLevel;
+        return customCombat != -1 ? customCombat : (int)combatLevel;
     }
 
     public int getSkillLevel(Skill skill) {

@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -22,7 +23,6 @@ public class ClickNpc implements Packet {
             return;
         }
         int npcId = tempNpc.getId();
-
         final WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
         if (client.randomed) {
@@ -39,7 +39,6 @@ public class ClickNpc implements Packet {
             return;
         }
         EventManager.getInstance().registerEvent(new Event(600) {
-
             @Override
             public void execute() {
 
@@ -63,7 +62,6 @@ public class ClickNpc implements Packet {
     public void clickNpc(Client client, Npc tempNpc) {
         int npcId = tempNpc.getId();
         client.faceNpc(tempNpc.getSlot());
-        // TurnPlayerTo(tempNpc.getX(), tempNpc.getY());
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
         if (npcId == 5809) {
@@ -95,6 +93,8 @@ public class ClickNpc implements Packet {
         } else if (npcId == 637) { /* Aubury */
             client.NpcWanneTalk = 3;
             client.convoId = 3;
+        } else if (npcId == 556) {
+            client.WanneShop = 31; // Premium store
         } else if (npcId == 3648) {
             client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 ||npcId == 1306) {
@@ -128,7 +128,7 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 1000;
             client.convoId = 1001;
         } else if (npcId == 3640) { // Beginner store!
-            client.WanneShop = 22;
+            client.WanneShop = 17;
         } else if (npcId == 2825) {
             client.NpcWanneTalk = 1002;
             client.convoId = -1;

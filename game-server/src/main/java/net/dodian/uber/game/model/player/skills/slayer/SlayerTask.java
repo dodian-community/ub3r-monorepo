@@ -129,7 +129,9 @@ public class SlayerTask {
                 i++; //Skip task we already have got before!
             } else if (mazchna[i].getAssignedLevelRange().getFloor() <= slayerLevel
                     && slayerLevel <= mazchna[i].getAssignedLevelRange().getCeiling()) {
-                if (mazchna[i] == slayerTasks.LESSER_DEMON && !c.checkItem(2383) && !c.checkItem(989)) {
+                if(mazchna[i] == slayerTasks.HEAD_MOURNER && (c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80))
+                    slayer.add(mazchna[i]);
+                else if (mazchna[i] == slayerTasks.LESSER_DEMON && !c.checkItem(2383) && !c.checkItem(989)) {
                     slayer.add(mazchna[i]);
                     slayer.add(mazchna[i]);
                 } else if (mazchna[i] == slayerTasks.SKELE_HELLHOUNDS && !c.checkItem(2382) && !c.checkItem(989)) {
@@ -171,7 +173,9 @@ public class SlayerTask {
                 i++; //Skip task we already have got before!
             } else if (duradel[i].getAssignedLevelRange().getFloor() <= slayerLevel
                     && slayerLevel <= duradel[i].getAssignedLevelRange().getCeiling()) {
-                if (duradel[i] == slayerTasks.SAN_TOJALON) {
+                if(duradel[i] == slayerTasks.HEAD_MOURNER && (c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80))
+                    slayer.add(duradel[i]);
+                else if (duradel[i] == slayerTasks.SAN_TOJALON) {
                     if (c.checkItem(1544))
                         slayer.add(duradel[i]);
                 } else if (duradel[i] == slayerTasks.BLACK_KNIGHT_TITAN) {

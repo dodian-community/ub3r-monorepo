@@ -13,11 +13,6 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
 fun Client.handleRanged(): Int {
-    if (!usingBow) return -1
-
-    if (!canReach(target, 5))
-        return 0
-
     val time = System.currentTimeMillis()
 
     val arrows = mapOf(

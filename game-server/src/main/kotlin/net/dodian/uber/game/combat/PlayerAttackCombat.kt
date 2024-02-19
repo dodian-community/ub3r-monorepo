@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.item.Equipment
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
     if (!checkSlayerTask(npcId))
@@ -17,8 +18,15 @@ fun Client.canAttackNpc(npcId: Int): Boolean {
 
     if (!requireKey(1543, 3964, 2075))
         return false
-
     return true
+}
+fun Client.getAttackStyle() : Int {
+    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
+    if (equipment[Equipment.Slot.WEAPON.id] in staves && autocast_spellIndex >= 0)
+        return 2
+    if (usingBow)
+        return 1
+    return 0
 }
 fun Client.attackTarget(): Boolean {
     if (target is Npc) {
@@ -35,21 +43,11 @@ fun Client.attackTarget(): Boolean {
             return false
         }
     }
-
-    when (handleMagic()) {
-        0 -> return false
-        1 -> return true
-    }
-
-    when (handleRanged()) {
-        0 -> return false
-        1 -> return true
-    }
-
-    when (handleMelee()) {
-        0 -> return false
-        1 -> return true
-    }
-
+    if(getAttackStyle() == 2 && handleMagic() == 1)
+        return true
+    if(getAttackStyle() == 1 && handleRanged() == 1)
+        return true
+    if(getAttackStyle() == 0 && handleMelee() == 1)
+        return true
     return false
 }

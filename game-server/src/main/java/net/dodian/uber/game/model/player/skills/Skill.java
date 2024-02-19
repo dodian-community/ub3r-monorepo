@@ -13,7 +13,7 @@ public enum Skill {
     HITPOINTS(3, "hitpoints", 24139, 24140),
     RANGED(4, "ranged", 24186, 24185),
     PRAYER(5, "prayer", 24202, 24201),
-    MAGIC(6, "magic", 24219, 24218),
+    MAGIC(6, "magic", 24218, 24217),
     COOKING(7, "cooking", 24190, 24189),
     WOODCUTTING(8, "woodcutting", 24222, 24221),
     FLETCHING(9, "fletching", 24220, 24219),

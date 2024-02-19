@@ -14,6 +14,7 @@ public class AttackPlayer implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
+        //TODO: Fix player like npcs with distance check!
         int victim = client.getInputStream().readSignedWordBigEndian();
         if (client.deathStage < 1) {
             Client plr = Server.playerHandler.getClient(victim);

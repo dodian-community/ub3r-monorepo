@@ -309,7 +309,7 @@ public class Client extends Player implements Runnable {
 								 int offsetX, int angle, int speed, int gfxMoving, int startHeight,
 								 int endHeight, int MageAttackIndex, int begin, int slope, int initDistance) {
 		try {
-			send(new SetMap(new Position(casterY, casterX)));
+			send(new SetMap(new Position(casterX - 3, casterY - 2)));
 			getOutputStream().createFrame(117);
 			getOutputStream().writeByte(angle); // Starting place of the projectile
 			getOutputStream().writeByte(offsetY); // Distance between caster and enemy
@@ -337,8 +337,8 @@ public class Client extends Player implements Runnable {
 		for (int a = 0; a < Constants.maxPlayers; a++) {
 			Client projCheck = (Client) PlayerHandler.players[a];
 			if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 60
-					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 60) {
+					&& Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 64
+					&& Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 64) {
 				projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
 						startHeight, endHeight, index, begin, slope, 64);
 			}
@@ -774,24 +774,17 @@ public class Client extends Player implements Runnable {
 
 	public void logout() {
 		// declineDuel();
-		if (!saveNeeded) {
-			return;
-		}
-		if (UsingAgility) {
-			xLog = true;
-			return;
-		}
-		if (!validClient) {
+		if (!saveNeeded || !validClient || UsingAgility) {
+			if(UsingAgility) xLog = true;
 			return;
 		}
 		saveStats(true, true);
 		saveNeeded = false;
-		//ConnectionList.getInstance().remove(mySock.getInetAddress());
+		disconnected = true;
 		send(new SendMessage("Please wait... logging out may take time"));
 		send(new SendString("     Please wait...", 2458));
 		send(new SendString("Click here to logout", 2458));
 		getOutputStream().createFrame(109);
-		this.disconnected = true;
 	}
 
 	/*
@@ -2118,6 +2111,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrame(107); // resets something in the client
 		setChatOptions(0, 0, 0);
 		varbit(287, 1); //SPLIT PRIVATE CHAT ON/OFF
+		varbit(529, 0); //All farming patches weeded!
 		WriteEnergy();
 		pmstatus(2);
 		setConfigIds();
@@ -2194,12 +2188,12 @@ public class Client extends Player implements Runnable {
 		}
 		/* Check for refunded items! */
 		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+			String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='"+dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
 			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
 			boolean gotResult = stm.executeQuery(query).next();
 			if(gotResult) {
 				send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-				stm.executeUpdate("UPDATE uber3_refunds SET message='1' where message='0'");
+				stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
 			}
 			stm.close();
 		} catch (Exception e) {
@@ -2277,7 +2271,10 @@ public class Client extends Player implements Runnable {
 			setCurrentPrayer(getMaxPrayer());
 		}
 		// RubberCheck();
-		QuestSend.questInterface(this);
+		if(questPage == 0)
+			QuestSend.questInterface(this);
+		else
+			QuestSend.serverInterface(this);
 		long now = System.currentTimeMillis();
 		if (now >= walkBlock && UsingAgility) {
 			UsingAgility = false;
@@ -3758,7 +3755,7 @@ public class Client extends Player implements Runnable {
 	public void GetBonus(boolean update) {
 		ResetBonus();
 		for (int i = 0; i < 14; i++) {
-			if (getEquipment()[i] > -1) {
+			if (getEquipment()[i] > 0) {
 				int timed = checkObsidianBonus(getEquipment()[i]) ? 2 : 1;
 				if(!(duelFight && i == 8))
 				for (int k = 0; k < playerBonus.length; k++) {
@@ -4572,7 +4569,7 @@ public class Client extends Player implements Runnable {
 			}
 			int currency = MyShopID == 55 ? 11997 : 995;
 			int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID, 0, fromSlot));
-			TotPrice2 = MyShopID >= 9 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
+			TotPrice2 = MyShopID >= 7 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
 			int coins = getInvAmt(currency);
 			amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
 			if (amount == 0) {
@@ -7188,14 +7185,15 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void varbit(int id, int value) {
-		if(value < 128) {
-			getOutputStream().createFrame(36);
-			getOutputStream().writeWordBigEndian(id);
-			getOutputStream().writeByte(value);
-		} else {
+		if(value == -1) { return; } //Do we need this?!
+		if(value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
 			getOutputStream().createFrame(87);
 			getOutputStream().writeWordBigEndian(id);
 			getOutputStream().writeDWord_v1(value);
+		} else {
+			getOutputStream().createFrame(36);
+			getOutputStream().writeWordBigEndian(id);
+			getOutputStream().writeByte(value);
 		}
 	}
 
@@ -8117,7 +8115,7 @@ public class Client extends Player implements Runnable {
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(13824);
 			getOutputStream().writeByte(e);
-			getOutputStream().writeWord(getEquipment()[e] + 1);
+			getOutputStream().writeWord(getEquipment()[e] < 1 ? 0 : getEquipment()[e] + 1);
 			if (getEquipmentN()[e] > 254) {
 				getOutputStream().writeByte(255);
 				getOutputStream().writeDWord(getEquipmentN()[e]);
@@ -8353,14 +8351,23 @@ public class Client extends Player implements Runnable {
 		return jewelry[i][i2];
 	}
 
-	public int[][] blanks = {{-1, 1649, 1650, 1651, 1652, 1653, 6564}, {-1, 1668, 1669, 1670, 1671, 1672, 6565},
-			{-1, 1687, 1688, 1689, 1690, 1691, 6566},};
+	/*public int[][] blanks = {{-1, 1649, 1650, 1651, 1652, 1653, 6564}, {-1, 1668, 1669, 1670, 1671, 1672, 6565},
+			{-1, 1687, 1688, 1689, 1690, 1691, 6566}};
 
 	public int[] startSlots = {4233, 4239, 4245, 79};
 	public int[] items = {-1, 1607, 1605, 1603, 1601, 1615, 6573};
 	public int[] black = {1647, 1666, 1685, 11067};
 	public int[] sizes = {120, 100, 75, 11067};
 
+	public int[] moulds = {1592, 1597, 1595, 11065};*/
+	public int[][] blanks = {
+			{-1, 1647, 1647, 1647, 1647, 1647, 1647},
+			{-1, 1666, 1666, 1666, 1666, 1666, 1666},
+			{-1, 1685, 1685, 1685, 1685, 1685, 1685}};
+	public int[] startSlots = {4233, 4245, 4257, 79};
+	public int[] items = {-1, 1607, 1605, 1603, 1601, 1615, 6573};
+	public int[] black = {-1, -1, -1};
+	public int[] sizes = {100, 75, 120, 11067};
 	public int[] moulds = {1592, 1597, 1595, 11065};
 
 	public int findStrungAmulet(int amulet) {
@@ -8385,29 +8392,27 @@ public class Client extends Player implements Runnable {
 
 	public void showItemsGold() {
 		int slot = 0;
-		for (int i = 0; i < 3; i++) {
+		for(int i = 0; i < startSlots.length - 1; i++) {
 			slot = startSlots[i];
 			if (!playerHasItem(moulds[i])) {
-				changeInterfaceStatus(startSlots[i] - 5, true);
-				changeInterfaceStatus(startSlots[i] - 1, false);
+				changeInterfaceStatus(slot - 5, true);
+				changeInterfaceStatus(slot - 1, false);
 				continue;
 			} else {
-				changeInterfaceStatus(startSlots[i] - 5, false);
-				changeInterfaceStatus(startSlots[i] - 1, true);
+				changeInterfaceStatus(slot - 5, false);
+				changeInterfaceStatus(slot - 1, true);
 			}
 			int[] itemsToShow = new int[7];
-			for (int i2 = 0; i2 < 7; i2++) {
+			for(int i2 = 0; i2 < itemsToShow.length; i2++) {
 				itemsToShow[i2] = getItem(this, i, i2);
 				if (i2 != 0 && itemsToShow[i2] != jewelry[i][i2])
 					if (i2 < 7)
 						sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
-					else
-						sendFrame246(slot + 1788 - (i * 5), sizes[i], black[i]);
+					else sendFrame246(slot + 1788 - (i * 5), sizes[i], black[i]);
 				else if (i2 != 0) {
 					if (i2 < 7)
 						sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
-					else
-						sendFrame246(slot + 1788 - (i * 5), sizes[i], -1);
+					else sendFrame246(slot + 1788 - (i * 5), sizes[i], -1);
 				}
 			}
 			setGoldItems(slot, itemsToShow);
@@ -8477,9 +8482,8 @@ public class Client extends Player implements Runnable {
 
 	public void startGoldCrafting(int interfaceID, int slot, int amount) {
 		int index = 0;
-		int[] inters = {4233, 4239, 4245};
 		for (int i = 0; i < 3; i++)
-			if (inters[i] == interfaceID)
+			if (startSlots[i] == interfaceID)
 				index = i;
 		int level = jewelry_levels[index][slot];
 		if (level > getLevel(Skill.CRAFTING)) {
@@ -8935,10 +8939,11 @@ public class Client extends Player implements Runnable {
 		varbit(153, 0);
 		send(new SendString("Brimhaven", 12338));
 		send(new SendString("Island", 12339));
-		for (int i = 0; i < 5; i++)
-			send(new SendString("", 809 + i));
 		send(new SendString("Catherby", 809));
+		send(new SendString("Canafis", 810));
+		send(new SendString("", 811)); //Trollheim?!
 		send(new SendString("Shilo", 812));
+		send(new SendString("Sophanem", 813));
 		showInterface(802);
 	}
 
@@ -8963,7 +8968,7 @@ public class Client extends Player implements Runnable {
 					send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));
 					return;
 				}
-				if (travel[i][1] == -1 || (i == 2 && playerRights < 2)) {
+				if (travel[i][1] == -1) {
 					send(new SendMessage("This will lead you to nothing!"));
 					return;
 				}
@@ -8999,7 +9004,7 @@ public class Client extends Player implements Runnable {
 	public void setRefundList() {
 		rewardList.clear();
 		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
+			String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
 			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
 			ResultSet result = stm.executeQuery(query);
 			while(result.next()) {
@@ -9033,7 +9038,7 @@ public class Client extends Player implements Runnable {
 	public void reclaim(int position) {
 		int slot = refundSlot + position;
 		try {
-			String query = "SELECT * FROM uber3_refunds WHERE receiver='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
+			String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='"+dbId+"' AND claimed IS NULL ORDER BY date ASC";
 			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
 			ResultSet result = stm.executeQuery(query);
 			String date = "";
@@ -9043,7 +9048,7 @@ public class Client extends Player implements Runnable {
 					date = result.getString("date");
 				}
 			}
-			stm.executeUpdate("UPDATE uber3_refunds SET claimed='"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"' where date='"+date+"'");
+			stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET claimed='"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"' where date='"+date+"'");
 			stm.close();
 			/* Set back options! */
 			setRefundList();

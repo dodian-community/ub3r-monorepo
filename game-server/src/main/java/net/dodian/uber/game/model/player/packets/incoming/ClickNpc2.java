@@ -87,7 +87,7 @@ public class ClickNpc2 implements Packet {
             client.stairDistance = 1;
             client.Essence = npcId == 5034 ? 1 : npcId == 844 ? 2 : 3;
         } else if (npcId == 1174) {
-            client.WanneShop = 39;
+            client.WanneShop = 19;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId + 1;
         } else if (npcId == 2180) {
@@ -126,27 +126,14 @@ public class ClickNpc2 implements Packet {
         } else if (npcId == 531 || npcId == 530) { // Shop Keeper +
             // Assistant
             client.WanneShop = 15; // Rimmington General Store
-        } else if (npcId == 1860) { // Brian
-            client.WanneShop = 16; // Rimmington Archery Shop
-        } else if (npcId == 557) { // Wydin
-            client.WanneShop = 17; // Port Sarim Food Shop
         } else if (npcId == 1027) { // Gerrant
-            client.WanneShop = 18; // Port Sarim Fishing Shop
+            client.WanneShop = 16; // Fishing shop
         } else if (npcId == 559) { // Brian
             client.WanneShop = 19; // Port Sarim Battleaxe Shop
-        } else if (npcId == 556) { // Grum
-            client.WanneShop = 20; // Port Sarim Jewelery Shop
         } else if (npcId == 583) { // Betty
             client.WanneShop = 21; // Port Sarim Magic Shop
-        } else if (npcId == 520 || npcId == 521) { // Shop Keeper +
-            // Assistant
-            client.WanneShop = 22; // Lumbridge General Store
         } else if (npcId == 519) { // Bob
-
             client.WanneShop = 23; // Lumbridge Axe Shop
-        } else if (npcId == 541) { // Zeke
-
-            client.WanneShop = 24; // Al-Kharid Scimitar Shop
         } else if (npcId == 545) { // Dommik
 
             client.WanneShop = 25; // Al-Kharid Crafting Shop
@@ -191,7 +178,7 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 38; // Legend's Gen. Store
         } else if (npcId == 5809) {
 
-            client.WanneShop = 25; // Crafting shop
+            client.WanneShop = 18; // Crafting shop
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 13;
         } else {

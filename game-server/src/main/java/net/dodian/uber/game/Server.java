@@ -45,12 +45,11 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 public class Server implements Runnable {
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
-    private static int delay = 30;
+    private static int delay = 50;
     public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
-    public static double updateElapsed = 0.0;
-    public static long updateStartTime;
+    public static long updateStartTime, serverStartup;
     public Player player;
     public Client c;
     public static ArrayList<String> connections = new ArrayList<>();
@@ -119,6 +118,7 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
         /* Done loading */
         System.gc();
+        serverStartup = System.currentTimeMillis(); //System.currentTimeMillis() - serverStartup
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 

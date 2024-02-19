@@ -1,8 +1,10 @@
 package net.dodian.uber.game.model.player.quests;
 
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
+import java.text.DecimalFormat;
 
 public enum QuestSend {
     PLAGUE_DOCKS(0, 7332, 28164,5,  "Mysterium of the Docks"), EMPTY_1(1, 7333, -1, 5, ""), EMPTY_2(2, 7334, -1, 10,
@@ -60,31 +62,47 @@ public enum QuestSend {
         }
         return null;
     }
+    public static QuestSend serverInterface(Client c) {
+        long uptimeMinutes = (System.currentTimeMillis() - Server.serverStartup) / 60000;
+        String hourText = uptimeMinutes % 60 == 0 ? (uptimeMinutes/60) + "" : new DecimalFormat("0.000").format(uptimeMinutes/60D);
+        c.send(new SendString("Dodian Server", 640));
+        c.send(new SendString("", 663));
+        c.send(new SendString("", 682)); //7332
+        c.send(new SendString("@gre@Uptime: [@whi@"+(uptimeMinutes < 60 ? uptimeMinutes + "@gre@] minutes" : hourText+"@gre@] hours")+"", 7332));
+        return null;
+    }
 
     public static boolean questMenu(Client c) {
          QuestSend quest = getSender(c.actionButtonId);
-         if(quest == null) return false;
-         c.clearQuestInterface();
-         if(quest.getId() == 0) {
-             int stage = c.quests[quest.getId()];
-             c.send(new SendString("@dre@"+quest.getName(), 8144));
-             if(stage == 0) {
-                 c.send(new SendString("I can start this quest by talking to the monk in Yanille", 8147));
-                 c.send(new SendString("", 8148));
-                 c.send(new SendString("", 8149));
-                 c.send(new SendString("I need to have the following levels:", 8150));
-                 c.send(new SendString(c.getLevel(Skill.HERBLORE) >= 15 ? "@str@15 herblore@str@" : "15 herblore", 8151)); //@str@ put a red line!
-                 c.send(new SendString(c.getLevel(Skill.SMITHING) >= 20 ? "@str@20 smithing@str@" : "20 smithing", 8152)); //@str@ put a red line!
-                 c.send(new SendString(c.getLevel(Skill.CRAFTING) >= 40 ? "@str@40 crafting@str@" : "40 crafting", 8153)); //@str@ put a red line!
-             } else if (stage > 0) {
-                 c.send(new SendString("@str@I have talked to the monk@str@", 8147));
-                 c.send(new SendString("The monk told me to talk to someone on the Brimhaven docks.", 8148));
-                 c.send(new SendString("I wonder who that could be.", 8149));
+         if(quest != null && c.questPage == 0) {
+             c.clearQuestInterface();
+             if (quest.getId() == 0) {
+                 int stage = c.quests[quest.getId()];
+                 c.send(new SendString("@dre@" + quest.getName(), 8144));
+                 if (stage == 0) {
+                     c.send(new SendString("I can start this quest by talking to the monk in Yanille", 8147));
+                     c.send(new SendString("", 8148));
+                     c.send(new SendString("", 8149));
+                     c.send(new SendString("I need to have the following levels:", 8150));
+                     c.send(new SendString(c.getLevel(Skill.HERBLORE) >= 15 ? "@str@15 herblore@str@" : "15 herblore", 8151)); //@str@ put a red line!
+                     c.send(new SendString(c.getLevel(Skill.SMITHING) >= 20 ? "@str@20 smithing@str@" : "20 smithing", 8152)); //@str@ put a red line!
+                     c.send(new SendString(c.getLevel(Skill.CRAFTING) >= 40 ? "@str@40 crafting@str@" : "40 crafting", 8153)); //@str@ put a red line!
+                 } else if (stage > 0) {
+                     c.send(new SendString("@str@I have talked to the monk@str@", 8147));
+                     c.send(new SendString("The monk said f' all and I am more confused...", 8148));
+                     c.send(new SendString("I wonder why no quest in Dodian exist....", 8149));
+                 }
+                 c.sendQuestSomething(8143);
+                 c.showInterface(8134);
+                 //c.flushOutStream();
+                 return true;
              }
-             c.sendQuestSomething(8143);
-             c.showInterface(8134);
-             //c.flushOutStream();
-             return true;
+         } else {
+             switch(c.actionButtonId) {
+                 case 28164: //First button!
+                     System.out.println("test...");
+                 return true;
+             }
          }
          return false;
     }
