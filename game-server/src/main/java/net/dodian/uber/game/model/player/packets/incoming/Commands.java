@@ -82,14 +82,6 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " objectId"));
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("gfx")) {
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        client.callGfxMask(id, 100);
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
-                    }
-                }
                 if (cmd[0].equalsIgnoreCase("varbit")) {
                     //173 = run config!
                     try {
@@ -588,8 +580,9 @@ public class Commands implements Packet {
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
                 if (cmd[0].equalsIgnoreCase("sound") && client.playerRights > 1) {
-                    int icon = Integer.parseInt(cmd[1]);
-                    client.send(new Sound(icon));
+                    int id = Integer.parseInt(cmd[1]);
+                    client.send(new Sound(id));
+                    client.send(new SendMessage("Sound playing..." + id));
                 }
                 if (cmd[0].equalsIgnoreCase("event")) {
                     Balloons.triggerBalloonEvent(client);

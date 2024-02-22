@@ -117,7 +117,7 @@ public class SocketHandler implements Runnable {
         if(player == null || player.disconnected) { //Fuck this check!
             return;
         }
-        player.logout();
+        player.disconnected = true;
     }
 
     public boolean parsePackets() {
@@ -197,9 +197,8 @@ public class SocketHandler implements Runnable {
             if (outData.isEmpty())
                 return false;
             byte[] data = outData.poll();
-            if (data == null)
-                continue;
-            write(data);
+            if (data != null)
+                write(data);
         }
         return false;
     }

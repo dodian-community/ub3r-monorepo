@@ -27,8 +27,8 @@ fun Client.requireKey(keyId: Int, vararg npcId: Int): Boolean {
 
 fun Client.slayerLevelRequired(npcId: Int): Boolean {
     when (npcId) {
-        2266 -> if(getLevel(Skill.SLAYER) < 90) {
-            send(SendMessage("You need a slayer level of 90 to harm this monster."))
+        2266 -> if(getLevel(Skill.SLAYER) < 86) {
+            send(SendMessage("You need a slayer level of 86 to harm this monster."))
             return false
         }
         3209 -> if(getLevel(Skill.SLAYER) < 65) {

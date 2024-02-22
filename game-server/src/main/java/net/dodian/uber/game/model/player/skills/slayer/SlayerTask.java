@@ -39,7 +39,7 @@ public class SlayerTask {
         BLACK_KNIGHT_TITAN("Black knight titan", false, new Range(1, 200), new Range(10, 30), 4067),
         JUNGLE_DEMON("Jungle demon", false, new Range(1, 200), new Range(10, 30), 1443),
         BLACK_DEMON("Black Demon", true, new Range(60, 200), new Range(10, 30), 1432),
-        DAGANNOTH_PRIME("Dagannoth prime", false, new Range(90, 200), new Range(10, 30), 2266),
+        DAGANNOTH_PRIME("Dagannoth prime", false, new Range(86, 200), new Range(12, 28), 2266),
         UNGADULU("Ungadulu", false, new Range(1, 200), new Range(10, 30), 3957),
         ICE_QUEEN("Ice queen", false, new Range(1, 200), new Range(10, 30), 4922),
         NECHRYAEL("Nechryael", false, new Range(1, 200), new Range(10, 30), 8),

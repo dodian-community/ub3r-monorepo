@@ -297,34 +297,19 @@ public class ClickObject implements Packet {
             client.ReplaceObject(2902, 3511, -1, -3, 0);
             return;
         }
-        if (objectID == 1516 && objectPosition.getX() == 2908 && objectPosition.getY() == 9698) {
+        if ((objectID == 1524 || objectID == 1521) && (objectPosition.getX() == 2908 || objectPosition.getX() == 2907) && objectPosition.getY() == 9698) {
             if (!client.checkItem(989)) {
                 client.send(new SendMessage("You need a crystal key to open this door."));
                 return;
             }
-            if (client.getLevel(Skill.SLAYER) < 90) {
-                client.send(new SendMessage("You need at least 90 slayer to enter!"));
+            if (client.getLevel(Skill.SLAYER) < 120) {
+                client.send(new SendMessage("You need at least 120 slayer to enter!"));
                 return;
             }
             client.ReplaceObject(2908, 9698, -1, 0, 0);
             client.ReplaceObject(2907, 9698, -1, 0, 0);
             client.ReplaceObject(2908, 9697, 1516, 2, 0);
-            client.ReplaceObject(2907, 9697, 1519, 0, 0);
-            return;
-        }
-        if (objectID == 1519 && objectPosition.getX() == 2907 && objectPosition.getY() == 9698) {
-            if (!client.checkItem(989)) {
-                client.send(new SendMessage("You need a crystal key to open this door."));
-                return;
-            }
-            if (client.getLevel(Skill.SLAYER) < 90) {
-                client.send(new SendMessage("You need at least 90 slayer to enter!"));
-                return;
-            }
-            client.ReplaceObject(2908, 9698, -1, 0, 0);
-            client.ReplaceObject(2907, 9698, -1, 0, 0);
-            client.ReplaceObject(2908, 9697, 1516, 2, 0);
-            client.ReplaceObject(2907, 9697, 1519, 0, 0);
+            client.ReplaceObject(2907, 9697, 1516, 0, 0);
             return;
         }
         if (objectID == 2623) {
@@ -336,12 +321,13 @@ public class ClickObject implements Packet {
             }
         }
         if (objectID == 16680 && objectPosition.getX() == 2884 && objectPosition.getY() == 3397) {
-            if (client.getLevel(Skill.SLAYER) >= 50) {
+            if (client.getLevel(Skill.SLAYER) < 50) {
+                client.send(new SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."));
+                return;
+            }
                 client.teleportToX = 2884;
                 client.teleportToY = 9798;
-            } else {
-                client.send(new SendMessage("You need 50 slayer to enter the Taverly Dungeon"));
-            }
+                client.getPosition().setZ(0);
         }
         if (objectID == 17385 && objectPosition.getX() == 2884 && objectPosition.getY() == 9797) {
             client.teleportToX = 2884;

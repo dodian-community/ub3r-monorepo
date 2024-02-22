@@ -127,7 +127,7 @@ public class EntityProcessor implements Job {
             PlayerHandler.cycle++;
         //Processing!
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket == -1) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
                 /* Some violation checks due to old code?! */
                 if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
@@ -155,14 +155,13 @@ public class EntityProcessor implements Job {
         }
         // after processing update!
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket == -1) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
-            if (!PlayerHandler.players[i].isActive || PlayerHandler.players[i].getPlayerName() == null || PlayerHandler.players[i].getPlayerName().equals("null")) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (!PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
             /* Removing non-responding player */
             long lp = currentTime - PlayerHandler.players[i].lastPacket;
-            if (((PlayerHandler.players[i] == null && PlayerHandler.players[i].lastPacket > 0) ||
-            (PlayerHandler.players[i] != null && PlayerHandler.players[i].dbId < 1)) && lp >= 60000) { //Removing non-responding player
+            if ((((PlayerHandler.players[i].getPlayerName() == null || PlayerHandler.players[i].getPlayerName().equals("null")) && PlayerHandler.players[i].lastPacket > 0) || PlayerHandler.players[i].dbId < 1) && lp >= 60000) { //Removing non-responding player
                 PlayerHandler.players[i].disconnected = true;
                 PlayerHandler.players[i].println_debug("Remove non-responding player after process " + PlayerHandler.players[i].getPlayerName());
             }
@@ -170,6 +169,7 @@ public class EntityProcessor implements Job {
             if (PlayerHandler.players[i].disconnected) {
                 PlayerHandler.players[i].println_debug("Remove disconnected player " + PlayerHandler.players[i].getPlayerName());
                 Server.playerHandler.removePlayer(PlayerHandler.players[i]);
+                PlayerHandler.players[i].disconnected = false;
                 PlayerHandler.players[i] = null; //Remove player from list as above do not for whatever reason xD
             } else PlayerHandler.players[i].update();
         }
