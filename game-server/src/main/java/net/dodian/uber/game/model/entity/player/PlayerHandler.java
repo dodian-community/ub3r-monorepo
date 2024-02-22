@@ -81,14 +81,10 @@ public class PlayerHandler {
     public void removePlayer(Player plr) {
         Client temp = (Client) plr;
         if (temp != null) {
-            if(temp.dbId > 0 && temp.saveNeeded)
-                temp.saveStats(true);
             PlayerHandler.playersOnline.remove(temp.longName);
             PlayerHandler.allOnline.remove(temp.longName);
-            temp.lastPacket = -1; //Need to know the player got send no packets!
-            temp.disconnected = false; //Set it to false as we do not disconnect at this stage!
-            temp.println_debug("Sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
-            temp.destruct();
+            temp.destruct(); //Destruct after player have saved!
+            temp.println_debug("Finished sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
         } else System.out.println("tried to remove nulled player!");
     }
 

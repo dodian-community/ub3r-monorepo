@@ -15,7 +15,6 @@ import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.security.DropLog;
 import net.dodian.utilities.Misc;
@@ -427,8 +426,7 @@ public class Npc extends Entity {
         int roll = 1;
         boolean wealth = target.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
         boolean itemDropped;
-        pos = getId() == 33333 ? new Position(1,2,0) : pos;
-        //System.out.println("dropped.." + getId() + ", at " + pos.toString());
+        pos = getId() == 33333 ? new Position(1,2,0) : pos; //Force a position of item drop!
 
         for (int rolls = 0; rolls < roll; rolls++) {
             rolledChance = Misc.chance(100000) / 1000D; //100% = 100000 (1000 * 100)
@@ -455,7 +453,7 @@ public class Npc extends Entity {
                     }
                     if (checkChance < 100.0)
                         itemDropped = true;
-                    if (wealth && drop.getChance() < 10.0)
+                    if (wealth && (drop.getChance() < 0.2 || drop.rareShout()))
                         target.send(new SendMessage("<col=FF6347>Your ring of wealth shines more brightly!"));
                     if (drop.rareShout()) {
                         String yell = "<col=292BA3>" + target.getPlayerName() + " has recieved a "
@@ -688,6 +686,7 @@ public class Npc extends Entity {
     public boolean specialCondition(Client c) {
         boolean attack = true;
         int hitDiff;
+        c.setFocus(c.getPosition().getX(), c.getPosition().getY());
         switch(getId()) {
             case 260: //Green dragon
             case 265: //Blue Dragon
@@ -821,10 +820,12 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 5311: //Head Mourner
-                if(Misc.chance(6) == 1) { //True melee damage!
+                if(Misc.chance(5) == 1) { //True melee damage!
                     setText("Get out of my farm!");
                     requestAnim(1203, 0);
-                    c.dealDamage((int)(maxHit * 0.8), true, this, damageType.MELEE);
+                    hitDiff = ((int)(maxHit * 0.2) + Misc.random((int)((maxHit * 0.6) - (maxHit * 0.2))));
+                    c.dealDamage(hitDiff, true, this, damageType.TRUEDAMAGE);
+                    setLastAttack(getAttackTimer() / 2);
                 } else attack = false;
                 break;
             case 239: //King black dragon

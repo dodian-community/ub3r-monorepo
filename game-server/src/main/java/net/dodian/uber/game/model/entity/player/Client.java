@@ -368,13 +368,11 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrame(200);
 		getOutputStream().writeWord(MainFrame);
 		getOutputStream().writeWord(SubFrame);
-		//flushOutStream();
 	}
 
 	public void sendFrame164(int Frame) {
 		getOutputStream().createFrame(164);
 		getOutputStream().writeWordBigEndian_dup(Frame);
-		//flushOutStream();
 	}
 
 	public void sendFrame246(int MainFrame, int SubFrame, int SubFrame2) {
@@ -382,20 +380,12 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWordBigEndian(MainFrame);
 		getOutputStream().writeWord(SubFrame);
 		getOutputStream().writeWord(SubFrame2);
-		//flushOutStream();
-	}
-
-	public void sendFrame185(int Frame) {
-		getOutputStream().createFrame(185);
-		getOutputStream().writeWordBigEndianA(Frame);
-		//flushOutStream();
 	}
 
 	public void sendQuestSomething(int id) {
 		getOutputStream().createFrame(79);
 		getOutputStream().writeWordBigEndian(id);
 		getOutputStream().writeWordA(0);
-		//flushOutStream();
 	}
 
 	public void clearQuestInterface() {
@@ -407,7 +397,6 @@ public class Client extends Player implements Runnable {
 		resetAction();
 		getOutputStream().createFrame(97);
 		getOutputStream().writeWord(interfaceid);
-		//flushOutStream();
 	}
 
 	public int ancients = 1;
@@ -428,10 +417,7 @@ public class Client extends Player implements Runnable {
 	public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Prayer", "Range",
 			"Str", "Spell Dmg"};
 
-	// public int pGender;
 	public int i;
-	// public int gender;
-
 	public int XremoveSlot = 0;
 	public int XinterfaceID = 0;
 	public int XremoveID = 0;
@@ -486,11 +472,11 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
+			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
 				saveStats(true, true);
-			}
-			//ConnectionList.getInstance().remove(mySock.getInetAddress()); //Do we need?!
-			disconnected = true;
+			if(!disconnected)
+				disconnected = true;
+			lastPacket = -1; //Need to know the player got send no packets!
 			mySock.close();
 			mySock = null;
 			mySocketHandler = null;
@@ -773,26 +759,18 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void logout() {
-		// declineDuel();
+		send(new SendMessage("Please wait... logging out may take time"));
+		send(new SendString("     Please wait...", 2458));
 		if (!saveNeeded || !validClient || UsingAgility) {
 			if(UsingAgility) xLog = true;
 			return;
 		}
-		saveStats(true, true);
+		getOutputStream().createFrame(109); //Send packet to logout player here!
 		saveNeeded = false;
-		disconnected = true;
-		send(new SendMessage("Please wait... logging out may take time"));
-		send(new SendString("     Please wait...", 2458));
-		send(new SendString("Click here to logout", 2458));
-		getOutputStream().createFrame(109);
+		saveStats(true, true);
+		Server.playerHandler.removePlayer(PlayerHandler.players[this.getSlot()]);
+		PlayerHandler.players[this.getSlot()] = null; //Just incase the player messes up?
 	}
-
-	/*
-	 * public void saveStats(boolean logout){ server.login.saveStats(this,
-	 * logout); if(logout){ long elapsed = System.currentTimeMillis() -
-	 * session_start; server.login.sendSession(dbId, clientPid, elapsed,
-	 * connectedFrom); } }
-	 */
 
 	public void saveStats(boolean logout, boolean updateProgress) {
 		if (loginDelay > 0) {
@@ -923,7 +901,6 @@ public class Client extends Player implements Runnable {
 						", prayer='"+prayer+"', boosted='"+boosted+"'" + last
 						+ " WHERE id = " + dbId);
 				statement.close();
-				//println_debug("Save:  " + getPlayerName() + " (" + (System.currentTimeMillis() - start) + "ms)");
 			} catch (Exception e) {
 				e.printStackTrace();
 				println_debug("Save Exception: " + getSlot() + ", " + getPlayerName());
@@ -946,7 +923,6 @@ public class Client extends Player implements Runnable {
 		if (amount > 0) {
 			if (bankItems[fromSlot] > 0) {
 				if (!takeAsNote) {
-					// if (Item.itemStackable[bankItems[fromSlot] - 1]) {
 					if (Server.itemManager.isStackable(itemID)) {
 						if (bankItemsN[fromSlot] > amount) {
 							if (addItem((bankItems[fromSlot] - 1), amount)) {
@@ -1203,7 +1179,6 @@ public class Client extends Player implements Runnable {
 					boolean itemExists = false;
 
 					while (amount > 0) {
-						itemExists = false;
 						for (int i = firstPossibleSlot; i < playerItems.length; i++) {
 							if ((playerItems[i]) == itemID) {
 								firstPossibleSlot = i;
@@ -1228,7 +1203,6 @@ public class Client extends Player implements Runnable {
 					boolean itemExists = false;
 
 					while (amount > 0) {
-						itemExists = false;
 						for (int i = firstPossibleSlot; i < playerItems.length; i++) {
 							if ((playerItems[i]) == itemID) {
 								firstPossibleSlot = i;
@@ -1326,7 +1300,6 @@ public class Client extends Player implements Runnable {
 					boolean itemExists = false;
 
 					while (amount > 0) {
-						itemExists = false;
 						for (int i = firstPossibleSlot; i < playerItems.length; i++) {
 							if ((playerItems[i]) == itemID) {
 								firstPossibleSlot = i;
@@ -1351,7 +1324,6 @@ public class Client extends Player implements Runnable {
 					boolean itemExists = false;
 
 					while (amount > 0) {
-						itemExists = false;
 						for (int i = firstPossibleSlot; i < playerItems.length; i++) {
 							if ((playerItems[i]) == itemID) {
 								firstPossibleSlot = i;
@@ -1389,9 +1361,7 @@ public class Client extends Player implements Runnable {
 			if (playerItemsN[i] > 254) {
 				getOutputStream().writeByte(255); // item's stack count. if over 254,
 				// write byte 255
-				getOutputStream().writeDWord_v2(playerItemsN[i]); // and then the real
-				// value with
-				// writeDWord_v2
+				getOutputStream().writeDWord_v2(playerItemsN[i]); // and then the real value with writeDWord_v2
 			} else {
 				getOutputStream().writeByte(playerItemsN[i]);
 			}
@@ -1430,12 +1400,7 @@ public class Client extends Player implements Runnable {
 			if (Constants.SmithingItems[i][1] > 254) {
 				getOutputStream().writeByte(255); // item's stack count. if over 254,
 				// write byte 255
-				getOutputStream().writeDWord_v2(Constants.SmithingItems[i][1]); // and
-				// then
-				// the real
-				// value
-				// with
-				// writeDWord_v2
+				getOutputStream().writeDWord_v2(Constants.SmithingItems[i][1]); // and then the real value with writeDWord_v2
 			} else {
 				getOutputStream().writeByte(Constants.SmithingItems[i][1]);
 			}
@@ -1460,11 +1425,8 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWord(len);
 		for (GameItem item : other.offeredItems) {
 			if (item.getAmount() > 254) {
-				getOutputStream().writeByte(255); // item's stack count. if over 254,
-				// write byte 255
-				getOutputStream().writeDWord_v2(item.getAmount()); // and then the real
-				// value with
-				// writeDWord_v2
+				getOutputStream().writeByte(255); // item's stack count. if over 254, write byte 255
+				getOutputStream().writeDWord_v2(item.getAmount()); // and then the real value with writeDWord_v2
 			} else {
 				getOutputStream().writeByte(item.getAmount());
 			}
@@ -1490,8 +1452,7 @@ public class Client extends Player implements Runnable {
 			if (item.getAmount() > 254) {
 				getOutputStream().writeByte(255); // item's stack count. if over 254,
 				// write byte 255
-				getOutputStream().writeDWord_v2(item.getAmount()); // and then the real
-				// value with
+				getOutputStream().writeDWord_v2(item.getAmount()); // and then the real value with writeDWord_v2
 				// writeDWord_v2
 			} else {
 				getOutputStream().writeByte(item.getAmount());
@@ -2168,6 +2129,7 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		//replaceDoors(); //Not sure we need this at this point!
+		send(new SendString("Click here to logout", 2458)); //Logout text incase!
 		/* Report a player interface text */
 		send(new SendString("Using this will send a notification to all online mods", 5967));
 		send(new SendString("@yel@Then click below to indicate which of our rules is being broken.", 5969));
@@ -4678,7 +4640,7 @@ public class Client extends Player implements Runnable {
 				send(new SendString(getPlayerName(), 970));
 				send(new SendString("Oh it's a rune shop. No thank you, then.", 971));
 				send(new SendString("Click here to continue", 972));
-				sendFrame185(969);
+				send(new PlayerDialogueHead(969));
 				sendFrame164(968);
 				NpcDialogueSend = true;
 				break;
@@ -4791,10 +4753,11 @@ public class Client extends Player implements Runnable {
 					send(new NpcDialogueHead(NpcTalkTo, 4888));
 					sendFrame164(4887);
 				} else {
+					boolean gotHelmet = playerHasItem(11864);
 					String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
 					String[] slayerMaster = new String[]{
 							"What would you like to say?", "I'd like a task please",
-							!taskName.equals("") ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my slayer mask", "Can you teleport me to west ardougne?"};
+							!taskName.equals("") ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my " + (gotHelmet ? "slayer helmet" : "black mask"), "Can you teleport me to west ardougne?"};
 					showPlayerOption(slayerMaster);
 				}
 				NpcDialogueSend = true;
@@ -4970,10 +4933,11 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 34: //Upgrade black mask!
-				if(!playerHasItem(8921))
-					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have a black mask!"});
+				boolean gotHelmet = playerHasItem(11864);
+				if(!playerHasItem(8921) && !gotHelmet)
+					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have a black mask or a slayer helmet!"});
 				else {
-					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to upgrade your black mask?", "It will cost you 2 million gold pieces."});
+					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to upgrade your "+(gotHelmet ? "slayer helmet" : "black mask") + "?", "It will cost you 2 million gold pieces."});
 					this.nextDiag = 35;
 				}
 				NpcDialogueSend = true;
@@ -4990,10 +4954,11 @@ public class Client extends Player implements Runnable {
 				if(!playerHasItem(995, 2000000))
 					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have enough money!"});
 				else {
+					gotHelmet = playerHasItem(11864);
 					deleteItem(995, 2000000);
-					deleteItem(8921, 1);
-					addItem(11784, 1);
-					showNPCChat(NpcTalkTo, 592, new String[]{"Here is your imbued black mask."});
+					deleteItem(gotHelmet ? 11864 : 8921, 1);
+					addItem(gotHelmet ? 11865 : 11784, 1);
+					showNPCChat(NpcTalkTo, 592, new String[]{"Here is your imbued "+(gotHelmet ? "slayer helmet" : "black mask")+"."});
 				}
 				NpcDialogueSend = true;
 				break;

@@ -93,8 +93,6 @@ public class ClickNpc implements Packet {
         } else if (npcId == 637) { /* Aubury */
             client.NpcWanneTalk = 3;
             client.convoId = 3;
-        } else if (npcId == 556) {
-            client.WanneShop = 31; // Premium store
         } else if (npcId == 3648) {
             client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 ||npcId == 1306) {
@@ -129,6 +127,8 @@ public class ClickNpc implements Packet {
             client.convoId = 1001;
         } else if (npcId == 3640) { // Beginner store!
             client.WanneShop = 17;
+        } else if (npcId == 556) {
+            client.WanneShop = 31; // Premium store
         } else if (npcId == 2825) {
             client.NpcWanneTalk = 1002;
             client.convoId = -1;

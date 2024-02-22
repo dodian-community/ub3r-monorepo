@@ -25,11 +25,12 @@ public class AttackNpc implements Packet {
             if ((getAttackStyle(client) != 0 && !client.goodDistanceEntity(tempNpc, 5)) || (getAttackStyle(client) == 0 && !client.goodDistanceEntity(tempNpc, 1))) {
                 final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, tempNpc.getPosition());
                 client.setWalkToTask(task);
-                if ((getAttackStyle(client) != 0 && client.goodDistanceEntity(tempNpc, 5)) || (getAttackStyle(client) == 0 && !client.goodDistanceEntity(tempNpc, 1))) {
+                if ((getAttackStyle(client) != 0 && client.goodDistanceEntity(tempNpc, 5)) || client.goodDistanceEntity(tempNpc, 1)) {
                     client.stopMovement();
                     client.startAttack(tempNpc);
                     client.setWalkToTask(null);
-                } //Do we even need this? IDK DODIAN SHIET!
+                    return;
+                }
                 EventManager.getInstance().registerEvent(new Event(600) {
                     @Override
                     public void execute() {
