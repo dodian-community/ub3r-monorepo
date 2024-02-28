@@ -16,7 +16,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.security.DropLog;
+import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -86,6 +86,12 @@ public class Npc extends Entity {
             } else if (id == 2261) { //Rock crab boss
                 boss = true;
             } else if (id == 3127) { //Jad
+                boss = true;
+            } else if (id == 4303) { //Kalphite Queen
+                boss = true;
+            } else if (id == 4304) { //Kalphite King
+                boss = true;
+            } else if (id == 494) { //Kraken (mage boss)
                 boss = true;
             }
         }
@@ -305,11 +311,23 @@ public class Npc extends Entity {
                             enemy = Server.playerHandler.getClient(e.getSlot());
                             int hitDiff = 0;
                             if (type == 1) {
-                                delayGfx(enemy, 2656, 446, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
-                                setGfx(444, 0);
+                                sendArrow(enemy, -1, 448); //446 = old, 448 = new!
+                                delayGfx(enemy, 2656, 450, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
                             } else if (type == 2) {
                                 CalculateMaxHit(false);
-                                delayGfx(enemy, 2652, 451, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
+                                delayGfx(enemy, 2652, -1, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
+                                final Client c = enemy;
+                                EventManager.getInstance().registerEvent(new Event(600) {
+
+                                    public void execute() {
+                                        if(c.disconnected || c == null || c.getCurrentHealth() < 1) {
+                                            stop();
+                                            return;
+                                        }
+                                        c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
+                                        stop();
+                                    }
+                                });
                             } else {
                                 requestAnim(data.getAttackEmote(), 0);
                                 enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, false, this, damageType.MELEE);
@@ -344,7 +362,7 @@ public class Npc extends Entity {
         double NpcHitChance;
         for(int i = 5; i <= 7; i++)
             if(p.playerBonus[i] > defBonus)
-                defBonus = p.checkObsidianWeapons() ? (int) (p.playerBonus[i] * 0.9) : p.playerBonus[i];
+                defBonus = p.playerBonus[i];
         defBonus = !melee ? p.playerBonus[9] : defBonus;
         double playerDef = defLevel * (defBonus + 64D);
         double npcAccuracy = atkLevel * (atkBonus + 64D);
@@ -388,7 +406,7 @@ public class Npc extends Entity {
                 String yell = npcName() + " has been slain by " + p.getPlayerName() + " (level-" + p.determineCombatLevel() + ")";
                 p.yell("<col=FFFF00>System<col=000000> <col=292BA3>" + yell);
             }
-        }
+        } else p.incrementMonsterLog(this);
 
         SlayerTask.slayerTasks task = SlayerTask.slayerTasks.getSlayerNpc(id);
         if (task != null) {
@@ -402,12 +420,12 @@ public class Npc extends Entity {
                         int[] taskStreak = {1000, 500, 250, 100, 50, 10};
                         int[] experience = {50, 30, 20, 11, 6, 2};
                         int bonusXp = -1;
-                        p.send(new SendMessage("You have completed your slayer task!"));
+                        p.send(new SendMessage("<col=FF8C00>You have completed your slayer task!"));
                         for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
                             if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
                                 bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;
                                 p.giveExperience(bonusXp, Skill.SLAYER);
-                                p.send(new SendMessage("You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
+                                p.send(new SendMessage("<col=FF8C00>You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
                             }
                     }
                 }
@@ -453,14 +471,14 @@ public class Npc extends Entity {
                     }
                     if (checkChance < 100.0)
                         itemDropped = true;
-                    if (wealth && (drop.getChance() < 0.2 || drop.rareShout()))
+                    if (wealth && (drop.getChance() <= 0.2 || drop.rareShout()))
                         target.send(new SendMessage("<col=FF6347>Your ring of wealth shines more brightly!"));
                     if (drop.rareShout()) {
                         String yell = "<col=292BA3>" + target.getPlayerName() + " has recieved a "
-                                + target.GetItemName(drop.getId()).toLowerCase() + " from " + npcName().toLowerCase() + (killCount(target) > 0 && boss ? " (Kill: " + killCount(target) + ")" : "");
+                                + target.GetItemName(drop.getId()).toLowerCase() + " from " + npcName().toLowerCase() + (killCount(target) > 0 && boss ? " (Kill: " + killCount(target) + ")" : "(Kill: " + target.monsterKC(this) + ")");
                         target.yell("<col=FFFF00>System<col=000000> <col=FFFF00>" + yell);
                     }
-                    DropLog.recordDrop(target, drop.getId(), drop.getAmount(), Server.npcManager.getName(id), pos, "Npc Drop");
+                    ItemLog.npcDrop(target, id, drop.getId(), drop.getAmount(), pos);
                 } else if (!itemDropped && checkChance < 100.0)
                     currentChance += checkChance;
             }
@@ -832,47 +850,58 @@ public class Npc extends Entity {
                 int landChance = Misc.chance(16);
                 if(landChance == 1) { //Fire breath, guarantee hit as crit with 50% reduce dmg as melee
                     setText("Grrr!");
-                    delayGfx(c, 81, 393, 2, (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
+                    sendArrow(c, -1, 393);
+                    delayGfx(c, 81, -1, 2, (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer() / 2);
                 } else if(landChance == 5) { //Blue breath, magic dmg
                     setText("Tsss!");
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    delayGfx(c, 82, 396, 2, hitDiff, false, this, damageType.FIRE_BREATH);
+                    sendArrow(c, -1, 396);
+                    delayGfx(c, 82, -1, 2, hitDiff, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer() / 2);
                 } else if(landChance == 10) { //Green breath, range dmg
                     setText("Rawr!!");
                     CalculateMaxHit(false);
                     hitDiff = Utils.random(maxHit);
-                    delayGfx(c, 83, 394, 2, landHit(c, false) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    sendArrow(c, -1, 394);
+                    delayGfx(c, 83, -1, 2, landHit(c, false) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer() / 2);
                 } else if(landChance == 16) { //White breath, melee dmg check with 20% increase dmg
                     setText("Tss rawr!!");
                     CalculateMaxHit(true);
                     hitDiff = Utils.random((int)Math.floor(maxHit * 1.2));
-                    delayGfx(c, 84, 395, 2, landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    sendArrow(c, -1, 395);
+                    delayGfx(c, 84, -1, 2, landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer() / 2);
                 } else attack = false;
             break;
             case 3137: //Vampire effect!
                 int prayerBonus = c.playerBonus[8];
                 if(prayerBonus < 15) {
                     setText("I'll suckie your bloodie!");
-                    hitDiff = 10 + Utils.random(20);
-                    c.dealDamage(hitDiff, hitDiff >= 28, this, damageType.BLOODATTACK);
+                    hitDiff = 15 + Utils.random(25);
+                    requestAnim(data.getAttackEmote(), 0);
+                    c.dealDamage(hitDiff, hitDiff >= 35, this, damageType.BLOODATTACK);
                     heal(hitDiff);
                     setLastAttack(getAttackTimer());
                 } else attack = false;
                 break;
             case 3021: //Deadly red spider!
-                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6708 || c.GetItemName(c.getEquipment()[0]).toLowerCase().contains("slayer helmet");
+                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6708 || c.gotSlayerHelmet(c);
                 if(!protection) { //Sting the target!
-                    hitDiff = 5 + Utils.random(15);
-                    c.dealDamage(hitDiff, hitDiff >= 18, this, damageType.TRUEDAMAGE);
+                    hitDiff = 8 + Utils.random(22);
+                    requestAnim(data.getAttackEmote(), 0);
+                    c.dealDamage(hitDiff, hitDiff >= 25, this, damageType.TRUEDAMAGE);
                     setLastAttack(getAttackTimer());
                     c.send(new SendMessage("The spider stung you. Ouch!"));
                 } else attack = false;
                 break;
             case 414: //Banshee
-                protection = c.getEquipment()[0] == 4166 || c.GetItemName(c.getEquipment()[0]).toLowerCase().contains("slayer helmet");
+                protection = c.getEquipment()[0] == 4166 || c.gotSlayerHelmet(c);
                 if(!protection) { //Sting the target!
-                    hitDiff = 5 + Utils.random(15);
-                    c.dealDamage(hitDiff, hitDiff >= 18, this, damageType.TRUEDAMAGE);
+                    hitDiff = 10 + Utils.random(15);
+                    requestAnim(data.getAttackEmote(), 0);
+                    c.dealDamage(hitDiff, hitDiff >= 22, this, damageType.TRUEDAMAGE);
                     setLastAttack(getAttackTimer());
                     c.send(new SendMessage("Banshees' screech echoes through your ears!"));
                 } else attack = false;
@@ -889,7 +918,7 @@ public class Npc extends Entity {
         EventManager.getInstance().registerEvent(new Event(delay * 600) {
 
             public void execute() {
-                if(c.disconnected) {
+                if(c.disconnected || c == null || c.getCurrentHealth() < 1) {
                     stop();
                     return;
                 }
@@ -899,7 +928,17 @@ public class Npc extends Entity {
                 setLastAttack(getAttackTimer() - delay + 1);
                 stop();
             }
-
         });
+    }
+    public void sendArrow(Client target, int startGfx, int flightGfx) {
+        int y = getId() == 239 ? getPosition().getY() + 2 : getPosition().getY();
+        int x = getId() == 239 ? getPosition().getX() + 2 : getPosition().getX();
+        int offsetX = (y - target.getPosition().getY()) * -1;
+        int offsetY = (x - target.getPosition().getX()) * -1;
+        int distance = target.distanceToPoint(getPosition(), target.getPosition());
+        int speed = getId() == 3127 ? 100 + (distance * 5) : 50 + (distance * 5);
+        int height = getId() == 3127 ? 143 : 43;
+        setGfx(startGfx, height);
+        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, height, 35, -(target.getSlot() + 1), 51, 16);
     }
 }

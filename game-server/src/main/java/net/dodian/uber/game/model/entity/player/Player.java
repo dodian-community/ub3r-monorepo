@@ -9,18 +9,24 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.model.entity.npc.NpcData;
+import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.music.RegionSong;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
+import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -41,7 +47,7 @@ public abstract class Player extends Entity {
     public int playerGroup = 3;
     public long lastPacket = -1;
     public int[] playerLooks = new int[13];
-    public boolean saveNeeded = true, lookNeeded = false;
+    public boolean saveNeeded = true, lookNeeded = false, discord = false;
     private boolean inCombat = false;
     private long lastCombat = 0;
     public long start = 0, lastPlayerCombat = 0;
@@ -71,7 +77,6 @@ public abstract class Player extends Entity {
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
     public boolean attackingPlayer = false, attackingNpc = false;
-    public int Essence;
     public boolean IsShopping = false;
     public int MyShopID = 0;
     public boolean UpdateShop = false;
@@ -98,9 +103,9 @@ public abstract class Player extends Entity {
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
-    public int playerBankSize = 350;
-    public int[] bankItems = new int[800];
-    public int[] bankItemsN = new int[800];
+    public int playerBankSize = 800;
+    public int[] bankItems = new int[playerBankSize];
+    public int[] bankItemsN = new int[playerBankSize];
     private int pGender;
     public int pHairC;
     public int pTorsoC;
@@ -916,6 +921,10 @@ public abstract class Player extends Entity {
         return false;
     }
 
+    public boolean gotSlayerHelmet(Client c) {
+        return c.GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
+    }
+
     public boolean areAllSongsUnlocked() {
         for (boolean unlocked : songUnlocked) {
             if (!unlocked)
@@ -1082,6 +1091,7 @@ public abstract class Player extends Entity {
 
     public void setWalkAnim(int playerSEW) {
         this.playerSEW = playerSEW;
+        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
     public int getRunAnim() {
@@ -1370,6 +1380,151 @@ public abstract class Player extends Entity {
         }
         String npcName = Server.npcManager.getName(id);
         c.send(new SendMessage(status == -1 ? "Could not found the npc with the name of '" + npcName + "'." : status == 0 ? "You respawn " + npcName + "!" : npcName + " is already alive!"));
+    }
+
+    public int bankSize() {
+        return this.playerBankSize / 2;
+    }
+
+    public ArrayList<String> monsterName = new ArrayList<>();
+    public ArrayList<Integer> monsterCount = new ArrayList<>();
+    public void addMonsterName(String name, int value) {
+        int index = monsterName.size();
+        if(index == 0) { //Add the first entry!
+            monsterName.add(name);
+            monsterCount.add(1);
+        } else { //Sorting after first entry!
+            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
+            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
+            monsterName.clear();
+            monsterCount.clear();
+            monsterName.add(name);
+            monsterCount.add(1);
+            for(int i = 0; i < nameClone.size(); i++) {
+                monsterName.add(nameClone.get(i));
+                monsterCount.add(countClone.get(i));
+            }
+        }
+    }
+    public int getMonsterIndex(String name) {
+        int slot = -1;
+        for(int i = 0; i < monsterName.size() && slot == -1; i++)
+            if(monsterName.get(i).equals(name)) {
+                slot = i;
+            }
+        return slot;
+    }
+    public void incrementMonsterLog(Npc npc) {
+        String name = npc.npcName().toLowerCase();
+        int index = getMonsterIndex(name);
+        if(index >= 0)
+            addMonsterLog(npc, index);
+        else addMonsterName(name, 1);
+    }
+    public void addMonsterLog(Npc npc, int index) {
+        String name = npc.npcName().toLowerCase();
+        int amount = index == -1 ? 0 : monsterCount.get(index);
+        int newAmount = amount < 1048576 ? amount + 1 : amount + 0;
+        if(index == 0)
+            monsterCount.set(index, newAmount);
+        else if(index > 0) { //Sorting time!
+            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
+            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
+            monsterName.clear();
+            monsterCount.clear();
+            nameClone.remove(index);
+            countClone.remove(index);
+            monsterName.add(name);
+            monsterCount.add(newAmount);
+            for(int i = 0; i < nameClone.size(); i++) {
+                monsterName.add(nameClone.get(i));
+                monsterCount.add(countClone.get(i));
+            }
+        }
+    }
+    public int monsterKC(Npc npc) {
+        int index = getMonsterIndex(npc.npcName().toLowerCase());
+        if(index >= 0)
+            return monsterCount.get(index);
+        return 0;
+    }
+
+    public void checkLoot(Client c, NpcData n) {
+            ArrayList<Integer> lootedItem = new ArrayList<>();
+            ArrayList<Integer> lootedAmount = new ArrayList<>();
+            boolean wealth = c.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
+            double chance, currentChance, checkChance;
+            for (int LOOP = 0; LOOP < 1000; LOOP++) {
+                chance = Misc.chance(100000) / 1000D;
+                currentChance = 0.0;
+                itemDropped = false;
+                for (NpcDrop drop : n.getDrops()) {
+                    if (drop == null) continue;
+                    checkChance = drop.getChance();
+                    if (wealth && drop.getChance() < 10.0)
+                        checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
+
+                    if (drop.getChance() >= 100.0) { // 100% items!
+                        int pos = lootedItem.lastIndexOf(drop.getId());
+                        if (pos == -1) {
+                            lootedItem.add(drop.getId());
+                            lootedAmount.add(drop.getAmount());
+                        } else
+                            lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
+                    } else if (checkChance + currentChance >= chance && !itemDropped) { // user won the roll
+                        if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
+                            if (c.checkItem(drop.getId()))
+                                continue;
+                        int pos = lootedItem.lastIndexOf(drop.getId());
+                        if (pos == -1) {
+                            lootedItem.add(drop.getId());
+                            lootedAmount.add(drop.getAmount());
+                        } else
+                            lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
+                        itemDropped = true;
+                    }
+                    if (!itemDropped && drop.getChance() < 100.0)
+                        currentChance += checkChance;
+                }
+            }
+            c.send(new SendString("Loot from 1000 " + n.getName(), 5383));
+            c.checkBankInterface = true;
+            c.sendBank(lootedItem, lootedAmount);
+            c.resetItems(5064);
+            c.send(new InventoryInterface(5292, 5063));
+            if (wealth)
+                c.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
+    }
+
+    public void examineNpc(Client c, int npcId) {
+        NpcData n = Server.npcManager.getData(npcId);
+        if (n == null) { return; } //No data!
+        if (!n.getDrops().isEmpty())
+            checkLoot(c, n);
+        if(n.getExamine() != "")
+            c.send(new SendMessage(n.getExamine()));
+    }
+    public void examineObject(Client c, int objectId, Position objPos) {
+        //Do we handle objects?!
+        if(objectId == 378 && objPos.getX() == 2593 && objPos.getY() == 3108 && objPos.getZ() == 1) { //Check timer on a object!
+            long timeLeft = (long) GlobalObject.getGlobalObject(objPos.getX(), objPos.getY()).getAttachment();
+            int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
+            c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+        }
+        if(objectId == 378 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
+            long timeLeft = (long) GlobalObject.getGlobalObject(objPos.getX(), objPos.getY()).getAttachment();
+            int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
+            c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+        }
+    }
+
+    public void examineItem(Client c, int id, int amount) {
+        String name = c.GetItemName(id);
+        if(amount >= 0x186a0)
+            c.send(new SendMessage(amount + " x " + name));
+        else { //Got this incase we need to do future stuff for item examine!
+            c.send(new SendMessage(Server.itemManager.getExamine(id)));
+        }
     }
 
 }

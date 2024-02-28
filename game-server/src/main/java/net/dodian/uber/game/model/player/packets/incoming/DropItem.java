@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
@@ -23,6 +25,17 @@ public class DropItem implements Packet {
             client.requestAnim(0x33D, 0);
             client.animationReset = System.currentTimeMillis() + 800;
             client.send(new SendMessage("You drank the milk and gained 15% magic penetration!"));
+            return;
+        }
+        boolean isHood = Server.itemManager.getName(droppedItem).contains("hood");
+        Skillcape skillcape = Skillcape.getSkillCape(isHood ? droppedItem - 1 : droppedItem);
+        if (skillcape != null) { //Cant drop the skillcape or skillcape hood!
+            client.send(new SendMessage("I might be skillful, but dropping this gain no skill!"));
+            return;
+        }
+        boolean maxCheck = client.GetItemName(droppedItem).contains(("Max cape")) || client.GetItemName(droppedItem).contains(("Max hood"));
+        if (maxCheck) { //Cant drop the max cape or hood!
+            client.send(new SendMessage("I might be skillful, but dropping this gain no skill!"));
             return;
         }
         if (client.wearing == false) {

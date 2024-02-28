@@ -12,6 +12,7 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 
 public class ClickNpc implements Packet {
 
@@ -86,10 +87,14 @@ public class ClickNpc implements Packet {
             }
             client.showNPCChat(3306, 590, new String[]{"There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild!", "There is " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!"});
         }
+        /* Fishing spots */
         client.startFishing(npcId, 1);
         if (npcId == 394 || npcId == 395 || npcId == 7677) { /* Banking */
             client.NpcWanneTalk = 1;
             client.convoId = 0;
+        } else if (npcId == 5927) {
+            Werewolf wolf = new Werewolf(client);
+            wolf.handStick();
         } else if (npcId == 637) { /* Aubury */
             client.NpcWanneTalk = 3;
             client.convoId = 3;
@@ -118,7 +123,7 @@ public class ClickNpc implements Packet {
             }
         } else if (npcId == 376 && client.playerRights == 2) {
             client.triggerTele(2772, 3234, 0, false);
-        } else if (npcId == 6080) {
+        } else if (npcId == 6080 && tempNpc.getSlot() < Server.npcManager.gnomeSpawn) {
             client.NpcWanneTalk = 162;
         } else if (npcId == 8051) {
             client.NpcWanneTalk = 8051;

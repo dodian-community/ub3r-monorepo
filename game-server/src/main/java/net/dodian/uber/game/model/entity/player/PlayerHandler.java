@@ -81,8 +81,6 @@ public class PlayerHandler {
     public void removePlayer(Player plr) {
         Client temp = (Client) plr;
         if (temp != null) {
-            PlayerHandler.playersOnline.remove(temp.longName);
-            PlayerHandler.allOnline.remove(temp.longName);
             temp.destruct(); //Destruct after player have saved!
             temp.println_debug("Finished sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
         } else System.out.println("tried to remove nulled player!");

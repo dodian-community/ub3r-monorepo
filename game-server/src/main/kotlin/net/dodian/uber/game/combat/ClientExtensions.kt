@@ -31,6 +31,10 @@ fun Client.slayerLevelRequired(npcId: Int): Boolean {
             send(SendMessage("You need a slayer level of 86 to harm this monster."))
             return false
         }
+        494, 4303, 4304 -> if(getLevel(Skill.SLAYER) < 88) {
+            send(SendMessage("You need a slayer level of 88 to harm this monster."))
+            return false
+        }
         3209 -> if(getLevel(Skill.SLAYER) < 65) {
             send(SendMessage("You need a slayer level of 65 to harm this monster."))
             return false
@@ -82,7 +86,9 @@ fun Client.meleeMaxHit(): Int {
     else if(prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 0.22
     else 0.0
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
-    val specialBonus = 0.0 // TODO: Calculate special bonus
+    var specialBonus = 0.0
+    if(checkObsidianWeapons()) //Obsidian weapon should give 20% increase damage!
+        specialBonus = 0.2
 
     val styleBonus = when (FightType) {
         0, 1 -> 0 // Accurate & Defensive

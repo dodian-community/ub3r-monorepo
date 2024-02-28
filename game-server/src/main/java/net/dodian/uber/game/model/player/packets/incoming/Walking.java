@@ -46,10 +46,12 @@ public class Walking implements Packet {
         long currentTime = System.currentTimeMillis();
         if (currentTime < client.snaredUntil) {
             client.send(new SendMessage("You are ensnared!"));
+            client.stopMovement();
             return;
         }
         if (!client.validClient) {
             client.send(new SendMessage("You can't move on this account"));
+            client.stopMovement();
             return;
         }
         if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
@@ -58,6 +60,7 @@ public class Walking implements Packet {
         client.send(new RemoveInterfaces());
         client.rerequestAnim();
         client.resetAction();
+        client.discord = false; //Sorry need it here!
         /* Death Stage */
         if (client.deathStage == 0) {
             client.newWalkCmdSteps = packetSize - 5;

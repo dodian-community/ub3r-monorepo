@@ -180,6 +180,12 @@ public class ItemManager {
             return "Database Error. Please contact admins with this error code: ITEM_NAME_" + id;
         return i.getName().replace("_", " ");
     }
+    public String getExamine(int id) {
+        Item i = items.get(id);
+        if (i == null)
+            return "";
+        return i.getDescription().replace("_", " ");
+    }
 
     public void getItemName(Client c, String name) {
         boolean send = false;

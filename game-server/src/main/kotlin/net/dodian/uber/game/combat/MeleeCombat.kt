@@ -56,9 +56,21 @@ fun Client.handleMelee(): Int {
         val landHit = landHit(this, target)
         if (target is Npc) {
             val npc = Server.npcManager.getNpc(target.slot)
+            val name = npc.npcName().lowercase()
+            val wolfBane = equipment[Equipment.Slot.WEAPON.id] == 2952 &&  when {
+                name.lowercase().contains("vampyre") -> true
+                name.lowercase().contains("werewolf") -> true
+                else -> false
+            }
+            if(wolfBane)
+                maxHit *= 2;
             if (landCrit && landHit)
                 hit + Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
+            if(wolfBane && Misc.chance(8) == 1) {
+                hit *= 2
+                send(SendMessage("<col=8B4513>You use the power of the wolf to hit higher!"))
+            } //#FFD700
             if(hit >= npc.currentHealth)
                 hit = npc.currentHealth
             npc.dealDamage(this, hit, landCrit && landHit)

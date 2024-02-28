@@ -10,7 +10,7 @@ public enum Skill {
     ATTACK(0, "attack", 24138, 24137),
     DEFENCE(1, "defence", 24170, 24169),
     STRENGTH(2, "strength", 24154, 24153),
-    HITPOINTS(3, "hitpoints", 24139, 24140),
+    HITPOINTS(3, "hitpoints", 24140, 24139),
     RANGED(4, "ranged", 24186, 24185),
     PRAYER(5, "prayer", 24202, 24201),
     MAGIC(6, "magic", 24218, 24217),

@@ -204,16 +204,18 @@ public final class Signlink implements Runnable {
         }
     }
 
-    public static synchronized void midisave(byte abyte0[], int i) {
+    public static synchronized boolean saveWave(byte abyte0[], int i) {
         if (i > 0x1e8480)
-            return;
+            return false;
         if (savereq != null) {
+            return false;
         } else {
-            midipos = (midipos + 1) % 5;
+            wavepos = (wavepos + 1) % 5;
             savelen = i;
             savebuf = abyte0;
-            midiplay = true;
-            savereq = "jingle" + midipos + ".mid";
+            waveplay = true;
+            savereq = "sound" + wavepos + ".wav";
+            return true;
         }
     }
 

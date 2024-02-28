@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.utilities.Misc;
 
 public class ClickItem2 implements Packet {
@@ -31,6 +32,13 @@ public class ClickItem2 implements Packet {
                     "More lazier then Spunky is Ivan :D"
             };
             client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
+        }
+        if(itemId == 11864 || itemId == 11865) {
+            SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
+            if (checkTask != null && client.getSlayerData().get(3) > 0)
+                client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
+            else
+                client.send(new SendMessage("You need to be assigned a task!"));
         }
         if (itemId == 11997) {
             client.send(new SendMessage("Event is over! Will use in the future?!")); //I need to bring these back to Duke!

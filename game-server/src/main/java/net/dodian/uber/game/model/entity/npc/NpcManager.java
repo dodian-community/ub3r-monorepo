@@ -23,6 +23,9 @@ import static net.dodian.utilities.DatabaseKt.getDbStatement;
 public class NpcManager {
     Map<Integer, Npc> npcs = new HashMap<>();
     Map<Integer, NpcData> data = new HashMap<>();
+    public int gnomeSpawn = -1, werewolfSpawn = -1;
+    Position[] gnomePosition = {  new Position(2475, 3428, 0), new Position(2476, 3423, 1), new Position(2475, 3419, 2), new Position(2485, 3421, 2), new Position(2487, 3423, 0), new Position(2486, 3430, 0) };
+    Position[] werewolfPosition = {  new Position(3540, 9873, 0), new Position(3540, 9890, 0), new Position(3537, 9903, 0), new Position(3533, 9908, 0), new Position(3528, 9913, 0), new Position(3527, 9865, 0) };
     int nextIndex = 1;
 
     public NpcManager() {
@@ -48,6 +51,18 @@ public class NpcManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        int extraSpawns = 0;
+        gnomeSpawn = nextIndex;
+        for(int i = 0; i < gnomePosition.length; i++) {
+            createNpc(6080, gnomePosition[i], 0);
+            extraSpawns++;
+        }
+        werewolfSpawn = nextIndex;
+        for(int i = 0; i < werewolfPosition.length; i++) {
+            createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
+            extraSpawns++;
+        }
+        System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
     }
 
     public void reloadDrops(Client c, int id) {

@@ -197,14 +197,11 @@ public final class ItemDef {
                 def.name = "Admin Tool";
                 def.itemActions[0] = "Add Npc Spawn";
                 def.itemActions[1] = "Wipe inventory";
-                def.itemActions[2] = "Option 3";
-                def.itemActions[3] = "Option 4";
+                def.itemActions[2] = "Update Server";
+                def.itemActions[3] = "Whatever I need this for :O";
                 break;
             case 7453:
                 def.name = "Hardleather gloves";
-                break;
-            case 11862:
-                def.name = "Nozemi";
                 break;
             case 7454:
                 def.name = "Bronze gloves";
@@ -259,13 +256,6 @@ public final class ItemDef {
             case 11997:
                 def.name = "Event shards";
                 def.itemActions[2] = "Info";
-                break;
-            case 21295://infernalcape
-            	def.name = "Infernal Cape";
-				def.originalModelColors= new int[1];
-				def.modifiedModelColors = new int[1];
-				def.originalModelColors[0] = 40;
-				def.modifiedModelColors[0] = 40;
                 break;
         }
         if (def.certTemplateID != -1)

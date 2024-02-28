@@ -85,7 +85,6 @@ public class ClickNpc2 implements Packet {
         } else if (npcId == 5034 || npcId == 844 || npcId == 462) {
             client.stairs = 26;
             client.stairDistance = 1;
-            client.Essence = npcId == 5034 ? 1 : npcId == 844 ? 2 : 3;
         } else if (npcId == 1174) {
             client.WanneShop = 19;
         } else if (npcId == 2345) {

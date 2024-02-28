@@ -30,6 +30,12 @@ public final class EntityDef {
             def.actions = new String[]{"Monkfish", null, "Shark", null, null};
         if (id == 1517)
             def.actions = new String[]{"Sea Turtle", null, "Manta Ray", null, null};
+        if (id == 2180)
+            def.actions = new String[]{"Talk-to", null, "Pay", null, null};
+        if (id == 4304) { //Kalphite King
+            def.name = "Kalphite King";
+            def.combatLevel = 365;
+        }
     }
 
     public Model method160() {

@@ -32,23 +32,23 @@ public class Utils {
     // cooper tin iron coal mith addy
     public static int[] rocks = {7471, 7451, 7484, 7452, 7485, 7455, 7488, 7456, 7489, 7458, 7491, 7459, 7492, 7460, 7493, 7461, 7494, /*7464, 7463*/};
     public static int[] rockLevels = {1, 1, 1, 1, 1, 15, 15, 30, 30, 40, 40, 55, 55, 70, 70, 85, 85, 50, 50};
-    public static long[] mineTimes = {900, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000, 6500, 6500};
+    public static long[] mineTimes = {1000, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000, 6500, 6500};
     public static int[] ore = {1436, 436, 436, 438, 438, 440, 440, 453, 453, 444, 444, 447, 447, 449, 449, 451, 451, 1625, 1625};
     public static int[] oreExp = {50, 110, 110, 110, 110, 280, 280, 420, 420, 510, 510, 620, 620, 780, 780, 3100, 3100, 550, 550};
     public static int[] picks = {1265, 1267, 1269, 1273, 1271, 1275, 11920, 20014};
-    public static double[] pickBonus = {0.03, 0.035, 0.045, 0.065, 0.09, 0.15, 0.35, 0.35};
+    public static double[] pickBonus = {0.04, 0.065, 0.1, 0.15, 0.22, 0.32, 0.55, 0.55};
     public static int[] pickReq = {1, 1, 6, 21, 31, 41, 61, 61};
 
     // Tree timer here soon!
     public static int[] axes = {1351, 1349, 1353, 1355, 1357, 1359, 6739, 20011};
-    public static double[] axeBonus = {0.03, 0.035, 0.045, 0.065, 0.09, 0.15, 0.35, 0.35};
+    public static double[] axeBonus = {0.04, 0.065, 0.1, 0.15, 0.22, 0.32, 0.55, 0.55};
     public static int[] axeReq = {1, 1, 6, 21, 31, 41, 61, 61};
 
     public static int[] fishSpots = {1510, 1510, 1511, 1511, 1514, 1514, 1517, 1517};
     public static int[] fishId = {317, 335, 377, 371, 7944, 383, 395, 389};
     public static int[] fishAnim = {621, 622, 619, 618, 621, 618, 619, 618};
     public static int[] fishReq = {1, 20, 40, 50, 60, 70, 85, 95};
-    public static int[] fishTime = {1200, 1800, 2400, 3000, 2400, 4200, 4800, 5400};
+    public static int[] fishTime = {1350, 1660, 2480, 3300, 2480, 4900, 5800, 6650};
     public static int[] fishTool = {303, 309, 301, 311, 303, 311, 301, 311};
     public static int[] fishExp = {110, 200, 440, 650, 780, 1100, 1450, 1900};
     public static int[] cookIds = {317, 2134, 2132, 2307, 3363, 335, 331, 377, 371, 7944, 383, 395, 389};

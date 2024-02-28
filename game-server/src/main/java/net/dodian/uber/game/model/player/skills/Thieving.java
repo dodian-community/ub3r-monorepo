@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Range;
 
 
@@ -203,14 +204,18 @@ public class Thieving {
 
                         for (int i = 0; i < data.getItemId().length; i++) {
                             if (rollChance < data.getItemItemChance()[i]) {
-                                player.addItem(data.getItemId()[i], data.getItemAmount()[i].getValue());
+                                int id = data.getItemId()[i], amount = data.getItemAmount()[i].getValue();
+                                player.addItem(id, amount);
+                                ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
                                 player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[i])) + " " + player.GetItemName(data.getItemId()[i]).toLowerCase()));
                                 break;
                             }
                         }
 
                     } else {
-                        player.addItem(data.getItemId()[0], data.getItemAmount()[0].getValue());
+                        int id = data.getItemId()[0], amount = data.getItemAmount()[0].getValue();
+                        player.addItem(id, amount);
+                        ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
                         player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase()));
                     }
                     if (data.getThievingType() == ThievingType.STALL_THIEVING) {

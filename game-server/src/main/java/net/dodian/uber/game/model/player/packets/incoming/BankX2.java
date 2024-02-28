@@ -3,6 +3,8 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
+import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 
@@ -43,14 +45,17 @@ public class BankX2 implements Packet {
             client.stakeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 6669 && client.inDuel) { // remove from duel window
             client.fromDuel(client.XremoveID, client.XremoveSlot, EnteredAmount);
-        } else if (client.XinterfaceID == 3900) { // Shop interface
-            client.buyItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
-        } else if (client.XinterfaceID == 3823) { // Shop interface
-            client.sellItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
+        } else if (client.XinterfaceID == 3900 && client.XremoveSlot >= 0) { // Shop interface
+            client.send(new InventoryInterface(3824, 3822)); //Need this to close interface, yikes!
+            int id = client.XremoveID, slot = client.XremoveSlot;
+            client.XremoveID = -1; client.XremoveSlot  = -1; //reset!
+            client.buyItem(id, slot, EnteredAmount);
+        } else if (client.XinterfaceID == 3823 && client.XremoveSlot >= 0) { // Shop interface
+            client.send(new InventoryInterface(3824, 3822)); //Need this to close interface, yikes!
+            int id = client.XremoveID, slot = client.XremoveSlot;
+            client.XremoveID = -1; client.XremoveSlot  = -1; //reset!
+            client.sellItem(id, slot, EnteredAmount);
         } else if (client.XinterfaceID == 3322 && client.inTrade) { // remove from bag to trade window
-            if (client.XremoveID == 1543) {
-                return;
-            }
             client.tradeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 3415 && client.inTrade) { // remove from trade window
             client.fromTrade(client.XremoveID, client.XremoveSlot, EnteredAmount);

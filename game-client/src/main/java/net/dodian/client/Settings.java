@@ -63,9 +63,10 @@ public class Settings extends HashMap<String, String> {
         this.put("screen_mode", "0");
         this.put("Width", "765");
         this.put("Height", "503");
+        this.put("Roof", "false");
+        this.put("username", "");
         this.put("Announce", "0");
         this.put("Gather", "0");
-        this.put("username", "");
     }
 
     public void saveSettings() {

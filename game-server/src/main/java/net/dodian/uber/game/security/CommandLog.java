@@ -33,8 +33,9 @@ public class CommandLog extends LogEntry {
             return;
         }
         try {
+            command = command.replaceAll("'", "`");
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command.replaceAll("'", "") + "')";
+            String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command + "')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {

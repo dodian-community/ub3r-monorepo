@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.security.DropLog;
+import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.DbTables;
 
 import java.sql.ResultSet;
@@ -91,10 +91,9 @@ public class LoginManager {
                 }
                 p.latestNews = results.getInt("news"); //Sets the latest news for a user!
                 p.UUID = results.getString("uuid");
-                p.moveTo(results.getInt("x"), results.getInt("y"), results.getInt("height"));
-                if (p.getPosition().getX() == -1 || p.getPosition().getY() == -1) {
-                    p.moveTo(2606, 3102, 0);
-                }
+                int x = results.getInt("x"), y = results.getInt("y"), z = results.getInt("height");
+                p.moveTo(x, y, z);
+                if(x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!
                 p.mutedTill = results.getInt("unmutetime");
                 Date now = new Date();
                 p.rightNow = now.getTime();
@@ -195,7 +194,7 @@ public class LoginManager {
                                 } else if(p.freeSlots() == 0 || !p.addItem(id, amount)) {
                                     GroundItem item = new GroundItem(p.getPosition().copy(), Integer.parseInt(parse2[1]), Integer.parseInt(parse2[2]), p.getSlot(), -1);
                                     Ground.items.add(item);
-                                    DropLog.recordDrop(p, item.id, item.amount, "Player", p.getPosition().copy(), "Equipment check drop");
+                                    ItemLog.playerDrop(p, item.id, item.amount, p.getPosition().copy(), "Equipment check drop");
                                     p.send(new SendMessage("<col=FF0000>You dropped the " + Server.itemManager.getName(Integer.parseInt(parse2[1])).toLowerCase() + " on the floor!!!"));
                                 }
                             }
@@ -265,6 +264,22 @@ public class LoginManager {
                         }
                     }
                 }
+                String Monster = results.getString("Monster_Log");
+                if (Monster != null) {
+                    String[] lines = Monster.split(";");
+                    for(int i = 0; i < lines.length; i++) {
+                        String[] parts = lines[i].split(",");
+                        if(parts.length == 2) {
+                            int amount = Integer.parseInt(parts[1]);
+                            p.monsterName.add(parts[0]);
+                            p.monsterCount.add(amount);
+                        } //If parts is more or less than 2 we gone goooofed!
+                    }
+                }
+                long accountAge = 0;
+                if(accountAge > 0) {
+                    p.accountAge = accountAge;
+                } else p.accountAge = System.currentTimeMillis(); //TODO: Fix a account age for doing shiez, either forum check or make a new value :D
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;
