@@ -40,18 +40,19 @@ fun Client.handleRanged(): Int {
         return 0
     }
     if (DeleteArrow()) {
+        val distance = distanceToPoint(target.position.x, target.position.y)
         if(target is Npc) {
             val offsetX = (position.y - target.position.y) * 1
             val offsetY = (position.x - target.position.x) * 1
             sendAnimation(426)
             callGfxMask(arrowPullGfx, 100)
-            arrowGfx(offsetY, offsetX, 50, 90, arrowGfx, 43, 35, target.slot + 1, 51, 16)
+            arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, target.slot + 1, 51, 16)
         } else {
             val offsetX = (position.y - target.position.y) * -1
             val offsetY = (position.x - target.position.x) * -1
             sendAnimation(426)
             callGfxMask(arrowPullGfx, 100)
-            arrowGfx(offsetY, offsetX, 50, 90, arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
+            arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
         }
     } else {
         resetAttack()

@@ -237,23 +237,6 @@ public class Server implements Runnable {
     }
 
     public static void setGlobalItems() { //I set global item spawn here as I do not have a config file for it yet!
-        //Yanille
-		/*
-		Ground.items.add(new GroundItem(2642, 3123, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2641, 3123, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2641, 3122, 401, 1, 30 * 1000));
-		//CAtherby
-		Ground.items.add(new GroundItem(2849, 3427, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2850, 3427, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2850, 3426, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2849, 3428, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2849, 3429, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2848, 3429, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2848, 3430, 401, 1, 30 * 1000));
-		for(int i = 0; i < 4; i++)
-			Ground.items.add(new GroundItem(2839 + i, 3433, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2842, 3432, 401, 1, 30 * 1000));
-		*/
         /* Troll items */
         Ground.items.add(new GroundItem(new Position(2611, 3096, 0), 11862, 1, 60 * 1000));
         Ground.items.add(new GroundItem(new Position(2612, 3096, 0), 11863, 1, 60 * 1000));
@@ -273,6 +256,10 @@ public class Server implements Runnable {
         /* White berries spawns!*/
         Ground.items.add(new GroundItem(new Position(2935, 3489, 0), 239, 1, 60 * 1000));
         Ground.items.add(new GroundItem(new Position(2877, 3000, 0), 239, 1, 60 * 1000));
+        /* Red Spider egg spawn*/
+        Ground.items.add(new GroundItem(new Position(3595, 3479, 0), 223, 1, 60 * 1000));
+        Ground.items.add(new GroundItem(new Position(3597, 3479, 0), 223, 1, 60 * 1000));
+        /* Seaweed */
     }
 
 }

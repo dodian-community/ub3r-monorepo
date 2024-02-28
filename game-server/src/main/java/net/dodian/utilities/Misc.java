@@ -195,6 +195,11 @@ public class Misc {
          */
         return null;
     }
+    public static Position goodDistanceObject(int objectX, int objectY, int playerX, int playerY, int distance, int z) {
+        if (goodDistance(playerX, playerY, objectX, objectY, distance))
+            return new Position(objectX, objectY, z);
+        return null;
+    }
 
     public static int hexToInt(byte[] data) {
         int value = 0;

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Emotes;
+import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
@@ -18,6 +19,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.party.Balloons;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
 import java.io.IOException;
@@ -49,7 +51,7 @@ public class ClickingButtons implements Packet {
             client.getPrayerManager().togglePrayer(prayer);
             return;
         }
-        if(QuestSend.questMenu(client)) {
+        if(QuestSend.questMenu(client, actionButton)) {
             return;
         }
         if(client.refundSlot != -1) { //Refund code!
@@ -125,31 +127,31 @@ public class ClickingButtons implements Packet {
                 client.travelTrigger(pos);
                 break;
             case 84237: //Home teleport aka Yanille
-                client.triggerTele(2606, 3102, 0, false);
+                client.triggerTele(2604 + Misc.random(6), 3101 + Misc.random(3), 0, false);
                 break;
             case 50235: //Seers
-                client.triggerTele(2723, 3485, 0, false);
+                client.triggerTele(2722 + Misc.random(6), 3484 + Misc.random(2), 0, false);
                 break;
             case 50245: //Ardougne
-                client.triggerTele(2662, 3309, 0, false);
+                client.triggerTele(2660 + Misc.random(4), 3306 + Misc.random(4), 0, false);
                 break;
             case 50253: // Catherby
-                client.triggerTele(2804, 3434, 0, false);
+                client.triggerTele(2802 + Misc.random(4), 3432 + Misc.random(3), 0, false);
                 break;
             case 51005: //Legends guild
-                client.triggerTele(2728, 3346, 0, false);
+                client.triggerTele(2726 + Misc.random(5), 3346 + Misc.random(2), 0, false);
                 break;
             case 51013: //Taverly
-                client.triggerTele(2895, 3457, 0, false);
+                client.triggerTele(2893 + Misc.random(4), 3454 + Misc.random(3), 0, false);
                 break;
             case 51023: //Fishing guild
-                client.triggerTele(2597, 3409, 0, true);
+                client.triggerTele(2596 + Misc.random(3), 3406 + Misc.random(4), 0, true);
                 break;
             case 51031: //Gnome village
-                client.triggerTele(2472, 3438, 0, false);
+                client.triggerTele(2472 + Misc.random(6), 3436 + Misc.random(3), 0, false);
                 break;
-            case 51039: //Empty teleport
-                client.triggerTele(3087, 3492, 0, false);
+            case 51039: //Edgeville teleport
+                client.triggerTele(3085 + Misc.random(4), 3488 + Misc.random(4), 0, false);
                 break;
             case 74212:
             case 49047: // old magic on
@@ -498,6 +500,10 @@ public class ClickingButtons implements Packet {
             case 17102: // accurate (darts)
             case 8234: // stab (dagger)
                 client.FightType = 0;
+                if(actionButton == 1080 && client.autocast_spellIndex != -1) {
+                    client.resetAttack(); //Swapping from magic to melee so stop combat!
+                    client.autocast_spellIndex = -1; //Reset due to change of combat style
+                }
                 break;
 
             case 1175: // Gmaul!
@@ -511,6 +517,10 @@ public class ClickingButtons implements Packet {
             case 18078: // block (spear)
             case 8235: // block (dagger)
                 client.FightType = 1;
+                if(actionButton == 1078 && client.autocast_spellIndex != -1) {
+                    client.resetAttack(); //Swapping from magic to melee so stop combat!
+                    client.autocast_spellIndex = -1; //Reset due to change of combat style
+                }
                 break;
 
             case 9127: // Controlled
@@ -539,7 +549,10 @@ public class ClickingButtons implements Packet {
             case 8237: // lunge (dagger)
             case 8236: // slash (dagger)
                 client.FightType = 2;
-                // client.SkillID = 2;
+                if(actionButton == 1079 && client.autocast_spellIndex != -1) {
+                    client.resetAttack(); //Swapping from magic to melee so stop combat!
+                    client.autocast_spellIndex = -1; //Reset due to change of combat style
+                }
                 break;
 
             case 9154: // Log out
@@ -636,6 +649,11 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 9157:
+                if(client.discord) { //Yes
+                    client.send(new RemoveInterfaces());
+                    client.openPage(client, "https://discord.com/invite/dDb2TKtK");
+                    client.discord = false;
+                }
                 client.triggerChat(1);
                 if (client.NpcDialogue == 2) {
                     client.NpcDialogue = 0;
@@ -674,6 +692,10 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 9158:
+                if(client.discord) { //No
+                    client.send(new RemoveInterfaces());
+                    client.discord = false;
+                }
                 client.triggerChat(2);
                 if (client.NpcDialogue == 2) {
                     client.NpcDialogue = 0;

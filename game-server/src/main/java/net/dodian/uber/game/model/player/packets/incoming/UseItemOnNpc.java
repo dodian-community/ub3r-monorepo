@@ -3,6 +3,8 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
@@ -57,7 +59,20 @@ public class UseItemOnNpc implements Packet {
             } else {
                 client.send(new SendMessage("You need some shears to shear this sheep!"));
             }
-            return;
+        }
+        Skillcape skillcape = Skillcape.getSkillCape(item);
+        if (skillcape != null && npcId == 6059) {
+            if (client.hasSpace()) {
+                client.addItem(skillcape.getTrimmedId() + 1, 1);
+                client.showNPCChat(6059, 588, new String[]{"Here, have a skillcape hood from me."});
+            } else client.send(new SendMessage("Not enough of space to get a skillcape hood."));
+        }
+        boolean gotMaxCape = client.GetItemName(item).contains(("Max cape"));
+        if (gotMaxCape && npcId == 6481) {
+            if (client.hasSpace()) {
+                client.addItem(item + 1, 1);
+                client.showNPCChat(6481, 588, new String[]{"Here, have a skillcape hood from me."});
+            } else client.send(new SendMessage("Not enough of space to get a skillcape hood."));
         }
     }
 

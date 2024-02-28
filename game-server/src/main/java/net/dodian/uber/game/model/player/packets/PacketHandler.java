@@ -10,7 +10,6 @@ public class PacketHandler {
     static {
         packets[4] = new Chat();
         packets[14] = new UseItemOnPlayer();
-        packets[16] = new ClickItem2();
         packets[17] = new ClickNpc2();
         packets[21] = new ClickNpc3();
         packets[25] = new ItemOnGroundItem();
@@ -20,6 +19,7 @@ public class PacketHandler {
         packets[43] = new Bank10();
         packets[53] = new ItemOnItem();
         packets[57] = new UseItemOnNpc();
+        packets[60] = new InputName();
         packets[70] = new ClickObject3();
         packets[72] = new AttackNpc();
         packets[73] = new AttackPlayer();
@@ -34,6 +34,8 @@ public class PacketHandler {
         packets[117] = new Bank5();
         packets[121] = new ChangeRegion();
         packets[122] = new ClickItem();
+        packets[16] = new ClickItem2();
+        packets[75] = new ClickItem3();
         packets[126] = new SendPrivateMessage();
         packets[128] = new TradeRequest();
         packets[129] = new BankAll();

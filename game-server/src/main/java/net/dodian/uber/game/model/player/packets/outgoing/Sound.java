@@ -17,11 +17,11 @@ public class Sound implements OutgoingPacket {
     }
 
     public Sound(int soundId, int delay) {
-        this(soundId, 10, delay);
+        this(soundId, 4, delay);
     }
 
     public Sound(int soundId) {
-        this(soundId, 10, 0);
+        this(soundId, 4, 0);
     }
 
     @Override

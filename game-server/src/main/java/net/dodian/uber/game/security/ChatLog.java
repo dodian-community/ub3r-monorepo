@@ -1,6 +1,7 @@
 package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
+import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.utilities.DbTables;
 
 import java.sql.Statement;
@@ -27,20 +28,68 @@ public class ChatLog extends LogEntry {
      * @param player  The player sending the message.
      * @param message The message sent.
      */
-    public static void recordChat(String player, String message) {
+    public static void recordPublicChat(Player player, String message) {
         if (getGameWorldId() > 1) {
             return;
         }
         try {
+            message = message.replaceAll("'", "`");
+            System.out.println("msg = " + message);
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_PUBLIC_CHAT + "(username, message, timestamp) VALUES ('" + player + "', '" + message.replaceAll("'", "") + "', '"
-                    + getTimeStamp() + "')";
+            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('1', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {
-            logger.severe("Unable to record chat!");
+            logger.severe("Unable to record public chat!");
             e.printStackTrace();
-            YellSystem.alertStaff("Unable to record chat logs, please contact an admin.");
+            YellSystem.alertStaff("Unable to record public chat, please contact an admin.");
+        }
+    }
+    public static void recordYellChat(Player player, String message) {
+        if (getGameWorldId() > 1) {
+            return;
+        }
+        try {
+            message = message.replaceAll("'", "`");
+            Statement statement = getDbConnection().createStatement();
+            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('1', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
+            statement.executeUpdate(query);
+            statement.close();
+        } catch (Exception e) {
+            logger.severe("Unable to record yell chat!");
+            e.printStackTrace();
+            YellSystem.alertStaff("Unable to record yell chat, please contact an admin.");
+        }
+    }
+    public static void recordModChat(Player player, String message) {
+        if (getGameWorldId() > 1) {
+            return;
+        }
+        try {
+            message = message.replaceAll("'", "`");
+            Statement statement = getDbConnection().createStatement();
+            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('4', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
+            statement.executeUpdate(query);
+            statement.close();
+        } catch (Exception e) {
+            logger.severe("Unable to record mod chat!");
+            e.printStackTrace();
+        }
+    }
+    public static void recordPrivateChat(Player sender, Player receiver, String message) {
+        if (getGameWorldId() > 1) {
+            return;
+        }
+        try {
+            message = message.replaceAll("'", "`");
+            Statement statement = getDbConnection().createStatement();
+            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('3', '" + sender.dbId + "', '" + receiver.dbId + "', '"+message+"', '" + getTimeStamp() + "')";
+            statement.executeUpdate(query);
+            statement.close();
+        } catch (Exception e) {
+            logger.severe("Unable to record private chat between " + sender.dbId + " and " + receiver.dbId);
+            e.printStackTrace();
+            YellSystem.alertStaff("Unable to record private chat of ("+sender.getPlayerName()+") to ("+receiver.getPlayerName()+"), please contact an admin.");
         }
     }
 }

@@ -224,7 +224,33 @@ public class ItemOnItem implements Packet {
                 } else client.send(new SendMessage("You need level 70 crafting to combine these items!"));
             }
         }
-
+        /* Slayer helmet creation! */
+        int[] slayerHelmItems = {4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923, 11784, 8921};
+        //4155-gem, 4156-mirror shield, 4164-face mask, 4166-earmuffs, 4168-nosepeg, 4551-spiny helm, 6720-slayer gloves, 8923-witchwood icon
+        boolean checkItemUsed = false;
+        for(int i = 0; i < slayerHelmItems.length && !checkItemUsed; i++)
+            if(itemUsed == slayerHelmItems[i]) checkItemUsed = true;
+        boolean checkOtherItem = false;
+        for(int i = 0; i < slayerHelmItems.length && !checkOtherItem; i++)
+            if(otherItem == slayerHelmItems[i]) checkOtherItem = true;
+        if (checkItemUsed && checkOtherItem) { //Slayer helmet making!
+            boolean hasAllItem = true;
+            for(int i = 0; i < slayerHelmItems.length - 2 && hasAllItem; i++)
+                if(!client.playerHasItem(slayerHelmItems[i])) hasAllItem = false;
+            if(!hasAllItem) {
+                client.send(new SendMessage("You need a enchanted gem, mirror shield, face mask, earmuffs, nosepeg, spiny helm,"));
+                client.send(new SendMessage("slayer gloves, witchwood icon and black mask or black mask (i)"));
+            } else if(client.playerHasItem(slayerHelmItems[slayerHelmItems.length - 1]) || client.playerHasItem(slayerHelmItems[slayerHelmItems.length - 2])) {
+                if(client.getSkillLevel(Skill.CRAFTING) >= 70) {
+                    int slayerHelm = client.playerHasItem(slayerHelmItems[slayerHelmItems.length - 2]) ? 11865 : 11864; //Trim : untrimmed
+                    for(int i = 0; i < slayerHelmItems.length - 2; i++)
+                        client.deleteItem(slayerHelmItems[i], 1);
+                    client.deleteItem(slayerHelm == 11865 ? slayerHelmItems[slayerHelmItems.length - 2] : slayerHelmItems[slayerHelmItems.length - 1], 1);
+                    client.addItem(slayerHelm, 1);
+                    client.send(new SendMessage("You assemble the items together and made a "+client.GetItemName(slayerHelm).toLowerCase()+"."));
+                } else client.send(new SendMessage("You need level 70 crafting to assemble these items together."));
+            }
+        }
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();
             client.shafting = true;

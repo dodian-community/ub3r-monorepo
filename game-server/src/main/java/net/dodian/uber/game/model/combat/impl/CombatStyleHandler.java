@@ -21,7 +21,7 @@ public abstract class CombatStyleHandler {
                 if (itemName.toLowerCase().contains(weaponData.getName()[i])) {
                     int interfaceId = weaponData.getInterface();
                     int itemOnInterfaceId = interfaceId + 1;
-                    int textOnInterfaceId = itemName.equalsIgnoreCase("unarmed") ? interfaceId + 2 : interfaceId + 3;
+                    int textOnInterfaceId = itemName.equalsIgnoreCase("unarmed") ? interfaceId + 2 : interfaceId == 328 ? 355 : interfaceId + 3;
                     ((Client) entity).setSidebarInterface(0, interfaceId);
                     ((Client) entity).sendFrame246(itemOnInterfaceId, 200, itemId);
                     ((Client) entity).send(new SendString(itemName, textOnInterfaceId));

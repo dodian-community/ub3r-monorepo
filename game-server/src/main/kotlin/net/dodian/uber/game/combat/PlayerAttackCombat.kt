@@ -5,8 +5,22 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
+    if(npcId == 494 && getAttackStyle() != 2) {
+        send(SendMessage("This monster can only be harmed by magic."))
+        return false
+    }
+    if(npcId == 4304 && getAttackStyle() != 1) {
+        send(SendMessage("This monster can only be harmed by ranged."))
+        return false
+    }
+    if(npcId == 4303 && getAttackStyle() != 0) {
+        send(SendMessage("This monster can only be harmed by melee."))
+        return false
+    }
+
     if (!checkSlayerTask(npcId))
         return false
 

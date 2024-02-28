@@ -47,7 +47,7 @@ public class ChangeRegion implements Packet {
             client.ReplaceObject2(new Position(2613, 3084, 0), 3994, -3, 11);
             client.ReplaceObject2(new Position(2628, 3151, 0), 2104, -3, 11);
             client.ReplaceObject2(new Position(2629, 3151, 0), 2105, -3, 11);
-            client.ReplaceObject2(new Position(2733, 3374, 0), 6420, -1, 11);
+            client.ReplaceObject2(new Position(2733, 3374, 0), 375, -1, 11);
             client.ReplaceObject2(new Position(2688, 3481, 0), 27978, 1, 11); //Blood altar
             client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
             client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair

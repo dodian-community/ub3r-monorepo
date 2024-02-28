@@ -3,7 +3,6 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -17,10 +16,12 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Agility;
+import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 import net.dodian.uber.game.party.Balloons;
+import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -72,9 +73,12 @@ public class ClickObject implements Packet {
                 if (objectID == 23131)
                     objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 if(objectID == 16466)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 2972, client.getPosition().getX(), client.getPosition().getY(), 1, 3, client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 2972, client.getPosition().getX(), client.getPosition().getY(), 1, 1, client.getPosition().getZ());
+                if(objectID == 11643) {
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), 2, client.getPosition().getZ());
+                }
                 if (objectPosition == null)
-                    return;
+                    this.stop();
                 atObject(client, task.getWalkToId(), task.getWalkToPosition(), object);
                 client.setWalkToTask(null);
                 this.stop();
@@ -276,7 +280,7 @@ public class ClickObject implements Packet {
             client.teleportToY = 9366;
             client.send(new SendMessage("Welcome to the dragon lair!"));
         }
-        if (objectID == 3994 || objectID == 11666 || objectID == 16469) {
+        if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) {
             for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
                 client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
             }
@@ -295,6 +299,11 @@ public class ClickObject implements Packet {
             client.ReplaceObject(2901, 3511, 2625, -3, 0);
             client.ReplaceObject(2902, 3510, -1, -1, 0);
             client.ReplaceObject(2902, 3511, -1, -3, 0);
+            return;
+        }
+        if (objectID == 11635) {
+                client.teleportToX = 3543;
+                client.teleportToY = 3463;
             return;
         }
         if ((objectID == 1524 || objectID == 1521) && (objectPosition.getX() == 2908 || objectPosition.getX() == 2907) && objectPosition.getY() == 9698) {
@@ -467,6 +476,38 @@ public class ClickObject implements Packet {
         } else if (objectID == 23548) {
             agility.yellowLedge();
         }
+        /* Werewolf course */
+        Werewolf werewolf = new Werewolf(client);
+        if (objectID == 11643) {
+            werewolf.StepStone(objectPosition);
+            return;
+        }
+        if (objectID == 11638) {
+            werewolf.hurdle(objectPosition);
+            return;
+        }
+        if (objectID == 11657) {
+            werewolf.pipe(objectPosition);
+            return;
+        }
+        if (objectID == 11641) {
+            werewolf.slope(objectPosition);
+            return;
+        }
+        if (objectID >= 11644 && objectID <= 11646) {
+            werewolf.zipLine(objectPosition);
+            return;
+        }
+        if (objectID == 11636) { //Werewolf entrance
+            if (client.getLevel(Skill.AGILITY) >= 60) {
+                client.ReplaceObject(objectPosition.getX(), objectPosition.getY(), 11636, 2, 10); //Do we need to showcase the trapdoor being opened?
+                client.teleportToX = 3549;
+                client.teleportToY = 9865;
+                client.showNPCChat(5928, 601, new String[]{"Welcome to the werewolf agility course!"});
+            } else client.showNPCChat(5928, 616, new String[]{"Go and train your agility!"});
+            return;
+        }
+        /* Something else... */
         if (objectID == 1558 || objectID == 1557 && client.distanceToPoint(2758, 3482) < 5 && client.playerRights > 0) {
             client.ReplaceObject(2758, 3482, 1558, -2, 0);
             client.ReplaceObject(2757, 3482, 1557, 0, 0);
@@ -488,19 +529,18 @@ public class ClickObject implements Packet {
                     client.send(new SendMessage("You need a mining level of " + Utils.rockLevels[r] + " to mine this rock"));
                     return;
                 }
-                int pickaxe = client.findPick();
-                if (pickaxe < 0) {
-                    client.minePick = -1;
+                client.minePick = client.findPick();
+                if (client.minePick < 0) {
                     client.resetAction();
                     client.send(new SendMessage("You do not have an pickaxe that you can use."));
                     return;
                 }
-                    client.minePick = pickaxe;
                     client.mineIndex = r;
                     client.mining = true;
-                    client.lastAction = System.currentTimeMillis() + client.getMiningSpeed();
-                    client.lastPickAction = System.currentTimeMillis() + 1200;
-                    client.requestAnim(client.getMiningEmote(Utils.picks[pickaxe]), 0);
+                    client.lastPickAction = System.currentTimeMillis() + 600;
+                    client.lastAction = System.currentTimeMillis() + 600;
+                    client.requestAnim(client.getMiningEmote(Utils.picks[client.minePick]), 0);
+                    client.resourcesGathered = 0;
                     client.send(new SendMessage("You swing your pick at the rock..."));
                 return;
             }
@@ -532,12 +572,6 @@ public class ClickObject implements Packet {
                 }
             }
         }
-        /*if (objectID == 2107) {
-            if (System.currentTimeMillis() - Server.lastRunite < 60000) {
-                client.println("invalid timer");
-                return;
-            }
-        }*/ //Eh..Old dodian code jizze!
         if (objectID == 2492) {
             client.teleportToX = 2591;
             client.teleportToY = 3087;
@@ -744,12 +778,14 @@ public class ClickObject implements Packet {
                 int r = (int) (Math.random() * items.length);
                 client.send(new SendMessage("You have recieved a " + client.GetItemName(items[r]) + "!"));
                 client.addItem(items[r], 1);
-                client.yell("[Server] - " + client.getPlayerName() + " has just received from the chest a  "
+                ItemLog.playerGathering(client, items[r], 1, client.getPosition().copy(), "Thieving");
+                client.yell("[Server] - " + client.getPlayerName() + " has just received from the Yanille chest a  "
                         + client.GetItemName(items[r]));
             } else {
                 int coins = 300 + Utils.random(1200);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
+                ItemLog.playerGathering(client, 995, coins, client.getPosition().copy(), "Thieving");
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
                 client.giveExperience(300, Skill.THIEVING);
@@ -757,7 +793,7 @@ public class ClickObject implements Packet {
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
             client.triggerRandom(900);
         }
-        if (objectID == 6420 && objectPosition.getX() == 2733 && objectPosition.getY() == 3374) {
+        if (objectID == 375 && objectPosition.getX() == 2733 && objectPosition.getY() == 3374) {
             if(client.chestEventOccur) {
                 return;
             }
@@ -777,7 +813,7 @@ public class ClickObject implements Packet {
                 client.lastAction = System.currentTimeMillis();
                 return;
             }
-            final Object o = new Object(6421, objectPosition.getX(), objectPosition.getY(), objectPosition.getZ(), 11, -1, objectID);
+            final Object o = new Object(378, objectPosition.getX(), objectPosition.getY(), objectPosition.getZ(), 11, -1, objectID);
             if (!GlobalObject.addGlobalObject(o, 15000)) {
                 return;
             }
@@ -788,12 +824,14 @@ public class ClickObject implements Packet {
                 int r = (int) (Math.random() * items.length);
                 client.send(new SendMessage("You have recieved a " + client.GetItemName(items[r]) + "!"));
                 client.addItem(items[r], 1);
-                client.yell("[Server] - " + client.getPlayerName() + " has just received from the premium chest a  "
+                ItemLog.playerGathering(client, items[r], 1, client.getPosition().copy(), "Thieving");
+                client.yell("[Server] - " + client.getPlayerName() + " has just received from the Legends chest a  "
                         + client.GetItemName(items[r]));
             } else {
                 int coins = 500 + Utils.random(2000);
                 client.send(new SendMessage("You find " + coins + " coins inside the chest"));
                 client.addItem(995, coins);
+                ItemLog.playerGathering(client, 995, coins, client.getPosition().copy(), "Thieving");
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
                 client.giveExperience(500, Skill.THIEVING);

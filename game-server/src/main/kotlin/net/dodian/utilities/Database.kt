@@ -29,12 +29,9 @@ enum class DbTables(val table: String) {
 
     GAME_LOGS_PLAYER("uber3_logs"),
     GAME_LOGS_PLAYER_TRADES("uber3_trades"),
-    GAME_LOGS_PLAYER_PRIVATE_CHAT("pm_log"),
-    GAME_LOGS_PLAYER_PUBLIC_CHAT("chat_log"),
-    GAME_LOGS_PLAYER_ITEM_PICKUPS("pickup_log"),
     GAME_LOGS_PLAYER_DUELS("duel_log"),
-
-    GAME_LOGS_ITEM_DROPS("drop_log"),
+    GAME_LOGS_ITEMS("uber3_item_log"),
+    GAME_CHAT_LOGS("uber3_chat_log"),
     GAME_LOGS_STAFF_COMMANDS("uber3_command_log"),
 
     GAME_CHARACTERS("characters"),
@@ -55,7 +52,7 @@ enum class DbTables(val table: String) {
     GAME_MISC("uber3_misc"),
 
     GAME_PETE_CO("pete_co"),
-    GAME_WORLDS("worlds"),
+    GAME_WORLDS("worlds")
 
     ;
 

@@ -102,7 +102,6 @@ public class ClickObject2 implements Packet {
                 client.send(new SendMessage("this chest is empty!"));
                 break;
         }
-		
 		/*if (objectID == 2564) {
 			client.skillX = position.getX();
 			client.setSkillY(position.getY());
@@ -133,17 +132,9 @@ public class ClickObject2 implements Packet {
             client.setSkillY(position.getY());
             client.WanneThieve = 4877;
         }
-        if (objectID == 3994 || objectID == 11666) { //Gold craft
+        if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) { //Gold craft
             client.showItemsGold();
-            //24469, 24481, 24493
-            //4233, 4245, 4257
             client.showInterface(4161);
-        }
-        if (objectID == 16469) { //For now smelt! Later adding gold craft!
-            for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
-                client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
-            }
-            client.sendFrame164(2400);
         }
 		/*if (objectID == 2562) {
 			client.skillX = position.getX();

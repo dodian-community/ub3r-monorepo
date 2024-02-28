@@ -9,7 +9,7 @@ public class GroundItem {
     public long dropped = 0;
     public boolean visible = false, npc = false;
     public boolean taken = false, canDespawn = true;
-    public int timeDespawn = 90000, timeDisplay = 30000; //60k = 60 seconds!, 90000, 30000
+    public int timeDisplay = 60_000, timeDespawn = timeDisplay + 90_000; //timeDisplay = your display time, timeDespawn = time after dropped to despawn! current 30 sec!
     public GroundItem(Position pos, int id, int amount, int dropper, int npcId) {
         this.x = pos.getX();
         this.y = pos.getY();
@@ -34,9 +34,26 @@ public class GroundItem {
         this.z = pos.getZ();
         this.id = id;
         this.amount = amount;
+        dropped = System.currentTimeMillis();
         this.canDespawn = false;
         this.timeDisplay = display;
+    }
+
+    public GroundItem(Position pos, int... drop) { //int dropper, int id, int amount, int display
+        if(drop.length < 4) { return; } //Cant have this if length is less than 4!
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
+        this.id = drop[1];
+        this.amount = drop[2];
+        this.timeDisplay = 0;
+        this.timeDespawn = drop[3] * 1000;
+        this.canDespawn = true;
         dropped = System.currentTimeMillis();
+        if (drop[0] > 0 && Server.playerHandler.validClient(drop[0])) {
+            Server.playerHandler.getClient(drop[0]).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
+            playerId = Server.playerHandler.getClient(drop[0]).dbId;
+        }
     }
 
     public void setTaken(boolean b) {

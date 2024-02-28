@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class NpcData {
 
     private ArrayList<NpcDrop> drops = new ArrayList<NpcDrop>();
-    private String name = "";
+    private String name = "", examine="";
     private int attackEmote, deathEmote, respawn, combat, size;
     private int[] level = new int[7];
 
@@ -22,6 +22,7 @@ public class NpcData {
             attackEmote = row.getInt("attackEmote");
             deathEmote = row.getInt("deathEmote");
             name = row.getString("name");
+            examine = row.getString("examine");
             respawn = row.getInt("respawn");
             combat = row.getInt("combat");
             size = row.getInt("size");
@@ -53,6 +54,9 @@ public class NpcData {
      */
     public String getName() {
         return name.replaceAll("_", " ");
+    }
+    public String getExamine() {
+        return examine == null ? "" : examine.replaceAll("_", " ");
     }
 
     /**
