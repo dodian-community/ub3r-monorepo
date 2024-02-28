@@ -6,6 +6,7 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -18,7 +19,8 @@ public class Werewolf {
         this.c = c;
     }
 
-    public void giveEndExperience(int xp) {
+    public void giveEndExperience(int xp, boolean ringCheck) {
+        if(ringCheck && c.getEquipment()[Equipment.Slot.RING.getId()] == 4202) xp = (int)(xp * 1.1);
         c.giveExperience(xp, Skill.AGILITY);
         c.triggerRandom(xp);
     }
@@ -34,8 +36,7 @@ public class Werewolf {
         if(pos.getX() == 3538 && pos.getY() == 9875 && c.getPosition().getX() == 3538 && c.getPosition().getY() == 9873) {
             c.UsingAgility = true;
             final Npc npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn); //Start werewolf!
-            npc.requestAnim(6547, 0);
-            npc.setText("Go fetch!");
+            //npc.requestAnim(65565, 0); //reset any type of animation!
             c.requestAnim(769, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
             int x = 3533 + Misc.random(4);
@@ -43,6 +44,8 @@ public class Werewolf {
             int offsetX = (x - npc.getPosition().getY());
             int offsetY = (y - npc.getPosition().getX());
             int distance = c.distanceToPoint(x, y);
+            npc.requestAnim(6547, 0);
+            npc.setText("Go fetch!");
             c.createProjectile(npc.getPosition().getY(), npc.getPosition().getX(), offsetY, offsetX, 50, 50 + (distance * 5), 338,
                     0, 35, 0, 51, 16, 64);
             EventManager.getInstance().registerEvent(new Event(600) {
@@ -52,7 +55,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     GroundItem stick = new GroundItem(new Position(x, y, 0), new int[]{c.getSlot(), 4179, 1, 60});
                     Ground.items.add(stick);
                     c.UsingAgility = false;
@@ -71,7 +74,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -88,7 +91,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -105,7 +108,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -122,7 +125,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -152,7 +155,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY() + 1, 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -170,7 +173,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY() + 1, 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -188,7 +191,7 @@ public class Werewolf {
                         return;
                     }
                     c.teleportTo(pos.getX(), pos.getY() + 1, 0);
-                    giveEndExperience(185);
+                    giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -223,7 +226,7 @@ public class Werewolf {
                     if (part == 6) {
                         c.setWalkAnim(oldEmote);
                         c.requestAnim(748, 0);
-                        giveEndExperience(650);
+                        giveEndExperience(600, true);
                         c.UsingAgility = false;
                         stop();
                     } else if (part == 1)
@@ -255,7 +258,7 @@ public class Werewolf {
                         return;
                     }
                     c.setWalkAnim(oldEmote);
-                    giveEndExperience(450);
+                    giveEndExperience(400, true);
                     c.UsingAgility = false;
                     stop();
                 }
@@ -289,7 +292,7 @@ public class Werewolf {
                         return;
                     }
                     c.setWalkAnim(oldEmote);
-                    giveEndExperience(1600);
+                    giveEndExperience(1500, true);
                     lastNpc.setText("Hand in that juicy stick to me!");
                     c.UsingAgility = false;
                     stop();
@@ -302,7 +305,7 @@ public class Werewolf {
         if(c.playerHasItem(4179)) {
             c.showNPCChat(5927, 616, new String[]{"Thank you for that juicy stick.", "Have some agility knowledge!"});
             c.deleteItem(4179, 1);
-            giveEndExperience(5650);
+            giveEndExperience(5500, false);
         } else c.showNPCChat(5927, 616, new String[]{"You do not have a stick to give me!"});
     }
 

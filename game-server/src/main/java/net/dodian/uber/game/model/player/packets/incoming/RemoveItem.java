@@ -87,6 +87,7 @@ public class RemoveItem implements Packet {
         } else if (interfaceID == 3900) { // Show value to buy items
             int currency = client.MyShopID == 55 ? 11997 : 995;
             int ShopValue = client.MyShopID == 55 ? client.eventShopValues(removeSlot) : (int) Math.floor(client.GetShopSellValue(removeID, 0, removeSlot));
+            ShopValue = client.MyShopID >= 7 && client.MyShopID <= 11 ? (int) (ShopValue * 1.5) : ShopValue;
             String ShopAdd = "";
             int thousand = (int)Math.pow(10, 3);
             int million = (int)Math.pow(10, 6);

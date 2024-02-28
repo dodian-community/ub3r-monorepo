@@ -2925,10 +2925,10 @@ public class Client extends Player implements Runnable {
 			} else if (child == 1) {
 				s = new String[]{"Leather gloves", "Leather boots", "Leather cowl", "Leather vambraces",
 						"Leather body", "Leather chaps", "Coif", "Green d'hide vamb", "Green d'hide chaps",
-						"Green d'hide body", "Blue d'hide vamb", "Blue d'hide chaps", "Blue d'hide body",
+						"Green d'hide body", "Blue d'hide vamb", "Blue d'hide chaps", "Blue d'hide body", "Slayer helmet",
 						"Red d'hide vamb", "Red d'hide chaps", "Red d'hide body", "Black d'hide vamb",
 						"Black d'hide chaps", "Black d'hide body"};
-				s1 = new String[]{"1", "7", "9", "11", "14", "18", "39", "50", "54", "58", "62", "66", "70", "73",
+				s1 = new String[]{"1", "7", "9", "11", "14", "18", "39", "50", "54", "58", "62", "66", "70", "70", "73",
 						"76", "79", "82", "85", "88"};
 			} else if (child == 2) {
 				s = new String[]{"Gold ring", "Gold necklace", "Gold bracelet", "Gold amulet", "Cut sapphire",
@@ -2942,8 +2942,8 @@ public class Client extends Player implements Runnable {
 						"34", "34", "40", "42", "43", "43", "50", "55", "55", "56", "58", "67", "67", "70", "72", "74",
 						"80", "82", "84", "90"};
 			} else if (child == 3) {
-				s = new String[]{"Skillcape" + prem};
-				s1 = new String[]{"99"};
+				s = new String[]{"Crystal key", "Skillcape" + prem};
+				s1 = new String[]{"60", "99"};
 			}
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
@@ -2955,14 +2955,14 @@ public class Client extends Player implements Runnable {
 			if (child == 0)
 				setMenuItems(new int[]{1759, 1777});
 			else if (child == 1)
-				setMenuItems(new int[]{1059, 1061, 1167, 1063, 1129, 1095, 1169, 1065, 1099, 1135, 2487, 2493, 2499,
+				setMenuItems(new int[]{1059, 1061, 1167, 1063, 1129, 1095, 1169, 1065, 1099, 1135, 2487, 2493, 2499, 11864,
 						2489, 2495, 2501, 2491, 2497, 2503});
 			else if (child == 2)
 				setMenuItems(new int[]{1635, 1654, 11069, 1692, 1607, 1637, 1656, 11072, 1694, 1605, 1639, 1658,
 						11076, 1696, 1603, 1641, 1660, 11085, 1601, 1643, 1698, 1615, 1645, 1662, 11092, 6573, 6575,
 						1700, 1664, 11115, 1702, 6577, 11130, 6581});
 			else if (child == 3)
-				setMenuItems(new int[]{9780});
+				setMenuItems(new int[]{989, 9780});
 		} else if (skillID == SMITHING.getId()) {
 			changeInterfaceStatus(8827, true);
 			changeInterfaceStatus(8828, true);

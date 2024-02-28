@@ -36,6 +36,7 @@ public class LoginManager {
             if (results.next()) {
                 p.dbId = results.getInt("userid");
                 p.playerGroup = results.getInt("usergroupid");
+                //if(p.playerGroup != 10 && p.playerGroup != 6) return 8; //Maintanance check!
                 if (results.getString("username").equals(playerName)
                         || results.getString("username").equalsIgnoreCase(playerName)) {
                     String playerSalt = results.getString("salt");

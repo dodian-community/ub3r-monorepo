@@ -651,7 +651,7 @@ public class ClickingButtons implements Packet {
             case 9157:
                 if(client.discord) { //Yes
                     client.send(new RemoveInterfaces());
-                    client.openPage(client, "https://discord.com/invite/dDb2TKtK");
+                    client.openPage(client, "https://discord.gg/WZP5mByJ8e");
                     client.discord = false;
                 }
                 client.triggerChat(1);

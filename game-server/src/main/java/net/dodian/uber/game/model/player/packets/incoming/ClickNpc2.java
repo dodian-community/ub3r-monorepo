@@ -101,7 +101,7 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 5;
         } else if (npcId == 538) {
             client.WanneShop = 6; // Just a general store?
-        } else if (npcId == 111) { //Axe store
+        } else if (npcId == 6478) { //Axe store
             client.WanneShop = 7;
         } else if (npcId == 112) { //Pickaxe store
             client.WanneShop = 8;

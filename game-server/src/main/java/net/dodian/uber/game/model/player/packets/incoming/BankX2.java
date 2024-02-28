@@ -45,12 +45,12 @@ public class BankX2 implements Packet {
             client.stakeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 6669 && client.inDuel) { // remove from duel window
             client.fromDuel(client.XremoveID, client.XremoveSlot, EnteredAmount);
-        } else if (client.XinterfaceID == 3900 && client.XremoveSlot >= 0) { // Shop interface
+        } else if (client.XinterfaceID == 3900 && client.XremoveID != -1) { // Shop interface
             client.send(new InventoryInterface(3824, 3822)); //Need this to close interface, yikes!
             int id = client.XremoveID, slot = client.XremoveSlot;
             client.XremoveID = -1; client.XremoveSlot  = -1; //reset!
             client.buyItem(id, slot, EnteredAmount);
-        } else if (client.XinterfaceID == 3823 && client.XremoveSlot >= 0) { // Shop interface
+        } else if (client.XinterfaceID == 3823 && client.XremoveID != -1) { // Shop interface
             client.send(new InventoryInterface(3824, 3822)); //Need this to close interface, yikes!
             int id = client.XremoveID, slot = client.XremoveSlot;
             client.XremoveID = -1; client.XremoveSlot  = -1; //reset!
