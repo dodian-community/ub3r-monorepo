@@ -52,7 +52,7 @@ public class ChatLog extends LogEntry {
         try {
             message = message.replaceAll("'", "`");
             Statement statement = getDbConnection().createStatement();
-            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('1', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
+            String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('2', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
             statement.close();
         } catch (Exception e) {

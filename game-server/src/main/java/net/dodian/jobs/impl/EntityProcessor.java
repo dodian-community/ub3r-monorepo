@@ -24,8 +24,6 @@ public class EntityProcessor implements Job {
         long now = System.currentTimeMillis();
         /* Npc! */
         for (Npc npc : Server.npcManager.getNpcs()) {
-            if(npc.getUpdateFlags().size() > 0)
-                npc.clearUpdateFlags();
             /* Facing of npc! */
             if(!npc.isFighting() && npc.isAlive())
                 npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);

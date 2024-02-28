@@ -1226,6 +1226,27 @@ public class Commands implements Packet {
                     break;
                 }
             }
+            /*if (cmd[0].equalsIgnoreCase("item") && specialRights) { //::item for server maintanance!
+                int newItemID = Integer.parseInt(cmd[1]);
+                int newItemAmount = Integer.parseInt(cmd[2]);
+                if (newItemID < 1 || newItemID > 22376) {
+                    client.send(new SendMessage("Stop pulling a River! Maximum itemid = 22376!"));
+                    return;
+                }
+                if (Server.itemManager.isStackable(newItemID))
+                    if (client.freeSlots() <= 0 && !client.playerHasItem(newItemID))
+                        client.send(new SendMessage("Not enough space in your inventory."));
+                    else
+                        client.addItem(newItemID, newItemAmount);
+                else {
+                    newItemAmount = Math.min(newItemAmount, client.freeSlots());
+                    if (newItemAmount > 0)
+                        for (int i = 0; i < newItemAmount; i++)
+                            client.addItem(newItemID, 1);
+                    else
+                        client.send(new SendMessage("Not enough space in your inventory."));
+                }
+            }*/
             if (cmd[0].equalsIgnoreCase("checkloot")) {
                 try {
                     int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
