@@ -22,11 +22,12 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public static NpcUpdating getInstance() {
         return instance;
     }
+    private Stream updateBlock = new Stream(new byte[10_000]);
 
     @Override
     public void update(Player player, Stream stream) {
-        Stream block = new Stream(new byte[10000]);
-        block.currentOffset = 0;
+        updateBlock.currentOffset = 0;
+
         stream.createFrameVarSizeWord(65);
         stream.initBitAccess();
 
@@ -36,7 +37,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             boolean exceptions = removeNpc(player, npc);
             if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
                 updateNPCMovement(npc, stream);
-                appendBlockUpdate(npc, block);
+                appendBlockUpdate(npc, updateBlock);
             } else {
                 stream.writeBits(1, 1);
                 stream.writeBits(2, 3); // tells client to remove this npc from list
@@ -51,13 +52,13 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
                     npc.setId(player.getGender() == 0 ? 1306 : 1307);
                 addNpc(player, npc, stream);
-                appendBlockUpdate(npc, block);
+                appendBlockUpdate(npc, updateBlock);
             }
         }
-        if (block.currentOffset > 0) {
+        if (updateBlock.currentOffset > 0) {
             stream.writeBits(14, 16383);
             stream.finishBitAccess();
-            stream.writeBytes(block.buffer, block.currentOffset, 0);
+            stream.writeBytes(updateBlock.buffer, updateBlock.currentOffset, 0);
         } else {
             stream.finishBitAccess();
         }

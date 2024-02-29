@@ -19,7 +19,7 @@ public class PacketHandler {
         packets[43] = new Bank10();
         packets[53] = new ItemOnItem();
         packets[57] = new UseItemOnNpc();
-        packets[60] = new InputName();
+        //packets[60] = new InputName();
         packets[70] = new ClickObject3();
         packets[72] = new AttackNpc();
         packets[73] = new AttackPlayer();

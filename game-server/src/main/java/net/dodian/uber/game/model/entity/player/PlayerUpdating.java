@@ -26,7 +26,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return instance;
     }
 
-    private Stream updateBlock = new Stream(new byte[10000]);
+    private Stream updateBlock = new Stream(new byte[10_000]);
     @Override
     public void update(Player player, Stream stream) {
         updateBlock.currentOffset = 0;

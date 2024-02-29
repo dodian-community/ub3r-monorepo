@@ -70,7 +70,6 @@ public class LoginManager {
     public int loadgame(Client p, String playerName, String playerPass) {
         int loadCharacterResponse = loadCharacterGame(p, playerName, playerPass);
         if (loadCharacterResponse > 0) return loadCharacterResponse;
-        //long start = System.currentTimeMillis();
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
             ResultSet results = getDbConnection().createStatement().executeQuery(query);

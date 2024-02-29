@@ -162,14 +162,14 @@ public class EntityProcessor implements Job {
             if (!PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
             /* Removing non-responding player */
-            long lp = currentTime - PlayerHandler.players[i].lastPacket;
-            if ((((PlayerHandler.players[i].getPlayerName() == null || PlayerHandler.players[i].getPlayerName().equals("null")) && PlayerHandler.players[i].lastPacket > 0) || PlayerHandler.players[i].dbId < 1) && lp >= 60000) { //Removing non-responding player
+            int timer = ((Client) PlayerHandler.players[i]).timeOutCounter;
+            if (timer >= 84) { //Removing non-responding player after 84 ticks ~50 seconds
                 PlayerHandler.players[i].disconnected = true;
-                PlayerHandler.players[i].println_debug("Remove non-responding player after process " + PlayerHandler.players[i].getPlayerName());
+                PlayerHandler.players[i].println_debug("\nRemove non-responding "+PlayerHandler.players[i].getPlayerName()+" after 60 seconds of disconnect! ");
             }
             /* Disconnect a user check! If not disconnect update! */
             if (PlayerHandler.players[i].disconnected) {
-                PlayerHandler.players[i].println_debug("Remove disconnected player " + PlayerHandler.players[i].getPlayerName());
+                PlayerHandler.players[i].println_debug("\nRemove disconnected player " + PlayerHandler.players[i].getPlayerName());
                 Server.playerHandler.removePlayer(PlayerHandler.players[i]);
                 PlayerHandler.players[i].disconnected = false;
                 PlayerHandler.players[i] = null; //Remove player from list as above do not for whatever reason xD
@@ -177,7 +177,7 @@ public class EntityProcessor implements Job {
         }
         /* Clear all update! */
         for (Npc npc : Server.npcManager.getNpcs()) {
-            npc.clearUpdateFlags();
+            if(npc != null) npc.clearUpdateFlags();
         }
         for (int i = 0; i < Constants.maxPlayers; i++) {
             if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*

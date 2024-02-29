@@ -887,7 +887,7 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 3021: //Deadly red spider!
-                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6708 || c.gotSlayerHelmet(c);
+                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6720 || c.gotSlayerHelmet(c);
                 if(!protection) { //Sting the target!
                     hitDiff = 8 + Utils.random(22);
                     requestAnim(data.getAttackEmote(), 0);
