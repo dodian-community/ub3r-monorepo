@@ -455,15 +455,14 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public static final int bufferSize = 1000000;
+	public static final int bufferSize = 1_048_576;
 	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
 	public int readPtr, writePtr;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
 
-	public int timeOutCounter = 0; // to detect timeouts on the connection to
-	// the client
+	public int timeOutCounter = 0; // to detect timeouts on the connection to the client
 
 	public int returnCode = 2; // Tells the client if the login was successfull
 
@@ -490,11 +489,14 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
+			PlayerHandler.playersOnline.remove(longName);
+			PlayerHandler.allOnline.remove(longName);
+			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
 				saveStats(true, true);
+				saveNeeded = false;
+			}
 			if(!disconnected)
 				disconnected = true;
-			lastPacket = -1; //Need to know the player got send no packets!
 			mySock.close();
 			mySock = null;
 			mySocketHandler = null;
@@ -784,8 +786,8 @@ public class Client extends Player implements Runnable {
 			if(UsingAgility) xLog = true;
 			return;
 		}
-		saveStats(true, true);
-		saveNeeded = false; //Need to do this as we will not need save upon logout!
+		//saveStats(true, true);
+		//saveNeeded = false; //Need to do this as we will not need save upon logout!
 		Server.playerHandler.removePlayer(PlayerHandler.players[this.getSlot()]);
 		PlayerHandler.players[this.getSlot()] = null; //Just incase the player messes up?
 	}
@@ -2615,6 +2617,7 @@ public class Client extends Player implements Runnable {
 		if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
 			logout();
 		}
+		timeOutCounter++; //We need this?!
 	}
 
 	public boolean packetProcess() { //Packet fixed?!
@@ -2639,7 +2642,6 @@ public class Client extends Player implements Runnable {
 	public PacketData currentPacket;
 
 	public void parseIncomingPackets() {
-		lastPacket = System.currentTimeMillis();
 		PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
 	}
 

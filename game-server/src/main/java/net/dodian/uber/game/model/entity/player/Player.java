@@ -45,7 +45,6 @@ public abstract class Player extends Entity {
     public boolean premium = false, randomed = false;
     public int latestNews = 0;
     public int playerGroup = 3;
-    public long lastPacket = -1;
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
     private boolean inCombat = false;

@@ -34,7 +34,6 @@ public class ChatLog extends LogEntry {
         }
         try {
             message = message.replaceAll("'", "`");
-            System.out.println("msg = " + message);
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('1', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
@@ -80,8 +79,9 @@ public class ChatLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
+        message = message.replaceAll("'", "`");
+        System.out.println("private message = " + message);
         try {
-            message = message.replaceAll("'", "`");
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('3', '" + sender.dbId + "', '" + receiver.dbId + "', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);

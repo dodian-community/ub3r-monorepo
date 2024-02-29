@@ -75,6 +75,7 @@ public class SocketHandler implements Runnable {
             return socket.getInputStream();
         } catch (IOException e) {
             logout();
+            //initialized
         }
         return null;
     }
@@ -158,7 +159,7 @@ public class SocketHandler implements Runnable {
             player.timeOutCounter = 0;
             player.packetType = -1;
         } catch (java.lang.Exception __ex) {
-            player.saveStats(true);
+            //player.saveStats(true); //We do not need this if we disconnect!
             player.disconnected = true;
             this.processRunning = false;
             return false;
