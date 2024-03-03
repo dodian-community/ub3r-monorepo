@@ -13,7 +13,19 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
 fun Client.handleRanged(): Int {
-    val time = System.currentTimeMillis()
+    if (combatTimer > 0) //Need this to be a check here!
+        return 0
+    if (target is Player && duelFight && duelRule[0]) {
+        send(SendMessage("Ranged has been disabled for this duel!"))
+        resetAttack()
+        return 0
+    }
+    if(equipmentN[Equipment.Slot.ARROWS.id] < 1) {
+        deleteequiment(equipment[Equipment.Slot.ARROWS.id], Equipment.Slot.ARROWS.id)
+        resetAttack()
+        send(SendMessage("You're out of arrows!"))
+        return 0
+    }
 
     val arrows = mapOf(
         882 to listOf(10, 19),
@@ -24,21 +36,13 @@ fun Client.handleRanged(): Int {
         892 to listOf(14, 23),
         11212 to listOf(1120, 1116)
     )
-
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
     val arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
     val arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
 
-    if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
-        isInCombat = true
-        lastCombat = System.currentTimeMillis()
-    } else return 0
+    combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id]);
+    lastCombat = 16
     setFocus(target.position.x, target.position.y)
-    if (target is Player && duelFight && duelRule[0]) {
-        send(SendMessage("Ranged has been disabled for this duel!"))
-        resetAttack()
-        return 0
-    }
     if (DeleteArrow()) {
         val distance = distanceToPoint(target.position.x, target.position.y)
         if(target is Npc) {
@@ -54,10 +58,6 @@ fun Client.handleRanged(): Int {
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
         }
-    } else {
-        resetAttack()
-        send(SendMessage("You're out of arrows!"))
-        return 0
     }
     var maxHit = rangedMaxHit().toDouble()
     if (target is Npc) { // Slayer damage!
@@ -99,10 +99,7 @@ fun Client.handleRanged(): Int {
         giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
     }
 
-    if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
-    resetWalkingQueue()
-    lastAttack = System.currentTimeMillis()
-
+    if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
     return 1
 }
 

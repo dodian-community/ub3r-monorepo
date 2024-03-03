@@ -29,7 +29,7 @@ public class MagicOnNpc implements Packet {
         int EnemyHP2 = tempNpc.getCurrentHealth();
         int distance = 4;
 
-        if (!client.goodDistanceEntity(tempNpc, distance) || (client.goodDistanceEntity(tempNpc, distance) && !canAttackNpc(client, id))) {
+        if (!client.goodDistanceEntity(tempNpc, distance) || (client.goodDistanceEntity(tempNpc, distance) && !canAttackNpc(client, id)) || client.getCombatTimer() > 0) {
             return;
         }
         if(client.goodDistanceEntity(tempNpc, distance)) {
@@ -46,14 +46,12 @@ public class MagicOnNpc implements Packet {
                     type = i2%4;
                 }
             }
-            if (System.currentTimeMillis() - client.lastAttack < client.coolDown[type]) {
-                return;
-            }
             if (client.getLevel(Skill.MAGIC) < client.requiredLevel[slot]) {
                 client.send(new SendMessage("You need a magic level of " + client.requiredLevel[slot]));
                 return;
             }
                 if (client.runeCheck()) {
+                    client.setLastCombat(16);
                     int hitDiff;
                     double extra = client.getLevel(Skill.MAGIC) * 0.195;
                     double critChance = client.getLevel(Skill.AGILITY) / 9D;
@@ -77,7 +75,6 @@ public class MagicOnNpc implements Packet {
                     client.giveExperience(40 * hitDiff, Skill.MAGIC);
                     client.giveExperience(hitDiff * 15, Skill.HITPOINTS);
                     tempNpc.dealDamage(client, hitDiff, hitCrit);
-                    client.lastAttack = System.currentTimeMillis();
                 }
     }
 

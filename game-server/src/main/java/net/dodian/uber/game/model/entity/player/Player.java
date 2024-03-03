@@ -34,7 +34,6 @@ import java.util.*;
 
 public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false;
-    public boolean saving = false;
     public long disconnectAt = 0, longName = 0;
     public int wildyLevel = 0, violations = 0;
     public long lastAction = 0, lastMagic = 0;
@@ -48,7 +47,7 @@ public abstract class Player extends Entity {
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
     private boolean inCombat = false;
-    private long lastCombat = 0;
+    private int lastCombat = 0, combatTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;// dbId = -1; //mysql userid
     public boolean busy = false, invis = false;
@@ -761,14 +760,21 @@ public abstract class Player extends Entity {
     public int deathStage = 0;
     public long deathTimer = 0;
 
-    public void appendMask400Update(Stream str) { // Xerozcheez: Something to
-        str.writeByteA(m4001);
+    public void appendMask400Update(Stream str) { //Forcemovement mask!
+        /*str.writeByteA(m4001);
         str.writeByteA(m4002);
         str.writeByteA(m4003);
         str.writeByteA(m4004);
         str.writeWordA(m4005);
         str.writeWordBigEndianA(m4006);
-        str.writeByteA(m4007); // direction
+        str.writeByteA(m4007);*/
+        str.writeByteS(m4001);
+        str.writeByteS(m4002);
+        str.writeByteS(m4003);
+        str.writeByteS(m4004);
+        str.writeWordBigEndianA(m4006);
+        str.writeWordA(m4005);
+        str.writeByteS(m4007);
     }
 
     // PM Stuff
@@ -1201,19 +1207,21 @@ public abstract class Player extends Entity {
     }
 
     public boolean isInCombat() {
-        return this.inCombat;
+        return getLastCombat() > 0;
     }
 
-    public void setInCombat(boolean inCombat) {
-        this.inCombat = inCombat;
+    public int getLastCombat() {
+        return lastCombat;
     }
-
-    public long getLastCombat() {
-        return this.lastCombat;
-    }
-
-    public void setLastCombat(long lastCombat) {
+    public void setLastCombat(int lastCombat) {
         this.lastCombat = lastCombat;
+    }
+
+    public int getCombatTimer() {
+        return combatTimer;
+    }
+    public void setCombatTimer(int timer) {
+        this.combatTimer = timer;
     }
 
     /**

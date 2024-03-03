@@ -13,13 +13,14 @@ import net.dodian.utilities.Utils
 import kotlin.math.min
 
 fun Client.handleMagic(): Int {
-    val time = System.currentTimeMillis()
     val slot = autocast_spellIndex%4
-    if (time - lastAttack > coolDown[slot]) {
-        isInCombat = true
-        lastCombat = System.currentTimeMillis()
-    } else return 0
-    setFocus(target.position.x, target.position.y)
+    if (combatTimer > 0) //Need this to be a check here!
+        return 0
+    if (target is Player && duelFight && duelRule[2]) {
+        send(SendMessage("Magic has been disabled for this duel!"))
+        resetAttack()
+        return 0
+    }
     if (getLevel(Skill.MAGIC) < requiredLevel[autocast_spellIndex]) {
         send(SendMessage("You need a magic level of ${requiredLevel[autocast_spellIndex]} to cast this spell!"))
         return 0
@@ -28,11 +29,10 @@ fun Client.handleMagic(): Int {
         resetAttack()
         return 0
     }
-    if (target is Player && duelFight && duelRule[2]) {
-        send(SendMessage("Magic has been disabled for this duel!"))
-        resetAttack()
-        return 0
-    }
+
+    combatTimer = coolDown[slot]
+    lastCombat = 16
+    setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
     requestAnim(1979, 0)
     var maxHit = baseDamage[autocast_spellIndex] * magicBonusDamage()
@@ -93,9 +93,7 @@ fun Client.handleMagic(): Int {
         giveExperience(15 * hit, Skill.HITPOINTS)
     }
 
-    if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
-    resetWalkingQueue()
-    lastAttack = System.currentTimeMillis()
+    if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
 
     return 1
 }

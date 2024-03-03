@@ -166,6 +166,9 @@ public class ClickObject implements Packet {
             client.teleportToY = 9806;
             client.newheightLevel = 0;
         }
+        if (objectID == 7962) {
+            System.out.println("patch?!");
+        }
         if (objectID == 17385 && objectPosition.getX() == 2677 && objectPosition.getY() == 9805) {
             client.teleportToX = 2677;
             client.teleportToY = 3404;

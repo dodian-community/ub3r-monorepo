@@ -36,6 +36,7 @@ public class ClickingStuff implements Packet {
         if (client.isPartyInterface) {
             client.isPartyInterface = false;
         }
+        if(client.currentSkill >= 0) client.currentSkill = -1; //Close skillmenu interface!
     }
 
 }

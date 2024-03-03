@@ -309,8 +309,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.writeByteC(value);
             stream.writeByte(100);
             player.setCrit(false); // bar
-            player.setInCombat(true);
-            player.setLastCombat(System.currentTimeMillis());
+            player.setLastCombat(16);
         }
     }
 
@@ -327,8 +326,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.writeByte(value);
             stream.writeByteC(100);
             player.setCrit(false); // bar
-            player.setInCombat(true);
-            player.setLastCombat(System.currentTimeMillis());
+            player.setLastCombat(16);
         }
     }
 
