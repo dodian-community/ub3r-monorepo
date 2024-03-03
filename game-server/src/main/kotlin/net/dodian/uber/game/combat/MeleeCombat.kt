@@ -18,22 +18,19 @@ fun Client.handleMelee(): Int {
     val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
     if (equipment[Equipment.Slot.WEAPON.id] in staves && autocast_spellIndex >= 0)
         return -1
-    if (usingBow) return -1
-
-    val time = System.currentTimeMillis()
-
-        if (time - lastAttack > getbattleTimer(equipment[Equipment.Slot.WEAPON.id])) {
-            isInCombat = true
-            lastCombat = System.currentTimeMillis()
-        } else return 0
-
+    if (usingBow)
+        return -1
+    if (combatTimer > 0) //Need this to be a check here!
+        return 0
+    if (target is Player && duelFight && duelRule[1]) {
+        send(SendMessage("Melee has been disabled for this duel!"))
+        resetAttack()
+        return 0
+    }
+        combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
+        lastCombat = 16
         val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
         setFocus(target.position.x, target.position.y)
-        if (target is Player && duelFight && duelRule[1]) {
-            send(SendMessage("Melee has been disabled for this duel!"))
-            resetAttack()
-            return 0
-        }
         sendAnimation(emote)
         var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
@@ -96,9 +93,7 @@ fun Client.handleMelee(): Int {
 
             giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
         }
-        if (debug) send(SendMessage("hit = $hit, elapsed = ${time - lastAttack}"))
-    lastAttack = System.currentTimeMillis()
-
+        if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
     return 1
 }
 

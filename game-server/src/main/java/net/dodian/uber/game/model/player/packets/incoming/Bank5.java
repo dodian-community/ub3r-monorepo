@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 
@@ -58,6 +59,12 @@ public class Bank5 implements Packet {
                 client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
             } else if (removeID == 4566) {
                 client.requestAnim(1835, 0);
+            } else if (removeID == 11864 || removeID == 11865) {
+                SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
+                if (checkTask != null && client.getSlayerData().get(3) > 0)
+                    client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
+                else
+                    client.send(new SendMessage("You need to be assigned a task!"));
             } else if (Server.itemManager.getName(removeID).toLowerCase().startsWith("cow")) {
                 client.requestForceChat("Moooooo!");
             } else {

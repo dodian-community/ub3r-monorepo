@@ -33,7 +33,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         try {
-            message = message.replaceAll("'", "`");
+            message = message.replaceAll("'", "`").replaceAll("\\u005C", "/"); //letter '\' and ' is not accepted by sql!
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('1', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
@@ -49,7 +49,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         try {
-            message = message.replaceAll("'", "`");
+            message = message.replaceAll("'", "`").replaceAll("\\u005C", "/"); //letter '\' and ' is not accepted by sql!
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('2', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
@@ -65,7 +65,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         try {
-            message = message.replaceAll("'", "`");
+            message = message.replaceAll("'", "`").replaceAll("\\u005C", "/"); //letter '\' and ' is not accepted by sql!
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('4', '" + player.dbId + "', '-1', '"+message+"', '" + getTimeStamp() + "')";
             statement.executeUpdate(query);
@@ -79,7 +79,7 @@ public class ChatLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
-        message = message.replaceAll("'", "`");
+        message = message.replaceAll("'", "`").replaceAll("\\u005C", "/"); //letter '\' and ' is not accepted by sql!
         System.out.println("private message = " + message);
         try {
             Statement statement = getDbConnection().createStatement();

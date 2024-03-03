@@ -27,7 +27,7 @@ public class MagicOnPlayer implements Packet {
         int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
         Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];
         int EnemyHP2 = castOnPlayer.getCurrentHealth();
-        if (castOnPlayer == null) {
+        if (castOnPlayer == null || client.getCombatTimer() > 0) {
             return;
         }
         if (!client.canAttack) {
@@ -40,7 +40,7 @@ public class MagicOnPlayer implements Packet {
         }
         int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());
         if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlayer.wildyLevel)
-                || client.duelFight && client.duel_with == castOnPlayer.getSlot()) || castOnPlayer.saving) {
+                || client.duelFight && client.duel_with == castOnPlayer.getSlot()) || !castOnPlayer.saveNeeded) {
             client.send(new SendMessage("You can't attack that player"));
             return;
         }
@@ -61,12 +61,10 @@ public class MagicOnPlayer implements Packet {
                     type = i2%4;
                 }
             }
-            if (System.currentTimeMillis() - client.lastAttack < client.coolDown[type]) {
-                return;
-            }
             if (client.getLevel(Skill.MAGIC) >= client.requiredLevel[slot]) {
                 if (client.runeCheck()) {
-                    int hitDiff = 0;
+                    client.setLastCombat(16);
+                    int hitDiff;
                     double extra = client.getLevel(Skill.MAGIC) * 0.195;
                     double critChance = client.getLevel(Skill.AGILITY) / 9;
                     boolean hitCrit = Math.random() * 100 <= critChance * (client.getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 1.5 : 1);

@@ -125,79 +125,43 @@ public class Commands implements Packet {
                                 client.varbit(905, 0); //Gout tuber patch!
                                 client.varbit(1057, 0); //Compost bin
                             break;
-                            case 1:
-                                client.varbit(529, 3); //Herb patch for trollheim!
+                            case 1: //Empty test for Trollheim
+                                client.varbit(529, (3 + 2 + 295) | 2 << 6); //Herb patch for trollheim!
+                                //client.varbit(529, (102 + 193) | 2 << 6); //Herb patch for trollheim!
                                 //client.varbit(905, 3 + 2 + (1 << 6 | 1 << 7));
                                 //client.varbit(905, 0); <- Gout tuber patch!
                             break;
-                            case 2: //Empty test for trees!
-                                client.varbit(529, 7 + 5 + (0 << 6 | 0 << 7));
-                            break;
-                            case 3: //Empty test for fruit trees
-                                client.varbit(529, 7 + 25);
-                            break;
-                            case 4: //Empty test for cactus
-                                client.varbit(529, (4<< 24));
-                            break;
-                            case 5: //Empty test for mushroom
-                                client.varbit(529, (5<< 24));
-                            break;
-                            case 6: //empty test for spirit tree
-                                client.varbit(529, (6<< 24));
-                            break;
-                            case 7: //Bushes
-                                client.varbit(529, 4 + 246 + (0 << 6 | 0 << 7));
-                            break;
-                            case 8: //Test for various raking stages!
-                                //Empty for now!
-                            break;
-                            case 9: //Flowers
-                                client.varbit(529, 32 + 1 + (0 << 6 | 0 << 7) << 16);
-                            break;
-                            case 10: //Compost bin
+                            case 2: //Compost bin
                                 client.varbit(1057, 30);
                             break;
-                            case 11:
-                                /*int config = 3 + 2 << 24 - (0 << 6 | 1 << 7);
-                                client.varbit(529, config);
-                                System.out.println("config: " + config);*/
-                                /*
-                                EventManager.getInstance().registerEvent(new Event(1200) {
-                                    int test = 103, config = 0;
-                                    @Override
-                                    public void execute() {
-
-                                        if (client.disconnected) {
-                                            this.stop();
-                                            return;
-                                        }
-                                        config = (test + 2) << 24;
-                                        client.varbit(529, config);
-                                        System.out.println("config: " + config);
-                                        client.send(new SendMessage("Setting config for..." + test));
-                                        test++;
-                                    }
-                                });*/
-
+                            case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {5 + 2, 5 + 2, 7 + 2}; //Allotment, Allotment, flower, herb
+                                int[] startConfig = {51, 5, 22, 3}; //Allotment, Allotment, flower, herb
+                                int[] stage = {0, 1, 2, 2};
+                                int[] patch = {0, 1, 2, 2};
                                 int config = 0;
                                 for(int i = 0; i < startConfig.length; i++) {
-                                    int check = (i + 1) << 6;
-                                    config |= (startConfig[i] | check) << (i << 3);
+                                    int check = patch[i] << 6;
+                                    if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
+                                        stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
+                                        check = 2 << 6;
+                                    } else if (i == 3) check = 0 << 6;
+                                    config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
                                 }
-                                config |= (102 + 2 | 3 << 6) << 24;
-                                System.out.println("be it config? " + config);
-                                client.varbit(529, config);
-                                //client.varbit(529, (102 + 2 | 0 << 6) << 24 | (7 + 2 | 0 << 6) << 16 | (5 + 2 | 0 << 6) << 8 | (5 + 2 | 0 << 6) << 0);
-                                //client.varbit(529, startConfig[3] << 24);
-                                /*
-                                        if (isEmpty() || needsWeeding()) {
-                                        return stage.ordinal();
-                                           }
-                                        return (state.ordinal() << 6) | (plant.getStartingState() + growth);
-                                 */
-                                //client.varbit(529, (3 + 1 + (0 << 6 | 0 << 7) << 24) | (7 + 1 + (0 << 6 | 0 << 7) << 16) | (5 + 1 + (0 << 6 | 0 << 7) << 8) | (5 + 1 + (0 << 6 | 0 << 7) << 0));
+                                client.varbit(529,  config);
+                            break;
+                            case 4: //Farm patch in tree gnome!
+                                config = 0;
+                                while(config < 2000) {
+                                    try {
+                                        client.send(new SendMessage("config = " + config));
+                                        client.varbit(529,  config);
+                                        config++;
+                                        Thread.sleep(500);
+                                    } catch(Exception e) {
+                                        System.out.println("msg: " + e.getMessage());
+                                    }
+                                }
                             break;
                             default: gotValue = false;
                         }
@@ -205,6 +169,10 @@ public class Commands implements Packet {
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
                     }
+                }
+                if (cmd[0].equalsIgnoreCase("forcemove")) {
+                    client.send(new SendMessage("force move!"));
+                    client.appendForcemovement(client.getPosition(), new Position(3333, 3333), new int[]{10, 20, 3});
                 }
                 if (cmd[0].equalsIgnoreCase("plist")) {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());

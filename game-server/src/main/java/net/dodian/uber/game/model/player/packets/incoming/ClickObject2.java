@@ -80,9 +80,6 @@ public class ClickObject2 implements Packet {
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, position.getX(), position.getY(), 2));
         }
-        if (getGameWorldId() > 0) {
-            client.println_debug("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
-        }
         if (System.currentTimeMillis() < client.walkBlock) {
             return;
         }
@@ -100,6 +97,9 @@ public class ClickObject2 implements Packet {
                 break;
             case 378: //Empty chest
                 client.send(new SendMessage("this chest is empty!"));
+                break;
+            case 7962:
+                client.send(new SendMessage("Inspect"));
                 break;
         }
 		/*if (objectID == 2564) {

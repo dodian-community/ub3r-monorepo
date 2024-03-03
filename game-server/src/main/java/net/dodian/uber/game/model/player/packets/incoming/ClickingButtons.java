@@ -5,7 +5,6 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Emotes;
-import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
@@ -21,8 +20,6 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
-
-import java.io.IOException;
 
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DotEnvKt.getServerDebugMode;
@@ -561,11 +558,8 @@ public class ClickingButtons implements Packet {
                     break;
                 }
                 if (client.isInCombat()) {
-                    client.send(new SendMessage("You must wait until you are out of combat before logging out!"));
-                    break;
-                }
-                if (System.currentTimeMillis() - client.getLastCombat() <= 7000 && client.inWildy()) {
-                    client.send(new SendMessage("You must wait 7 seconds after npc combat to logout."));
+                    int seconds = (int)(client.getLastCombat() * 0.6);
+                    client.send(new SendMessage("You must wait "+(seconds + 1)+" seconds before you can logout!"));
                     break;
                 }
                 if (System.currentTimeMillis() - client.lastPlayerCombat <= 30000 && client.inWildy()) {
@@ -800,253 +794,120 @@ public class ClickingButtons implements Packet {
 
                 break;
 
-            /*
-             * case 33206: try { client.showSkillMenu(0, 0); } catch (IOException e) { }
-             * break; case 33212: try { client.showSkillMenu(1, 0); } catch (IOException
-             * e) { } break; case 33215: try { client.showSkillMenu(4, 0); } catch
-             * (IOException e) { } break; case 33216: try { client.showSkillMenu(17, 0);
-             * } catch (IOException e) { } break; case 34142: try { if
-             * (client.currentSkill < 2) client.showSkillMenu(0, 0); else if
-             * (client.currentSkill == 4) client.showSkillMenu(4, 0); } catch
-             * (IOException e) { } break; case 34119: try { if (client.currentSkill < 2)
-             * client.showSkillMenu(1, 0); else if (client.currentSkill == 4)
-             * client.showSkillMenu(4, 1); } catch (IOException e) { } break; case
-             * 34120: try { if (client.currentSkill < 2) client.showSkillMenu(4, 0); }
-             * catch (IOException e) { } break; case 34123: // try { if
-             * (client.currentSkill < 2) client.send(new SendMessage("Coming soon!"));
-             * // showSkillMenu(6, 0); // } catch (IOException e) { } break;
-             */
-
             case 33206:
             case 94167:
-                try {
                     client.showSkillMenu(ATTACK.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33207:
             case 94168:
-                try {
                     client.showSkillMenu(HITPOINTS.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33208:
             case 94169:
-                try {
                     client.showSkillMenu(MINING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33209:
             case 94170:
-                try {
                     client.showSkillMenu(STRENGTH.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33210:
             case 94171:
-                try {
                     client.showSkillMenu(AGILITY.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33212:
             case 94173:
-                try {
                     client.showSkillMenu(DEFENCE.getId(), 0);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
                 break;
             case 33215:
             case 94176:
-                try {
                     client.showSkillMenu(RANGED.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33216:
             case 94177:
-                try {
                     client.showSkillMenu(THIEVING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33213:
             case 94174:
-                try {
                     client.showSkillMenu(HERBLORE.getId(), 0);
-                } catch (IOException e5) {
-                    e5.printStackTrace();
-                }
                 break;
             case 33219: //Crafting
             case 94180:
-                try {
                     client.showSkillMenu(CRAFTING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33211: //Smithing
             case 94172:
-                try {
                     client.showSkillMenu(SMITHING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33220:
             case 94184:
-                try {
                     client.showSkillMenu(WOODCUTTING.getId(), 0);
-                } catch (IOException e4) {
-                    e4.printStackTrace();
-                }
                 break;
             case 33221:
             case 94182:
-                try {
                     client.showSkillMenu(MAGIC.getId(), 0);
-                } catch (IOException e3) {
-                    e3.printStackTrace();
-                }
                 break;
             case 33222:
             case 94181:
-                try {
                     client.showSkillMenu(FIREMAKING.getId(), 0);
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
                 break;
             case 33223:
             case 94178:
-                try {
                     client.showSkillMenu(COOKING.getId(), 0);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
                 break;
             case 33224:
             case 95053:
-                try {
                     client.showSkillMenu(RUNECRAFTING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33214:
             case 94183:
-                try {
                     client.showSkillMenu(FLETCHING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 33217:
             case 94175:
-                try {
                     client.showSkillMenu(FISHING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34142:
-                try {
                     if (client.currentSkill < 2)
                         client.showSkillMenu(ATTACK.getId(), 0);
                     else
                         client.showSkillMenu(client.currentSkill, 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34119:
-                try {
                     if (client.currentSkill < 2)
                         client.showSkillMenu(DEFENCE.getId(), 0);
                     else
                         client.showSkillMenu(client.currentSkill, 1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34120:
                 if (client.currentSkill < 2)
-                    try {
                         client.showSkillMenu(RANGED.getId(), 0);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 else
-                    try {
                         client.showSkillMenu(client.currentSkill, 2);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 break;
             case 34123:
                 if (client.currentSkill < 2)
                     client.send(new SendMessage("Coming soon!"));
                 else
-                    try {
                         client.showSkillMenu(client.currentSkill, 3);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 break;
             case 34133:
-                try {
                     client.showSkillMenu(client.currentSkill, 4);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34136:
-                try {
                     client.showSkillMenu(client.currentSkill, 5);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34139:
-                try {
                     client.showSkillMenu(client.currentSkill, 6);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 34155:
-                try {
                     client.showSkillMenu(client.currentSkill, 7);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 47130:
             case 95061:
-                try {
                     client.showSkillMenu(SLAYER.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
-            case 95068:
-                try {
+            case 95068: //Farming
                     client.showSkillMenu(FARMING.getId(), 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 break;
             case 88060: //Idea
                 client.requestAnim(4276, 0);

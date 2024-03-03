@@ -165,7 +165,7 @@ public class Client extends Player implements Runnable {
 			"Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz",
 			"Smoke Barrage", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
 	public int[] ancientId = {12939, 12987, 12901, 12861, 12963, 13011, 12919, 12881, 12951, 12999, 12911, 12871, 12975, 13023, 12929, 12891};
-	public long[] coolDown = {2400, 2400, 3000, 3000};
+	public int[] coolDown = {5, 5, 6, 6};
 	public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
 	public String properName = "";
 	public int actionButtonId = 0;
@@ -240,7 +240,7 @@ public class Client extends Player implements Runnable {
 				|| wep.contains("tzhaar-ket-om") || wep.contains("dharok")) {
 			wepPlainTick = 7;
 		}
-		return wepPlainTick * 600;
+		return wepPlainTick;
 	}
 
 	public void CheckGear() {
@@ -491,10 +491,8 @@ public class Client extends Player implements Runnable {
 		try {
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
-			if (saveNeeded && !tradeSuccessful) { //Attempt to fix a potential dupe?
+			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
 				saveStats(true, true);
-				saveNeeded = false;
-			}
 			if(!disconnected)
 				disconnected = true;
 			mySock.close();
@@ -801,7 +799,6 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		if (getPlayerName() == null || getPlayerName().equals("null") || dbId < 1) {
-			saveNeeded = false;
 			println_debug("Could not save due to null! " + (dbId < 1 ? "db is less than 1!" : "Dbid = " + dbId));
 			return;
 		}
@@ -810,10 +807,11 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		if (logout) {
-			saving = true;
+			saveNeeded = false;
 			/* Remove player from list! */
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
+			println_debug(getPlayerName() + " has logged out.");
       /*for (Player p : PlayerHandler.players) {
         if (p != null && !p.disconnected && p.dbId > 0) {
           if (p.getDamage().containsKey(getSlot())) {
@@ -826,7 +824,6 @@ public class Client extends Player implements Runnable {
 				int minutes = (int) (elapsed / 60000);
 				Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
 			}
-			//System.out.println("exorth save!");
 			for (Client c : PlayerHandler.playersOnline.values()) {
 				if (c.hasFriend(longName)) {
 					c.refreshFriends();
@@ -911,8 +908,6 @@ public class Client extends Player implements Runnable {
 						num++;
 					}
 				}
-				if (logout)
-					saveNeeded = false;
 
 				String last = "";
 				long elapsed = System.currentTimeMillis() - session_start;
@@ -2215,6 +2210,9 @@ public class Client extends Player implements Runnable {
 	public boolean canAttack = true;
 
 	public void process() {// is being called regularily every 600 ms
+		/* Combat stuff! */
+		setLastCombat(Math.max(getLastCombat() - 1, 0));
+		setCombatTimer(Math.max(getCombatTimer() - 1, 0));
 		//RegionMusic.handleRegionMusic(this);
 		if (mutedTill * 1000 <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
@@ -2390,22 +2388,16 @@ public class Client extends Player implements Runnable {
 			UsingAgility = false;
 		}
 		long current = System.currentTimeMillis();
-		if (isInCombat() && current - getLastCombat() >= 7500) {
-			setInCombat(false);
-		}
-		if (wildyLevel < 1 && current - lastBar >= 30000) {
+		if (wildyLevel < 1 && current - lastBar >= 30_000) {
 			lastBar = current;
 			updatePlayerDisplay();
-
 			// barTimer = 0;
 		}
-		// Save every minute
-		if (current - lastSave >= 60000) {
+		if (current - lastSave >= 60_000) { // Save every minute except for skills!
 			saveStats(false);
 			lastSave = now;
 		}
-		// Update progress every hour
-		if (current - lastProgressSave >= (60000) * 60) {
+		if (current - lastProgressSave >= 3_600_000) { // Update skill progress every hour
 			saveStats(false, true);
 			lastProgressSave = now;
 		}
@@ -2677,7 +2669,7 @@ public class Client extends Player implements Runnable {
 
 	public int currentSkill = -1;
 
-	public void showSkillMenu(int skillID, int child) throws IOException {
+	public void showSkillMenu(int skillID, int child) {
 		if (currentSkill != skillID)
 			send(new RemoveInterfaces());
 		int slot = 8720;
@@ -3609,24 +3601,20 @@ public class Client extends Player implements Runnable {
 	public int[] staffs = {2415, 2416, 2417, 4675, 4710, 6526, 6914};
 
 	public boolean DeleteArrow() {
-		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] == 0) {
-			deleteequiment(getEquipment()[Equipment.Slot.ARROWS.getId()], Equipment.Slot.ARROWS.getId());
-			return false;
-		}
-		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] > 0) {
+		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] < 1 || getEquipment()[Equipment.Slot.ARROWS.getId()] < 1) return false; //If we do not have any arrows do this!
+			getEquipmentN()[Equipment.Slot.ARROWS.getId()] -= 1;
+			int amount = getEquipmentN()[Equipment.Slot.ARROWS.getId()];
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(1688);
 			getOutputStream().writeByte(Equipment.Slot.ARROWS.getId());
+			if(amount < 1) getEquipment()[Equipment.Slot.ARROWS.getId()] = -1;
 			getOutputStream().writeWord(getEquipment()[Equipment.Slot.ARROWS.getId()] + 1);
-			if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] - 1 > 254) {
+			if (amount > 254) {
 				getOutputStream().writeByte(255);
-				getOutputStream().writeDWord(getEquipmentN()[Equipment.Slot.ARROWS.getId()] - 1);
-			} else {
-				getOutputStream().writeByte(getEquipmentN()[Equipment.Slot.ARROWS.getId()] - 1); // amount
-			}
+				getOutputStream().writeDWord(amount);
+			} else
+				getOutputStream().writeByte(amount); // amount
 			getOutputStream().endFrameVarSizeWord();
-			getEquipmentN()[Equipment.Slot.ARROWS.getId()] -= 1;
-		}
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 		return true;
 	}
@@ -7822,6 +7810,44 @@ public class Client extends Player implements Runnable {
 			newWalkCmdX[i] += l;
 			newWalkCmdY[i] += j1;
 		}
+	}
+
+	public void appendForcemovement(Position startPos, Position endPos, int... speed) {
+		if(speed.length != 3) { //Need atleast 3 values!
+			return;
+		}
+		System.out.println("x = " + startPos.getX() + ", " + startPos.getY());
+		int startX = startPos.getLocalX();
+		int startY = startPos.getLocalY();
+		int endX = endPos.getX();
+		int endY = endPos.getY();
+
+		m4001 = startX;
+		m4002 = startY;
+		m4003 = startX + endX;
+		m4004 = startY + endY;
+		m4006 = speed[0];
+		m4005 = speed[1];
+		m4007 = speed[2];
+		getUpdateFlags().setRequired(UpdateFlag.FORCED_MOVEMENT, true);
+		/*
+		int startX = startPos.getLocalX();
+		int startY = startPos.getLocalY();
+		m4001 = startX;
+		m4002 = startY;
+		m4003 = startX + 4;
+		m4004 = startY;
+		m4005 = speed[1];
+		m4006 = speed[0];
+		m4007 = speed[2];
+		 */
+		/*getOutputStream().writeByteA(startPos.getX());
+		getOutputStream().writeByteA(startPos.getY());
+		getOutputStream().writeByteA(startPos.getX() + endX);
+		getOutputStream().writeByteA(startPos.getY() + endY);
+		getOutputStream().writeWordBigEndianA(speed[0]);
+		getOutputStream().writeWordA(speed[1]);
+		getOutputStream().writeByteA(speed[2]);*/
 	}
 
 	public void AddToCords(int X, int Y, long time) {
