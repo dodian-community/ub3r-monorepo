@@ -719,8 +719,7 @@ public class Client extends Player implements Runnable {
 			if (loadgame == 0 && returnCode != 6) {
 				validLogin = true;
 				if (getPosition().getX() > 0 && getPosition().getY() > 0) {
-					teleportToX = getPosition().getX();
-					teleportToY = getPosition().getY();
+					transport(new Position(getPosition().getX(), getPosition().getY(), 0));
 				}
 			} else {
 				if (returnCode != 6 && returnCode != 5)
@@ -2377,10 +2376,7 @@ public class Client extends Player implements Runnable {
 			animation(308, getPosition());
 			tStage = 2;
 		} else if (tStage == 2 && System.currentTimeMillis() - lastTeleport >= 1200) {
-			getPosition().moveTo(tX, tY, tH);
-			teleportToX = getPosition().getX();
-			teleportToY = getPosition().getY();
-			tH = 0;
+			transport(new Position(tX, tY, tH));
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			tStage = 0;
 			GetBonus(true);
@@ -2479,9 +2475,7 @@ public class Client extends Player implements Runnable {
 			prayers.reset();
 			send(new SendMessage("Oh dear you have died!"));
 		} else if (deathStage == 1 && now - deathTimer >= 1800) {
-			getPosition().moveTo(2604 + Misc.random(6), 3101 + Misc.random(3), 0); //Update position!
-			teleportToX = getPosition().getX();
-			teleportToY = getPosition().getY();
+			transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), tH));
 			deathStage = 0;
 			deathTimer = 0;
 			/* Stats check! */
@@ -3017,8 +3011,8 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Taverly dungeon shortcut", "Wilderness course", "Prime boss shortcut", "Skillcape" + prem};
-			String[] s1 = {"1", "40", "50", "60", "70", "70", "85", "99"};
+			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Prime boss shortcut", "Skillcape" + prem};
+			String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "85", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -3026,7 +3020,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {751, 1365, -1, 4224, 4155, 964, 4155, 9771};
+			int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, 4155, 9771};
 			setMenuItems(items);
 		} else if (skillID == WOODCUTTING.getId()) {
 			send(new SendString("Axes", 8846));
@@ -3331,9 +3325,7 @@ public class Client extends Player implements Runnable {
 						// resetStairs();
 						return false;
 					} else {
-						getPosition().setZ(1);
-						teleportToX = teleX;
-						teleportToY = teleY;
+						transport(new Position(teleX, teleY, 1));
 						resetStairs();
 						return true;
 					}
@@ -3341,18 +3333,14 @@ public class Client extends Player implements Runnable {
 			}
 			if (stairs == "legendsUp".hashCode()) {
 				if (skillX == 2732 && skillY == 3377) {
-					getPosition().setZ(1);
-					teleportToX = 2732;
-					teleportToY = 3380;
+					transport(new Position(2732, 3380, 1));
 					resetStairs();
 					return true;
 				}
 			}
 			if (stairs == "legendsDown".hashCode()) {
 				if (skillX == 2732 && skillY == 3378) {
-					getPosition().setZ(0);
-					teleportToX = 2732;
-					teleportToY = 3376;
+					transport(new Position(2732, 3376, 0));
 					resetStairs();
 					return true;
 				}
@@ -3366,85 +3354,64 @@ public class Client extends Player implements Runnable {
 			} else if (stairs == 22) {
 				getPosition().setZ(getPosition().getZ() - 1);
 			} else if (stairs == 69)
-				getPosition().setZ(getPosition().getZ() + 1);
-			teleportToX = teleX;
-			teleportToY = teleY;
+				transport(new Position(teleX, teleY, getPosition().getZ() + 1)); //Unsure what height!
 			if (stairs == 3 || stairs == 5 || stairs == 9) {
-				teleportToY += 6400;
+				transport(new Position(getPosition().getX(), getPosition().getY() + 6400, getPosition().getZ()));
 			} else if (stairs == 4 || stairs == 6 || stairs == 10) {
-				teleportToY -= 6400;
+				transport(new Position(getPosition().getX(), getPosition().getY() - 6400, getPosition().getZ())); //Unsure if this is good!
 			} else if (stairs == 7) {
-				teleportToX = 3104;
-				teleportToY = 9576;
+				transport(new Position(3104, 9576, getPosition().getZ()));
 			} else if (stairs == 8) {
-				teleportToX = 3105;
-				teleportToY = 3162;
+				transport(new Position(3105, 3162, getPosition().getZ()));
 			} else if (stairs == 11) {
-				teleportToX = 2856;
-				teleportToY = 9570;
+				transport(new Position(2856, 9570, getPosition().getZ()));
 			} else if (stairs == 12) {
-				teleportToX = 2857;
-				teleportToY = 3167;
+				transport(new Position(2857, 3167, getPosition().getZ()));
 			} else if (stairs == 13) {
 				getPosition().setZ(getPosition().getZ() + 3);
 				teleportToX = skillX;
 				teleportToY = skillY;
 			} else if (stairs == 15) {
-				teleportToY += (6400 - (stairDistance + stairDistanceAdd));
+				teleportToY += (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
 			} else if (stairs == 14) {
-				teleportToY -= (6400 - (stairDistance + stairDistanceAdd));
+				teleportToY -= (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
 			} else if (stairs == 16) {
-				teleportToX = 2828;
-				teleportToY = 9772;
+				transport(new Position(2828, 9772, getPosition().getZ()));
 			} else if (stairs == 17) {
-				teleportToX = 3494;
-				teleportToY = 3465;
+				transport(new Position(3494, 3465, getPosition().getZ()));
 			} else if (stairs == 18) {
-				teleportToX = 3477;
-				teleportToY = 9845;
+				transport(new Position(3477, 9845, getPosition().getZ()));
 			} else if (stairs == 19) {
-				teleportToX = 3543;
-				teleportToY = 3463;
+				transport(new Position(3543, 3463, getPosition().getZ()));
 			} else if (stairs == 20) {
-				teleportToX = 3549;
-				teleportToY = 9865;
+				transport(new Position(3549, 9865, getPosition().getZ()));
 			} else if (stairs == 21) {
-				teleportToY += (stairDistance + stairDistanceAdd);
+				teleportToY += (stairDistance + stairDistanceAdd); //Shiet system!
 			} else if (stairs == 69) {
 				teleportToY = stairDistanceAdd;
 				teleportToX = stairDistance;
 			} else if (stairs == 22) {
 				teleportToY -= (stairDistance + stairDistanceAdd);
 			} else if (stairs == 23) {
-				teleportToX = 2480;
-				teleportToY = 5175;
+				transport(new Position(2480, 5175, getPosition().getZ()));
 			} else if (stairs == 24) {
-				teleportToX = 2862;
-				teleportToY = 9572;
+				transport(new Position(2862, 9572, getPosition().getZ()));
 			} else if (stairs == 25) {
 				int Essence = Misc.random(EssenceMineRX.length - 1);
-				teleportToX = EssenceMineRX[Essence];
-				teleportToY = EssenceMineRY[Essence];
-				getPosition().setZ(0);
+				transport(new Position(EssenceMineRX[Essence], EssenceMineRY[Essence], 0));
 			} else if (stairs == 26) {
 				int Essence = Misc.random(EssenceMineX.length - 1);
-				teleportToX = EssenceMineX[Essence];
-				teleportToY = EssenceMineY[Essence];
-				getPosition().setZ(0);
+				transport(new Position(EssenceMineX[Essence], EssenceMineY[Essence], 0));
 			} else if (stairs == 27) {
-				teleportToX = 2453;
-				teleportToY = 4468;
+				transport(new Position(2453, 4468, getPosition().getZ()));
 			} else if (stairs == 28) {
-				teleportToX = 3201;
-				teleportToY = 3169;
+				transport(new Position(3201, 3169, getPosition().getZ()));
 			}
 			if (stairs == 5 || stairs == 10) {
-				teleportToX += (stairDistance + stairDistanceAdd);
-				teleportToY = getPosition().getY();
-				getPosition().setZ(0);
+				transport(new Position(getPosition().getX() + (stairDistance + stairDistanceAdd), getPosition().getY(), 0));
 			}
 			if (stairs == 6 || stairs == 9) {
-				teleportToX -= (stairDistance - stairDistanceAdd);
+				transport(new Position(getPosition().getX() - (stairDistance - stairDistanceAdd), getPosition().getY(), 0));
 			}
 		}
 		resetStairs();
@@ -3529,6 +3496,14 @@ public class Client extends Player implements Runnable {
 			if (playerItems[i] == itemID) {
 				return true;
 			}
+		}
+		return false;
+	}
+
+	public boolean playerHasItem(String name) {
+		for (int i = 0; i < playerItems.length; i++) {
+			if (GetItemName(playerItems[i]).contains(name))
+				return true;
 		}
 		return false;
 	}
@@ -5808,9 +5783,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void resetPos() {
-		getPosition().moveTo(2604 + Misc.random(6), 3101 + Misc.random(3), 0); //Update position!
-		teleportToX = getPosition().getX();
-		teleportToY = getPosition().getY();
+		transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), 0));
 	}
 
 	public boolean canUse(int id) {
@@ -8858,11 +8831,17 @@ public class Client extends Player implements Runnable {
 		send(new SendString("Brimhaven", 12338));
 		send(new SendString("Island", 12339));
 		send(new SendString("Catherby", 809));
-		send(new SendString("Canafis", 810));
+		send(new SendString("Canifis", 810));
 		send(new SendString("", 811)); //Trollheim?!
 		send(new SendString("Shilo", 812));
 		send(new SendString("Sophanem", 813));
 		showInterface(802);
+	}
+
+	public void transport(Position pos) {
+		teleportToX = pos.getX();
+		teleportToY = pos.getY();
+		moveTo(teleportToX, teleportToY, pos.getZ());
 	}
 
 	public void travelTrigger(int checkPos) {
@@ -8904,9 +8883,7 @@ public class Client extends Player implements Runnable {
 						if (disconnected)
 							this.stop();
 						else {
-							getPosition().moveTo(travel[pos][1], travel[pos][2], 0); //Update position!
-							teleportToX = getPosition().getX();
-							teleportToY = getPosition().getY();
+							transport(new Position(travel[pos][1], travel[pos][2], 0));
 							send(new RemoveInterfaces());
 							travelInitiate = false;
 							this.stop();

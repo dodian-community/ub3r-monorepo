@@ -117,8 +117,7 @@ public class ClickObject implements Packet {
             return;
         }
         if (objectID == 23271) {
-            client.teleportToX = objectPosition.getX();
-            client.teleportToY = objectPosition.getY() + (client.getPosition().getY() == 3523 ? -1 : 2);
+            client.transport(new Position(objectPosition.getX(), objectPosition.getY() + (client.getPosition().getY() == 3523 ? -1 : 2), objectPosition.getZ()));
         }
         if ((objectID == 6451 && client.getPosition().getY() == 9375) || (objectID == 6452 && client.getPosition().getY() == 9376)) {
             if (client.getPosition().getX() == 3305) {
@@ -152,32 +151,22 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You do not have any bars to smith!"));
         }
         if (objectID == 1294) {
-            client.teleportToX = 2485;
-            client.teleportToY = 9912;
-            client.newheightLevel = 0;
+            client.transport(new Position(2485, 9912, 0));
         }
         if (objectID == 17384 && objectPosition.getX() == 2892 && objectPosition.getY() == 3507) {
-            client.teleportToX = 2893;
-            client.teleportToY = 3507 + 6400;
-            client.newheightLevel = 0;
+            client.transport(new Position(2893, 9907, 0));
         }
         if (objectID == 17384 && objectPosition.getX() == 2677 && objectPosition.getY() == 3405) {
-            client.teleportToX = 2677;
-            client.teleportToY = 9806;
-            client.newheightLevel = 0;
+            client.transport(new Position(2677, 9806, 0));
         }
-        if (objectID == 7962) {
-            System.out.println("patch?!");
+        if (objectID == 7962) { //Flower patch?!
+            //System.out.println("patch?!");
         }
         if (objectID == 17385 && objectPosition.getX() == 2677 && objectPosition.getY() == 9805) {
-            client.teleportToX = 2677;
-            client.teleportToY = 3404;
-            client.newheightLevel = 0;
+            client.transport(new Position(2677, 3404, 0));
         }
         if (objectID == 17387 && objectPosition.getX() == 2892 && objectPosition.getY() == 9907) {
-            client.teleportToX = 2893;
-            client.teleportToY = 3507;
-            client.newheightLevel = 0;
+            client.transport(new Position(2893, 3507, 0));
         }
         if (objectID == 20877 && objectPosition.getX() == 2743 && objectPosition.getY() == 3153) {
             if (!client.checkUnlock(0) && client.checkUnlockPaid(0) != 1) {
@@ -185,22 +174,16 @@ public class ClickObject implements Packet {
                 return;
             }
             client.addUnlocks(0, "0", client.checkUnlock(0) ? "1" : "0");
-            client.teleportToX = 3748;
-            client.teleportToY = 9373 + Misc.random(1);
-            client.newheightLevel = 0;
             client.showNPCChat(2345, 592, new String[]{"Welcome to my dungeon."});
+            client.transport(new Position(3748, 9373 + Misc.random(1), 0));
         }
         if (objectID == 5553 && objectPosition.getX() == 3749 && objectPosition.getY() == 9373) {
-            client.teleportToX = 2744 + Misc.random(1);
-            client.teleportToY = 3153;
-            client.newheightLevel = 0;
             client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
+            client.transport(new Position(2744 + Misc.random(1), 3153, 0));
         }
         if (objectID == 6702 && objectPosition.getX() == 3749 && objectPosition.getY() == 9374) {
-            client.teleportToX = 2744 + Misc.random(1);
-            client.teleportToY = 3153;
-            client.newheightLevel = 0;
             client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
+            client.transport(new Position(2744 + Misc.random(1), 3153, 0));
         }
         if (objectID == 14914) {
             if (!client.checkUnlock(1) && client.checkUnlockPaid(1) != 1) {
@@ -208,17 +191,13 @@ public class ClickObject implements Packet {
                 return;
             }
             client.addUnlocks(1, "0", client.checkUnlock(1) ? "1" : "0");
-            client.teleportToX = 2444;
-            client.teleportToY = 5169;
-            client.newheightLevel = 0;
             client.showNPCChat(2180, 592, new String[]{"Welcome to my cave."});
+            client.transport(new Position(2444, 5169, 0));
             client.GetBonus(true);
         }
         if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
-            client.teleportToX = 2848;
-            client.teleportToY = 2991;
-            client.newheightLevel = 0;
             client.showNPCChat(2180, 593, new String[]{"Welcome back out from my cave."});
+            client.transport(new Position(2848, 2991, 0));
             client.GetBonus(true);
         }
         if (objectID == 16466) {
@@ -226,62 +205,49 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need level 75 agility to use this shortcut!"));
                 return;
             }
-            client.teleportToX = 2863;
-            client.teleportToY = client.getPosition().getY() == 2971 ? 2976 : 2971;
-            client.newheightLevel = 0;
+            client.transport(new Position(2863, client.getPosition().getY() == 2971 ? 2976 : 2971, 0));
         }
         if (objectID == 882 && objectPosition.getX() == 2899 && objectPosition.getY() == 9728) {
             if (client.getLevel(Skill.AGILITY) < 85) {
                 client.send(new SendMessage("You need level 85 agility to use this shortcut!"));
                 return;
             }
-            client.teleportToX = 2885;
-            client.teleportToY = 9795;
-            client.newheightLevel = 0;
+            client.transport(new Position(2885, 9795, 0));
         }
         if (objectID == 882 && objectPosition.getX() == 2885 && objectPosition.getY() == 9794) {
             if (client.getLevel(Skill.AGILITY) < 85) {
                 client.send(new SendMessage("You need level 85 agility to use this shortcut!"));
                 return;
             }
-            client.teleportToX = 2899;
-            client.teleportToY = 9729;
-            client.newheightLevel = 0;
+            client.transport(new Position(2899, 9729, 0));
         }
         if (objectID == 16509) {
             if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
                 client.send(new SendMessage("You need a crystal key and 70 agility to use this shortcut!"));
                 return;
             }
-            if (client.getPosition().getX() == 2886 && client.getPosition().getY() == 9799) {
-                client.teleportToX = 2892;
-                client.teleportToY = 9799;
-            } else if (client.getPosition().getX() == 2892 && client.getPosition().getY() == 9799) {
-                client.teleportToX = 2886;
-                client.teleportToY = 9799;
-            }
+            if (client.getPosition().getX() == 2886 && client.getPosition().getY() == 9799)
+                client.transport(new Position(2892, 9799, 0));
+            else if (client.getPosition().getX() == 2892 && client.getPosition().getY() == 9799)
+                client.transport(new Position(2886, 9799, 0));
         }
         if (objectID == 16510) {
             if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
                 client.send(new SendMessage("You need a crystal key and 70 agility to use this shortcut!"));
                 return;
             }
-            if (client.getPosition().getX() == 2880 && client.getPosition().getY() == 9813) {
-                client.teleportToX = 2878;
-                client.teleportToY = 9813;
-            } else if (client.getPosition().getX() == 2878 && client.getPosition().getY() == 9813) {
-                client.teleportToX = 2880;
-                client.teleportToY = 9813;
-            }
+            if (client.getPosition().getX() == 2880 && client.getPosition().getY() == 9813)
+                client.transport(new Position(2878, 9813, 0));
+            else if (client.getPosition().getX() == 2878 && client.getPosition().getY() == 9813)
+                client.transport(new Position(2880, 9813, 0));
         }
         if (objectID == 6847) {
             Thieving.attemptSteal(client, objectID, objectPosition);
             // 	client.addItem(4084, 1);
         }
         if (objectID == 133) { // new dragon teleport?
-            client.teleportToX = 3235;
-            client.teleportToY = 9366;
             client.send(new SendMessage("Welcome to the dragon lair!"));
+            client.transport(new Position(3235, 9366, 0));
         }
         if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) {
             for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
@@ -305,8 +271,7 @@ public class ClickObject implements Packet {
             return;
         }
         if (objectID == 11635) {
-                client.teleportToX = 3543;
-                client.teleportToY = 3463;
+            client.transport(new Position(3543, 3463, 0));
             return;
         }
         if ((objectID == 1524 || objectID == 1521) && (objectPosition.getX() == 2908 || objectPosition.getX() == 2907) && objectPosition.getY() == 9698) {
@@ -337,33 +302,22 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."));
                 return;
             }
-                client.teleportToX = 2884;
-                client.teleportToY = 9798;
-                client.getPosition().setZ(0);
+            client.transport(new Position(2884, 9798, 0));
         }
         if (objectID == 17385 && objectPosition.getX() == 2884 && objectPosition.getY() == 9797) {
-            client.teleportToX = 2884;
-            client.teleportToY = 3398;
+            client.transport(new Position(2884, 3398, 0));
         }
         if (objectID == 25939 && objectPosition.getX() == 2715 && objectPosition.getY() == 3470) {
-            client.teleportToX = 2715;
-            client.teleportToY = 3471;
-            client.getPosition().setZ(0);
+            client.transport(new Position(2715, 3471, 0));
         }
         if (objectID == 25938 && objectPosition.getX() == 2715 && objectPosition.getY() == 3470) {
-            client.teleportToX = 2714;
-            client.teleportToY = 3470;
-            client.getPosition().setZ(1);
+            client.transport(new Position(2714, 3470, 1));
         }
         if (objectID == 16683 && objectPosition.getX() == 2597 && objectPosition.getY() == 3107) {
-            client.teleportToX = 2597;
-            client.teleportToY = 3106;
-            client.getPosition().setZ(1);
+            client.transport(new Position(2597, 3106, 1));
         }
         if (objectID == 16681 && objectPosition.getX() == 2597 && objectPosition.getY() == 3107) {
-            client.teleportToX = 2597;
-            client.teleportToY = 3106;
-            client.getPosition().setZ(0);
+            client.transport(new Position(2597, 3106, 0));
         }
         if (objectID == 410 && objectPosition.getX() == 2925 && objectPosition.getY() == 3483) { //Guthix altar to cosmic
             client.requestAnim(645, 0);
@@ -386,22 +340,16 @@ public class ClickObject implements Packet {
                     objectPosition.getY()) > 2) {
                 return;
             }
-            if (client.premium) {
-                client.teleportToX = 2732;
-                client.teleportToY = 3380;
-                client.getPosition().setZ(1);
-            }
+            if (client.premium)
+                client.transport(new Position(2732, 3380, 1));
         }
         if (objectID == 1726 && objectPosition.getX() == 2732 && objectPosition.getY() == 3378) {
             if (Utils.getDistance(client.getPosition().getX(), client.getPosition().getY(), objectPosition.getX(),
                     objectPosition.getY()) > 2) {
                 return;
             }
-            if (client.premium) {
-                client.teleportToX = 2732;
-                client.teleportToY = 3376;
-                client.getPosition().setZ(0);
-            }
+            if (client.premium)
+                client.transport(new Position(2732, 3376, 0));
         }
         if (objectID == 1726) {
             client.stairs = "legendsDown".hashCode();
@@ -504,9 +452,8 @@ public class ClickObject implements Packet {
         if (objectID == 11636) { //Werewolf entrance
             if (client.getLevel(Skill.AGILITY) >= 60) {
                 client.ReplaceObject(objectPosition.getX(), objectPosition.getY(), 11636, 2, 10); //Do we need to showcase the trapdoor being opened?
-                client.teleportToX = 3549;
-                client.teleportToY = 9865;
                 client.showNPCChat(5928, 601, new String[]{"Welcome to the werewolf agility course!"});
+                client.transport(new Position(3549, 9865, 0));
             } else client.showNPCChat(5928, 616, new String[]{"Go and train your agility!"});
             return;
         }
@@ -552,9 +499,8 @@ public class ClickObject implements Packet {
             return;
         }
         if (objectID == 2634 && objectPosition.getX() == 2838 && objectPosition.getY() == 3517) { //2838, 3517
-            client.teleportToX = 2840;
-            client.teleportToY = 3517;
             client.send(new SendMessage("You jump to the other side of the rubble"));
+            client.transport(new Position(2840, 3517, 0));
 //      if (client.getLevel(Skill.MINING) < 40) {
 //        client.send(new SendMessage("You need 40 mining to clear this rubble"));
 //        return;
@@ -569,16 +515,13 @@ public class ClickObject implements Packet {
             int[] y = {3516, 3513, 3519};
             for (int c = 0; c < x.length; c++) {
                 if (objectPosition.getX() == x[c] && objectPosition.getY() == y[c]) {
-                    client.teleportToX = 2868;
-                    client.teleportToY = 9945;
+                    client.transport(new Position(2868, 9945, 0));
                     c = x.length;
                 }
             }
         }
         if (objectID == 2492) {
-            client.teleportToX = 2591;
-            client.teleportToY = 3087;
-            client.getPosition().setZ(0);
+            client.transport(new Position(2591, 3087, 0));
             return;
         }
         if (objectID == 14905) {
@@ -619,31 +562,22 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need level 50 agility to use this shortcut!"));
                 return;
             }
-            if (objectPosition.getX() == 2575 && objectPosition.getY() == 3108) {
-                client.teleportToX = 2575;
-                client.teleportToY = 3112;
-                client.getPosition().setZ(0);
-            } else if (objectPosition.getX() == 2575 && objectPosition.getY() == 3111) {
-                client.teleportToX = 2575;
-                client.teleportToY = 3107;
-                client.getPosition().setZ(0);
-            }
+            if (objectPosition.getX() == 2575 && objectPosition.getY() == 3108)
+                client.transport(new Position(2575, 3112, 0));
+            else if (objectPosition.getX() == 2575 && objectPosition.getY() == 3111)
+                client.transport(new Position(2575, 3107, 0));
             return;
         }
         if (objectID == 16664 && objectPosition.getX() == 2724 && objectPosition.getY() == 3374) {
             if (!client.premium) {
                 client.resetPos();
             }
-            client.teleportToX = 2727;
-            client.teleportToY = 9774;
-            client.getPosition().setZ(0);
+            client.transport(new Position(2727, 9774, 0));
             return;
         }
         if (objectID == 2833) {
             if (objectPosition.getX() == 2544 && objectPosition.getY() == 3111) {
-                client.teleportToX = 2544;
-                client.teleportToY = 3112;
-                client.getPosition().setZ(1);
+                client.transport(new Position(2544, 3112, 1));
             }
             return;
         }
@@ -651,54 +585,39 @@ public class ClickObject implements Packet {
             if (client.playerRights < 1) {
                 return;
             }
-            if (objectPosition.getX() == 2542 && objectPosition.getY() == 3097) {
-                client.teleportToX = 2462;
-                client.teleportToY = 4359;
-                client.getPosition().setZ(0);
-            } else if (objectPosition.getX() == 2459 && objectPosition.getY() == 4354) {
-                client.teleportToX = 2544;
-                client.teleportToY = 3096;
-                client.getPosition().setZ(0);
-            }
+            if (objectPosition.getX() == 2542 && objectPosition.getY() == 3097)
+                client.transport(new Position(2462, 4359, 0));
+            else if (objectPosition.getX() == 2459 && objectPosition.getY() == 4354)
+                client.transport(new Position(2544, 3096, 0));
             return;
         }
         if (objectID == 17122) {
             if (objectPosition.getX() == 2544 && objectPosition.getY() == 3111) {
-                client.teleportToX = 2544;
-                client.teleportToY = 3112;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2544, 3112, 0));
             }
             return;
         }
         if (objectID == 2796) {
             if (objectPosition.getX() == 2549 && objectPosition.getY() == 3111) {
-                client.teleportToX = 2549;
-                client.teleportToY = 3112;
-                client.getPosition().setZ(2);
+                client.transport(new Position(2549, 3112, 2));
             }
             return;
         }
         if (objectID == 2797) {
             if (objectPosition.getX() == 2549 && objectPosition.getY() == 3111) {
-                client.teleportToX = 2549;
-                client.teleportToY = 3112;
-                client.getPosition().setZ(1);
+                client.transport(new Position(2549, 3112, 1));
             }
             return;
         }
         if (objectID == 17384) {
             if (objectPosition.getX() == 2594 && objectPosition.getY() == 3085) {
-                client.teleportToX = 2594;
-                client.teleportToY = 9486;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2594, 9486, 0));
             }
             return;
         }
         if (objectID == 17385) {
             if (objectPosition.getX() == 2594 && objectPosition.getY() == 9485) {
-                client.teleportToX = 2594;
-                client.teleportToY = 3086;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2594, 3086, 0));
             }
             return;
         }
@@ -707,17 +626,11 @@ public class ClickObject implements Packet {
                 if (!client.premium) {
                     client.resetPos();
                 }
-                client.teleportToX = 2723;
-                client.teleportToY = 3375;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2723, 3375, 0));
             } else if (objectPosition.getX() == 2603 && objectPosition.getY() == 9478) {
-                client.teleportToX = 2606;
-                client.teleportToY = 3079;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2606, 3079, 0));
             } else if (objectPosition.getX() == 2569 && objectPosition.getY() == 9522) {
-                client.teleportToX = 2570;
-                client.teleportToY = 3121;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2570, 3121, 0));
             }
             return;
         }
@@ -877,21 +790,16 @@ public class ClickObject implements Packet {
                 client.send(new SendMessage("You need a orange key to use this pipe!"));
                 return;
             }
-            if (objectPosition.getX() == 2576 && objectPosition.getY() == 9506) {
-                client.teleportToX = 2572;
-                client.teleportToY = 9506;
-            } else if (objectPosition.getX() == 2573 && objectPosition.getY() == 9506) {
-                client.teleportToX = 2578;
-                client.teleportToY = 9506;
-            }
+            if (objectPosition.getX() == 2576 && objectPosition.getY() == 9506)
+                client.transport(new Position(2572, 9506, 0));
+            else if (objectPosition.getX() == 2573 && objectPosition.getY() == 9506)
+                client.transport(new Position(2578, 9506, 0));
         }
         if (objectID == 23564) {
-            client.teleportToX = 2621;
-            client.teleportToY = 9496;
+            client.transport(new Position(2621, 9496, 0));
         }
         if (objectID == 15656) {
-            client.teleportToX = 2614;
-            client.teleportToY = 9505;
+            client.transport(new Position(2614, 9505, 0));
         }
         if(objectID == 409) {
             if(client.getCurrentPrayer() != client.getMaxPrayer()) {
@@ -909,40 +817,32 @@ public class ClickObject implements Packet {
         }
         if (objectID == 1591 && objectPosition.getX() == 3268 && objectPosition.getY() == 3435) {
             if (client.determineCombatLevel() >= 80) {
-                client.teleportToX = 2540;
-                client.teleportToY = 4716;
+                client.transport(new Position(2540, 4716, 0));
             } else {
                 client.send(new SendMessage("You need to be level 80 or above to enter the mage arena."));
                 client.send(new SendMessage("The skeletons at the varrock castle are a good place until then."));
             }
         }
         if (objectID == 5960 && objectPosition.getX() == 2539 && objectPosition.getY() == 4712) {
-            client.teleportToX = 3105;
-            client.teleportToY = 3933;
+            client.transport(new Position(3105, 3933, 0));
         }
 
         // Wo0t Tzhaar Objects
 
         if (objectID == 9369 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5176)) {
             if (client.getPosition().getY() == 5177) {
-                client.teleportToX = 2399;
-                client.teleportToY = 5175;
-
+                client.transport(new Position(2399, 5175, 0));
             }
         }
         if (objectID == 9369 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5176)) {
             if (client.getPosition().getY() == 5175) {
-                client.teleportToX = 2399;
-                client.teleportToY = 5177;
-
+                client.transport(new Position(2399, 5177, 0));
             }
         }
 
         if (objectID == 9368 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5168)) {
             if (client.getPosition().getY() == 5169) {
-                client.teleportToX = 2399;
-                client.teleportToY = 5167;
-
+                client.transport(new Position(2399, 5167, 0));
             }
         }
         if (objectID == 9391 && (objectPosition.getX() == 2399) && (objectPosition.getY() == 5172)) // Tzhaar bank?
@@ -953,15 +853,13 @@ public class ClickObject implements Packet {
             client.openUpBank();
         if (objectID == 11833 && objectPosition.getX() == 2437 && objectPosition.getY() == 5166) // Jad entrance
         {
-            client.teleportToX = 2413;
-            client.teleportToY = 5117;
             client.send(new SendMessage("You have entered the Jad Cave."));
+            client.transport(new Position(2413, 5117, 0));
         }
         if (objectID == 11834 && objectPosition.getX() == 2412 && objectPosition.getY() == 5118) // Jad exit
         {
-            client.teleportToX = 2438;
-            client.teleportToY = 5168;
             client.send(new SendMessage("You have left the Jad Cave."));
+            client.transport(new Position(2438, 5168, 0));
         }
         // End of Tzhaar Objects
 
@@ -983,52 +881,36 @@ public class ClickObject implements Packet {
         /* Gnome Village stairs! */
         if (objectID == 16675 && objectPosition.getX() == 2488 && objectPosition.getY() == 3407) // spinning wheel stairs 1
         {
-            client.getPosition().setZ(1);
-            client.teleportToX = 2489;
-            client.teleportToY = 3409;
+            client.transport(new Position(2489, 3409, 1));
         }
         if (objectID == 16677 && objectPosition.getX() == 2489 && objectPosition.getY() == 3408) // spinning wheel stairs 1
         {
-            client.getPosition().setZ(0);
-            client.teleportToX = 2488;
-            client.teleportToY = 3406;
+            client.transport(new Position(2488, 3406, 0));
         }
         if (objectID == 16675 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) // spinning wheel stairs 2
         {
-            client.getPosition().setZ(1);
-            client.teleportToX = 2485;
-            client.teleportToY = 3401;
+            client.transport(new Position(2485, 3401, 1));
         }
         if (objectID == 16677 && objectPosition.getX() == 2485 && objectPosition.getY() == 3402) // spinning wheel stairs 2
         {
-            client.getPosition().setZ(0);
-            client.teleportToX = 2485;
-            client.teleportToY = 3404;
+            client.transport(new Position(2485, 3404, 0));
         }
 
         if (objectID == 16675 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) // Bank staircase 1
         {
-            client.getPosition().setZ(1);
-            client.teleportToX = 2445;
-            client.teleportToY = 3433;
+            client.transport(new Position(2445, 3433, 1));
         }
         if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3434) // Bank staircase 1
         {
-            client.getPosition().setZ(0);
-            client.teleportToX = 2446;
-            client.teleportToY = 3436;
+            client.transport(new Position(2446, 3436, 0));
         }
         if (objectID == 16675 && objectPosition.getX() == 2444 && objectPosition.getY() == 3414) // Bank staircase 2
         {
-            client.getPosition().setZ(1);
-            client.teleportToX = 2445;
-            client.teleportToY = 3416;
+            client.transport(new Position(2445, 3416, 1));
         }
         if (objectID == 16677 && objectPosition.getX() == 2445 && objectPosition.getY() == 3415) // Bank staircase 2
         {
-            client.getPosition().setZ(0);
-            client.teleportToX = 2444;
-            client.teleportToY = 3413;
+            client.transport(new Position(2444, 3413, 0));
         }
         // }
         // go upstairs
@@ -1131,25 +1013,19 @@ public class ClickObject implements Packet {
                         client.send(new SendMessage("You need a red key to go down these stairs!"));
                         return;
                     }
-                    client.teleportToX = 2602;
-                    client.teleportToY = 9479;
-                    client.getPosition().setZ(0);
+                    client.transport(new Position(2602, 9479, 0));
                 } else if (objectPosition.getX() == 2569 && objectPosition.getY() == 3122) {
                     if (!client.checkItem(1545)) {
                         client.send(new SendMessage("You need a yellow key to use this staircase!"));
                         return;
                     }
-                    client.teleportToX = 2570;
-                    client.teleportToY = 9525;
-                    client.getPosition().setZ(0);
+                    client.transport(new Position(2570, 9525, 0));
                 }
             } else if (objectID == 1992 && objectPosition.getX() == 2558 && objectPosition.getY() == 3444) {
 //        if (client.playerHasItem(537, 50)) {
 //          client.deleteItem(537, client.getItemSlot(537), 50);
 //          client.send(new SendMessage("The gods accept your offer!"));
-                client.teleportToX = 2717;
-                client.teleportToY = 9820;
-                client.getPosition().setZ(0);
+                client.transport(new Position(2717, 9820, 0));
 //        } else {
 //          client.send(new SendMessage("The gods require 50 dragon bones as a sacrifice!"));
 //          return;
