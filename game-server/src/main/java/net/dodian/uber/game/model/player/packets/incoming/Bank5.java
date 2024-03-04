@@ -59,7 +59,7 @@ public class Bank5 implements Packet {
                 client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
             } else if (removeID == 4566) {
                 client.requestAnim(1835, 0);
-            } else if (removeID == 11864 || removeID == 11865) {
+            } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
                 SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
                 if (checkTask != null && client.getSlayerData().get(3) > 0)
                     client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));

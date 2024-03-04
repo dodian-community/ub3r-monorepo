@@ -33,7 +33,7 @@ public class ClickItem2 implements Packet {
             };
             client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
         }
-        if(itemId == 11864 || itemId == 11865) {
+        if(client.playerHasItem("Slayer helm")) {
             SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
             if (checkTask != null && client.getSlayerData().get(3) > 0)
                 client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
