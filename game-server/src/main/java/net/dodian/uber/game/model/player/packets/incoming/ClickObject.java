@@ -469,9 +469,50 @@ public class ClickObject implements Packet {
         if (objectID == 2102) {
             objectID = 2103;
         }
-        for (int r = 0; r < Utils.rocks.length; r++) {
+        /* Woodcutting */
+        if (client.CheckObjectSkill(objectID, objectName)) {
+            if (client.fletchings || client.isFiremaking || client.shafting) { //We need this here?!
+                client.resetAction();
+            }
+            if (client.cuttingIndex < 0) {
+                client.resetAction();
+                return;
+            }
+            int WCAxe = client.findAxe();
+            if (WCAxe < 0) {
+                client.send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
+                client.resetAction();
+                return;
+            }
+            int level = Utils.woodcuttingLevels[client.cuttingIndex];
+            if (level > client.getLevel(Skill.WOODCUTTING)) {
+                client.send(new SendMessage(
+                        "You need a woodcutting level of " + level + " to cut this tree."));
+                client.resetAction();
+                return;
+            }
+            if (client.freeSlots() < 1) {
+                client.send(new SendMessage("You got full inventory!"));
+                client.resetAction();
+                return;
+            }
+            client.resourcesGathered = 0;
+            client.lastAxeAction = System.currentTimeMillis() + 600;
+            client.lastAction = System.currentTimeMillis() - 600;
+            client.woodcutting = true;
+            client.requestAnim(client.getWoodcuttingEmote(Utils.axes[WCAxe]), 0);
+            client.send(new SendMessage("You swing your axe at the tree..."));
+            return;
+        }
+        /* Mining */
+        boolean foundRock = false;
+        for (int r = 0; r < Utils.rocks.length && !foundRock; r++) {
             if (objectID == Utils.rocks[r]) {
-                if(client.getPositionName(client.getPosition()) == Client.positions.TZHAAR) {
+                foundRock = true;
+                if (client.fletchings || client.isFiremaking || client.shafting) { //We need this here?!
+                    client.resetAction();
+                }
+                if (client.getPositionName(client.getPosition()) == Client.positions.TZHAAR) {
                     client.send(new SendMessage("You can not mine here or the Tzhaar's will be angry!"));
                     return;
                 }
@@ -479,24 +520,22 @@ public class ClickObject implements Packet {
                     client.send(new SendMessage("You need a mining level of " + Utils.rockLevels[r] + " to mine this rock"));
                     return;
                 }
-                client.minePick = client.findPick();
-                if (client.minePick < 0) {
+                int minePick = client.findPick();
+                if (minePick < 0) {
                     client.resetAction();
-                    client.send(new SendMessage("You do not have an pickaxe that you can use."));
+                    client.send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
                     return;
                 }
-                    client.mineIndex = r;
-                    client.mining = true;
-                    client.lastPickAction = System.currentTimeMillis() + 600;
-                    client.lastAction = System.currentTimeMillis() + 600;
-                    client.requestAnim(client.getMiningEmote(Utils.picks[client.minePick]), 0);
+                if (foundRock) {
                     client.resourcesGathered = 0;
+                    client.lastPickAction = System.currentTimeMillis() + 600;
+                    client.lastAction = System.currentTimeMillis() - 600;
+                    client.mineIndex = r; //Rock id need to be here!
+                    client.mining = true;
+                    client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0);
                     client.send(new SendMessage("You swing your pick at the rock..."));
-                return;
+                }
             }
-        }
-        if (client.mining) {
-            return;
         }
         if (objectID == 2634 && objectPosition.getX() == 2838 && objectPosition.getY() == 3517) { //2838, 3517
             client.send(new SendMessage("You jump to the other side of the rubble"));
@@ -802,7 +841,7 @@ public class ClickObject implements Packet {
             client.transport(new Position(2614, 9505, 0));
         }
         if(objectID == 409) {
-            if(client.getCurrentPrayer() != client.getMaxPrayer()) {
+            if(client.getCurrentPrayer() < client.getMaxPrayer()) {
                 client.pray(client.getMaxPrayer());
                 client.send(new SendMessage("You restore your prayer points!"));
             } else client.send(new SendMessage("You are at maximum prayer points!"));
@@ -870,13 +909,6 @@ public class ClickObject implements Packet {
             client.setSkillY(objectPosition.getY());
             client.WanneBank = 1;
             client.WanneShop = -1;
-        }
-        // woodCutting
-        // mining
-        // if (actionTimer == 0) {
-        if (client.CheckObjectSkill(objectID, objectName)) {
-            client.skillX = objectPosition.getX();
-            client.setSkillY(objectPosition.getY());
         }
         /* Gnome Village stairs! */
         if (objectID == 16675 && objectPosition.getX() == 2488 && objectPosition.getY() == 3407) // spinning wheel stairs 1

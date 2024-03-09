@@ -6,9 +6,12 @@ import net.dodian.uber.game.model.combat.impl.styles.*;
 public enum WeaponData {
     UNARMED(new String[]{"unarmed"}, 5855, new UnarmedHandler()),
     WHIP(new String[]{"whip", "scythe"}, 12290, new WhipHandler()),
+    CROSSBOW(new String[]{"crossbow"}, 1749, new BowHandler()),
     BOW(new String[]{"bow", "seercull"}, 1764, new BowHandler()),
+    DARTS(new String[]{"darts", "knifes"}, 4446, new BowHandler()),
     WAND(new String[]{"wand", "staff", "toktz-mej-tal"}, 328, new WandHandler()),
     THROWABLE(new String[]{"dart", "knife", "javelin"}, 4446, new ThrowableHandler()),
+    TWOHANDED(new String[]{"2h"}, 4705, new SwordsHandler()),
     SWORDS(new String[]{"dagger", "sword", "toktz-xil-ak", "wolfbane"}, 2276, new SwordsHandler()),
     LONGSWORDS(new String[]{"scimitar", "longsword", "toktz-xil-ek"}, 2423, new LongSwordsHandler()),
     PICKAXE(new String[]{"pickaxe"}, 5570, new PickaxeHandler()),

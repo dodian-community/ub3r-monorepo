@@ -97,7 +97,6 @@ public class ChangeRegion implements Packet {
             client.getOutputStream().writeString("null");
             client.getOutputStream().endFrameVarSize();
         }
-        client.updatePlayerDisplay();
     }
 
 }

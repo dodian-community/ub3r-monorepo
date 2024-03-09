@@ -12,67 +12,50 @@ public class Walking implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
+        long currentTime = System.currentTimeMillis();
         if (packetType == 248)
             packetSize -= 14;
-
+        if(client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient || !client.pLoaded || currentTime < client.walkBlock) {
+            return;
+        }
+        if(client.doingTeleport()) { //In the midst of a teleport to stop movement!
+            return;
+        }
         if (packetType != 98 && packetType != 164) {
             client.setWalkToTask(null);
-        }
-        if (!client.pLoaded || System.currentTimeMillis() < client.walkBlock) {
-            return;
-        }
-        if (client.getCurrentHealth() < 1 || client.deathStage > 0) { //You are dead here!
-            return;
-        }
-        if (client.randomed) {
-            return;
         }
         if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
         /* Auto decline when walk away from trade! */
         if(client.inTrade && packetType != 164) client.declineTrade();
+        /* Auto decline when walk away from duel! */
         else if(client.inDuel && !client.duelFight && packetType != 164) client.declineDuel();
         /* Check a players inventory! */
         if (client.checkInv) {
             client.checkInv = false;
             client.resetItems(3214);
         }
-        if (client.genie)
-            client.genie = false;
-        if (!client.playerPotato.isEmpty())
-            client.playerPotato.clear();
-        if (client.NpcDialogue == 1001)
-            client.setInterfaceWalkable(-1);
-        client.convoId = -1;
-        long currentTime = System.currentTimeMillis();
-        if (currentTime < client.snaredUntil) {
-            client.send(new SendMessage("You are ensnared!"));
-            client.stopMovement();
-            return;
-        }
-        if (!client.validClient) {
-            client.send(new SendMessage("You can't move on this account"));
-            client.stopMovement();
-            return;
-        }
+        if (client.genie) client.genie = false;
+        if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
+        /* Combat checks! */
         if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
             client.resetAttack();
-        /* ? */
+        if(client.getStunTimer() > 0 || client.getSnareTimer() > 0) { //In the midst of a teleport to stop movement!
+            client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
+            client.stopMovement();
+            return;
+        }
+        /* Stuff to close interface, not sure if needed before trigger of walk or before! */
         client.send(new RemoveInterfaces());
         client.rerequestAnim();
         client.resetAction();
-        client.discord = false; //Sorry need it here!
-        /* Death Stage */
-        if (client.deathStage == 0) {
+        client.discord = false;
+        /* Code for when you trigger the walking! */
             client.newWalkCmdSteps = packetSize - 5;
             if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
                 if (client.newWalkCmdSteps > 0)
                     client.send(new SendMessage("You cannot move during this duel!"));
                 client.newWalkCmdSteps = 0;
                 return;
-            }
-            if (client.newWalkCmdSteps % 2 != 0) {
-                client.println_debug("Warning: walkTo(" + packetType + ") command malformed: "
-                        + Utils.Hex(client.getInputStream().buffer, 0, packetSize));
             }
             client.newWalkCmdSteps /= 2;
             if (++client.newWalkCmdSteps > Player.WALKING_QUEUE_SIZE) {
@@ -100,14 +83,15 @@ public class Walking implements Packet {
                 client.resetStairs();
             }
             // Npc Talking
+            if (client.NpcDialogue == 1001) client.setInterfaceWalkable(-1);
+            client.convoId = -1;
             if (client.NpcDialogue > 0) {
                 client.NpcDialogue = 0;
                 client.NpcTalkTo = 0;
                 client.NpcDialogueSend = false;
                 client.send(new RemoveInterfaces());
             }
-            if(client.refundSlot != -1)
-                client.refundSlot = -1;
+            if(client.refundSlot != -1) client.refundSlot = -1;
             // banking
             if (client.IsBanking) {
                 client.IsBanking = false;
@@ -128,7 +112,6 @@ public class Walking implements Packet {
                 client.UpdateShop = false;
                 client.send(new RemoveInterfaces());
             }
-        }
         //Reset npc face!
         client.faceNpc(65535);
     }

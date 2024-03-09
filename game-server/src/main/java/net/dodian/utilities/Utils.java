@@ -35,14 +35,17 @@ public class Utils {
     public static long[] mineTimes = {1000, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000, 6500, 6500};
     public static int[] ore = {1436, 436, 436, 438, 438, 440, 440, 453, 453, 444, 444, 447, 447, 449, 449, 451, 451, 1625, 1625};
     public static int[] oreExp = {50, 110, 110, 110, 110, 280, 280, 420, 420, 510, 510, 620, 620, 780, 780, 3100, 3100, 550, 550};
-    public static int[] picks = {1265, 1267, 1269, 1273, 1271, 1275, 11920, 20014};
-    public static double[] pickBonus = {0.04, 0.065, 0.1, 0.15, 0.22, 0.32, 0.55, 0.55};
-    public static int[] pickReq = {1, 1, 6, 21, 31, 41, 61, 61};
+    public static int[] picks = {1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920, 20014};
+    public static double[] pickBonus = {0.04, 0.065, 0.1, 0.15, 0.24, 0.33, 0.42, 0.8, 0.8};
+    public static int[] pickReq = {1, 1, 6, 11, 21, 31, 41, 61, 61};
 
-    // Tree timer here soon!
-    public static int[] axes = {1351, 1349, 1353, 1355, 1357, 1359, 6739, 20011};
-    public static double[] axeBonus = {0.04, 0.065, 0.1, 0.15, 0.22, 0.32, 0.55, 0.55};
-    public static int[] axeReq = {1, 1, 6, 21, 31, 41, 61, 61};
+    public static int[] woodcuttingDelays = {1800, 2400, 3200, 4600, 5600, 8200};
+    public static int[] woodcuttingLevels = {1, 15, 30, 45, 60, 75};
+    public static int[] woodcuttingLogs = {1511, 1521, 1519, 1517, 1515, 1513};
+    public static int[] woodcuttingExp = {100, 165, 285, 425, 735, 1075};
+    public static int[] axes = {1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739, 20011};
+    public static double[] axeBonus = {0.04, 0.065, 0.1, 0.15, 0.24, 0.33, 0.42, 0.8, 0.8};
+    public static int[] axeReq = {1, 1, 6, 11, 21, 31, 41, 61, 61};
 
     public static int[] fishSpots = {1510, 1510, 1511, 1511, 1514, 1514, 1517, 1517};
     public static int[] fishId = {317, 335, 377, 371, 7944, 383, 395, 389};

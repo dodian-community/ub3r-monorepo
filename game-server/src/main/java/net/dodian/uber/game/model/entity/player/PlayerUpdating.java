@@ -91,7 +91,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.createFrame(73);
             stream.writeWordA(player.mapRegionX + 6);
             stream.writeWord(player.mapRegionY + 6);
-            ((Client)player).updateItems();
+            if(player.didTeleport()) //Update items if teleport and not at map region change!
+                ((Client)player).updateItems();
         }
 
         stream.createFrameVarSizeWord(81);
@@ -200,8 +201,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         Stream playerProps = new Stream(new byte[128]);
         playerProps.currentOffset = 0;
         playerProps.writeByte(player.getGender());
-        playerProps.writeByte((byte) player.getHeadIcon()); // Head icon aka prayer over head
-        playerProps.writeByte((byte) player.getSkullIcon()); // Skull icon
+        playerProps.writeByte((byte) player.headIcon); // Head icon aka prayer over head
+        playerProps.writeByte((byte) player.skullIcon); // Skull icon
         if (!player.isNpc()) {
             if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
                 playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);

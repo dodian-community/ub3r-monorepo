@@ -447,7 +447,7 @@ public class Npc extends Entity {
         pos = getId() == 33333 ? new Position(1,2,0) : pos; //Force a position of item drop!
 
         for (int rolls = 0; rolls < roll; rolls++) {
-            rolledChance = Misc.chance(100000) / 1000D; //100% = 100000 (1000 * 100)
+            rolledChance = Misc.chance(100_000) / 1_000D; //100% = 100000 (1000 * 100)
             itemDropped = false;
             currentChance = 0.0;
             for (NpcDrop drop : data.getDrops()) {
@@ -455,8 +455,8 @@ public class Npc extends Entity {
                 checkChance = drop.getChance();
                 if (wealth && drop.getChance() < 10.0)
                     checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
-
-                if (checkChance >= 100.0 || (checkChance + currentChance >= rolledChance && !itemDropped)) { // 100% items!
+                //System.out.println("Chance for item "+target.GetItemName(drop.getId())+": " + rolledChance + ", " + checkChance + ", " + currentChance + ": " + (checkChance + currentChance));
+                if (checkChance >= 100.0 || target.instaLoot || (checkChance + currentChance >= rolledChance && !itemDropped)) { // 100% items!
                     if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
                         if (target.checkItem(drop.getId()))
                             continue;
@@ -775,6 +775,7 @@ public class Npc extends Entity {
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
                     requestAnim(1978, 0);
                     c.stillgfx(180, c.getPosition().getY(), c.getPosition().getX());
+                    c.setSnared(-1, 5);
                     c.dealDamage(hitDiff, false, this, damageType.RANGED);
                     setLastAttack(getAttackTimer());
                 } else attack = false;

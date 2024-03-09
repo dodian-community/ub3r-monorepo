@@ -197,13 +197,13 @@ public class Prayers {
             set(prayer, false);
             c.varbit(prayer.getConfigId(), 0);
             if (!ifCheck()) {
-                p.setHeadIcon(HeadIcon.NONE.asInt());
+                p.headIcon = HeadIcon.NONE.asInt();
                 p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             }
         } else {
             set(prayer, true);
             if (prayer.getHeadIcon() != null) {
-                p.setHeadIcon(prayer.getHeadIcon().asInt());
+                p.headIcon = prayer.getHeadIcon().asInt();
                 p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             }
             checkExtraPrayers(prayer);
@@ -245,7 +245,7 @@ public class Prayers {
             set(prayer, false);
             c.varbit(prayer.getConfigId(), 0);
         }
-        p.setHeadIcon(HeadIcon.NONE.asInt());
+        p.headIcon = HeadIcon.NONE.asInt();
         p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
