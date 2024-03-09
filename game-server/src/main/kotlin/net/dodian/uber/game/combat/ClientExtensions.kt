@@ -7,7 +7,6 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
 import net.dodian.utilities.Utils
@@ -89,14 +88,11 @@ fun Client.meleeMaxHit(): Int {
     var specialBonus = 0.0
     if(checkObsidianWeapons()) //Obsidian weapon should give 20% increase damage!
         specialBonus = 0.2
-
-    val styleBonus = when (FightType) {
-        0, 1 -> 0 // Accurate & Defensive
+    val styleBonus = when (fightType) {
         2 -> 3 // Aggressive
         3 -> 1 // Controlled
-        else -> error("Fight style ID '$FightType' was unexpected!")
+        else -> 0
     }
-
     val strengthBonus = playerBonus[10]
     val strength = getLevel(Skill.STRENGTH)
     val effectiveStrength = ((strength * (1 + prayerBonus)) + styleBonus + 8) * (1 + voidBonus)
@@ -113,10 +109,9 @@ fun Client.rangedMaxHit(): Int {
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     val specialBonus = 0.0 // TODO: Calculate special bonus
 
-    val styleBonus = when (FightType) {
+    val styleBonus = when (fightType) {
         2 -> 3 // Rapid
-        0, 3 -> 0 // Accuracy and Long range
-        else -> error("Fight style ID '$FightType' was unexpected!")
+        else -> 0
     }
     val ranged = getLevel(Skill.RANGED)
     val effectiveStrength = ((ranged * (1 + prayerBonus)) + styleBonus + 8) * (1 + voidBonus)

@@ -14,7 +14,7 @@ import kotlin.math.min
 
 fun Client.handleMagic(): Int {
     val slot = autocast_spellIndex%4
-    if (combatTimer > 0) //Need this to be a check here!
+    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
         return 0
     if (target is Player && duelFight && duelRule[2]) {
         send(SendMessage("Magic has been disabled for this duel!"))
@@ -90,7 +90,7 @@ fun Client.handleMagic(): Int {
 
     if(target is Npc) {
         giveExperience(40 * hit, Skill.MAGIC)
-        giveExperience(15 * hit, Skill.HITPOINTS)
+        giveExperience(13 * hit, Skill.HITPOINTS)
     }
 
     if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))

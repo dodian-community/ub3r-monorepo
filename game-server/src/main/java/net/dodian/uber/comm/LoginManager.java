@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Friend;
+import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
@@ -101,6 +102,8 @@ public class LoginManager {
                     p.muted = true;
                 }
                 /* Set stats */
+                p.fightType = results.getInt("fightStyle");
+                p.autocast_spellIndex = results.getInt("autocast");
                 int health = (results.getInt("health"));
                 String prayer = results.getString("prayer").trim();
                 String boosted = results.getString("boosted").trim();
@@ -201,11 +204,8 @@ public class LoginManager {
                         }
                     }
                 }
-
-                p.FightType = results.getInt("fightStyle");
                 p.setTask(results.getString("slayerData"));
                 p.agilityCourseStage = results.getInt("agility");
-                p.autocast_spellIndex = results.getInt("autocast");
                 p.setTravel(results.getString("travel"));
                 /* Sets Unlocks */
                 String unlocks = (results.getString("unlocks")).trim();
@@ -292,7 +292,7 @@ public class LoginManager {
                 String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
                         + p.dbId + "', '" + playerName + "', '', '', '', '', '0')";
                 statement.executeUpdate(newAccount);
-                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON DUPLICATE (uid) DO NOTHING";
+                String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON DUPLICATE KEY UPDATE uid=uid";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
                 results.close();

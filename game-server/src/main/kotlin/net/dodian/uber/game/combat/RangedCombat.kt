@@ -13,7 +13,7 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
 fun Client.handleRanged(): Int {
-    if (combatTimer > 0) //Need this to be a check here!
+    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
         return 0
     if (target is Player && duelFight && duelRule[0]) {
         send(SendMessage("Ranged has been disabled for this duel!"))
@@ -93,10 +93,12 @@ fun Client.handleRanged(): Int {
     }
 
     if(target is Npc) {
-        val xp = (if (FightType != 3) 40 * hit else 20 * hit) * CombatExpRate
-        giveExperience(xp, Skill.RANGED)
-        if (FightType == 3) giveExperience(xp, Skill.DEFENCE)
-        giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
+        if (fightType == 1) {
+            val xp = (20 * hit)
+            giveExperience(xp, Skill.DEFENCE)
+            giveExperience(xp, Skill.RANGED)
+        } else giveExperience(40 * hit, Skill.RANGED)
+        giveExperience(13 * hit, Skill.HITPOINTS)
     }
 
     if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
@@ -105,22 +107,26 @@ fun Client.handleRanged(): Int {
 
 fun landHitRanged(p: Client, t: Entity): Boolean {
     val hitChance: Double
-    val chance = Misc.chance(100000) / 1000
+    val chance = Misc.chance(100_000) / 1_000
     val prayerBonus = if(p.prayerManager.isPrayerOn(Prayers.Prayer.SHARP_EYE)) 1.025
     else if(p.prayerManager.isPrayerOn(Prayers.Prayer.HAWK_EYE)) 1.05
     else if(p.prayerManager.isPrayerOn(Prayers.Prayer.EAGLE_EYE)) 1.075
     else 1.0
     if(t is Client) { //Pvp
         val atkBonus = p.playerBonus[4]
-        val atkLevel = p.getLevel(Skill.RANGED)
+        var atkLevel = p.getLevel(Skill.RANGED)
         val defBonus = t.playerBonus[9]
-        val defLevel = t.getLevel(Skill.DEFENCE)
+        var defLevel = t.getLevel(Skill.DEFENCE)
         val prayerDefBonus = if(t.prayerManager.isPrayerOn(Prayers.Prayer.THICK_SKIN)) 1.05
         else if(p.prayerManager.isPrayerOn(Prayers.Prayer.ROCK_SKIN)) 1.1
         else if(p.prayerManager.isPrayerOn(Prayers.Prayer.STEEL_SKIN)) 1.15
         else if(p.prayerManager.isPrayerOn(Prayers.Prayer.CHIVALRY)) 1.18
         else if(p.prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 1.22
         else 1.0
+        /* Various bonuses for styles! */
+        if(p.fightType == 0) atkLevel += 3
+        if(t.fightType == 1) defLevel += 3
+        /* Calculation */
         val playerDef = (defLevel * (defBonus + 64.0)) * prayerDefBonus
         val playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         if (playerAccuracy > playerDef)
@@ -131,9 +137,12 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
         val atkBonus = p.playerBonus[4]
-        val atkLevel = p.getLevel(Skill.RANGED)
+        var atkLevel = p.getLevel(Skill.RANGED)
         val defLevel = t.defence
         val defBonus = 0.0
+        /* Various bonuses for styles! */
+        if(p.fightType == 0) atkLevel += 3
+        /* Calculation */
         val npcDef = defLevel * (defBonus + 64.0)
         var playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         playerAccuracy = if(p.getSlayerDamage(t.id, true) == 2) playerAccuracy * 1.2 else playerAccuracy

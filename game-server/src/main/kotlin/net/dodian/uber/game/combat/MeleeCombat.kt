@@ -20,7 +20,7 @@ fun Client.handleMelee(): Int {
         return -1
     if (usingBow)
         return -1
-    if (combatTimer > 0) //Need this to be a check here!
+    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
         return 0
     if (target is Player && duelFight && duelRule[1]) {
         send(SendMessage("Melee has been disabled for this duel!"))
@@ -84,14 +84,14 @@ fun Client.handleMelee(): Int {
         }
 
         if (target is Npc) {
-            if (FightType == 3) {
-                val xp = (15 * hit) * CombatExpRate
+            if (fightType == 3) {
+                val xp = (13 * hit)
                 giveExperience(xp, Skill.ATTACK)
                 giveExperience(xp, Skill.DEFENCE)
                 giveExperience(xp, Skill.STRENGTH)
-            } else giveExperience((40 * hit) * CombatExpRate, Skill.getSkill(FightType))
+            } else giveExperience(40 * hit, Skill.getSkill(fightType))
 
-            giveExperience((15 * hit) * CombatExpRate, Skill.HITPOINTS)
+            giveExperience(13 * hit, Skill.HITPOINTS)
         }
         if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
     return 1
@@ -115,7 +115,7 @@ fun highestAttackBonus(p: Client): Int {
         }
 fun landHit(p: Client, t: Entity): Boolean {
     val hitChance: Double
-    val chance = Misc.chance(100000) / 1000
+    val chance = Misc.chance(100_000) / 1_000
     val prayerBonus = if(p.prayerManager.isPrayerOn(Prayers.Prayer.CLARITY_OF_THOUGHT)) 1.05
     else if(p.prayerManager.isPrayerOn(Prayers.Prayer.IMPROVED_REFLEXES)) 1.1
     else if(p.prayerManager.isPrayerOn(Prayers.Prayer.INCREDIBLE_REFLEXES)) 1.15
@@ -123,16 +123,22 @@ fun landHit(p: Client, t: Entity): Boolean {
     else if(p.prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 1.22
     else 1.0
     if(t is Client) { //Pvp
-        val atkLevel = p.getLevel(Skill.ATTACK)
+        var atkLevel = p.getLevel(Skill.ATTACK)
         val atkBonus = highestAttackBonus(p)
-        val defLevel = t.getLevel(Skill.DEFENCE)
+        var defLevel = t.getLevel(Skill.DEFENCE)
         val defBonus = highestDefensiveBonus(t)
         val prayerDefBonus = if(t.prayerManager.isPrayerOn(Prayers.Prayer.THICK_SKIN)) 1.05
-        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.ROCK_SKIN)) 1.1
-        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.STEEL_SKIN)) 1.15
-        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.CHIVALRY)) 1.18
-        else if(p.prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 1.22
+        else if(t.prayerManager.isPrayerOn(Prayers.Prayer.ROCK_SKIN)) 1.1
+        else if(t.prayerManager.isPrayerOn(Prayers.Prayer.STEEL_SKIN)) 1.15
+        else if(t.prayerManager.isPrayerOn(Prayers.Prayer.CHIVALRY)) 1.18
+        else if(t.prayerManager.isPrayerOn(Prayers.Prayer.PIETY)) 1.22
         else 1.0
+        /* Various bonuses for styles! */
+        if(p.fightType == 0) atkLevel += 3
+        if(t.fightType == 1) defLevel += 3
+        if(p.fightType == 3) atkLevel += 1
+        if(t.fightType == 3) defLevel += 1
+        /* Calculations */
         val playerDef = (defLevel * (defBonus + 64.0)) * prayerDefBonus
         val playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         hitChance = if (playerAccuracy > playerDef)
@@ -143,10 +149,14 @@ fun landHit(p: Client, t: Entity): Boolean {
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
         val atkBonus = highestAttackBonus(p)
-        val atkLevel = p.getLevel(Skill.ATTACK)
+        var atkLevel = p.getLevel(Skill.ATTACK)
         val defLevel = t.defence
         val defBonus = 0.0
         val npcDef = defLevel * (defBonus + 64.0)
+        /* Various bonuses for styles! */
+        if(p.fightType == 0) atkLevel += 3
+        if(p.fightType == 3) atkLevel += 1
+        /* Calculation */
         var playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         playerAccuracy = if(p.getSlayerDamage(t.id, false) == 1) playerAccuracy * 1.15
         else if(p.getSlayerDamage(t.id, false) == 2) playerAccuracy * 1.20 else playerAccuracy

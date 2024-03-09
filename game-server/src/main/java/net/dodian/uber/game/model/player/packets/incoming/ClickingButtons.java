@@ -39,7 +39,6 @@ public class ClickingButtons implements Packet {
         if(!(actionButton >= 9157 && actionButton <= 9194))
             client.actionButtonId = actionButton;
         client.resetAction(false);
-        CombatStyleHandler.setWeaponHandler(client);
         if (client.duelButton(actionButton)) {
             return;
         }
@@ -436,6 +435,8 @@ public class ClickingButtons implements Packet {
             case 1097:
             case 1094:
             case 1093:
+                client.autocast_spellIndex = -1; //Reset autocast!
+                client.resetAttack(); //Reset attack when picking new autocast?
                 client.setSidebarInterface(0, 1689);
                 break;
             case 51133:
@@ -454,14 +455,12 @@ public class ClickingButtons implements Packet {
             case 51224:
             case 51122:
             case 51080:
-                for (int index = 0; index < client.ancientButton.length; index++) {
-                    if (client.actionButtonId == client.ancientButton[index]) {
+                for (int index = 0; index < client.ancientButton.length && client.autocast_spellIndex == -1; index++) {
+                    if (client.actionButtonId == client.ancientButton[index])
                         client.autocast_spellIndex = index;
-                        CombatStyleHandler.setWeaponHandler(client);
-                        //client.debug("autocast_spellIndex=" + client.autocast_spellIndex);
-                        break;
-                    }
                 }
+                //client.setSidebarInterface(0, 328);
+                CombatStyleHandler.setWeaponHandler(client); //We need this apperently!
                 break;
             case 24017:
                 CombatStyleHandler.setWeaponHandler(client);
@@ -486,17 +485,32 @@ public class ClickingButtons implements Packet {
                 client.println_debug("Closing Interface");
                 break;
 
+            case 3014: //Unhandled weapon buttons?
+            case 3017:
+            case 3016:
+                // fightType = fightStyle.POUND;
+            break;
+
             case 1177: // Gmaul!
-            case 9125: // Accurate
+            case 1080: // bash (staff)
+            case 14218: //?
             case 22228: // punch (unarmed)
             case 48010: // flick (whip)
             case 21200: // spike (pickaxe)
-            case 1080: // bash (staff)
-            case 6168: // chop (axe)
+            case 6221: // accurate (shortbow)
             case 6236: // accurate (long bow)
             case 17102: // accurate (darts)
             case 8234: // stab (dagger)
-                client.FightType = 0;
+            case 30088: // Chop claws
+            case 18103: // Chop 2h
+            case 9125: // Chop longsword & Scimitar
+            case 6168: // chop (axe)
+                client.weaponStyle = actionButton == 1177 || actionButton == 1080 || actionButton == 14218 ? client.weaponStyle.POUND :
+                actionButton == 22228 ? client.weaponStyle.PUNCH : actionButton == 48010 ? client.weaponStyle.FLICK : actionButton == 21200 ? client.weaponStyle.SPIKE :
+                actionButton == 6221 || actionButton == 6236 || actionButton == 17102 ? client.weaponStyle.ACCURATE :
+                actionButton == 8234 ? client.weaponStyle.STAB : client.weaponStyle.CHOP;
+                client.fightType = 0;
+                CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1080 && client.autocast_spellIndex != -1) {
                     client.resetAttack(); //Swapping from magic to melee so stop combat!
                     client.autocast_spellIndex = -1; //Reset due to change of combat style
@@ -504,48 +518,71 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 1175: // Gmaul!
-            case 9126: // Defensive
-            case 48008: // deflect (whip)
             case 22229: // block (unarmed)
-            case 21201: // block (pickaxe)
             case 1078: // focus - block (staff)
-            case 6169: // block (axe)
+            case 3015: // ??
             case 33019: // fend (hally)
-            case 18078: // block (spear)
+            case 6169: // block (axe)
             case 8235: // block (dagger)
-                client.FightType = 1;
+            case 9126: // Defensive
+            case 18078: // block (spear)
+            case 21201: // block (pickaxe)
+            case 48008: // deflect (whip)
+            case 14219:
+            case 6219: // longrange (shortbow)
+            case 6234: // longrange (long bow)
+            case 17100: // longrange (darts)
+                client.weaponStyle = actionButton == 1175 || actionButton == 22229 ? client.weaponStyle.BLOCK_THREE :
+                actionButton == 33019 ? client.weaponStyle.FEND : actionButton == 48008 ? client.weaponStyle.DEFLECT :
+                actionButton == 6219 || actionButton == 6234 || actionButton == 17100 ? client.weaponStyle.LONGRANGE : client.weaponStyle.BLOCK;
+                client.fightType = 1; //Defensive xp!
+                CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1078 && client.autocast_spellIndex != -1) {
                     client.resetAttack(); //Swapping from magic to melee so stop combat!
                     client.autocast_spellIndex = -1; //Reset due to change of combat style
                 }
                 break;
 
+            case 14220: //Mace spike!
+            case 33018: // jab (hally)
             case 9127: // Controlled
             case 48009: // lash (whip)
-            case 33018: // jab (hally)
-            case 6234: // longrange (long bow)
             case 18077: // lunge (spear)
             case 18080: // swipe (spear)
             case 18079: // pound (spear)
-            case 17100: // longrange (darts)
-                client.FightType = 3;
-                // client.SkillID = 3;
-                break;
+                client.weaponStyle = actionButton == 14220 ? client.weaponStyle.SPIKE : actionButton == 33018 ? client.weaponStyle.JAB :
+                actionButton == 18077 ? client.weaponStyle.LUNGE : actionButton == 18079 ? client.weaponStyle.POUND_CON : actionButton == 18080 ? client.weaponStyle.SWIPE :
+                client.weaponStyle.LASH;
+                client.fightType = 3;
+                CombatStyleHandler.setWeaponHandler(client);
+            break;
 
+            case 1079: // pound (staff)
             case 1176: // Gmaul!
+            case 14221: //Mace pummel!
             case 9128: // Aggressive
+            case 18106: // slash 2h
+            case 30091: // Slash claws
             case 22230: // kick (unarmed)
             case 21203: // impale (pickaxe)
             case 21202: // smash (pickaxe)
-            case 1079: // pound (staff)
-            case 6171: // hack (axe)
+            case 18105: //Smash 2h
             case 6170: // smash (axe)
+            case 6171: // hack (axe)
             case 33020: // swipe (hally)
+            case 6220: // Rapid (shortbow)
             case 6235: // rapid (long bow)
             case 17101: // repid (darts)
             case 8237: // lunge (dagger)
             case 8236: // slash (dagger)
-                client.FightType = 2;
+                client.weaponStyle = actionButton == 1079 || actionButton == 1176 || actionButton == 14221 ? client.weaponStyle.PUMMEL :
+                actionButton == 9128 || actionButton == 18106 || actionButton == 30091 || actionButton == 8236 ? client.weaponStyle.SLASH :
+                actionButton == 22230 ? client.weaponStyle.KICK : actionButton == 21203 ? client.weaponStyle.IMPALE :
+                actionButton == 6170 || actionButton == 21202 || actionButton == 18105 ? client.weaponStyle.SMASH :
+                actionButton == 6171 ? client.weaponStyle.HACK : actionButton == 33020 ? client.weaponStyle.SWIPE :
+                actionButton == 6220 || actionButton == 6235 || actionButton == 17101 ? client.weaponStyle.RAPID : client.weaponStyle.LUNGE_STR;
+                client.fightType = 2;
+                CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1079 && client.autocast_spellIndex != -1) {
                     client.resetAttack(); //Swapping from magic to melee so stop combat!
                     client.autocast_spellIndex = -1; //Reset due to change of combat style

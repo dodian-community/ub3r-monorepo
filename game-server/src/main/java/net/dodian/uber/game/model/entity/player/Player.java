@@ -33,21 +33,17 @@ import net.dodian.utilities.Utils;
 import java.util.*;
 
 public abstract class Player extends Entity {
-    public boolean yellOn = true, genie = false;
+    public boolean yellOn = true, genie = false, instaLoot = false;
     public long disconnectAt = 0, longName = 0;
     public int wildyLevel = 0, violations = 0;
-    public long lastAction = 0, lastMagic = 0;
-    public long lastPickAction = 0;
-    public long lastTeleport = 0;
+    public long lastAction = 0, lastMagic = 0, lastTeleport = 0;
+    public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
-    public int dbId = -1;
     public boolean premium = false, randomed = false;
-    public int latestNews = 0;
-    public int playerGroup = 3;
+    public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
-    private boolean inCombat = false;
-    private int lastCombat = 0, combatTimer = 0;
+    private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;// dbId = -1; //mysql userid
     public boolean busy = false, invis = false;
@@ -55,20 +51,16 @@ public abstract class Player extends Entity {
             "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
     "TzTok-Jad"};
     public int[] boss_amount = new int[boss_name.length];
-    // dueling
-    public int duelStatus = -1; // 0 = Requesting duel, 1 = in duel screen, 2 =
-    // waiting for other player to accept, 3 = in
-    // duel, 4 = won
-    public int duelChatTimer = -1, iconTimer = 6;
+    public int duelChatTimer = -1, duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public boolean startDuel = false;
     public String forcedChat = "";
-    private int headIcon = -1, skullIcon = -1;
-    public int customCombat = -1, questPage = 0;
+    public int headIcon = -1, skullIcon = -1, customCombat = -1;
     private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember;
     public int[] playerBonus = new int[12];
-    public int FightType = 1;
+    public int fightType = 1; //What it should do!
+    public fightStyle weaponStyle = fightStyle.PUNCH;
     private int playerSE = 0x328; // SE = Standard Emotion
     private int playerSEW = 0x333; // SEW = Standard Emotion Walking
     private int playerSER = 0x338; // SER = Standard Emotion Run
@@ -78,25 +70,18 @@ public abstract class Player extends Entity {
     public boolean IsShopping = false;
     public int MyShopID = 0;
     public boolean UpdateShop = false;
-    public int NpcDialogue = 0;
-    public int NpcTalkTo = 0;
-    public boolean NpcDialogueSend = false;
-    public int NpcWanneTalk = 0;
-    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface;
-    public boolean debug = false;
+    public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
+    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
     private boolean crit;
     private boolean isNpc;
-    public boolean initialized = false, disconnected = false;
-    public boolean isActive = false;
-    public boolean isKicked = false;
+    public boolean initialized = false, disconnected = false, isKicked = false;
+    public boolean isActive = false, debug = false;
     public int actionTimer = 0;
     public String connectedFrom = "";
     public int ip = 0;
     public String UUID = "";
     public boolean takeAsNote = false;
-    private String playerName = null; // name of the connecting client
-    public String playerPass = null; // name of the connecting client
-    public int playerRights; // 0=normal player, 1=player mod, 2=real mod,
+    public String playerName = null, playerPass = null;
     public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
@@ -104,19 +89,8 @@ public abstract class Player extends Entity {
     public int playerBankSize = 800;
     public int[] bankItems = new int[playerBankSize];
     public int[] bankItemsN = new int[playerBankSize];
-    private int pGender;
-    public int pHairC;
-    public int pTorsoC;
-    public int pLegsC;
-    public int pFeetC;
-    public int pSkinC;
-    private int pHead;
-    private int pTorso;
-    private int pArms;
-    private int pHands;
-    private int pLegs;
-    private int pFeet;
-    private int pBeard;
+    public int pHairC, pTorsoC, pLegsC, pFeetC, pSkinC;
+    private int pGender, pHead, pTorso, pArms, pHands, pLegs, pFeet, pBeard;
     private final int[] playerEquipment = new int[14];
     private final int[] playerEquipmentN = new int[14];
     private final int[] playerLevel = new int[21];
@@ -214,6 +188,19 @@ public abstract class Player extends Entity {
         System.arraycopy(testLook, 0, playerLooks, 0, 13);
         temp.setLook(playerLooks);
     }
+
+    public enum fightStyle {
+        PUNCH, KICK, BLOCK, // Unarmed
+        STAB, LUNGE_STR, SLASH, // Dagger & sword
+        CHOP, LUNGE, // Scimitar & longsword & 2h (Smash instead of lunge
+        HACK, SMASH, // Axe & battleaxe
+        POUND, PUMMEL, SPIKE, // BLOCK // Mace & warhammer
+        JAB, SWIPE, FEND, /* Halberd */ IMPALE, // Pickaxe
+        ACCURATE, RAPID, LONGRANGE, // Range weapons
+        FLICK, LASH, DEFLECT, // Abyssal Whip
+        SWIPE_CON, POUND_CON, // Spear
+        BLOCK_THREE // MAUL!
+    };
 
     void destruct() {
         getPosition().moveTo(-1, -1);
@@ -423,8 +410,7 @@ public abstract class Player extends Entity {
         dir >>= 1;
         currentX += Utils.directionDeltaX[dir];
         currentY += Utils.directionDeltaY[dir];
-        getPosition().moveTo(getPosition().getX() + Utils.directionDeltaX[dir],
-                getPosition().getY() + Utils.directionDeltaY[dir]);
+        getPosition().moveTo(getPosition().getX() + Utils.directionDeltaX[dir],getPosition().getY() + Utils.directionDeltaY[dir]);
         return dir;
     }
 
@@ -657,12 +643,11 @@ public abstract class Player extends Entity {
 
             // travel backwards to find a proper connection vertex
             int lastDir;
-            boolean found = false;
+            boolean found;
             numTravelBackSteps = 0;
             int ptr = wQueueReadPtr;
             int dir = Utils.direction(currentX, currentY, firstX, firstY);
-            if (dir != -1 && (dir & 1) != 0) {
-                // we can't connect first and current directly
+            if (dir != -1 && (dir & 1) != 0) { // we can't connect first and current directly
                 do {
                     lastDir = dir;
                     if (--ptr < 0)
@@ -672,80 +657,58 @@ public abstract class Player extends Entity {
                     travelBackY[numTravelBackSteps++] = walkingQueueY[ptr];
                     dir = Utils.direction(walkingQueueX[ptr], walkingQueueY[ptr], firstX, firstY);
                     if (lastDir != dir) {
-                        found = true;
-                        break; // either of those two, or a vertex between
-                        // those is a candidate
+                        break;
                     }
-
                 } while (ptr != wQueueWritePtr);
-            } else
-                found = true; // we didn't need to go back in time because the current position already can be connected to first
-
-            if (!found) {
-                println_debug("Fatal: couldn't find connection vertex! Dropping packet.");
-                Client temp = (Client) this;
-                temp.saveStats(true);
-                disconnected = true;
-            } else {
-                wQueueWritePtr = wQueueReadPtr; // discard any yet unprocessed
-                // waypoints from queue
-
-                addToWalkingQueue(currentX, currentY); // have to add this in
-                // order to keep
-                // consistency in the
-                // queue
-
-                if (dir != -1 && (dir & 1) != 0) {
-
-                    for (int i = 0; i < numTravelBackSteps - 1; i++) {
-                        addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                    }
-                    int wayPointX2 = travelBackX[numTravelBackSteps - 1], wayPointY2 = travelBackY[numTravelBackSteps - 1];
-                    int wayPointX1, wayPointY1;
-                    if (numTravelBackSteps == 1) {
-                        wayPointX1 = currentX;
-                        wayPointY1 = currentY;
-                    } else {
-                        wayPointX1 = travelBackX[numTravelBackSteps - 2];
-                        wayPointY1 = travelBackY[numTravelBackSteps - 2];
-                    }
-
-                    dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
-                    if (dir == -1 || (dir & 1) != 0) {
-                        println_debug("Fatal: The walking queue is corrupt! wp1=(" + wayPointX1 + ", " + wayPointY1 + "), "
-                                + "wp2=(" + wayPointX2 + ", " + wayPointY2 + ")");
-                    } else {
-                        dir >>= 1;
-                        found = false;
-                        int x = wayPointX1, y = wayPointY1;
-                        while (x != wayPointX2 || y != wayPointY2) {
-                            x += Utils.directionDeltaX[dir];
-                            y += Utils.directionDeltaY[dir];
-                            if ((Utils.direction(x, y, firstX, firstY) & 1) == 0) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            println_debug("Fatal: Internal error: unable to determine connection vertex!" + "  wp1=(" + wayPointX1
-                                    + ", " + wayPointY1 + "), wp2=(" + wayPointX2 + ", " + wayPointY2 + "), " + "first=(" + firstX + ", "
-                                    + firstY + ")");
-                        } else
-                            addToWalkingQueue(wayPointX1, wayPointY1);
-                    }
-                } else {
-                    for (int i = 0; i < numTravelBackSteps; i++) {
-                        addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                    }
-                }
-
-                for (int i = 0; i < newWalkCmdSteps; i++) {
-                    addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
-                }
-
             }
-            isRunning = (newWalkCmdIsRunning || buttonOnRun);
+
+            wQueueWritePtr = wQueueReadPtr;
+            addToWalkingQueue(currentX, currentY);
+
+            if (dir != -1 && (dir & 1) != 0) {
+                for (int i = 0; i < numTravelBackSteps - 1; i++) {
+                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
+                }
+                int wayPointX2 = travelBackX[numTravelBackSteps - 1], wayPointY2 = travelBackY[numTravelBackSteps - 1];
+                int wayPointX1, wayPointY1;
+                if (numTravelBackSteps == 1) {
+                    wayPointX1 = currentX;
+                    wayPointY1 = currentY;
+                } else {
+                    wayPointX1 = travelBackX[numTravelBackSteps - 2];
+                    wayPointY1 = travelBackY[numTravelBackSteps - 2];
+                }
+                dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
+                if (dir == -1 || (dir & 1) != 0) {
+                    println_debug("Fatal: The walking queue is corrupt! wp1=(" + wayPointX1 + ", " + wayPointY1 + "), "
+                            + "wp2=(" + wayPointX2 + ", " + wayPointY2 + ")");
+                } else {
+                    dir >>= 1;
+                    found = false;
+                    int x = wayPointX1, y = wayPointY1;
+                    while (x != wayPointX2 || y != wayPointY2) {
+                        x += Utils.directionDeltaX[dir];
+                        y += Utils.directionDeltaY[dir];
+                        if ((Utils.direction(x, y, firstX, firstY) & 1) == 0) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                        addToWalkingQueue(wayPointX1, wayPointY1);
+                }
+            } else {
+                for (int i = 0; i < numTravelBackSteps; i++) {
+                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
+                }
+            }
+            // now we can finally add those waypoints because we made sure
+            // about the connection to first
+            for (int i = 0; i < newWalkCmdSteps; i++) {
+                addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
+            }
         }
+        isRunning = (newWalkCmdIsRunning || buttonOnRun);
         newWalkCmdSteps = 0;
     }
 
@@ -889,10 +852,6 @@ public abstract class Player extends Entity {
 
     Prayers prayers = new Prayers(this);
 
-    public void setSkullIcon(int id) {
-        skullIcon = id;
-    }
-
     public boolean isSongUnlocked(int songId) {
         return this.songUnlocked[songId];
     }
@@ -901,16 +860,14 @@ public abstract class Player extends Entity {
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
-        boolean maskEquip = (itemId >= 8905 && itemId <= 8921) || itemId == 11864;
-        return maskEquip && onTask;
+        return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
         String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
-        int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
-        boolean maskEquip = (itemId >= 11774 && itemId <= 11784) || itemId == 11865;
-        return maskEquip && onTask;
+        String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
+        return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
     }
 
     public boolean checkObsidianBonus(int id) {
@@ -1064,18 +1021,6 @@ public abstract class Player extends Entity {
         this.pHead = pHead;
     }
 
-    public int getHeadIcon() {
-        return this.headIcon;
-    }
-
-    public void setHeadIcon(int headIcon) {
-        this.headIcon = headIcon;
-    }
-
-    public int getSkullIcon() {
-        return this.skullIcon;
-    }
-
     public int getStandAnim() {
         return this.playerSE;
     }
@@ -1222,6 +1167,18 @@ public abstract class Player extends Entity {
     }
     public void setCombatTimer(int timer) {
         this.combatTimer = timer;
+    }
+    public int getStunTimer() {
+        return stunTimer;
+    }
+    public void setStunTimer(int timer) {
+        this.stunTimer = timer;
+    }
+    public int getSnareTimer() {
+        return snareTimer;
+    }
+    public void setSnareTimer(int timer) {
+        this.snareTimer = timer;
     }
 
     /**

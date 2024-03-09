@@ -103,7 +103,7 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 6; // Just a general store?
         } else if (npcId == 6478) { //Axe store
             client.WanneShop = 7;
-        } else if (npcId == 112) { //Pickaxe store
+        } else if (npcId == 3890) { //Pickaxe store
             client.WanneShop = 8;
         } else if (npcId == 637) { // Aubury rune shop
             client.WanneShop = 9; // Aubury Magic Shop

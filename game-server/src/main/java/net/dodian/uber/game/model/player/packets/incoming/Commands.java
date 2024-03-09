@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
+import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
@@ -67,6 +68,20 @@ public class Commands implements Packet {
                         Server.npcManager.getData(id).setAttackEmote(Integer.parseInt(cmd[2]));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid animationId"));
+                    }
+                }
+                if (cmd[0].equalsIgnoreCase("loot")) {
+                    client.instaLoot = !client.instaLoot;
+                    client.send(new SendMessage("You turned insta loot " + (client.instaLoot ? "on" : "off") + "!"));
+                }
+                if (cmd[0].equalsIgnoreCase("obja")) {
+                    try { //497 = swing rope! -> 23132
+                        int id = Integer.parseInt(cmd[1]);
+                        int animation = Integer.parseInt(cmd[2]);
+                        client.send(new ObjectAnimation(new GameObjectDef(id, 10, 2, new Position(client.getPosition().getX(), client.getPosition().getY() + 1, client.getPosition().getZ())), animation));
+                        client.send(new SendMessage("Object "+id+" showing animation as " + animation));
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " objectId animationId"));
                     }
                 }
                 /*if(cmd[0].equalsIgnoreCase("input")) {
@@ -567,13 +582,13 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("head")) {
                     int icon = Integer.parseInt(cmd[1]);
-                    client.setHeadIcon(icon);
+                    client.headIcon = icon;
                     client.send(new SendMessage("Head : " + icon));
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
                 if (cmd[0].equalsIgnoreCase("skull") && client.playerRights > 1) {
                     int icon = Integer.parseInt(cmd[1]);
-                    client.setSkullIcon(icon);
+                    client.skullIcon = icon;
                     client.send(new SendMessage("Skull : " + icon));
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
@@ -783,6 +798,14 @@ public class Commands implements Packet {
                     client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(skill));
                     client.setLevel(level, Skill.getSkill(skill));
                     client.refreshSkill(Skill.getSkill(skill));
+                    if(skill == 3) { //refresh hp + prayer from this skill!
+                        client.maxHealth = level;
+                        client.heal(client.maxHealth);
+                    } else if (skill == 5) {
+                        client.maxPrayer = level;
+                        client.setCurrentPrayer(client.maxPrayer);
+                        client.drainPrayer(0);
+                    }
                 }
                 if (cmd[0].equalsIgnoreCase("setxp")) {
                     int skill = Integer.parseInt(cmd[1]);
