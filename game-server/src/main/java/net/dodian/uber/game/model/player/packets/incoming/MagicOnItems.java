@@ -231,7 +231,6 @@ public class MagicOnItems implements Packet {
             client.deleteItem(561, 1);
             client.addItem(995, value);
             client.giveExperience(600, Skill.MAGIC);
-            client.animationReset = System.currentTimeMillis() + 3200;
             // animation(113, absY, absX);
             // stillgfx(113, absY, absX);
             client.requestAnim(713, 0);

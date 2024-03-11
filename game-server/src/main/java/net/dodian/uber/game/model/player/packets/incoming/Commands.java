@@ -74,6 +74,9 @@ public class Commands implements Packet {
                     client.instaLoot = !client.instaLoot;
                     client.send(new SendMessage("You turned insta loot " + (client.instaLoot ? "on" : "off") + "!"));
                 }
+                if (cmd[0].equalsIgnoreCase("death")) {
+                    client.dealDamage(client.getCurrentHealth(), true);
+                }
                 if (cmd[0].equalsIgnoreCase("obja")) {
                     try { //497 = swing rope! -> 23132
                         int id = Integer.parseInt(cmd[1]);
@@ -207,16 +210,14 @@ public class Commands implements Packet {
                     client.dealDamage(20, true);
                 }
                 if (cmd[0].equalsIgnoreCase("goup")) {
-                    client.getPosition().setZ(client.getPosition().getZ() + 1);
+                    int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
+                    client.teleportTo(x, y, z + 1);
                     client.send(new SendMessage("You set your height to " + client.getPosition().getZ()));
-                    client.teleportToX = client.getPosition().getX();
-                    client.teleportToY = client.getPosition().getY();
                 }
                 if (cmd[0].equalsIgnoreCase("godown")) {
-                    client.getPosition().setZ(Math.max(client.getPosition().getZ() - 1, 0));
+                    int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
+                    client.teleportTo(x, y, Math.max(z - 1, 0));
                     client.send(new SendMessage("You set your height to " + client.getPosition().getZ()));
-                    client.teleportToX = client.getPosition().getX();
-                    client.teleportToY = client.getPosition().getY();
                 }
                 if (cmd[0].equalsIgnoreCase("tnpc") && getGameWorldId() > 1) {
                     try {

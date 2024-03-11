@@ -540,14 +540,6 @@ public class ClickObject implements Packet {
         if (objectID == 2634 && objectPosition.getX() == 2838 && objectPosition.getY() == 3517) { //2838, 3517
             client.send(new SendMessage("You jump to the other side of the rubble"));
             client.transport(new Position(2840, 3517, 0));
-//      if (client.getLevel(Skill.MINING) < 40) {
-//        client.send(new SendMessage("You need 40 mining to clear this rubble"));
-//        return;
-//      }
-//      client.requestAnim(client.getMiningEmote(624), 0);
-//      client.animationReset = System.currentTimeMillis() + 2000;
-//      client.ReplaceObject2(2838, 3517, -1, -1, 11);
-//      client.send(new SendMessage("You clear the rubble"));
         }
         if (objectID == 16680) {
             int[] x = {2845, 2848, 2848};

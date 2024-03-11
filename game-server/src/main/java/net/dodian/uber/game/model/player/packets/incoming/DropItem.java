@@ -23,7 +23,6 @@ public class DropItem implements Packet {
             client.deleteItem(1927, slot, 1);
             client.addItemSlot(1925, 1, slot);
             client.requestAnim(0x33D, 0);
-            client.animationReset = System.currentTimeMillis() + 800;
             client.send(new SendMessage("You drank the milk and gained 15% magic penetration!"));
             return;
         }

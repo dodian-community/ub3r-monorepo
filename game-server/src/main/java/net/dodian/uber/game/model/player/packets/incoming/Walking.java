@@ -8,6 +8,8 @@ import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Utils;
 
+import static net.dodian.utilities.DotEnvKt.getServerEnv;
+
 public class Walking implements Packet {
 
     @Override
@@ -29,34 +31,30 @@ public class Walking implements Packet {
         if(client.inTrade && packetType != 164) client.declineTrade();
         /* Auto decline when walk away from duel! */
         else if(client.inDuel && !client.duelFight && packetType != 164) client.declineDuel();
+        if (client.genie) client.genie = false;
+        if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
+        if(client.getStunTimer() > 0 || client.getSnareTimer() > 0) { //In the midst of a teleport to stop movement!
+            client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
+            client.resetWalkingQueue();
+            return;
+        }
+        /* Combat checks! */
+        if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
+            client.resetAttack();
+        client.faceTarget(-1);
         /* Check a players inventory! */
         if (client.checkInv) {
             client.checkInv = false;
             client.resetItems(3214);
         }
-        if (client.genie) client.genie = false;
-        if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
         /* Combat checks! */
-        if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
-            client.resetAttack();
-        if(client.getStunTimer() > 0 || client.getSnareTimer() > 0) { //In the midst of a teleport to stop movement!
+        if(packetType != 98 && (client.getStunTimer() > 0 || client.getSnareTimer() > 0)) { //In the midst of a teleport to stop movement!
             client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
-            client.stopMovement();
+            client.resetWalkingQueue();
             return;
         }
-        /* Stuff to close interface, not sure if needed before trigger of walk or before! */
-        client.send(new RemoveInterfaces());
-        client.rerequestAnim();
-        client.resetAction();
-        client.discord = false;
         /* Code for when you trigger the walking! */
             client.newWalkCmdSteps = packetSize - 5;
-            if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
-                if (client.newWalkCmdSteps > 0)
-                    client.send(new SendMessage("You cannot move during this duel!"));
-                client.newWalkCmdSteps = 0;
-                return;
-            }
             client.newWalkCmdSteps /= 2;
             if (++client.newWalkCmdSteps > Player.WALKING_QUEUE_SIZE) {
                 client.newWalkCmdSteps = 0;
@@ -78,6 +76,29 @@ public class Walking implements Packet {
                 client.newWalkCmdX[i] += firstStepX;
                 client.newWalkCmdY[i] += firstStepY;
             }
+            if(packetType == 98 && getServerEnv().equals("dev"))
+                System.out.println("walking: " + client.newWalkCmdSteps);
+            /* Closing of stuff if we send "walk" value! */
+            if(client.newWalkCmdSteps > 0) {
+                if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
+                    if(packetType != 98)
+                        client.send(new SendMessage("You cannot move during this duel!"));
+                    client.resetWalkingQueue();
+                    return;
+                }
+                client.send(new RemoveInterfaces());
+                client.rerequestAnim();
+                client.resetAction();
+                client.discord = false;
+            /* Check a players inventory! */
+            if (client.checkInv) {
+                client.checkInv = false;
+                client.resetItems(3214);
+            }
+            if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
+                client.resetAttack();
+            client.faceTarget(-1);
+            }
             // stairs check
             if (client.stairs > 0) {
                 client.resetStairs();
@@ -94,8 +115,8 @@ public class Walking implements Packet {
             if(client.refundSlot != -1) client.refundSlot = -1;
             // banking
             if (client.IsBanking) {
-                client.IsBanking = false;
                 client.send(new RemoveInterfaces());
+                client.IsBanking = false;
             }
             if(client.checkBankInterface) {
                 client.checkBankInterface = false;
@@ -112,8 +133,6 @@ public class Walking implements Packet {
                 client.UpdateShop = false;
                 client.send(new RemoveInterfaces());
             }
-        //Reset npc face!
-        client.faceNpc(65535);
     }
 
 }
