@@ -33,7 +33,7 @@ public class MagicOnNpc implements Packet {
             return;
         }
         if(client.goodDistanceEntity(tempNpc, distance)) {
-            client.stopMovement();
+            client.resetWalkingQueue();
         }
         if(EnemyHP2 < 1 || client.deathTimer > 0) {
             client.send(new SendMessage("That monster has already been killed!"));

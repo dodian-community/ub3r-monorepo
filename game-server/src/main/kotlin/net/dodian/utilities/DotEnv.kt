@@ -24,7 +24,7 @@ val gameWorldId = dotenv["GAME_WORLD_ID"]?.toInt() ?: 1
 val gameConnectionsPerIp = dotenv["GAME_CONNECTIONS_PER_IP"]?.toInt() ?: 2
 
 // Game Settings - Client
-val gameClientCustomVersion = dotenv["GAME_CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
+val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
 
 // Game Settings - Multipliers
 val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1

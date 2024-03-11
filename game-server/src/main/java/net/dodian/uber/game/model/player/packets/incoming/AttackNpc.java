@@ -26,7 +26,7 @@ public class AttackNpc implements Packet {
                 final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, tempNpc.getPosition());
                 client.setWalkToTask(task);
                 if ((getAttackStyle(client) != 0 && client.goodDistanceEntity(tempNpc, 5)) || client.goodDistanceEntity(tempNpc, 1)) {
-                    client.stopMovement();
+                    client.resetWalkingQueue();
                     client.startAttack(tempNpc);
                     client.setWalkToTask(null);
                     return;
@@ -39,7 +39,7 @@ public class AttackNpc implements Packet {
                             return;
                         }
                         if ((getAttackStyle(client) != 0 && client.goodDistanceEntity(tempNpc, 5)) || client.goodDistanceEntity(tempNpc, 1)) {
-                            client.stopMovement();
+                            client.resetWalkingQueue();
                             client.startAttack(tempNpc);
                             client.setWalkToTask(null);
                             this.stop();
@@ -47,7 +47,7 @@ public class AttackNpc implements Packet {
                     }
                 });
             } else { //In range so attack!
-                client.stopMovement();
+                client.resetWalkingQueue();
                 client.startAttack(tempNpc);
             }
         }

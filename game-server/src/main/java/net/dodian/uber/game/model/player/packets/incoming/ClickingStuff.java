@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 
 public class ClickingStuff implements Packet {
 
@@ -28,6 +29,7 @@ public class ClickingStuff implements Packet {
             client.UpdateShop = false;
         }
         if (client.IsBanking) {
+            client.send(new RemoveInterfaces());
             client.IsBanking = false;
         }
         if (client.checkBankInterface) {

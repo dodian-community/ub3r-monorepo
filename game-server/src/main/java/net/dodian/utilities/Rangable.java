@@ -337,7 +337,7 @@ public class Rangable {
             return;
         }
         if (x >= 3256 && x <= 3259 && y >= 3926 && y <= 3928) {
-            System.out.println(objectId);
+            //System.out.println(objectId);
         }
         GameObjectData data = GameObjectData.forId(objectId);
         if (data == null) {

@@ -13,7 +13,6 @@ public class TradeRequest implements Packet {
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
             client.facePlayer(tw);
             client.requestAnim(1833, 0);
-            client.animationReset = System.currentTimeMillis() + 1200;
             return;
         }
         if (client.inDuel || client.duelFight) {

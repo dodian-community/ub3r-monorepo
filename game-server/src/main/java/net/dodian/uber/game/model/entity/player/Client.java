@@ -62,8 +62,6 @@ public class Client extends Player implements Runnable {
 	long lastBar = 0;
 	public long lastSave, lastProgressSave, accountAge;
 	public long lastClickAltar = 0;
-	public boolean checkTime = false;
-
 	public Entity target = null;
 	int otherdbId = -1;
 	public int convoId = -1, nextDiag = -1, npcFace = 591;
@@ -121,7 +119,7 @@ public class Client extends Player implements Runnable {
 	public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
 	public boolean adding = false;
 	public ArrayList<RS2Object> objects = new ArrayList<>();
-	public long animationReset = 0, lastButton = 0;
+	public long lastButton = 0;
 	public int cookAmount = 0, cookIndex = 0, enterAmountId = 0;
 	public boolean cooking = false;
 	// Dodian: fishing
@@ -197,11 +195,7 @@ public class Client extends Player implements Runnable {
 		int deltaX = o[0] - getPosition().getX(), deltaY = o[1] - getPosition().getY();
 		return (deltaX <= (dist - 1) && deltaX >= -dist && deltaY <= (dist - 1) && deltaY >= -dist);
 	}
-
 	public boolean wearing = false;
-
-	public int resetanim = 8;
-
 	public void refreshSkill(Skill skill) {
 		try {
 			int out = Skills.getLevelForExperience(getExperience(skill));
@@ -222,11 +216,10 @@ public class Client extends Player implements Runnable {
 
 	public int getbattleTimer(int weapon) {
 		String wep = GetItemName(weapon).toLowerCase();
+		//2952 aka wolfbane to strong as 3 tick weapon!
 		int wepPlainTick = 4; //Default tick for many weapons
 		if (wep.contains("dart") || wep.contains("knife")) {
 			wepPlainTick = 2;
-		} else if (weapon == 2952) {
-			wepPlainTick = 3;
 		} else if (wep.contains("longsword") || wep.contains("mace") || wep.contains("axe") && !wep.contains("dharok")
 				|| wep.contains("spear") || wep.contains("tzhaar-ket-em") || wep.contains("torag") || wep.contains("guthan")
 				|| wep.contains("verac") || wep.contains("staff") && !wep.contains("ahrim") || wep.contains("composite")
@@ -307,9 +300,6 @@ public class Client extends Player implements Runnable {
 		// 100 pixels higher
 		getOutputStream().writeWord(time); // Time before casting the graphic
 	}
-
-	public boolean AnimationReset; // Resets Animations With The Use Of The
-	// ActionTimer
 
 	public void createProjectile(int casterY, int casterX, int offsetY,
 								 int offsetX, int angle, int speed, int gfxMoving, int startHeight,
@@ -716,7 +706,7 @@ public class Client extends Player implements Runnable {
 			if (loadgame == 0 && returnCode != 6) {
 				validLogin = true;
 				if (getPosition().getX() > 0 && getPosition().getY() > 0) {
-					transport(new Position(getPosition().getX(), getPosition().getY(), 0));
+					transport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ()));
 				}
 			} else {
 				if (returnCode != 6 && returnCode != 5)
@@ -834,7 +824,7 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		// TODO: Look into improving this, and potentially a system to configure player saving per world id...
-		if (getGameWorldId() < 2 || getPlayerName().toLowerCase().startsWith("pro noob"))
+		if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob"))
 			try {
 				Statement statement = getDbConnection().createStatement();
 
@@ -1116,6 +1106,10 @@ public class Client extends Player implements Runnable {
 
 	public boolean bankItem(int itemID, int fromSlot, int amount) {
 		if (playerItemsN[fromSlot] <= 0 || playerItems[fromSlot] <= 0 || playerItems[fromSlot] - 1 != itemID) {
+			return false;
+		}
+		if (!IsBanking) {
+			send(new RemoveInterfaces());
 			return false;
 		}
 		int id = GetUnnotedItem(itemID);
@@ -2117,6 +2111,7 @@ public class Client extends Player implements Runnable {
 		setSidebarInterface(11, 904); // wrench tab
 		setSidebarInterface(12, 147); // run tab
 		setSidebarInterface(13, 962); // harp tab
+		System.out.println("position? " + getPosition().toString());
       /*if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 2518) {
         getOutputStream().createFrameVarSize(104);
         getOutputStream().writeByteC(1);
@@ -2213,6 +2208,9 @@ public class Client extends Player implements Runnable {
 		setStunTimer(Math.max(getStunTimer() - 1, 0));
 		setSnareTimer(Math.max(getSnareTimer() - 1, 0));
 		//RegionMusic.handleRegionMusic(this);
+		/* Timers for actions! */
+		Math.max(actionTimer - 1, 0);
+		/* Other timers! */
 		if (mutedTill * 1000 <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
 		} else {
@@ -2343,10 +2341,6 @@ public class Client extends Player implements Runnable {
 		if (disconnectAt > 0 && now >= disconnectAt) {
 			disconnected = true;
 		}
-		if (checkTime && now >= lastAction) {
-			send(new SendMessage("Time's up (went " + (now - lastAction) + " over)"));
-			checkTime = false;
-		}
 		if (pickupWanted) {
 			if (pickTries < 1) {
 				pickupWanted = false;
@@ -2355,13 +2349,6 @@ public class Client extends Player implements Runnable {
 			if (getPosition().getX() == pickX && getPosition().getY() == pickY) {
 				pickUpItem(pickId, pickX, pickY);
 				pickupWanted = false;
-			}
-		}
-		if (animationReset > 0 && System.currentTimeMillis() >= animationReset) {
-			animationReset = 0;
-			rerequestAnim();
-			if (originalS > 0) {
-				wear(originalS, Equipment.Slot.SHIELD.getId(), 0);
 			}
 		}
 		if (inTrade && tradeResetNeeded) {
@@ -2400,25 +2387,6 @@ public class Client extends Player implements Runnable {
 		if (startDuel && duelChatTimer <= 0) {
 			startDuel = false;
 		}
-		if (resetanim <= 0) {
-			rerequestAnim();
-			resetanim = 8;
-		}
-
-		if (AnimationReset && actionTimer <= 0) {
-			rerequestAnim();
-			AnimationReset = false;
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-		}
-		if (actionTimer > 0) {
-			actionTimer -= 1;
-		}
-		// Shop
-		if (UpdateShop) {
-			resetItems(3823);
-			resetShop(MyShopID);
-		}
-
 		// check stairs
 		if (stairs > 0) {
 			if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), stairDistance)) {
@@ -2433,6 +2401,10 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		// check shopping
+		if (UpdateShop) {
+			resetItems(3823);
+			resetShop(MyShopID);
+		}
 		if (WanneShop > 0) {
 			if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
 				openUpShop(WanneShop);
@@ -2470,6 +2442,8 @@ public class Client extends Player implements Runnable {
 			transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), tH));
 			deathStage = 0;
 			deathTimer = 0;
+			setCombatTimer(0);
+			setLastCombat(0);
 			/* Stats check! */
 			for(int i = 0; i < boostedLevel.length; i++) {
 				if(i == 3)
@@ -2564,7 +2538,6 @@ public class Client extends Player implements Runnable {
 			lastAction = now;
 			cook();
 		}
-		// Snowing
 		// Npc Talking
 		if (NpcWanneTalk == 2) { // Bank Booth
 			if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 1)) {
@@ -2586,12 +2559,11 @@ public class Client extends Player implements Runnable {
 		if (NpcDialogue > 0 && !NpcDialogueSend) {
 			UpdateNPCChat();
 		}
-
 		/* Items update! Might cause some lag if more than 500 items?! */
 		/* TODO: Add better way of handling ground items! */
 		if (!Ground.items.isEmpty() || !(Ground.items.size() < 0)) {
 			for (GroundItem item : Ground.items) {
-				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
+				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay && Math.abs(getPosition().getX() - item.x) < 104 && Math.abs(getPosition().getY() - item.y) < 104 && getPosition().getZ() == item.z) {
 					item.taken = false;
 					item.visible = false;
 				}
@@ -6197,7 +6169,6 @@ public class Client extends Player implements Runnable {
 			deleteItem(229, 1);
 			addItem(227, 1);
 			requestAnim(832, 0);
-			animationReset = System.currentTimeMillis() + 600;
 		} else {
 			resetAction(true);
 			resetAction();
@@ -7800,7 +7771,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void resetAttack() {
-		rerequestAnim();
+		//rerequestAnim();
 		if (target instanceof Npc)
 			attackingNpc = false;
 		else
@@ -7845,7 +7816,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void setSnared(int gfx, int time) {
-		System.out.println("position? " + getPosition().getX() + ", " + getPosition().getY());
 		stillgfx(gfx, getPosition().getX(), getPosition().getY());
 		if(getSnareTimer() < 1) //Send message only if snare is less than 1!
 			send(new SendMessage("You have been snared!"));
@@ -8490,7 +8460,8 @@ public class Client extends Player implements Runnable {
 				otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
 			}
 			send(new SendString("Examine the bank of " + player, 5383));
-			sendBank(5382, otherBank);
+			sendBank(5292, otherBank);
+			resetItems(5064);
 			send(new InventoryInterface(5292, 5063));
 			IsBanking = false;
 			checkBankInterface = true;
@@ -8804,7 +8775,8 @@ public class Client extends Player implements Runnable {
 	public void transport(Position pos) {
 		teleportToX = pos.getX();
 		teleportToY = pos.getY();
-		moveTo(teleportToX, teleportToY, pos.getZ());
+		teleportToZ = pos.getZ();
+		teleportTo(teleportToX, teleportToY, teleportToZ);
 	}
 
 	public void travelTrigger(int checkPos) {
