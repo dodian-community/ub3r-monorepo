@@ -87,7 +87,7 @@ public class ClickObject4 implements Packet {
         if(objectID >= 8389 && objectID <= 8391 || objectID == 19147) { //Tree guide
             client.showSkillMenu(FARMING.getId(), 4);
         }
-        if(objectID >= 7962 && objectID <= 7964 || objectID == 26579) { //Fruit tree guide
+        if(objectID >= 7962 && objectID <= 7965 || objectID == 26579) { //Fruit tree guide
             client.showSkillMenu(FARMING.getId(), 5);
         }
     }

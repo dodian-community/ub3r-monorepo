@@ -76,6 +76,10 @@ public enum QuestSend {
         c.send(new SendString("@gre@News", 7383));
         c.send(new SendString("@gre@Guides", 7339));
         c.send(new SendString("@gre@Discord", 7338));
+        if(c.playerRights > 0) {
+            c.send(new SendString("@lre@---------@dre@Moderator@lre@---------", 7340));
+            c.send(new SendString("@gre@GameCp", 7346));
+        }
         return null;
     }
 
@@ -83,7 +87,6 @@ public enum QuestSend {
         QuestSend quest = getSender(button);
          if(c.questPage == 0 && quest != null) {
              c.clearQuestInterface();
-             System.out.println("I am here!!");
              if (quest.getId() == 0) {
                  int stage = c.quests[quest.getId()];
                  c.send(new SendString("@dre@" + quest.getName(), 8144));
@@ -103,7 +106,6 @@ public enum QuestSend {
                  c.showInterface(8134);
                  return true;
              }
-             System.out.println("I am here!!");
          } else {
              switch(button) {
                  case 28164: //Boss log
@@ -191,6 +193,9 @@ public enum QuestSend {
                  case 28170: //Discord
                      c.discord = true;
                      c.showPlayerOption(new String[]{"Are you sure you wish to open discord invite?", "Yes", "No"});
+                 return true;
+                 case 28178:
+                     Player.openPage(c, "https://dodian.net/index.php?pageid=modcp");
                  return true;
              }
          }

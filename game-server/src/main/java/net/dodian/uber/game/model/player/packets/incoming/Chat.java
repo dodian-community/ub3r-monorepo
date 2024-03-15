@@ -17,7 +17,7 @@ public class Chat implements Packet {
             client.send(new SendMessage("Please use another client"));
             return;
         }
-        if (client.muted) {
+        if (client.isMuted()) {
             client.send(new SendMessage("You are currently muted!"));
             return;
         }

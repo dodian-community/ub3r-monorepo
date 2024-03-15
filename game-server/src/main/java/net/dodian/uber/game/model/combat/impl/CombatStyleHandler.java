@@ -222,7 +222,6 @@ public abstract class CombatStyleHandler {
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 328: // Staff interface
-                System.out.println("index? " + player.autocast_spellIndex);
                 player.varbit(108, player.autocast_spellIndex < 0 ? 0 : 3); //TODO: Fix autocast for defensive trigger!
                 if (player.fightType == 0)
                     player.weaponStyle = player.weaponStyle.POUND;

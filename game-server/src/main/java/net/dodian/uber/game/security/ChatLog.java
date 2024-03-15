@@ -80,7 +80,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         message = message.replaceAll("'", "`").replaceAll("\\u005C", "/"); //letter '\' and ' is not accepted by sql!
-        System.out.println("private message = " + message);
+        //System.out.println("private message = " + message);
         try {
             Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_CHAT_LOGS + "(type, sender, receiver, message, timestamp) VALUES ('3', '" + sender.dbId + "', '" + receiver.dbId + "', '"+message+"', '" + getTimeStamp() + "')";

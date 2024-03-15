@@ -188,7 +188,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         } else {
             npc.setDirection(npc.getNextWalkingDirection());
             if (npc.getDirection() == -1) {
-                System.out.println("aborting walk");
                 stream.writeBits(1, 1);
                 stream.writeBits(2, 0);
                 return;

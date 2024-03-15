@@ -190,7 +190,11 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("forcemove")) {
                     client.send(new SendMessage("force move!"));
-                    client.appendForcemovement(client.getPosition(), new Position(3333, 3333), new int[]{10, 20, 3});
+                    client.appendForcemovement(client.getPosition(), new Position(3333, 3333), 10, 20, 3);
+                }
+                if (cmd[0].equalsIgnoreCase("time_now")) {
+                    long now = System.currentTimeMillis();
+                    System.out.println("new timers: " + (now + 90_000_000) + ":" + (now + 3_600_000));
                 }
                 if (cmd[0].equalsIgnoreCase("plist")) {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());
@@ -565,7 +569,7 @@ public class Commands implements Packet {
                                 item = new GroundItem(client.getPosition().copy(), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             } else {
-                                Ground.deleteItem(item);
+                                Ground.deleteItem(item, true);
                                 item = new GroundItem(new Position(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ()), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             }
@@ -864,10 +868,7 @@ public class Commands implements Packet {
                                 client.send(new SendMessage("That player is in the wilderness!"));
                                 return;
                             }
-                            client.teleportToX = p.getPosition().getX();
-                            client.teleportToY = p.getPosition().getY();
-                            client.getPosition().setZ(p.getPosition().getZ());
-                            client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+                            client.transport(p.getPosition().copy());
                             client.send(new SendMessage("Teleto: You teleport to " + p.getPlayerName()));
                             CommandLog.recordCommand(client, command);
                         } else {
@@ -908,10 +909,7 @@ public class Commands implements Packet {
                                 client.send(new SendMessage("Can not teleport someone out of the wilderness! Contact a admin!"));
                                 return;
                             }
-                            p.teleportToX = client.getPosition().getX();
-                            p.teleportToY = client.getPosition().getY();
-                            p.getPosition().setZ(client.getPosition().getZ());
-                            p.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+                            p.transport(client.getPosition().copy());
                             CommandLog.recordCommand(client, command);
                         } else {
                             client.send(new SendMessage("Player " + otherPName + " is not online!"));
@@ -1118,7 +1116,7 @@ public class Commands implements Packet {
                         "Your position is (" + client.getPosition().getX() + " , " + client.getPosition().getY() + ")"));
             }
             if (command.startsWith("noclip") && client.playerRights < 2 && getGameWorldId() == 1) {
-                client.kick();
+                client.disconnected = true;
             }
             if (command.startsWith("slay_sim") && getGameWorldId() > 1) {
                 int[] taskStreak = {1000, 500, 250, 100, 50, 10};
@@ -1176,7 +1174,7 @@ public class Commands implements Packet {
                 text = text.replace("g:", "<col=0B610B>");
                 text = text.replace("y:", "<col=FFFF00>");
                 text = text.replace("d:", "<col=000000>");
-                if (!client.muted) {
+                if (!client.isMuted()) {
                     String[] bad = {"chalreq", "duelreq", "tradereq"};
                     for (String s : bad) {
                         if (text.contains(s)) {

@@ -399,7 +399,7 @@ public abstract class Player extends Entity {
             if (dir == -1)
                 wQueueReadPtr = (wQueueReadPtr + 1) % WALKING_QUEUE_SIZE;
             else if ((dir & 1) != 0) {
-                println_debug("Invalid waypoint in walking queue!");
+                println_debug("Invalid waypoint in walking queue! at direction: " + dir);
                 resetWalkingQueue();
                 return -1;
             }
@@ -720,10 +720,6 @@ public abstract class Player extends Entity {
     }
 
     public boolean buttonOnRun = true;
-
-    public void kick() {
-        isKicked = true;
-    }
 
     private int hitDiff = 0;
     protected boolean IsStair = false;

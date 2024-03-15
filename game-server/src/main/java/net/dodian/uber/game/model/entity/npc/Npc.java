@@ -526,7 +526,6 @@ public class Npc extends Entity {
         dir = Utils.direction(getPosition().getX(), getPosition().getY(), (getPosition().getX() + moveX),
                 (getPosition().getY() + moveY));
         if (dir == -1) {
-            System.out.println("returning -1");
             return -1;
         }
         dir >>= 1;
