@@ -70,6 +70,27 @@ public class WorldProcessor implements Job {
                     System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
                     e.printStackTrace();
                 }
+                try {
+                    for (Player p : PlayerHandler.players) {
+                        if(p != null) {
+                            Client c = ((Client) p);
+                            /* Mute check */
+                            String query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id='" + c.dbId + "'";
+                            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+                            boolean gotResult = stm.executeQuery(query).next();
+                            if (gotResult) {
+                                long checkTime = stm.getResultSet().getLong("unmutetime");
+                                if(checkTime != c.mutedTill) c.mutedTill = checkTime; //Incase we need to update the mute timer!
+                            }
+                            stm.close();
+                            /* Ban check */
+                            if(Server.loginManager.isBanned(c.dbId)) c.disconnected = true;
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+                    e.printStackTrace();
+                }
                 Server.chat.clear(); //Not sure what this do, but empty it just incase!
         } catch (Exception e) {
             e.printStackTrace();

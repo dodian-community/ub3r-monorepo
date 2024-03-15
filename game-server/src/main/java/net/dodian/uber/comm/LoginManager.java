@@ -96,12 +96,7 @@ public class LoginManager {
                 int x = results.getInt("x"), y = results.getInt("y"), z = results.getInt("height");
                 p.moveTo(x, y, z);
                 if(x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!
-                p.mutedTill = results.getInt("unmutetime");
-                Date now = new Date();
-                p.rightNow = now.getTime();
-                if (p.mutedTill * 1000 > p.rightNow) {
-                    p.muted = true;
-                }
+                p.mutedTill = results.getLong("unmutetime");
                 /* Set stats */
                 p.fightType = results.getInt("fightStyle");
                 p.autocast_spellIndex = results.getInt("autocast");
@@ -322,9 +317,8 @@ public class LoginManager {
         String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + id + "'";
         ResultSet results = getDbConnection().createStatement().executeQuery(query);
         Date now = new Date();
-        if (results.next()) {
+        if (results.next())
             return now.getTime() < results.getLong("unbantime");
-        }
         return false;
     }
 
