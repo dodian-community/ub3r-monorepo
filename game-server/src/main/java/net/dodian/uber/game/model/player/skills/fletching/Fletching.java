@@ -8,34 +8,6 @@ import net.dodian.uber.game.model.player.skills.Skill;
 
 public class Fletching {
 
-    public void fletchOther(Client player, int amount) {
-        player.send(new RemoveInterfaces());
-        player.fletchOtherAmount = amount;
-        player.fletchingOther = true;
-    }
-
-    public void fletchOther(Client player) {
-        if (player.fletchOtherAmount < 1) {
-            player.resetAction();
-            return;
-        }
-        player.fletchOtherAmount--;
-        player.IsBanking = false;
-        if (player.fletchOtherAmt == 1)
-            player.requestAnim(6683, 0);
-        if (player.playerHasItem(player.fletchOtherId1, player.fletchOtherAmt) && player.playerHasItem(player.fletchOtherId2, player.fletchOtherAmt)) {
-            player.deleteItem(player.fletchOtherId1, player.fletchOtherAmt);
-            player.deleteItem(player.fletchOtherId2, player.fletchOtherAmt);
-            player.addItem(player.fletchOtherId3, player.fletchOtherAmt);
-            player.giveExperience(player.fletchOtherXp * player.fletchOtherAmt, Skill.FLETCHING);
-            player.triggerRandom(player.fletchOtherXp * player.fletchOtherAmt);
-        } else {
-            if (player.fletchOtherAmt == 15)
-                player.send(new SendMessage("You need atleast 15 " + player.GetItemName(player.fletchOtherId1).toLowerCase() + " and " + player.GetItemName(player.fletchOtherId2).toLowerCase() + ""));
-            player.resetAction();
-        }
-    }
-
     public void fletchBow(Client player, boolean shortBow, int amount) {
         player.send(new RemoveInterfaces());
         if (shortBow) {
@@ -71,6 +43,7 @@ public class Fletching {
         if (player.playerHasItem(Constants.logs[player.fletchLog])) {
             player.deleteItem(Constants.logs[player.fletchLog], 1);
             player.addItem(player.fletchId, 1);
+            player.checkItemUpdate();
             player.giveExperience(player.fletchExp, Skill.FLETCHING);
             player.triggerRandom(player.fletchExp);
         } else {

@@ -30,10 +30,6 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 43 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{561}, new int[]{1})) {
-                client.send(new SendMessage("You need 1 nature runes to cast this spell!"));
-                return;
-            }
             client.superHeat(castOnItem);
         }
         if (castSpell == 1155) {// Sapphire
@@ -61,6 +57,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{2});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -91,6 +88,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{4});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -121,6 +119,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{6});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -151,6 +150,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{8});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -181,6 +181,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{10});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -211,6 +212,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, 1);
             client.deleteRunes(new int[]{564}, new int[]{10});
             client.addItem(item, 1);
+            client.checkItemUpdate();
             client.requestAnim(720, 0);
             client.callGfxMask(115, 100);
             client.send(new SendSideTab(6));
@@ -230,6 +232,7 @@ public class MagicOnItems implements Packet {
             client.deleteItem(castOnItem, castOnSlot, 1);
             client.deleteItem(561, 1);
             client.addItem(995, value);
+            client.checkItemUpdate();
             client.giveExperience(600, Skill.MAGIC);
             // animation(113, absY, absX);
             // stillgfx(113, absY, absX);

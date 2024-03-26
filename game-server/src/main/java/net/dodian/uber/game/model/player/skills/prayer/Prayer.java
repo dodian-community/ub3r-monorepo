@@ -16,6 +16,7 @@ public class Prayer {
         client.requestAnim(827, 0);
         client.giveExperience(bone.getExperience(), Skill.PRAYER);
         client.deleteItem(itemId, itemSlot, 1);
+        client.checkItemUpdate();
         client.send(new SendMessage("You bury the " + client.GetItemName(itemId).toLowerCase()));
         return true;
     }
@@ -27,6 +28,7 @@ public class Prayer {
             return false;
         }
         client.deleteItem(itemId, 1);
+        client.checkItemUpdate();
         client.requestAnim(3705, 0);
         double extra = (double) (client.getLevel(Skill.FIREMAKING) + 1) / 100;
         double chance = 2.0 + extra;

@@ -34,6 +34,7 @@ public class ClickNpc implements Packet {
         if (npcId == 2794) {
             if (client.playerHasItem(1735)) {
                 client.addItem(1737, 1);
+                client.checkItemUpdate();
             } else {
                 client.send(new SendMessage("You need some shears to shear this sheep!"));
             }
@@ -113,6 +114,8 @@ public class ClickNpc implements Packet {
                 client.send(new SendMessage(client.playerRights > 1 ? "Set your quest to: " + client.quests[0] : "Suddenly the monk had an urge to dissapear!"));
         } else if (npcId == 683) { // Range stuff
             client.WanneShop = 11;
+        } else if (npcId == 2053) { // Glass store!
+            client.WanneShop = 32;
         } else if (npcId == 3951) {
             if (client.premium) {
                 client.ReplaceObject(2728, 3349, 2391, 0, 0);

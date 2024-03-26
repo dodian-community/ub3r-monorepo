@@ -20,8 +20,9 @@ public class BankAll implements Packet {
                 client.bankItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID), removeSlot);
+            client.checkItemUpdate();
         } else if (interfaceID == 5382) { // remove from bank
-            client.fromBank(removeID, removeSlot, client.bankItemsN[removeSlot]);
+            client.fromBank(removeID, removeSlot, -2);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, !stack ? 8 : Integer.MAX_VALUE, removeSlot);
         } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window

@@ -612,14 +612,10 @@ public class ClickObject implements Packet {
             }
             return;
         }
-        if (objectID == 12260) {
-            if (client.playerRights < 1) {
-                return;
-            }
-            if (objectPosition.getX() == 2542 && objectPosition.getY() == 3097)
-                client.transport(new Position(2462, 4359, 0));
-            else if (objectPosition.getX() == 2459 && objectPosition.getY() == 4354)
-                client.transport(new Position(2544, 3096, 0));
+        if (objectID == 12260) { //Teleport to Kalphite King?
+            if (objectPosition.getX() == 2459 && objectPosition.getY() == 4354)
+                client.transport(new Position(2941, 4691, 0));
+            else client.transport(new Position(2462, 4359, 0));
             return;
         }
         if (objectID == 17122) {
@@ -736,6 +732,7 @@ public class ClickObject implements Packet {
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
                 client.giveExperience(300, Skill.THIEVING);
+            client.checkItemUpdate();
             client.chestEvent++;
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
             client.triggerRandom(900);
@@ -782,6 +779,7 @@ public class ClickObject implements Packet {
             }
             if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
                 client.giveExperience(500, Skill.THIEVING);
+            client.checkItemUpdate();
             client.chestEvent++;
             client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
             client.triggerRandom(1500);

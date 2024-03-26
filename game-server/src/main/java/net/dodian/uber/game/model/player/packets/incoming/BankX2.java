@@ -37,6 +37,7 @@ public class BankX2 implements Packet {
                 client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, EnteredAmount);
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, client.playerItems[client.XremoveSlot] - 1, EnteredAmount, client.XremoveSlot);
+            client.checkItemUpdate();
         } else if (client.XinterfaceID == 5382) { // remove from bank
             client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 2274) { // remove from party

@@ -315,13 +315,29 @@ public class Commands implements Packet {
                     /* Shilo village gem rock? */
                     double[] chance = new double[] {23.4, 11.7, 7.03, 3.91, 3.91, 3.12};
                     int[] gemId = new int[] {1625, 1627, 1629, 1623, 1621, 1619, 1617};
-                        int rolledChance = 0, gem = -1, roll = Misc.chance(10000);
-                        for (int i = 0; i < chance.length && gem == -1; i++) {
-                            rolledChance += (int)(chance[i] * 100);
-                            if (roll <= rolledChance) gem = gemId[i + 1];
-                            else if (i + 1 == chance.length) gem = gemId[0];
-                        }
+                    int rolledChance = 0, gem = -1, roll = Misc.chance(10000);
+                    for (int i = 0; i < chance.length && gem == -1; i++) {
+                        rolledChance += (int)(chance[i] * 100);
+                        if (roll <= rolledChance) gem = gemId[i + 1];
+                        else if (i + 1 == chance.length) gem = gemId[0];
+                    }
                     client.send(new SendMessage("You found gem.." + client.GetItemName(gem) + "(" + gem + ")"));
+                }
+                if (cmd[0].equals("rune")) {
+                    /* 1k cosmic rune convertion! */
+                    int level = Integer.parseInt(cmd[1]);
+                    int deleteOne = 0, deleteTwo = 0, deleteThree = 0, deleteFour = 0;
+                    double[] value = {1.25, 2.5, 5};
+                    for(int i = 0; i < 100; i++) {
+                        if(Math.random() * 100 < (100D - (level / value[0])))
+                            deleteFour++;
+                        else if(Math.random() * 100 < (100D - (level / value[1])))
+                            deleteThree++;
+                        else if(Math.random() * 100 < (100D - (level / value[2])))
+                            deleteTwo++;
+                        else deleteOne++;
+                    }
+                    client.send(new SendMessage("At level "+level+" Runecraft, Four=" + deleteFour + ", Three=" + deleteThree + ", Two=" + deleteTwo + ", One=" + deleteOne + "."));
                 }
                 if (cmd[0].equals("boost_on")) {
                     client.boost(1337, Skill.STRENGTH);
@@ -507,6 +523,7 @@ public class Commands implements Packet {
                         client.addItem(5509, 1);
                         for (int i = 0; i < 3; i++)
                             client.addItem(5510 + (i * 2), 1);
+                        client.checkItemUpdate();
                     } else
                         client.send(new SendMessage("Need 4 free slots!"));
                 }
@@ -1522,6 +1539,7 @@ public class Commands implements Packet {
                         else
                             client.send(new SendMessage("Not enough space in your inventory."));
                     }
+                    client.checkItemUpdate();
                 }
                 if (!specialRights && (cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b"))) {
                     client.openUpBank();

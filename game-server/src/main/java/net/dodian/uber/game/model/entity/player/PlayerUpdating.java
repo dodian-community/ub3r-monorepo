@@ -91,13 +91,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.createFrame(73);
             stream.writeWordA(player.mapRegionX + 6);
             stream.writeWord(player.mapRegionY + 6);
-            if(player.didTeleport()) //Update items if teleport and not at map region change!
-                ((Client)player).updateItems();
+            if (player.didTeleport())
+                ((Client) player).updateItems();
         }
-
         stream.createFrameVarSizeWord(81);
         stream.initBitAccess();
-        if (player.didTeleport() || player.didMapRegionChange()) {
+        if (player.didTeleport()) {
             stream.writeBits(1, 1);
             stream.writeBits(2, 3); // updateType
             stream.writeBits(2, player.getPosition().getZ());

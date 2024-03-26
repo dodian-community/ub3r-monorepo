@@ -175,6 +175,7 @@ public class LoginManager {
                     p.addItem(995, 2000);
                     p.addItem(1856, 1);
                     p.addItem(4155, 1);
+                    p.checkItemUpdate();
                 }
                 /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();

@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.security.CommandLog;
 import net.dodian.utilities.Utils;
 
 import java.text.SimpleDateFormat;
@@ -61,11 +63,17 @@ public class PlayerHandler {
     }
 
     public static boolean isPlayerOn(String playerName) { //Already logged in!
-        if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) { //Old code test!
+        int otherPIndex = getPlayerID(playerName);
+        if (otherPIndex != -1) {
             String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
             return true;
         }
+        /*if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) { //Old code test!
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
+            return true;
+        }*/ //old code!
         return false;
     }
 

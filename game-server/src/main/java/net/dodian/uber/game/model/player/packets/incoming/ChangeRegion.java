@@ -23,7 +23,9 @@ public class ChangeRegion implements Packet {
             client.refreshFriends();
             client.IsPMLoaded = true;
         }
-        client.customObjects();
+        if(packetType == 121) { // Loads new area
+            client.customObjects();
+        }
     }
 
 }

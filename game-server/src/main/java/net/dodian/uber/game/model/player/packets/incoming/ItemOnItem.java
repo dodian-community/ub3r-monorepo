@@ -49,25 +49,30 @@ public class ItemOnItem implements Packet {
             client.NpcDialogueSend = false;
             client.NpcDialogue = 10000;
         }
+        /* Unfinish potion making! */
         for (int h = 0; h < Utils.herbs.length; h++) {
             if ((itemUsed == Utils.herbs[h] && otherItem == 227) || (itemUsed == 227 && otherItem == Utils.herbs[h])) {
                 if (!client.premium && h > 2) {
                     client.send(new SendMessage("Need premium to mix these pots!"));
                     return;
                 }
-                if (client.getSkillLevel(Skill.HERBLORE) < Utils.req[h]) {
-                    client.send(new SendMessage("Requires herblore level " + Utils.req[h]));
+                if (client.getSkillLevel(Skill.HERBLORE) < Utils.grimy_herbs_lvl[h]) {
+                    client.send(new SendMessage("Requires herblore level " + Utils.grimy_herbs_lvl[h]));
                     return;
                 }
                 int xp = 0;
                 if (client.premium)
                     xp = Utils.grimy_herbs_xp[h];
-                client.setPots(600, itemUsed, otherItem, Utils.unfinished[h], xp);
-                return;
+                client.setSkillAction(Skill.HERBLORE.getId(), Utils.herb_unf[h], 1, itemUsed, otherItem, xp, 363, 1);
+                client.skillMessage = "You mix the " + client.GetItemName(itemUsed != 227 ? itemUsed : otherItem).toLowerCase() + " herb with the vial of water.";
+                break;
             }
-            if ((itemUsed == Utils.secondary[h] && otherItem == Utils.unfinished[h])
-                    || (itemUsed == Utils.unfinished[h] && otherItem == Utils.secondary[h])) {
-                if (!client.premium && h > 2) {
+        }
+        /* Finish Potions */
+        for (int h = 0; h < Utils.unf_potion.length; h++) {
+            if ((itemUsed == Utils.secondary[h] && otherItem == Utils.unf_potion[h])
+                    || (itemUsed == Utils.unf_potion[h] && otherItem == Utils.secondary[h])) {
+                if (!client.premium && h > 3) {
                     client.send(new SendMessage("Need premium to mix these pots!"));
                     return;
                 }
@@ -75,9 +80,53 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("Requires herblore level " + Utils.req[h]));
                     return;
                 }
-                client.setPots(1200, itemUsed, otherItem, Utils.finished[h], Utils.potexp[h]);
+                client.setSkillAction(Skill.HERBLORE.getId(), Utils.finished[h], 1, itemUsed, otherItem, Utils.potexp[h], 363, 3);
+                client.skillMessage = "You mix the " + client.GetItemName(Utils.secondary[h]) + " into your potion.";
+                break;
             }
         }
+        /* Super combat potion */
+        boolean checkPotionUsed = false, checkOtherPotionUsed = false;
+        int[] potionItems = {269, 2436, 2440, 2442};
+        for(int i = 0; i < potionItems.length && !checkPotionUsed; i++)
+            if(potionItems[i] == 269 && (itemUsed == 111 || itemUsed == potionItems[i]) || itemUsed == potionItems[i]) checkPotionUsed = true;
+        for(int i = 0; i < potionItems.length && !checkOtherPotionUsed; i++)
+            if((potionItems[i] == 269 && (otherItem == 111 || otherItem == potionItems[i])) || otherItem == potionItems[i]) checkOtherPotionUsed = true;
+        if (checkPotionUsed && checkOtherPotionUsed) { //Overload making
+            boolean hasAllItem = true;
+            for(int i = 0; i < potionItems.length && hasAllItem; i++) {
+                if(potionItems[i] == 269 && (!client.playerHasItem(269) && !client.playerHasItem(111))) hasAllItem = false;
+                else if(potionItems[i] != 269 && !client.playerHasItem(potionItems[i])) hasAllItem = false;
+            }
+            if(hasAllItem) {
+                if(client.getSkillLevel(Skill.HERBLORE) >= 88) {
+                    //Succeeed!
+                    client.setSkillAction(Skill.HERBLORE.getId(), 12695, 1, 2436, -1, 600, 363, 3);
+                    client.skillMessage = "You mix the ingredience together and made a super combat potion.";
+                } else client.send(new SendMessage("You need level 88 herblore to mix a super combat potion!"));
+            } else client.send(new SendMessage("You need a torstol herb or (unf) potion, super attack, strength and defence potion!"));
+        }
+        /* Overload potion */
+        potionItems = new int[]{12695, 2444, 5978};
+        checkPotionUsed = false;
+        checkOtherPotionUsed = false;
+        for(int i = 0; i < potionItems.length && !checkPotionUsed; i++)
+            if(itemUsed == potionItems[i]) checkPotionUsed = true;
+        for(int i = 0; i < potionItems.length && !checkOtherPotionUsed; i++)
+            if(otherItem == potionItems[i]) checkOtherPotionUsed = true;
+        if (checkPotionUsed && checkOtherPotionUsed) { //Overload making
+            boolean hasAllItem = true;
+            for(int i = 0; i < potionItems.length && hasAllItem; i++)
+                if(!client.playerHasItem(potionItems[i])) hasAllItem = false;
+            if(hasAllItem) {
+                if(client.getSkillLevel(Skill.HERBLORE) >= 93) {
+                    //Succeeed!
+                    client.setSkillAction(Skill.HERBLORE.getId(), 11730, 1, 5978, -1, 800, 363, 3);
+                    client.skillMessage = "You mix the ingredience together and made a Overload potion.";
+                } else client.send(new SendMessage("You need level 93 herblore to mix a overload potion!"));
+            } else client.send(new SendMessage("You need a coconut, super combat potion and a ranging potion!"));
+        }
+        /* Mix dose potions */
         for (int i = 0; i < Utils.pot_4_dose.length; i++) {
             if ((itemUsed == Utils.pot_4_dose[i] && useWith == 229) || (itemUsed == 229 && useWith == Utils.pot_4_dose[i])) {
                 client.deleteItem(itemUsed, 1);
@@ -130,7 +179,7 @@ public class ItemOnItem implements Packet {
                 client.addItem(229, 1);
             }
         }
-
+        /* Shiny keys */
         if (itemUsed == 85 || otherItem == 85) {
             int otherId = itemUsed == 85 ? otherItem : itemUsed;
             if(otherId == 1543 || otherId == 1544) {
@@ -151,7 +200,6 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("I already have a " + client.GetItemName(989).toLowerCase() + " in " + (client.playerHasItem(989) ? "my inventory!" : "my bank!")));
             }
         }
-
         boolean rainbowHat = Server.itemManager.getName(itemUsed).endsWith("partyhat") && Server.itemManager.getName(otherItem).endsWith("partyhat") && Server.itemManager.isNote(itemUsed) && Server.itemManager.isNote(otherItem);
         if(rainbowHat) {
             boolean hasItems = true;
@@ -186,7 +234,6 @@ public class ItemOnItem implements Packet {
                 client.send(new SendMessage("You gentle used the knife on the paper hat and cut it into a cracker and a rainbow partyhat."));
             } else client.send(new SendMessage("You need to have atleast one space to tear the black partyhat apart!"));
         }
-
         int[][] dyes = {{-1, 1019}, {1763, 1007}, {1765, 1023}, {1767, 1021}, {1769, 1031}, {1771, 1027}, {1773, 1029}}; //Black, Red, yellow, blue, orange, green, purple
         for(int i = 0; i < dyes.length; i++)
             if(itemUsed == dyes[i][0] || otherItem == dyes[i][0]) {
@@ -200,30 +247,6 @@ public class ItemOnItem implements Packet {
                     break;
                     }
             }
-
-        int[] otherSlayerItems = {8923, 6708, 4166};
-        boolean maskCreation = false, blackmask = (itemUsed == 8921 && otherItem != 11784) || (itemUsed == 11784 && otherItem != 8921) || (otherItem == 8921 && itemUsed != 11784) || (otherItem == 11784 && itemUsed != 8921);
-        if(blackmask) {
-            for(int i = 0; i < otherSlayerItems.length && !maskCreation; i++)
-                if(itemUsed == otherSlayerItems[i] || otherItem == otherSlayerItems[i])
-                    maskCreation = true;
-            if(maskCreation) {
-                if(client.getSkillLevel(Skill.CRAFTING) >= 70) {
-                    boolean gotItems = true;
-                    for(int i = 0; i < otherSlayerItems.length && gotItems; i++)
-                        if(!client.playerHasItem(otherSlayerItems[i])) {
-                            gotItems = false;
-                            client.send(new SendMessage("You are missing " + Server.itemManager.getName(otherSlayerItems[i]).toLowerCase() + " in order to craft the " + Server.itemManager.getName(itemUsed == 8921 || otherItem == 8921 ? 11864 : 11865).toLowerCase() + "!"));
-                        }
-                    if(gotItems) {
-                        for(int i = 0; i < otherSlayerItems.length && gotItems; i++)
-                            client.deleteItem(otherSlayerItems[i], 1);
-                        client.deleteItem(itemUsed == 8921 || otherItem == 8921 ? 8921: 11784, 1);
-                        client.addItem(itemUsed == 8921 || otherItem == 8921 ? 11864 : 11865, 1);
-                    }
-                } else client.send(new SendMessage("You need level 70 crafting to combine these items!"));
-            }
-        }
         /* Slayer helmet creation! */
         int[] slayerHelmItems = {4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923, 11784, 8921};
         //4155-gem, 4156-mirror shield, 4164-face mask, 4166-earmuffs, 4168-nosepeg, 4551-spiny helm, 6720-slayer gloves, 8923-witchwood icon
@@ -260,17 +283,7 @@ public class ItemOnItem implements Packet {
         }
         if ((itemUsed == 314 || otherItem == 314)
                 && (itemUsed == 52 || otherItem == 52)) {
-            client.resetAction();
-            client.send(new SendString("" + client.GetItemName(53), 2799));
-            client.sendFrame246(1746, 175, 53);
-            client.sendFrame164(4429);
-            client.dialogInterface = 53;
-            client.fletchOtherAmt = 15;
-            client.fletchOtherId1 = itemUsed;
-            client.fletchOtherId2 = otherItem;
-            client.fletchOtherId3 = 53;
-            client.fletchOtherXp = 5;
-            client.fletchOtherTime = 600;
+            client.setSkillAction(Skill.FLETCHING.getId(), 53, 15, itemUsed, otherItem, 5, -1, 2);
         }
         for (int d = 0; d < Constants.darttip.length; d++) {
             if ((itemUsed == Constants.darttip[d] || otherItem == Constants.darttip[d])
@@ -280,19 +293,12 @@ public class ItemOnItem implements Packet {
                     client.send(new SendMessage("You need level " + Constants.darttip_required[d] + " fletcing to make " + client.GetItemName(Constants.darts[d]).toLowerCase() + ""));
                     return;
                 }
-                if (!client.playerHasItem(314, 10) || !client.playerHasItem(Constants.darttip[d], 10)) {
-                    client.send(new SendMessage("You need ten " + client.GetItemName(314).toLowerCase() + "s and ten " + client.GetItemName(Constants.darttip[d]).toLowerCase() + "s."));
-                    return;
-                }
-                if (!client.playerHasItem(Constants.darts[d], 10)) {
+                if (!client.playerHasItem(Constants.darts[d]) && client.freeSlots() < 1) {
                     client.send(new SendMessage("Your inventory is full!")); //Might send this if all else fails
                     return;
                 }
-                client.deleteItem(314, 10);
-                client.deleteItem(Constants.darttip[d], 10);
-                client.addItem(Constants.darts[d], 10);
-                client.giveExperience(Constants.darttip_xp[d] * 5, Skill.FLETCHING);
-                client.send(new SendMessage("You fletch ten " + client.GetItemName(Constants.darts[d]).toLowerCase() + "s."));
+                client.setSkillAction(Skill.FLETCHING.getId(), Constants.darts[d], 10, itemUsed, otherItem, Constants.darttip_xp[d] / 2, -1, 3);
+                break;
             }
         }
         for (int h = 0; h < Constants.heads.length; h++) {
@@ -304,16 +310,12 @@ public class ItemOnItem implements Packet {
                             + " fletching"));
                     return;
                 }
-                client.send(new SendString("" + client.GetItemName(Constants.arrows[h]), 2799));
-                client.sendFrame246(1746, 180, Constants.arrows[h]);
-                client.sendFrame164(4429);
-                client.dialogInterface = Constants.arrows[h];
-                client.fletchOtherAmt = 15;
-                client.fletchOtherId1 = itemUsed;
-                client.fletchOtherId2 = otherItem;
-                client.fletchOtherId3 = Constants.arrows[h];
-                client.fletchOtherXp = Constants.xp[h];
-                client.fletchOtherTime = 1200;
+                if (!client.playerHasItem(Constants.arrows[h]) && client.freeSlots() < 1) {
+                    client.send(new SendMessage("Your inventory is full!")); //Might send this if all else fails
+                    return;
+                }
+                client.setSkillAction(Skill.FLETCHING.getId(), Constants.arrows[h], 15, itemUsed, otherItem, Constants.xp[h], -1, 3);
+                client.skillMessage = "You fletched some " + client.GetItemName(Constants.arrows[h]).toLowerCase() + ".";
                 break;
             }
         }
@@ -338,32 +340,28 @@ public class ItemOnItem implements Packet {
             if ((itemUsed == Constants.shortbows[id1] || otherItem == Constants.shortbows[id1])
                     && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction();
-                client.send(new SendString("" + client.GetItemName(Constants.shortbow[id1]), 2799));
-                client.sendFrame246(1746, 220, Constants.shortbow[id1]);
-                client.sendFrame164(4429);
-                client.dialogInterface = Constants.shortbow[id1];
-                client.fletchOtherAmt = 1;
-                client.fletchOtherId1 = itemUsed;
-                client.fletchOtherId2 = otherItem;
-                client.fletchOtherId3 = Constants.shortbow[id1];
-                client.fletchOtherXp = Constants.shortexp[id1];
-                client.fletchOtherTime = 1200;
+                if (client.getLevel(Skill.FLETCHING) < Constants.shortreq[id1]) {
+                    client.send(new SendMessage("Requires level " + Constants.shortreq[id1]
+                            + " fletching"));
+                    return;
+                }
+                client.setSkillAction(Skill.FLETCHING.getId(), Constants.shortbow[id1], 1, itemUsed, otherItem, Constants.shortexp[id1], 6679 + id1, 2);
+                client.skillMessage = "You string your " + client.GetItemName(Constants.shortbows[id1]).toLowerCase() + " into a "+client.GetItemName(Constants.shortbow[id1]).toLowerCase()+".";
+                break;
             }
         }
         for (int b2 = 0; b2 < Constants.longbows.length; b2++) {
             if ((itemUsed == Constants.longbows[b2] || otherItem == Constants.longbows[b2])
                     && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction();
-                client.send(new SendString("" + client.GetItemName(Constants.longbow[b2]), 2799));
-                client.sendFrame246(1746, 220, Constants.longbow[b2]);
-                client.sendFrame164(4429);
-                client.dialogInterface = Constants.longbow[b2];
-                client.fletchOtherAmt = 1;
-                client.fletchOtherId1 = itemUsed;
-                client.fletchOtherId2 = otherItem;
-                client.fletchOtherId3 = Constants.longbow[b2];
-                client.fletchOtherXp = Constants.longexp[b2];
-                client.fletchOtherTime = 1200;
+                if (client.getLevel(Skill.FLETCHING) < Constants.longreq[b2]) {
+                    client.send(new SendMessage("Requires level " + Constants.longreq[b2]
+                            + " fletching"));
+                    return;
+                }
+                client.setSkillAction(Skill.FLETCHING.getId(), Constants.longbow[b2], 1, itemUsed, otherItem, Constants.longexp[b2], 6685 + b2, 2);
+                client.skillMessage = "You string your " + client.GetItemName(Constants.longbows[b2]).toLowerCase() + " into a "+client.GetItemName(Constants.longbow[b2]).toLowerCase()+".";
+                break;
             }
         }
         for (int h = 0; h < Constants.leathers.length; h++) {
@@ -375,28 +373,61 @@ public class ItemOnItem implements Packet {
         }
 
         if (itemUsed == 1755 || otherItem == 1755) {
-            int gem = -1, slot = -1;
-            if (itemUsed == 1755)
-                gem = otherItem;
-            else
-                gem = itemUsed;
-            for (int i11 = 0; i11 < Utils.uncutGems.length; i11++) {
-                if (Utils.uncutGems[i11] == gem) {
-                    slot = i11;
-                }
-            }
-            if (slot < 0)
-                return;
-            if (Utils.gemReq[slot] > client.getLevel(Skill.CRAFTING)) {
-                client.send(new SendMessage("You need a crafting level of " + Utils.gemReq[slot] + " to cut this."));
-                return;
-            }
-            client.deleteItem(gem, 1);
-            client.addItem(Utils.cutGems[slot], 1);
-            client.giveExperience((int) (Utils.gemExp[slot] * 6), Skill.CRAFTING);
-            client.send(new SendMessage("You cut the " + client.GetItemName(Utils.cutGems[slot]) + ""));
-        }
+            int gem = itemUsed == 1755 ? otherItem : itemUsed, slot = -1;
+            for (int i11 = 0; i11 < Utils.uncutGems.length; i11++)
+                if (Utils.uncutGems[i11] == gem) slot = i11;
 
+            if(slot >= 0) {
+                if (Utils.gemReq[slot] > client.getLevel(Skill.CRAFTING)) {
+                    client.send(new SendMessage("You need a crafting level of " + Utils.gemReq[slot] + " to cut this."));
+                    return;
+                }
+                client.setSkillAction(Skill.CRAFTING.getId(), Utils.cutGems[slot], 1, gem, -1, Utils.gemExp[slot] * 5, Utils.gemEmote[slot], 3);
+                client.skillMessage = "You cut the " + client.GetItemName(Utils.cutGems[slot]) + "";
+            }
+        }
+        if (itemUsed == 1391 || otherItem == 1391) {
+            int orb = itemUsed == 1391 ? otherItem : itemUsed, slot = -1;
+            for (int i = 0; i < Utils.orbs.length; i++)
+                if (Utils.orbs[i] == orb) slot = i;
+
+            if(slot >= 0) {
+                if (Utils.orbLevel[slot] > client.getLevel(Skill.CRAFTING)) {
+                    client.send(new SendMessage("You need a crafting level of " + Utils.orbLevel[slot] + " to make this."));
+                    return;
+                }
+                client.setSkillAction(Skill.CRAFTING.getId(), Utils.staves[slot], 1, orb, 1391, Utils.orbXp[slot], -1, 3);
+                client.skillMessage = "You put the " + client.GetItemName(orb).toLowerCase() + " onto the battlestaff and made a " + client.GetItemName(Utils.staves[slot]).toLowerCase() + ".";
+            }
+            //TODO: Fix items in the database!
+        }
+        if((itemUsed == 1785 && otherItem == 1775) || (itemUsed == 1775 && otherItem == 1785)) {
+            //884 = blowing glass emote!
+            String jump = "\\n\\n\\n";
+            client.sendFrame246(11465, 160, 229);
+            client.send(new SendString(jump + "Vial", 11474));
+            client.sendFrame246(11466, 180, 1980);
+            client.send(new SendString(jump + "Empty cup", 12396));
+            client.sendFrame246(11467, 150, 6667);
+            client.send(new SendString(jump + "Fishbowl", 12400));
+            client.sendFrame246(11468, 150, 567);
+            client.send(new SendString(jump + "Orb", 12404));
+            client.sendFrame246(11469, 190, -1);
+            client.send(new SendString(jump + "", 12408));
+            client.sendFrame246(11470, 190, -1);
+            client.send(new SendString(jump + "", 12412));
+            client.sendFrame246(6199, 190, -1);
+            client.send(new SendString(jump + "", 6203));
+            client.showInterface(11462);
+        }
+        if((itemUsed == 6667 && otherItem == 1755) || (itemUsed == 1755 && otherItem == 6667)) {
+            int slot = itemUsed == 6667 ? itemUsedSlot : usedWithSlot;
+            client.deleteItem(6667, slot, 1);
+            client.addItemSlot(7534, 1, slot);
+            client.checkItemUpdate();
+            client.giveExperience(60, Skill.CRAFTING);
+            client.send(new SendMessage("You chisel the fishbowl into a helmet."));
+        }
         if (itemUsed == 1759 || otherItem == 1759) {
             int amulet;
             if (itemUsed == 1759)
@@ -408,10 +439,8 @@ public class ItemOnItem implements Packet {
                 client.send(new SendMessage("You cannot string this item with wool!"));
                 return;
             }
-            client.deleteItem(amulet, 1);
-            client.deleteItem(1759, 1);
-            client.addItem(strung, 1);
-            client.giveExperience(60, Skill.CRAFTING);
+            client.setSkillAction(Skill.CRAFTING.getId(), strung, 1, amulet, 1759, 60, -1, 2);
+            client.skillMessage = "You put the wool onto the " + client.GetItemName(strung).toLowerCase() + ".";
         }
 
         if (itemUsed == 590 && useWith == 1511 || itemUsed == 1511 && useWith == 590) {
@@ -459,6 +488,7 @@ public class ItemOnItem implements Packet {
                 client.send(new SendMessage("You need a firemaking level of 75 to burn magic logs."));
             }
         }
+        client.checkItemUpdate();
     }
 
 }
