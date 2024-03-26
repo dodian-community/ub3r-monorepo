@@ -49,6 +49,7 @@ public class UseItemOnNpc implements Packet {
                 client.deleteItem(item == 1540 ? 11286 : 1540, 1);
                 client.deleteItem(995, 1500000);
                 client.addItemSlot(11284, 1, slot);
+                client.checkItemUpdate();
                 client.showNPCChat(npcId, 591, new String[]{"Here you go.", "Your shield is done."});
             }
         }
@@ -56,6 +57,7 @@ public class UseItemOnNpc implements Packet {
         if (npcId == 2794) {
             if (item == 1735) {
                 client.addItem(1737, 1);
+                client.checkItemUpdate();
             } else {
                 client.send(new SendMessage("You need some shears to shear this sheep!"));
             }
@@ -64,6 +66,7 @@ public class UseItemOnNpc implements Packet {
         if (skillcape != null && npcId == 6059) {
             if (client.hasSpace()) {
                 client.addItem(skillcape.getTrimmedId() + 1, 1);
+                client.checkItemUpdate();
                 client.showNPCChat(6059, 588, new String[]{"Here, have a skillcape hood from me."});
             } else client.send(new SendMessage("Not enough of space to get a skillcape hood."));
         }
@@ -71,6 +74,7 @@ public class UseItemOnNpc implements Packet {
         if (gotMaxCape && npcId == 6481) {
             if (client.hasSpace()) {
                 client.addItem(item + 1, 1);
+                client.checkItemUpdate();
                 client.showNPCChat(6481, 588, new String[]{"Here, have a skillcape hood from me."});
             } else client.send(new SendMessage("Not enough of space to get a skillcape hood."));
         }

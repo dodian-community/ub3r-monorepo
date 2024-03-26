@@ -41,6 +41,7 @@ public class UseItemOnPlayer implements Packet {
                 client.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
             } else {
                 player.addItem(partyHat, 1);
+                client.checkItemUpdate();
                 player.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from " + client.getPlayerName()));
                 client.send(new SendMessage(player.getPlayerName() + " got a  " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
             }

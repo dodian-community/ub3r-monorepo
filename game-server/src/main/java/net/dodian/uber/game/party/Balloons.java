@@ -278,10 +278,8 @@ public class Balloons {
                     amount = 0;
             }
         }
-        if (amount > 0) { //To update!
+        if (amount > 0) //To update!
             displayOfferItems(c);
-            c.resetItems(5064);
-        }
     }
 
     public static void removeOfferItems(Client c, int id, int amount, int slot) {
@@ -314,7 +312,7 @@ public class Balloons {
         }
         if (amount > 0) { //To update!
             displayOfferItems(c);
-            c.resetItems(5064);
+            c.checkItemUpdate();
         }
     }
 
@@ -329,6 +327,7 @@ public class Balloons {
         }
         displayItems(c);
         displayOfferItems(c);
+        c.checkItemUpdate();
     }
 
 	/*public static void displayItems(Client c) {

@@ -31,6 +31,7 @@ public class ClickItem3 implements Packet {
                 client.addItem(4551, 1);
                 client.addItem(6720, 1);
                 client.addItem(8923, 1);
+                client.checkItemUpdate();
                 client.send(new SendMessage("you disassemble the "+client.GetItemName(itemId).toLowerCase()+"."));
             }
         }

@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
+import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -10,6 +11,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.Packet;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -91,15 +93,29 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
         return;
     }
     if (item == 229 && objectId == 879) {
+        client.fillingObj = objectId;
+        client.filling = true;
+    }
+    if (item == 1925 && objectId == 14890) {
+        client.fillingObj = objectId;
         client.filling = true;
     }
     if (item == 1925 && objectId == 8689) {
         client.setFocus(UsedOnX, UsedOnY);
         client.deleteItem(item, 1);
         client.addItem(item + 2, 1);
+        client.checkItemUpdate();
     }
-    if (objectId == 3994 || objectId == 11666 || objectId == 16469) {
-        if (item == 2357) { // 2357 = gold
+    if (objectId == 3994 || objectId == 11666 || objectId == 16469 || objectId == 29662) {
+        if(item == 1783 || item == 1781) { //Soda ash or bucket of sand
+            client.send(new RemoveInterfaces());
+            if(!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
+                client.send(new SendMessage("You need one bucket of sand and one soda ash"));
+                return;
+            }
+            client.setSkillAction(Skill.CRAFTING.getId(), 1775, 1, 1783, 1781, 80, 899, 3);
+            client.skillMessage = "You smelt soda ash with the sand and made molten glass.";
+        } else if (item == 2357) { // 2357 = gold
             client.showItemsGold();
             client.showInterface(4161);
         } else {
@@ -116,20 +132,32 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
         client.stillgfx(624, new Position(client.skillY, client.skillX, client.getPosition().getZ()), 0);
         client.boneItem = item;
     }
-    if(objectId == 2097 && (item == 1540 || item == 11286)) {
-        if(!client.playerHasItem(2347)) client.send(new SendMessage("You need a hammer!"));
-        else if (item == 1540 && !client.playerHasItem(11286)) client.send(new SendMessage("You need a draconic visage!"));
-        else if (item == 11286 && !client.playerHasItem(1540)) client.send(new SendMessage("You need a anti-dragon shield!"));
-        else if(Skills.getLevelForExperience(client.getExperience(Skill.SMITHING)) < 90) client.send(new SendMessage("You need level 90 smithing to do this!"));
+    if (objectId == 2097 && (item == 1540 || item == 11286)) {
+        if (!client.playerHasItem(2347)) client.send(new SendMessage("You need a hammer!"));
+        else if (item == 1540 && !client.playerHasItem(11286))
+            client.send(new SendMessage("You need a draconic visage!"));
+        else if (item == 11286 && !client.playerHasItem(1540))
+            client.send(new SendMessage("You need a anti-dragon shield!"));
+        else if (Skills.getLevelForExperience(client.getExperience(Skill.SMITHING)) < 90)
+            client.send(new SendMessage("You need level 90 smithing to do this!"));
         else { //Preforming action!
             client.deleteItem(item, slot, 1);
             client.deleteItem(item == 1540 ? 11286 : 1540, 1);
             client.addItemSlot(11284, 1, slot);
+            client.checkItemUpdate();
             client.giveExperience(15000, Skill.SMITHING);
             client.send(new SendMessage("Your smithing craft made a Dragonfire shield out of the visage."));
         }
     }
-    if (objectId == 2781 || objectId == 2728 || objectId == 26181) { // Cooking range!
+    if(objectId == 26181 && item == 401) {
+        int amount = client.getInvAmt(401);
+        for(int i = 0; i < amount; i++) {
+            client.deleteItem(401, 1);
+            client.addItem(1781, 1);
+        }
+        client.checkItemUpdate();
+        client.send(new SendMessage("You burn all your seaweed into ashes."));
+    } else if (objectId == 2781 || objectId == 2728 || objectId == 26181) { // Cooking range!
         client.skillX = UsedOnX;
         client.setSkillY(UsedOnY);
         client.startCooking(item);

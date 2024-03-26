@@ -9,12 +9,34 @@ public class ClickingStuff implements Packet {
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         //int interfaceID = client.getInputStream().readSignedByte(); //Do not exist!!
+        if (client.IsBanking) {
+            client.send(new RemoveInterfaces());
+            client.IsBanking = false;
+            client.checkItemUpdate();
+        }
+        if (client.IsShopping) {
+            client.IsShopping = false;
+            client.MyShopID = 0;
+            client.UpdateShop = false;
+            client.checkItemUpdate();
+        }
+        if (client.checkBankInterface) {
+            client.send(new RemoveInterfaces());
+            client.checkBankInterface = false;
+            client.checkItemUpdate();
+        }
+        if (client.isPartyInterface) {
+            client.send(new RemoveInterfaces());
+            client.isPartyInterface = false;
+            client.checkItemUpdate();
+        }
         if (client.inDuel && !client.duelFight) {
             Client other = client.getClient(client.duel_with);
             if (other == null || !client.validClient(client.duel_with) || System.currentTimeMillis() - client.lastButton < 600) {
                 return;
             }
             client.declineDuel();
+            client.checkItemUpdate(); //We need this here?!
         }
         if (client.inTrade) {
             Client other = client.getClient(client.trade_reqId);
@@ -22,21 +44,7 @@ public class ClickingStuff implements Packet {
                 return;
             }
             client.declineTrade();
-        }
-        if (client.IsShopping) {
-            client.IsShopping = false;
-            client.MyShopID = 0;
-            client.UpdateShop = false;
-        }
-        if (client.IsBanking) {
-            client.send(new RemoveInterfaces());
-            client.IsBanking = false;
-        }
-        if (client.checkBankInterface) {
-            client.checkBankInterface = false;
-        }
-        if (client.isPartyInterface) {
-            client.isPartyInterface = false;
+            client.checkItemUpdate(); //We need this here?!
         }
         if(client.currentSkill >= 0) client.currentSkill = -1; //Close skillmenu interface!
     }

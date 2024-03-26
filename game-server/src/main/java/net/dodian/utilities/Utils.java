@@ -11,21 +11,20 @@ public class Utils {
     public static int[] smelt_frame = {2405, 2406, 2407, 2409, 2410, 2411, 2412, 2413};
     public static int[][] smelt_bars = {{2349, 30}, {2351, 65}, {2355, 70}, {2353, 90}, {2357, 115},
             {2359, 150}, {2361, 190}, {2363, 250}};
-
-    public static int[] herbs = {249, 253, 257, 257, 259, 263, 3000, 265, 267,};
-    public static int[] secondary = {221, 225, 239, 231, 221, 225, 223, 239, 245};
-    public static int[] unfinished = {91, 95, 99, 99, 101, 105, 3004, 107, 109};
-    public static int[] finished = {121, 115, 133, 139, 145, 157, 3026, 163, 169};
-    public static int[] req = {3, 14, 25, 38, 46, 55, 60, 65, 75};
-    public static int[] potexp = {200, 480, 560, 700, 840, 1000, 1120, 1200, 1350};
+    public static int[] unf_potion = {91, 95, 99, 99, 101, 105, 3004, 107, 109, 111};
+    public static int[] secondary = {221, 225, 239, 231, 221, 225, 223, 239, 245, 6045};
+    public static int[] finished = {121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454};
+    public static int[] req = {3, 14, 25, 38, 46, 55, 60, 65, 75, 79};
+    public static int[] potexp = {200, 480, 560, 700, 840, 1000, 1120, 1200, 1350, 1425};
     public static int[] grimy_herbs = {199, 203, 207, 209, 213, 3051, 215, 217, 219};
+    public static int[] herbs = {249, 253, 257, 259, 263, 3000, 265, 267, 269};
     public static int[] grimy_herbs_lvl = {1, 10, 25, 40, 54, 59, 65, 70, 75};
     public static int[] grimy_herbs_xp = {24, 40, 56, 72, 88, 96, 104, 120, 136}; //3 guam, 5 tarromin, 7 ranarr, 9 irit, kwuarm 11, snapdragon 12, cadantine 13, dwarfweed 15, torstol 17
-
-    public static int[] pot_1_dose = {119, 125, 137, 143, 149, 161, 167, 173, 3030};
-    public static int[] pot_2_dose = {117, 123, 135, 141, 147, 159, 165, 171, 3028};
-    public static int[] pot_3_dose = {115, 121, 133, 139, 145, 157, 163, 169, 3026};
-    public static int[] pot_4_dose = {113, 2428, 2432, 2434, 2436, 2440, 2442, 2444, 3024};
+    public static int[] herb_unf = {91, 95, 99, 101, 105, 3004, 107, 109, 111};
+    public static int[] pot_1_dose = {119, 125, 137, 143, 149, 161, 167, 173, 3030, 2458, 12701};
+    public static int[] pot_2_dose = {117, 123, 135, 141, 147, 159, 165, 171, 3028, 2456, 12699};
+    public static int[] pot_3_dose = {115, 121, 133, 139, 145, 157, 163, 169, 3026, 2454, 12697};
+    public static int[] pot_4_dose = {113, 2428, 2432, 2434, 2436, 2440, 2442, 2444, 3024, 2452, 12695};
 
     public static int[] shortExp = {80, 120, 160, 200, 250, 320};
     public static int[] longExp = {90, 135, 180, 230, 290, 360};
@@ -61,10 +60,15 @@ public class Utils {
     public static int[] cookLevel = {1, 1, 1, 10, 15, 20, 30, 40, 50, 60, 70, 85, 95};
 
     // Crafting
-    public static int[] uncutGems = {1623, 1621, 1619, 1617, 1631, 6571};
-    public static int[] cutGems = {1607, 1605, 1603, 1601, 1615, 6573};
-    public static int[] gemReq = {20, 27, 34, 43, 55, 67};
-    public static int[] gemExp = {50, 68, 85, 108, 137, 168};
+    public static int[] uncutGems = {1623, 1621, 1619, 1617, 1631, 6571, 1625, 1627, 1629}; //Opal, Jade and Topaz added later!
+    public static int[] cutGems = {1607, 1605, 1603, 1601, 1615, 6573, 1609, 1611, 1613};
+    public static int[] gemReq = {20, 27, 34, 43, 55, 67, 1, 13, 16};
+    public static int[] gemExp = {50, 68, 85, 108, 137, 168, 15, 20, 25};
+    public static int[] gemEmote = {888, 889, 887, 886, 885, 2717, 890, 891, 892};
+    public static int[] orbs = {571, 575, 569, 573};
+    public static int[] staves = {1395, 1399, 1393, 1397};
+    public static int[] orbLevel = {51, 56, 61, 66};
+    public static int[] orbXp = {450, 500, 550, 600};
 
     public static final char playerNameXlateTable[] = {'_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
             'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',

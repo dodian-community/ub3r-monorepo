@@ -38,6 +38,7 @@ public class ClickObject2 implements Packet {
             client.send(new SendMessage("Obj click2: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
         if (objectID == 14896 || objectID == 14909) {
             client.addItem(1779, 1);
+            client.checkItemUpdate();
         }
         if (client.randomed) {
             return;
@@ -151,7 +152,6 @@ public class ClickObject2 implements Packet {
         }
         if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
                 || (objectID == 6084) || objectName.contains("bank booth")) {
-            //System.out.println("Banking..");
             client.skillX = position.getX();
             client.setSkillY(position.getY());
             client.WanneBank = 1;

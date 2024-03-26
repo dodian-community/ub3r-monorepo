@@ -438,26 +438,26 @@ public abstract class Player extends Entity {
             if (mapRegionDidChange) {
                 // after map region change the relative coordinates range
                 // between 48 - 55+
-                mapRegionX = (teleportToX >> 3) - 6;
-                mapRegionY = (teleportToY >> 3) - 6;
                 if (firstSend) {
                     temp.pLoaded = false;
                 } else {
                     firstSend = true;
                 }
+                mapRegionX = (teleportToX >> 3) - 6;
+                mapRegionY = (teleportToY >> 3) - 6;
                 // playerListSize = 0; // completely rebuild playerList after
                 // teleport AND map region change
             }
             currentX = teleportToX - 8 * mapRegionX;
             currentY = teleportToY - 8 * mapRegionY;
+            Position newPos = new Position(teleportToX, teleportToY, teleportToZ);
             resetWalkingQueue();
-            if(temp.pLoaded)
-                getPosition().moveTo(teleportToX, teleportToY, teleportToZ);
-            Balloons.updateBalloons(temp);
-            GlobalObject.updateObject(temp);
+            //Balloons.updateBalloons(temp);
+            //GlobalObject.updateObject(temp);
             teleportToX = teleportToY = -1;
             teleportToZ = 0;
             didTeleport = true;
+            temp.getPosition().moveTo(newPos.getX(), newPos.getY(), newPos.getZ());
         } else {
             primaryDirection = getNextWalkingDirection();
             if (primaryDirection == -1)
@@ -1548,69 +1548,74 @@ public abstract class Player extends Entity {
 
     public void customObjects() {
         Client client = (Client) this;
-        if(getPosition().getZ() != 0) { //For now all object is at height 0!
-            return;
-        }
         client.replaceDoors();
         Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
-        /* NMZ object removal!*/
-        for (int x = 0; x <= 9; x++)
-            for (int y = 0; y <= 8; y++)
-                client.ReplaceObject2(new Position(2600 + x, 3111 + y, 0), -1, 0, 10);
-        client.ReplaceObject2(new Position(2869, 9813, 0), 2343, 0, 10); //Brick
-        client.ReplaceObject2(new Position(2870, 9813, 0), 2343, 0, 10); //Brick
-        client.ReplaceObject2(new Position(2871, 9813, 0), 2343, 0, 10); //Brick
+        if(client.getPosition().getZ() == 0) {
+            /* NMZ object removal!*/
+            for (int x = 0; x <= 9; x++)
+                for (int y = 0; y <= 8; y++)
+                    client.ReplaceObject2(new Position(2600 + x, 3111 + y, 0), -1, 0, 10);
+            client.ReplaceObject2(new Position(2869, 9813, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2870, 9813, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2871, 9813, 0), 2343, 0, 10); //Brick
 
-        client.ReplaceObject2(new Position(2866, 9797, 0), 2343, 0, 10); //Brick
-        client.ReplaceObject2(new Position(2866, 9798, 0), 2343, 0, 10); //Brick
-        client.ReplaceObject2(new Position(2866, 9799, 0), 2343, 0, 10); //Brick
-        client.ReplaceObject2(new Position(2866, 9800, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2866, 9797, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2866, 9798, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2866, 9799, 0), 2343, 0, 10); //Brick
+            client.ReplaceObject2(new Position(2866, 9800, 0), 2343, 0, 10); //Brick
 
-        client.ReplaceObject2(new Position(2885, 9794, 0), 882, 0, 10); // Shortcut entrance Taverly
-        client.ReplaceObject2(new Position(2899, 9728, 0), 882, 0, 10); // Shortcut exit Taverly
+            client.ReplaceObject2(new Position(2885, 9794, 0), 882, 0, 10); // Shortcut entrance Taverly
+            client.ReplaceObject2(new Position(2899, 9728, 0), 882, 0, 10); // Shortcut exit Taverly
 
-        client.ReplaceObject2(new Position(2542, 3097, 0), 12260, 0, 10); //Teleport
+            client.ReplaceObject2(new Position(2572, 3105, 0), 14890, 0, 10); //Sand Pit in Yanille!
+            client.ReplaceObject2(new Position(2542, 3097, 0), -1, 0, 10); //Remove portal near dad!
+            client.ReplaceObject2(new Position(2942, 4688, 0), 12260, 3, 10); //Teleport of some sort!
 
-        client.ReplaceObject2(new Position(2613, 3084, 0), 3994, -3, 11);
-        client.ReplaceObject2(new Position(2628, 3151, 0), 2104, -3, 11);
-        client.ReplaceObject2(new Position(2629, 3151, 0), 2105, -3, 11);
-        client.ReplaceObject2(new Position(2733, 3374, 0), 375, -1, 11);
-        client.ReplaceObject2(new Position(2688, 3481, 0), 27978, 1, 11); //Blood altar
-        client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
-        client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair
-        client.ReplaceObject2(new Position(2863, 3427, 0), 3828, 0, 10); //Kalphite lair entrance!
+            client.ReplaceObject2(new Position(2613, 3084, 0), 3994, -3, 11);
+            client.ReplaceObject2(new Position(2628, 3151, 0), 2104, -3, 11);
+            client.ReplaceObject2(new Position(2629, 3151, 0), 2105, -3, 11);
+            client.ReplaceObject2(new Position(2733, 3374, 0), 375, -1, 11);
+            client.ReplaceObject2(new Position(2688, 3481, 0), 27978, 1, 11); //Blood altar
+            client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
+            client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair
 
-        client.ReplaceObject2(new Position(2669, 2713, 0), -1, -1, 11); // Remove door?
-        client.ReplaceObject2(new Position(2713, 3483, 0), -1, -1, 0); // Remove seers door?
-        client.ReplaceObject2(new Position(2716, 3472, 0), -1, -1, 0); // Remove seers door?
-        client.ReplaceObject2(new Position(2594, 3102, 0), -1, -1, 0); // Remove Yanille door?
-        client.ReplaceObject2(new Position(2816, 3438, 0), -1, -1, 0); // Remove Catherby door?
-        /* Rope from Tzhaar city */
-        client.ReplaceObject2(new Position(2443, 5169, 0), 2352, 0, 10);
-        /*
-         * Danno: Box off new area from noobs =]
-         */
-        client.ReplaceObject2(new Position(2770, 3140, 0), 2050, 0, 10);
-        client.ReplaceObject2(new Position(2771, 3140, 0), 2050, 0, 10);
-        client.ReplaceObject2(new Position(2772, 3140, 0), 2050, 0, 10);
-        client.ReplaceObject2(new Position(2772, 3141, 0), 2050, 0, 10);
-        client.ReplaceObject2(new Position(2772, 3142, 0), 2050, 0, 10);
-        client.ReplaceObject2(new Position(2772, 3143, 0), 2050, 0, 10);
-        /* Blocking object! */
-        //client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
-        /* ? */
-        client.ReplaceObject2(new Position(2998, 3931, 0), 6951, 0, 0);
-        client.ReplaceObject2(new Position(2904, 9678, 0), 6951, 0, 10);
-        // slayer update
-        // ReplaceObject2(2904, 9678, -1, -1, 11);
-        // ReplaceObject2(2691, 9774, 2107, 0, 11);
-        // Ancient slayer dunegon
-        client.ReplaceObject(2661, 9815, 2391, 0, 0);
-        client.ReplaceObject(2662, 9815, 2392, -2, 0);
-        /* Gnome mining cavern */
-        client.ReplaceObject2(new Position(2492, 9916, 0), 7491, 0, 10);
-        client.ReplaceObject2(new Position(2493, 9915, 0), 7491, 0, 10);
+            client.ReplaceObject2(new Position(2669, 2713, 0), -1, -1, 11); // Remove door?
+            client.ReplaceObject2(new Position(2713, 3483, 0), -1, -1, 0); // Remove seers door?
+            client.ReplaceObject2(new Position(2716, 3472, 0), -1, -1, 0); // Remove seers door?
+            client.ReplaceObject2(new Position(2594, 3102, 0), -1, -1, 0); // Remove Yanille door?
+            client.ReplaceObject2(new Position(2816, 3438, 0), -1, -1, 0); // Remove Catherby door?
+            /* Rope from Tzhaar city */
+            client.ReplaceObject2(new Position(2443, 5169, 0), 2352, 0, 10);
+            /*
+             * Danno: Box off new area from noobs =]
+             */
+            client.ReplaceObject2(new Position(2770, 3140, 0), 2050, 0, 10);
+            client.ReplaceObject2(new Position(2771, 3140, 0), 2050, 0, 10);
+            client.ReplaceObject2(new Position(2772, 3140, 0), 2050, 0, 10);
+            client.ReplaceObject2(new Position(2772, 3141, 0), 2050, 0, 10);
+            client.ReplaceObject2(new Position(2772, 3142, 0), 2050, 0, 10);
+            client.ReplaceObject2(new Position(2772, 3143, 0), 2050, 0, 10);
+            /* Blocking object! */
+            //client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
+            /* ? */
+            client.ReplaceObject2(new Position(2998, 3931, 0), 6951, 0, 0);
+            client.ReplaceObject2(new Position(2904, 9678, 0), 6951, 0, 10);
+            // slayer update
+            // ReplaceObject2(2904, 9678, -1, -1, 11);
+            // ReplaceObject2(2691, 9774, 2107, 0, 11);
+            // Ancient slayer dunegon
+            client.ReplaceObject(2661, 9815, 2391, 0, 0);
+            client.ReplaceObject(2662, 9815, 2392, -2, 0);
+            /* Gnome mining cavern */
+            client.ReplaceObject2(new Position(2492, 9916, 0), 7491, 0, 10);
+            client.ReplaceObject2(new Position(2493, 9915, 0), 7491, 0, 10);
+            /* Elemental obelisk */
+            client.ReplaceObject2(new Position(2863, 3427, 0), 2151, 0, 10); //Water
+            client.ReplaceObject2(new Position(3531, 3536, 0), 2150, 0, 10); //Earth
+            client.ReplaceObject2(new Position(3059, 3564, 0), 2153, 0, 10); //Fire
+            client.ReplaceObject2(new Position(2743, 3174, 0), 2152, 0, 10); //Air
+        }
     }
 
     public void examineItem(Client c, int id, int amount) {

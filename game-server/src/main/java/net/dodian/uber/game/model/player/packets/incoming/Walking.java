@@ -90,6 +90,7 @@ public class Walking implements Packet {
                 client.rerequestAnim();
                 client.resetAction();
                 client.discord = false;
+                if(!client.playerSkillAction.isEmpty()) client.playerSkillAction.clear(); //Need to clear if you walk away!
             /* Check a players inventory! */
             if (client.checkInv) {
                 client.checkInv = false;
@@ -117,14 +118,17 @@ public class Walking implements Packet {
             if (client.IsBanking) {
                 client.send(new RemoveInterfaces());
                 client.IsBanking = false;
+                client.checkItemUpdate();
             }
             if(client.checkBankInterface) {
                 client.checkBankInterface = false;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
             if (client.isPartyInterface) {
                 client.isPartyInterface = false;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
             // shopping
             if (client.IsShopping == true) {
@@ -132,6 +136,7 @@ public class Walking implements Packet {
                 client.MyShopID = 0;
                 client.UpdateShop = false;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
     }
 

@@ -28,6 +28,7 @@ public class RemoveItem implements Packet {
                 int amount = client.getEquipmentN()[removeSlot];
                     if(client.remove(removeSlot, false))
                         client.addItem(id, amount);
+                client.checkItemUpdate();
             } else client.send(
                     new SendMessage("Not enough space to unequip this item!"));
         } else if (interfaceID == 5064) { // remove from bag to bank
@@ -35,6 +36,7 @@ public class RemoveItem implements Packet {
                 client.bankItem(removeID, removeSlot, 1);
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, 1, removeSlot);
+            client.checkItemUpdate();
         } else if (interfaceID == 5382) { // remove from bank
             client.fromBank(removeID, removeSlot, 1);
         } else if (interfaceID == 2274) { // remove from party

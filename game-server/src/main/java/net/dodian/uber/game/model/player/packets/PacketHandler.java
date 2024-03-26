@@ -24,6 +24,7 @@ public class PacketHandler {
         packets[131] = new MagicOnNpc();
         packets[249] = new MagicOnPlayer();
         packets[237] = new MagicOnItems();
+        packets[35] = new MagicOnObject();
 
         packets[4] = new Chat();
         packets[40] = new Dialogue();

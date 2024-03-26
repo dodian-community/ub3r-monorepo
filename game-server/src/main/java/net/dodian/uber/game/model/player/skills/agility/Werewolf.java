@@ -305,6 +305,7 @@ public class Werewolf {
         if(c.playerHasItem(4179)) {
             c.showNPCChat(5927, 616, new String[]{"Thank you for that juicy stick.", "Have some agility knowledge!"});
             c.deleteItem(4179, 1);
+            c.checkItemUpdate();
             giveEndExperience(5500, false);
         } else c.showNPCChat(5927, 616, new String[]{"You do not have a stick to give me!"});
     }

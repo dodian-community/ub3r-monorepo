@@ -119,6 +119,7 @@ public class SlotMachine {
                 trackDice(2, amt);
         }
         // c.showInterface(6675);
+        c.checkItemUpdate();
         c.setInterfaceWalkable(6675);
     }
 

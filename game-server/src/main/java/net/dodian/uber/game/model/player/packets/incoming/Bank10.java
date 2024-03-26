@@ -26,6 +26,7 @@ public class Bank10 implements Packet {
                 client.bankItem(removeID, removeSlot, 10);
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, 10, removeSlot);
+            client.checkItemUpdate();
         } else if (interfaceID == 5382) { // remove from bank
             client.fromBank(removeID, removeSlot, 10);
         } else if (interfaceID == 2274) { // remove from party

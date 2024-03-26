@@ -316,6 +316,24 @@ public class ClickItem implements Packet {
                                                 Utils.pot_1_dose[i] == item ? 229 : -1;
                     client.send(new SendMessage(nextId == 229 ? "You empty the restore potion." : "You drink the restore potion."));
                     break;
+                case 12695: //Super combat potion
+                case 12697:
+                case 12699:
+                case 12701:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.ATTACK);
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.STRENGTH)) * 0.15), Skill.STRENGTH);
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.15), Skill.DEFENCE);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the super combat potion." : "You drink the super combat potion."));
+                    break;
                 case 4155:
                     if (client.inTrade || client.inDuel)
                         break;
@@ -439,6 +457,7 @@ public class ClickItem implements Packet {
         if (nextId > 0) {
             client.addItemSlot(nextId, 1, slot);
         }
+        client.checkItemUpdate();
     }
 
 }

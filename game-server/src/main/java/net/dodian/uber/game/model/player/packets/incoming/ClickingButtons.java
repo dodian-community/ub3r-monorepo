@@ -38,7 +38,8 @@ public class ClickingButtons implements Packet {
         }
         if(!(actionButton >= 9157 && actionButton <= 9194))
             client.actionButtonId = actionButton;
-        client.resetAction(false);
+        if(actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) ////10239, 10238, 6212, 6211
+            client.resetAction(false);
         if (client.duelButton(actionButton)) {
             return;
         }
@@ -122,30 +123,39 @@ public class ClickingButtons implements Packet {
                 client.skillX == 3511 && client.skillY == 3505 ? 2: 0;
                 client.travelTrigger(pos);
                 break;
+            case 75010:
             case 84237: //Home teleport aka Yanille
                 client.triggerTele(2604 + Misc.random(6), 3101 + Misc.random(3), 0, false);
                 break;
+            case 4143: //Normal spellbook!
             case 50235: //Seers
                 client.triggerTele(2722 + Misc.random(6), 3484 + Misc.random(2), 0, false);
                 break;
+            case 4146: //Normal spellbook!
             case 50245: //Ardougne
                 client.triggerTele(2660 + Misc.random(4), 3306 + Misc.random(4), 0, false);
                 break;
+            case 4150: //Normal spellbook!
             case 50253: // Catherby
                 client.triggerTele(2802 + Misc.random(4), 3432 + Misc.random(3), 0, false);
                 break;
+            case 6004: //Normal spellbook!
             case 51005: //Legends guild
                 client.triggerTele(2726 + Misc.random(5), 3346 + Misc.random(2), 0, false);
                 break;
+            case 6005: //Normal spellbook!
             case 51013: //Taverly
                 client.triggerTele(2893 + Misc.random(4), 3454 + Misc.random(3), 0, false);
                 break;
+            case 29031: //Normal spellbook!
             case 51023: //Fishing guild
                 client.triggerTele(2596 + Misc.random(3), 3406 + Misc.random(4), 0, true);
                 break;
+            case 72038:
             case 51031: //Gnome village
                 client.triggerTele(2472 + Misc.random(6), 3436 + Misc.random(3), 0, false);
                 break;
+            case 4140: //Normal spell book pvp teleport!
             case 51039: //Edgeville teleport
                 client.triggerTele(3085 + Misc.random(4), 3488 + Misc.random(4), 0, false);
                 break;
@@ -346,16 +356,80 @@ public class ClickingButtons implements Packet {
                 client.startTan(27, 5);
                 break;
             case 10239: //make stuff 1
-                client.fletching.fletchOther(client, 1);
+                if(client.playerSkillAction.isEmpty()) break;
+                client.send(new RemoveInterfaces());
+                client.skillActionCount = 1;
+                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 10238: //make stuff 5
-                client.fletching.fletchOther(client, 5);
+                if(client.playerSkillAction.isEmpty()) break;
+                client.send(new RemoveInterfaces());
+                client.skillActionCount = 5;
+                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 6212: //make stuff 10 (x)
-                client.fletching.fletchOther(client, 10);
+                if(client.playerSkillAction.isEmpty()) break;
+                client.send(new RemoveInterfaces());
+                client.skillActionCount = 10;
+                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 6211: //make stuff 28 (all)
-                client.fletching.fletchOther(client, 28);
+                if(client.playerSkillAction.isEmpty()) break;
+                client.send(new RemoveInterfaces());
+                client.skillActionCount = 28;
+                client.skillActionTimer = client.playerSkillAction.get(7);
+                break;
+            case 44210: //Make one vial
+            case 44209: //Make 5
+            case 44208: //Make 10
+            case 44207: //Make all (27)
+                client.send(new RemoveInterfaces());
+                int[] craftAmount = {27, 10, 5, 1};
+                client.setSkill(CRAFTING.getId(), 229,  1, 1775, -1, 80, 884, 3);
+                client.skillActionCount = craftAmount[actionButton - 44207];
+                client.skillActionTimer = client.playerSkillAction.get(7);
+            break;
+            case 48108: //Make one empty cup
+            case 48107: //Make 5
+            case 48106: //Make 10
+            case 48105: //Make all (27)
+                client.send(new RemoveInterfaces());
+                if(client.getLevel(CRAFTING) < 18) {
+                    client.send(new SendMessage("You need level 18 crafting to craft a empty cup."));
+                    break;
+                }
+                craftAmount = new int[]{27, 10, 5, 1};
+                client.setSkill(CRAFTING.getId(), 1980,  1, 1775, -1, 120, 884, 3);
+                client.skillActionCount = craftAmount[actionButton - 48105];
+                client.skillActionTimer = client.playerSkillAction.get(7);
+                break;
+            case 48112: //Make one fishbowl
+            case 48111: //Make 5
+            case 48110: //Make 10
+            case 48109: //Make all (27)
+                client.send(new RemoveInterfaces());
+                if(client.getLevel(CRAFTING) < 32) {
+                    client.send(new SendMessage("You need level 32 crafting to craft a fishbowl."));
+                    break;
+                }
+                craftAmount = new int[]{27, 10, 5, 1};
+                client.setSkill(CRAFTING.getId(), 6667,  1, 1775, -1, 160, 884, 3);
+                client.skillActionCount = craftAmount[actionButton - 48109];
+                client.skillActionTimer = client.playerSkillAction.get(7);
+                break;
+            case 48116: //Make one unpowered orb
+            case 48115: //Make 5
+            case 48114: //Make 10
+            case 48113: //Make all (27)
+                client.send(new RemoveInterfaces());
+                if(client.getLevel(CRAFTING) < 48) {
+                    client.send(new SendMessage("You need level 48 crafting to craft a unpowered orb."));
+                    break;
+                }
+                craftAmount = new int[]{27, 10, 5, 1};
+                client.setSkill(CRAFTING.getId(), 567,  1, 1775, -1, 240, 884, 3);
+                client.skillActionCount = craftAmount[actionButton - 48113];
+                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 34170:
                 client.fletching.fletchBow(client, true, 1);
@@ -414,12 +488,15 @@ public class ClickingButtons implements Packet {
                         break;
                     for (int i = 0; i < skillTrain.length; i++) {
                         Skill trainedSkill = Skill.getSkill(i);
-                        if (trainedSkill != null && skillTrain[i] == client.actionButtonId && client.actionButtonId != 54090) {
-                            client.deleteItem(2528, 1);
-                            int level = Skills.getLevelForExperience(client.getExperience(trainedSkill));
-                            int experience = 250 * level;
-                            client.giveExperience(experience, trainedSkill);
-                            client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + trainedSkill.getName() + "."));
+                        if (trainedSkill != null && skillTrain[i] == client.actionButtonId) {
+                            if(client.actionButtonId != 54090) {
+                                client.deleteItem(2528, 1);
+                                client.checkItemUpdate();
+                                int level = Skills.getLevelForExperience(client.getExperience(trainedSkill));
+                                int experience = 250 * level;
+                                client.giveExperience(experience, trainedSkill);
+                                client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + trainedSkill.getName() + "."));
+                            } else client.send(new SendMessage("Experience for " + trainedSkill.getName() + " is disabled until 10th of July!"));
                         }
                     }
                 } else if (client.randomed && client.actionButtonId == client.statId[client.random_skill]) {
@@ -432,6 +509,8 @@ public class ClickingButtons implements Packet {
                     }
                 }
                 break;
+            case 4130: //Autocast on normal spellbook
+            break;
             case 1097:
             case 1094:
             case 1093:
@@ -613,7 +692,7 @@ public class ClickingButtons implements Packet {
                     client.takeAsNote = !client.takeAsNote;
                     client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
                     client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
-                }
+                } else System.out.println("I am not banking!");
                 break;
             case 21010:
                 if(client.IsBanking) {

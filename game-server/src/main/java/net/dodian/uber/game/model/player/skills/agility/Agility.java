@@ -204,6 +204,7 @@ public class Agility {
                     c.requestAnim(748, 0);
                     if (c.agilityCourseStage == 6) {
                         c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11));
+                        c.checkItemUpdate();
                         c.agilityCourseStage = 0;
                         c.send(new SendMessage("You finished a gnome lap!"));
                         giveEndExperience(1050);
@@ -465,6 +466,7 @@ public class Agility {
                 c.setWalkAnim(oldEmote);
                 if (c.agilityCourseStage == 6) {
                     c.addItem(2996, 2 + Misc.random(c.getLevel(Skill.AGILITY) / 22));
+                    c.checkItemUpdate();
                     giveEndExperience(1300);
                     c.send(new SendMessage("You finished a barbarian lap!"));
                     c.agilityCourseStage = 0;
@@ -667,6 +669,7 @@ public class Agility {
                     c.setWalkAnim(oldEmote);
                     if (c.agilityCourseStage == 4) {
                         c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33));
+                        c.checkItemUpdate();
                         c.send(new SendMessage("You finished a wilderness lap!"));
                         giveEndExperience(2700);
                         c.agilityCourseStage = 0;
