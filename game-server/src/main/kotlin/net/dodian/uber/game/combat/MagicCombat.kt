@@ -12,7 +12,7 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
 
-fun Client.handleMagic(): Int {
+fun Client.handleMagicAttack(): Int {
     val slot = autocast_spellIndex%4
     if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
         return 0
@@ -23,6 +23,7 @@ fun Client.handleMagic(): Int {
     }
     if (getLevel(Skill.MAGIC) < requiredLevel[autocast_spellIndex]) {
         send(SendMessage("You need a magic level of ${requiredLevel[autocast_spellIndex]} to cast this spell!"))
+        resetAttack()
         return 0
     }
     if (!runeCheck()) {

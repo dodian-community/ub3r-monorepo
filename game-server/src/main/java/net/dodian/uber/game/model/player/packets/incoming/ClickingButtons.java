@@ -692,7 +692,7 @@ public class ClickingButtons implements Packet {
                     client.takeAsNote = !client.takeAsNote;
                     client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
                     client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
-                } else System.out.println("I am not banking!");
+                }
                 break;
             case 21010:
                 if(client.IsBanking) {
@@ -938,6 +938,10 @@ public class ClickingButtons implements Packet {
             case 94176:
                     client.showSkillMenu(RANGED.getId(), 0);
                 break;
+            //case 33213:
+            case 94179:
+                client.showSkillMenu(PRAYER.getId(), 0);
+            break;
             case 33216:
             case 94177:
                     client.showSkillMenu(THIEVING.getId(), 0);

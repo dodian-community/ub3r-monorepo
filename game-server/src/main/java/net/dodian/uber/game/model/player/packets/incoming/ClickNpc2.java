@@ -117,6 +117,8 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 18; // Crafting shop
         } else if (npcId == 6059) { // Archer's Armour
             client.WanneShop = 30; // Cape store!
+        } else if (npcId == 3837) { // Baba Yaga
+            client.WanneShop = 33;
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 13;
         } else {

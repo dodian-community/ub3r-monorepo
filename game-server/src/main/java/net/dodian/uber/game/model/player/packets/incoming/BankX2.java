@@ -20,6 +20,29 @@ public class BankX2 implements Packet {
             Server.slots.rollDice(client, EnteredAmount);
             return;
         }
+        if (client.XinterfaceID == 3838) { //Claim battlestaffs
+            client.send(new RemoveInterfaces());
+            if(client.dailyReward.size() < 1) {
+                return;
+            }
+            int amount = Integer.parseInt(client.dailyReward.get(0).get(2));
+            int totalAmount = amount;
+            amount = EnteredAmount > amount ? amount : EnteredAmount;
+            int coins = client.getInvAmt(995);
+            amount = amount > coins / 7_000 ? coins / 7_000 : amount;
+            if(coins < 7_000)
+                client.showNPCChat(3837, 597, new String[]{"You do not have enough coins to purchase one battlestaff."});
+            else if(amount < 1) //Just incase we reach here :D!
+                client.showNPCChat(3837, 597, new String[]{"You do not have any battlestaffs left to claim!"});
+            else {
+                client.deleteItem(995, amount * 7_000);
+                client.addItem(1392, amount);
+                client.dailyReward.get(0).set(2, (totalAmount - amount) + "");
+                client.checkItemUpdate();
+                client.showNPCChat(3837, 595, new String[]{"Here is " + amount + " battlestaffs for you."});
+            }
+            return;
+        }
         if (client.enterAmountId > 0) {
             if (client.enterAmountId == 1) {// cooking amt
                 if (client.inTrade || client.inDuel) {

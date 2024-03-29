@@ -75,10 +75,11 @@ public enum QuestSend {
         c.send(new SendString("@lre@------------@dre@Links@lre@------------", 7336));
         c.send(new SendString("@gre@News", 7383));
         c.send(new SendString("@gre@Guides", 7339));
-        c.send(new SendString("@gre@Discord", 7338));
+        c.send(new SendString("@gre@Account Services", 7338));
+        c.send(new SendString("@gre@Discord", 7340));
         if(c.playerRights > 0) {
-            c.send(new SendString("@lre@---------@dre@Moderator@lre@---------", 7340));
-            c.send(new SendString("@gre@GameCp", 7346));
+            c.send(new SendString("@lre@---------@dre@Moderator@lre@---------", 7346));
+            c.send(new SendString("@gre@GameCp", 7341));
         }
         return null;
     }
@@ -190,7 +191,10 @@ public enum QuestSend {
                      c.sendQuestSomething(8143);
                      c.showInterface(8134);
                      return true;
-                 case 28170: //Discord
+                 case 28170: //Account service
+                     c.openPage(c, "https://dodian.net/forumdisplay.php?f=83");
+                     return true;
+                 case 28172: //Discord
                      c.discord = true;
                      c.showPlayerOption(new String[]{"Are you sure you wish to open discord invite?", "Yes", "No"});
                  return true;

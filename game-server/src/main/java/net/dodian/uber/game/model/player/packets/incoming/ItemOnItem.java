@@ -399,7 +399,6 @@ public class ItemOnItem implements Packet {
                 client.setSkillAction(Skill.CRAFTING.getId(), Utils.staves[slot], 1, orb, 1391, Utils.orbXp[slot], -1, 3);
                 client.skillMessage = "You put the " + client.GetItemName(orb).toLowerCase() + " onto the battlestaff and made a " + client.GetItemName(Utils.staves[slot]).toLowerCase() + ".";
             }
-            //TODO: Fix items in the database!
         }
         if((itemUsed == 1785 && otherItem == 1775) || (itemUsed == 1775 && otherItem == 1785)) {
             //884 = blowing glass emote!

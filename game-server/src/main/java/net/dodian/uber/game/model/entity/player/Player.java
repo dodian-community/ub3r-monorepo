@@ -31,13 +31,14 @@ import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false, instaLoot = false;
     public long disconnectAt = 0, longName = 0;
     public int wildyLevel = 0, violations = 0;
-    public long lastAction = 0, lastMagic = 0, lastTeleport = 0;
+    public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
     public boolean premium = false, randomed = false;
@@ -46,7 +47,7 @@ public abstract class Player extends Entity {
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
-    public static int id = -1, localId = -1;// dbId = -1; //mysql userid
+    public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
     public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
             "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
@@ -68,9 +69,7 @@ public abstract class Player extends Entity {
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
     public boolean attackingPlayer = false, attackingNpc = false;
-    public boolean IsShopping = false;
-    public int MyShopID = 0;
-    public boolean UpdateShop = false;
+    public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
     private boolean crit;
@@ -150,8 +149,9 @@ public abstract class Player extends Entity {
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int boostedLevel[] = new int[21];
     public int chestEvent = 0;
-    public boolean chestEventOccur = false, updateAnnounced = false;
-
+    public boolean chestEventOccur = false;
+    public ArrayList<ArrayList<String>> dailyReward = new ArrayList<>();
+    public int dailyLogin = 1;
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
@@ -182,6 +182,40 @@ public abstract class Player extends Entity {
         mapRegionX = mapRegionY = -1;
         currentX = currentY = teleportToZ = 0;
         resetWalkingQueue();
+    }
+
+    public boolean isShopping() {
+        return MyShopID != -1;
+    }
+
+    public void defaultDailyReward(Client c) {
+        ArrayList<String> list = new ArrayList<>();
+        list.add(0, c.today.getTime() + "");
+        list.add(1, "6000"); //1 hour added to the timer for battlestaff
+        list.add(2, "0");
+        list.add(3, "0");
+        list.add(4, "60");
+        dailyReward.add(0, (ArrayList) list.clone());
+        list.clear();
+    }
+    public void battlestavesData() {
+        if(dailyReward.size() < 1) { //If size is empty do not send!
+            return;
+        }
+        int time = Integer.parseInt(dailyReward.get(0).get(1));
+        int amount = Integer.parseInt(dailyReward.get(0).get(2));
+        int current = Integer.parseInt(dailyReward.get(0).get(3));
+        int maxAmount = Integer.parseInt(dailyReward.get(0).get(4));
+        if(current == maxAmount) { //Cant get anymore battlestaffs this day!
+            return;
+        }
+        time -= 1;
+        if(time == 0) {
+            dailyReward.get(0).set(1, "6000");
+            dailyReward.get(0).set(2, (amount + 20) + "");
+            dailyReward.get(0).set(3, (current + 20) + "");
+            ((Client) this).send(new SendMessage("<col=ff6200>You got "+(amount + 20)+" battlestaves that you can claim at Baba Yaga."));
+        } else dailyReward.get(0).set(1, time + "");
     }
 
     public void defaultCharacterLook(Client temp) {
@@ -897,6 +931,20 @@ public abstract class Player extends Entity {
                 return false;
         }
         return true;
+    }
+
+    public int dateDays(Date lowestDate, Date highestDate) {
+        return (int)( (highestDate.getTime() - lowestDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
+    public Date checkCalendarDate(Date date, int days) {
+        Calendar checkCal = Calendar.getInstance();
+        checkCal.setTime(date);
+        checkCal.set(Calendar.HOUR, 0);
+        checkCal.set(Calendar.MINUTE, 0);
+        checkCal.set(Calendar.SECOND, 0);
+        checkCal.set(Calendar.MILLISECOND, 0);
+        checkCal.add(Calendar.DATE, days);
+        return checkCal.getTime();
     }
 
     public void setSongUnlocked(int songId, boolean unlocked) {

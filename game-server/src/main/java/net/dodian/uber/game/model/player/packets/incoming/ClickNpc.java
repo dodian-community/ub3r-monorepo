@@ -107,6 +107,8 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = npcId;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId;
+        } else if (npcId == 3837) {
+            client.NpcWanneTalk = npcId;
         } else if (npcId == 2180) {
             client.NpcWanneTalk = npcId;
         } else if (npcId == 555) {
@@ -137,6 +139,10 @@ public class ClickNpc implements Packet {
             client.WanneShop = 17;
         } else if (npcId == 556) {
             client.WanneShop = 31; // Premium store
+        } else if (npcId == 4808) {
+            client.WanneShop = 34; // Battlestaff shop two
+        } else if (npcId == 3541) {
+            client.WanneShop = 35; // Battlestaff shop three
         } else if (npcId == 2825) {
             client.NpcWanneTalk = 1002;
             client.convoId = -1;

@@ -70,7 +70,8 @@ public class Client extends Player implements Runnable {
 	public int maxQuests = QuestSend.values().length;
 	public int[] quests = new int[maxQuests];
 	public String failer = "";
-	Date now = new Date();
+	public Date now = new Date();
+	public Date today = checkCalendarDate(now, 0);
 	public long mutedTill;
 	public long rightNow = now.getTime();
 	public boolean mining = false, woodcutting = false;
@@ -237,15 +238,16 @@ public class Client extends Player implements Runnable {
 		return wepPlainTick;
 	}
 
-	public void CheckGear() {
-		boolean foundStaff = false;
-		for (int a = 0; a < staffs.length && !foundStaff; a++) {
+	public boolean hasStaff() {
+		for (int a = 0; a < staffs.length; a++) {
 			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staffs[a])
-				foundStaff = true;
+				return true;
 		}
-		if (!foundStaff)
-			autocast_spellIndex = -1;
-		checkBow();
+		return false;
+	}
+	public void CheckGear() {
+		if (!hasStaff()) autocast_spellIndex = -1;
+		else checkBow();
 	}
 
 	public int distanceToPoint(int pointX, int pointY) {
@@ -442,18 +444,15 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public static final int bufferSize = 1_048_576;
+	public static final int bufferSize = 1_000_000;
 	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
 	public int readPtr, writePtr;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
-
-	public int timeOutCounter = 0; // to detect timeouts on the connection to the client
-
-	public int returnCode = 2; // Tells the client if the login was successfull
-
 	private SocketHandler mySocketHandler;
+	public int timeOutCounter = 0; // to detect timeouts on the connection to the client
+	public int returnCode = 2; // Tells the client if the login was successfull
 
 	public Client(java.net.Socket s, int _playerId) {
 		super(_playerId);
@@ -851,6 +850,7 @@ public class Client extends Player implements Runnable {
 				StringBuilder list = new StringBuilder();
 				StringBuilder boss_log = new StringBuilder();
 				StringBuilder monster_log = new StringBuilder();
+				StringBuilder daily_reward = new StringBuilder();
 				StringBuilder prayer = new StringBuilder();
 				StringBuilder boosted = new StringBuilder();
 				for (int i = 0; i < playerItems.length; i++) {
@@ -875,6 +875,10 @@ public class Client extends Player implements Runnable {
 				}
 				for (int i = 0; i < monsterName.size(); i++) {
 					monster_log.append(monsterName.get(i)).append(",").append(monsterCount.get(i)).append(i == monsterName.size() - 1 ? "" : ";");
+				}
+				for (int i = 0; i < dailyReward.size(); i++) {
+					for(int ii = 0; ii < dailyReward.get(i).size(); ii++)
+						daily_reward.append(dailyReward.get(i).get(ii)).append(ii == dailyReward.get(i).size() - 1 && dailyReward.size() == 1 ? "" : ii == dailyReward.get(i).size() - 1 ? ";" : ",");
 				}
 				prayer.append(getCurrentPrayer());
 				for(Prayers.Prayer pray : Prayers.Prayer.values()) {
@@ -902,7 +906,7 @@ public class Client extends Player implements Runnable {
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
 						+ "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
 						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
-						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', Boss_Log='"
+						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', dailyReward = '"+daily_reward+"',Boss_Log='"
 						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
 						", prayer='"+prayer+"', boosted='"+boosted+"'" + last
 						+ " WHERE id = " + dbId);
@@ -1632,16 +1636,14 @@ public class Client extends Player implements Runnable {
 				return;
 			}
 		}
+		MyShopID = ShopID;
+		checkItemUpdate();
 		send(new SendString(ShopHandler.ShopName[ShopID], 3901));
 		send(new InventoryInterface(3824, 3822));
-		resetItems(3823);
-		resetShop(ShopID);
-		IsShopping = true;
-		MyShopID = ShopID;
 	}
 
 	public void checkItemUpdate() { //Checking bank etc..
-		if (IsShopping) {
+		if (isShopping()) {
 			resetShop(MyShopID);
 			resetItems(3823);
 		} else if (IsBanking || checkBankInterface) {
@@ -1895,6 +1897,10 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You need 60 Agility to equip " + itemName.toLowerCase() + "."));
 			failCheck = true;
 		}
+		if (Skills.getLevelForExperience(getExperience(PRAYER)) < 25 && id == 2952) {
+			send(new SendMessage("You need 25 Prayer to equip " + itemName.toLowerCase() + "."));
+			failCheck = true;
+		}
 		boolean isHood = Server.itemManager.getName(id).contains("hood");
 		Skillcape skillcape = Skillcape.getSkillCape(isHood ? id - 2 : id);
 		if (skillcape != null) {
@@ -1935,7 +1941,7 @@ public class Client extends Player implements Runnable {
 			checkItemUpdate();
 		}
 		/* Bow check! */
-		boolean check = (id == 4212 || id == 6724 || id == 20997) || (weapon == 4212 || weapon == 6724 || weapon == 20997);
+		boolean check = (id == 4212 || id == 6724 || id == 4734 || id == 20997) || (weapon == 4212 || weapon == 6724 || weapon == 4734 || weapon == 20997);
 		if(check && !failCheck) {
 			if(slot == 5 && id != 3844 && id != 4224 && id != 1540) {
 				if (shield > 0 && hasSpace()) {
@@ -1954,7 +1960,7 @@ public class Client extends Player implements Runnable {
 					addItemSlot(weapon, 1, invSlot);
 				} else if (invSlot == -1) failCheck = true;
 			}
-			if(slot == 3 && invSlot != -1 && (id == 4212 || id == 6724 || id == 20997)) {
+			if(slot == 3 && invSlot != -1 && (id == 4212 || id == 6724 || id == 4734 || id == 20997)) {
 				boolean shieldCheck = shield == 3844 || shield == 4224 || shield == 1540;
 				if(!shieldCheck && shield > 0 && weapon > 0 && hasSpace()) {
 					remove(slot, true);
@@ -2132,9 +2138,13 @@ public class Client extends Player implements Runnable {
 		setCombatTimer(Math.max(getCombatTimer() - 1, 0));
 		setStunTimer(Math.max(getStunTimer() - 1, 0));
 		setSnareTimer(Math.max(getSnareTimer() - 1, 0));
-		//RegionMusic.handleRegionMusic(this);
+		/* Daily stuff */
+		if(dailyLogin == 0)
+			battlestavesData();
+		else dailyLogin--;
 		/* Timers for actions! */
 		Math.max(actionTimer - 1, 0);
+		//RegionMusic.handleRegionMusic(this);
 		/* Other timers! */
 		if (mutedTill <= rightNow) {
 			send(new SendString(invis ? "You are invisible!" : "", 6572));
@@ -2294,17 +2304,21 @@ public class Client extends Player implements Runnable {
 				o.resetTrade();
 			}
 		}
-		if (tStage == 1) { //Set emote for teleport!
-			requestAnim(tEmote, 0);
-			animation(308, getPosition());
-			tStage = 2;
-		} else if (tStage == 2 && System.currentTimeMillis() - lastTeleport >= 1200) {
-			transport(new Position(tX, tY, tH));
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			tStage = 0;
-			GetBonus(true);
-			rerequestAnim();
-			UsingAgility = false;
+		if(tStage > 0) {
+			tStage++;
+			if (tStage == 2) { //Setup animation for teleport
+				requestAnim(tEmote, 0);
+				if(ancients == 1) gfx0(392); //Gfx for ancient start instant
+			} else if (tStage == 4 && ancients != 1) { //2 tick gfx for normal spellbook!
+				callGfxMask(308, 100);
+			} else if (tStage == 5) { //4 tick before teleporting!
+				transport(new Position(tX, tY, tH));
+				requestAnim(715, 0);
+				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+				tStage = 0;
+				GetBonus(true);
+				UsingAgility = false;
+			}
 		}
 		long current = System.currentTimeMillis();
 		if (wildyLevel < 1 && current - lastBar >= 30_000) {
@@ -2335,11 +2349,6 @@ public class Client extends Player implements Runnable {
 				openUpBank();
 				WanneBank = 0;
 			}
-		}
-		// check shopping
-		if (UpdateShop) {
-			resetItems(3823);
-			resetShop(MyShopID);
 		}
 		if (WanneShop > 0) {
 			if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
@@ -2608,9 +2617,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Mithril", "Adamant", "Rune", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon",
+			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Elemental battlestaff", "Mithril", "Adamant", "Rune", "Wolfbane", "Keris", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon", "Verac's flail", "Torag's hammers",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "30", "40", "45", "45", "50", "55", "60", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "40", "40", "45", "45", "50", "55", "60", "70", "70", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2618,7 +2627,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {4151, 1291, 1293, 1295, 1299, 1301, 1303, 3842, 20223, 21646, 6523, 1305, 9747};
+			int[] items = {4151, 1291, 1293, 1295, 1395, 1299, 1301, 1303, 2952, 10581, 3842, 20223, 21646, 6523, 1305, 4755, 4747, 9747};
 			setMenuItems(items);
 		} else if (skillID == DEFENCE.getId()) {
 			send(new SendString("Attack", 8846));
@@ -2627,9 +2636,9 @@ public class Client extends Player implements Runnable {
 			send(new SendString("Magic", 8827));
 			String prem = " @red@(Premium only)";
 			slot = 8760;
-			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Crystal shield (with 60 agility)", "Dragonfire shield",
+			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Barrows", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
-			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "75", "99"};
+			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "70", "75", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2637,7 +2646,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4224, 11284, 9753};
+			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4749, 4224, 11284, 9753};
 			setMenuItems(items);
 		} else if (skillID == STRENGTH.getId()) {
 			send(new SendString("Strength", 8846));
@@ -2645,8 +2654,8 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Skillcape" + prem};
-			String[] s1 = {"45", "45", "45", "50", "55", "99"};
+			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Dharok's greataxe", "Guthan's warspear", "Skillcape" + prem};
+			String[] s1 = {"45", "45", "45", "50", "55", "70", "70", "99"};
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
 			}
@@ -2654,7 +2663,7 @@ public class Client extends Player implements Runnable {
 			for (int i = 0; i < s1.length; i++) {
 				send(new SendString(s1[i], slot++));
 			}
-			int[] items = {3842, 20223, 20232, 4153, 6528, 9750};
+			int[] items = {3842, 20223, 20232, 4153, 6528, 4718, 4726, 9750};
 			setMenuItems(items);
 		} else if (skillID == HITPOINTS.getId()) {
 			send(new SendString("Hitpoints", 8846));
@@ -2679,15 +2688,15 @@ public class Client extends Player implements Runnable {
 			String[] s = new String[0];
 			String[] s1 = new String[0];
 			if (child == 0) {
-				s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Seercull"/*, "Twisted bow"*/};
-				s1 = new String[]{"1", "20", "30", "40", "50", "65", "75"/*, "85"*/};
+				s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Karil's crossbow", "Seercull"/*, "Twisted bow"*/};
+				s1 = new String[]{"1", "20", "30", "40", "50", "65", "70", "75"/*, "85"*/};
 			} else if (child == 1) {
 				s = new String[]{"Leather", "Green dragonhide body (with 40 defence)", "Green dragonhide chaps",
 						"Green dragonhide vambraces", "Book of balance", "Peaceful blessing", "Honourable blessing", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
 						"Blue dragonhide vambraces", "Red dragonhide body (with 40 defence)", "Red dragonhide chaps",
 						"Red dragonhide vambraces", "Black dragonhide body (with 40 defence)", "Black dragonhide chaps",
-						"Black dragonhide vambraces", "Spined"};
-				s1 = new String[]{"1", "40", "40", "40", "45", "45", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "75"};
+						"Black dragonhide vambraces", "Karil (with 70 defence)", "Spined"};
+				s1 = new String[]{"1", "40", "40", "40", "45", "45", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "70", "75"};
 			} else if (child == 2) {
 				s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
@@ -2700,11 +2709,28 @@ public class Client extends Player implements Runnable {
 				send(new SendString(s1[i], slot++));
 			}
 			if (child == 0)
-				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 6724/*, 20997*/});
+				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 4734, 6724/*, 20997*/});
 			else if (child == 1)
-				setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 20226, 20229, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 6133});
+				setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 20226, 20229, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 4736, 6133});
 			else if (child == 2)
 				setMenuItems(new int[]{882, 884, 886, 888, 890, 892, 11212, 9756});
+		} else if (skillID == PRAYER.getId()) {
+			send(new SendString("Prayer", 8846));
+			changeInterfaceStatus(8825, false);
+			changeInterfaceStatus(8813, false);
+			slot = 8760;
+			String prem = " @red@(Premium only)";
+			String[] s = {"Wolfbane", "Skillcape" + prem};
+			String[] s1 = {"25", "99"};
+			for (int i = 0; i < s.length; i++) {
+				send(new SendString(s[i], slot++));
+			}
+			slot = 8720;
+			for (int i = 0; i < s1.length; i++) {
+				send(new SendString(s1[i], slot++));
+			}
+			int[] items = {2952, 9759};
+			setMenuItems(items);
 		} else if (skillID == MAGIC.getId()) {
 			changeInterfaceStatus(8825, false);
 			send(new SendString("Spells", 8846));
@@ -2718,11 +2744,11 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
 				s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
 			} else if (child == 1) {
-				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Holy blessing", "Infinity"};
-				s1 = new String[]{"1", "20", "20", "35", "45", "45", "50"};
+				s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Holy blessing", "Infinity", "Ahrim (with 70 defence)"};
+				s1 = new String[]{"1", "20", "20", "35", "45", "45", "50", "70"};
 			} else if (child == 2) {
-				s = new String[]{"Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Skillcape" + prem};
-				s1 = new String[]{"1", "1", "1", "25", "40", "50", "99"};
+				s = new String[]{"Battlestaff", "Elemental battlestaff", "Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Ahrim's staff", "Skillcape" + prem};
+				s1 = new String[]{"1", "1", "10", "10", "10", "25", "40", "50", "70", "99"};
 			}
 			for (int i = 0; i < s.length; i++) {
 				send(new SendString(s[i], slot++));
@@ -2735,9 +2761,9 @@ public class Client extends Player implements Runnable {
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
 						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
 			else if (child == 1)
-				setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 20220, 6918});
+				setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 20220, 6918, 4708});
 			else if (child == 2)
-				setMenuItems(new int[]{2417, 2415, 2416, 4675, 6526, 6914, 9762});
+				setMenuItems(new int[]{1391, 1395, 2417, 2415, 2416, 4675, 6526, 6914, 4710, 9762});
 		} else if (skillID == THIEVING.getId()) {
 			send(new SendString("Thieving", 8846));
 			changeInterfaceStatus(8825, false);
@@ -3506,7 +3532,7 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeByte(world);
 	}
 
-	public int[] staffs = {2415, 2416, 2417, 4675, 4710, 6526, 6914};
+	public int[] staffs = {1391, 1393, 1395, 1397, 1399, 2415, 2416, 2417, 4675, 6526, 6914, 4710};
 
 	public boolean DeleteArrow() {
 		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] < 1 || getEquipment()[Equipment.Slot.ARROWS.getId()] < 1) return false; //If we do not have any arrows do this!
@@ -4309,9 +4335,8 @@ public class Client extends Player implements Runnable {
 		} else
 			send(new SendMessage("Could not sell anything!"));
 		/* Store update! */
-		resetItems(3823);
-		resetShop(MyShopID);
 		UpdatePlayerShop();
+		checkItemUpdate();
 		return true;
 	}
 
@@ -4383,9 +4408,9 @@ public class Client extends Player implements Runnable {
 				} else
 					return false;
 			}
-			resetItems(3823);
-			resetShop(MyShopID);
+			/* Store update! */
 			UpdatePlayerShop();
+			checkItemUpdate();
 			return true;
 		}
 		return false;
@@ -4394,9 +4419,9 @@ public class Client extends Player implements Runnable {
 	public void UpdatePlayerShop() {
 		for (int i = 1; i < Constants.maxPlayers; i++) {
 			if (PlayerHandler.players[i] != null) {
-				if (PlayerHandler.players[i].IsShopping && PlayerHandler.players[i].MyShopID == MyShopID
+				if (PlayerHandler.players[i].isShopping() && PlayerHandler.players[i].MyShopID == MyShopID
 						&& i != getSlot()) {
-					PlayerHandler.players[i].UpdateShop = true;
+					((Client) PlayerHandler.players[i]).checkItemUpdate();
 				}
 			}
 		}
@@ -4909,6 +4934,19 @@ public class Client extends Player implements Runnable {
 				showPlayerOption(new String[]{"Do you wish to enter?", "Sacrifice 5 dragon bones", "Stay here"});
 				NpcDialogueSend = true;
 				break;
+			case 3837: //Baba Yaga
+				int battlestaffs = dailyReward.isEmpty() ? 0 : Integer.parseInt(dailyReward.get(0).get(2));
+				if(battlestaffs > 0) { //Ask to claim!
+					showNPCChat(NpcTalkTo, 594, new String[]{"Fancy meeting you here mysterious one.", "I have " + battlestaffs + " battlestaffs that", "you can claim for 7000 coins each."});
+					nextDiag = 3838;
+				} else
+					showNPCChat(NpcTalkTo, 597, new String[]{"Fancy meeting you here mysterious one.", "I have no battlestaffs that you can claim."});
+				NpcDialogueSend = true;
+			break;
+			case 3838:
+				showPlayerOption(new String[]{"Do you wish to claim your battlestaffs?", "Yes", "No"});
+				NpcDialogueSend = true;
+			break;
 			case 2345:
 				if(!checkUnlock(0)) {
 					showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", "You have to pay a to enter.", "You can also pay a one time fee."});
@@ -5112,12 +5150,18 @@ public class Client extends Player implements Runnable {
 				return 60;
 			}
 		}
+		if (ItemID >= 1393 && ItemID <= 1400) //Elemental battlestaff
+			return 20;
+		if(ItemID == 2952 || ItemID == 10581)
+			return 40;
 		if (ItemID == 21646)
 			return 50;
 		if (ItemID == 6523 || ItemID == 6525 || ItemID == 6527)
 			return 55;
 		if (ItemID == 3842 ||ItemID == 20223)
 			return 45;
+		if (ItemID == 4755 ||ItemID == 4747) //Barrows weapons!
+			return 70;
 		return 1;
 	}
 
@@ -5145,18 +5189,20 @@ public class Client extends Player implements Runnable {
 				|| ItemName2.startsWith("battleaxe") || ItemName2.startsWith("warhammer") || ItemName2.startsWith("2h sword")
 				|| ItemName2.startsWith("harlberd") || ItemName2.startsWith("pickaxe")) {// It's a weapon,
 			return 1;
-		} else if (ItemName.startsWith("Ahrims") || ItemName.startsWith("Karil") || ItemName.startsWith("Torag")
-				|| ItemName.startsWith("Verac") || ItemName.endsWith("Guthan") || ItemName.endsWith("Dharok") ||
-				ItemName.endsWith("staff") || ItemName.endsWith("crossbow") || ItemName.endsWith("hammers")
+		} else if (ItemName.endsWith("crossbow") || ItemName.endsWith("hammers")
 				|| ItemName.endsWith("flail") || ItemName.endsWith("warspear") || ItemName.endsWith("greataxe")) {
 			return 1;
 		} else {
-			if (ItemName.startsWith("Saradomin") || ItemName.startsWith("Zamorak") || ItemName.startsWith("Guthix")
-					&& ItemName.toLowerCase().contains("staff") && ItemName.toLowerCase().contains("cape"))
+			if (ItemName.startsWith("Saradomin") || ItemName.startsWith("Zamorak") || ItemName.startsWith("Guthix") ||
+				checkName.contains("staff") || checkName.contains("cape"))
 				return 1;
 			if (ItemID == 11284)
 				return 75;
 			if (ItemID == 4224)
+				return 70;
+			if ((ItemName.startsWith("Ahrim") && !checkName.contains("staff")) || (ItemName.startsWith("Karil") && !checkName.contains("crossbow")) ||
+			(ItemName.startsWith("Verac") && !checkName.contains("flail")) || (ItemName.startsWith("Dharok") && !checkName.contains("greataxe")) ||
+			(ItemName.startsWith("Torag") && !checkName.contains("hammers")) || (ItemName.startsWith("Guthan") && !checkName.contains("warspear")))
 				return 70;
 			if (ItemName.startsWith("Bronze")) {
 				return 1;
@@ -5207,12 +5253,16 @@ public class Client extends Player implements Runnable {
 			return 50;
 		if (ItemID == 6528)
 			return 55;
+		if (ItemID == 4718 ||ItemID == 4726) //Barrows weapons!
+			return 70;
 		return 1;
 	}
 
 	public int GetCLMagic(int ItemID) {
 		if (ItemID == -1) return 1;
 		String ItemName = GetItemName(ItemID);
+		if(ItemID >= 2415 && ItemID <= 2417)
+			return 10;
 		if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark"))
 			return 20;
 		if(ItemID == 4675)
@@ -5227,25 +5277,14 @@ public class Client extends Player implements Runnable {
 			return 50;
 		if (ItemID == 13235)
 			return 60;
-		if (ItemName.toLowerCase().contains("ghostly"))
+		if (ItemName.toLowerCase().contains("ghostly") || ItemName.startsWith("Ahrim"))
 			return 70;
-		if (ItemName.startsWith("Ahrim"))
-			return 80;
 		return 1;
 	}
 
 	public int GetCLRanged(int ItemID) {
 		if (ItemID == -1) return 1;
 		String ItemName = GetItemName(ItemID);
-		if (ItemName.startsWith("Karil")) {
-			return 90;
-		}
-		if (ItemName.startsWith("Snakeskin")) {
-			return 80;
-		}
-		if (ItemName.startsWith("New crystal bow")) {
-			return 65;
-		}
 		if (ItemName.startsWith("Oak")) {
 			return 1;
 		}
@@ -5261,6 +5300,13 @@ public class Client extends Player implements Runnable {
 		if (ItemName.startsWith("Magic") && !ItemName.toLowerCase().contains("cape")) {
 			return 50;
 		}
+		if (ItemName.startsWith("New crystal bow")) {
+			return 65;
+		}
+		if (ItemID == 6724) //Seercull
+			return 75;
+		if (ItemID == 20997) //Twisted bow
+			return 85;
 		if (ItemName.startsWith("Green d")) {
 			return 40;
 		}
@@ -5273,30 +5319,32 @@ public class Client extends Player implements Runnable {
 		if (ItemName.startsWith("Black d")) {
 			return 70;
 		}
+		if (ItemName.startsWith("Karil")) {
+			return 70;
+		}
 		if (ItemName.startsWith("Spined")) {
 			return 75;
 		}
-		if (ItemName.startsWith("Dragon arr")) {
-			return 60;
-		}
-		if (ItemName.startsWith("Rune arr")) {
-			return 40;
-		}
-		if (ItemName.startsWith("Adamant arr")) {
-			return 30;
-		}
-		if (ItemName.startsWith("Mithril arr")) {
-			return 20;
+		if (ItemName.startsWith("Snakeskin")) { //Do we want snakeskin?!
+			return 80;
 		}
 		if (ItemName.startsWith("Steel arr")) {
 			return 10;
 		}
-		if (ItemID == 3844 || ItemID == 20226 || ItemID == 20229)
+		if (ItemName.startsWith("Mithril arr")) {
+			return 20;
+		}
+		if (ItemName.startsWith("Adamant arr")) {
+			return 30;
+		}
+		if (ItemName.startsWith("Rune arr")) {
+			return 40;
+		}
+		if (ItemName.startsWith("Dragon arr")) {
+			return 60;
+		}
+		if (ItemID == 3844 || ItemID == 20226 || ItemID == 20229) //Shield or blessings!
 			return 45;
-		if (ItemID == 6724)
-			return 75;
-		if (ItemID == 20997)
-			return 85;
 		return 1;
 	}
 
@@ -6390,7 +6438,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void triggerTele(int x, int y, int height, boolean prem) {
-		triggerTele(x, y, height, prem, 1816);
+		triggerTele(x, y, height, prem, ancients == 1 ? 1979 : 714);
 	}
 
 	public void triggerTele(int x, int y, int height, boolean prem, int emote) {
@@ -6409,15 +6457,14 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("This spell is only available to premium members, visit Dodian.net for info"));
 			return;
 		}
-		lastTeleport = System.currentTimeMillis();
-		resetAction();
+		resetAction(false);
 		resetWalkingQueue();
+		UsingAgility = true;
 		tX = x;
 		tY = y;
 		tH = height;
-		tStage = 1;
 		tEmote = emote;
-		UsingAgility = true;
+		tStage = 1;
 	}
 
 	public void startSmelt(int id) {
@@ -7592,6 +7639,13 @@ public class Client extends Player implements Runnable {
 				send(new RemoveInterfaces());
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 3838) {
+			if (button == 1) {
+				send(new RemoveInterfaces());
+				XinterfaceID = 3838;
+				getOutputStream().createFrame(27);
+			} else
+				send(new RemoveInterfaces());
 		} else if (NpcDialogue == 48054) {
 			if(getInvAmt(621) < 1) {
 				send(new SendMessage("You need a ship ticket to unlock this travel!"));
@@ -8528,7 +8582,7 @@ public class Client extends Player implements Runnable {
 	public boolean checkInv = false;
 
 	public void openUpOtherInventory(String player) {
-		if (IsBanking || IsShopping || duelFight) {
+		if (IsBanking || isShopping() || duelFight) {
 			send(new SendMessage("Please finish with what you are doing!"));
 			return;
 		}
@@ -8581,7 +8635,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void openUpOtherBank(String player) {
-		if (IsBanking || IsShopping || duelFight) {
+		if (IsBanking || isShopping() || duelFight) {
 			send(new SendMessage("Please finish with what you are doing!"));
 			return;
 		}

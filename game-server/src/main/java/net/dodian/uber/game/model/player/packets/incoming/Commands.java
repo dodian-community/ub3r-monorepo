@@ -35,7 +35,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -304,6 +308,15 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equals("tomato")) {
                     client.RottenTomato(client);
+                }
+                if (cmd[0].equals("date")) {
+                    //System.out.println("test..." + Date.valueOf("2024-03-29").getTime()); //1711666800000
+                    Date newDate = client.checkCalendarDate(client.today, -1);
+                    //Date date = new SimpleDateFormat("YYYY-MM-DD").parse("2024-03-28");
+                    System.out.println("days passed..." + client.today + ", " + newDate + ", " + newDate.getTime());
+                    //System.out.println("days passed..." + client.dateDays(client.today, newDate));
+                    //System.out.println("test..." + client.now.getTime() + ", " + Date.valueOf("2024-03-29").getTime());
+                    //System.out.println("test..." + client.dateDays(Date.valueOf("2024-03-29"), client.now));
                 }
                 if ((cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b")) && client.playerRights > 1 && getGameWorldId() < 2) {
                     client.openUpBank();

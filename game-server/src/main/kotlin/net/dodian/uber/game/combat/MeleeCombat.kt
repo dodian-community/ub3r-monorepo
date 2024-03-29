@@ -14,9 +14,8 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
 
-fun Client.handleMelee(): Int {
-    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
-    if (equipment[Equipment.Slot.WEAPON.id] in staves && autocast_spellIndex >= 0)
+fun Client.handleMeleeAttack(): Int {
+    if (hasStaff() && autocast_spellIndex >= 0)
         return -1
     if (usingBow)
         return -1

@@ -20,6 +20,7 @@ import net.dodian.utilities.DbTables;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -262,7 +263,7 @@ public class LoginManager {
                     }
                 }
                 String Monster = results.getString("Monster_Log");
-                if (Monster != null) {
+                if (Monster != null && !Monster.isEmpty()) {
                     String[] lines = Monster.split(";");
                     for(int i = 0; i < lines.length; i++) {
                         String[] parts = lines[i].split(",");
@@ -273,6 +274,30 @@ public class LoginManager {
                         } //If parts is more or less than 2 we gone goooofed!
                     }
                 }
+                /* Daily reward, like battlestaves! */
+                String daily = results.getString("dailyReward");
+                if (daily != null && !daily.isEmpty()) { //If empty or null!
+                    String[] lines = daily.split(";");
+                    ArrayList<String> list = new ArrayList<>();
+                    for(int i = 0; i < lines.length; i++) {
+                        String[] parts = lines[i].split(",");
+                        if(i == 0) { //Battle staff loading!
+                            boolean newDay = p.dateDays(new Date(Long.parseLong(parts[0])), p.today) > 0;
+                            for (int ii = 0; ii < parts.length; ii++) {
+                                if (newDay && ii == 0) list.add(0, p.today.getTime() + "");
+                                else if (newDay && ii == 1) list.add(1, "6000");
+                                else if (newDay && ii == 3) list.add(3, "0"); //Reset three values each day otherwise do not!
+                                else list.add(ii, parts[ii]);
+                            }
+                        } else { //Hmm we could do it like this if needed :L
+                            for (int ii = 0; ii < parts.length; ii++)
+                                list.add(ii, parts[ii]);
+                        }
+                        p.dailyReward.add(i, (ArrayList)list.clone()); //Need to clone due to we clear the list!
+                        list.clear();
+                    }
+                } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
+                /* Account age*/
                 long accountAge = 0;
                 if(accountAge > 0) {
                     p.accountAge = accountAge;

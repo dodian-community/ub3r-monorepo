@@ -4,11 +4,10 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
-    if(npcId == 494 && getAttackStyle() != 2) {
+    if(npcId == 6610 && getAttackStyle() != 2) {
         send(SendMessage("This monster can only be harmed by magic."))
         return false
     }
@@ -35,13 +34,13 @@ fun Client.canAttackNpc(npcId: Int): Boolean {
     return true
 }
 fun Client.getAttackStyle() : Int {
-    val staves = listOf(2415, 2416, 2417, 4675, 4710, 6914, 6526)
-    if (equipment[Equipment.Slot.WEAPON.id] in staves && autocast_spellIndex >= 0)
+    if (hasStaff() && autocast_spellIndex >= 0)
         return 2
     if (usingBow)
         return 1
     return 0
 }
+
 fun Client.attackTarget(): Boolean {
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
@@ -57,11 +56,11 @@ fun Client.attackTarget(): Boolean {
             return false
         }
     }
-    if(getAttackStyle() == 2 && handleMagic() == 1)
+    if(getAttackStyle() == 2 && handleMagicAttack() == 1)
         return true
-    if(getAttackStyle() == 1 && handleRanged() == 1)
+    if(getAttackStyle() == 1 && handleRangedAttack() == 1)
         return true
-    if(getAttackStyle() == 0 && handleMelee() == 1)
+    if(getAttackStyle() == 0 && handleMeleeAttack() == 1)
         return true
     return false
 }
