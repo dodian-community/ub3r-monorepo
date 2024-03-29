@@ -506,7 +506,7 @@ public class ClickingButtons implements Packet {
                         GroundItem item = new GroundItem(client.getPosition(), 2528, 1, client.getSlot(), -1);
                         Ground.items.add(item);
                         client.send(new SendMessage("You dropped the lamp on the floor!"));
-                    }
+                    } else client.checkItemUpdate();
                 }
                 break;
             case 4130: //Autocast on normal spellbook
@@ -701,6 +701,7 @@ public class ClickingButtons implements Packet {
                             if (client.playerItems[i] > 0)
                                 client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
                         client.send(new SendMessage("You bank all your items!"));
+                        client.checkItemUpdate();
                     } else
                         client.send(new SendMessage("You do not have anything that can be banked!"));
                 }

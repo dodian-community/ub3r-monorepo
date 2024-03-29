@@ -150,8 +150,10 @@ public abstract class Player extends Entity {
     public int boostedLevel[] = new int[21];
     public int chestEvent = 0;
     public boolean chestEventOccur = false;
-    public ArrayList<ArrayList<String>> dailyReward = new ArrayList<>();
     public int dailyLogin = 1;
+    public ArrayList<String> dailyReward = new ArrayList<String>();
+    public int staffSize = 5;
+    //public ArrayList<ArrayList<String>> dailyReward = new ArrayList<>();
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
@@ -189,33 +191,30 @@ public abstract class Player extends Entity {
     }
 
     public void defaultDailyReward(Client c) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add(0, c.today.getTime() + "");
-        list.add(1, "6000"); //1 hour added to the timer for battlestaff
-        list.add(2, "0");
-        list.add(3, "0");
-        list.add(4, "60");
-        dailyReward.add(0, (ArrayList) list.clone());
-        list.clear();
+        dailyReward.add(0, c.today.getTime() + "");
+        dailyReward.add(1, "6000"); //1 hour added to the timer for battlestaff
+        dailyReward.add(2, "0");
+        dailyReward.add(3, "0");
+        dailyReward.add(4, "60");
     }
     public void battlestavesData() {
         if(dailyReward.size() < 1) { //If size is empty do not send!
             return;
         }
-        int time = Integer.parseInt(dailyReward.get(0).get(1));
-        int amount = Integer.parseInt(dailyReward.get(0).get(2));
-        int current = Integer.parseInt(dailyReward.get(0).get(3));
-        int maxAmount = Integer.parseInt(dailyReward.get(0).get(4));
+        int time = Integer.parseInt(dailyReward.get(1));
+        int amount = Integer.parseInt(dailyReward.get(2));
+        int current = Integer.parseInt(dailyReward.get(3));
+        int maxAmount = Integer.parseInt(dailyReward.get(4));
         if(current == maxAmount) { //Cant get anymore battlestaffs this day!
             return;
         }
-        time -= 1;
+        time -= 600;
         if(time == 0) {
-            dailyReward.get(0).set(1, "6000");
-            dailyReward.get(0).set(2, (amount + 20) + "");
-            dailyReward.get(0).set(3, (current + 20) + "");
+            dailyReward.set(1, "6000");
+            dailyReward.set(2, (amount + 20) + "");
+            dailyReward.set(3, (current + 20) + "");
             ((Client) this).send(new SendMessage("<col=ff6200>You got "+(amount + 20)+" battlestaves that you can claim at Baba Yaga."));
-        } else dailyReward.get(0).set(1, time + "");
+        } else dailyReward.set(1, time + "");
     }
 
     public void defaultCharacterLook(Client temp) {

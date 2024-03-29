@@ -278,23 +278,24 @@ public class LoginManager {
                 String daily = results.getString("dailyReward");
                 if (daily != null && !daily.isEmpty()) { //If empty or null!
                     String[] lines = daily.split(";");
-                    ArrayList<String> list = new ArrayList<>();
                     for(int i = 0; i < lines.length; i++) {
                         String[] parts = lines[i].split(",");
+                        boolean newDay = p.dateDays(new Date(Long.parseLong(parts[0])), p.today) > 0;
                         if(i == 0) { //Battle staff loading!
-                            boolean newDay = p.dateDays(new Date(Long.parseLong(parts[0])), p.today) > 0;
-                            for (int ii = 0; ii < parts.length; ii++) {
-                                if (newDay && ii == 0) list.add(0, p.today.getTime() + "");
-                                else if (newDay && ii == 1) list.add(1, "6000");
-                                else if (newDay && ii == 3) list.add(3, "0"); //Reset three values each day otherwise do not!
-                                else list.add(ii, parts[ii]);
-                            }
+                            if(newDay) {
+                                p.dailyReward.add(0, p.today.getTime() + "");
+                                p.dailyReward.add(1, "6000");
+                                p.dailyReward.add(2, parts[2]);
+                                p.dailyReward.add(3, "0");
+                                p.dailyReward.add(4, parts[4]);
+                            } else
+                                for (int ii = 0; ii < parts.length; ii++)
+                                    p.dailyReward.add(ii, parts[ii]);
                         } else { //Hmm we could do it like this if needed :L
                             for (int ii = 0; ii < parts.length; ii++)
-                                list.add(ii, parts[ii]);
+                                p.dailyReward.add(p.staffSize + ii, parts[ii]);
                         }
-                        p.dailyReward.add(i, (ArrayList)list.clone()); //Need to clone due to we clear the list!
-                        list.clear();
+                        //p.dailyReward.add(i, (ArrayList)list.clone()); //Need to clone due to we clear the list!
                     }
                 } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
                 /* Account age*/
