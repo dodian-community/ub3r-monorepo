@@ -246,8 +246,8 @@ public class Client extends Player implements Runnable {
 		return false;
 	}
 	public void CheckGear() {
+		checkBow();
 		if (!hasStaff()) autocast_spellIndex = -1;
-		else checkBow();
 	}
 
 	public int distanceToPoint(int pointX, int pointY) {
@@ -444,7 +444,7 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public static final int bufferSize = 1_000_000;
+	public static final int bufferSize = 1_048_576;
 	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
@@ -876,10 +876,8 @@ public class Client extends Player implements Runnable {
 				for (int i = 0; i < monsterName.size(); i++) {
 					monster_log.append(monsterName.get(i)).append(",").append(monsterCount.get(i)).append(i == monsterName.size() - 1 ? "" : ";");
 				}
-				for (int i = 0; i < dailyReward.size(); i++) {
-					for(int ii = 0; ii < dailyReward.get(i).size(); ii++)
-						daily_reward.append(dailyReward.get(i).get(ii)).append(ii == dailyReward.get(i).size() - 1 && dailyReward.size() == 1 ? "" : ii == dailyReward.get(i).size() - 1 ? ";" : ",");
-				}
+				for (int i = 0; i < staffSize; i++)
+					daily_reward.append(dailyReward.get(i)).append(i == staffSize - 1 && dailyReward.size() <= staffSize ? "" : i == staffSize - 1 ? ";" : ",");
 				prayer.append(getCurrentPrayer());
 				for(Prayers.Prayer pray : Prayers.Prayer.values()) {
 					if(getPrayerManager().isPrayerOn(pray))
@@ -4935,9 +4933,9 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 3837: //Baba Yaga
-				int battlestaffs = dailyReward.isEmpty() ? 0 : Integer.parseInt(dailyReward.get(0).get(2));
-				if(battlestaffs > 0) { //Ask to claim!
-					showNPCChat(NpcTalkTo, 594, new String[]{"Fancy meeting you here mysterious one.", "I have " + battlestaffs + " battlestaffs that", "you can claim for 7000 coins each."});
+				int staffCounting = dailyReward.isEmpty() ? 0 : Integer.parseInt(dailyReward.get(2));
+				if(staffCounting > 0) { //Ask to claim!
+					showNPCChat(NpcTalkTo, 594, new String[]{"Fancy meeting you here mysterious one.", "I have " + staffCounting + " battlestaffs that", "you can claim for 7000 coins each."});
 					nextDiag = 3838;
 				} else
 					showNPCChat(NpcTalkTo, 597, new String[]{"Fancy meeting you here mysterious one.", "I have no battlestaffs that you can claim."});
