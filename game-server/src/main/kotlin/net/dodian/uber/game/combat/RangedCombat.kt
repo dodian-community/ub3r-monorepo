@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
-fun Client.handleRanged(): Int {
+fun Client.handleRangedAttack(): Int {
     if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
         return 0
     if (target is Player && duelFight && duelRule[0]) {

@@ -131,12 +131,10 @@ public class Walking implements Packet {
                 client.checkItemUpdate();
             }
             // shopping
-            if (client.IsShopping == true) {
-                client.IsShopping = false;
-                client.MyShopID = 0;
-                client.UpdateShop = false;
-                client.send(new RemoveInterfaces());
+            if (client.isShopping()) {
+                client.MyShopID = -1;
                 client.checkItemUpdate();
+                client.send(new RemoveInterfaces());
             }
     }
 

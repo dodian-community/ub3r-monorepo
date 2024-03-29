@@ -30,7 +30,7 @@ fun Client.slayerLevelRequired(npcId: Int): Boolean {
             send(SendMessage("You need a slayer level of 86 to harm this monster."))
             return false
         }
-        494, 4303, 4304 -> if(getLevel(Skill.SLAYER) < 88) {
+        6610, 4303, 4304 -> if(getLevel(Skill.SLAYER) < 88) {
             send(SendMessage("You need a slayer level of 88 to harm this monster."))
             return false
         }

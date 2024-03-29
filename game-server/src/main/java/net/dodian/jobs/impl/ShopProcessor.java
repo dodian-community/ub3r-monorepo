@@ -3,6 +3,7 @@ package net.dodian.jobs.impl;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -30,18 +31,19 @@ public class ShopProcessor implements Job {
                         }
                     }
                 } else ShopHandler.ShopItemsDelay[i]++;
+            //System.out.println("hello?!" + DidUpdate);
             if (DidUpdate == true) {
                 for (int k = 1; k < Constants.maxPlayers; k++) {
                     if (PlayerHandler.players[k] != null) {
-                        if (PlayerHandler.players[k].IsShopping == true && PlayerHandler.players[k].MyShopID == i) {
-                            PlayerHandler.players[k].UpdateShop = true;
+                        if (PlayerHandler.players[k].isShopping() && PlayerHandler.players[k].MyShopID == i) {
+                            ((Client) PlayerHandler.players[k]).checkItemUpdate();
                         }
                     }
                 }
-                ShopHandler.ShopItemsDelay[i] = 0;
-                DidUpdate = false;
-            }
+            ShopHandler.ShopItemsDelay[i] = 0;
+            DidUpdate = false;
         }
+    }
 
     }
 
