@@ -475,12 +475,13 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			//PlayerHandler.playersOnline.remove(longName);
-			//PlayerHandler.allOnline.remove(longName);
+			PlayerHandler.playersOnline.remove(longName);
+			PlayerHandler.allOnline.remove(longName);
 			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			if(!disconnected)
 				disconnected = true;
+			/* Reset socket of player! */
 			mySock.close();
 			mySock = null;
 			mySocketHandler = null;
@@ -791,6 +792,8 @@ public class Client extends Player implements Runnable {
 		}
 		if (logout) {
 			saveNeeded = false;
+			/* Reset activities! */
+			getPlunder.resetPlunder();
 			/* Remove player from list! */
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
@@ -850,6 +853,7 @@ public class Client extends Player implements Runnable {
 				StringBuilder list = new StringBuilder();
 				StringBuilder boss_log = new StringBuilder();
 				StringBuilder monster_log = new StringBuilder();
+				StringBuilder effect = new StringBuilder();
 				StringBuilder daily_reward = new StringBuilder();
 				StringBuilder prayer = new StringBuilder();
 				StringBuilder boosted = new StringBuilder();
@@ -873,6 +877,8 @@ public class Client extends Player implements Runnable {
 						boss_log.append(boss_name[i]).append(":").append(boss_amount[i]).append(" ");
 					}
 				}
+				for (int i = 0; i < effects.size(); i++)
+					effect.append(effects.get(i)).append(i == effects.size() - 1 ? "" : ":");
 				for (int i = 0; i < monsterName.size(); i++) {
 					monster_log.append(monsterName.get(i)).append(",").append(monsterCount.get(i)).append(i == monsterName.size() - 1 ? "" : ";");
 				}
@@ -902,7 +908,7 @@ public class Client extends Player implements Runnable {
 				}
 				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
-						+ "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "'"
+						+ "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='"+effect+"'"
 						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
 						+ ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', dailyReward = '"+daily_reward+"',Boss_Log='"
 						+ boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
@@ -2136,12 +2142,16 @@ public class Client extends Player implements Runnable {
 		setCombatTimer(Math.max(getCombatTimer() - 1, 0));
 		setStunTimer(Math.max(getStunTimer() - 1, 0));
 		setSnareTimer(Math.max(getSnareTimer() - 1, 0));
+		changeEffectTime();
 		/* Daily stuff */
 		if(dailyLogin == 0)
 			battlestavesData();
 		else dailyLogin--;
 		/* Timers for actions! */
 		Math.max(actionTimer - 1, 0);
+		getPlunder.reduceTicks();
+		if(getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
+			addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
 		//RegionMusic.handleRegionMusic(this);
 		/* Other timers! */
 		if (mutedTill <= rightNow) {
@@ -2387,6 +2397,9 @@ public class Client extends Player implements Runnable {
 			deathTimer = 0;
 			setCombatTimer(0);
 			setLastCombat(0);
+			/* Effect reset! */
+			for(int i = 0; i < effects.size(); i++)
+				addEffectTime(i, i == 0 || effects.get(i) == -1 ? -1 : 0);
 			/* Stats check! */
 			for(int i = 0; i < boostedLevel.length; i++) {
 				if(i == 3)
@@ -5057,6 +5070,10 @@ public class Client extends Player implements Runnable {
 					NpcDialogueSend = true;
 				}
 				break;
+			case 20931:
+				showPlayerOption(new String[]{ "Exit pyramid plunder?", "Yes", "No" });
+				NpcDialogueSend = true;
+			break;
 		}
 	}
 
@@ -6443,6 +6460,10 @@ public class Client extends Player implements Runnable {
 		if (inDuel || duelStatus == 3 || UsingAgility || doingTeleport() || getStunTimer() > 0) {
 			return;
 		}
+		if(rejectTeleport()) {
+			send(new SendMessage("A magical force stop you from teleporting."));
+			return;
+		}
 		if (isInCombat() || randomed2) {
 			send(new SendMessage(isInCombat() ? "You cant teleport during combat!" : "You can't teleport out of here!"));
 			return;
@@ -6463,6 +6484,7 @@ public class Client extends Player implements Runnable {
 		tH = height;
 		tEmote = emote;
 		tStage = 1;
+		addEffectTime(0, -1); //If we teleport, reset desert shiez!
 	}
 
 	public void startSmelt(int id) {
@@ -7644,6 +7666,12 @@ public class Client extends Player implements Runnable {
 				getOutputStream().createFrame(27);
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 20931) {
+			if(button == 0)
+				getPlunder.resetPlunder();
+			send(new RemoveInterfaces());
+			NpcDialogueSend = false;
+			NpcDialogue = -1;
 		} else if (NpcDialogue == 48054) {
 			if(getInvAmt(621) < 1) {
 				send(new SendMessage("You need a ship ticket to unlock this travel!"));

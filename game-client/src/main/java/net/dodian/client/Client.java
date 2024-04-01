@@ -4968,7 +4968,9 @@ public class Client extends RSApplet {
                     // menuActionName[menuActionRow] = "Examine @cya@" +
                     // class46.name + " @gre@(@whi@" + l1 + "@gre@) (@whi@" +
                     // (i1 + baseX) + "," + (j1 + baseY) + "@gre@)";
-                    menuActionName[menuActionRow] = "Examine @cya@" + class46.name + (myPrivilege >= 2 ? " (@whi@" + class46.type + "@cya@)" : "");
+                    //TODO: Fix examine
+                    //System.out.println("test ? " + class46.types);
+                    menuActionName[menuActionRow] = "Examine @cya@" + class46.name + (myPrivilege >= 2 ? " (@whi@" + l1 + " at "+x+", "+y+"@cya@)" : "");
                     menuActionID[menuActionRow] = 1226;
                     menuActionCmd1[menuActionRow] = class46.type << 14;
                     menuActionCmd2[menuActionRow] = i1;

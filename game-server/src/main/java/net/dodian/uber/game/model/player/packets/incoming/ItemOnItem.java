@@ -102,7 +102,7 @@ public class ItemOnItem implements Packet {
                 if(client.getSkillLevel(Skill.HERBLORE) >= 88) {
                     //Succeeed!
                     client.setSkillAction(Skill.HERBLORE.getId(), 12695, 1, 2436, -1, 600, 363, 3);
-                    client.skillMessage = "You mix the ingredience together and made a super combat potion.";
+                    client.skillMessage = "You mix the ingredients together and made a super combat potion.";
                 } else client.send(new SendMessage("You need level 88 herblore to mix a super combat potion!"));
             } else client.send(new SendMessage("You need a torstol herb or (unf) potion, super attack, strength and defence potion!"));
         }
@@ -122,7 +122,7 @@ public class ItemOnItem implements Packet {
                 if(client.getSkillLevel(Skill.HERBLORE) >= 93) {
                     //Succeeed!
                     client.setSkillAction(Skill.HERBLORE.getId(), 11730, 1, 5978, -1, 800, 363, 3);
-                    client.skillMessage = "You mix the ingredience together and made a Overload potion.";
+                    client.skillMessage = "You mix the ingredients together and made a Overload potion.";
                 } else client.send(new SendMessage("You need level 93 herblore to mix a overload potion!"));
             } else client.send(new SendMessage("You need a coconut, super combat potion and a ranging potion!"));
         }

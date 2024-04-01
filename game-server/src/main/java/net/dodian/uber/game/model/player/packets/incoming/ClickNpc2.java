@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 
 public class ClickNpc2 implements Packet {
 
@@ -93,6 +93,8 @@ public class ClickNpc2 implements Packet {
             client.NpcWanneTalk = npcId + 1;
         } else if (npcId == 3648) {
             client.setTravelMenu();
+        } else if (npcId == 1779) { // Start plunder
+            client.getPlunder.startPlunder();
         } else if (npcId == 506 || npcId == 527) {
             client.WanneShop = 3; // Yanille General Store
         } else if (npcId == 4965) { // Gnome general store

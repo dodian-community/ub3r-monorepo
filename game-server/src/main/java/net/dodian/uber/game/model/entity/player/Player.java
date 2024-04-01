@@ -24,6 +24,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.ItemLog;
@@ -68,6 +69,7 @@ public abstract class Player extends Entity {
     private int playerSER = 0x338; // SER = Standard Emotion Run
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
+    public PyramidPlunder getPlunder = new PyramidPlunder(((Client) this));
     public boolean attackingPlayer = false, attackingNpc = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
@@ -150,6 +152,7 @@ public abstract class Player extends Entity {
     public int boostedLevel[] = new int[21];
     public int chestEvent = 0;
     public boolean chestEventOccur = false;
+    public ArrayList<Integer> effects = new ArrayList<>();
     public int dailyLogin = 1;
     public ArrayList<String> dailyReward = new ArrayList<String>();
     public int staffSize = 5;
@@ -157,29 +160,6 @@ public abstract class Player extends Entity {
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
-        /*
-        // Setting player items
-        Arrays.fill(playerItems, 0);
-        // Setting Item amounts
-        Arrays.fill(playerItemsN, 0);
-
-        for (int i = 0; i < playerLevel.length; i++) { // Setting Levels
-            if (i == 3) {
-                playerLevel[i] = 10;
-                playerXP[i] = 1155;
-            } else {
-                playerLevel[i] = 1;
-                playerXP[i] = 0;
-            }
-        }
-
-        for (int i = 0; i < playerBankSize; i++) { // Setting bank items
-            bankItems[i] = 0;
-        }
-
-        for (int i = 0; i < playerBankSize; i++) { // Setting bank item amounts
-            bankItemsN[i] = 0;
-        }*/
         teleportToX = teleportToY = -1;
         mapRegionX = mapRegionY = -1;
         currentX = currentY = teleportToZ = 0;
@@ -208,13 +188,89 @@ public abstract class Player extends Entity {
         if(current == maxAmount) { //Cant get anymore battlestaffs this day!
             return;
         }
-        time -= 600;
-        if(time == 0) {
+        time -= 1;
+        if(time <= 0) { //Need this just incase someone is in the negative!
             dailyReward.set(1, "6000");
             dailyReward.set(2, (amount + 20) + "");
             dailyReward.set(3, (current + 20) + "");
             ((Client) this).send(new SendMessage("<col=ff6200>You got "+(amount + 20)+" battlestaves that you can claim at Baba Yaga."));
         } else dailyReward.set(1, time + "");
+    }
+
+    public void addEffectTime(int slot, int ticks) {
+        if(effects.size() - 1 < slot) { //Set default values!
+            for(int i = effects.size(); i < slot + 1; i++)
+                effects.add(i, i == slot ? ticks : -1);
+        } else effects.set(slot, ticks);
+    }
+    public void changeEffectTime() {
+        if(effects.isEmpty()) {
+            return;
+        }
+        Client c = ((Client) this);
+        for(int i = 0; i < effects.size(); i++) {
+            if(effects.get(i) > 0 && (i != 0 || (i == 0 && getPositionName(getPosition()) == positions.DESERT))) //Remove 1 tick from timer
+                effects.set(i, effects.get(i) - 1);
+
+            if(i == 2 && effects.get(i)%10 == 0 && effects.get(i) > 0) {
+                for(int skill = 0; skill < 4; skill++) {
+                    skill = skill == 3 ? 4 : skill;
+                    boost(5 + (int) (Skills.getLevelForExperience(getExperience(Skill.getSkill(skill))) * 0.15), Skill.getSkill(skill));
+                }
+            }
+            if(i == 1 && effects.get(i)%100 == 0 && effects.get(i) >= 100)
+                c.send(new SendMessage("<col=702963>You have " + ((int)(effects.get(i) * 0.6) / 60) + " minutes left on your antifire potion."));
+            else if(i == 1 && effects.get(i)%50 == 0 && effects.get(i) > 0 && effects.get(i) < 100) c.send(new SendMessage("<col=702963>Your antifire potion is about to expire."));
+
+            if(i == 0 && effects.get(i) == 0) { //Desert heat
+                boolean waterSource = false;
+                if (c.playerHasItem(1823) || c.playerHasItem(1825) || c.playerHasItem(1827) || c.playerHasItem(1829)) {
+                    waterSource = true;
+                    int deleteItem = c.playerHasItem(1829) ? 1829 : c.playerHasItem(1827) ? 1827 : c.playerHasItem(1825) ? 1825 : 1823;
+                    c.deleteItem(deleteItem, 1);
+                    c.addItem(deleteItem + 2, 1);
+                } else if (c.playerHasItem(1929)) {
+                    waterSource = true;
+                    c.deleteItem(1929, 1);
+                    c.addItem(1925, 1);
+                } else if (c.playerHasItem(1921)) {
+                    waterSource = true;
+                    c.deleteItem(1921, 1);
+                    c.addItem(1923, 1);
+                } else if (c.playerHasItem(1937)) {
+                    waterSource = true;
+                    c.deleteItem(1937, 1);
+                    c.addItem(1935, 1);
+                } else if (c.playerHasItem(4458)) {
+                    waterSource = true;
+                    c.deleteItem(4458, 1);
+                    c.addItem(1980, 1);
+                } else if (c.playerHasItem(227)) {
+                    waterSource = true;
+                    c.deleteItem(227, 1);
+                    c.addItem(229, 1);
+                }
+                if (!waterSource) { //Damage player!
+                    dealDamage(3 + Misc.random(12), false);
+                    c.send(new SendMessage("The thirst from the heat damage you!"));
+                } else c.checkItemUpdate();
+                addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
+            } else if (i == 1 && effects.get(i) == 0) {
+                addEffectTime(1, -1);
+                c.send(new SendMessage("<col=702963>Your antifire potion has expired."));
+            } else if(i == 2 && effects.get(i) == 0) { //Overload
+                for(int skill = 0; skill < 4; skill++) {
+                    skill = skill == 3 ? 4 : skill;
+                    boostedLevel[skill] = 0;
+                    c.refreshSkill(Skill.getSkill(skill));
+                }
+                addEffectTime(2, -1);
+                c.send(new SendMessage("Your overload effect is now over!"));
+            }
+        }
+    }
+    private boolean antiFireEffect() {
+        return effects.size() > 1 && effects.get(1) > 0;
     }
 
     public void defaultCharacterLook(Client temp) {
@@ -800,7 +856,7 @@ public abstract class Player extends Entity {
         currentHealth -= amt;
         hitDiff = amt;
         if (plr.target != null && plr.target instanceof Player) { //Pvp damage profile!
-            int totalDmg = 0;
+            int totalDmg;
             if (getDamage().containsKey(plr.target)) {
                 totalDmg = getDamage().get(plr.target) + hitDiff;
                 getDamage().remove(plr.target);
@@ -819,7 +875,7 @@ public abstract class Player extends Entity {
         if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
             boolean gotAntiEffect = plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
                     || plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC);
+                    || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC) || antiFireEffect();
             if(npc != null && npc.getId() == 239 && gotAntiEffect) amt /= 2;
             else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
                 amt *= 3; amt /= 10; //Ugly way to write reduce dmg by 70%
@@ -938,7 +994,7 @@ public abstract class Player extends Entity {
     public Date checkCalendarDate(Date date, int days) {
         Calendar checkCal = Calendar.getInstance();
         checkCal.setTime(date);
-        checkCal.set(Calendar.HOUR, 0);
+        checkCal.set(Calendar.HOUR_OF_DAY, 0);
         checkCal.set(Calendar.MINUTE, 0);
         checkCal.set(Calendar.SECOND, 0);
         checkCal.set(Calendar.MILLISECOND, 0);
@@ -1662,7 +1718,14 @@ public abstract class Player extends Entity {
             client.ReplaceObject2(new Position(3531, 3536, 0), 2150, 0, 10); //Earth
             client.ReplaceObject2(new Position(3059, 3564, 0), 2153, 0, 10); //Fire
             client.ReplaceObject2(new Position(2743, 3174, 0), 2152, 0, 10); //Air
+            /* Desert shiet */
+            client.ReplaceObject2(new Position(3284, 2809, 0), 20391, 2, 0);
+            client.ReplaceObject2(new Position(3283, 2809, 0), 20391, 4, 0);
         }
+    }
+
+    public boolean rejectTeleport() {
+        return getPlunder.hinderTeleport();
     }
 
     public void examineItem(Client c, int id, int amount) {

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.model.player.skills;
+package net.dodian.uber.game.model.player.skills.thieving;
 
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Range;
 
