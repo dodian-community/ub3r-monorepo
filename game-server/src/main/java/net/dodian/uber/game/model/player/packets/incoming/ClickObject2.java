@@ -13,9 +13,8 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.utilities.Misc;
-import net.dodian.utilities.Utils;
 
 import java.util.Random;
 
@@ -102,6 +101,9 @@ public class ClickObject2 implements Packet {
             case 7962:
                 client.send(new SendMessage("Inspect"));
                 break;
+            case 20931: //Quick exit pyramid plunder
+                client.getPlunder.resetPlunder();
+            break;
         }
 		/*if (objectID == 2564) {
 			client.skillX = position.getX();

@@ -274,6 +274,14 @@ public class LoginManager {
                         } //If parts is more or less than 2 we gone goooofed!
                     }
                 }
+                String effect = results.getString("effects");
+                if (effect != null && !effect.isEmpty()) {
+                    String[] lines = effect.split(":");
+                    for(int i = 0; i < lines.length; i++) {
+                        int amount = Integer.parseInt(lines[i]);
+                        p.effects.add(i, amount);
+                    }
+                }
                 /* Daily reward, like battlestaves! */
                 String daily = results.getString("dailyReward");
                 if (daily != null && !daily.isEmpty()) { //If empty or null!
@@ -288,14 +296,14 @@ public class LoginManager {
                                 p.dailyReward.add(2, parts[2]);
                                 p.dailyReward.add(3, "0");
                                 p.dailyReward.add(4, parts[4]);
-                            } else
+                            } else {
                                 for (int ii = 0; ii < parts.length; ii++)
                                     p.dailyReward.add(ii, parts[ii]);
+                            }
                         } else { //Hmm we could do it like this if needed :L
                             for (int ii = 0; ii < parts.length; ii++)
                                 p.dailyReward.add(p.staffSize + ii, parts[ii]);
                         }
-                        //p.dailyReward.add(i, (ArrayList)list.clone()); //Need to clone due to we clear the list!
                     }
                 } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
                 /* Account age*/

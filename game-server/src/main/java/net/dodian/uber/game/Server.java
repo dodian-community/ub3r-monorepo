@@ -24,7 +24,8 @@ import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
@@ -61,6 +62,7 @@ public class Server implements Runnable {
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
     public static LoginManager loginManager = null;
+    public static PyramidPlunder entryObject = null;
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map<String, Long> tempConns = new HashMap<>();
@@ -116,6 +118,7 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
         job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
         job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
+        entryObject = new PyramidPlunder();
         /* Done loading */
         System.gc();
         serverStartup = System.currentTimeMillis(); //System.currentTimeMillis() - serverStartup

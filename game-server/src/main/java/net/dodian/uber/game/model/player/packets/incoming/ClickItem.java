@@ -324,9 +324,8 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.ATTACK);
-                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.STRENGTH)) * 0.15), Skill.STRENGTH);
-                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.15), Skill.DEFENCE);
+                    for(int skill = 0; skill < 3; skill++)
+                        client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.getSkill(skill));
                     for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
                         nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
                                 Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
@@ -334,6 +333,44 @@ public class ClickItem implements Packet {
                                                 Utils.pot_1_dose[i] == item ? 229 : -1;
                     client.send(new SendMessage(nextId == 229 ? "You empty the super combat potion." : "You drink the super combat potion."));
                     break;
+                case 11730: //Overload
+                case 11731:
+                case 11732:
+                case 11733:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel || client.getCurrentHealth() < 11) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.dealDamage(10, true);
+                    for(int skill = 0; skill < 4; skill++) {
+                        skill = skill == 3 ? 4 : skill;
+                        client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Skill.getSkill(skill))) * 0.15), Skill.getSkill(skill));
+                    }
+                    int ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2;
+                    client.addEffectTime(2, 200 + ticks); //200 ticks = 120 seconds = 2 minutes!, max ticks = (99 + 1) * 2 = 200 aka 2 minute for a total of 4 minutes.
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the overload potion." : "You drink the overload potion."));
+                break;
+                case 2452:
+                case 2454:
+                case 2456:
+                case 2458:
+                    if((client.effects.size() > 1 && client.effects.get(1) > 50) || client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.addEffectTime(1, 500); //500 ticks = 300 seconds = 5 minutes!
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the anti-fire potion." : "You drink the anti-fire potion."));
+                break;
                 case 4155:
                     if (client.inTrade || client.inDuel)
                         break;

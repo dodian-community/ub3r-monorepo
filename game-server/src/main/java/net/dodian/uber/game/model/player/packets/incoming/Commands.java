@@ -1563,13 +1563,11 @@ public class Commands implements Packet {
                     boolean invCheck = client.skillcapePerk(Skill.WOODCUTTING, true);
                     client.send(new SendMessage("result = " + equipCheck + ", " + invCheck));
                 }
-                if (cmd[0].equalsIgnoreCase("fill")) {
-                    int slot = 0;
-                    for(int i = 1; i < client.bankSize() + 1; i++) {
-                        client.bankItems[slot] = i + 1;
-                        client.bankItemsN[slot] = 1;
-                        slot++;
-                    }
+                if (cmd[0].equals("plunder")) {
+                    client.getPlunder.startPlunder();
+                }
+                if (cmd[0].equals("p_tele")) {
+                    client.transport(Server.entryObject.currentDoor);
                 }
                 if(cmd[0].equalsIgnoreCase("setup")) {
                     for(int i = 0; i < 7; i++) {

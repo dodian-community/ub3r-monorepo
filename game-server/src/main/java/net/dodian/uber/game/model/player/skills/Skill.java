@@ -26,7 +26,7 @@ public enum Skill {
     AGILITY(16, "agility", 24156, 24155),
     THIEVING(17, "thieving", 24188, 24187),
     SLAYER(18, "slayer", 24367, 24366),
-    FARMING(19, "farming", 24372, 24371),
+    FARMING(19, "farming", 24372, 24371, false),
     RUNECRAFTING(20, "runecrafting", 24362, 24361);
 
     private final int id;

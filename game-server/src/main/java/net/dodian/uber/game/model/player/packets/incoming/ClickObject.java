@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -18,7 +19,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.ItemLog;
@@ -356,6 +357,34 @@ public class ClickObject implements Packet {
             client.skillX = objectPosition.getX();
             client.setSkillY(objectPosition.getY());
             client.stairDistance = 1;
+        }
+        if (objectID >= 26622 && objectID <= 26625) {
+            if(client.getLevel(Skill.THIEVING) < 21 || client.getStunTimer() > 0) {
+                client.send(new SendMessage(client.getLevel(Skill.THIEVING) < 21 ? "You need level 21 thieving to enter." : "You are stunned!"));
+                return;
+            }
+            if(Server.entryObject.getEntryDoor(objectPosition)) { //Entry to activity
+                //TODO: Fix a thieving check chance to enter!
+                int chance = Misc.random(255);
+                if(chance <= (int)(client.getLevel(Skill.THIEVING) * 2.5))
+                    client.transport(new Position(1934, 4450, 2));
+                else {
+                    client.dealDamage(Misc.random(3), false);
+                    client.setStunTimer(4);
+                }
+            } else
+                client.transport(new Position(1968, 4420, 2));
+        }
+        if (objectID >= 26618 && objectID <= 26621) { //Room entrance check...For now :D
+            if(Server.entryObject.nextRoom[client.getPlunder.getRoomNr()] + 26618 == objectID)
+                client.getPlunder.nextRoom();
+            //System.out.println("animation reset!");
+        }
+        if (objectID == 20932) {
+            client.transport(client.getPlunder.end);
+        }
+        if (objectID == 20931) {
+            client.NpcDialogue = 20931;
         }
         /* Agility */
         Agility agility = new Agility(client);
