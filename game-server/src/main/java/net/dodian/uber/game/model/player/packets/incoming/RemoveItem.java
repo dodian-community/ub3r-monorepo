@@ -61,19 +61,15 @@ public class RemoveItem implements Packet {
             }
             boolean IsIn = false;
             if (ShopHandler.ShopSModifier[client.MyShopID] > 1) {
-                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID] && !IsIn; j++) {
-                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1)) {
+                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID] && !IsIn; j++)
+                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1))
                         IsIn = true;
-                    }
-                }
-            } else {
-                IsIn = true;
-            }
-            if (IsIn == false && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
+            } else IsIn = true;
+            if (!IsIn && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
                 client.send(new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
             } else {
                 int currency = client.MyShopID == 55 ? 11997 : 995;
-                int ShopValue = client.MyShopID == 55 ? 1000 : (int) Math.floor(client.GetShopBuyValue(removeID, 1, removeSlot));
+                int ShopValue = client.MyShopID == 55 ? 1000 : (int) Math.floor(client.GetShopBuyValue(removeID));
                 String ShopAdd = "";
                 int thousand = (int)Math.pow(10, 3);
                 int million = (int)Math.pow(10, 6);
@@ -88,7 +84,7 @@ public class RemoveItem implements Packet {
             }
         } else if (interfaceID == 3900) { // Show value to buy items
             int currency = client.MyShopID == 55 ? 11997 : 995;
-            int ShopValue = client.MyShopID == 55 ? client.eventShopValues(removeSlot) : (int) Math.floor(client.GetShopSellValue(removeID, 0, removeSlot));
+            int ShopValue = client.MyShopID == 55 ? client.eventShopValues(removeSlot) : (int) Math.floor(client.GetShopSellValue(removeID));
             ShopValue = client.MyShopID >= 7 && client.MyShopID <= 11 ? (int) (ShopValue * 1.5) : ShopValue;
             String ShopAdd = "";
             int thousand = (int)Math.pow(10, 3);

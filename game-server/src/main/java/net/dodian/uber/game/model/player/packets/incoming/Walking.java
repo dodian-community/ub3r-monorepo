@@ -20,7 +20,7 @@ public class Walking implements Packet {
         if(client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient || !client.pLoaded || currentTime < client.walkBlock) {
             return;
         }
-        if(client.doingTeleport()) { //In the midst of a teleport to stop movement!
+        if(client.doingTeleport() || client.getPlunder.looting) { //In the midst of something like plunder or teleport
             return;
         }
         if (packetType != 98 && packetType != 164) {
@@ -32,6 +32,7 @@ public class Walking implements Packet {
         /* Auto decline when walk away from duel! */
         else if(client.inDuel && !client.duelFight && packetType != 164) client.declineDuel();
         if (client.genie) client.genie = false;
+        if (client.antique) client.antique = false;
         if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
         if(client.getStunTimer() > 0 || client.getSnareTimer() > 0) { //In the midst of a teleport to stop movement!
             client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));

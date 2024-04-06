@@ -116,6 +116,25 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id value"));
                     }
                 }
+                if (cmd[0].equalsIgnoreCase("lamps")) {
+                    //173 = run config!
+                    try {
+                        int xp = 0, lamps = 0, lamp = 0;
+                        while(xp < 13034431) {
+                            int level = Skills.getLevelForExperience(xp);
+                            xp += level * 100;
+                            lamps++;
+                        }
+                        while(xp >= 13034431 && xp < 50_000_000) {
+                            int level = Skills.getLevelForExperience(xp);
+                            xp += level * 100;
+                            lamp++;
+                        }
+                        System.out.println("You need " + lamps + " to get from level 1 to 99 and " + (lamps + lamp) + " to get from 0 to 50m xp.");
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " value"));
+                    }
+                }
                 if (cmd[0].equalsIgnoreCase("woof")) {
                     try {
                         int id = Integer.parseInt(cmd[1]);
@@ -599,7 +618,7 @@ public class Commands implements Packet {
                                 item = new GroundItem(client.getPosition().copy(), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             } else {
-                                Ground.deleteItem(item, true);
+                                Ground.deleteItem(client, item, true);
                                 item = new GroundItem(new Position(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ()), test, 1, client.clientPid, -1);
                                 client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                             }
@@ -1456,6 +1475,8 @@ public class Commands implements Packet {
                 }
                 if ((cmd[0].equalsIgnoreCase("tool") || cmd[0].equalsIgnoreCase("potato")) && client.playerRights > 0) {
                     client.addItem(5733, 1);
+                    client.checkItemUpdate();
+                    client.send(new SendMessage("Here is your dev potato!"));
                 }
                 if (cmd[0].equalsIgnoreCase("pnpc") && client.playerRights > 0) {
                     try {
@@ -1566,8 +1587,19 @@ public class Commands implements Packet {
                 if (cmd[0].equals("plunder")) {
                     client.getPlunder.startPlunder();
                 }
+                if (cmd[0].equals("p_start")) {
+                    client.transport(Server.entryObject.start);
+                }
                 if (cmd[0].equals("p_tele")) {
                     client.transport(Server.entryObject.currentDoor);
+                }
+                if (cmd[0].equals("p_next")) {
+                    client.getPlunder.nextRoom();
+                    client.send(new SendMessage("You are now at floor " + (client.getPlunder.getRoomNr() + 1)));
+                }
+                if (cmd[0].equals("decant")) {
+                    client.NpcTalkTo = 1174;
+                    client.NpcDialogue = 1178;
                 }
                 if(cmd[0].equalsIgnoreCase("setup")) {
                     for(int i = 0; i < 7; i++) {

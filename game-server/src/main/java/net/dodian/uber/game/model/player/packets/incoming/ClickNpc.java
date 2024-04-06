@@ -5,7 +5,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -148,12 +147,11 @@ public class ClickNpc implements Packet {
             client.convoId = -1;
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 11;
-        } else if (npcId == 1174) {
-            client.NpcWanneTalk = 16;
-            client.convoId = 2;
         } else if (npcId == 520) {
             client.NpcWanneTalk = 19;
             client.convoId = 4;
+        } else if (npcId == 1174) {
+            client.NpcWanneTalk = npcId;
         } else if (npcId == 943) {
             int num = 0;
             for (Player p : PlayerHandler.players) {

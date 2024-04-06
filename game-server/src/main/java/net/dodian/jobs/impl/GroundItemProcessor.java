@@ -16,12 +16,26 @@ import org.quartz.JobExecutionException;
 @DisallowConcurrentExecution
 public class GroundItemProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
-
-        /*if (Ground.items.size() < 0) {
-            return;
-        }
         long now = System.currentTimeMillis();
-        if (!Ground.items.isEmpty())
+        if (!Ground.items.isEmpty() || !(Ground.items.size() < 0)) {
+            for (GroundItem item : Ground.items) {
+                    boolean displayTime = now - item.dropped >= item.timeDisplay;
+                    if (!item.canDespawn && item.taken && displayTime) {
+                        item.taken = false;
+                        item.visible = true;
+                    } else  if (item.taken && displayTime) {
+                        item.taken = false;
+                        item.visible = true;
+                    }
+                    if (item.canDespawn && item.visible && !item.taken && (now - item.dropped < item.timeDespawn)) { //Priorities removing item above all else!
+                        item.taken = true;
+                    } else if (!item.canDespawn && !item.taken && (now - item.dropped < item.timeDespawn)) {
+                        item.taken = true;
+                    }
+                }
+            }
+        }
+        /*if (!Ground.items.isEmpty())
         for (GroundItem item : Ground.items) {
             if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
                 item.taken = false;
@@ -41,6 +55,5 @@ public class GroundItemProcessor implements Job {
                 Ground.deleteItem(item);
             }
         }*/
-    }
 
 }

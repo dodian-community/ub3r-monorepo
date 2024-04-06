@@ -40,10 +40,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -142,7 +139,7 @@ public class Client extends Player implements Runnable {
 	public boolean fletchings = false;
 	public int fletchId = -1, fletchAmount = -1, fletchLog = -1, fletchExp = 0;
 	/* Set make one skill action! */
-	public int skillActionCount = 0, skillActionTimer = -1;
+	public int skillActionCount = 0, skillActionTimer = -1, prayerAction = -1;
 	public ArrayList<Integer> playerSkillAction = new ArrayList<>(); //playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = tickTimer
 	public String skillMessage = "";
 	public boolean smelting = false;
@@ -199,7 +196,6 @@ public class Client extends Player implements Runnable {
 	}
 	public boolean wearing = false;
 	public void refreshSkill(Skill skill) {
-		try {
 			int out = Skills.getLevelForExperience(getExperience(skill));
 			if (skill == Skill.HITPOINTS) out = getCurrentHealth();
 			else if (skill == Skill.PRAYER) out = getCurrentPrayer();
@@ -211,9 +207,6 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeDWord_v1(getExperience(skill));
 			getOutputStream().writeByte(out);
 			//System.out.println(skill.getName() + " XP: " + getExperience(skill));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public int getbattleTimer(int weapon) {
@@ -239,10 +232,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean hasStaff() {
-		for (int a = 0; a < staffs.length; a++) {
-			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staffs[a])
-				return true;
-		}
+        for (int staff : staffs) {
+            if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staff)
+                return true;
+        }
 		return false;
 	}
 	public void CheckGear() {
@@ -408,6 +401,7 @@ public class Client extends Player implements Runnable {
 		resetAction();
 		getOutputStream().createFrame(97);
 		getOutputStream().writeWord(interfaceid);
+		flushOutStream();
 	}
 
 	public int ancients = 1;
@@ -444,7 +438,7 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public static final int bufferSize = 1_048_576;
+	public static final int bufferSize = 1_000_000;
 	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
@@ -460,7 +454,7 @@ public class Client extends Player implements Runnable {
 		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[bufferSize]);
 		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[bufferSize]);
+		inputStream = new Stream(new byte[bufferSize]); //< this issue?!
 		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
 	}
@@ -490,7 +484,7 @@ public class Client extends Player implements Runnable {
 			isActive = false;
 			buffer = null;
 		} catch (java.io.IOException ioe) {
-			ioe.printStackTrace();
+			System.out.println("error in destruct " + ioe);
 		}
 		super.destruct();
 	}
@@ -512,7 +506,7 @@ public class Client extends Player implements Runnable {
 		if (disconnected || getOutputStream().currentOffset == 0) {
 			return;
 		}
-			Integer length = getOutputStream().currentOffset;
+			int length = getOutputStream().currentOffset;
 			byte[] copy = new byte[length];
 			System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
 			mySocketHandler.queueOutput(copy);
@@ -527,7 +521,9 @@ public class Client extends Player implements Runnable {
 
 	private void fillInStream(int forceRead) throws java.io.IOException {
 		getInputStream().currentOffset = 0;
-		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
+		//mySocketHandler.getInput().read(inStream.buffer, 0, forceRead);
+		int read = mySocketHandler.getSocket().getInputStream().read(getInputStream().buffer, 0, forceRead);
+		if(read < 0) System.out.println("Read is below 0 for some reason?!");
 	}
 
 	private void fillInStream(PacketData pData) throws java.io.IOException {
@@ -605,7 +601,7 @@ public class Client extends Player implements Runnable {
 			String customClientVersion = getInputStream().readString();
 			officialClient = customClientVersion.equals(getGameClientCustomVersion());
 			setPlayerName(getInputStream().readString());
-			if (getPlayerName() == null || getPlayerName().length() == 0) {
+			if (getPlayerName() == null || getPlayerName().isEmpty()) {
 				setPlayerName("player" + getSlot());
 			}
 			playerPass = getInputStream().readString();
@@ -693,9 +689,8 @@ public class Client extends Player implements Runnable {
 				if (!temp.isEmpty()) {
 					int group = Integer.parseInt(temp);
 					switch (group) {
-						case 14:
-							premium = true;
-							break;
+						case 14: //Premium members but everyone is premium currently! Also can be handled in a better way!
+						break;
 						case 3:
 						case 19:
 							playerRights = 1;
@@ -733,7 +728,6 @@ public class Client extends Player implements Runnable {
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 			print_debug("....Success login of " + getPlayerName());
 		} catch (java.lang.Exception __ex) {
-			__ex.printStackTrace();
 			destruct();
 			print_debug("....Failed destruct..." + __ex.getMessage());
 			return;
@@ -792,8 +786,6 @@ public class Client extends Player implements Runnable {
 		}
 		if (logout) {
 			saveNeeded = false;
-			/* Reset activities! */
-			getPlunder.resetPlunder();
 			/* Remove player from list! */
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
@@ -906,7 +898,7 @@ public class Client extends Player implements Runnable {
 				if (elapsed > 10000) {
 					last = ", lastlogin = '" + System.currentTimeMillis() + "'";
 				}
-				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', lastvote=" + lastVoted + ", pkrating=" + 1500 + ", health="
+				statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', pkrating=" + 1500 + ", health="
 						+ getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
 						+ "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='"+effect+"'"
 						+ ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
@@ -916,8 +908,7 @@ public class Client extends Player implements Runnable {
 						+ " WHERE id = " + dbId);
 				statement.close();
 			} catch (Exception e) {
-				e.printStackTrace();
-				println_debug("Save Exception: " + getSlot() + ", " + getPlayerName());
+				println_debug("Save Exception: " + getSlot() + ", " + getPlayerName() + ", msg: " + e);
 			}
 	}
 
@@ -933,7 +924,7 @@ public class Client extends Player implements Runnable {
 		int id = GetNotedItem(itemID);
 		if(amount == -2) { //draw all from bank!
 			if(!takeAsNote && !Server.itemManager.isStackable(itemID))
-				amount = freeSlots() == 0 ? 1 : bankItemsN[fromSlot] > freeSlots() ? freeSlots() : bankItemsN[fromSlot];
+				amount = freeSlots() == 0 ? 1 : Math.min(bankItemsN[fromSlot], freeSlots());
 			else
 				amount = freeSlots() == 0 && !playerHasItem(id == 0 ? itemID : id) ? 1 : bankItemsN[fromSlot];
 		}
@@ -1101,20 +1092,20 @@ public class Client extends Player implements Runnable {
 		return true;
 	}
 
-	public boolean bankItem(int itemID, int fromSlot, int amount) {
+	public void bankItem(int itemID, int fromSlot, int amount) {
 		if (playerItemsN[fromSlot] <= 0 || playerItems[fromSlot] <= 0 || playerItems[fromSlot] - 1 != itemID) {
-			return false;
+			return;
 		}
 		if (!IsBanking) {
 			send(new RemoveInterfaces());
-			return false;
+			return;
 		}
 		int id = GetUnnotedItem(itemID);
 		if (id == 0) {
 			if (playerItems[fromSlot] <= 0) {
-				return false;
+				return;
 			}
-			amount = amount > getInvAmt(itemID) ? getInvAmt(itemID) : amount;
+			amount = Math.min(amount, getInvAmt(itemID));
 			if (Server.itemManager.isStackable(itemID) || playerItemsN[fromSlot] > 1) {
 				int toBankSlot = 0;
 				boolean alreadyInBank = false;
@@ -1144,22 +1135,19 @@ public class Client extends Player implements Runnable {
 						bankItemsN[toBankSlot] += amount;
 					} else {
 						send(new SendMessage("Bank full!"));
-						return false;
+						return;
 					}
 					deleteItem(itemID, fromSlot, amount);
-					return true;
 				} else if (alreadyInBank) {
 					if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
 						bankItemsN[toBankSlot] += amount;
 					} else {
 						send(new SendMessage("Bank full!"));
-						return false;
+						return;
 					}
 					deleteItem(itemID, fromSlot, amount);
-					return true;
 				} else {
 					send(new SendMessage("Bank full!"));
-					return false;
 				}
 			} else {
 				itemID = playerItems[fromSlot];
@@ -1200,7 +1188,6 @@ public class Client extends Player implements Runnable {
 							amount = 0;
 						}
 					}
-					return true;
 				} else if (alreadyInBank) {
 					int firstPossibleSlot = 0;
 					boolean itemExists = false;
@@ -1221,17 +1208,15 @@ public class Client extends Player implements Runnable {
 							amount = 0;
 						}
 					}
-					return true;
 				} else {
 					send(new SendMessage("Bank full!"));
-					return false;
 				}
 			}
 		} else if (id > 0) {
 			if (playerItems[fromSlot] <= 0) {
-				return false;
+				return;
 			}
-			amount = amount > getInvAmt(itemID) ? getInvAmt(itemID) : amount;
+			amount = Math.min(amount, getInvAmt(itemID));
 			if (Server.itemManager.isStackable(playerItems[fromSlot] - 1) || playerItemsN[fromSlot] > 1) {
 				int toBankSlot = 0;
 				boolean alreadyInBank = false;
@@ -1259,21 +1244,18 @@ public class Client extends Player implements Runnable {
 					if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
 						bankItemsN[toBankSlot] += amount;
 					} else {
-						return false;
+						return;
 					}
 					deleteItem((playerItems[fromSlot] - 1), fromSlot, amount);
-					return true;
 				} else if (alreadyInBank) {
 					if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
 						bankItemsN[toBankSlot] += amount;
 					} else {
-						return false;
+						return;
 					}
 					deleteItem((playerItems[fromSlot] - 1), fromSlot, amount);
-					return true;
 				} else {
 					send(new SendMessage("Bank full!"));
-					return false;
 				}
 			} else {
 				itemID = playerItems[fromSlot];
@@ -1314,7 +1296,6 @@ public class Client extends Player implements Runnable {
 							amount = 0;
 						}
 					}
-					return true;
 				} else if (alreadyInBank) {
 					int firstPossibleSlot = 0;
 					boolean itemExists = false;
@@ -1335,15 +1316,12 @@ public class Client extends Player implements Runnable {
 							amount = 0;
 						}
 					}
-					return true;
 				} else {
 					send(new SendMessage("Bank full!"));
-					return false;
 				}
 			}
 		} else {
 			send(new SendMessage("Item not supported " + itemID));
-			return false;
 		}
 	}
 
@@ -1601,7 +1579,7 @@ public class Client extends Player implements Runnable {
 						continue;
 					if (addItem(item.id, item.amount)) { //Fixed so stackable items can be added with full inv as long as you got it.
 						item.setTaken(true);
-						Ground.deleteItem(item, true);
+						Ground.deleteItem(this, item, true);
 						//send(new Sound(356)); //TODO: fix sounds!
 						if(!item.canDespawn)
 							ItemLog.playerGathering(this, item.id, item.amount, getPosition().copy(), "global item");
@@ -1799,16 +1777,16 @@ public class Client extends Player implements Runnable {
 		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
-	public boolean wear(int wearID, int slot, int Interface) {
-		if (inTrade) {
-			return false;
+	public void wear(int wearID, int slot, int interFace) {
+		if (inTrade || interFace != 3214)  {
+			return;
 		}
 		if (emptyEssencePouch(wearID)) { //Runecrafting Pouches
-			return false;
+			return;
 		}
 		if (wearID == 5733) { //Potato
 			wipeInv();
-			return false;
+			return;
 		}
 		if (wearID == 4155) { //Enchanted gem
 			SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
@@ -1816,32 +1794,32 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need to kill " + getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
 			else
 				send(new SendMessage("You need to be assigned a task!"));
-			return false;
+			return;
 		}
 		if (duelFight && duelRule[3]) {
 			send(new SendMessage("Equipment changing has been disabled in this duel"));
-			return false;
+			return;
 		}
 		if (duelConfirmed && !duelFight)
-			return false;
+			return;
 		if (!playerHasItem(wearID)) {
-			return false;
+			return;
 		}
 		int targetSlot = Server.itemManager.getSlot(wearID);
-		if (!canUse(wearID)) {
+		if (canUse(wearID)) {
 			send(new SendMessage("You must be a premium member to use this item"));
-			return false;
+			return;
 		}
 		if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
 			send(new SendMessage("Current duel rules restrict this from being worn!"));
-			return false;
+			return;
 		}
 		if ((playerItems[slot] - 1) == wearID) {
 			if(!checkEquip(wearID, targetSlot, slot))
-				return false;
+				return;
 			int wearAmount = playerItemsN[slot];
 			if (wearAmount < 1) {
-				return false;
+				return;
 			}
 			if (wearID >= 0) {
 				deleteItem(wearID, slot, wearAmount);
@@ -1859,9 +1837,7 @@ public class Client extends Player implements Runnable {
 			setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
 			wearing = false;
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			return true;
 		}
-		return false;
 	}
 
 	public boolean checkEquip(int id, int slot, int invSlot) {
@@ -1959,10 +1935,10 @@ public class Client extends Player implements Runnable {
 				} else if(shield > 0) {
 					send(new SendMessage("Not enough space to equip this item!"));
 					failCheck = true;
-				} else if (shield < 1 && invSlot != -1) {
+				} else if (invSlot != -1) {
 					remove(Equipment.Slot.WEAPON.getId(), true);
 					addItemSlot(weapon, 1, invSlot);
-				} else if (invSlot == -1) failCheck = true;
+				} else failCheck = true;
 			}
 			if(slot == 3 && invSlot != -1 && (id == 4212 || id == 6724 || id == 4734 || id == 20997)) {
 				boolean shieldCheck = shield == 3844 || shield == 4224 || shield == 1540;
@@ -2121,7 +2097,6 @@ public class Client extends Player implements Runnable {
 			stm.close();
 		} catch (Exception e) {
 			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
 		}
 		loaded = true;
 	}
@@ -2148,7 +2123,7 @@ public class Client extends Player implements Runnable {
 			battlestavesData();
 		else dailyLogin--;
 		/* Timers for actions! */
-		Math.max(actionTimer - 1, 0);
+		actionTimer = actionTimer > 0 ? actionTimer - 1 : 0;
 		getPlunder.reduceTicks();
 		if(getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
 			addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
@@ -2161,7 +2136,7 @@ public class Client extends Player implements Runnable {
 			int mutedDays = (int)((mutedTill - rightNow) / 86_400_000);
 			if(mutedDays == 0)
 				mutedHours = (int)((mutedTill - rightNow) / 3_600_000);
-			mutedHours = mutedHours < 1 ? 1 : mutedHours;
+			mutedHours = Math.max(mutedHours, 1);
 			send(new SendString("Muted: " + (mutedDays > 0 ? mutedDays+ " days" : mutedHours+ " hours"), 6572));
 		}
 		if(getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
@@ -2342,9 +2317,6 @@ public class Client extends Player implements Runnable {
 			saveStats(false, true);
 			lastProgressSave = now;
 		}
-		if (startDuel && duelChatTimer <= 0) {
-			startDuel = false;
-		}
 		// check stairs
 		if (stairs > 0) {
 			if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), stairDistance)) {
@@ -2438,16 +2410,14 @@ public class Client extends Player implements Runnable {
 			fletching.fletchBow(this);
 		} else if (skillActionTimer > -1) {
 			if(skillActionTimer-- < 1) skillActionYield();
+		} else if (boneItem > 0 && prayerAction > -1) {
+			if(prayerAction-- < 1) Prayer.altarBones(this, boneItem);
 		} else if (filling) {
 			lastAction = now;
 			fill();
 		} else if (spinning && now - lastAction >= getSpinSpeed()) {
 			lastAction = now;
 			spin();
-		} else if (boneItem > 0 && now - lastAction >= 1800) {
-			lastAction = now;
-			stillgfx(624, new Position(skillY, skillX, getPosition().getZ()), 0);
-			Prayer.altarBones(this, boneItem);
 		} else if (crafting && now - lastAction >= 1800) {
 			lastAction = now;
 			craft();
@@ -2455,7 +2425,8 @@ public class Client extends Player implements Runnable {
 			lastAction = now;
 			fish();
 		} else if (fishing && now - lastFishAction <= 0) { //Reapply animation every 3 tick!
-			if(fishIndex >= 0 && playerHasItem(Utils.fishTool[fishIndex])) {
+			boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
+			if(fishIndex >= 0 && (playerHasItem(Utils.fishTool[fishIndex]) || harpoon)) {
 				requestAnim(Utils.fishAnim[fishIndex], 0);
 				lastFishAction = System.currentTimeMillis() + 1800;
 			} else {
@@ -2513,24 +2484,21 @@ public class Client extends Player implements Runnable {
 		}
 		/* Items update! Might cause some lag if more than 500 items?! */
 		/* TODO: Add better way of handling ground items! */
-		if (!Ground.items.isEmpty() || !(Ground.items.size() < 0)) {
 			for (GroundItem item : Ground.items) {
 				int x = Math.abs(getPosition().getX() - item.x), y = Math.abs(getPosition().getY() - item.y);
-				if (item.canDespawn && now - item.dropped >= item.timeDespawn) { //Priorities removing item above all else!
-					Ground.deleteItem(item, x >= -114 && x <= 114 && y >= -114 && y <= 114);
-				}
-				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
-					item.taken = false;
-					item.visible = false;
-					if(x >= -114 && x <= 114 && y >= -114 && y <= 114)
-						send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-				}
-				boolean displayTime = (now - item.dropped >= item.timeDisplay || !item.canDespawn);
-				if ((!item.visible && displayTime) || ((!item.visible && !item.canDespawn && !item.taken) && displayTime)) {
-					if (Server.itemManager.isTradable(item.id) && dbId != item.playerId) item.visible = true;
+				boolean coordCheck = x >= -114 && x <= 114 && y >= -114 && y <= 114;
+				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay && coordCheck) {
+					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				} else  if (coordCheck && Server.itemManager.isTradable(item.id) && dbId != item.playerId && now - item.dropped >= item.timeDisplay) {
+					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				} else if (coordCheck && !Server.itemManager.isTradable(item.id) && dbId == item.playerId)
+					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				if (item.canDespawn && item.visible && now - item.dropped >= item.timeDespawn && coordCheck) { //Priorities removing item above all else!
+					Ground.deleteItem(this, item, true);
+				} else if (item.taken && (now - item.dropped < item.timeDespawn) && coordCheck) {
+					Ground.deleteItem(this, item, true);
 				}
 			}
-		}
 		/* Handle logout shiez */
 		timeOutCounter++;
 		if (isKicked) //Kicked muhahah!
@@ -2549,8 +2517,7 @@ public class Client extends Player implements Runnable {
 		try {
 			fillInStream(data.poll());
 		} catch (IOException e) {
-			e.printStackTrace();
-			System.out.println(e);
+			System.out.println("Packet process issue... " + e);
 			disconnected = true;
 			return false;
 		}
@@ -2574,11 +2541,10 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(8847);
 		getOutputStream().writeWord(items.length);
-
-		for (int i = 0; i < items.length; i++) {
-			getOutputStream().writeByte((byte) 1);
-			getOutputStream().writeWordBigEndianA(items[i] + 1);
-		}
+        for (int item : items) {
+            getOutputStream().writeByte((byte) 1);
+            getOutputStream().writeWordBigEndianA(item + 1);
+        }
 		getOutputStream().endFrameVarSizeWord();
 	}
 
@@ -2604,7 +2570,7 @@ public class Client extends Player implements Runnable {
 			send(new SendString("", slot));
 			slot++;
 		}
-		String skillName = Skill.getSkill(skillID).getName();
+		String skillName = Objects.requireNonNull(getSkill(skillID)).getName();
 		skillName = skillName.substring(0, 1).toUpperCase() + skillName.substring(1);
 		send(new SendString(skillName, 8716));
 		if (skillID < 23) {
@@ -2631,13 +2597,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Elemental battlestaff", "Mithril", "Adamant", "Rune", "Wolfbane", "Keris", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon", "Verac's flail", "Torag's hammers",
 					"Skillcape" + prem};
 			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "40", "40", "45", "45", "50", "55", "60", "70", "70", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {4151, 1291, 1293, 1295, 1395, 1299, 1301, 1303, 2952, 10581, 3842, 20223, 21646, 6523, 1305, 4755, 4747, 9747};
 			setMenuItems(items);
 		} else if (skillID == DEFENCE.getId()) {
@@ -2650,13 +2616,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Barrows", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
 			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "70", "75", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4749, 4224, 11284, 9753};
 			setMenuItems(items);
 		} else if (skillID == STRENGTH.getId()) {
@@ -2667,13 +2633,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Dharok's greataxe", "Guthan's warspear", "Skillcape" + prem};
 			String[] s1 = {"45", "45", "45", "50", "55", "70", "70", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {3842, 20223, 20232, 4153, 6528, 4718, 4726, 9750};
 			setMenuItems(items);
 		} else if (skillID == HITPOINTS.getId()) {
@@ -2684,9 +2650,9 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Shrimps (3 health)", "Rat meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
 					"Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == RANGED.getId()) {
@@ -2712,13 +2678,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 4734, 6724/*, 20997*/});
 			else if (child == 1)
@@ -2731,16 +2697,20 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Wolfbane", "Skillcape" + prem};
-			String[] s1 = {"25", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+			String[] s = {"Thick Skin", "Burst of Strength", "Clarity of Thought", "Sharp Eye", "Mystic Will",
+			"Rock Skin", "Superhuman Strength", "Improved Reflexes", "Hawk Eye", "Mystic Lore", "Wolfbane",
+			"Steel Skin", "Ultimate Strength", "Incredible Reflexes", "Eagle Eye", "Mystic Might",
+			"Protect from Magic", "Protect from Missiles", "Protect from Melee", "Chivalry", "Piety", "Skillcape" + prem};
+			String[] s1 = {"5", "5", "5", "10", "10", "20", "20", "20", "25", "25", "25",
+			"40", "40", "40", "45", "45", "55", "55", "55", "70", "80", "99"};
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
-			int[] items = {2952, 9759};
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
+			int[] items = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2952, -1, -1, -1, -1, -1,-1, -1, -1, -1, -1, 9759};
 			setMenuItems(items);
 		} else if (skillID == MAGIC.getId()) {
 			changeInterfaceStatus(8825, false);
@@ -2761,13 +2731,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Battlestaff", "Elemental battlestaff", "Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Ahrim's staff", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "10", "10", "25", "40", "50", "70", "99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
 						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
@@ -2783,13 +2753,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Cage", "Farmer", "Baker stall", "fur stall", "silver stall", "Master Farmer", "Yanille chest", "Spice Stall", "Legends chest" + prem, "Gem Stall" + prem};
 			String[] s1 = {"1", "10", "10", "40", "65", "70", "70", "80", "85", "90"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {4443, 3243, 2309, 1739, 2349, 5068, 6759, 199, 6759, 1623};
 			setMenuItems(items);
 		} else if (skillID == RUNECRAFTING.getId()) {
@@ -2800,13 +2770,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Small pouch", "Nature rune", "Medium pouch", "Large pouch", "Blood rune", "Giant pouch", "Cosmic rune", "Skillcape" + prem};
 			String[] s1 = {"1", "1", "20", "40", "50", "60", "75", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {5509, 561, 5510, 5512, 565, 5514, 564, 9765};
 			setMenuItems(items);
 			//crafting == 12
@@ -2816,17 +2786,17 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
+			String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Dragon harpoon", "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem, ""};
-			String[] s1 = {"1", "20", "30", "40", "50", "60", "70", "85", "95"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+			String[] s1 = {"1", "20", "30", "40", "50", "60", "61", "70", "85", "95"};
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
-			int[] items = {317, 335, 331, 377, 371, 7944, 383, 395, 389};
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
+			int[] items = {317, 335, 331, 377, 371, 7944, 21028, 383, 395, 389};
 			setMenuItems(items);
 		} else if (skillID == COOKING.getId()) {
 			send(new SendString("Cooking", 8846));
@@ -2837,13 +2807,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Shrimps", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem};
 			String[] s1 = {"1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == CRAFTING.getId()) {
@@ -2895,13 +2865,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Crystal key", "Skillcape" + prem};
 				s1 = new String[]{"60", "99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{1759, 1777});
 			else if (child == 1)
@@ -2957,13 +2927,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 
 			if (child == 0)
 				setMenuItems(new int[]{2349, 2351, 2353, 2357, 2359, 2361, 2363});
@@ -2977,15 +2947,15 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Prime boss shortcut", "Skillcape" + prem};
-			String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "85", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Shilo stepping stones ", "Prime boss shortcut", "Skillcape" + prem};
+			String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "75", "85", "99"};
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, 4155, 9771};
 			setMenuItems(items);
 		} else if (skillID == WOODCUTTING.getId()) {
@@ -3008,13 +2978,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739});
 			else if (child == 1)
@@ -3042,13 +3012,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920});
 			else if (child == 1)
@@ -3074,13 +3044,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{4155});
 			else if (child == 1)
@@ -3099,13 +3069,13 @@ public class Client extends Player implements Runnable {
 			s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs",
 					"Skillcape" + prem};
 			s1 = new String[]{"1", "15", "30", "45", "60", "75", "99"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513, 9804});
 		} else if (skillID == HERBLORE.getId()) {
 			send(new SendString("Potions", 8846));
@@ -3134,13 +3104,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454, 12695, 11730});
 			else if (child == 1)
@@ -3155,13 +3125,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Arrow Shafts", "Oak Shortbow", "Oak Longbow", "Willow Shortbow", "Willow Longbow",
 					"Maple Shortbow", "Maple Longbow", "Yew Shortbow", "Yew Longbow", "Magic Shortbow", "Magic Longbow"};
 			String[] s1 = {"1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"};
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String string : s) {
+                send(new SendString(string, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			int[] items = {52, 54, 56, 60, 58, 64, 62, 68, 66, 72, 70};
 			setMenuItems(items);
 		} else if (skillID == FARMING.getId()) {
@@ -3210,13 +3180,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-			for (int i = 0; i < s.length; i++) {
-				send(new SendString(s[i], slot++));
-			}
+            for (String value : s) {
+                send(new SendString(value, slot++));
+            }
 			slot = 8720;
-			for (int i = 0; i < s1.length; i++) {
-				send(new SendString(s1[i], slot++));
-			}
+            for (String string : s1) {
+                send(new SendString(string, slot++));
+            }
 			if (child == 0)
 				setMenuItems(new int[]{1942, 1957, 1982, 5986, 5504, 5982, 231}); //5318, 5319, 5322, 5320, 5323, 5321, 5324 = seeds!
 			else if (child == 1)
@@ -3284,11 +3254,11 @@ public class Client extends Player implements Runnable {
 	 */
 	private long stairBlock = 0;
 
-	public boolean stairs(int stairs, int teleX, int teleY) {
+	public void stairs(int stairs, int teleX, int teleY) {
 		if (stairBlock > System.currentTimeMillis()) {
 			resetStairs();
 			System.out.println(getPlayerName() + " stair blocked!");
-			return false;
+			return;
 		}
 		stairBlock = System.currentTimeMillis() + 1000;
 		if (!IsStair) {
@@ -3297,11 +3267,11 @@ public class Client extends Player implements Runnable {
 				if (skillX == 2715 && skillY == 3470) {
 					if (getPosition().getY() < 3470 || getPosition().getX() < 2715) {
 						// resetStairs();
-						return false;
+						return;
 					} else {
 						transport(new Position(teleX, teleY, 1));
 						resetStairs();
-						return true;
+						return;
 					}
 				}
 			}
@@ -3309,14 +3279,14 @@ public class Client extends Player implements Runnable {
 				if (skillX == 2732 && skillY == 3377) {
 					transport(new Position(2732, 3380, 1));
 					resetStairs();
-					return true;
+					return;
 				}
 			}
 			if (stairs == "legendsDown".hashCode()) {
 				if (skillX == 2732 && skillY == 3378) {
 					transport(new Position(2732, 3376, 0));
 					resetStairs();
-					return true;
+					return;
 				}
 			}
 			if (stairs == 1) {
@@ -3387,10 +3357,9 @@ public class Client extends Player implements Runnable {
 			}
 		}
 		resetStairs();
-		return true;
 	}
 
-	public boolean resetStairs() {
+	public void resetStairs() {
 		stairs = 0;
 		skillX = -1;
 		setSkillY(-1);
@@ -3407,7 +3376,6 @@ public class Client extends Player implements Runnable {
 			}
 
 		});
-		return true;
 	}
 
 	public boolean usingBow = false;
@@ -3464,16 +3432,16 @@ public class Client extends Player implements Runnable {
 
 	public boolean playerHasItem(int itemID) {
 		itemID++;
-		for (int i = 0; i < playerItems.length; i++)
-			if (playerItems[i] == itemID)
-				return true;
+        for (int playerItem : playerItems)
+            if (playerItem == itemID)
+                return true;
 		return false;
 	}
 
 	public boolean playerHasItem(String name) {
-		for (int i = 0; i < playerItems.length; i++)
-			if (GetItemName(playerItems[i] - 1).contains(name))
-				return true;
+        for (int playerItem : playerItems)
+            if (GetItemName(playerItem - 1).contains(name))
+                return true;
 		return false;
 	}
 
@@ -3488,21 +3456,21 @@ public class Client extends Player implements Runnable {
 
 	public boolean checkItem(int itemID) {
 		itemID++;
-		for (int i = 0; i < playerItems.length; i++) {
-			if (playerItems[i] == itemID) {
-				return true;
-			}
-		}
+        for (int playerItem : playerItems) {
+            if (playerItem == itemID) {
+                return true;
+            }
+        }
 		for (int i = 0; i < getEquipment().length; i++) {
 			if (getEquipment()[i] == itemID) {
 				return true;
 			}
 		}
-		for (int i = 0; i < bankItems.length; i++) {
-			if (bankItems[i] == itemID) {
-				return true;
-			}
-		}
+        for (int bankItem : bankItems) {
+            if (bankItem == itemID) {
+                return true;
+            }
+        }
 		return false;
 	}
 
@@ -3546,7 +3514,7 @@ public class Client extends Player implements Runnable {
 	public int[] staffs = {1391, 1393, 1395, 1397, 1399, 2415, 2416, 2417, 4675, 6526, 6914, 4710};
 
 	public boolean DeleteArrow() {
-		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] < 1 || getEquipment()[Equipment.Slot.ARROWS.getId()] < 1) return false; //If we do not have any arrows do this!
+		if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] > 0) {
 			getEquipmentN()[Equipment.Slot.ARROWS.getId()] -= 1;
 			int amount = getEquipmentN()[Equipment.Slot.ARROWS.getId()];
 			getOutputStream().createFrameVarSizeWord(34);
@@ -3560,8 +3528,9 @@ public class Client extends Player implements Runnable {
 			} else
 				getOutputStream().writeByte(amount); // amount
 			getOutputStream().endFrameVarSizeWord();
-		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-		return true;
+			return true;
+		}
+		return false;
 	}
 
 	public void ReplaceObject(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
@@ -3595,11 +3564,11 @@ public class Client extends Player implements Runnable {
 		return Server.itemManager.getName(ItemID);
 	}
 
-	public double GetShopSellValue(int ItemID, int Type, int fromSlot) {
+	public double GetShopSellValue(int ItemID) {
 		return Server.itemManager.getShopSellValue(ItemID);
 	}
 
-	public double GetShopBuyValue(int ItemID, int Type, int fromSlot) {
+	public double GetShopBuyValue(int ItemID) {
 		return Server.itemManager.getShopBuyValue(ItemID);
 	}
 
@@ -3630,9 +3599,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void ResetBonus() {
-		for (int i = 0; i < playerBonus.length; i++) {
-			playerBonus[i] = 0;
-		}
+        Arrays.fill(playerBonus, 0);
 	}
 
 	public void GetBonus(boolean update) {
@@ -3640,10 +3607,11 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < 14; i++) {
 			if (getEquipment()[i] > 0) {
 				int timed = checkObsidianBonus(getEquipment()[i]) ? 2 : 1;
-				if(!(duelFight && i == 8))
-				for (int k = 0; k < playerBonus.length; k++) {
-					int bonus = Server.itemManager.getBonus(getEquipment()[i], k);
-					playerBonus[k] += bonus * timed;
+				if(!(duelFight && i == 8)) {
+					for (int k = 0; k < playerBonus.length; k++) {
+						int bonus = Server.itemManager.getBonus(getEquipment()[i], k);
+						playerBonus[k] += bonus * timed;
+					}
 				}
 			}
 		}
@@ -3675,7 +3643,7 @@ public class Client extends Player implements Runnable {
 		} else if(id == 11)
 			send = "Neglect Dmg: " + String.format("%3.1f", neglectDmg() / 10D) + "%";
 		else if(id == 10)
-			send = (usingBow ? "Ranged str: " : "Melee str: ") + "" + (usingBow && getRangedStr(this) >= 0 ? "+" : playerBonus[id] >= 0 ? "+" : "-") + "" + (usingBow ? getRangedStr(this) : playerBonus[id]);
+			send = (usingBow ? "Ranged str: " : "Melee str: ") + (usingBow && getRangedStr(this) >= 0 ? "+" : playerBonus[id] >= 0 ? "+" : "-") + (usingBow ? getRangedStr(this) : playerBonus[id]);
 		else
 			send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
 		send(new SendString(send, 1675 + (id >= 10 ? id + 1 : id)));
@@ -3826,13 +3794,7 @@ public class Client extends Player implements Runnable {
 
 	public void OpenSmithingFrame(int Type) {
 		int Type2 = Type - 1;
-		int Length = 22;
-
-		if (Type == 1 || Type == 2) {
-			Length += 1;
-		} else if (Type == 3) {
-			Length += 2;
-		}
+		int Length = 23;
 		// Sending amount of bars + make text green if lvl is highenough
 		send(new SendString("", 1132)); // Wire
 		send(new SendString("", 1096));
@@ -3858,12 +3820,8 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < Length; i++) {
 			bar = "bar";
 			color = "@red@";
-			color2 = "@bla@";
 			if (Constants.smithing_frame[Type2][i][3] > 1) {
 				bar = bar + "s";
-			}
-			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][i][2]) {
-				color2 = "@whi@";
 			}
 			int Type3 = Type2;
 
@@ -3873,7 +3831,7 @@ public class Client extends Player implements Runnable {
 			if (AreXItemsInBag((2349 + (Type3 * 2)), Constants.smithing_frame[Type2][i][3])) {
 				color = "@gre@";
 			}
-			send(new SendString(color + "" + Constants.smithing_frame[Type2][i][3] + "" + bar,
+			send(new SendString(color + Constants.smithing_frame[Type2][i][3] + bar,
 					Constants.smithing_frame[Type2][i][4]));
 			String linux_hack = GetItemName(Constants.smithing_frame[Type2][i][0]);
 			int index = GetItemName(Constants.smithing_frame[Type2][i][0]).indexOf(name);
@@ -3881,11 +3839,6 @@ public class Client extends Player implements Runnable {
 				linux_hack = linux_hack.substring(index + 1);
 				send(new SendString(linux_hack, Constants.smithing_frame[Type2][i][5]));
 			}
-			// send(new SendString(
-			// color2 + ""
-			// + GetItemName(Constants.smithing_frame[Type2][i][0]).replace(name,
-			// ""),
-			// Constants.smithing_frame[Type2][i][5]);
 		}
 		Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][0][0]; // Dagger
 		Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][0][1];
@@ -3927,15 +3880,13 @@ public class Client extends Player implements Runnable {
 		Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][21][1];
 		Constants.SmithingItems[4][0] = -1; // Lantern
 		Constants.SmithingItems[4][1] = 0;
-		if (Type == 2 || Type == 3) {
-			color2 = "@bla@";
-			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][22][2]) {
-				color2 = "@whi@";
-			}
-			Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][22][0]; // Lantern
-			Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][22][1];
-			send(new SendString(color2 + "" + GetItemName(Constants.smithing_frame[Type2][22][0]).replace(name, ""), 11461));
+		color2 = "@bla@";
+		if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][22][2]) {
+			color2 = "@whi@";
 		}
+		Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][22][0]; // Lantern
+		Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][22][1];
+		send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][22][0]).replace(name, ""), 11461));
 		SetSmithing(1121);
 		Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][3][0]; // Medium
 		Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][3][1];
@@ -3959,33 +3910,15 @@ public class Client extends Player implements Runnable {
 		Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][11][1];
 		Constants.SmithingItems[3][0] = -1; // Wire
 		Constants.SmithingItems[3][1] = 0;
-		if (Type == 1) {
-			color2 = "@bla@";
-			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][22][2]) {
-				color2 = "@whi@";
-			}
-			Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][22][0]; // Wire
-			Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][22][1];
-			send(new SendString(color2 + "" + GetItemName(Constants.smithing_frame[Type2][22][0]).replace(name, ""), 1096));
-		}
 		for (int i = 0; i < 22; i++) {
 			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][i][2]) {
 				color2 = "@whi@";
 			} else
 				color2 = "@bla@";
-			send(new SendString(color2 + "" + GetItemName(Constants.smithing_frame[Type2][i][0]).replace(name, ""), Constants.smithing_frame[Type2][i][5]));
+			send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][i][0]).replace(name, ""), Constants.smithing_frame[Type2][i][5]));
 		}
 		Constants.SmithingItems[4][0] = -1; // Studs
 		Constants.SmithingItems[4][1] = 0;
-		if (Type == 3) {
-			color2 = "@bla@";
-			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][23][2]) {
-				color2 = "@whi@";
-			}
-			Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][23][0]; // Studs
-			Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][23][1];
-			send(new SendString(color2 + "" + GetItemName(Constants.smithing_frame[Type2][23][0]).replace(name, ""), 1134));
-		}
 		SetSmithing(1123);
 		showInterface(994);
 		smithing[2] = Type;
@@ -4052,7 +3985,7 @@ public class Client extends Player implements Runnable {
 						int diff = getLevel(Skill.SMITHING) - barLevelRequired[CheckSmithing(smithing[3]) - 1];
 						smithing[0] = 5 - (diff >= 14 ? 2 : diff >= 7 ? 1 : 0);
 					}
-					if (System.currentTimeMillis() - lastAction >= (smithing[0] * 600) && IsAnvil) {
+					if (System.currentTimeMillis() - lastAction >= (smithing[0] * 600L) && IsAnvil) {
 						lastAction = System.currentTimeMillis();
 						for (int i = 0; i < bars; i++) {
 							deleteItem(barid, GetItemSlot(barid), playerItemsN[GetItemSlot(barid)]);
@@ -4061,7 +3994,7 @@ public class Client extends Player implements Runnable {
 						giveExperience(experience, Skill.SMITHING);
 						addItem(smithing[4], ItemN);
 						checkItemUpdate();
-						send(new SendMessage("You smith a " + GetItemName(smithing[4]) + ""));
+						send(new SendMessage("You smith a " + GetItemName(smithing[4])));
 						requestAnim(0x382, 0);
 						triggerRandom(experience);
 					}
@@ -4145,7 +4078,11 @@ public class Client extends Player implements Runnable {
 		double pickBonus = findPick() >= 0 ? Utils.pickBonus[findPick()] : 0.0;
 		double level = getLevel(Skill.MINING) / 256D;
 		double bonus = 1 + pickBonus + level;
-		double time = Utils.mineTimes[mineIndex] / bonus;
+		double timer = Utils.mineTimes[mineIndex];
+		boolean chance = Misc.chance(8) == 1;
+		if(chance && pickBonus > 0.0 && (Utils.picks[findPick()] == 11920 || Utils.picks[findPick()] == 20014)) //11920, 20014
+			timer -= 600;
+		double time = timer / bonus;
 		return (long) time;
 	}
 
@@ -4153,31 +4090,40 @@ public class Client extends Player implements Runnable {
 		double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
 		double level = getLevel(Skill.WOODCUTTING) / 256D;
 		double bonus = 1 + axeBonus + level;
-		double time = Utils.woodcuttingDelays[cuttingIndex] / bonus;
+		double timer = Utils.woodcuttingDelays[cuttingIndex];
+		boolean chance = Misc.chance(8) == 1;
+		if(chance && axeBonus > 0.0 && (Utils.axes[findAxe()] == 6739 || Utils.axes[findAxe()] == 20011))
+			timer -= 600;
+		double time = timer / bonus;
 		return (long) time;
 	}
 
 	public long getFishingSpeed() {
 		double level = getLevel(FISHING) / 256D;
-		double bonus = 1 + level;
-		double time = Utils.fishTime[fishIndex] / bonus;
+		boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
+		double bonus = 1 + level + (harpoon ? 0.2 : 0.0);
+		double timer = Utils.fishTime[fishIndex];
+		boolean chance = Misc.chance(8) == 1;
+		if(chance && harpoon) //Dragon harpoon?!
+			timer -= 600;
+		double time = timer / bonus;
 		return (long) time;
 	}
 
-	public boolean fromTrade(int itemID, int fromSlot, int amount) {
+	public void fromTrade(int itemID, int fromSlot, int amount) {
 		if (System.currentTimeMillis() - lastButton >= 200) {
 			lastButton = System.currentTimeMillis();
 		} else {
-			return false;
+			return;
 		}
 		try {
 			Client other = getClient(trade_reqId);
 			if (!inTrade || !validClient(trade_reqId) || !canOffer) {
 				declineTrade();
-				return false;
+				return;
 			}
-			if (!checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
-				return false;
+			if (checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
+				return;
 			}
 			int count = 0;
 			if (!Server.itemManager.isStackable(itemID)) {
@@ -4188,7 +4134,7 @@ public class Client extends Player implements Runnable {
 				}
 			} else
 				count = offeredItems.get(fromSlot).getAmount();
-			amount = amount > count ? count : amount;
+			amount = Math.min(amount, count);
 			boolean found = false;
 			for (GameItem item : offeredItems) {
 				if (item.getId() == itemID) {
@@ -4230,33 +4176,32 @@ public class Client extends Player implements Runnable {
 			send(new SendString("", 3431));
 			other.send(new SendString("", 3431));
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("Error with trade " + e);
 		}
-		return true;
 	}
 
-	public boolean tradeItem(int itemID, int fromSlot, int amount) {
+	public void tradeItem(int itemID, int fromSlot, int amount) {
 		if (System.currentTimeMillis() - lastButton >= 200) {
 			lastButton = System.currentTimeMillis();
 		} else {
-			return false;
+			return;
 		}
 		if (!Server.itemManager.isStackable(itemID))
-			amount = amount > getInvAmt(itemID) ? getInvAmt(itemID) : amount;
+			amount = Math.min(amount, getInvAmt(itemID));
 		else
-			amount = amount > playerItemsN[fromSlot] ? playerItemsN[fromSlot] : amount;
+			amount = Math.min(amount, playerItemsN[fromSlot]);
 		Client other = getClient(trade_reqId);
 		if (!inTrade || !validClient(trade_reqId) || !canOffer) {
 			System.out.println("declining in tradeItem()");
 			declineTrade();
-			return false;
+			return;
 		}
 		if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) {
-			return false;
+			return;
 		}
 		if (!Server.itemManager.isTradable(itemID) && playerRights < 2 && other.playerRights < 2) {
 			send(new SendMessage("You can't trade this item"));
-			return false;
+			return;
 		}
 		if (Server.itemManager.isStackable(itemID)) {
 			boolean inTrade = false;
@@ -4291,27 +4236,29 @@ public class Client extends Player implements Runnable {
 		other.resetOTItems(3416);
 		send(new SendString("", 3431));
 		other.send(new SendString("", 3431));
-		return true;
 	}
 
 	/* Shops */
-	public boolean sellItem(int itemID, int fromSlot, int amount) {
+	public void sellItem(int itemID, int fromSlot, int amount) {
 		/* Item Values */
+		if(itemID != ShopHandler.ShopItems[MyShopID][fromSlot] - 1) { //Testing..
+			return;
+		}
 		int original = itemID;
 		itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
-		int price = (int) Math.floor(GetShopBuyValue(itemID, 0, fromSlot));
+		int price = (int) Math.floor(GetShopBuyValue(itemID));
 		/* Functions */
 		if (!Server.shopping || tradeLocked) {
 			send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
-			return false;
+			return;
 		}
 		if (price <= 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
 			send(new SendMessage("You cannot sell " + GetItemName(itemID).toLowerCase() + " in this store."));
-			return false;
+			return;
 		}
 		if (ShopHandler.ShopBModifier[MyShopID] == 2 && !ShopHandler.findDefaultItem(MyShopID, itemID)) {
 			send(new SendMessage("Can't sell that item to the store!"));
-			return false;
+			return;
 		}
 		int slot = -1;
 		for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
@@ -4324,12 +4271,12 @@ public class Client extends Player implements Runnable {
 		}
 		if (slot == -1) { //If we do not have a slot means the store is full!
 			send(new SendMessage("Can't sell more items to the store!"));
-			return false;
+			return;
 		}
 		/* Amount checks */
 		boolean stack = Server.itemManager.isStackable(original);
-		amount = amount > getInvAmt(original) ? getInvAmt(original) : amount;
-		amount = Integer.MAX_VALUE - ShopHandler.ShopItemsN[MyShopID][slot] < amount ? Integer.MAX_VALUE - ShopHandler.ShopItemsN[MyShopID][slot] : amount;
+		amount = Math.min(amount, getInvAmt(original));
+		amount = Math.min(Integer.MAX_VALUE - ShopHandler.ShopItemsN[MyShopID][slot], amount);
 		amount = Integer.MAX_VALUE - getInvAmt(995) < amount * price ? (Integer.MAX_VALUE - getInvAmt(995)) / price : amount;
 
 		if (amount > 0) { // Code to check if there is any amount to sell!
@@ -4348,7 +4295,6 @@ public class Client extends Player implements Runnable {
 		/* Store update! */
 		UpdatePlayerShop();
 		checkItemUpdate();
-		return true;
 	}
 
 	public int eventShopValues(int slot) {
@@ -4369,33 +4315,33 @@ public class Client extends Player implements Runnable {
 		return 0;
 	}
 
-	public boolean buyItem(int itemID, int fromSlot, int amount) {
+	public void buyItem(int itemID, int fromSlot, int amount) {
 		if (amount > 0 && itemID == (ShopHandler.ShopItems[MyShopID][fromSlot] - 1)) {
 			boolean stack = Server.itemManager.isStackable(itemID);
-			amount = ShopHandler.ShopItemsN[MyShopID][fromSlot] < amount ? ShopHandler.ShopItemsN[MyShopID][fromSlot] : amount;
-			if (!canUse(itemID)) {
+			amount = Math.min(ShopHandler.ShopItemsN[MyShopID][fromSlot], amount);
+			if (canUse(itemID)) {
 				send(new SendMessage("You must be a premium member to buy this item"));
 				send(new SendMessage("Visit Dodian.net to subscribe"));
-				return false;
+				return;
 			}
 			if (!stack && freeSlots() < 1) {
 				send(new SendMessage("Not enough space in your inventory."));
-				return false;
+				return;
 			}
 			int currency = MyShopID == 55 ? 11997 : 995;
-			int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID, 0, fromSlot));
+			int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID));
 			TotPrice2 = MyShopID >= 7 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
 			int coins = getInvAmt(currency);
 			amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
 			if (amount == 0) {
-				send(new SendMessage("You don't have enough " + GetItemName(currency).toLowerCase() + ""));
-				return false;
+				send(new SendMessage("You don't have enough " + GetItemName(currency).toLowerCase()));
+				return;
 			}
 			if (!stack) {
 				for (int i = amount; i > 0; i--) {
 					if (freeSlots() == 0) {
 						send(new SendMessage("Not enough space in your inventory."));
-						return false;
+						return;
 					}
 					if (addItem(itemID, 1)) {
 						deleteItem(currency, TotPrice2);
@@ -4406,7 +4352,7 @@ public class Client extends Player implements Runnable {
 						}
 					} else {
 						send(new SendMessage("Not enough space in your inventory."));
-						return false;
+						return;
 					}
 				}
 			} else {
@@ -4417,14 +4363,12 @@ public class Client extends Player implements Runnable {
 						ShopHandler.resetAnItem(MyShopID, fromSlot);
 					}
 				} else
-					return false;
+					return;
 			}
 			/* Store update! */
 			UpdatePlayerShop();
 			checkItemUpdate();
-			return true;
 		}
-		return false;
 	}
 
 	public void UpdatePlayerShop() {
@@ -4607,10 +4551,10 @@ public class Client extends Player implements Runnable {
 					sendFrame164(4887);
 				} else {
 					boolean gotHelmet = playerHasItem(11864);
-					String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
+					String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
 					String[] slayerMaster = new String[]{
 							"What would you like to say?", "I'd like a task please",
-							!taskName.equals("") ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my " + (gotHelmet ? "slayer helmet" : "black mask"), "Can you teleport me to west ardougne?"};
+                            !taskName.isEmpty() ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my " + (gotHelmet ? "slayer helmet" : "black mask"), "Can you teleport me to west ardougne?"};
 					showPlayerOption(slayerMaster);
 				}
 				NpcDialogueSend = true;
@@ -4654,7 +4598,7 @@ public class Client extends Player implements Runnable {
 							int amt = task.getAssignedAmountRange().getValue();
 							sendFrame200(4901, npcFace);
 							send(new SendString(GetNpcName(NpcTalkTo), 4902));
-							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation() + "", 4903));
+							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation(), 4903));
 							send(new SendString("If you want a new task that's too bad", 4904));
 							send(new SendString("Visit Dodian.net for a slayer guide", 4905));
 							send(new SendString("", 4906));
@@ -4687,7 +4631,7 @@ public class Client extends Player implements Runnable {
 							int amt = task.getAssignedAmountRange().getValue();
 							sendFrame200(4901, npcFace);
 							send(new SendString(GetNpcName(NpcTalkTo), 4902));
-							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation() + "", 4903));
+							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation(), 4903));
 							send(new SendString("If you want a new task that's too bad", 4904));
 							send(new SendString("Visit Dodian.net for a slayer guide", 4905));
 							send(new SendString("", 4906));
@@ -4720,7 +4664,7 @@ public class Client extends Player implements Runnable {
 							int amt = task.getAssignedAmountRange().getValue();
 							sendFrame200(4901, npcFace);
 							send(new SendString(GetNpcName(NpcTalkTo), 4902));
-							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation() + "", 4903));
+							send(new SendString("You must go out and kill " + amt + " " + task.getTextRepresentation(), 4903));
 							send(new SendString("If you want a new task that's too bad", 4904));
 							send(new SendString("Visit Dodian.net for a slayer guide", 4905));
 							send(new SendString("", 4906));
@@ -4738,31 +4682,31 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 31: //Skip task
-				String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
-				int cost = getSlayerData().get(0) == 403 ? 250000 :
+				String taskMonster = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
+				int skipCost = getSlayerData().get(0) == 403 ? 250000 :
 						getSlayerData().get(0) == 405 ? 500000 :
 								100000; //Default 100k!
 
 				sendFrame200(4888, npcFace);
 				send(new SendString(GetNpcName(NpcTalkTo), 4889));
-				send(new SendString(taskName.equals("") ? "You do not have a task currently." : "I can cancel your " + taskName.toLowerCase() + " task", 4890));
-				send(new SendString(taskName.equals("") ? "Talk to me to get one." : "task for " + cost + " coins.", 4891));
+				send(new SendString(taskMonster.isEmpty() ? "You do not have a task currently." : "I can cancel your " + taskMonster.toLowerCase() + " task", 4890));
+				send(new SendString(taskMonster.isEmpty() ? "Talk to me to get one." : "task for " + skipCost + " coins.", 4891));
 				send(new SendString("Click here to continue", 4892));
 				send(new NpcDialogueHead(NpcTalkTo, 4888));
 				sendFrame164(4887);
-				if (!taskName.equals(""))
+				if (!taskMonster.isEmpty())
 					nextDiag = 32;
 				NpcDialogueSend = true;
 				break;
 			case 32:
-				taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
-				if (!taskName.equals(""))
-					showPlayerOption(new String[]{"Do you wish to cancel your " + taskName.toLowerCase() + " task?", "Yes", "No"});
+				String currentTaskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
+				if (!currentTaskName.isEmpty())
+					showPlayerOption(new String[]{"Do you wish to cancel your " + currentTaskName.toLowerCase() + " task?", "Yes", "No"});
 				NpcDialogueSend = true;
 				break;
 			case 33:
-				taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + SlayerTask.slayerTasks.getTask(getSlayerData().get(1)).getTextRepresentation();
-				cost = getSlayerData().get(0) == 403 ? 250000 :
+				String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
+				int cost = getSlayerData().get(0) == 403 ? 250000 :
 						getSlayerData().get(0) == 405 ? 500000 :
 								100000; //Default 100k!
 				int coinAmount = this.getInvAmt(995);
@@ -4787,11 +4731,11 @@ public class Client extends Player implements Runnable {
 				NpcDialogueSend = true;
 				break;
 			case 34: //Upgrade black mask!
-				boolean gotHelmet = playerHasItem(11864);
-				if(!playerHasItem(8921) && !gotHelmet)
+				boolean slayerHelm = playerHasItem(11864);
+				if(!playerHasItem(8921) && !slayerHelm)
 					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have a black mask or a slayer helmet!"});
 				else {
-					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to upgrade your "+(gotHelmet ? "slayer helmet" : "black mask") + "?", "It will cost you 2 million gold pieces."});
+					showNPCChat(NpcTalkTo, 591, new String[]{"Would you like to upgrade your "+(slayerHelm ? "slayer helmet" : "black mask") + "?", "It will cost you 2 million gold pieces."});
 					this.nextDiag = 35;
 				}
 				NpcDialogueSend = true;
@@ -4808,7 +4752,7 @@ public class Client extends Player implements Runnable {
 				if(!playerHasItem(995, 2000000))
 					showNPCChat(NpcTalkTo, 596, new String[]{"You do not have enough money!"});
 				else {
-					gotHelmet = playerHasItem(11864);
+					boolean gotHelmet = playerHasItem(11864);
 					deleteItem(995, 2000000);
 					deleteItem(gotHelmet ? 11864 : 8921, 1);
 					addItem(gotHelmet ? 11865 : 11784, 1);
@@ -4842,45 +4786,6 @@ public class Client extends Player implements Runnable {
 					sendFrame164(4882);
 				} else
 					send(new SendMessage("You have yet to get a task. Talk to a slayer master!"));
-				NpcDialogueSend = true;
-				break;
-			case 16:
-				sendFrame200(4883, npcFace);
-				send(new SendString(GetNpcName(NpcTalkTo), 4884));
-				send(new SendString("Would you like to buy some herblore supplies?", 4885));
-				send(new SendString("Click here to continue", 4886));
-				send(new NpcDialogueHead(NpcTalkTo, 4883));
-				sendFrame164(4882);
-				NpcDialogueSend = true;
-				nextDiag = 17;
-				break;
-
-			case 17:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("Would you like to buy herblore supplies?", 2460));
-				send(new SendString("Sure, what do you have?", 2461));
-				send(new SendString("No thanks", 2462));
-				sendFrame164(2459);
-				NpcDialogueSend = true;
-				break;
-			case 19:
-				sendFrame200(4883, 591);
-				send(new SendString(GetNpcName(NpcTalkTo), 4884));
-				send(new SendString("Would you like to buy some supplies?", 4885));
-				send(new SendString("Click here to continue", 4886));
-				send(new NpcDialogueHead(NpcTalkTo, 4883));
-				sendFrame164(4882);
-				NpcDialogueSend = true;
-				nextDiag = 20;
-				break;
-			case 20:
-				send(new Frame171(1, 2465));
-				send(new Frame171(0, 2468));
-				send(new SendString("Would you like to buy some supplies?", 2460));
-				send(new SendString("Sure, what do you have?", 2461));
-				send(new SendString("No thanks", 2462));
-				sendFrame164(2459);
 				NpcDialogueSend = true;
 				break;
 			case 21:
@@ -4943,6 +4848,29 @@ public class Client extends Player implements Runnable {
 				break;
 			case 536:
 				showPlayerOption(new String[]{"Do you wish to enter?", "Sacrifice 5 dragon bones", "Stay here"});
+				NpcDialogueSend = true;
+				break;
+			case 1174: //Jatix
+				showNPCChat(NpcTalkTo, 591, new String[]{"Hello there adventurer " + getPlayerName() + ",", "is there anything you are looking for?"});
+				nextDiag = 1175;
+				NpcDialogueSend = true;
+				break;
+			case 1175:
+				showPlayerChat(new String[]{ "Is there anything you can do for me?", "I heard you know alot about herblore." }, 614);
+				nextDiag = 1176;
+				NpcDialogueSend = true;
+				break;
+			case 1176:
+				showNPCChat(NpcTalkTo, 591, new String[]{"For you " + getPlayerName() + " I know the art of decanting.", "I can offer you to decant any noted potions", "that you will bring me, free of charge.", "I also got a herblore store if you wish to take a look."});
+				nextDiag = 1177;
+				NpcDialogueSend = true;
+				break;
+			case 1177:
+				showPlayerOption(new String[]{ "What do you wish to do?", "Visit store", "Decant potions", "Nevermind" });
+				NpcDialogueSend = true;
+				break;
+			case 1178:
+				showPlayerOption(new String[]{ "What should we decant it into?", "Four dose", "Three dose", "Two dose", "One dose", "Nevermind" });
 				NpcDialogueSend = true;
 				break;
 			case 3837: //Baba Yaga
@@ -5401,24 +5329,24 @@ public class Client extends Player implements Runnable {
 			send(new SendString(other.getPlayerName(), 6840));
 		}
 		boolean stake = false;
-		String playerStake = "";
+		StringBuilder playerStake = new StringBuilder();
 		for (GameItem item : offeredItems) {
 			if (item.getId() > 0 && item.getAmount() > 0) {
-				playerStake += "(" + item.getId() + ", " + item.getAmount() + ")";
+				playerStake.append("(").append(item.getId()).append(", ").append(item.getAmount()).append(")");
 				stake = true;
 			}
 		}
-		String opponentStake = "";
+		StringBuilder opponentStake = new StringBuilder();
 		for (GameItem item : otherOfferedItems) {
 			if (item.getId() > 0 && item.getAmount() > 0) {
-				opponentStake += "(" + item.getId() + ", " + item.getAmount() + ")";
+				opponentStake.append("(").append(item.getId()).append(", ").append(item.getAmount()).append(")");
 				stake = true;
 			}
 		}
 		resetAttack();
 
 		if (stake) {
-			DuelLog.recordDuel(this.getPlayerName(), other.getPlayerName(), playerStake, opponentStake, this.getPlayerName());
+			DuelLog.recordDuel(this.getPlayerName(), other.getPlayerName(), playerStake.toString(), opponentStake.toString(), this.getPlayerName());
 			itemsToVScreen_old();
 			acceptDuelWon();
 			other.resetDuel();
@@ -5426,7 +5354,6 @@ public class Client extends Player implements Runnable {
 			if (validClient(duel_with))
 				other.resetDuel();
 			resetDuel();
-			// duelStatus = -1;
 		}
 		if (stake) {
 			showInterface(6733);
@@ -5514,9 +5441,9 @@ public class Client extends Player implements Runnable {
 		getOutputStream().endFrameVarSizeWord();
 	}
 
-	public boolean stakeItem(int itemID, int fromSlot, int amount) {
+	public void stakeItem(int itemID, int fromSlot, int amount) {
 		if (System.currentTimeMillis() - lastButton < 200)
-			return false;
+			return;
 		lastButton = System.currentTimeMillis();
 		if (!Server.itemManager.isStackable(itemID))
 			amount = Math.min(amount, getInvAmt(itemID));
@@ -5524,23 +5451,23 @@ public class Client extends Player implements Runnable {
 			amount = Math.min(amount, playerItemsN[fromSlot]);
 		if (!Server.itemManager.isTradable(itemID)) {
 			send(new SendMessage("You can't trade that item"));
-			return false;
+			return;
 		}
 		Client other = getClient(duel_with);
 		if (!inDuel || !validClient(duel_with)) {
 			declineDuel();
-			return false;
+			return;
 		}
 		if (!canOffer) {
 			declineDuel();
-			return false;
+			return;
 		}
 		if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) {
-			return false;
+			return;
 		}
 		if (!Server.itemManager.isTradable(itemID)) {
 			send(new SendMessage("You can't trade this item"));
-			return false;
+			return;
 		}
 		if (Server.itemManager.isStackable(itemID)) {
 			boolean inTrade = false;
@@ -5578,12 +5505,11 @@ public class Client extends Player implements Runnable {
 		other.refreshDuelScreen();
 		send(new SendString("", 6684));
 		other.send(new SendString("", 6684));
-		return true;
 	}
 
 	public boolean checkGameitemAmount(int slot, int amount, CopyOnWriteArrayList<GameItem> item) {
 		int count = 0;
-		if (item.isEmpty()) return false;
+		if (item.isEmpty()) return true;
 		if (!item.get(slot).isStackable()) {
 			for (GameItem checkItem : item) {
 				if (checkItem.getId() == id)
@@ -5591,22 +5517,22 @@ public class Client extends Player implements Runnable {
 			}
 		} else
 			count = item.get(slot).getAmount();
-		return amount >= count;
+		return amount < count;
 	}
 
-	public boolean fromDuel(int itemID, int fromSlot, int amount) {
+	public void fromDuel(int itemID, int fromSlot, int amount) {
 		if (System.currentTimeMillis() - lastButton >= 200) {
 			lastButton = System.currentTimeMillis();
 		} else {
-			return false;
+			return;
 		}
 		Client other = getClient(duel_with);
 		if (!inDuel || !validClient(duel_with)) {
 			declineDuel();
-			return false;
+			return;
 		}
-		if (!checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
-			return false;
+		if (checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
+			return;
 		}
 		int count = 0;
 		if (!Server.itemManager.isStackable(itemID)) {
@@ -5617,7 +5543,7 @@ public class Client extends Player implements Runnable {
 			}
 		} else
 			count = offeredItems.get(fromSlot).getAmount();
-		amount = amount > count ? count : amount;
+		amount = Math.min(amount, count);
 		boolean found = false;
 		for (GameItem item : offeredItems) {
 			if (item.getId() == itemID) {
@@ -5653,7 +5579,6 @@ public class Client extends Player implements Runnable {
 		other.refreshDuelScreen();
 		other.send(new SendString("", 6684));
 
-		return true;
 	}
 
 	public static String passHash(String in, String salt) {
@@ -5662,19 +5587,19 @@ public class Client extends Player implements Runnable {
 	}
 
 	public String getLook() {
-		String out = "";
+		StringBuilder out = new StringBuilder();
 		for (int playerLook : playerLooks) {
-			out += playerLook + " ";
+			out.append(playerLook).append(" ");
 		}
-		return out;
+		return out.toString();
 	}
 
 	public String getPouches() {
-		String out = "";
+		StringBuilder out = new StringBuilder();
 		for (int i = 0; i < runePouchesAmount.length; i++) {
-			out += runePouchesAmount[i] + (i == runePouchesAmount.length - 1 ? "" : ":");
+			out.append(runePouchesAmount[i]).append(i == runePouchesAmount.length - 1 ? "" : ":");
 		}
-		return out;
+		return out.toString();
 	}
 
 	public void setLook(int[] parts) {
@@ -5711,7 +5636,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean canUse(int id) {
-		return !(!premium && premiumItem(id));
+		return !premium && premiumItem(id);
 	}
 
 	public boolean premiumItem(int id) {
@@ -5728,7 +5653,7 @@ public class Client extends Player implements Runnable {
 		resetAction(true);
 		if (!randomed || !randomed2) {
 			random_skill = Utils.random(20);
-			send(new SendString("Click the @or1@" + Skill.getSkill(random_skill).getName() + " @yel@button", 2810));
+			send(new SendString("Click the @or1@" + Objects.requireNonNull(getSkill(random_skill)).getName() + " @yel@button", 2810));
 			send(new SendString("", 2811));
 			send(new SendString("", 2831));
 			randomed = true;
@@ -5767,6 +5692,17 @@ public class Client extends Player implements Runnable {
 		genie = true;
 		showInterface(2808);
 	}
+	public void openAntique() {
+		if (inDuel || duelFight || IsBanking) {
+			send(new SendMessage("Finish what you are doing first!"));
+			return;
+		}
+		send(new SendString("Select a skill in which you wish to gain experience!", 2810));
+		send(new SendString("", 2811));
+		send(new SendString("", 2831));
+		antique = true;
+		showInterface(2808);
+	}
 
 	public int findItem(int id, int[] items, int[] amounts) {
 		for (int i = 0; i < playerItems.length; i++) {
@@ -5778,21 +5714,21 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean hasSpace() {
-		for (int i = 0; i < playerItems.length; i++) {
-			if (playerItems[i] == -1 || playerItems[i] == 0) {
-				return true;
-			}
-		}
+        for (int playerItem : playerItems) {
+            if (playerItem == -1 || playerItem == 0) {
+                return true;
+            }
+        }
 		return false;
 	}
 
 	public int getFreeSpace() {
 		int spaces = 0;
-		for (int i = 0; i < playerItems.length; i++) {
-			if (playerItems[i] == -1 || playerItems[i] == 0) {
-				spaces += 1;
-			}
-		}
+        for (int playerItem : playerItems) {
+            if (playerItem == -1 || playerItem == 0) {
+                spaces += 1;
+            }
+        }
 		return spaces;
 	}
 
@@ -6202,6 +6138,9 @@ public class Client extends Player implements Runnable {
 		skillActionCount = 0;
 		skillMessage = "";
 		if(!playerSkillAction.isEmpty()) playerSkillAction.clear(); //Need to clear if you reset any type of action!
+		/* Prayer action */
+		prayerAction = -1;
+		boneItem = -1;
 		/* Animation shiez?! */
 		if (full) {
 			rerequestAnim();
@@ -6361,7 +6300,7 @@ public class Client extends Player implements Runnable {
 			cItem = id;
 			cAmount = amount == 10 ? getInvAmt(cSelected) : amount;
 			cLevel = levels[index];
-			cExp = Math.round(exp[index] * 8);
+			cExp = exp[index] * 8;
 		} else if (id != -1) {
 			send(new SendMessage("You need level " + levels[index] + " crafting to craft a " + GetItemName(id).toLowerCase()));
 			send(new RemoveInterfaces());
@@ -6505,6 +6444,7 @@ public class Client extends Player implements Runnable {
 
 	public void startFishing(int object, int click) {
 		boolean valid = false;
+		boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
 		for (int i = 0; i < Utils.fishSpots.length; i++) {
 			if (Utils.fishSpots[i] == object) {
 				if (click == 1 && (i == 0 || i == 2 || i == 4 || i == 6)) {
@@ -6532,7 +6472,7 @@ public class Client extends Player implements Runnable {
 			resetAction(true);
 			return;
 		}
-		if (!playerHasItem(Utils.fishTool[fishIndex])) {
+		if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
 			send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
 			resetAction(true);
 			return;
@@ -6556,7 +6496,8 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void fish() {
-		if (!playerHasItem(Utils.fishTool[fishIndex])) {
+		boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
+		if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
 			send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
 			resetAction(true);
 			return;
@@ -6673,7 +6614,7 @@ public class Client extends Player implements Runnable {
 			ran -= 4;
 		if (getEquipment()[Equipment.Slot.HEAD.getId()] == 1949 && getEquipment()[Equipment.Slot.HANDS.getId()] == 775)
 			ran -= 2;
-		ran = ran < 0 ? 0 : ran > 100 ? 100 : ran;
+		ran = ran < 0 ? 0 : Math.min(ran, 100);
 		boolean burn = 1 + Utils.random(99) <= ran;
 		if (Utils.cookExp[index] > 0) {
 			cookAmount--;
@@ -6714,7 +6655,7 @@ public class Client extends Player implements Runnable {
 		} else if (PlayerHandler.players[trade_reqId].playerRights == 2) {
 			out = "@cr2@" + out;
 		}
-		send(new SendString("Trading With: " + PlayerHandler.players[trade_reqId].getPlayerName(), 3417));
+		send(new SendString("Trading With: " + out, 3417));
 		send(new SendString("", 3431));
 		send(new SendString("Are you sure you want to make this trade?", 3535));
 	}
@@ -6811,57 +6752,97 @@ public class Client extends Player implements Runnable {
 		inTrade = true;
 		resetItems(3214);
 		send(new InventoryInterface(3443, 3213)); // trade confirm + normal bag
-		StringBuilder SendTrade = new StringBuilder("Absolutely nothing!");
-		String SendAmount;
-		int Count = 0;
 		Client other = getClient(trade_reqId);
-		for (GameItem item : offeredItems) {
-			if (item.getId() > 0) {
-				if (item.getAmount() >= 1000 && item.getAmount() < 1000000) {
-					SendAmount = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Utils.format(item.getAmount()) + ")";
-				} else if (item.getAmount() >= 1000000) {
-					SendAmount = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Utils.format(item.getAmount())
-							+ ")";
-				} else {
-					SendAmount = "" + Utils.format(item.getAmount());
+		/* Reset item containers! */
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(3538);
+		getOutputStream().writeWord(28);
+		for(int i = 0; i < 28; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(3539);
+		getOutputStream().writeWord(28);
+		for(int i = 0; i < 28; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		/* Set text if 16 or below items! */
+		StringBuilder offerItems = new StringBuilder();
+		if(offeredItems.size() <= 16) {
+			if(offeredItems.isEmpty()) offerItems.append("Absolutely nothing!");
+			else {
+				int id = 0;
+				for (GameItem item : offeredItems) {
+					if(id > 0) offerItems.append("\\n");
+					offerItems.append(GetItemName(item.getId()));
+					String amt = Misc.format(item.getAmount());
+					if (item.getAmount() >= 1000000000) {
+						amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
+					} else if (item.getAmount() >= 1000000) {
+						amt = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Misc.format(item.getAmount()) + ")";
+					} else if(item.getAmount() >= 1000) {
+						amt = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Misc.format(item.getAmount()) + ")";
+					}
+					if(item.getAmount() > 1) offerItems.append(" x ").append(amt);
+					id++;
 				}
-				if (Count == 0) {
-					SendTrade = new StringBuilder(GetItemName(item.getId()));
-				} else {
-					SendTrade.append("\\n").append(GetItemName(item.getId()));
-				}
-				if (item.isStackable()) {
-					SendTrade.append(" x ").append(SendAmount);
-				}
-				Count++;
 			}
 		}
-		send(new SendString(SendTrade.toString(), 3557));
-		SendTrade = new StringBuilder("Absolutely nothing!");
-		Count = 0;
-		for (GameItem item : other.offeredItems) {
-			if (item.getId() > 0) {
-				if (item.getAmount() >= 1000 && item.getAmount() < 1000000) {
-					SendAmount = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Utils.format(item.getAmount()) + ")";
-				} else if (item.getAmount() >= 1000000) {
-					SendAmount = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Utils.format(item.getAmount())
-							+ ")";
-				} else {
-					SendAmount = "" + Utils.format(item.getAmount());
+		StringBuilder otherOfferItems = new StringBuilder();
+		if(other.offeredItems.size() <= 16) {
+			if(other.offeredItems.isEmpty()) otherOfferItems.append("Absolutely nothing!");
+			else {
+				int id = 0;
+				for (GameItem item : other.offeredItems) {
+					if(id > 0) otherOfferItems.append("\\n");
+					otherOfferItems.append(GetItemName(item.getId()));
+					String amt = Misc.format(item.getAmount());
+					if (item.getAmount() >= 1000000000) {
+						amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
+					} else if (item.getAmount() >= 1000000) {
+						amt = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Misc.format(item.getAmount()) + ")";
+					} else if(item.getAmount() >= 1000) {
+						amt = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Misc.format(item.getAmount()) + ")";
+					}
+					if(item.getAmount() > 1) otherOfferItems.append(" x ").append(amt);
+					id++;
 				}
-				// SendAmount = SendAmount;
-				if (Count == 0) {
-					SendTrade = new StringBuilder(GetItemName(item.getId()));
-				} else {
-					SendTrade.append("\\n").append(GetItemName(item.getId()));
-				}
-				if (Server.itemManager.isStackable(item.getId())) {
-					SendTrade.append(" x ").append(SendAmount);
-				}
-				Count++;
 			}
 		}
-		send(new SendString(SendTrade.toString(), 3558));
+		/* Sending trading items! */
+		if(offeredItems.size() > 16) {
+			getOutputStream().createFrameVarSizeWord(53);
+			getOutputStream().writeWord(3538);
+			getOutputStream().writeWord(offeredItems.size());
+			for (GameItem item : offeredItems) {
+				if (item.getAmount() > 254) {
+					getOutputStream().writeByte(255);
+					getOutputStream().writeDWord_v2(item.getAmount());
+				} else getOutputStream().writeByte(item.getAmount());
+				getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
+			}
+			getOutputStream().endFrameVarSizeWord();
+		}
+		if(other.offeredItems.size() > 16) {
+			getOutputStream().createFrameVarSizeWord(53);
+			getOutputStream().writeWord(3539);
+			getOutputStream().writeWord(other.offeredItems.size());
+			for (GameItem item : other.offeredItems) {
+				if (item.getAmount() > 254) {
+					getOutputStream().writeByte(255);
+					getOutputStream().writeDWord_v2(item.getAmount());
+				} else getOutputStream().writeByte(item.getAmount());
+				getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
+			}
+			getOutputStream().endFrameVarSizeWord();
+		}
+
+		send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : offerItems.toString(), 3557));
+		send(new SendString(other.offeredItems.isEmpty() ? "Absolutely nothing!" : otherOfferItems.toString(), 3558));
 	}
 
 	private boolean tradeSuccessful = false;
@@ -6894,7 +6875,7 @@ public class Client extends Player implements Runnable {
 				checkItemUpdate();
 				//System.out.println("trade succesful");
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println("giving items failed.."+ e);
 			}
 		}
 	}
@@ -6965,7 +6946,7 @@ public class Client extends Player implements Runnable {
 		send(new SendString("", 6684));
 		resetItems(3322);
 		send(new InventoryInterface(6575, 3321));
-		sendArmour();
+		sendDuelArmour(other);
 	}
 
 	public void declineDuel() {
@@ -7008,24 +6989,65 @@ public class Client extends Player implements Runnable {
 		if (!validClient(duel_with)) {
 			declineDuel();
 		}
-		StringBuilder out = new StringBuilder();
+		/* Sending duel item reset! */
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(6509);
+		getOutputStream().writeWord(14);
+		for(int i = 0; i < 14; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(6507);
+		getOutputStream().writeWord(28);
+		for(int i = 0; i < 28; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(6502);
+		getOutputStream().writeWord(14);
+		for(int i = 0; i < 14; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(6508);
+		getOutputStream().writeWord(28);
+		for(int i = 0; i < 28; i++) {
+			getOutputStream().writeByte(0);
+			getOutputStream().writeWordBigEndianA(0);
+		}
+		getOutputStream().endFrameVarSizeWord();
+		/* Sending duel items! */
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(other.offeredItems.size() >= 14 ? 6509 : 6507);
+		getOutputStream().writeWord(offeredItems.size());
 		for (GameItem item : offeredItems) {
-			if (Server.itemManager.isStackable(item.getId()) || Server.itemManager.isNote(item.getId())) {
-				out.append(GetItemName(item.getId())).append(" x ").append(Utils.format(item.getAmount())).append(", ");
-			} else {
-				out.append(GetItemName(item.getId())).append(", ");
-			}
+			if(item.getAmount() > 254) {
+				getOutputStream().writeByte(255);
+				getOutputStream().writeDWord_v2(item.getAmount());
+			} else getOutputStream().writeByte(item.getAmount());
+			getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
 		}
-		send(new SendString(out.toString(), 6516));
-		out = new StringBuilder();
+		getOutputStream().endFrameVarSizeWord();
+		getOutputStream().createFrameVarSizeWord(53);
+		getOutputStream().writeWord(other.offeredItems.size() >= 14 ? 6508 : 6502);
+		getOutputStream().writeWord(other.offeredItems.size());
 		for (GameItem item : other.offeredItems) {
-			if (Server.itemManager.isStackable(item.getId()) || Server.itemManager.isNote(item.getId())) {
-				out.append(GetItemName(item.getId())).append(" x ").append(Utils.format(item.getAmount())).append(", ");
-			} else {
-				out.append(GetItemName(item.getId())).append(", ");
-			}
+			if(item.getAmount() > 254) {
+				getOutputStream().writeByte(255);
+				getOutputStream().writeDWord_v2(item.getAmount());
+			} else getOutputStream().writeByte(item.getAmount());
+			getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
 		}
-		send(new SendString(out.toString(), 6517));
+		getOutputStream().endFrameVarSizeWord();
+		send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6516));
+		send(new SendString(other.offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6517));
+
 		send(new SendString("Movement will be disabled", 8242));
 		for (int i = 8243; i <= 8253; i++) {
 			send(new SendString("", i));
@@ -7036,10 +7058,9 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void startDuel() {
-		canAttack = false;
-		// canAttack = true;
-		canOffer = false;
 		send(new RemoveInterfaces());
+		canAttack = false;
+		canOffer = false;
 		duelFight = true;
 		prayers.reset();
 		GetBonus(true); //Set bonus due to blessing!
@@ -7052,7 +7073,6 @@ public class Client extends Player implements Runnable {
 			otherOfferedItems.add(new GameItem(item.getId(), item.getAmount()));
 		}
 		otherdbId = other.dbId;
-
 		final Client player = this;
 		player.requestForceChat("It is time to D-D-D-DUEL!");
 		EventManager.getInstance().registerEvent(new Event(600) {
@@ -7138,16 +7158,15 @@ public class Client extends Player implements Runnable {
 		return found;
 	}
 
-	public boolean duelButton2(int button) {
+	public void duelButton2(int button) {
 		Client other = getClient(duel_with);
 		/*
 		 * Danno: Null check :p
 		 */
 		if (other == null)
-			return false;
-		boolean found = false;
-		if (System.currentTimeMillis() - lastButton < 400) {
-			return false;
+			return;
+        if (System.currentTimeMillis() - lastButton < 400) {
+			return;
 		}
 		if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
 			if (duelBodyRules[button]) {
@@ -7166,7 +7185,6 @@ public class Client extends Player implements Runnable {
 			RefreshDuelRules();
 			other.RefreshDuelRules();
 		}
-		return found;
 	}
 
 	public void addFriend(long name) {
@@ -7285,6 +7303,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void addIgnore(long name) {
+		if (ignores.size() >= 100) {
+			send(new SendMessage("Maximum ignores reached!"));
+			return;
+		}
 		boolean canAdd = true;
 		for (Friend f : ignores) {
 			if (f.name == name) {
@@ -7293,19 +7315,16 @@ public class Client extends Player implements Runnable {
 				break;
 			}
 		}
-		if (canAdd) {
-			if (ignores.size() < 100) {
-				ignores.add(new Friend(name, true));
-				if (PlayerHandler.allOnline.containsKey(name)) {
-					for (Player p : PlayerHandler.players) {
-						if (p != null && p.longName == name) {
-							Client player = (Client) p;
-							player.refreshFriends();
-						}
+		if(canAdd) {
+			ignores.add(new Friend(name, true));
+			if (PlayerHandler.allOnline.containsKey(name)) {
+				for (Player p : PlayerHandler.players) {
+					if (p != null && p.longName == name) {
+						Client player = (Client) p;
+						player.refreshFriends();
 					}
 				}
-			} else
-			send(new SendMessage("Maximum ignores reached!"));
+			}
 		}
 	}
 
@@ -7315,7 +7334,8 @@ public class Client extends Player implements Runnable {
 				send(new RemoveInterfaces());
 				Npc tempNpc = Server.npcManager.getNpc(playerPotato.get(1));
 				int npcId = playerPotato.get(2);
-
+				NpcDialogue = -1;
+				NpcDialogueSend = false; //Need this just incase!
 				if (button == 1) {
 					try {
 						java.sql.Connection conn = getDbConnection();
@@ -7382,6 +7402,7 @@ public class Client extends Player implements Runnable {
 					Server.npcManager.reloadAllData(this, npcId);
 				}
 				playerPotato.clear();
+				return;
 			}
 
 		if (convoId == 0) {
@@ -7405,13 +7426,6 @@ public class Client extends Player implements Runnable {
 				nextDiag = 36;
 			} else
 				showPlayerChat(new String[]{ "No, thank you." }, 614);
-		}
-		if (convoId == 2) {
-			if (button == 1) {
-				WanneShop = 39;
-			} else {
-				send(new RemoveInterfaces());
-			}
 		}
 		if (convoId == 3) {
 			if (button == 1) {
@@ -7465,7 +7479,7 @@ public class Client extends Player implements Runnable {
 					missing -= (getInvAmt(621) - minimumTicket) * ticketValue;
 					if(missing > 0) {
 						if(getInvAmt(995) >= missing) {
-							deleteItem(621, getInvAmt(621) < maximumTickets ? getInvAmt(621) : maximumTickets);
+							deleteItem(621, Math.min(getInvAmt(621), maximumTickets));
 							deleteItem(995, missing);
 							addUnlocks(0, checkUnlockPaid(0) + "", "1");
 							showNPCChat(NpcTalkTo, 591, new String[]{"Thank you for the payment.", "You may enter freely into my dungeon."});
@@ -7519,7 +7533,7 @@ public class Client extends Player implements Runnable {
 					missing -= (getInvAmt(621) - minimumTicket) * ticketValue;
 					if(missing > 0) {
 						if(getInvAmt(995) >= missing) {
-							deleteItem(621, getInvAmt(621) < maximumTickets ? getInvAmt(621) : maximumTickets);
+							deleteItem(621, Math.min(getInvAmt(621), maximumTickets));
 							deleteItem(995, missing);
 							checkItemUpdate();
 							addUnlocks(1, checkUnlockPaid(1) + "", "1");
@@ -7570,7 +7584,6 @@ public class Client extends Player implements Runnable {
 			if (button == 1) {
 				send(new RemoveInterfaces());
 				openUpShop(55);
-				//TODO: Add reward shop
 			} else
 				send(new RemoveInterfaces());
 		} else if (NpcDialogue == 10000) {
@@ -7636,7 +7649,7 @@ public class Client extends Player implements Runnable {
 						}
 						for (int slot = 0; slot < 28; slot++) {
 							if (playerItems[slot] - 1 == 537) {
-								int toDelete = playerItemsN[slot] >= amt ? amt : playerItemsN[slot];
+								int toDelete = Math.min(playerItemsN[slot], amt);
 								deleteItem(537, slot, toDelete);
 								amt -= toDelete;
 								break;
@@ -7666,12 +7679,90 @@ public class Client extends Player implements Runnable {
 				getOutputStream().createFrame(27);
 			} else
 				send(new RemoveInterfaces());
+		} else if (NpcDialogue == 1177) {
+			if(button == 1) {
+				send(new RemoveInterfaces());
+				WanneShop = 19;
+			} else if (button == 2)
+				nextDiag = 1178;
+			else showPlayerChat(new String[]{"Nevermind, I do not need anything."}, 614);
+		} else if (NpcDialogue == 1178) {
+			if(button >= 5)
+				showPlayerChat(new String[]{"Nevermind, I do not need anything."}, 614);
+			else {
+				send(new RemoveInterfaces());
+				NpcDialogue = -1;
+				NpcDialogueSend = false;
+				Long[] amount = new Long[Utils.pot_4_dose.length];
+				Long[] vials = new Long[Utils.pot_4_dose.length];
+				for(int i = 0; i < amount.length; i++) {
+					amount[i] = 0L; //Default values!
+					vials[i] = 0L;
+				}
+				for(int i = 0; i < Utils.pot_4_dose.length; i++)
+					if(GetNotedItem(Utils.pot_4_dose[i]) > 0) {
+						int inv_amt = getInvAmt(GetNotedItem(Utils.pot_4_dose[i]));
+						amount[i] += inv_amt * 4L;
+						vials[i] += (long)inv_amt;
+						deleteItem(GetNotedItem(Utils.pot_4_dose[i]), inv_amt);
+					}
+				for(int i = 0; i < Utils.pot_3_dose.length; i++)
+					if(GetNotedItem(Utils.pot_3_dose[i]) > 0) {
+						int inv_amt = getInvAmt(GetNotedItem(Utils.pot_3_dose[i]));
+						amount[i] += inv_amt * 3L;
+						vials[i] += (long)inv_amt;
+						deleteItem(GetNotedItem(Utils.pot_3_dose[i]), inv_amt);
+					}
+				for(int i = 0; i < Utils.pot_2_dose.length; i++)
+					if(GetNotedItem(Utils.pot_2_dose[i]) > 0) {
+						int inv_amt = getInvAmt(GetNotedItem(Utils.pot_2_dose[i]));
+						amount[i] += inv_amt * 2L;
+						vials[i] += (long)inv_amt;
+						deleteItem(GetNotedItem(Utils.pot_2_dose[i]), inv_amt);
+					}
+				for(int i = 0; i < Utils.pot_1_dose.length; i++)
+					if(GetNotedItem(Utils.pot_1_dose[i]) > 0) {
+						int inv_amt = getInvAmt(GetNotedItem(Utils.pot_1_dose[i]));
+						amount[i] += (long)inv_amt;
+						vials[i] += (long)inv_amt;
+						deleteItem(GetNotedItem(Utils.pot_1_dose[i]), inv_amt);
+					}
+				for(int i = 0; i < amount.length; i++) {
+					int id = button == 1 ? Utils.pot_4_dose[i] : button == 2 ? Utils.pot_3_dose[i] : button == 3 ? Utils.pot_2_dose[i] : Utils.pot_1_dose[i];
+					int divide = button == 1 ? 4 : button == 2 ? 3 : button == 3 ? 2 : 1;
+					if(GetNotedItem(id) > 0) {
+						int inv_amt = (int)(amount[i] / divide);
+						int leftOver = (int)(amount[i]%divide);
+						int inv_empty = (int)(vials[i] - inv_amt - (leftOver > 0 ? 1 : 0));
+						int empty_amount = getInvAmt(230);
+						leftOver = leftOver == 3 ? Utils.pot_3_dose[i] : leftOver == 2 ? Utils.pot_2_dose[i] : leftOver == 1 ? Utils.pot_1_dose[i] : -1;
+						if(inv_amt > 0 && !addItem(GetNotedItem(id), inv_amt)) {
+							GroundItem item = new GroundItem(getPosition().copy(), GetNotedItem(id), inv_amt, getSlot(), -1);
+							Ground.items.add(item);
+							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(id).toLowerCase());
+							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(id).toLowerCase()+" to the floor!"));
+						}
+						if(inv_empty > 0 && (inv_empty + empty_amount) < 1000 && !addItem(230, inv_empty)) { //Empty vials
+							GroundItem item = new GroundItem(getPosition().copy(), 230, inv_empty, getSlot(), -1);
+							Ground.items.add(item);
+							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(230).toLowerCase());
+							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(230).toLowerCase()+" to the floor!"));
+						} else if(inv_empty < 0) deleteItem(230, inv_empty * -1);
+						if(leftOver > 0 && !addItem(leftOver, 1)) {
+							GroundItem item = new GroundItem(getPosition().copy(), leftOver, 1, getSlot(), -1);
+							Ground.items.add(item);
+							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(leftOver).toLowerCase());
+							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(leftOver).toLowerCase()+" to the floor!"));
+						}
+					}
+				}
+				checkItemUpdate();
+				showNPCChat(NpcTalkTo, 591, new String[]{"Enjoy your decanted potions " + getPlayerName()});
+			}
 		} else if (NpcDialogue == 20931) {
-			if(button == 0)
+			if(button == 1)
 				getPlunder.resetPlunder();
 			send(new RemoveInterfaces());
-			NpcDialogueSend = false;
-			NpcDialogue = -1;
 		} else if (NpcDialogue == 48054) {
 			if(getInvAmt(621) < 1) {
 				send(new SendMessage("You need a ship ticket to unlock this travel!"));
@@ -7716,44 +7807,39 @@ public class Client extends Player implements Runnable {
 				if (getLevel(Skill.MINING) >= Utils.pickReq[i])
 					Eaxe = i;
 			}
-			for (int ii = 0; ii < playerItems.length; ii++) {
-				if (Utils.picks[i] == playerItems[ii] - 1) {
-					if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
-						Iaxe = i;
-					}
-				}
-			}
+            for (int playerItem : playerItems) {
+                if (Utils.picks[i] == playerItem - 1) {
+                    if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
+                        Iaxe = i;
+                    }
+                }
+            }
 		}
-		return Eaxe > Iaxe ? Eaxe : Iaxe > Eaxe ? Iaxe : -1;
+		return Math.max(Eaxe, Iaxe);
 	}
 
 	public int findAxe() {
-		int Eaxe = -1;
-		int Iaxe = -1;
+		int Eaxe = -1, Iaxe = -1;
 		int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
 		for (int i = 0; i < Utils.axes.length; i++) {
 			if (Utils.axes[i] == weapon) {
 				if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i])
 					Eaxe = i;
 			}
-			for (int ii = 0; ii < playerItems.length; ii++) {
-				if (Utils.axes[i] == playerItems[ii] - 1) {
-					if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
-						Iaxe = i;
-					}
-				}
-			}
+            for (int playerItem : playerItems) {
+                if (Utils.axes[i] == playerItem - 1) {
+                    if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
+                        Iaxe = i;
+                    }
+                }
+            }
 		}
-		if (Eaxe >= Iaxe)
-			return Eaxe;
-		if (Iaxe >= Eaxe)
-			return Iaxe;
-		return -1;
-	}
+        return Math.max(Eaxe, Iaxe);
+    }
 
 	public void mining(int index) {
 		int minePick = findPick();
-		if (minePick < 0) {
+		if (minePick == -1) {
 			resetAction();
 			send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
 			return;
@@ -7764,7 +7850,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		if (index != 6) {
-			send(new SendMessage("You mine some " + GetItemName(Utils.ore[index]).toLowerCase() + ""));
+			send(new SendMessage("You mine some " + GetItemName(Utils.ore[index]).toLowerCase()));
 		}
 		lastAction = System.currentTimeMillis();
 		int ore = Utils.ore[index];
@@ -7781,8 +7867,7 @@ public class Client extends Player implements Runnable {
 		if (resourcesGathered >= amount && Misc.chance(20) == 1) {
 			send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
 			resetAction(true);
-		} else if (minePick >= 0)
-			requestAnim(getMiningEmote(Utils.picks[minePick]), 0);
+		} else requestAnim(getMiningEmote(Utils.picks[minePick]), 0);
 	}
 	public void randomGem() {
 		if(freeSlots() < 1) { //No inventory space so do not give gem!
@@ -7803,7 +7888,7 @@ public class Client extends Player implements Runnable {
 	/* WOODCUTTING */
 	public void woodcutting(int index) {
 		int woodcutAxe = findAxe();
-		if (woodcutAxe < 0) {
+		if (woodcutAxe == -1) {
 			resetAction();
 			send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
 			return;
@@ -7814,7 +7899,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		lastAction = System.currentTimeMillis();
-		send(new SendMessage("You cut some " + GetItemName(Utils.woodcuttingLogs[index]).toLowerCase() + ""));
+		send(new SendMessage("You cut some " + GetItemName(Utils.woodcuttingLogs[index]).toLowerCase()));
 		addItem(Utils.woodcuttingLogs[index], 1);
 		checkItemUpdate();
 		ItemLog.playerGathering(this, Utils.woodcuttingLogs[index], 1, getPosition().copy(), "Woodcutting");
@@ -7824,8 +7909,7 @@ public class Client extends Player implements Runnable {
 		if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
 			send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
 			resetAction(true);
-		} else if (woodcutAxe >= 0)
-			requestAnim(getWoodcuttingEmote(Utils.axes[woodcutAxe]), 0);
+		} else requestAnim(getWoodcuttingEmote(Utils.axes[woodcutAxe]), 0);
 	}
 
 	public void callGfxMask(int id, int height) {
@@ -8022,8 +8106,8 @@ public class Client extends Player implements Runnable {
 				lastButton = System.currentTimeMillis();
 			}
 			Client other = getClient(duel_with);
-			CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<GameItem>();
-			CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<GameItem>();
+			CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
+			CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<>();
 			for (GameItem item : otherOfferedItems) {
 				otherOfferCopy.add(new GameItem(item.getId(), item.getAmount()));
 			}
@@ -8062,10 +8146,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean contains(int item) {
-		for (int i = 0; i < playerItems.length; i++) {
-			if (playerItems[i] == item + 1)
-				return true;
-		}
+        for (int playerItem : playerItems) {
+            if (playerItem == item + 1)
+                return true;
+        }
 		return false;
 	}
 
@@ -8098,17 +8182,17 @@ public class Client extends Player implements Runnable {
 	/**
 	 * Shows armour in the duel screen slots! (hopefully lol)
 	 */
-	public void sendArmour() {
-		for (int e = 0; e < getEquipment().length; e++) {
+	public void sendDuelArmour(Client c) {
+		for (int e = 0; e < c.getEquipment().length; e++) {
 			getOutputStream().createFrameVarSizeWord(34);
 			getOutputStream().writeWord(13824);
 			getOutputStream().writeByte(e);
-			getOutputStream().writeWord(getEquipment()[e] < 1 ? 0 : getEquipment()[e] + 1);
-			if (getEquipmentN()[e] > 254) {
+			getOutputStream().writeWord(c.getEquipment()[e] < 1 ? 0 : c.getEquipment()[e] + 1);
+			if (c.getEquipmentN()[e] > 254) {
 				getOutputStream().writeByte(255);
-				getOutputStream().writeDWord(getEquipmentN()[e]);
+				getOutputStream().writeDWord(c.getEquipmentN()[e]);
 			} else {
-				getOutputStream().writeByte(getEquipmentN()[e]); // amount
+				getOutputStream().writeByte(c.getEquipmentN()[e]); // amount
 			}
 			getOutputStream().endFrameVarSizeWord();
 		}
@@ -8116,11 +8200,11 @@ public class Client extends Player implements Runnable {
 
 	public boolean hasTradeSpace() {
 		if (!validClient(trade_reqId)) {
-			return false;
+			return true;
 		}
 		Client o = getClient(trade_reqId);
 		int spaces = 0;
-		ArrayList<GameItem> items = new ArrayList<GameItem>();
+		ArrayList<GameItem> items = new ArrayList<>();
 		for (GameItem item : o.offeredItems) {
 			if (item == null)
 				continue;
@@ -8138,9 +8222,9 @@ public class Client extends Player implements Runnable {
 		if (spaces > getFreeSpace()) {
 			failer = getPlayerName() + " does not have enough space to hold items being traded.";
 			o.failer = getPlayerName() + " does not have enough space to hold items being traded.";
-			return false;
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/**
@@ -8148,7 +8232,7 @@ public class Client extends Player implements Runnable {
 	 */
 	public boolean hasEnoughSpace() {
 		if (!inDuel || !validClient(duel_with)) {
-			return false;
+			return true;
 		}
 		Client o = getClient(duel_with);
 		int spaces = 0;
@@ -8159,7 +8243,7 @@ public class Client extends Player implements Runnable {
 				spaces += 1;
 			}
 		}
-		ArrayList<GameItem> items = new ArrayList<GameItem>();
+		ArrayList<GameItem> items = new ArrayList<>();
 		for (GameItem item : offeredItems) {
 			if (item == null)
 				continue;
@@ -8191,9 +8275,9 @@ public class Client extends Player implements Runnable {
 		if (spaces > getFreeSpace()) {
 			failer = getPlayerName() + " does not have enough space to hold items being removed and/or staked.";
 			o.failer = getPlayerName() + " does not have enough space to hold items being removed and/or staked.";
-			return false;
+			return true;
 		}
-		return true;
+		return false;
 
 	}
 
@@ -8270,10 +8354,8 @@ public class Client extends Player implements Runnable {
 		//playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = emote, 7 = tickTimer
 		resetAction();
 		sendFrame246(1746, skill == Skill.HERBLORE.getId() ? 150 : 190, itemMade);
-		String jump = "";
-		for(int i = 0; i < (skill == Skill.HERBLORE.getId() ? 4 : 5); i++) //Doubt this is how you do it but meh cba!
-			jump += "\\n";
-		send(new SendString(jump + GetItemName(itemMade), 2799));
+        //Doubt this is how you do it but meh cba!
+        send(new SendString("\\n".repeat((skill == Skill.HERBLORE.getId() ? 4 : 5)) + GetItemName(itemMade), 2799));
 		sendFrame164(4429);
 		setSkill(skill, itemMade,  amount, itemOne, itemTwo, xp, emote, tick);
 	}
@@ -8335,7 +8417,7 @@ public class Client extends Player implements Runnable {
 				return;
 			}
 			if(getInvAmt(itemOne) < amount || (itemTwo != -1 && getInvAmt(itemTwo) < amount)) //Incase we use 15 as amount!
-				amount = getInvAmt(itemOne) > getInvAmt(itemTwo) ? getInvAmt(itemTwo) : getInvAmt(itemOne);
+				amount = Math.min(getInvAmt(itemOne), getInvAmt(itemTwo));
 			deleteItem(itemOne, amount);
 			if(itemTwo != -1) //For gem crafting or stringing! OBS!
 				deleteItem(itemTwo, amount);
@@ -8389,13 +8471,11 @@ public class Client extends Player implements Runnable {
 		send(new SendString("---------------------------", 8176));
 	}
 
-	private long lastVoted;
-
 	public Prayers getPrayerManager() {
 		return prayers;
 	}
 
-	private int getItem(Player p, int i, int i2) {
+	private int getItem(int i, int i2) {
 		if (!playerHasItem(items[i2]) && items[i2] != -1) {
 			return blanks[i][i2];
 		}
@@ -8422,17 +8502,17 @@ public class Client extends Player implements Runnable {
 
 	public int[] strungAmulets = {1692, 1694, 1696, 1698, 1700, 1702, 6581};
 
-	private int[][] jewelry = {{1635, 1637, 1639, 1641, 1643, 1645, 6575}, {1654, 1656, 1658, 1660, 1662, 1664, 6577},
+	private final int[][] jewelry = {{1635, 1637, 1639, 1641, 1643, 1645, 6575}, {1654, 1656, 1658, 1660, 1662, 1664, 6577},
 			{1673, 1675, 1677, 1679, 1681, 1683, 6579}, {11069, 11072, 11076, 11085, 11092, 11115, 11130}};
 
-	private int[][] jewelry_levels = {{5, 20, 27, 34, 43, 55, 67}, {6, 22, 29, 40, 56, 72, 82},
+	private final int[][] jewelry_levels = {{5, 20, 27, 34, 43, 55, 67}, {6, 22, 29, 40, 56, 72, 82},
 			{8, 23, 31, 50, 70, 80, 90}, {7, 24, 30, 42, 58, 74, 84}};
 
-	private int[][] jewelry_xp = {{15, 40, 55, 70, 85, 100, 115}, {20, 55, 60, 75, 90, 105, 120},
+	private final int[][] jewelry_xp = {{15, 40, 55, 70, 85, 100, 115}, {20, 55, 60, 75, 90, 105, 120},
 			{30, 65, 70, 85, 100, 150, 165}, {25, 60, 65, 80, 95, 110, 125}};
 
 	public void showItemsGold() {
-		int slot = 0;
+		int slot;
 		for(int i = 0; i < startSlots.length - 1; i++) {
 			slot = startSlots[i];
 			if (!playerHasItem(moulds[i])) {
@@ -8445,15 +8525,11 @@ public class Client extends Player implements Runnable {
 			}
 			int[] itemsToShow = new int[7];
 			for(int i2 = 0; i2 < itemsToShow.length; i2++) {
-				itemsToShow[i2] = getItem(this, i, i2);
+				itemsToShow[i2] = getItem(i, i2);
 				if (i2 != 0 && itemsToShow[i2] != jewelry[i][i2])
-					if (i2 < 7)
-						sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
-					else sendFrame246(slot + 1788 - (i * 5), sizes[i], black[i]);
+                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
 				else if (i2 != 0) {
-					if (i2 < 7)
-						sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
-					else sendFrame246(slot + 1788 - (i * 5), sizes[i], -1);
+                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
 				}
 			}
 			setGoldItems(slot, itemsToShow);
@@ -8465,10 +8541,10 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWord(slot);
 		getOutputStream().writeWord(items.length);
 
-		for (int i = 0; i < items.length; i++) {
-			getOutputStream().writeByte((byte) 1);
-			getOutputStream().writeWordBigEndianA(items[i] + 1);
-		}
+        for (int item : items) {
+            getOutputStream().writeByte((byte) 1);
+            getOutputStream().writeWordBigEndianA(item + 1);
+        }
 		getOutputStream().endFrameVarSizeWord();
 	}
 
@@ -8481,12 +8557,7 @@ public class Client extends Player implements Runnable {
 		int amount = goldCraftingCount;
 		int item = jewelry[goldIndex][goldSlot];
 		int xp = jewelry_xp[goldIndex][goldSlot];
-		if (goldIndex == -1 || goldSlot == -1) {
-			goldCrafting = false;
-			resetAction();
-			return;
-		}
-		if (amount <= 0) {
+        if (amount <= 0) {
 			goldCrafting = false;
 			resetAction();
 			return;
@@ -8514,7 +8585,7 @@ public class Client extends Player implements Runnable {
 		deleteItem(2357, 1);
 		if (goldSlot != 0)
 			deleteItem(items[goldSlot], 1);
-		send(new SendMessage("You craft a " + GetItemName(item).toLowerCase() + ""));
+		send(new SendMessage("You craft a " + GetItemName(item).toLowerCase()));
 		addItem(item, 1);
 		checkItemUpdate();
 		giveExperience(xp * 10, Skill.CRAFTING);
@@ -8555,10 +8626,10 @@ public class Client extends Player implements Runnable {
 	public boolean hasRunes(int[] runes, int[] qty) {
 		for (int i = 0; i < runes.length; i++) {
 			if (!playerHasItem(runes[i], qty[i])) {
-				return false;
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	public void checkBow() {
@@ -8568,9 +8639,11 @@ public class Client extends Player implements Runnable {
 
 	public boolean bowWeapon(int weaponId) {
 		boolean bow = false;
-		for (int i = 0; i < Constants.shortbow.length && !bow; i++)
-			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i])
-				bow = true;
+		for (int i = 0; i < Constants.shortbow.length; i++)
+            if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
+                bow = true;
+                break;
+            }
 		if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
 				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768))
 			bow = true;
@@ -8612,10 +8685,10 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Please finish with what you are doing!"));
 			return;
 		}
-		ArrayList<GameItem> otherInv = new ArrayList<GameItem>();
+		ArrayList<GameItem> otherInv = new ArrayList<>();
 		if (PlayerHandler.getPlayer(player) != null) { //Online check
 			Client other = (Client) PlayerHandler.getPlayer(player);
-			for (int i = 0; i < other.playerItems.length; i++) {
+			for (int i = 0; i < Objects.requireNonNull(other).playerItems.length; i++) {
 				otherInv.add(i, new GameItem(other.playerItems[i] - 1, other.playerItemsN[i]));
 			}
 			sendInventory(3214, otherInv);
@@ -8631,20 +8704,20 @@ public class Client extends Player implements Runnable {
 				if (results.next())
 					id = results.getInt("userid");
 				if (id >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("inventory");
 						if (text != null && text.length() > 2) {
-							String lines[] = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								@SuppressWarnings("unused")
-								int slot = Integer.parseInt(parts[0]);
-								int item = Integer.parseInt(parts[1]);
-								int amount = Integer.parseInt(parts[2]);
-								otherInv.add(new GameItem(item, amount));
-							}
+							String[] lines = text.split(" ");
+                            for (String line : lines) {
+                                String[] parts = line.split("-");
+                                @SuppressWarnings("unused")
+                                int slot = Integer.parseInt(parts[0]);
+                                int item = Integer.parseInt(parts[1]);
+                                int amount = Integer.parseInt(parts[2]);
+                                otherInv.add(new GameItem(item, amount));
+                            }
 						}
 						sendInventory(3214, otherInv);
 						send(new SendMessage("User " + player + "'s inventory is now being shown."));
@@ -8669,7 +8742,7 @@ public class Client extends Player implements Runnable {
 		IsBanking = false;
 		if (PlayerHandler.getPlayer(player) != null) { //Online check
 			Client other = (Client) PlayerHandler.getPlayer(player);
-			for (int i = 0; i < other.bankItems.length; i++) {
+			for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
 				otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
 			}
 			send(new SendString("Examine the bank of " + player, 5383));
@@ -8688,20 +8761,20 @@ public class Client extends Player implements Runnable {
 				if (results.next())
 					id = results.getInt("userid");
 				if (id >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("bank");
 						if (text != null && text.length() > 2) {
-							String lines[] = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								@SuppressWarnings("unused")
-								int slot = Integer.parseInt(parts[0]);
-								int item = Integer.parseInt(parts[1]);
-								int amount = Integer.parseInt(parts[2]);
-								otherBank.add(new GameItem(item, amount));
-							}
+							String[] lines = text.split(" ");
+                            for (String line : lines) {
+                                String[] parts = line.split("-");
+                                @SuppressWarnings("unused")
+                                int slot = Integer.parseInt(parts[0]);
+                                int item = Integer.parseInt(parts[1]);
+                                int amount = Integer.parseInt(parts[2]);
+                                otherBank.add(new GameItem(item, amount));
+                            }
 						}
 						send(new SendString("Examine the bank of " + player, 5383));
 						sendBank(5382, otherBank);
@@ -8719,10 +8792,10 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-	private ArrayList<GroundItem> displayItems = new ArrayList<>();
+	private final ArrayList<GroundItem> displayItems = new ArrayList<>();
 
 	public void updateItems() {
-		if (displayItems.size() > 0) {
+		if (!displayItems.isEmpty()) {
 			for (GroundItem display : displayItems) {
 				send(new RemoveGroundItem(new GameItem(display.id, display.amount), new Position(display.x, display.y, display.z)));
 			}
@@ -8769,17 +8842,17 @@ public class Client extends Player implements Runnable {
 
 	@Override
 	public boolean equals(Object o) {
-		return ((Client) o).getPlayerName().equalsIgnoreCase(this.getPlayerName());
+		return ((Client) o).getPlayerName().equalsIgnoreCase(getPlayerName());
 	}
 
 	public void removeExperienceFromPlayer(String user, int id, int xp) {
-		String skillName = Skill.getSkill(id).getName();
+		String skillName = Objects.requireNonNull(getSkill(id)).getName();
 		if (PlayerHandler.getPlayer(user) != null) { //Online check
 			Client other = (Client) PlayerHandler.getPlayer(user);
-			int currentXp = other.getExperience(Skill.values()[id]);
-			xp = currentXp >= xp ? xp : currentXp;
-			other.setExperience(currentXp - xp, Skill.getSkill(id));
-			other.setLevel(Skills.getLevelForExperience(other.getExperience(Skill.values()[id])), Skill.getSkill(id));
+			int currentXp = Objects.requireNonNull(other).getExperience(Skill.values()[id]);
+			xp = Math.min(currentXp, xp);
+			other.setExperience(currentXp - xp, Objects.requireNonNull(getSkill(id)));
+			other.setLevel(Skills.getLevelForExperience(other.getExperience(Skill.values()[id])), Objects.requireNonNull(getSkill(id)));
 			other.refreshSkill(Skill.getSkill(id));
 			send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
 		} else {
@@ -8794,7 +8867,7 @@ public class Client extends Player implements Runnable {
 				if (results.next())
 					userid = results.getInt("userid");
 				if (userid >= 0) {
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid + "";
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid;
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						currentXp = results.getInt(skillName);
@@ -8805,7 +8878,7 @@ public class Client extends Player implements Runnable {
 					found = false;
 				if (found) {
 					statement = getDbConnection().createStatement();
-					xp = currentXp >= xp ? xp : currentXp;
+					xp = Math.min(currentXp, xp);
 					int newXp = currentXp - xp;
 					totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
 					totalXp -= xp;
@@ -8824,9 +8897,9 @@ public class Client extends Player implements Runnable {
 		int totalItemRemoved = 0;
 		if (PlayerHandler.getPlayer(user) != null) { //Online check
 			Client other = (Client) PlayerHandler.getPlayer(user);
-			for (int i = 0; i < other.bankItems.length; i++) {
+			for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
 				if (other.bankItems[i] - 1 == id) {
-					int canRemove = other.bankItemsN[i] < amount ? other.bankItemsN[i] : amount;
+					int canRemove = Math.min(other.bankItemsN[i], amount);
 					other.bankItemsN[i] -= canRemove;
 					amount -= canRemove;
 					totalItemRemoved += canRemove;
@@ -8837,7 +8910,7 @@ public class Client extends Player implements Runnable {
 			}
 			for (int i = 0; i < other.playerItems.length; i++) {
 				if (other.playerItems[i] - 1 == id) {
-					int canRemove = other.playerItemsN[i] < amount ? other.playerItemsN[i] : amount;
+					int canRemove = Math.min(other.playerItemsN[i], amount);
 					other.playerItemsN[i] -= canRemove;
 					amount -= canRemove;
 					totalItemRemoved += canRemove;
@@ -8848,7 +8921,7 @@ public class Client extends Player implements Runnable {
 			other.checkItemUpdate();
 			for (int i = 0; i < getEquipment().length; i++) {
 				if (other.getEquipment()[i] == id) {
-					int canRemove = other.getEquipmentN()[i] < amount ? other.getEquipmentN()[i] : amount;
+					int canRemove = Math.min(other.getEquipmentN()[i], amount);
 					other.getEquipmentN()[i] -= canRemove;
 					amount -= canRemove;
 					totalItemRemoved += canRemove;
@@ -8872,8 +8945,10 @@ public class Client extends Player implements Runnable {
 				if (results.next())
 					userid = results.getInt("userid");
 				if (userid >= 0) {
-					String bank = "", inventory = "", equipment = "";
-					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid + "";
+					StringBuilder bank = new StringBuilder();
+                    StringBuilder inventory = new StringBuilder();
+                    StringBuilder equipment = new StringBuilder();
+                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid;
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("bank");
@@ -8883,30 +8958,30 @@ public class Client extends Player implements Runnable {
 								String[] parts = line.split("-");
 								int checkItem = Integer.parseInt(parts[1]);
 								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
+									int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
 									if (canRemove < Integer.parseInt(parts[2]))
-										bank += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
+										bank.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
 									amount -= canRemove;
 									totalItemRemoved += canRemove;
 								} else
-									bank += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
+									bank.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
 							}
 						}
 						text = results.getString("inventory");
 						if (text != null && text.length() > 2) {
 							String[] lines = text.split(" ");
-							for (int i = 0; i < lines.length; i++) {
-								String[] parts = lines[i].split("-");
-								int checkItem = Integer.parseInt(parts[1]);
-								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
-									if (canRemove < Integer.parseInt(parts[2]))
-										inventory += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
-									amount -= canRemove;
-									totalItemRemoved += canRemove;
-								} else
-									inventory += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
-							}
+                            for (String line : lines) {
+                                String[] parts = line.split("-");
+                                int checkItem = Integer.parseInt(parts[1]);
+                                if (checkItem == id) {
+                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
+                                    if (canRemove < Integer.parseInt(parts[2]))
+                                        inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
+                                    amount -= canRemove;
+                                    totalItemRemoved += canRemove;
+                                } else
+                                    inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
+                            }
 						}
 						text = results.getString("equipment");
 						if (text != null && text.length() > 2) {
@@ -8915,13 +8990,13 @@ public class Client extends Player implements Runnable {
 								String[] parts = line.split("-");
 								int checkItem = Integer.parseInt(parts[1]);
 								if (checkItem == id) {
-									int canRemove = Integer.parseInt(parts[2]) < amount ? Integer.parseInt(parts[2]) : amount;
+									int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
 									if (canRemove < Integer.parseInt(parts[2]))
-										equipment += parts[0] + "-" + parts[1] + "-" + (Integer.parseInt(parts[2]) - canRemove) + " ";
+										equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
 									amount -= canRemove;
 									totalItemRemoved += canRemove;
 								} else
-									equipment += parts[0] + "-" + parts[1] + "-" + parts[2] + " ";
+									equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
 							}
 						}
 					} else
@@ -9067,7 +9142,6 @@ public class Client extends Player implements Runnable {
 			stm.close();
 		} catch (Exception e) {
 			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
 		}
 	}
 
@@ -9135,7 +9209,6 @@ public class Client extends Player implements Runnable {
 			checkItemUpdate();
 		} catch (Exception e) {
 			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-			e.printStackTrace();
 		}
 	}
 

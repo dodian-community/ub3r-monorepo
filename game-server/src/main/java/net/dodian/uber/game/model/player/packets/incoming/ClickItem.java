@@ -63,6 +63,10 @@ public class ClickItem implements Packet {
             client.openGenie();
             return;
         }
+        if (itemId == 6543) {
+            client.openAntique();
+            return;
+        }
         if((itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051)
             clickItem(client, itemSlot, itemId);
         else if (System.currentTimeMillis() - client.lastAction > 100) { //Due to how system handles time need this for 1 tick delay! Perhaps better way to do it?
@@ -164,8 +168,8 @@ public class ClickItem implements Packet {
                     client.eat(24, item, slot);
                     used = false;
                 break;
-                case 1961: //Pumpkin
-                case 1959: //Easter egg
+                case 1959: //Pumpkin
+                case 1961: //Easter egg
                     client.eat(2, item, slot);
                     used = false;
                 break;

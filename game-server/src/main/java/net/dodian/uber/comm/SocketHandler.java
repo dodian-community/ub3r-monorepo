@@ -32,30 +32,22 @@ public class SocketHandler implements Runnable {
     }
 
     public void run() {
-        long lastProcess = System.currentTimeMillis();
             while (processRunning) {
-                if (!isConnected()) {
-                    myPackets.clear();
-                    break;
-                }
-                while (writeOutput());
-                flush();
-                if (lastProcess + 50 <= System.currentTimeMillis()) {
+                if (isConnected()) {
+                    while (writeOutput());
+                    flush();
                     while (parsePackets());
                     LinkedList<PacketData> temp = packets.getPackets();
-                    if (myPackets == null)
-                        myPackets.clear();
-                    if (temp != null)
-                        myPackets.addAll(temp);
-                    lastProcess = System.currentTimeMillis();
-                }
+                    if (myPackets == null) myPackets.clear();
+                    if (temp != null) myPackets.addAll(temp);
+                } else myPackets.clear();
                 try {
                     Thread.sleep(50);
                 } catch (java.lang.Exception _ex) {
                     YellSystem.alertStaff("Something is up with socket handler!");
                     System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
                 }
-                }
+            }
     }
 
     private boolean isConnected() {

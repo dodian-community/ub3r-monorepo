@@ -489,14 +489,36 @@ public class ClickingButtons implements Packet {
                     for (int i = 0; i < skillTrain.length; i++) {
                         Skill trainedSkill = Skill.getSkill(i);
                         if (trainedSkill != null && skillTrain[i] == client.actionButtonId) {
-                            if(client.actionButtonId != 54090) {
+                            if (client.actionButtonId != 54090) {
                                 client.deleteItem(2528, 1);
+                                client.checkItemUpdate();
+                                int level = Skills.getLevelForExperience(client.getExperience(trainedSkill));
+                                int experience = 100 * level;
+                                client.giveExperience(experience, trainedSkill);
+                                client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + trainedSkill.getName() + "."));
+                            } else
+                                client.send(new SendMessage("Experience for " + trainedSkill.getName() + " is disabled until 10th of July!"));
+                        }
+                    }
+                } else if (client.antique) {
+                    int[] skillTrain = {
+                            10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011,
+                            11013, 11014, 11010, 11012, 11006, 11009, 11008, 11004,
+                            11003, 11005, 47002, 54090, 11007
+                    };
+                    client.send(new RemoveInterfaces());
+                    client.antique = false;
+                    if (client.inDuel || client.duelFight || client.IsBanking || client.checkBankInterface || !client.playerHasItem(6543)) //To prevent stuff!
+                        break;
+                    for (int i = 0; i < skillTrain.length; i++) {
+                        Skill trainedSkill = Skill.getSkill(i);
+                        if (trainedSkill != null && skillTrain[i] == client.actionButtonId) {
+                                client.deleteItem(6543, 1);
                                 client.checkItemUpdate();
                                 int level = Skills.getLevelForExperience(client.getExperience(trainedSkill));
                                 int experience = 250 * level;
                                 client.giveExperience(experience, trainedSkill);
                                 client.send(new SendMessage("You rub the lamp and gained " + experience + " experience in " + trainedSkill.getName() + "."));
-                            } else client.send(new SendMessage("Experience for " + trainedSkill.getName() + " is disabled until 10th of July!"));
                         }
                     }
                 } else if (client.randomed && client.actionButtonId == client.statId[client.random_skill]) {
@@ -717,7 +739,7 @@ public class ClickingButtons implements Packet {
                     if (client.inTrade && !client.tradeConfirmed) {
                         client.tradeConfirmed = true;
                         if (other != null && other.tradeConfirmed) {
-                            if (!other.hasTradeSpace() || !client.hasTradeSpace()) {
+                            if (other.hasTradeSpace() || client.hasTradeSpace()) {
                                 client.send(new SendMessage(client.failer));
                                 other.send(new SendMessage(client.failer));
                                 client.declineTrade();
@@ -894,7 +916,7 @@ public class ClickingButtons implements Packet {
                         o.send(new SendMessage("At least one combat style must be enabled!"));
                         return;
                     }
-                    if (!client.hasEnoughSpace() || !o.hasEnoughSpace()) {
+                    if (client.hasEnoughSpace() || o.hasEnoughSpace()) {
                         client.send(new SendMessage(client.failer));
                         o.send(new SendMessage(client.failer));
                         client.declineDuel();

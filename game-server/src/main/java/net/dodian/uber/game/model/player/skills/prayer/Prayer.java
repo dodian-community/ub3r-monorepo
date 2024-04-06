@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.player.skills.prayer;
 
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -23,13 +24,15 @@ public class Prayer {
 
     public static boolean altarBones(Client client, int itemId) {
         Bones bone = Bones.getBone(itemId);
-        if (bone == null || !client.playerHasItem(itemId)) {
-            client.boneItem = -1;
+        if (bone == null || !client.playerHasItem(itemId) || client.randomed) {
+            client.resetAction();
             return false;
         }
+        client.prayerAction = 3;
         client.deleteItem(itemId, 1);
         client.checkItemUpdate();
         client.requestAnim(3705, 0);
+        client.stillgfx(624, new Position(client.skillX, client.skillY, client.getPosition().getZ()), 0);
         double extra = (double) (client.getLevel(Skill.FIREMAKING) + 1) / 100;
         double chance = 2.0 + extra;
         client.giveExperience((int) (bone.getExperience() * chance), Skill.PRAYER);
