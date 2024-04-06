@@ -113,7 +113,7 @@ public class Server implements Runnable {
         /* Processes */
         job = new JobScheduler();
         job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
-        //job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class); //Ground item revolved inside entity process!
+        job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class); //Will see if we shall have this!
         job.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
         job.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
         job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);

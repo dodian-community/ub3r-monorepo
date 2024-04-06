@@ -37,7 +37,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 7 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{2})) {
+            if (client.hasRunes(new int[]{564}, new int[]{2})) {
                 client.send(new SendMessage("You need 2 cosmic runes to cast this spell!"));
                 return;
             }
@@ -68,7 +68,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 27 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{4})) {
+            if (client.hasRunes(new int[]{564}, new int[]{4})) {
                 client.send(new SendMessage("You need 4 cosmic runes to cast this spell!"));
                 return;
             }
@@ -99,7 +99,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 49 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{6})) {
+            if (client.hasRunes(new int[]{564}, new int[]{6})) {
                 client.send(new SendMessage("You need 6 cosmic runes to cast this spell!"));
                 return;
             }
@@ -130,7 +130,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 57 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{8})) {
+            if (client.hasRunes(new int[]{564}, new int[]{8})) {
                 client.send(new SendMessage("You need 8 cosmic runes to cast this spell!"));
                 return;
             }
@@ -161,7 +161,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 68 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{10})) {
+            if (client.hasRunes(new int[]{564}, new int[]{10})) {
                 client.send(new SendMessage("You need 10 cosmic runes to cast this spell!"));
                 return;
             }
@@ -192,7 +192,7 @@ public class MagicOnItems implements Packet {
                 client.send(new SendMessage("You need a magic level of 87 to cast this spell."));
                 return;
             }
-            if (!client.hasRunes(new int[]{564}, new int[]{10})) {
+            if (client.hasRunes(new int[]{564}, new int[]{10})) {
                 client.send(new SendMessage("You need 10 cosmic runes to cast this spell!"));
                 return;
             }

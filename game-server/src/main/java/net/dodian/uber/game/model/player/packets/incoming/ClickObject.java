@@ -98,7 +98,7 @@ public class ClickObject implements Packet {
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, objectPosition.getX(), objectPosition.getY(), 1));
         }
-        if (System.currentTimeMillis() < client.walkBlock || client.genie) {
+        if (System.currentTimeMillis() < client.walkBlock || client.genie || client.antique) {
             return;
         }
         client.resetAction(false);
@@ -364,7 +364,6 @@ public class ClickObject implements Packet {
                 return;
             }
             if(Server.entryObject.getEntryDoor(objectPosition)) { //Entry to activity
-                //TODO: Fix a thieving check chance to enter!
                 int chance = Misc.random(255);
                 if(chance <= (int)(client.getLevel(Skill.THIEVING) * 2.5))
                     client.transport(new Position(1934, 4450, 2));
@@ -376,15 +375,26 @@ public class ClickObject implements Packet {
                 client.transport(new Position(1968, 4420, 2));
         }
         if (objectID >= 26618 && objectID <= 26621) { //Room entrance check...For now :D
-            if(Server.entryObject.nextRoom[client.getPlunder.getRoomNr()] + 26618 == objectID)
+            if(client.getPlunder.getRoomNr() + 1 == 8) { //Max floors!
+                return;
+            }
+            if(Server.entryObject.nextRoom[client.getPlunder.getRoomNr()] + 26618 == objectID && client.getPlunder.openDoor(objectID))
                 client.getPlunder.nextRoom();
-            //System.out.println("animation reset!");
+            else if (client.getPlunder.openDoor(objectID))
+                client.send(new SendMessage("This tomb door lead nowhere."));
+            else client.getPlunder.toggleObstacles(objectID);
         }
         if (objectID == 20932) {
             client.transport(client.getPlunder.end);
         }
         if (objectID == 20931) {
             client.NpcDialogue = 20931;
+        }
+        if (objectID == 26616 || objectID == 26626) { //Grand gold chest + Sarcophagus
+            client.getPlunder.toggleObstacles(objectID);
+        }
+        if (objectID == 26580 || (objectID >= 26600 && objectID <= 26613)) { //Urns!
+            client.getPlunder.toggleObstacles(objectID);
         }
         /* Agility */
         Agility agility = new Agility(client);

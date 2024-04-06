@@ -95,7 +95,7 @@ public class LoginManager {
                 p.latestNews = results.getInt("news"); //Sets the latest news for a user!
                 p.UUID = results.getString("uuid");
                 int x = results.getInt("x"), y = results.getInt("y"), z = results.getInt("height");
-                p.moveTo(x, y, z);
+                p.loginPosition(x, y, z);
                 if(x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!
                 p.mutedTill = results.getLong("unmutetime");
                 /* Set stats */

@@ -12,7 +12,6 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.music.RegionSong;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
@@ -27,16 +26,14 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
-import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class Player extends Entity {
-    public boolean yellOn = true, genie = false, instaLoot = false;
+    public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
     public long disconnectAt = 0, longName = 0;
     public int wildyLevel = 0, violations = 0;
     public long lastAction = 0, lastMagic = 0;
@@ -54,8 +51,7 @@ public abstract class Player extends Entity {
             "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
     "TzTok-Jad"};
     public int[] boss_amount = new int[boss_name.length];
-    public int duelChatTimer = -1, duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
-    public boolean startDuel = false;
+    public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
     private WalkToTask walkToTask;
@@ -156,7 +152,6 @@ public abstract class Player extends Entity {
     public int dailyLogin = 1;
     public ArrayList<String> dailyReward = new ArrayList<String>();
     public int staffSize = 5;
-    //public ArrayList<ArrayList<String>> dailyReward = new ArrayList<>();
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
@@ -1383,7 +1378,11 @@ public abstract class Player extends Entity {
         DESERT_POLLNIVNEACH_OUTSKIRT_3("in the Pollnivneach.", 3359, 3373, 2957, 2964),
         DESERT_POLLNIVNEACH_OUTSKIRT_4("in the Pollnivneach.", 3359, 3369, 2953, 2956),
         DESERT_POLLNIVNEACH_OUTSKIRT_5("in the Pollnivneach.", 3359, 3364, 2949, 2952),
-        DESERT("in the Desert.", 3137, 3565, 2647, 3162) //3565, 2647, 3137, 3162
+        PYRAMID_PLUNDER("doing Pyramid Plunder", 1916, 4418, 1983, 4479),
+        KALPHITE_KING("in the Kalphite King lair.", 10, 100, 20, 110),
+        KALPHITE_QUEEN("in the Kalphite Queen lair.", 10, 100, 20, 110),
+        DESERT("in the Desert.", 3137, 3565, 2647, 3162), //3565, 2647, 3137, 3162
+        VENENATIS("in the Venenatis lair.", 10, 100, 20, 110)
         ;
         final String name;
         final int[] coordValue;
@@ -1726,6 +1725,11 @@ public abstract class Player extends Entity {
 
     public boolean rejectTeleport() {
         return getPlunder.hinderTeleport();
+    }
+    public void loginPosition(int x, int y, int z) {
+        moveTo(x, y, z);
+        if(!getPlunder.hinderTeleport() && getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
+            getPlunder.resetPlunder();
     }
 
     public void examineItem(Client c, int id, int amount) {

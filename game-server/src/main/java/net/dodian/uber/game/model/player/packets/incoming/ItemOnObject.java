@@ -126,11 +126,10 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
         }
     }
     if (objectId == 409 && Prayer.altarBones(client, item)) {
-        client.lastAction = System.currentTimeMillis();
         client.skillX = UsedOnX;
         client.setSkillY(UsedOnY);
-        client.stillgfx(624, new Position(client.skillY, client.skillX, client.getPosition().getZ()), 0);
         client.boneItem = item;
+        Prayer.altarBones(client, client.boneItem);
     }
     if (objectId == 2097 && (item == 1540 || item == 11286)) {
         if (!client.playerHasItem(2347)) client.send(new SendMessage("You need a hammer!"));
@@ -147,6 +146,13 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
             client.checkItemUpdate();
             client.giveExperience(15000, Skill.SMITHING);
             client.send(new SendMessage("Your smithing craft made a Dragonfire shield out of the visage."));
+        }
+    } else if (objectId == 2097) {
+        int type = item;
+        if (client.CheckSmithing(type) != -1) {
+            client.skillX = objectPosition.getX();
+            client.setSkillY(objectPosition.getY());
+            client.OpenSmithingFrame(client.CheckSmithing(type));
         }
     }
     if(objectId == 26181 && item == 401) {
