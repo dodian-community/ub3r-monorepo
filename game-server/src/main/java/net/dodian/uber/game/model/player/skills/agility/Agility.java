@@ -538,19 +538,10 @@ public class Agility {
                         stop();
                         return;
                     }
-                    EventManager.getInstance().registerEvent(new Event(distance * 600) {
-                        public void execute() {
-                            if (c.disconnected) {
-                                stop();
-                                return;
-                            }
-                            c.setAgilityEmote(oldWalk, oldRun);
-                            giveEndExperience(500);
-                            c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                            c.UsingAgility = false;
-                            stop();
-                        }
-                    });
+                    c.setAgilityEmote(oldWalk, oldRun);
+                    giveEndExperience(500);
+                    c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
+                    c.UsingAgility = false;
                     stop();
                 }
             });

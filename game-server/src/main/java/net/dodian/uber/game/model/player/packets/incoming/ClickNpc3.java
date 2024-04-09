@@ -33,7 +33,7 @@ public class ClickNpc3 implements Packet {
             @Override
             public void execute() {
 
-                if (client == null || client.disconnected) {
+                if (client.disconnected) {
                     this.stop();
                     return;
                 }

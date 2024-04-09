@@ -4,11 +4,9 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
-import net.dodian.utilities.Utils;
 
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 

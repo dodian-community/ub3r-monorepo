@@ -13,7 +13,7 @@ public class Trade implements Packet {
             client.send(new SendMessage("You are busy at the moment"));
             return;
         }
-        if (!client.inTrade && !client.inDuel && !client.duelFight) {
+        if (!client.inTrade) {
             client.trade_reqId = temp;
             client.tradeReq(client.trade_reqId);
         }

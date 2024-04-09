@@ -9,7 +9,7 @@ public class PacketQueue {
     /**
      * The list of packets in the queue
      */
-    private Queue<PacketData> packets = new LinkedBlockingQueue<PacketData>();
+    private final Queue<PacketData> packets = new LinkedBlockingQueue<>();
 
     /**
      * Adds a packet to the queue
@@ -19,21 +19,13 @@ public class PacketQueue {
     }
 
     /**
-     * Returns if there is packets to process
-     */
-    public boolean hasPackets() {
-        return !packets.isEmpty();
-    }
-
-    /**
      * Returns the packets currently in the list and removes them from the backing
      * store
      */
     public LinkedList<PacketData> getPackets() {
-        LinkedList<PacketData> tmpList = null;
+        LinkedList<PacketData> tmpList;
         synchronized (packets) {
-            tmpList = new LinkedList<PacketData>();
-            tmpList.addAll(packets);
+            tmpList = new LinkedList<>(packets);
             packets.clear();
         }
         return tmpList;

@@ -1,12 +1,10 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.Utils;
 
 import static net.dodian.utilities.DotEnvKt.getServerEnv;
 

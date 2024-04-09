@@ -2,24 +2,20 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Misc;
-import net.dodian.utilities.Utils;
 
-import static net.dodian.uber.game.combat.ClientExtensionsKt.magicBonusDamage;
-import static net.dodian.uber.game.combat.PlayerAttackCombatKt.canAttackNpc;
+import java.util.Objects;
+
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class MagicOnObject implements Packet {
@@ -57,16 +53,16 @@ public class MagicOnObject implements Packet {
                 Position objectPosition = null;
                 Object o = new Object(objectID, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), task.getWalkToPosition().getZ(), 10);
                 if (def != null && !GlobalObject.hasGlobalObject(o)) {
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
                 } else {
                     if (GlobalObject.hasGlobalObject(o)) {
-                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(o.face), object.getSizeY(o.type), o.z);
+                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(o.face), object.getSizeY(o.type), o.z);
                     } else if (object != null) {
                         objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                     }
                 }
                 if (objectID == 23131)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 if(objectID == 16466)
                     objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 2972, client.getPosition().getX(), client.getPosition().getY(), 1, 1, client.getPosition().getZ());
                 if(objectID == 11643) {

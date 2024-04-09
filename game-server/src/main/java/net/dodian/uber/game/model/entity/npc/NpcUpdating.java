@@ -22,7 +22,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public static NpcUpdating getInstance() {
         return instance;
     }
-    private Stream updateBlock = new Stream(new byte[10_000]);
+    private final Stream updateBlock = new Stream();
 
     @Override
     public void update(Player player, Stream stream) {
@@ -106,16 +106,16 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeByte(updateMask);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
             appendAnimationRequest(npc, stream);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(npc, stream);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
+            appendPrimaryHit2(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGfxUpdate(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
             appendTextUpdate(npc, stream);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
+            appendPrimaryHit(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
             appendFaceCharacter(npc, stream);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(npc, stream);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
             appendFaceCoordinates(npc, stream);
     }
@@ -126,7 +126,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     public void appendGfxUpdate(Npc npc, Stream stream) {
         stream.writeWord(npc.getGfxId());
-        stream.writeDWord(npc.getGfxHeight());
+        stream.writeDWord(npc.getGfxHeight() << 16);
     }
 
     @Override
@@ -140,10 +140,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeByteC(Math.min(npc.getDamageDealt(), 255));
         if (npc.getDamageDealt() == 0) {
             stream.writeByteS(0);
-        } else if (!npc.isCrit()) {
-            stream.writeByteS(1);
-        } else {
+        } else if (npc.isCrit()) {
             stream.writeByteS(3);
+        } else {
+            stream.writeByteS(1);
         }
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
@@ -152,18 +152,18 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void appendPrimaryHit2(Npc npc, Stream stream) {
-        stream.writeByteA(Math.min(npc.getDamageDealt(), 255));
-        if (npc.getDamageDealt() == 0) {
-            stream.writeByteC(0);
-        } else if (!npc.isCrit()) {
-            stream.writeByteC(1);
+        stream.writeByteA(Math.min(npc.getDamageDealt2(), 255));
+        if (npc.getDamageDealt2() == 0) {
+            stream.writeByte(0);
+        } else if (npc.isCrit2()) {
+            stream.writeByte(-3);
         } else {
-            stream.writeByteC(3);
+            stream.writeByte(-1);
         }
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-        stream.writeByteA(value);
-        stream.writeByte(100);
+        stream.writeByteS(value);
+        stream.writeByteC(100);
     }
     @Override
     public void appendFaceCoordinates(Npc npc, Stream stream) {

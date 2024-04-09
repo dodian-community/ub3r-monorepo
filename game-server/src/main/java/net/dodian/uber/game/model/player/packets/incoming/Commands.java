@@ -35,10 +35,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
@@ -79,7 +76,14 @@ public class Commands implements Packet {
                     client.send(new SendMessage("You turned insta loot " + (client.instaLoot ? "on" : "off") + "!"));
                 }
                 if (cmd[0].equalsIgnoreCase("death")) {
-                    client.dealDamage(client.getCurrentHealth(), true);
+                    client.dealDamage(null, client.getCurrentHealth(), true);
+                }
+                if (cmd[0].equalsIgnoreCase("dharok")) {
+                    client.dealDamage(null, client.getCurrentHealth() - 1, true);
+                }
+                if (cmd[0].equalsIgnoreCase("heal")) {
+                    int overHeal = (int)(client.getMaxHealth() * 0.15);
+                    client.heal(client.getMaxHealth() + overHeal, overHeal);
                 }
                 if (cmd[0].equalsIgnoreCase("obja")) {
                     try { //497 = swing rope! -> 23132
@@ -234,7 +238,7 @@ public class Commands implements Packet {
                         client.triggerTele(3230, 3107, 0,false);
                 }
                 if (cmd[0].equalsIgnoreCase("damage")) {
-                    client.dealDamage(20, true);
+                    client.dealDamage(null, 20, true);
                 }
                 if (cmd[0].equalsIgnoreCase("goup")) {
                     int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
@@ -264,6 +268,9 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("rehp")) {
                     client.reloadHp = !client.reloadHp;
                     client.send(new SendMessage("You set reload hp as " + client.reloadHp));
+                }
+                if (cmd[0].equalsIgnoreCase("chat")) {
+                    client.showPlayerOption(new String[]{ "Moo?", "Yes", "No" });
                 }
                 if (cmd[0].equalsIgnoreCase("face")) {
                     try {
@@ -1004,6 +1011,11 @@ public class Commands implements Packet {
                 }
                 if (cmd[0].equalsIgnoreCase("staffzone")) {
                     client.teleportTo(2936, 4688, 0);
+                    client.send(new SendMessage("Welcome to the staff zone!"));
+                }
+                if (cmd[0].equalsIgnoreCase("test_area")) {
+                    client.teleportTo(3260, 2784, 0);
+                    client.send(new SendMessage("Welcome to the monster test area!"));
                 }
                 if (cmd[0].equalsIgnoreCase("busy") && client.playerRights > 1) {
                     client.busy = !client.busy;
@@ -1352,7 +1364,7 @@ public class Commands implements Packet {
                     int newPosX = Integer.parseInt(cmd[1]);
                     int newPosY = Integer.parseInt(cmd[2]);
                     int newHeight = cmd.length != 4 ? 0 : Integer.parseInt(cmd[3]);
-                    client.teleportTo(newPosX, newPosY, newHeight);
+                    client.transport(new Position(newPosX, newPosY, newHeight));
                     client.send(new SendMessage("Welcome to " + newPosX + ", " + newPosY + " at height " + newHeight));
                 } catch (Exception e) {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " x y or ::" + cmd[0] + " x y height"));
@@ -1552,6 +1564,10 @@ public class Commands implements Packet {
                             client.triggerTele(2905, 9727, 0,false);
                         else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                             client.triggerTele(2393, 5090, 0,false);
+                        else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
+                            client.triggerTele(2393, 5090, 0,false);
+                        else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("kk")) //Kalphite king
+                            client.triggerTele(2393, 5090, 0,false);
                 }
                 if (cmd[0].equalsIgnoreCase("item")) {
                     int newItemID = Integer.parseInt(cmd[1]);
@@ -1597,9 +1613,13 @@ public class Commands implements Packet {
                     client.getPlunder.nextRoom();
                     client.send(new SendMessage("You are now at floor " + (client.getPlunder.getRoomNr() + 1)));
                 }
-                if (cmd[0].equals("decant")) {
-                    client.NpcTalkTo = 1174;
-                    client.NpcDialogue = 1178;
+                if (cmd[0].equals("barrows")) {
+                    for(int i = 0; i < 8; i++)
+                        client.addItem(4746 + (i * 2), 1);
+                    for(int i = 0; i < 16; i++)
+                        client.addItem(4709 + (i * 2), 1);
+                    client.checkItemUpdate();
+                    client.send(new SendMessage("Here is your barrows pieces!"));
                 }
                 if(cmd[0].equalsIgnoreCase("setup")) {
                     for(int i = 0; i < 7; i++) {
@@ -1635,6 +1655,8 @@ public class Commands implements Packet {
                     client.addItem(5733, 1);
                     for(int i = 0; i < 27; i++)
                         client.addItem(385, 1);
+                    client.checkItemUpdate();
+                    client.send(new SendMessage("Your setup is done!"));
                 }
             }
         } catch (Exception e) { //end of commands!

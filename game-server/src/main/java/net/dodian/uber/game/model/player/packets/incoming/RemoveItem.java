@@ -61,9 +61,11 @@ public class RemoveItem implements Packet {
             }
             boolean IsIn = false;
             if (ShopHandler.ShopSModifier[client.MyShopID] > 1) {
-                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID] && !IsIn; j++)
-                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1))
+                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID]; j++)
+                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1)) {
                         IsIn = true;
+                        break;
+                    }
             } else IsIn = true;
             if (!IsIn && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
                 client.send(new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
@@ -77,10 +79,10 @@ public class RemoveItem implements Packet {
                     ShopAdd = " (" + (ShopValue / thousand) + "K)";
                 } else if (ShopValue >= million) {
                     int leftover = ShopValue - ((ShopValue / million) * million);
-                    ShopAdd = " (" + (ShopValue / 1000000) + "" + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
+                    ShopAdd = " (" + (ShopValue / 1000000) + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
                 }
                 client.send(
-                        new SendMessage(client.GetItemName(removeID) + ": shop will buy for " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + "" + ShopAdd));
+                        new SendMessage(client.GetItemName(removeID) + ": shop will buy for " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + ShopAdd));
             }
         } else if (interfaceID == 3900) { // Show value to buy items
             int currency = client.MyShopID == 55 ? 11997 : 995;
@@ -94,10 +96,10 @@ public class RemoveItem implements Packet {
                 ShopAdd = " (" + (ShopValue / thousand) + "K)";
             } else if (ShopValue >= million) {
                 int leftover = ShopValue - ((ShopValue / million) * million);
-                ShopAdd = " (" + (ShopValue / 1000000) + "" + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
+                ShopAdd = " (" + (ShopValue / 1000000) + ((leftover / 100000) > 0 ? "."+ (leftover / 100000) : "") + " million)";
             }
             client
-                    .send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + "" + ShopAdd));
+                    .send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + ShopValue + " " + client.GetItemName(currency).toLowerCase() + ShopAdd));
         } else if (interfaceID >= 1119 && interfaceID <= 1123) { // Smithing
             if (client.smithing[2] > 0) {
                 client.smithing[4] = removeID;

@@ -1,8 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.security.CommandLog;
 import net.dodian.utilities.Utils;
 
 import java.text.SimpleDateFormat;
@@ -12,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerHandler {
 
     public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<Long, Integer>();
+    public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<>();
     public static int cycle = 1;
     //Players online!
     public static Player[] players = new Player[Constants.maxPlayers];

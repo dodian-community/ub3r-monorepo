@@ -6,7 +6,6 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
-import net.dodian.uber.game.model.item.SpecialsHandler
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
@@ -28,26 +27,33 @@ fun Client.handleMeleeAttack(): Int {
     }
         combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
         lastCombat = 16
-        val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
         setFocus(target.position.x, target.position.y)
-        sendAnimation(emote)
         var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
-             val npcId = Server.npcManager.getNpc(target.slot).id
-             if(getSlayerDamage(npcId, false) == 1)
+             val npc = Server.npcManager.getNpc(target.slot)
+             val name = npc.npcName().lowercase()
+             if(getSlayerDamage(npc.id, false) == 1)
                  maxHit *= 1.15
-             else if(getSlayerDamage(npcId, false) == 2)
+             else if(getSlayerDamage(npc.id, false) == 2)
                  maxHit *= 1.2
+             val wolfBane = equipment[Equipment.Slot.WEAPON.id] == 2952 &&  when {
+                 name.lowercase().contains("vampyre") -> true
+                 name.lowercase().contains("werewolf") -> true
+                 else -> false
+             }
+             if(wolfBane) maxHit *= 2
+             val keris = equipment[Equipment.Slot.WEAPON.id] == 10581 &&  when {
+                 name.lowercase().contains("kalphite") -> true
+                 name.lowercase().contains("scarab") -> true
+                 name.lowercase().contains("spider") -> true
+                 else -> false
+             }
+             if(keris) maxHit *= 2
          }
-        if(target is Player) {
-            val player = Server.playerHandler.getClient(target.slot)
-            if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) maxHit /= 2.0
-        }
         var hit = Utils.random(maxHit.toInt())
         val criticalChance = getLevel(Skill.AGILITY) / 9
-        if(equipment[Equipment.Slot.SHIELD.id]==4224)
-            criticalChance * 1.5
         val extra = getLevel(Skill.STRENGTH) * 0.195
+        if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
         val landCrit = Math.random() * 100 <= criticalChance
         val landHit = landHit(this, target)
         if (target is Npc) {
@@ -58,41 +64,85 @@ fun Client.handleMeleeAttack(): Int {
                 name.lowercase().contains("werewolf") -> true
                 else -> false
             }
-            if(wolfBane)
-                maxHit *= 2;
-            if (landCrit && landHit)
-                hit + Utils.dRandom2(extra).toInt()
+            val keris = equipment[Equipment.Slot.WEAPON.id] == 10581 &&  when {
+                name.lowercase().contains("kalphite") -> true
+                name.lowercase().contains("scarab") -> true
+                name.lowercase().contains("spider") -> true
+                else -> false
+            }
+            if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
             if(wolfBane && Misc.chance(8) == 1) {
                 hit *= 2
                 send(SendMessage("<col=8B4513>You use the power of the wolf to hit higher!"))
             } //#FFD700
-            if(hit >= npc.currentHealth)
-                hit = npc.currentHealth
-            npc.dealDamage(this, hit, landCrit && landHit)
+            if(keris && Misc.chance(8) == 1) {
+                hit *= 2
+                send(SendMessage("<col=8B4513>You use the power of the keris to hit higher!"))
+            } else if (keris && Misc.chance(33) == 1) {
+                hit *= 4
+                send(SendMessage("<col=8B4513>You punch a hole in the creatures exoskeleton!"))
+            }
+            hit = handleSpecial(hit)
+            if(hit >= npc.currentHealth) hit = npc.currentHealth
+            npc.dealDamage(this, hit, landCrit && hit > 0)
+
+            var chance = Misc.chance(8) == 1 && armourSet("guthan")
+            if(chance && hit > 0) { //Guthan effect!
+                stillgfx(398, npc.position, 100)
+                heal(hit, (getMaxHealth().toDouble() * 0.15).toInt())
+            }
+            var hit2 = hit
+            chance = Misc.chance(8) == 1 && armourSet("torag")
+            if(chance && hit2 > 0) { //Torag effect!
+                stillgfx(399, npc.position, 0)
+                hit2 /= 2
+                if(hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+                npc.dealDamage(this, hit2, landCrit && hit2 > 0)
+            }
+            if(hit > 0) {
+                if (fightType == 3) {
+                    val xp = (13 * hit)
+                    giveExperience(xp, Skill.ATTACK)
+                    giveExperience(xp, Skill.DEFENCE)
+                    giveExperience(xp, Skill.STRENGTH)
+                } else giveExperience(40 * hit, Skill.getSkill(fightType))
+                giveExperience(13 * hit, Skill.HITPOINTS)
+            }
+            if(hit2 > 0) {
+                if (fightType == 3) {
+                    val xp = (13 * hit2)
+                    giveExperience(xp, Skill.ATTACK)
+                    giveExperience(xp, Skill.DEFENCE)
+                    giveExperience(xp, Skill.STRENGTH)
+                } else giveExperience(40 * hit2, Skill.getSkill(fightType))
+                giveExperience(13 * hit2, Skill.HITPOINTS)
+            }
         }
         if (target is Player) {
             val player = Server.playerHandler.getClient(target.slot)
-            if (landCrit && landHit)
-                hit + Utils.dRandom2(extra).toInt()
+            if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
-            if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) hit /= 2
-            if(hit >= player.currentHealth)
-                hit = player.currentHealth
-            player.dealDamage(hit, landCrit && landHit)
-        }
+            if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) (hit * 0.6).toInt()
+            if(hit >= player.currentHealth) hit = player.currentHealth
+            hit = handleSpecial(hit)
+            player.dealDamage(this, hit, landCrit && landHit)
 
-        if (target is Npc) {
-            if (fightType == 3) {
-                val xp = (13 * hit)
-                giveExperience(xp, Skill.ATTACK)
-                giveExperience(xp, Skill.DEFENCE)
-                giveExperience(xp, Skill.STRENGTH)
-            } else giveExperience(40 * hit, Skill.getSkill(fightType))
-
-            giveExperience(13 * hit, Skill.HITPOINTS)
+            var chance = Misc.chance(8) == 1 && armourSet("guthan")
+            if(chance && hit > 0) { //Guthan effect!
+                stillgfx(398, player.position, 100)
+                heal(hit, (getMaxHealth().toDouble() * 0.15).toInt())
+            }
+            var hit2 = hit
+            chance = Misc.chance(8) == 1 && armourSet("torag")
+            if(chance && hit2 > 0) { //Torag effect!
+                stillgfx(399, player.position, 0)
+                hit2 /= 2
+                if(hit2 >= player.currentHealth) hit2 = player.currentHealth
+                player.dealDamage(this, hit2, landCrit)
+            }
         }
-        if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
+        if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
     return 1
 }
 
@@ -151,7 +201,7 @@ fun landHit(p: Client, t: Entity): Boolean {
         var atkLevel = p.getLevel(Skill.ATTACK)
         val defLevel = t.defence
         val defBonus = 0.0
-        val npcDef = defLevel * (defBonus + 64.0)
+        val npcDef = (defLevel + 9) * (defBonus + 64.0)
         /* Various bonuses for styles! */
         if(p.fightType == 0) atkLevel += 3
         if(p.fightType == 3) atkLevel += 1
@@ -170,24 +220,44 @@ fun landHit(p: Client, t: Entity): Boolean {
 }
 
 fun Client.handleSpecial(hit: Int): Int {
-    var newHit = hit
     val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
-    if(target is Client) {
-
-    }
-    if (target is Npc) {
-        val chance = Range(1, 8).value
-        if (chance == 1 && specsOn) {
-            when (equipment[Equipment.Slot.WEAPON.id]) {
-                4151, 7158 -> {
-                    SpecialsHandler.specAction(this, equipment[Equipment.Slot.WEAPON.id], hitDiff)
-                    newHit += bonusSpec
-                    requestAnim(emoteSpec, 0)
-                    // TODO: Uhm? Why y then x?
-                    animation(animationSpec, target.position)
-                }
+    var newHit = hit
+    val chance = Range(1, 8).value
+    if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
+        requestAnim(-1, 0)
+        sendAnimation(emote)
+    } else if (target is Npc) {
+        val npc = Server.npcManager.getNpc(target.slot)
+        requestAnim(-1, 0)
+        when (equipment[Equipment.Slot.WEAPON.id]) {
+            1215 -> {
+                newHit = (newHit * 1.1).toInt()
+                stillgfx(252, target.position, 55, true)
+                sendAnimation(1062)
+                var damage = Range(1, newHit / 2).value
+                if (damage >= npc.currentHealth) damage = npc.currentHealth
+                npc.dealDamage(this, damage, false)
+                giveExperience(40 * damage, Skill.getSkill(fightType))
+                giveExperience(13 * damage, Skill.HITPOINTS)
             }
-        } else requestAnim(emote, 0)
-    } else resetAttack()
+            else -> sendAnimation(emote)
+        }
+    } else if (target is Player) {
+        val player = Server.playerHandler.getClient(target.slot)
+        requestAnim(-1, 0)
+        when (equipment[Equipment.Slot.WEAPON.id]) {
+            1215 -> {
+                newHit = (newHit * 1.1).toInt()
+                stillgfx(252, target.position, 55, true)
+                sendAnimation(1062)
+                var damage = Range(1, newHit / 2).value
+                if (damage >= player.currentHealth) damage = player.currentHealth
+                player.dealDamage(this, damage, false)
+                giveExperience(40 * damage, Skill.getSkill(fightType))
+                giveExperience(13 * damage, Skill.HITPOINTS)
+            }
+            else ->  sendAnimation(emote)
+        }
+    }
     return newHit
 }

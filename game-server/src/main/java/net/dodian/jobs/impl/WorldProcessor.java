@@ -27,8 +27,7 @@ public class WorldProcessor implements Job {
                         statement.executeUpdate(query);
                         statement.close();
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                        e.printStackTrace();
+                        System.out.println("Game world set player count issue! " + e.getMessage());
                     }
                 }
                 try {
@@ -50,7 +49,6 @@ public class WorldProcessor implements Job {
                     results.close();
                 } catch (Exception e) {
                     System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-                    e.printStackTrace();
                 }
                 try {
                     for (Player p : PlayerHandler.players) {
@@ -68,7 +66,6 @@ public class WorldProcessor implements Job {
                     }
                 } catch (Exception e) {
                     System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-                    e.printStackTrace();
                 }
                 try {
                     for (Player p : PlayerHandler.players) {
@@ -89,11 +86,9 @@ public class WorldProcessor implements Job {
                     }
                 } catch (Exception e) {
                     System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-                    e.printStackTrace();
                 }
                 Server.chat.clear(); //Not sure what this do, but empty it just incase!
         } catch (Exception e) {
-            e.printStackTrace();
             System.out.println("world process ended for some reason...");
             System.out.println(e.getMessage());
         }

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Emotes;
+import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
@@ -66,7 +67,7 @@ public class ClickingButtons implements Packet {
             if(client.refundSlot == 0 && ((size > 3 && checkSlot == 5) || (size == 3 && checkSlot == 4) || (size == 1 && checkSlot == 2) || (size == 2 && checkSlot == 3))) { //Close!
                 client.refundSlot = -1;
                 client.send(new RemoveInterfaces());
-            } else if(((client.refundSlot == 0 && position > 3) || position > 3) && checkSlot == 4)
+            } else if((position > 3) && checkSlot == 4)
                 client.refundSlot += 3;
             else if(client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5)))
                 client.refundSlot -= 3;
@@ -384,9 +385,9 @@ public class ClickingButtons implements Packet {
             case 44208: //Make 10
             case 44207: //Make all (27)
                 client.send(new RemoveInterfaces());
-                int[] craftAmount = {27, 10, 5, 1};
+                int[] craftVialAmount = {27, 10, 5, 1};
                 client.setSkill(CRAFTING.getId(), 229,  1, 1775, -1, 80, 884, 3);
-                client.skillActionCount = craftAmount[actionButton - 44207];
+                client.skillActionCount = craftVialAmount[actionButton - 44207];
                 client.skillActionTimer = client.playerSkillAction.get(7);
             break;
             case 48108: //Make one empty cup
@@ -398,9 +399,9 @@ public class ClickingButtons implements Packet {
                     client.send(new SendMessage("You need level 18 crafting to craft a empty cup."));
                     break;
                 }
-                craftAmount = new int[]{27, 10, 5, 1};
+                int[] craftCupAmount = new int[]{27, 10, 5, 1};
                 client.setSkill(CRAFTING.getId(), 1980,  1, 1775, -1, 120, 884, 3);
-                client.skillActionCount = craftAmount[actionButton - 48105];
+                client.skillActionCount = craftCupAmount[actionButton - 48105];
                 client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 48112: //Make one fishbowl
@@ -412,9 +413,9 @@ public class ClickingButtons implements Packet {
                     client.send(new SendMessage("You need level 32 crafting to craft a fishbowl."));
                     break;
                 }
-                craftAmount = new int[]{27, 10, 5, 1};
+                int[] craftFishAmount = new int[]{27, 10, 5, 1};
                 client.setSkill(CRAFTING.getId(), 6667,  1, 1775, -1, 160, 884, 3);
-                client.skillActionCount = craftAmount[actionButton - 48109];
+                client.skillActionCount = craftFishAmount[actionButton - 48109];
                 client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 48116: //Make one unpowered orb
@@ -426,9 +427,9 @@ public class ClickingButtons implements Packet {
                     client.send(new SendMessage("You need level 48 crafting to craft a unpowered orb."));
                     break;
                 }
-                craftAmount = new int[]{27, 10, 5, 1};
+                int[] craftOrbAmount = new int[]{27, 10, 5, 1};
                 client.setSkill(CRAFTING.getId(), 567,  1, 1775, -1, 240, 884, 3);
-                client.skillActionCount = craftAmount[actionButton - 48113];
+                client.skillActionCount = craftOrbAmount[actionButton - 48113];
                 client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 34170:
@@ -606,10 +607,10 @@ public class ClickingButtons implements Packet {
             case 18103: // Chop 2h
             case 9125: // Chop longsword & Scimitar
             case 6168: // chop (axe)
-                client.weaponStyle = actionButton == 1177 || actionButton == 1080 || actionButton == 14218 ? client.weaponStyle.POUND :
-                actionButton == 22228 ? client.weaponStyle.PUNCH : actionButton == 48010 ? client.weaponStyle.FLICK : actionButton == 21200 ? client.weaponStyle.SPIKE :
-                actionButton == 6221 || actionButton == 6236 || actionButton == 17102 ? client.weaponStyle.ACCURATE :
-                actionButton == 8234 ? client.weaponStyle.STAB : client.weaponStyle.CHOP;
+                client.weaponStyle = actionButton == 1177 || actionButton == 1080 || actionButton == 14218 ? Player.fightStyle.POUND :
+                actionButton == 22228 ? Player.fightStyle.PUNCH : actionButton == 48010 ? Player.fightStyle.FLICK : actionButton == 21200 ? Player.fightStyle.SPIKE :
+                actionButton == 6221 || actionButton == 6236 || actionButton == 17102 ? Player.fightStyle.ACCURATE :
+                actionButton == 8234 ? Player.fightStyle.STAB : Player.fightStyle.CHOP;
                 client.fightType = 0;
                 CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1080 && client.autocast_spellIndex != -1) {
@@ -633,9 +634,9 @@ public class ClickingButtons implements Packet {
             case 6219: // longrange (shortbow)
             case 6234: // longrange (long bow)
             case 17100: // longrange (darts)
-                client.weaponStyle = actionButton == 1175 || actionButton == 22229 ? client.weaponStyle.BLOCK_THREE :
-                actionButton == 33019 ? client.weaponStyle.FEND : actionButton == 48008 ? client.weaponStyle.DEFLECT :
-                actionButton == 6219 || actionButton == 6234 || actionButton == 17100 ? client.weaponStyle.LONGRANGE : client.weaponStyle.BLOCK;
+                client.weaponStyle = actionButton == 1175 || actionButton == 22229 ? Player.fightStyle.BLOCK_THREE :
+                actionButton == 33019 ? Player.fightStyle.FEND : actionButton == 48008 ? Player.fightStyle.DEFLECT :
+                actionButton == 6219 || actionButton == 6234 || actionButton == 17100 ? Player.fightStyle.LONGRANGE : Player.fightStyle.BLOCK;
                 client.fightType = 1; //Defensive xp!
                 CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1078 && client.autocast_spellIndex != -1) {
@@ -651,9 +652,9 @@ public class ClickingButtons implements Packet {
             case 18077: // lunge (spear)
             case 18080: // swipe (spear)
             case 18079: // pound (spear)
-                client.weaponStyle = actionButton == 14220 ? client.weaponStyle.SPIKE : actionButton == 33018 ? client.weaponStyle.JAB :
-                actionButton == 18077 ? client.weaponStyle.LUNGE : actionButton == 18079 ? client.weaponStyle.POUND_CON : actionButton == 18080 ? client.weaponStyle.SWIPE :
-                client.weaponStyle.LASH;
+                client.weaponStyle = actionButton == 14220 ? Player.fightStyle.SPIKE : actionButton == 33018 ? Player.fightStyle.JAB :
+                actionButton == 18077 ? Player.fightStyle.LUNGE : actionButton == 18079 ? Player.fightStyle.POUND_CON : actionButton == 18080 ? Player.fightStyle.SWIPE :
+                        Player.fightStyle.LASH;
                 client.fightType = 3;
                 CombatStyleHandler.setWeaponHandler(client);
             break;
@@ -676,12 +677,12 @@ public class ClickingButtons implements Packet {
             case 17101: // repid (darts)
             case 8237: // lunge (dagger)
             case 8236: // slash (dagger)
-                client.weaponStyle = actionButton == 1079 || actionButton == 1176 || actionButton == 14221 ? client.weaponStyle.PUMMEL :
-                actionButton == 9128 || actionButton == 18106 || actionButton == 30091 || actionButton == 8236 ? client.weaponStyle.SLASH :
-                actionButton == 22230 ? client.weaponStyle.KICK : actionButton == 21203 ? client.weaponStyle.IMPALE :
-                actionButton == 6170 || actionButton == 21202 || actionButton == 18105 ? client.weaponStyle.SMASH :
-                actionButton == 6171 ? client.weaponStyle.HACK : actionButton == 33020 ? client.weaponStyle.SWIPE :
-                actionButton == 6220 || actionButton == 6235 || actionButton == 17101 ? client.weaponStyle.RAPID : client.weaponStyle.LUNGE_STR;
+                client.weaponStyle = actionButton == 1079 || actionButton == 1176 || actionButton == 14221 ? Player.fightStyle.PUMMEL :
+                actionButton == 9128 || actionButton == 18106 || actionButton == 30091 || actionButton == 8236 ? Player.fightStyle.SLASH :
+                actionButton == 22230 ? Player.fightStyle.KICK : actionButton == 21203 ? Player.fightStyle.IMPALE :
+                actionButton == 6170 || actionButton == 21202 || actionButton == 18105 ? Player.fightStyle.SMASH :
+                actionButton == 6171 ? Player.fightStyle.HACK : actionButton == 33020 ? Player.fightStyle.SWIPE :
+                actionButton == 6220 || actionButton == 6235 || actionButton == 17101 ? Player.fightStyle.RAPID : Player.fightStyle.LUNGE_STR;
                 client.fightType = 2;
                 CombatStyleHandler.setWeaponHandler(client);
                 if(actionButton == 1079 && client.autocast_spellIndex != -1) {
@@ -738,7 +739,7 @@ public class ClickingButtons implements Packet {
                     client.lastButton = System.currentTimeMillis();
                     if (client.inTrade && !client.tradeConfirmed) {
                         client.tradeConfirmed = true;
-                        if (other != null && other.tradeConfirmed) {
+                        if (other.tradeConfirmed) {
                             if (other.hasTradeSpace() || client.hasTradeSpace()) {
                                 client.send(new SendMessage(client.failer));
                                 other.send(new SendMessage(client.failer));
@@ -750,12 +751,12 @@ public class ClickingButtons implements Packet {
                             break;
                         }
                         client.send(new SendString("Waiting for other player...", 3431));
-                        if (other != null && client.validClient(client.trade_reqId)) {
+                        if (client.validClient(client.trade_reqId)) {
                             other.send(new SendString("Other player has accepted", 3431));
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println("Trade button issue! " + e);
                 }
                 break;
 
@@ -777,14 +778,14 @@ public class ClickingButtons implements Packet {
                         client.send(new SendString("Waiting for other player...", 3535));
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println("Trade button issue! " + e);
                 }
                 break;
 
             case 9157:
                 if(client.discord) { //Yes
                     client.send(new RemoveInterfaces());
-                    client.openPage(client, "https://discord.gg/WZP5mByJ8e");
+                    Player.openPage(client, "https://discord.gg/WZP5mByJ8e");
                     client.discord = false;
                 }
                 client.triggerChat(1);
@@ -800,12 +801,6 @@ public class ClickingButtons implements Packet {
                     client.getOutputStream().createFrame(27);
                 } else if (client.NpcDialogue == 22) { // Makeover Mage
                     client.NpcDialogue = 23;
-                    client.NpcDialogueSend = false;
-                } else if (client.NpcDialogue == 26) {
-                    client.specsOn = true;
-                    client.send(new SendMessage("You have enabled specials."));
-                    client.send(new RemoveInterfaces());
-                    client.NpcDialogue = 0;
                     client.NpcDialogueSend = false;
                 } else if (client.NpcDialogue == 27) {
                     client.yellOn = true;
@@ -842,12 +837,6 @@ public class ClickingButtons implements Packet {
                 } else if (client.NpcDialogue == 1001) { // dice
                     client.setInterfaceWalkable(-1);
                     client.send(new RemoveInterfaces());
-                } else if (client.NpcDialogue == 26) {
-                    client.specsOn = false;
-                    client.send(new SendMessage("You have disabled specials."));
-                    client.send(new RemoveInterfaces());
-                    client.NpcDialogue = 0;
-                    client.NpcDialogueSend = false;
                 } else if (client.NpcDialogue == 27) {
                     client.yellOn = false;
                     client.send(new SendMessage("You have disabled boss yell messages."));

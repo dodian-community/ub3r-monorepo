@@ -16,7 +16,7 @@ public class MagicOnItems implements Packet {
         int castOnItem = client.getInputStream().readSignedWordA();
         client.getInputStream().readSignedWord();
         int castSpell = client.getInputStream().readSignedWordA();
-        int value = (int) Math.floor(Server.itemManager.getAlchemy(castOnItem));
+        int value = (int) (double) Server.itemManager.getAlchemy(castOnItem);
         if (!(System.currentTimeMillis() - client.lastMagic >= 1800) || !client.playerHasItem(castOnItem) || !(client.playerItems[castOnSlot] == (castOnItem + 1))) {
             client.send(new SendSideTab(6));
             return;
@@ -44,8 +44,6 @@ public class MagicOnItems implements Packet {
             int item = 0;
             if (castOnItem == 1637)
                 item = 2550;
-            else if (castOnItem == 1656)
-                item = 0;
             else if (castOnItem == 1694)
                 item = 1727;
             else
@@ -73,11 +71,7 @@ public class MagicOnItems implements Packet {
                 return;
             }
             int item = 0;
-            if (castOnItem == 1639)
-                item = 0;
-            else if (castOnItem == 1658)
-                item = 0;
-            else if (castOnItem == 1696)
+            if (castOnItem == 1696)
                 item = 1729;
             else
                 client.send(new SendMessage("Cant enchant this item!"));
@@ -106,8 +100,6 @@ public class MagicOnItems implements Packet {
             int item = 0;
             if (castOnItem == 1641)
                 item = 2568;
-            else if (castOnItem == 1660)
-                item = 0;
             else if (castOnItem == 1698)
                 item = 1725;
             else
@@ -137,8 +129,6 @@ public class MagicOnItems implements Packet {
             int item = 0;
             if (castOnItem == 1643)
                 item = 2570;
-            else if (castOnItem == 1662)
-                item = 0;
             else if (castOnItem == 1700)
                 item = 1731;
             else
@@ -168,8 +158,6 @@ public class MagicOnItems implements Packet {
             int item = 0;
             if (castOnItem == 1645)
                 item = 2572;
-            else if (castOnItem == 1664)
-                item = 0;
             else if (castOnItem == 1702)
                 item = 1704;
             else

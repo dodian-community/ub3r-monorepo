@@ -11,8 +11,9 @@ import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Misc;
+
+import java.util.Objects;
 
 import static net.dodian.uber.game.model.player.skills.Skill.FARMING;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -39,7 +40,7 @@ public class ClickObject4 implements Packet {
             @Override
             public void execute() {
 
-                if (client == null || client.disconnected) {
+                if (client.disconnected) {
                     this.stop();
                     return;
                 }
@@ -50,11 +51,11 @@ public class ClickObject4 implements Packet {
                 }
                 Position objectPosition = null;
                 if (def != null)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
                 else {
                     Object o = new Object(objectID, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), task.getWalkToPosition().getZ(), 10);
                     if (GlobalObject.hasGlobalObject(o)) {
-                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
+                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
                     } else if (object != null)
                         objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 }
@@ -70,8 +71,8 @@ public class ClickObject4 implements Packet {
     }
 
     public void clickObject3(Client client, int objectID, Position position, GameObjectData obj) {
-        //String objectName = obj == null ? "" : obj.getName().toLowerCase();
         client.setFocus(position.getX(), position.getY());
+        String objectName = obj == null ? "" : obj.getName().toLowerCase();
         if(objectID >= 8550 && objectID <= 8557 || (objectID == 27114 || objectID == 27113)) { //Allotment guide
             client.showSkillMenu(FARMING.getId(), 0);
         }
@@ -89,6 +90,10 @@ public class ClickObject4 implements Packet {
         }
         if(objectID >= 7962 && objectID <= 7965 || objectID == 26579) { //Fruit tree guide
             client.showSkillMenu(FARMING.getId(), 5);
+        }
+        if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
+                || (objectID == 6084) || objectName.contains("bank booth")) {
+            client.send(new SendMessage("This bank options are not working currently!"));
         }
     }
 

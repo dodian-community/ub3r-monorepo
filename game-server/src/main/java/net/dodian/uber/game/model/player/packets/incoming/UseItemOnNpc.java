@@ -3,7 +3,6 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;

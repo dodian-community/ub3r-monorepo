@@ -15,6 +15,7 @@ import net.dodian.utilities.Utils;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Objects;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
@@ -55,7 +56,7 @@ public class ClickItem implements Packet {
                 client.send(new SendMessage("Npc added = " + client.getPlayerNpc() + ", at x = " + client.getPosition().getX()
                         + " y = " + client.getPosition().getY() + "."));
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Potato sql error " + e);
             }
             return;
         }
@@ -345,10 +346,10 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.dealDamage(10, true);
+                    client.dealDamage(null, 10, true);
                     for(int skill = 0; skill < 4; skill++) {
                         skill = skill == 3 ? 4 : skill;
-                        client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Skill.getSkill(skill))) * 0.15), Skill.getSkill(skill));
+                        client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Objects.requireNonNull(Skill.getSkill(skill)))) * 0.15), Skill.getSkill(skill));
                     }
                     int ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2;
                     client.addEffectTime(2, 200 + ticks); //200 ticks = 120 seconds = 2 minutes!, max ticks = (99 + 1) * 2 = 200 aka 2 minute for a total of 4 minutes.

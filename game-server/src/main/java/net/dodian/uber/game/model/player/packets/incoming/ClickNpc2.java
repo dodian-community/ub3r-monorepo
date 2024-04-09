@@ -61,10 +61,6 @@ public class ClickNpc2 implements Packet {
         client.globalCooldown[0] = time;
         int npcX = tempNpc.getPosition().getX();
         int npcY = tempNpc.getPosition().getY();
-		/*if (Math.abs(client.getPosition().getX() - npcX) > 50 || Math.abs(client.getPosition().getY() - npcY) > 50) {
-			// send(new SendMessage("Client hack detected!");
-			// break;
-		}*/
         if (!tempNpc.isAlive()) {
             client.send(new SendMessage("That monster has been killed!"));
             return;
@@ -121,6 +117,8 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 30; // Cape store!
         } else if (npcId == 3837) { // Baba Yaga
             client.WanneShop = 33;
+        } else if (npcId == 4642) { // Shanty
+            client.WanneShop = 36;
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 13;
         } else {

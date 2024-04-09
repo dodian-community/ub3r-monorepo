@@ -17,7 +17,7 @@ public class UseItemOnPlayer implements Packet {
         int CrackerSlot = client.getInputStream().readSignedWordBigEndian();
         Client player = ((Client) PlayerHandler.players[playerSlot]);
 
-        if (playerSlot < 0 || player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
+        if (player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
             return;
         }
         if (itemId == 5733) { //Potato
