@@ -2,14 +2,9 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
-import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
@@ -36,21 +31,33 @@ public class EntityProcessor implements Job {
                 npc.drop();
                 Client p = npc.getTarget(false);
                 npc.removeEnemy(p);
-                /* Jad loot table, up to 5 players */
-                if(npc.getId() == 3127)
-                    for(int i = 1; i <= 4 && !npc.getDamage().isEmpty(); i++) { //4 more players if damage not empty.
+                if(npc.getId() == 3127) { //Jad loot table, up to 5 players
+                    for (int i = 1; i <= 4 && !npc.getDamage().isEmpty(); i++) { //4 more players if damage not empty.
                         p = npc.getTarget(false);
-                        if(p != null) {
-                            double chance = (0.1 + (npc.getDamage().get(p) / (double)npc.getMaxHealth())) * 100; //10% + your damage profile!
+                        if (p != null) {
+                            double chance = (0.1 + (npc.getDamage().get(p) / (double) npc.getMaxHealth())) * 100; //10% + your damage profile!
                             double rate = Misc.chance(100000) / 1000D;
-                            if(chance - 10 >= 5 && rate <= chance) {
+                            if (chance - 10 >= 5 && rate <= chance) {
                                 npc.drop();
                                 p.send(new SendMessage("You managed to roll for the loot!"));
-                            } else if(chance - 10 < 5) p.send(new SendMessage("You were not eligible for the drop!"));
+                            } else if (chance - 10 < 5) p.send(new SendMessage("You were not eligible for the drop!"));
                             else p.send(new SendMessage("Unlucky! Better luck next time."));
                         }
                         npc.removeEnemy(p); //Need to remove the enemy if we done with the check values!
                     }
+                } else if(!npc.getDamage().isEmpty() && (npc.getId() == 4303 || npc.getId() == 4304 || npc.getId() == 6610)) { //New bosses up to 2 loot table!
+                    p = npc.getTarget(false);
+                    if(p != null) {
+                        double chance = (0.1 + (npc.getDamage().get(p) / (double)npc.getMaxHealth())) * 100; //10% + your damage profile!
+                        double rate = Misc.chance(100000) / 1000D;
+                        if(chance - 10 >= 5 && rate <= chance) {
+                            npc.drop();
+                            p.send(new SendMessage("You managed to roll for the loot!"));
+                        } else if(chance - 10 < 5) p.send(new SendMessage("You were not eligible for the drop!"));
+                        else p.send(new SendMessage("Unlucky! Better luck next time."));
+                    }
+                    npc.removeEnemy(p);
+                }
             }
             if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
                 npc.respawn();
@@ -105,8 +112,7 @@ public class EntityProcessor implements Job {
                 npc.setText("There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild and " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!");
             }
         }
-        /* Player */
-        long currentTime = System.currentTimeMillis();
+
         /* End server when update finished! */
         if (Server.updateRunning
                 && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
@@ -131,35 +137,21 @@ public class EntityProcessor implements Job {
         for (int i = 0; i < Constants.maxPlayers; i++) {
             if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
                 continue;
-                /* Some violation checks due to old code?! */
-                if (!PlayerHandler.players[i].disconnected && !PlayerHandler.players[i].isActive) {
-                    if (PlayerHandler.players[i].violations > 100) {
-                        PlayerHandler.players[i].println_debug("Disconnecting bugged player " + PlayerHandler.players[i].getPlayerName());
-                        Server.playerHandler.removePlayer(PlayerHandler.players[i]);
-                        PlayerHandler.players[i] = null;
-                        continue;
-                    } else {
-                        PlayerHandler.players[i].violations++;
-                        continue;
-                    }
+            /* initialize the login! */
+            if(!PlayerHandler.players[i].disconnected) {
+                if (!PlayerHandler.players[i].initialized) {
+                    PlayerHandler.players[i].initialize();
+                    PlayerHandler.players[i].initialized = true;
                 }
-                /* initialize the login! */
-                if (!PlayerHandler.players[i].disconnected) {
-                    if (!PlayerHandler.players[i].initialized) {
-                        PlayerHandler.players[i].initialize();
-                        PlayerHandler.players[i].initialized = true;
-                    }
-                        PlayerHandler.players[i].process();
-                        while (PlayerHandler.players[i].packetProcess()) ; //Dodian's way of handling packets..Omegalul!
-                        PlayerHandler.players[i].postProcessing();
-                        PlayerHandler.players[i].getNextPlayerMovement();
-                }
+                while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
+                PlayerHandler.players[i].process();
+                PlayerHandler.players[i].postProcessing();
+                PlayerHandler.players[i].getNextPlayerMovement();
+            }
         }
         // after processing update!
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null) //Hate continue; in a loop! Dodian do it this way..*yikes*
-                continue;
-            if (!PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive) //We need all this to continue?!
                 continue;
             /* Removing non-responding player */
             int timer = ((Client) PlayerHandler.players[i]).timeOutCounter;
@@ -180,7 +172,7 @@ public class EntityProcessor implements Job {
             if(npc != null) npc.clearUpdateFlags();
         }
         for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive) //Hate continue; in a loop! Dodian do it this way..*yikes*
+            if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive) //We need all this to continue?!
                 continue;
             PlayerHandler.players[i].clearUpdateFlags();
         }

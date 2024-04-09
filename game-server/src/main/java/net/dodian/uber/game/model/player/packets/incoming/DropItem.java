@@ -37,7 +37,7 @@ public class DropItem implements Packet {
             client.send(new SendMessage("I might be skillful, but dropping this gain no skill!"));
             return;
         }
-        if (client.wearing == false) {
+        if (!client.wearing) {
             client.dropItem(droppedItem, slot);
         }
     }

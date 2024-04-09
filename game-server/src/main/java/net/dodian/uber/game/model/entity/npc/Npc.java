@@ -36,7 +36,7 @@ public class Npc extends Entity {
     private int defaultFace;
     public int viewX;
     public int viewY;
-    private int damageDealt = 0;
+    private int damageDealt = 0, damageDealt2 = 0;
     private int deathEmote;
     public NpcData data;
     private boolean fighting = false;
@@ -91,7 +91,7 @@ public class Npc extends Entity {
                 boss = true;
             } else if (id == 4304) { //Kalphite King
                 boss = true;
-            } else if (id == 494) { //Kraken (mage boss)
+            } else if (id == 6610) { //Venenatis (mage boss)
                 boss = true;
             }
         }
@@ -145,7 +145,6 @@ public class Npc extends Entity {
 
     public void clearUpdateFlags() {
         direction = -1;
-        crit = false;
         getUpdateFlags().clear();
     }
 
@@ -169,7 +168,7 @@ public class Npc extends Entity {
         return false;
     }
 
-    private boolean crit;
+    private boolean crit, crit2;
 
     public void showConfig(Client client) {
         int magicDamage = (int) Math.floor(maxHit * this.getMagic());
@@ -250,15 +249,21 @@ public class Npc extends Entity {
     }
 
     public void dealDamage(Client client, int hitDiff, boolean crit) {
-        if (!alive || (currentHealth < 1 && maxHealth > 0))
+        if (!alive || currentHealth < 1)
             hitDiff = 0;
         else if (hitDiff > currentHealth)
             hitDiff = currentHealth;
-        this.crit = crit;
-        getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
+            this.crit = crit;
+            damageDealt = hitDiff;
+            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        } else if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
+            this.crit2 = crit;
+            damageDealt2 = hitDiff;
+            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
+        }
         currentHealth -= hitDiff;
-        damageDealt = hitDiff;
-        int dmg = damageDealt;
+        int dmg = hitDiff;
         if (validClient(client)) {
             if (getDamage().containsKey(client)) {
                 dmg += getDamage().get(client);
@@ -267,10 +272,9 @@ public class Npc extends Entity {
             getDamage().put(client, dmg);
             fighting = true;
         }
-        if (currentHealth <= 0 && maxHealth > 0) {
+        if (currentHealth < 1) {
             alive = false;
-            if (currentHealth < 0)
-                currentHealth = 0;
+            currentHealth = Math.max(currentHealth, 0);
             die();
         }
     }
@@ -393,6 +397,7 @@ public class Npc extends Entity {
     }
 
     public void die() {
+        resetCombatTimer();
         alive = false;
         fighting = false;
         deathTime = System.currentTimeMillis();
@@ -428,7 +433,7 @@ public class Npc extends Entity {
                                 p.send(new SendMessage("<col=FF8C00>You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
                             }
                     }
-                }
+            }
         }
     }
 
@@ -578,7 +583,8 @@ public class Npc extends Entity {
      * @return the respawn
      */
     public int getRespawn() {
-        return boss ? respawn - Math.max(30, PlayerHandler.getPlayerCount() - 1) : respawn;
+        int bossSpawn = boss ? respawn - Math.max(30, Math.max(PlayerHandler.getPlayerCount() - 5, 0)) : 0;
+        return Math.max(boss ? bossSpawn : respawn, 1);
     }
 
     /**
@@ -659,9 +665,14 @@ public class Npc extends Entity {
     public int getDamageDealt() {
         return this.damageDealt;
     }
-
+    public int getDamageDealt2() {
+        return this.damageDealt2;
+    }
     public boolean isCrit() {
         return this.crit;
+    }
+    public boolean isCrit2() {
+        return this.crit2;
     }
 
     public int getMaxHealth() {
@@ -940,5 +951,12 @@ public class Npc extends Entity {
         int height = getId() == 3127 ? 143 : 43;
         setGfx(startGfx, height);
         target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, height, 35, -(target.getSlot() + 1), 51, 16);
+    }
+
+    public void resetCombatTimer() {
+        for (Entity e : getDamage().keySet()) {
+            if (e instanceof Player && getPosition().withinDistance(e.getPosition(), 16) && ((Client) e).getCurrentHealth() > 0)
+                ((Client) e).setLastCombat(0); //Reset combat timer if something get killed within 16 distance and you targeted it!
+        }
     }
 }

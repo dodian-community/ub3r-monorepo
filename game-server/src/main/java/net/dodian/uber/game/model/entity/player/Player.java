@@ -35,7 +35,7 @@ import java.util.*;
 public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
     public long disconnectAt = 0, longName = 0;
-    public int wildyLevel = 0, violations = 0;
+    public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
@@ -49,7 +49,7 @@ public abstract class Player extends Entity {
     public boolean busy = false, invis = false;
     public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
             "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
-    "TzTok-Jad"};
+    "TzTok-Jad", "Kalphite_queen", "Kalphite_king", "Venenatis"};
     public int[] boss_amount = new int[boss_name.length];
     public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
@@ -70,7 +70,7 @@ public abstract class Player extends Entity {
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
-    private boolean crit;
+    private boolean crit, crit2;
     private boolean isNpc;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
@@ -145,12 +145,12 @@ public abstract class Player extends Entity {
     private final ArrayList<Boolean> unlocked = new ArrayList<>();
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;
-    public int boostedLevel[] = new int[21];
+    public int[] boostedLevel = new int[21];
     public int chestEvent = 0;
     public boolean chestEventOccur = false;
     public ArrayList<Integer> effects = new ArrayList<>();
     public int dailyLogin = 1;
-    public ArrayList<String> dailyReward = new ArrayList<String>();
+    public ArrayList<String> dailyReward = new ArrayList<>();
     public int staffSize = 5;
 
     public Player(int slot) {
@@ -173,7 +173,7 @@ public abstract class Player extends Entity {
         dailyReward.add(4, "60");
     }
     public void battlestavesData() {
-        if(dailyReward.size() < 1) { //If size is empty do not send!
+        if(dailyReward.isEmpty()) { //If size is empty do not send!
             return;
         }
         int time = Integer.parseInt(dailyReward.get(1));
@@ -204,13 +204,13 @@ public abstract class Player extends Entity {
         }
         Client c = ((Client) this);
         for(int i = 0; i < effects.size(); i++) {
-            if(effects.get(i) > 0 && (i != 0 || (i == 0 && getPositionName(getPosition()) == positions.DESERT))) //Remove 1 tick from timer
+            if(effects.get(i) > 0 && (i != 0 || getPositionName(getPosition()) == positions.DESERT)) //Remove 1 tick from timer
                 effects.set(i, effects.get(i) - 1);
 
             if(i == 2 && effects.get(i)%10 == 0 && effects.get(i) > 0) {
                 for(int skill = 0; skill < 4; skill++) {
                     skill = skill == 3 ? 4 : skill;
-                    boost(5 + (int) (Skills.getLevelForExperience(getExperience(Skill.getSkill(skill))) * 0.15), Skill.getSkill(skill));
+                    boost(5 + (int) (Skills.getLevelForExperience(getExperience(Objects.requireNonNull(Skill.getSkill(skill)))) * 0.15), Skill.getSkill(skill));
                 }
             }
             if(i == 1 && effects.get(i)%100 == 0 && effects.get(i) >= 100)
@@ -246,9 +246,13 @@ public abstract class Player extends Entity {
                     c.addItem(229, 1);
                 }
                 if (!waterSource) { //Damage player!
-                    dealDamage(3 + Misc.random(12), false);
+                    dealDamage(null, 3 + Misc.random(12), false);
                     c.send(new SendMessage("The thirst from the heat damage you!"));
-                } else c.checkItemUpdate();
+                } else {
+                    c.requestAnim(829, 0);
+                    c.checkItemUpdate();
+                    //c.send(new SendMessage("You take a sip on some water.")); //Should we add a msg when drinking?!
+                }
                 addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
             } else if (i == 1 && effects.get(i) == 0) {
                 addEffectTime(1, -1);
@@ -285,7 +289,7 @@ public abstract class Player extends Entity {
         FLICK, LASH, DEFLECT, // Abyssal Whip
         SWIPE_CON, POUND_CON, // Spear
         BLOCK_THREE // MAUL!
-    };
+    }
 
     void destruct() {
         getPosition().moveTo(-1, -1);
@@ -295,7 +299,7 @@ public abstract class Player extends Entity {
     }
 
     public void setTask(String input) {
-        if (input.equals(""))
+        if (input.isEmpty())
             input = "-1,-1,0,0,0,0,-1";
         String[] tasks = input.split(",");
         for (String task : tasks) slayerData.add(Integer.parseInt(task));
@@ -312,7 +316,7 @@ public abstract class Player extends Entity {
         return slayerData;
     }
     public void setTravel(String input) {
-        if (input.equals("")) input = "0:0:0:0:0";
+        if (input.isEmpty()) input = "0:0:0:0:0";
         String[] travel = input.split(":");
         for (String s : travel) travelData.add(s.equals("1"));
     }
@@ -375,7 +379,7 @@ public abstract class Player extends Entity {
         } else {
             getDamage().put(e, amount);
         }
-        dealDamage(amount, crit);
+        dealDamage(e, amount, crit);
     }
 
     public void println_debug(String str) {
@@ -747,11 +751,12 @@ public abstract class Player extends Entity {
                     travelBackY[numTravelBackSteps++] = walkingQueueY[ptr];
                     dir = Utils.direction(walkingQueueX[ptr], walkingQueueY[ptr], firstX, firstY);
                     if (lastDir != dir) {
-                        found = true; //Not sure if we need this here or not!
+                        //Not sure if we need this here or not!
                         break;
                     }
                 } while (ptr != wQueueWritePtr);
-            } else found = true; //Not sure if needed!
+            }  //Not sure if needed!
+
 
             wQueueWritePtr = wQueueReadPtr;
             addToWalkingQueue(currentX, currentY);
@@ -805,7 +810,7 @@ public abstract class Player extends Entity {
 
     public boolean buttonOnRun = true;
 
-    private int hitDiff = 0;
+    private int damageDealt = 0, damageDealt2;
     protected boolean IsStair = false;
     public int deathStage = 0;
     public long deathTimer = 0;
@@ -834,9 +839,12 @@ public abstract class Player extends Entity {
 
     public abstract void sendpm(long name, int rights, byte[] chatmessage, int messagesize);
 
-    public void dealDamage(int amt, boolean crit) {
+    public void dealDamage(Entity attacker, int amt, boolean crit) {
         Client plr = ((Client) this);
-        plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
+        if(attacker != null) setLastCombat(16);
+        if (deathStage >= 0 && getCurrentHealth() < 1)
+            amt = 0;
+        else if (amt > currentHealth) amt = currentHealth;
         double rolledChance = Math.random();
         double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
         double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
@@ -848,20 +856,35 @@ public abstract class Player extends Entity {
             if(amt != oldDmg)
                 ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
         }
-        currentHealth -= amt;
-        hitDiff = amt;
-        if (plr.target != null && plr.target instanceof Player) { //Pvp damage profile!
-            int totalDmg;
-            if (getDamage().containsKey(plr.target)) {
-                totalDmg = getDamage().get(plr.target) + hitDiff;
-                getDamage().remove(plr.target);
-            } else
-                totalDmg = hitDiff;
-            getDamage().put(plr.target, totalDmg);
+        if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
+            this.crit = crit;
+            damageDealt = amt;
+            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        } else if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
+            this.crit2 = crit;
+            damageDealt2 = amt;
+            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
         }
-        this.crit = crit;
+        setCurrentHealth(Math.max(getCurrentHealth() - amt, 0));
         ((Client) this).refreshSkill(Skill.HITPOINTS);
-        getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
+        if (attacker instanceof Player) { //Pvp damage profile!
+            int totalDmg;
+            if (getDamage().containsKey(attacker)) {
+                totalDmg = getDamage().get(attacker) + amt;
+                getDamage().remove(attacker);
+            } else
+                totalDmg = amt;
+            getDamage().put(attacker, totalDmg);
+        }
+        boolean veracEffect = Misc.chance(8) == 1 && armourSet("verac");
+        if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Player) {
+            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
+            ((Player) attacker).dealDamage(plr, amt, crit);
+        } else if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Npc) {
+            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
+            ((Npc) attacker).dealDamage(plr, amt, crit);
+        }
     }
 
     public void dealDamage(int amt, boolean crit, Entity attacker, Entity.damageType dmg) {
@@ -880,7 +903,7 @@ public abstract class Player extends Entity {
         else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
         else if(dmg.equals(damageType.JAD_RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt = 0;
         else if(dmg.equals(damageType.JAD_MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt = 0;
-        dealDamage(amt, crit);
+        dealDamage(attacker, amt, crit);
     }
 
     private void delayedHit(Entity source, Entity target, final int damage, final boolean b, int delay) {
@@ -944,18 +967,48 @@ public abstract class Player extends Entity {
         return this.songUnlocked[songId];
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : "" + Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
         SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
+    }
+
+    public int getEquipment(int slot) {
+        return playerEquipment[slot];
+    }
+    public String getEquipName(int slot) {
+        return ((Client) this).GetItemName(getEquipment(slot));
+    }
+    public boolean armourSet(String armourName) {
+        switch(armourName) {
+            case "ahrim":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Ahrim") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Ahrim");
+            case "karil":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Karil") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Karil");
+            case "verac":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Verac") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Verac");
+            case "dharok":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Dharok") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Dharok");
+            case "torag":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Torag") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Torag");
+            case "guthan":
+                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Guthan") &&
+                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Guthan");
+            default: return false;
+        }
     }
 
     public boolean checkObsidianBonus(int id) {
@@ -965,8 +1018,8 @@ public abstract class Player extends Entity {
         6524, 21298, 21301, 21304 //Obsidian armour
         };
         boolean inArea = getPositionName(getPosition()) == positions.TZHAAR  || getPositionName(getPosition()) == positions.JAD;
-        for(int i = 0; i < acceptedItems.length; i++)
-            if(inArea && id == acceptedItems[i])
+        for (int acceptedItem : acceptedItems)
+            if (inArea && id == acceptedItem)
                 return true;
         return false;
     }
@@ -1170,16 +1223,18 @@ public abstract class Player extends Entity {
         this.playerNpc = playerNpc;
     }
 
-    public int getHitDiff() {
-        return this.hitDiff;
+    public int getDamageDealt() {
+        return this.damageDealt;
     }
-
-    public void setHitDiff(int hitDiff) {
-        this.hitDiff = hitDiff;
+    public int getDamageDealt2() {
+        return this.damageDealt2;
     }
 
     public boolean isCrit() {
         return this.crit;
+    }
+    public boolean isCrit2() {
+        return this.crit2;
     }
 
     public int getCurrentHealth() {
@@ -1192,9 +1247,12 @@ public abstract class Player extends Entity {
         this.currentHealth = currentHealth;
     }
     public void heal(int healing) {
+        heal(healing, 0);
+    }
+    public void heal(int healing, int overHeal) {
         Client c = (Client) this;
-        int maxLevel = getMaxHealth();
-        setCurrentHealth(getCurrentHealth() + healing > maxLevel ? maxLevel : getCurrentHealth() + healing);
+        int maxLevel = getMaxHealth() + overHeal;
+        setCurrentHealth(Math.min(getCurrentHealth() + healing, maxLevel));
         c.refreshSkill(Skill.HITPOINTS);
     }
     public void eat(int healing, int removeId, int removeSlot) {
@@ -1245,12 +1303,8 @@ public abstract class Player extends Entity {
     public void pray(int healing) {
         Client c = (Client) this;
         int maxLevel = getMaxPrayer();
-        setCurrentPrayer(getCurrentPrayer() + healing > maxLevel ? maxLevel : getCurrentPrayer() + healing);
+        setCurrentPrayer(Math.min(getCurrentPrayer() + healing, maxLevel));
         c.refreshSkill(Skill.PRAYER);
-    }
-
-    public void setCrit(boolean crit) {
-        this.crit = crit;
     }
 
     public boolean isInCombat() {
@@ -1371,19 +1425,26 @@ public abstract class Player extends Entity {
         IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
         PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),
         DESERT_NARDAH("in the Nardah.", 3396, 3452, 2885, 2942), //3396, 2942, 3452, 2885
-        DESERT_SOPHANEM("in the Sophanem.", 3271, 3322, 2747, 2809), //3322, 2747, 3271, 2809
+        DESERT_SOPHANEM("in the Sophanem.", 3271, 3322, 2747, 2809),
+        DESERT_MENAPHOS("in the Menaphos.", 3202, 3270, 2750, 2809),
         DESERT_POLLNIVNEACH_MAIN("in the Pollnivneach.", 3334, 3372, 2958, 3004), //3334, 3004, 3372, 2958
         DESERT_POLLNIVNEACH_OUTSKIRT_1("in the Pollnivneach.", 3373, 3380, 2961, 2992),
         DESERT_POLLNIVNEACH_OUTSKIRT_2("in the Pollnivneach.", 3329, 3358, 2940, 2968),
         DESERT_POLLNIVNEACH_OUTSKIRT_3("in the Pollnivneach.", 3359, 3373, 2957, 2964),
         DESERT_POLLNIVNEACH_OUTSKIRT_4("in the Pollnivneach.", 3359, 3369, 2953, 2956),
         DESERT_POLLNIVNEACH_OUTSKIRT_5("in the Pollnivneach.", 3359, 3364, 2949, 2952),
-        PYRAMID_PLUNDER("doing Pyramid Plunder", 1916, 4418, 1983, 4479),
+        DESERT_BANDIT_CAMP("in the Bandit camp.", 3138, 3192, 2963, 2992),
+        DESERT_BEDABIN_CAMP("in the Bedabin camp.", 3159, 3187, 3023, 3050),
+        PYRAMID_PLUNDER("doing Pyramid Plunder", 1916, 1983, 4418, 4479),
         KALPHITE_KING("in the Kalphite King lair.", 10, 100, 20, 110),
         KALPHITE_QUEEN("in the Kalphite Queen lair.", 10, 100, 20, 110),
         DESERT("in the Desert.", 3137, 3565, 2647, 3162), //3565, 2647, 3137, 3162
         VENENATIS("in the Venenatis lair.", 10, 100, 20, 110)
         ;
+        //Area[] area = {
+        //    new Area(3193, 2953, 3171, 2996),
+        //    new Area(3170, 2956, 3139, 2996)
+        //};
         final String name;
         final int[] coordValue;
 
@@ -1426,7 +1487,7 @@ public abstract class Player extends Entity {
         try {
             c.send(new SendMessage(pageName + "#url#"));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("error opening page.." + e);
         }
     }
 
@@ -1458,7 +1519,7 @@ public abstract class Player extends Entity {
 
     public ArrayList<String> monsterName = new ArrayList<>();
     public ArrayList<Integer> monsterCount = new ArrayList<>();
-    public void addMonsterName(String name, int value) {
+    public void addMonsterName(String name) {
         int index = monsterName.size();
         if(index == 0) { //Add the first entry!
             monsterName.add(name);
@@ -1489,12 +1550,12 @@ public abstract class Player extends Entity {
         int index = getMonsterIndex(name);
         if(index >= 0)
             addMonsterLog(npc, index);
-        else addMonsterName(name, 1);
+        else addMonsterName(name);
     }
     public void addMonsterLog(Npc npc, int index) {
         String name = npc.npcName().toLowerCase();
         int amount = index == -1 ? 0 : monsterCount.get(index);
-        int newAmount = amount < 1048576 ? amount + 1 : amount + 0;
+        int newAmount = amount < 1048576 ? amount + 1 : amount;
         if(index == 0)
             monsterCount.set(index, newAmount);
         else if(index > 0) { //Sorting time!
@@ -1571,18 +1632,18 @@ public abstract class Player extends Entity {
         if (n == null) { return; } //No data!
         if (!n.getDrops().isEmpty())
             checkLoot(c, n);
-        if(n.getExamine() != "")
+        if(!n.getExamine().isEmpty())
             c.send(new SendMessage(n.getExamine()));
     }
     public void examineObject(Client c, int objectId, Position objPos) {
         //Do we handle objects?!
         if(objectId == 378 && objPos.getX() == 2593 && objPos.getY() == 3108 && objPos.getZ() == 1) { //Check timer on a object!
-            long timeLeft = (long) GlobalObject.getGlobalObject(objPos.getX(), objPos.getY()).getAttachment();
+            long timeLeft = (long) Objects.requireNonNull(GlobalObject.getGlobalObject(objPos.getX(), objPos.getY())).getAttachment();
             int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
             c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
         }
         if(objectId == 378 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
-            long timeLeft = (long) GlobalObject.getGlobalObject(objPos.getX(), objPos.getY()).getAttachment();
+            long timeLeft = (long) Objects.requireNonNull(GlobalObject.getGlobalObject(objPos.getX(), objPos.getY())).getAttachment();
             int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
             c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
         }
@@ -1728,7 +1789,7 @@ public abstract class Player extends Entity {
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
-        if(!getPlunder.hinderTeleport() && getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
+        if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
             getPlunder.resetPlunder();
     }
 

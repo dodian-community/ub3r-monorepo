@@ -11,7 +11,11 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.agility.Werewolf;
+
+import java.util.Objects;
 
 public class ClickNpc implements Packet {
 
@@ -138,6 +142,15 @@ public class ClickNpc implements Packet {
             client.WanneShop = 17;
         } else if (npcId == 556) {
             client.WanneShop = 31; // Premium store
+        } else if (npcId == 557) { //Boost in test area!
+            tempNpc.requestAnim(5643, 0);
+            for(int skill = 0; skill < 4; skill++) {
+                skill = skill == 3 ? 4 : skill;
+                client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Objects.requireNonNull(Skill.getSkill(skill)))) * 0.15), Skill.getSkill(skill));
+            }
+            int ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2;
+            client.addEffectTime(2, 200 + ticks);
+            client.send(new SendMessage("The monk boost your stats!"));
         } else if (npcId == 4808) {
             client.WanneShop = 34; // Battlestaff shop two
         } else if (npcId == 3541) {

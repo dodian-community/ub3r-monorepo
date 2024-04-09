@@ -87,7 +87,9 @@ fun Client.meleeMaxHit(): Int {
     val voidBonus = 0.0 // TODO: Probably not relevant for Dodian, at least not for a while
     var specialBonus = 0.0
     if(checkObsidianWeapons()) //Obsidian weapon should give 20% increase damage!
-        specialBonus = 0.2
+        specialBonus += 0.2
+    if(armourSet("dharok"))
+        specialBonus += (getMaxHealth() - getCurrentHealth()) / 100.0
     val styleBonus = when (fightType) {
         2 -> 3 // Aggressive
         3 -> 1 // Controlled
@@ -110,7 +112,7 @@ fun Client.rangedMaxHit(): Int {
     val specialBonus = 0.0 // TODO: Calculate special bonus
 
     val styleBonus = when (fightType) {
-        2 -> 3 // Rapid
+        0 -> 3 // Accurate
         else -> 0
     }
     val ranged = getLevel(Skill.RANGED)
@@ -131,24 +133,26 @@ fun Client.getRangedStr(): Int {
         else -> 0
     }
     rangedStr += when(equipment[Equipment.Slot.WEAPON.id]) {
-        843 -> 10
-        845 -> 15
-        849 -> 15
-        847 -> 20
-        853 -> 20
-        851 -> 25
-        857 -> 25
-        855 -> 30
-        861 -> 30
-        859 -> 35
-        4212 -> 68
-        6724 -> 78
-        20997 -> 88
+        843 -> 3
+        845 -> 5
+        849 -> 6
+        847 -> 8
+        853 -> 9
+        851 -> 11
+        857 -> 12
+        855 -> 14
+        861 -> 15
+        859 -> 17
+        4212 -> 25
+        4734 -> 28
+        6724 -> 33
+        20997 -> 40
         else -> 0
     }
     /* Head */
     rangedStr += when(equipment[Equipment.Slot.HEAD.id]) {
         1169 -> 1
+        4732 -> 1
         2581 -> 3
         6131 -> 3
         else -> 0
@@ -156,11 +160,12 @@ fun Client.getRangedStr(): Int {
     /* Body */
     rangedStr += when(equipment[Equipment.Slot.CHEST.id]) {
         1129 -> 1
-        1743 -> 2
+        1131 -> 2
         1135 -> 5
         2499 -> 7
         2501 -> 9
         2503 -> 11
+        4736 -> 11
         6133 -> 13
         else -> 0
     }
@@ -172,6 +177,7 @@ fun Client.getRangedStr(): Int {
         2493 -> 5
         2495 -> 6
         2497 -> 7
+        4738 -> 7
         6135 -> 9
         else -> 0
     }
@@ -179,6 +185,7 @@ fun Client.getRangedStr(): Int {
     rangedStr += when(equipment[Equipment.Slot.FEET.id]) {
         2577 -> 3
         6143 -> 3
+        13237 -> 5
         else -> 0
     }
     /* Hands */

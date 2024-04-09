@@ -13,6 +13,8 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
 
+import java.util.Objects;
+
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject3 implements Packet {
@@ -37,7 +39,7 @@ public class ClickObject3 implements Packet {
             @Override
             public void execute() {
 
-                if (client == null || client.disconnected) {
+                if (client.disconnected) {
                     this.stop();
                     return;
                 }
@@ -48,11 +50,11 @@ public class ClickObject3 implements Packet {
                 }
                 Position objectPosition = null;
                 if (def != null)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
                 else {
                     Object o = new Object(objectID, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), task.getWalkToPosition().getZ(), 10);
                     if (GlobalObject.hasGlobalObject(o)) {
-                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
+                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
                     } else if (object != null)
                         objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 }
@@ -68,10 +70,11 @@ public class ClickObject3 implements Packet {
     }
 
     public void clickObject3(Client client, int objectID, Position position, GameObjectData obj) {
+        client.setFocus(position.getX(), position.getY());
         String objectName = obj == null ? "" : obj.getName().toLowerCase();
-        if (objectName.contains("trading post")) {
-            //client.send(new SendMessage("I am here!"));
-        }
+        /*if (objectName.contains("trading post")) {
+            client.send(new SendMessage("I am here!"));
+        }*/
         if (objectID == 1739) {
             client.moveTo(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ() - 1);
         }

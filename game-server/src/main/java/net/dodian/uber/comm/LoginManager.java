@@ -2,10 +2,8 @@ package net.dodian.uber.comm;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Friend;
-import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
@@ -20,8 +18,6 @@ import net.dodian.utilities.DbTables;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -31,7 +27,7 @@ public class LoginManager {
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
         if (PlayerHandler.isPlayerOn(playerName)) //Already online!
             return 5;
-        if (playerName.length() < 1) //To short name!
+        if (playerName.isEmpty()) //To short name!
             return 3;
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
@@ -61,8 +57,7 @@ public class LoginManager {
             }
             results.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to load player: " + playerName);
+            System.out.println("Failed to load player: " + playerName + ", " + e);
             return 13;
         }
         return 0;
@@ -83,7 +78,7 @@ public class LoginManager {
                 if(Login.isUidBanned(LoginManager.UUID)) {
                     return 22;
                 }
-                String[] look = results.getString("look").length() == 0 ? null : results.getString("look").split(" ");
+                String[] look = results.getString("look").isEmpty() ? null : results.getString("look").split(" ");
                 if (look == null || look.length != 13) {
                     p.lookNeeded = true;
                 } else {
@@ -106,7 +101,7 @@ public class LoginManager {
                 String boosted = results.getString("boosted").trim();
                 String[] prayer_prase = prayer.split(":");
                 String[] boosted_prase = boosted.split(":");
-                int prayerLevel = !prayer.equals("") ? Integer.parseInt(prayer_prase[0]) : 0;
+                int prayerLevel = !prayer.isEmpty() ? Integer.parseInt(prayer_prase[0]) : 0;
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
                 ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
                 if (results2.next()) {
@@ -123,7 +118,7 @@ public class LoginManager {
                             }
                             p.refreshSkill(skill);
                         } catch (SQLException e) {
-                            e.printStackTrace();
+                            System.out.println("something wrong with sql stats! " + e);
                         }
                     });
                 } else {
@@ -141,11 +136,11 @@ public class LoginManager {
                         p.refreshSkill(skill);
                     });
                 }
-                if(!prayer.equals("")) {
+                if(!prayer.isEmpty()) {
                     for(int i = 1; i < prayer_prase.length; i++)
                         p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayer_prase[i])));
                 }
-                if(!boosted.equals("")) {
+                if(!boosted.isEmpty()) {
                     p.lastRecover = Integer.parseInt(boosted_prase[0]);
                     for(int i = 0; i < boosted_prase.length - 1; i++)
                         p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
@@ -153,7 +148,7 @@ public class LoginManager {
                 results2.close();
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
-                if(!inventory.equals("")) {
+                if(!inventory.isEmpty()) {
                     String[] parse = inventory.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -180,7 +175,7 @@ public class LoginManager {
                 }
                 /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();
-                if(!equip.equals("")) {
+                if(!equip.isEmpty()) {
                     String[] parse = equip.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -208,7 +203,7 @@ public class LoginManager {
                 /* Sets Unlocks */
                 String unlocks = (results.getString("unlocks")).trim();
                 for(int i = 0; i < p.unlockLength; i++) {
-                    if(!unlocks.equals("")) {
+                    if(!unlocks.isEmpty()) {
                         String[] parse = unlocks.split(":");
                         if(i < parse.length)  {
                             p.addUnlocks(i, parse[i].split(","));
@@ -217,7 +212,7 @@ public class LoginManager {
                 }
                 /* Sets Bank */
                 String bank = (results.getString("bank")).trim();
-                if(!bank.equals("")) {
+                if(!bank.isEmpty()) {
                     String[] parse = bank.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -236,14 +231,14 @@ public class LoginManager {
 
                 String[] songUnlocked = results.getString("songUnlocked").split(" ");
                 for (int i = 0; i < songUnlocked.length; i++) {
-                    if (songUnlocked[i].equals(""))
+                    if (songUnlocked[i].isEmpty())
                         continue;
                     p.setSongUnlocked(i, Integer.parseInt(songUnlocked[i]) == 1);
                 } //TODO Shall we keep?
 
                 String[] friends = results.getString("friends").split(" ");
                 for (String friend : friends) {
-                    if (friend.length() > 0) {
+                    if (!friend.isEmpty()) {
                         p.friends.add(new Friend(Long.parseLong(friend), true));
                     }
                 }
@@ -265,9 +260,9 @@ public class LoginManager {
                 String Monster = results.getString("Monster_Log");
                 if (Monster != null && !Monster.isEmpty()) {
                     String[] lines = Monster.split(";");
-                    for(int i = 0; i < lines.length; i++) {
-                        String[] parts = lines[i].split(",");
-                        if(parts.length == 2) {
+                    for (String line : lines) {
+                        String[] parts = line.split(",");
+                        if (parts.length == 2) {
                             int amount = Integer.parseInt(parts[1]);
                             p.monsterName.add(parts[0]);
                             p.monsterCount.add(amount);
@@ -307,10 +302,7 @@ public class LoginManager {
                     }
                 } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
                 /* Account age*/
-                long accountAge = 0;
-                if(accountAge > 0) {
-                    p.accountAge = accountAge;
-                } else p.accountAge = System.currentTimeMillis(); //TODO: Fix a account age for doing shiez, either forum check or make a new value :D
+                //p.accountAge = System.currentTimeMillis(); //TODO: Fix a account age for doing shiez, either forum check or make a new value :D
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;
@@ -330,7 +322,7 @@ public class LoginManager {
                 return loadgame(p, playerName, playerPass);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Something wrong with loading a player..." + e);
             return 13;
         }
         // return 13;
@@ -343,7 +335,7 @@ public class LoginManager {
         statement.executeUpdate(newStatsAccount);
         statement.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Something wrong with updating a players forum rights " + e);
         }
         p.send(new SendMessage("You have now been registered to the forum! Enjoy your stay :D"));
     }

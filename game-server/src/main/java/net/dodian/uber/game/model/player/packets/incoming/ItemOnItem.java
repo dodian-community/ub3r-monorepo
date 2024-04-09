@@ -3,8 +3,6 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.item.ItemHandler;
-import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
@@ -34,7 +32,7 @@ public class ItemOnItem implements Packet {
             return;
         }
         int otherItem = client.playerItems[usedWithSlot] - 1;
-        boolean knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605) ? true : false;
+        boolean knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605);
         if ((itemUsed == 2383 && useWith == 2382) || (itemUsed == 2382 && useWith == 2383)) {
             if (client.getSkillLevel(Skill.CRAFTING) >= 60) {
                 client.deleteItem(itemUsed, itemUsedSlot, 1);
@@ -88,10 +86,16 @@ public class ItemOnItem implements Packet {
         /* Super combat potion */
         boolean checkPotionUsed = false, checkOtherPotionUsed = false;
         int[] potionItems = {269, 2436, 2440, 2442};
-        for(int i = 0; i < potionItems.length && !checkPotionUsed; i++)
-            if(potionItems[i] == 269 && (itemUsed == 111 || itemUsed == potionItems[i]) || itemUsed == potionItems[i]) checkPotionUsed = true;
-        for(int i = 0; i < potionItems.length && !checkOtherPotionUsed; i++)
-            if((potionItems[i] == 269 && (otherItem == 111 || otherItem == potionItems[i])) || otherItem == potionItems[i]) checkOtherPotionUsed = true;
+        for (int potionItem : potionItems)
+            if (potionItem == 269 && (itemUsed == 111 || itemUsed == potionItem) || itemUsed == potionItem) {
+                checkPotionUsed = true;
+                break;
+            }
+        for (int potionItem : potionItems)
+            if ((potionItem == 269 && (otherItem == 111 || otherItem == potionItem)) || otherItem == potionItem) {
+                checkOtherPotionUsed = true;
+                break;
+            }
         if (checkPotionUsed && checkOtherPotionUsed) { //Overload making
             boolean hasAllItem = true;
             for(int i = 0; i < potionItems.length && hasAllItem; i++) {
@@ -110,10 +114,16 @@ public class ItemOnItem implements Packet {
         potionItems = new int[]{12695, 2444, 5978};
         checkPotionUsed = false;
         checkOtherPotionUsed = false;
-        for(int i = 0; i < potionItems.length && !checkPotionUsed; i++)
-            if(itemUsed == potionItems[i]) checkPotionUsed = true;
-        for(int i = 0; i < potionItems.length && !checkOtherPotionUsed; i++)
-            if(otherItem == potionItems[i]) checkOtherPotionUsed = true;
+        for (int potionItem : potionItems)
+            if (itemUsed == potionItem) {
+                checkPotionUsed = true;
+                break;
+            }
+        for (int potionItem : potionItems)
+            if (otherItem == potionItem) {
+                checkOtherPotionUsed = true;
+                break;
+            }
         if (checkPotionUsed && checkOtherPotionUsed) { //Overload making
             boolean hasAllItem = true;
             for(int i = 0; i < potionItems.length && hasAllItem; i++)
@@ -235,27 +245,33 @@ public class ItemOnItem implements Packet {
             } else client.send(new SendMessage("You need to have atleast one space to tear the black partyhat apart!"));
         }
         int[][] dyes = {{-1, 1019}, {1763, 1007}, {1765, 1023}, {1767, 1021}, {1769, 1031}, {1771, 1027}, {1773, 1029}}; //Black, Red, yellow, blue, orange, green, purple
-        for(int i = 0; i < dyes.length; i++)
-            if(itemUsed == dyes[i][0] || otherItem == dyes[i][0]) {
-                for(int dye = 0; dye < dyes.length; dye++)
-                    if((itemUsed == dyes[i][0] && otherItem == dyes[dye][1]) || (otherItem == dyes[i][0] && itemUsed == dyes[dye][1])) {
-                        if(dyes[dye][1] != dyes[i][1]) {
+        for (int[] ints : dyes)
+            if (itemUsed == ints[0] || otherItem == ints[0]) {
+                for (int[] value : dyes)
+                    if ((itemUsed == ints[0] && otherItem == value[1]) || (otherItem == ints[0] && itemUsed == value[1])) {
+                        if (value[1] != ints[1]) {
                             client.deleteItem(itemUsed, itemUsedSlot, 1);
-                            client.deleteItem(otherItem, usedWithSlot,1);
-                            client.addItemSlot(dyes[i][1], 1, itemUsed == dyes[dye][1] ? itemUsedSlot : usedWithSlot);
+                            client.deleteItem(otherItem, usedWithSlot, 1);
+                            client.addItemSlot(ints[1], 1, itemUsed == value[1] ? itemUsedSlot : usedWithSlot);
                         } else client.send(new SendMessage("There is no point in using the same color as the cape!"));
-                    break;
+                        break;
                     }
             }
         /* Slayer helmet creation! */
         int[] slayerHelmItems = {4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923, 11784, 8921};
         //4155-gem, 4156-mirror shield, 4164-face mask, 4166-earmuffs, 4168-nosepeg, 4551-spiny helm, 6720-slayer gloves, 8923-witchwood icon
         boolean checkItemUsed = false;
-        for(int i = 0; i < slayerHelmItems.length && !checkItemUsed; i++)
-            if(itemUsed == slayerHelmItems[i]) checkItemUsed = true;
+        for (int slayerHelmItem : slayerHelmItems)
+            if (itemUsed == slayerHelmItem) {
+                checkItemUsed = true;
+                break;
+            }
         boolean checkOtherItem = false;
-        for(int i = 0; i < slayerHelmItems.length && !checkOtherItem; i++)
-            if(otherItem == slayerHelmItems[i]) checkOtherItem = true;
+        for (int slayerHelmItem : slayerHelmItems)
+            if (otherItem == slayerHelmItem) {
+                checkOtherItem = true;
+                break;
+            }
         if (checkItemUsed && checkOtherItem) { //Slayer helmet making!
             boolean hasAllItem = true;
             for(int i = 0; i < slayerHelmItems.length - 2 && hasAllItem; i++)
@@ -290,7 +306,7 @@ public class ItemOnItem implements Packet {
                     && (itemUsed == 314 || otherItem == 314)) {
                 client.resetAction();
                 if (client.getLevel(Skill.FLETCHING) < Constants.darttip_required[d]) {
-                    client.send(new SendMessage("You need level " + Constants.darttip_required[d] + " fletcing to make " + client.GetItemName(Constants.darts[d]).toLowerCase() + ""));
+                    client.send(new SendMessage("You need level " + Constants.darttip_required[d] + " fletcing to make " + client.GetItemName(Constants.darts[d]).toLowerCase()));
                     return;
                 }
                 if (!client.playerHasItem(Constants.darts[d]) && client.freeSlots() < 1) {
@@ -383,7 +399,7 @@ public class ItemOnItem implements Packet {
                     return;
                 }
                 client.setSkillAction(Skill.CRAFTING.getId(), Utils.cutGems[slot], 1, gem, -1, Utils.gemExp[slot] * 5, Utils.gemEmote[slot], 3);
-                client.skillMessage = "You cut the " + client.GetItemName(Utils.cutGems[slot]) + "";
+                client.skillMessage = "You cut the " + client.GetItemName(Utils.cutGems[slot]);
             }
         }
         if (itemUsed == 1391 || otherItem == 1391) {
@@ -412,11 +428,11 @@ public class ItemOnItem implements Packet {
             client.sendFrame246(11468, 150, 567);
             client.send(new SendString(jump + "Orb", 12404));
             client.sendFrame246(11469, 190, -1);
-            client.send(new SendString(jump + "", 12408));
+            client.send(new SendString(jump, 12408));
             client.sendFrame246(11470, 190, -1);
-            client.send(new SendString(jump + "", 12412));
+            client.send(new SendString(jump, 12412));
             client.sendFrame246(6199, 190, -1);
-            client.send(new SendString(jump + "", 6203));
+            client.send(new SendString(jump, 6203));
             client.showInterface(11462);
         }
         if((itemUsed == 6667 && otherItem == 1755) || (itemUsed == 1755 && otherItem == 6667)) {

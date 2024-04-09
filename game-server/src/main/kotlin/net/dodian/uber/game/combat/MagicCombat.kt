@@ -35,66 +35,66 @@ fun Client.handleMagicAttack(): Int {
     lastCombat = 16
     setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
-    requestAnim(1979, 0)
+    requestAnim(-1, 0)
+    sendAnimation(1979)
     var maxHit = baseDamage[autocast_spellIndex] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
         if(getSlayerDamage(checkNpc.id, true) == 2)
             maxHit *= 1.2
         if(checkNpc.boss) {
-            var reduceDefence = min(checkNpc.defence / 15, 18)
-            var value = (12.0 + Misc.random(reduceDefence.toInt())) / 100.0
+            val reduceDefence = min(checkNpc.defence / 15, 18)
+            val value = (12.0 + Misc.random(reduceDefence)) / 100.0
             maxHit *= 1.0 - value
             //System.out.println("reduce value: $value and defence $reduceDefence to be new max hit $maxHit")
         }
     }
-    if(target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) maxHit /= 2.0
-    }
     var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9
     val extra = getLevel(Skill.MAGIC) * 0.195
+    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
-    if(equipment[Equipment.Slot.SHIELD.id]==4224)
-        criticalChance * 1.5
+    /* Magic graphics! */
+    when (slot) {
+        2 //Blood effect
+        -> stillgfx(377, target.position.y, target.position.x)
+        3 //Freeze effect
+        -> stillgfx(369, target.position.y, target.position.x)
+        else //Other ancient effect!
+        -> stillgfx(78, target.position.y, target.position.x)
+    }
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        if (landCrit)
-            hit + Utils.dRandom2(extra).toInt()
-        if(hit >= npc.currentHealth)
-            hit = npc.currentHealth
-        if(slot == 2) { //Heal effect!
-            heal(hit / 3)
-        }
+        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        if(hit >= npc.currentHealth) hit = npc.currentHealth
         npc.dealDamage(this, hit, landCrit)
-    }
-    if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
-        if (landCrit)
-            hit + Utils.dRandom2(extra).toInt()
-        if(hit >= player.currentHealth)
-            hit = player.currentHealth
-        if(slot == 2) { //Heal effect!
-            currentHealth = min(getLevel(Skill.HITPOINTS), currentHealth + (hit / 3))
-            refreshSkill(Skill.HITPOINTS)
-        }
-        player.dealDamage(hit, landCrit)
-    }
-    /* Magic graphics! */
-    if (slot == 2) //Blood effect
-        stillgfx(377, target.position.y, target.position.x)
-    else if (slot == 3) //Freeze effect
-        stillgfx(369, target.position.y, target.position.x)
-    else //Other ancient effect!
-        stillgfx(78, target.position.y, target.position.x)
 
-    if(target is Npc) {
+        val chance = Misc.chance(8) == 1 && armourSet("ahrim")
+        if(chance && hit > 0) { //Ahrim effect!
+            stillgfx(400, npc.position, 100)
+            heal(hit / 2)
+        } else if(slot == 2) //Heal effect!
+            heal(hit / 3)
+        /* Give experience */
         giveExperience(40 * hit, Skill.MAGIC)
         giveExperience(13 * hit, Skill.HITPOINTS)
     }
+    if (target is Player) {
+        val player = Server.playerHandler.getClient(target.slot)
+        if (landCrit) hit + Utils.dRandom2(extra).toInt()
+        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) (hit * 0.6).toInt()
+        if(hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, landCrit)
 
-    if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
+        val chance = Misc.chance(8) == 1 && armourSet("ahrim")
+        if(chance && hit > 0) { //Ahrim effect!
+            stillgfx(400, player.position, 100)
+            heal(hit / 2)
+        } else if(slot == 2) //Heal effect!
+            heal(hit / 3)
+    }
+
+    if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
 
     return 1
 }

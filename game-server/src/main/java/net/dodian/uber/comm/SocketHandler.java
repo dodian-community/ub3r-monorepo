@@ -1,10 +1,8 @@
 package net.dodian.uber.comm;
 
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,14 +14,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SocketHandler implements Runnable {
 
-    private Client player;
-    private Socket socket;
+    private final Client player;
+    private final Socket socket;
 
     private boolean processRunning;
 
-    private PacketQueue packets = new PacketQueue();
-    private Queue<PacketData> myPackets = new LinkedList<PacketData>();
-    private Queue<byte[]> outData = new ConcurrentLinkedQueue<byte[]>();
+    private final PacketQueue packets = new PacketQueue();
+    private final Queue<PacketData> myPackets = new LinkedList<>();
+    private final Queue<byte[]> outData = new ConcurrentLinkedQueue<>();
 
     public SocketHandler(Client player, Socket socket) {
         this.player = player;
@@ -32,22 +30,21 @@ public class SocketHandler implements Runnable {
     }
 
     public void run() {
-            while (processRunning) {
+        try {
+            while(processRunning) {
                 if (isConnected()) {
                     while (writeOutput());
                     flush();
                     while (parsePackets());
                     LinkedList<PacketData> temp = packets.getPackets();
-                    if (myPackets == null) myPackets.clear();
                     if (temp != null) myPackets.addAll(temp);
                 } else myPackets.clear();
-                try {
-                    Thread.sleep(50);
-                } catch (java.lang.Exception _ex) {
-                    YellSystem.alertStaff("Something is up with socket handler!");
-                    System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
-                }
             }
+            Thread.sleep(50);
+        } catch (java.lang.Exception _ex) {
+            YellSystem.alertStaff("Something is up with socket handler!");
+            System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
+        }
     }
 
     private boolean isConnected() {

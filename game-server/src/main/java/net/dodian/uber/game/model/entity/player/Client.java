@@ -58,7 +58,7 @@ public class Client extends Player implements Runnable {
 	public boolean immune = false, loadingDone = false, reloadHp = false;
 	public boolean canPreformAction = true;
 	long lastBar = 0;
-	public long lastSave, lastProgressSave, accountAge;
+	public long lastSave, lastProgressSave;
 	public long lastClickAltar = 0;
 	public Entity target = null;
 	int otherdbId = -1;
@@ -148,7 +148,7 @@ public class Client extends Player implements Runnable {
 	public boolean shafting = false;
 	public int random_skill = -1;
 	public String[] otherGroups = new String[10];
-	public int autocast_spellIndex = -1;
+	public int autocast_spellIndex = -1, magicId = -1;
 	public int loginDelay = 0;
 	public boolean validClient = true;
 	public int newPms = 0;
@@ -217,17 +217,19 @@ public class Client extends Player implements Runnable {
 			wepPlainTick = 2;
 		} else if (wep.contains("longsword") || wep.contains("mace") || wep.contains("axe") && !wep.contains("dharok")
 				|| wep.contains("spear") || wep.contains("tzhaar-ket-em") || wep.contains("torag") || wep.contains("guthan")
-				|| wep.contains("verac") || wep.contains("staff") && !wep.contains("ahrim") || wep.contains("composite")
+				|| wep.contains("verac") || (wep.contains("staff") && !wep.contains("ahrim")) || wep.contains("composite")
 				|| wep.contains("crystal") || wep.contains("thrownaxe") || wep.contains("longbow")) {
 			wepPlainTick = 5;
 		} else if (wep.contains("battleaxe") || wep.contains("warhammer") || wep.contains("godsword")
 				|| wep.contains("barrelchest") || wep.contains("ahrim") || wep.contains("toktz-mej-tal")
-				|| wep.contains("dorgeshuun") || wep.contains("crossbow") || wep.contains("javelin")) {
+				|| wep.contains("dorgeshuun") || (wep.contains("crossbow") && !wep.contains("karil")) || wep.contains("javelin")) {
 			wepPlainTick = 6;
 		} else if (wep.contains("2h sword") || wep.contains("halberd") || wep.contains("maul") || wep.contains("balmung")
 				|| wep.contains("tzhaar-ket-om") || wep.contains("dharok")) {
 			wepPlainTick = 7;
 		}
+		if(usingBow && fightType == 2) //Rapid style...Not sure if we should keep?!
+			wepPlainTick -= 1;
 		return wepPlainTick;
 	}
 
@@ -270,20 +272,24 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWord(0);
 	}
 
-	public void stillgfx(int id, Position pos, int time) {
+	public void stillgfx(int id, Position pos, int height, boolean showAll) {
 		// for (Player p : server.playerHandler.players) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Player p = PlayerHandler.players[i];
-			if (p != null) {
-				Client person = (Client) p;
-				if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
-					person.stillgfx2(id, pos, 0, time);
+		if(showAll) {
+			for (int i = 0; i < PlayerHandler.players.length; i++) {
+				Player p = PlayerHandler.players[i];
+				if (p != null) {
+					Client person = (Client) p;
+					if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
+						person.stillgfx2(id, pos, height, 0);
+				}
 			}
-		}
+		} else stillgfx2(id, pos, height, 0);
 	}
-
 	public void stillgfx(int id, int y, int x) {
-		stillgfx(id, new Position(x, y, getPosition().getZ()), 0);
+		stillgfx(id, new Position(x, y, getPosition().getZ()), 0, true);
+	}
+	public void stillgfx(int id, Position pos, int height) {
+		stillgfx(id, pos, height, false);
 	}
 
 	public void stillgfx2(int id, Position pos, int height, int time) {
@@ -365,7 +371,6 @@ public class Client extends Player implements Runnable {
 
 	public void rerequestAnim() {
 		requestAnim(-1, 0);
-		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
 	}
 
 	public void sendFrame200(int MainFrame, int SubFrame) {
@@ -412,9 +417,6 @@ public class Client extends Player implements Runnable {
 			12191, 12192, 12193, 12194, 12195, 12196, 12197, 12198, 12199, 12200, 12201, 12202, 12203, 12204, 12205, 12206,
 			12207, 12208, 12209, 12210, 12211, 12212, 12213, 12214, 12215, 12216, 12217, 12218, 12219, 12220, 12221, 12222,
 			12223};
-
-	public int bonusSpec = 0, animationSpec = 0, emoteSpec = 0;
-	public boolean specsOn = true;
 
 	public int[] statId = {10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011, 11013, 11014, 11010, 11012, 11006,
 			11009, 11008, 11004, 11003, 11005, 47002, 54090, 11007};
@@ -2145,7 +2147,7 @@ public class Client extends Player implements Runnable {
 			else if(iconTimer == 0 && !gotIcon) { //Hit with dmg!
 				send(new SendMessage("The strange aura from the dungeon makes you vulnerable!"));
 				int dmg = 5 + Misc.random(15);
-				this.dealDamage(dmg, dmg >= 15);
+				dealDamage(null, dmg, dmg >= 15);
 				iconTimer = 6;
 			} else iconTimer = 6;
 		} else
@@ -2169,7 +2171,7 @@ public class Client extends Player implements Runnable {
 				Skill.enabledSkills().forEach(skill -> {
 					switch (skill) {
 						case HITPOINTS:
-							heal(1);
+							if (getCurrentHealth() < getMaxHealth()) heal(1); //Not sure if we should remove 1 to max health!
 							break;
 						case PRAYER: //Do not restore prayer!
 							break;
@@ -2187,6 +2189,7 @@ public class Client extends Player implements Runnable {
 		if (reloadHp) {
 			heal(getMaxHealth());
 			setCurrentPrayer(getMaxPrayer());
+			pray(0);
 		}
 		// RubberCheck();
 		if(questPage == 0)
@@ -4240,10 +4243,10 @@ public class Client extends Player implements Runnable {
 
 	/* Shops */
 	public void sellItem(int itemID, int fromSlot, int amount) {
-		/* Item Values */
-		if(itemID != ShopHandler.ShopItems[MyShopID][fromSlot] - 1) { //Testing..
+		if(itemID != playerItems[fromSlot] && playerItemsN[fromSlot] < 1) {
 			return;
 		}
+		/* Item Values */
 		int original = itemID;
 		itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
 		int price = (int) Math.floor(GetShopBuyValue(itemID));
@@ -4260,6 +4263,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Can't sell that item to the store!"));
 			return;
 		}
+		System.out.println("I send here?!");
 		int slot = -1;
 		for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
 			if (ShopHandler.ShopItems[MyShopID][i] <= 0 && slot == -1)
@@ -4328,6 +4332,7 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("Not enough space in your inventory."));
 				return;
 			}
+
 			int currency = MyShopID == 55 ? 11997 : 995;
 			int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID));
 			TotPrice2 = MyShopID >= 7 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
@@ -5036,7 +5041,6 @@ public class Client extends Player implements Runnable {
 		send(new SendString("Click here to continue", base + 3 + text.length));
 		sendFrame164(base);
 	}
-
 	public void showPlayerChat(String[] text, int emote) {
 		int base = 968;
 		if(text.length == 2)
@@ -5051,6 +5055,11 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < text.length; i++)
 			send(new SendString(text[i], base + 3 + i));
 		sendFrame164(base);
+	}
+	public void resetDialogueChat() {
+		send(new PlayerDialogueHead(0));
+		sendFrame200(0, -1);
+		sendFrame164(-1);
 	}
 
 	/* Equipment level checking */
@@ -6117,6 +6126,7 @@ public class Client extends Player implements Runnable {
 		goldSlot = -1;
 		boneItem = -1;
 		shafting = false;
+		fletchings = false;
 		spinning = false;
 		crafting = false;
 		fishing = false;
@@ -6142,13 +6152,7 @@ public class Client extends Player implements Runnable {
 		prayerAction = -1;
 		boneItem = -1;
 		/* Animation shiez?! */
-		if (full) {
-			rerequestAnim();
-		}
-		if (fletchings) { //Not sure if we need this?!
-			fletchings = false;
-			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-		}
+		if (full) rerequestAnim();
 	}
 
 	public void resetAction() {
@@ -6415,6 +6419,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("This spell is only available to premium members, visit Dodian.net for info"));
 			return;
 		}
+		resetActionTeleport();
 		resetAction(false);
 		resetWalkingQueue();
 		UsingAgility = true;
@@ -6992,35 +6997,27 @@ public class Client extends Player implements Runnable {
 		/* Sending duel item reset! */
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(6509);
-		getOutputStream().writeWord(14);
-		for(int i = 0; i < 14; i++) {
-			getOutputStream().writeByte(0);
-			getOutputStream().writeWordBigEndianA(0);
-		}
+		getOutputStream().writeWord(1);
+		getOutputStream().writeByte(0);
+		getOutputStream().writeWordBigEndianA(0);
 		getOutputStream().endFrameVarSizeWord();
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(6507);
-		getOutputStream().writeWord(28);
-		for(int i = 0; i < 28; i++) {
-			getOutputStream().writeByte(0);
-			getOutputStream().writeWordBigEndianA(0);
-		}
+		getOutputStream().writeWord(1);
+		getOutputStream().writeByte(0);
+		getOutputStream().writeWordBigEndianA(0);
 		getOutputStream().endFrameVarSizeWord();
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(6502);
-		getOutputStream().writeWord(14);
-		for(int i = 0; i < 14; i++) {
-			getOutputStream().writeByte(0);
-			getOutputStream().writeWordBigEndianA(0);
-		}
+		getOutputStream().writeWord(1);
+		getOutputStream().writeByte(0);
+		getOutputStream().writeWordBigEndianA(0);
 		getOutputStream().endFrameVarSizeWord();
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(6508);
-		getOutputStream().writeWord(28);
-		for(int i = 0; i < 28; i++) {
-			getOutputStream().writeByte(0);
-			getOutputStream().writeWordBigEndianA(0);
-		}
+		getOutputStream().writeWord(1);
+		getOutputStream().writeByte(0);
+		getOutputStream().writeWordBigEndianA(0);
 		getOutputStream().endFrameVarSizeWord();
 		/* Sending duel items! */
 		getOutputStream().createFrameVarSizeWord(53);
@@ -7063,6 +7060,7 @@ public class Client extends Player implements Runnable {
 		canOffer = false;
 		duelFight = true;
 		prayers.reset();
+		addEffectTime(2, 0); //Need to reset this for dueling!
 		GetBonus(true); //Set bonus due to blessing!
 		for(int i = 0; i < boostedLevel.length; i++) {
 			boostedLevel[i] = 0;
@@ -7764,17 +7762,19 @@ public class Client extends Player implements Runnable {
 				getPlunder.resetPlunder();
 			send(new RemoveInterfaces());
 		} else if (NpcDialogue == 48054) {
+			resetDialogueChat();
 			if(getInvAmt(621) < 1) {
 				send(new SendMessage("You need a ship ticket to unlock this travel!"));
 			} else if (button == 1) {
 				int id = actionButtonId == 48054 ? 4 : actionButtonId == 3056 ? 3 : actionButtonId - 3058;
-				if(!getTravel(id)) {
+				if(getTravel(id)) {
+					send(new SendMessage("You have already unlocked this travel!"));
+				} else {
 					deleteItem(621, 1);
 					checkItemUpdate();
 					saveTravel(id);
 					send(new SendMessage("You have now unlocked the travel!"));
-				} else
-					send(new SendMessage("You have already unlocked this travel!"));
+				}
 			}
 			NpcDialogueSend = false;
 			NpcDialogue = -1;
@@ -8645,7 +8645,7 @@ public class Client extends Player implements Runnable {
                 break;
             }
 		if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
-				weaponId == 11235 || (weaponId >= 12765 && weaponId <= 12768))
+				weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
 			bow = true;
 		return bow;
 	}
@@ -8838,11 +8838,6 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrame(248);
 		getOutputStream().writeWordA(MainFrame);
 		getOutputStream().writeWord(SubFrame);
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		return ((Client) o).getPlayerName().equalsIgnoreCase(getPlayerName());
 	}
 
 	public void removeExperienceFromPlayer(String user, int id, int xp) {
@@ -9072,10 +9067,15 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void transport(Position pos) {
+		resetActionTeleport();
 		moveTo(pos.getX(), pos.getY(), pos.getZ());
 		teleportToX = pos.getX();
 		teleportToY = pos.getY();
 		teleportToZ = pos.getZ();
+	}
+	public void resetActionTeleport() {
+		if(getPositionName(getPosition()) == positions.DESERT_MENAPHOS) //Test area boost! MAybe do this for raid :O ?
+			addEffectTime(2, 0);
 	}
 
 	public void travelTrigger(int checkPos) {
@@ -9114,14 +9114,12 @@ public class Client extends Player implements Runnable {
 				EventManager.getInstance().registerEvent(new Event(1800) {
 					@Override
 					public void execute() {
-						if (disconnected)
-							this.stop();
-						else {
+						if (!disconnected) {
 							transport(new Position(travel[pos][1], travel[pos][2], 0));
 							send(new RemoveInterfaces());
 							travelInitiate = false;
-							this.stop();
 						}
+						this.stop();
 					}
 				});
 			}

@@ -26,6 +26,8 @@ import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
+import java.util.Objects;
+
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject implements Packet {
@@ -63,16 +65,16 @@ public class ClickObject implements Packet {
                 Position objectPosition = null;
                 Object o = new Object(objectID, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), task.getWalkToPosition().getZ(), 10);
                 if (def != null && !GlobalObject.hasGlobalObject(o)) {
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
                 } else {
                     if (GlobalObject.hasGlobalObject(o)) {
-                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(o.face), object.getSizeY(o.type), o.z);
+                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(o.face), object.getSizeY(o.type), o.z);
                     } else if (object != null) {
                         objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                     }
                 }
                 if (objectID == 23131)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 3552, client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 if(objectID == 16466)
                     objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), 2972, client.getPosition().getX(), client.getPosition().getY(), 1, 1, client.getPosition().getZ());
                 if(objectID == 11643) {
@@ -161,7 +163,7 @@ public class ClickObject implements Packet {
             client.transport(new Position(2677, 9806, 0));
         }
         if (objectID == 7962) { //Flower patch?!
-            //System.out.println("patch?!");
+            System.out.println("patch?!");
         }
         if (objectID == 17385 && objectPosition.getX() == 2677 && objectPosition.getY() == 9805) {
             client.transport(new Position(2677, 3404, 0));
@@ -322,6 +324,7 @@ public class ClickObject implements Packet {
         }
         if (objectID == 410 && objectPosition.getX() == 2925 && objectPosition.getY() == 3483) { //Guthix altar to cosmic
             client.requestAnim(645, 0);
+            //TODO: Fix random teleport with cosmic!
             client.triggerTele(2162, 4833, 0, false);
             return;
         }
@@ -368,7 +371,7 @@ public class ClickObject implements Packet {
                 if(chance <= (int)(client.getLevel(Skill.THIEVING) * 2.5))
                     client.transport(new Position(1934, 4450, 2));
                 else {
-                    client.dealDamage(Misc.random(3), false);
+                    client.dealDamage(null, Misc.random(3), false);
                     client.setStunTimer(4);
                 }
             } else
@@ -395,6 +398,15 @@ public class ClickObject implements Packet {
         }
         if (objectID == 26580 || (objectID >= 26600 && objectID <= 26613)) { //Urns!
             client.getPlunder.toggleObstacles(objectID);
+        }
+        /* Desert Objects */
+        if (objectID == 20275) { //Sophanem bank entry!
+            client.transport(new Position(2799, 5160, 0));
+            client.setFocus(2799, 5159);
+        }
+        else if (objectID == 20277) { //Sophanem bank exit!
+            client.transport(new Position(3315, 2796, 0));
+            client.setFocus(3315, 2797);
         }
         /* Agility */
         Agility agility = new Agility(client);
@@ -544,42 +556,41 @@ public class ClickObject implements Packet {
             return;
         }
         /* Mining */
-        boolean foundRock = false;
-        for (int r = 0; r < Utils.rocks.length && !foundRock; r++) {
-            if (objectID == Utils.rocks[r]) {
-                foundRock = true;
-                if (client.fletchings || client.isFiremaking || client.shafting) { //We need this here?!
-                    client.resetAction();
-                }
-                if (client.getPositionName(client.getPosition()) == Client.positions.TZHAAR) {
-                    client.send(new SendMessage("You can not mine here or the Tzhaar's will be angry!"));
-                    return;
-                }
-                if (client.getLevel(Skill.MINING) < Utils.rockLevels[r]) {
-                    client.send(new SendMessage("You need a mining level of " + Utils.rockLevels[r] + " to mine this rock"));
-                    return;
-                }
-                int minePick = client.findPick();
-                if (minePick < 0) {
-                    client.resetAction();
-                    client.send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
-                    return;
-                }
-                if (foundRock) {
-                    client.resourcesGathered = 0;
-                    client.lastPickAction = System.currentTimeMillis() + 600;
-                    client.lastAction = System.currentTimeMillis() - 600;
-                    client.mineIndex = r; //Rock id need to be here!
-                    client.mining = true;
-                    client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0);
-                    client.send(new SendMessage("You swing your pick at the rock..."));
-                }
+        int rockId = -1;
+        for (int r = 0; r < Utils.rocks.length && rockId == -1; r++) //Check rock object!
+            if (objectID == Utils.rocks[r]) rockId = r;
+
+        if(rockId != -1) {
+            if (client.fletchings || client.isFiremaking || client.shafting) { //We need this here?!
+                client.resetAction();
             }
+            if (client.getPositionName(client.getPosition()) == Client.positions.TZHAAR) {
+                client.send(new SendMessage("You can not mine here or the Tzhaar's will be angry!"));
+                return;
+            }
+            if (client.getLevel(Skill.MINING) < Utils.rockLevels[rockId]) {
+                client.send(new SendMessage("You need a mining level of " + Utils.rockLevels[rockId] + " to mine this rock"));
+                return;
+            }
+            int minePick = client.findPick();
+            if (minePick == -1) {
+                client.resetAction();
+                client.send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
+                return;
+            }
+            client.resourcesGathered = 0;
+            client.lastPickAction = System.currentTimeMillis() + 600;
+            client.lastAction = System.currentTimeMillis() - 600;
+            client.mineIndex = rockId; //Rock id need to be here!
+            client.mining = true;
+            client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0);
+            client.send(new SendMessage("You swing your pick at the rock..."));
         }
         if (objectID == 2634 && objectPosition.getX() == 2838 && objectPosition.getY() == 3517) { //2838, 3517
             client.send(new SendMessage("You jump to the other side of the rubble"));
             client.transport(new Position(2840, 3517, 0));
         }
+        /* Unsure... */
         if (objectID == 16680) {
             int[] x = {2845, 2848, 2848};
             int[] y = {3516, 3513, 3519};
@@ -832,12 +843,11 @@ public class ClickObject implements Packet {
                     if (DoorHandler.doorState[d] == 0) { // closed
                         newFace = DoorHandler.doorFaceOpen[d];
                         DoorHandler.doorState[d] = 1;
-                        DoorHandler.doorFace[d] = newFace;
                     } else {
                         newFace = DoorHandler.doorFaceClosed[d];
                         DoorHandler.doorState[d] = 0;
-                        DoorHandler.doorFace[d] = newFace;
                     }
+                    DoorHandler.doorFace[d] = newFace;
                     //client.send(new Sound(326));
                     for (int p = 0; p < Constants.maxPlayers; p++) {
                         Client player = (Client) PlayerHandler.players[p];
@@ -869,7 +879,7 @@ public class ClickObject implements Packet {
         if (objectID == 15656) {
             client.transport(new Position(2614, 9505, 0));
         }
-        if(objectID == 409) {
+        if(objectID == 409 || objectID == 20377) {
             if(client.getCurrentPrayer() < client.getMaxPrayer()) {
                 client.pray(client.getMaxPrayer());
                 client.send(new SendMessage("You restore your prayer points!"));

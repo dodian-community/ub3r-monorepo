@@ -23,7 +23,7 @@ public class ShopProcessor implements Job {
                                 && ShopHandler.ShopItemsN[i][j] != ShopHandler.ShopItemsSN[i][j]) {
                             if (ShopHandler.ShopItemsN[i][j] < ShopHandler.ShopItemsSN[i][j]) {
                                 double restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j]) * 0.05;
-                                ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? restockAmount : 1;
+                                ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? (int) restockAmount : 1;
                             } else Server.shopHandler.DiscountItem(i, j);
                         }
                             if (j >= ShopHandler.ShopItemsStandard[i]) Server.shopHandler.DiscountItem(i, j);
@@ -32,7 +32,7 @@ public class ShopProcessor implements Job {
                     }
                 } else ShopHandler.ShopItemsDelay[i]++;
             //System.out.println("hello?!" + DidUpdate);
-            if (DidUpdate == true) {
+            if (DidUpdate) {
                 for (int k = 1; k < Constants.maxPlayers; k++) {
                     if (PlayerHandler.players[k] != null) {
                         if (PlayerHandler.players[k].isShopping() && PlayerHandler.players[k].MyShopID == i) {

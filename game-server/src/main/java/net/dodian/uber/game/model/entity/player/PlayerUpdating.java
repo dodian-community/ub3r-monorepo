@@ -5,10 +5,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
@@ -26,7 +22,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return instance;
     }
 
-    private Stream updateBlock = new Stream(new byte[10_000]);
+    private final Stream updateBlock = new Stream();
     @Override
     public void update(Player player, Stream stream) {
         updateBlock.currentOffset = 0;
@@ -36,6 +32,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
             stream.writeWordBigEndian(seconds * 50 / 30);
         }
+
 
         updateLocalPlayerMovement(player, stream);
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
@@ -298,35 +295,35 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void appendPrimaryHit(Player player, Stream stream) {
         synchronized(this) {
-            stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
-            if (player.getHitDiff() == 0) {
+            stream.writeByte(Math.min(player.getDamageDealt(), 255)); // What the perseon got 'hit' for
+            if (player.getDamageDealt() == 0) {
                 stream.writeByteA(0);
+            } else if (player.isCrit()) {
+                stream.writeByteA(3);
             } else {
-                stream.writeByteA(player.isCrit() ? 3 : 1);
+                stream.writeByteA(1);
             }
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
             stream.writeByteC(value);
             stream.writeByte(100);
-            player.setCrit(false); // bar
-            player.setLastCombat(16);
         }
     }
 
     public void appendPrimaryHit2(Player player, Stream stream) {
         synchronized(this) {
-            stream.writeByte(Math.min(player.getHitDiff(), 255)); // What the perseon got 'hit' for
-            if (player.getHitDiff() == 0) {
+            stream.writeByte(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
+            if (player.getDamageDealt2() == 0) {
                 stream.writeByteS(0);
+            } else if (player.isCrit2()) {
+                stream.writeByteS(3);
             } else {
-                stream.writeByteS(player.isCrit() ? 3 : 1);
+                stream.writeByteS(1);
             }
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
             stream.writeByte(value);
             stream.writeByteC(100);
-            player.setCrit(false); // bar
-            player.setLastCombat(16);
         }
     }
 

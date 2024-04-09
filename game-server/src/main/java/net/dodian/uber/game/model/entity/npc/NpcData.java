@@ -12,10 +12,10 @@ import java.util.ArrayList;
  */
 public class NpcData {
 
-    private ArrayList<NpcDrop> drops = new ArrayList<NpcDrop>();
+    private final ArrayList<NpcDrop> drops = new ArrayList<>();
     private String name = "", examine="";
     private int attackEmote, deathEmote, respawn, combat, size;
-    private int[] level = new int[7];
+    private final int[] level = new int[7];
 
     public NpcData(ResultSet row) {
         try {
@@ -34,7 +34,7 @@ public class NpcData {
             level[5] = 0; // a npc got no prayer!
             level[6] = row.getInt("magic");
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("NpcData error..." + e);
         }
     }
 
@@ -101,7 +101,6 @@ public class NpcData {
     /**
      * Returns the amount of tiles that the npc occupies on the game map.
      *
-     * @return
      */
     public int getSize() {
         return size;

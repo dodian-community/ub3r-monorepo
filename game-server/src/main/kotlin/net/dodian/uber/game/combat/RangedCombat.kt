@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
@@ -36,11 +37,18 @@ fun Client.handleRangedAttack(): Int {
         892 to listOf(14, 23),
         11212 to listOf(1120, 1116)
     )
+    //obby ring, 442 + 443
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
-    val arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
-    val arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
+    var arrowGfx = arrows[equippedArrow]?.get(0) ?: 10
+    var arrowPullGfx = arrows[equippedArrow]?.get(1) ?: 20
+    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
 
-    combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id]);
+    if(equipment[Equipment.Slot.WEAPON.id] == 4734) {
+        arrowGfx = 27
+        arrowPullGfx = -1 //Not right but believe there is no real gfx for this!
+    }
+
+    combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
     lastCombat = 16
     setFocus(target.position.x, target.position.y)
     if (DeleteArrow()) {
@@ -48,13 +56,15 @@ fun Client.handleRangedAttack(): Int {
         if(target is Npc) {
             val offsetX = (position.y - target.position.y) * 1
             val offsetY = (position.x - target.position.x) * 1
-            sendAnimation(426)
+            requestAnim(-1, 0)
+            sendAnimation(emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, target.slot + 1, 51, 16)
         } else {
             val offsetX = (position.y - target.position.y) * -1
             val offsetY = (position.x - target.position.x) * -1
-            sendAnimation(426)
+            requestAnim(-1, 0)
+            sendAnimation(emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
         }
@@ -67,9 +77,8 @@ fun Client.handleRangedAttack(): Int {
     }
     var hit = Utils.random(maxHit.toInt())
     val criticalChance = getLevel(Skill.AGILITY) / 9
-    if(equipment[Equipment.Slot.SHIELD.id]==4224)
-        criticalChance * 1.5
     val extra = getLevel(Skill.RANGED) * 0.195
+    if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
     val landHit = landHitRanged(this, target)
     if (target is Npc) {
@@ -77,31 +86,54 @@ fun Client.handleRangedAttack(): Int {
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
-        if(hit >= npc.currentHealth)
-            hit = npc.currentHealth
+        if(hit >= npc.currentHealth) hit = npc.currentHealth
         npc.dealDamage(this, hit, landCrit)
+
+        var hit2 = hit
+        val chance = Misc.chance(8) == 1 && armourSet("karil")
+        if(chance && hit2 > 0) { //Karil effect!
+            stillgfx(401, npc.position, 100)
+            hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
+            if(hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+            npc.dealDamage(this, hit2, landCrit)
+        }
+        /* Experience */
+        if(hit > 0) {
+            if (fightType == 1) {
+                val xp = (20 * hit)
+                giveExperience(xp, Skill.DEFENCE)
+                giveExperience(xp, Skill.RANGED)
+            } else giveExperience(40 * hit, Skill.RANGED)
+            giveExperience(13 * hit, Skill.HITPOINTS)
+        }
+        if(hit2 > 0) {
+            if (fightType == 1) {
+                val xp = (20 * hit2)
+                giveExperience(xp, Skill.DEFENCE)
+                giveExperience(xp, Skill.RANGED)
+            } else giveExperience(40 * hit2, Skill.RANGED)
+            giveExperience(13 * hit2, Skill.HITPOINTS)
+        }
     }
     if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
-        else if(!landHit) hit = 0
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) hit /= 2
-        if(hit >= player.currentHealth)
-            hit = player.currentHealth
-        player.dealDamage(hit, landCrit)
-    }
+        else if (!landHit) hit = 0
+        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) (hit * 0.6).toInt()
+        if (hit >= player.currentHealth) hit = player.currentHealth
+        player.dealDamage(this, hit, landCrit)
 
-    if(target is Npc) {
-        if (fightType == 1) {
-            val xp = (20 * hit)
-            giveExperience(xp, Skill.DEFENCE)
-            giveExperience(xp, Skill.RANGED)
-        } else giveExperience(40 * hit, Skill.RANGED)
-        giveExperience(13 * hit, Skill.HITPOINTS)
+        var hit2 = hit
+        val chance = Misc.chance(8) == 1 && armourSet("karil")
+        if (chance && hit2 > 0) { //Karil effect!
+            stillgfx(401, player.position, 100)
+            hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
+            if (hit2 >= player.currentHealth) hit2 = player.currentHealth
+            player.dealDamage(this, hit2, landCrit)
+        }
     }
-
-    if (debug) send(SendMessage("hit = $hit, elapsed = ${combatTimer}"))
+        if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
     return 1
 }
 
@@ -129,10 +161,10 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         /* Calculation */
         val playerDef = (defLevel * (defBonus + 64.0)) * prayerDefBonus
         val playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
-        if (playerAccuracy > playerDef)
-            hitChance = 1 - ((playerDef + 2) / (2 * (playerAccuracy + 1)))
+        hitChance = if (playerAccuracy > playerDef)
+            1 - ((playerDef + 2) / (2 * (playerAccuracy + 1)))
         else
-            hitChance = playerAccuracy / (2 * (playerDef + 1))
+            playerAccuracy / (2 * (playerDef + 1))
         p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
         return chance < (hitChance*100)
     } else if(t is Npc) { //Pve
@@ -143,13 +175,13 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         /* Various bonuses for styles! */
         if(p.fightType == 0) atkLevel += 3
         /* Calculation */
-        val npcDef = defLevel * (defBonus + 64.0)
+        val npcDef = (defLevel + 9) * (defBonus + 64.0)
         var playerAccuracy = (atkLevel * (atkBonus + 64.0)) * prayerBonus
         playerAccuracy = if(p.getSlayerDamage(t.id, true) == 2) playerAccuracy * 1.2 else playerAccuracy
-        if (playerAccuracy > npcDef)
-            hitChance = 1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
+        hitChance = if (playerAccuracy > npcDef)
+            1 - ((npcDef + 2) / (2 * (playerAccuracy + 1)))
         else
-            hitChance = playerAccuracy / (2 * (npcDef + 1))
+            playerAccuracy / (2 * (npcDef + 1))
         p.debug("Ranged Accuracy Hit: " + (hitChance * 100.0) + "% out of " + chance.toDouble() + "%")
         return chance < (hitChance*100)
     }
