@@ -38,8 +38,6 @@ enum class DbTables(val table: String) {
     GAME_CHARACTERS_STATS("character_stats"),
     GAME_CHARACTERS_STATS_PROGRESS("character_stats_progress"),
 
-    GAME_ACTIONS("uber3_actions"),
-
     GAME_DOOR_DEFINITIONS("uber3_doors"),
     GAME_ITEM_DEFINITIONS("uber3_items"),
     GAME_NPC_DEFINITIONS("uber3_npcs"),
@@ -49,7 +47,6 @@ enum class DbTables(val table: String) {
 
     GAME_NPC_SPAWNS("uber3_spawn"),
     GAME_NPC_DROPS("uber3_drops"),
-    GAME_MISC("uber3_misc"),
 
     GAME_PETE_CO("pete_co"),
     GAME_WORLDS("worlds")

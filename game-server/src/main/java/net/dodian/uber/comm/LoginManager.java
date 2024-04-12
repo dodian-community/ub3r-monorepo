@@ -7,7 +7,6 @@ import net.dodian.uber.game.model.entity.player.Friend;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -188,9 +187,8 @@ public class LoginManager {
                                     p.getEquipment()[slot] = id;
                                     p.getEquipmentN()[slot] = amount;
                                 } else if(p.freeSlots() == 0 || !p.addItem(id, amount)) {
-                                    GroundItem item = new GroundItem(p.getPosition().copy(), Integer.parseInt(parse2[1]), Integer.parseInt(parse2[2]), p.getSlot(), -1);
-                                    Ground.items.add(item);
-                                    ItemLog.playerDrop(p, item.id, item.amount, p.getPosition().copy(), "Equipment check drop");
+                                    Ground.addFloorItem(p, id, amount);
+                                    ItemLog.playerDrop(p, id, amount, p.getPosition().copy(), "Equipment check drop");
                                     p.send(new SendMessage("<col=FF0000>You dropped the " + Server.itemManager.getName(Integer.parseInt(parse2[1])).toLowerCase() + " on the floor!!!"));
                                 }
                             }
@@ -301,8 +299,7 @@ public class LoginManager {
                         }
                     }
                 } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
-                /* Account age*/
-                //p.accountAge = System.currentTimeMillis(); //TODO: Fix a account age for doing shiez, either forum check or make a new value :D
+                /* Account timers */
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;

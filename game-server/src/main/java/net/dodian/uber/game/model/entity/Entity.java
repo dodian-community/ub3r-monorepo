@@ -30,9 +30,9 @@ public abstract class Entity {
     private int animationId;
     private String text;
 
-    private Map<Entity, Integer> damage = new HashMap<Entity, Integer>();
+    private final Map<Entity, Integer> damage = new HashMap<>();
 
-    private JobScheduler jobScheduler = new JobScheduler(this);
+    private final JobScheduler jobScheduler = new JobScheduler(this);
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
@@ -71,10 +71,7 @@ public abstract class Entity {
 
     public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
-        if (dist <= distance) {
-            return true;
-        }
-        return false;
+        return dist <= distance;
     }
 
     public int getSlot() {
@@ -115,14 +112,10 @@ public abstract class Entity {
     }
 
     public int getSize() {
-        if (type != null && type == Type.NPC && ((Npc) this) != null && Server.npcManager.getData(((Npc) this).getId()) != null) {
+        if (type != null && type == Type.NPC && Server.npcManager.getData(((Npc) this).getId()) != null) {
             return Server.npcManager.getData(((Npc) this).getId()).getSize();
         }
         return 1;
-    }
-
-    public int getSizeMinusOne() {
-        return getSize() - 1;
     }
 
     public Position getPosition() {
@@ -166,15 +159,15 @@ public abstract class Entity {
         return this.updateFlags;
     }
 
-    public enum Type {
-        NPC, PLAYER;
-    }
+    public enum Type { NPC, PLAYER }
 
     public enum damageType {
         MELEE, RANGED, MAGIC, //Standard
         FIRE_BREATH, JAD_MAGIC, JAD_RANGED, //Special
         BLOODATTACK, TRUEDAMAGE //Unique
-        ;
+    }
+    public enum hitType {
+        STANDARD, CRIT, POISON, BURN, BLEED //Bleed is custom and thus got no hitsplat yet!
     }
 
 }

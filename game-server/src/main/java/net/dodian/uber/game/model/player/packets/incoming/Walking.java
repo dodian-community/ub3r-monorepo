@@ -21,14 +21,14 @@ public class Walking implements Packet {
         if(client.doingTeleport() || client.getPlunder.looting) { //In the midst of something like plunder or teleport
             return;
         }
-        if (packetType != 98 && packetType != 164) {
+        if (packetType != 98) {
             client.setWalkToTask(null);
         }
         if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
         /* Auto decline when walk away from trade! */
-        if(client.inTrade && packetType != 164) client.declineTrade();
+        if(client.inTrade && (packetType == 164 || packetType == 248)) client.declineTrade();
         /* Auto decline when walk away from duel! */
-        else if(client.inDuel && !client.duelFight && packetType != 164) client.declineDuel();
+        else if(client.inDuel && !client.duelFight && (packetType == 164 || packetType == 248)) client.declineDuel();
         if (client.genie) client.genie = false;
         if (client.antique) client.antique = false;
         if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
@@ -45,6 +45,10 @@ public class Walking implements Packet {
         if (client.checkInv) {
             client.checkInv = false;
             client.resetItems(3214);
+        }
+        if(client.pickupWanted) { //Reset attempt to pickup if you walk away!
+            client.pickupWanted = false;
+            client.attemptGround = null;
         }
         /* Combat checks! */
         if(packetType != 98 && (client.getStunTimer() > 0 || client.getSnareTimer() > 0)) { //In the midst of a teleport to stop movement!
@@ -85,7 +89,8 @@ public class Walking implements Packet {
                     client.resetWalkingQueue();
                     return;
                 }
-                client.send(new RemoveInterfaces());
+                if(packetType == 98 && !client.isBusy())
+                    client.send(new RemoveInterfaces());
                 client.rerequestAnim();
                 client.resetAction();
                 client.discord = false;

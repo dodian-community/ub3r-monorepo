@@ -124,7 +124,6 @@ public class NpcManager {
                 reloadAllData(c, id);
                 statement.close();
             } catch (Exception e) {
-                //System.out.println("test: " + e.getLocalizedMessage() + ", " + e.getMessage());
                 if (e.getMessage().contains("Unknown column"))
                     c.send(new SendMessage("row name '" + table + "' do not exist in the database!"));
                 else if (e.getMessage().contains("Incorrect integer"))

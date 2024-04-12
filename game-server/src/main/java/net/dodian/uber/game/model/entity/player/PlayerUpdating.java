@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.utilities.Misc;
@@ -22,10 +23,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return instance;
     }
 
-    private final Stream updateBlock = new Stream();
     @Override
     public void update(Player player, Stream stream) {
-        updateBlock.currentOffset = 0;
+        Stream updateBlock = new Stream(new byte[2048]); //2048 is true here?!
 
         if (Server.updateRunning) {
             stream.createFrame(114);
@@ -88,8 +88,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.createFrame(73);
             stream.writeWordA(player.mapRegionX + 6);
             stream.writeWord(player.mapRegionY + 6);
-            if (player.didTeleport())
-                ((Client) player).updateItems();
+            ((Client) player).updateGroundItems();
         }
         stream.createFrameVarSizeWord(81);
         stream.initBitAccess();
@@ -296,13 +295,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void appendPrimaryHit(Player player, Stream stream) {
         synchronized(this) {
             stream.writeByte(Math.min(player.getDamageDealt(), 255)); // What the perseon got 'hit' for
-            if (player.getDamageDealt() == 0) {
+            if (player.getDamageDealt() == 0)
                 stream.writeByteA(0);
-            } else if (player.isCrit()) {
+            else if (player.getHitType() == Entity.hitType.BURN)
+                stream.writeByteA(4);
+            else if (player.getHitType() == Entity.hitType.CRIT)
                 stream.writeByteA(3);
-            } else {
+            else if (player.getHitType() == Entity.hitType.POISON)
+                stream.writeByteA(2);
+            else
                 stream.writeByteA(1);
-            }
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
             stream.writeByteC(value);
@@ -313,13 +315,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void appendPrimaryHit2(Player player, Stream stream) {
         synchronized(this) {
             stream.writeByte(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
-            if (player.getDamageDealt2() == 0) {
+            if (player.getDamageDealt2() == 0)
                 stream.writeByteS(0);
-            } else if (player.isCrit2()) {
+            else if (player.getHitType2() == Entity.hitType.BURN)
+                stream.writeByteS(4);
+            else if (player.getHitType2() == Entity.hitType.CRIT)
                 stream.writeByteS(3);
-            } else {
+            else if (player.getHitType2() == Entity.hitType.POISON)
+                stream.writeByteS(2);
+            else
                 stream.writeByteS(1);
-            }
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
             stream.writeByte(value);

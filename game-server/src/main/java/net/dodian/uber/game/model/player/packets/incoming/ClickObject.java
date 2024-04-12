@@ -8,6 +8,7 @@ import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
@@ -161,9 +162,6 @@ public class ClickObject implements Packet {
         }
         if (objectID == 17384 && objectPosition.getX() == 2677 && objectPosition.getY() == 3405) {
             client.transport(new Position(2677, 9806, 0));
-        }
-        if (objectID == 7962) { //Flower patch?!
-            System.out.println("patch?!");
         }
         if (objectID == 17385 && objectPosition.getX() == 2677 && objectPosition.getY() == 9805) {
             client.transport(new Position(2677, 3404, 0));
@@ -371,7 +369,7 @@ public class ClickObject implements Packet {
                 if(chance <= (int)(client.getLevel(Skill.THIEVING) * 2.5))
                     client.transport(new Position(1934, 4450, 2));
                 else {
-                    client.dealDamage(null, Misc.random(3), false);
+                    client.dealDamage(null, Misc.random(3), Entity.hitType.STANDARD);
                     client.setStunTimer(4);
                 }
             } else

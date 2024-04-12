@@ -79,10 +79,9 @@ public class Client extends Player implements Runnable {
 	public int mineIndex = -1, cuttingIndex = -1;
 	public int resourcesGathered = 0;
 	public long lastDoor = 0;
-	public int clientPid = -1;
 	public long session_start = 0;
 	public boolean pickupWanted = false, duelWin = false;
-	public int pickX, pickY, pickId, pickTries;
+	public GroundItem attemptGround = null;
 	public CopyOnWriteArrayList<Friend> friends = new CopyOnWriteArrayList<>();
 	public CopyOnWriteArrayList<Friend> ignores = new CopyOnWriteArrayList<>();
 	public boolean tradeLocked = false;
@@ -206,7 +205,6 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeByte(skill.getId());
 			getOutputStream().writeDWord_v1(getExperience(skill));
 			getOutputStream().writeByte(out);
-			//System.out.println(skill.getName() + " XP: " + getExperience(skill));
 	}
 
 	public int getbattleTimer(int weapon) {
@@ -228,7 +226,7 @@ public class Client extends Player implements Runnable {
 				|| wep.contains("tzhaar-ket-om") || wep.contains("dharok")) {
 			wepPlainTick = 7;
 		}
-		if(usingBow && fightType == 2) //Rapid style...Not sure if we should keep?!
+		if(usingBow && fightType == 2) //Rapid style
 			wepPlainTick -= 1;
 		return wepPlainTick;
 	}
@@ -273,7 +271,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void stillgfx(int id, Position pos, int height, boolean showAll) {
-		// for (Player p : server.playerHandler.players) {
 		if(showAll) {
 			for (int i = 0; i < PlayerHandler.players.length; i++) {
 				Player p = PlayerHandler.players[i];
@@ -440,7 +437,6 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public static final int bufferSize = 1_000_000;
 	public java.net.Socket mySock;
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
@@ -454,9 +450,9 @@ public class Client extends Player implements Runnable {
 		super(_playerId);
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[bufferSize]);
+		outputStream = new Stream(new byte[8192]);
 		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[bufferSize]); //< this issue?!
+		inputStream = new Stream(new byte[8192]);
 		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
 	}
@@ -614,8 +610,6 @@ public class Client extends Player implements Runnable {
 				playerServer = "play.dodian.com";
 			}
 			setPlayerName(getPlayerName().toLowerCase());
-			// playerPass = playerPass.toLowerCase();
-			// System.out.println("valid chars");
 			char[] validChars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
 					's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
 					'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
@@ -1070,7 +1064,7 @@ public class Client extends Player implements Runnable {
 			animation = 623;
 			publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 175 million experience!");
 		}
-		if (oldXP < 200000000 && newXP >= 200000000) { // 200 million announcement!
+		if (oldXP < 200000000 && newXP == 200000000) { // 200 million announcement!
 			animation = 623;
 			publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached the maximum experience!");
 		}
@@ -1564,33 +1558,78 @@ public class Client extends Player implements Runnable {
 		return freeSlot;
 	}
 
-	public void pickUpItem(int id, int x, int y) {
+	public void pickUpItem(int x, int y) {
 		boolean specialItems = (x == 2611 && y == 3096) || (x == 2612 && y == 3096) || (x == 2563 && y == 9511) || (x == 2564 && y == 9511);
 		if (specialItems && playerRights < 2) {
 			dropAllItems();
+			attemptGround = null;
+			pickupWanted = false;
 			return;
 		}
-		for (GroundItem item : Ground.items) {
-			if (item.id == id && getPosition().getX() == x && getPosition().getY() == y && (item.visible || dbId == item.playerId)) {
-				if (getPosition().getX() == item.x && getPosition().getY() == item.y) {
-					if (premiumItem(id) && !premium) {
-						send(new SendMessage("You must be a premium member to use this item"));
-						return;
-					}
-					if (item.isTaken())
-						continue;
-					if (addItem(item.id, item.amount)) { //Fixed so stackable items can be added with full inv as long as you got it.
-						item.setTaken(true);
-						Ground.deleteItem(this, item, true);
-						//send(new Sound(356)); //TODO: fix sounds!
-						if(!item.canDespawn)
-							ItemLog.playerGathering(this, item.id, item.amount, getPosition().copy(), "global item");
-						else
-							ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-						checkItemUpdate();
-					}
-					break;
-				}
+		if(attemptGround != null) {
+			if (!hasSpace() && Server.itemManager.isStackable(attemptGround.id) && !playerHasItem(attemptGround.id)) {
+				send(new SendMessage("Your inventory is full!"));
+				attemptGround = null;
+				pickupWanted = false;
+				return;
+			}
+			switch(attemptGround.type) {
+				case 0:
+					if (!Ground.ground_items.isEmpty())
+						for (GroundItem item : Ground.ground_items) {
+							if(item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z) continue;
+							if (premiumItem(id) && !premium) {
+								send(new SendMessage("You must be a premium member to use this item"));
+								attemptGround = null;
+								pickupWanted = false;
+								break;
+							}
+							if (addItem(item.id, item.amount)) {
+								Ground.deleteItem(attemptGround);
+								ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
+								checkItemUpdate();
+							}
+							attemptGround = null;
+							pickupWanted = false;
+						}
+				break;
+				case 1:
+					if (!Ground.untradeable_items.isEmpty())
+						for (GroundItem item : Ground.untradeable_items) {
+							if(item.isTaken() || dbId != item.playerId || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z) continue;
+							if (premiumItem(id) && !premium) {
+								send(new SendMessage("You must be a premium member to use this item"));
+								attemptGround = null;
+								pickupWanted = false;
+								break;
+							}
+							if (addItem(item.id, item.amount)) {
+								Ground.deleteItem(attemptGround);
+								ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
+								checkItemUpdate();
+							}
+							attemptGround = null;
+							pickupWanted = false;
+						}
+				break;
+				default:
+					if (!Ground.tradeable_items.isEmpty())
+						for (GroundItem item : Ground.tradeable_items) {
+							if(item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z) continue;
+							if (premiumItem(id) && !premium) {
+								send(new SendMessage("You must be a premium member to use this item"));
+								attemptGround = null;
+								pickupWanted = false;
+								break;
+							}
+							if (addItem(item.id, item.amount)) {
+								Ground.deleteItem(attemptGround);
+								ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
+								checkItemUpdate();
+							}
+							attemptGround = null;
+							pickupWanted = false;
+						}
 			}
 		}
 	}
@@ -1638,8 +1677,10 @@ public class Client extends Player implements Runnable {
 			Balloons.displayItems(this);
 			resetItems(5064);
 			send(new InventoryInterface(2156, 5063));
+		} else if (inTrade || inDuel) {
+			resetItems(3322);
 		}
-		resetItems(3214); //Reset this standard inventory regardless!
+		resetItems(3214); //Default reset!
 	}
 
 	public boolean addItem(int item, int amount) {
@@ -1696,7 +1737,8 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void dropItem(int id, int slot) {
-		if (inTrade || inDuel || IsBanking) {
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy!"));
 			return;
 		}
 		if (!Server.dropping) {
@@ -1708,20 +1750,14 @@ public class Client extends Player implements Runnable {
 		if (playerItems[slot] == (id + 1) && playerItemsN[slot] > 0) {
 			amount = playerItemsN[slot];
 		}
-		if (amount < 1) {
+		if (amount < 1 || id < 0) {
 			return;
 		}
-		/*
-		 * if(dropTries < 1){ dropTries++; for(int i = 0; i < 2; i++){ sendMessage (
-		 * "WARNING: dropping this item will DELETE it, not drop it"); send(new
-		 * SendMessage( "To confirm, drop again"); return; } }
-		 */
 		//send(new Sound(376));
 		deleteItem(id, slot, amount);
 		checkItemUpdate();
-		GroundItem drop = new GroundItem(getPosition().copy(), id, amount, getSlot(), -1);
-		Ground.items.add(drop);
-		ItemLog.playerDrop(this, drop.id, drop.amount, getPosition().copy(), "Inventory Drop");
+		Ground.addFloorItem(this, id, amount);
+		ItemLog.playerDrop(this, id, amount, getPosition().copy(), "Inventory Drop");
 	}
 
 	public void deleteItem(int id, int amount) {
@@ -1780,7 +1816,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void wear(int wearID, int slot, int interFace) {
-		if (inTrade || interFace != 3214)  {
+		if (isBusy() || interFace != 3214)  {
 			return;
 		}
 		if (emptyEssencePouch(wearID)) { //Runecrafting Pouches
@@ -2147,7 +2183,7 @@ public class Client extends Player implements Runnable {
 			else if(iconTimer == 0 && !gotIcon) { //Hit with dmg!
 				send(new SendMessage("The strange aura from the dungeon makes you vulnerable!"));
 				int dmg = 5 + Misc.random(15);
-				dealDamage(null, dmg, dmg >= 15);
+				dealDamage(null, dmg, dmg >= 15 ? Entity.hitType.CRIT : Entity.hitType.STANDARD);
 				iconTimer = 6;
 			} else iconTimer = 6;
 		} else
@@ -2273,15 +2309,8 @@ public class Client extends Player implements Runnable {
 		if (disconnectAt > 0 && now >= disconnectAt) {
 			disconnected = true;
 		}
-		if (pickupWanted) {
-			if (pickTries < 1) {
-				pickupWanted = false;
-			}
-			pickTries--;
-			if (getPosition().getX() == pickX && getPosition().getY() == pickY) {
-				pickUpItem(pickId, pickX, pickY);
-				pickupWanted = false;
-			}
+		if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
+			pickUpItem(attemptGround.x, attemptGround.y);
 		}
 		if (inTrade && tradeResetNeeded) {
 			Client o = getClient(trade_reqId);
@@ -2485,23 +2514,6 @@ public class Client extends Player implements Runnable {
 		if (NpcDialogue > 0 && !NpcDialogueSend) {
 			UpdateNPCChat();
 		}
-		/* Items update! Might cause some lag if more than 500 items?! */
-		/* TODO: Add better way of handling ground items! */
-			for (GroundItem item : Ground.items) {
-				int x = Math.abs(getPosition().getX() - item.x), y = Math.abs(getPosition().getY() - item.y);
-				boolean coordCheck = x >= -114 && x <= 114 && y >= -114 && y <= 114;
-				if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay && coordCheck) {
-					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-				} else  if (coordCheck && Server.itemManager.isTradable(item.id) && dbId != item.playerId && now - item.dropped >= item.timeDisplay) {
-					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-				} else if (coordCheck && !Server.itemManager.isTradable(item.id) && dbId == item.playerId)
-					send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-				if (item.canDespawn && item.visible && now - item.dropped >= item.timeDespawn && coordCheck) { //Priorities removing item above all else!
-					Ground.deleteItem(this, item, true);
-				} else if (item.taken && (now - item.dropped < item.timeDespawn) && coordCheck) {
-					Ground.deleteItem(this, item, true);
-				}
-			}
 		/* Handle logout shiez */
 		timeOutCounter++;
 		if (isKicked) //Kicked muhahah!
@@ -2568,6 +2580,10 @@ public class Client extends Player implements Runnable {
 	public void showSkillMenu(int skillID, int child) {
 		if (currentSkill != skillID)
 			send(new RemoveInterfaces());
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be opening skill menu!"));
+			return;
+		}
 		int slot = 8720;
 		for (int i = 0; i < 80; i++) {
 			send(new SendString("", slot));
@@ -2927,8 +2943,8 @@ public class Client extends Player implements Runnable {
 					s1[i] = String.valueOf(Constants.smithing_frame[child - 1][i][2]);
 				}
 			} else if (child == Constants.smithing_frame.length + 1) {
-				s = new String[]{"Skillcape" + prem};
-				s1 = new String[]{"99"};
+				s = new String[]{"Rockshell armour", "Dragonfire shield", "Skillcape" + prem};
+				s1 = new String[]{"60", "90", "99"};
 			}
             for (String string : s) {
                 send(new SendString(string, slot++));
@@ -2943,7 +2959,7 @@ public class Client extends Player implements Runnable {
 			else if (child > 0 && child <= Constants.smithing_frame.length)
 				setMenuItems(item, amt);
 			else if (child == Constants.smithing_frame.length + 1)
-				setMenuItems(new int[]{9795});
+				setMenuItems(new int[]{6129, 11284, 9795});
 		} else if (skillID == AGILITY.getId()) {
 			send(new SendString("Agility", 8846));
 			changeInterfaceStatus(8825, false);
@@ -2959,7 +2975,7 @@ public class Client extends Player implements Runnable {
             for (String string : s1) {
                 send(new SendString(string, slot++));
             }
-			int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, 4155, 9771};
+			int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, -1, 4155, 9771};
 			setMenuItems(items);
 		} else if (skillID == WOODCUTTING.getId()) {
 			send(new SendString("Axes", 8846));
@@ -3928,6 +3944,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean smithing() {
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be smithing!"));
+			return false;
+		}
 		if (IsItemInBag(2347)) {
 			if (!smithCheck(smithing[4])) {
 				IsAnvil = true;
@@ -5750,6 +5770,10 @@ public class Client extends Player implements Runnable {
 			resetAction(true);
 			return;
 		}
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be smelting!"));
+			return;
+		}
 		smeltCount--;
 		switch (id) {
 			case 2349: // bronze
@@ -5991,8 +6015,7 @@ public class Client extends Player implements Runnable {
 			deleteRunes(new int[]{561}, new int[]{3});
 			for(int i = 0; i < moltenCount; i++)
 				if(!addItem(smelt_barId, 1)) { //Ground drop!
-					GroundItem groundItem = new GroundItem(getPosition().copy(), smelt_barId, 1, getSlot(), -1);
-					Ground.items.add(groundItem);
+					Ground.addFloorItem(this, smelt_barId, 1);
 				}
 			checkItemUpdate();
 			giveExperience(count * 40, CRAFTING);
@@ -6056,8 +6079,6 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("This pouch is currently full of essence!"));
 				return true;
 			}
-			//System.out.println("clicked fill...");
-			//System.out.println("compare: " + System.currentTimeMillis() + ":" + lastClickAltar + " = " + (System.currentTimeMillis() - lastClickAltar));
 			if(System.currentTimeMillis() - lastClickAltar <= 1200)
 				makeFileExploit();
 			int max = runePouchesMaxAmount[slot] - runePouchesAmount[slot];
@@ -6160,6 +6181,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void shaft() {
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be fletching!"));
+			return;
+		}
 		if (IsCutting || isFiremaking)
 			resetAction();
 		send(new RemoveInterfaces());
@@ -6537,8 +6562,8 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void startCooking(int id) {
-		if (inTrade || inDuel) {
-			send(new SendMessage("Cannot cook in duel or trade"));
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be cooking!"));
 			return;
 		}
 		boolean valid = false;
@@ -6556,7 +6581,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void cook() {
-		if (inTrade || inDuel || cookAmount < 1) {
+		if (isBusy() || cookAmount < 1) {
 			resetAction(true);
 			return;
 		}
@@ -6644,10 +6669,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void openTrade() {
-		if (inHeat()) {
-			send(new SendMessage("It would not be a wise idea to trade with the heat in the background!"));
-			return;
-		}
 		inTrade = true;
 		tradeRequested = false;
 		resetItems(3322);
@@ -6673,10 +6694,8 @@ public class Client extends Player implements Runnable {
 		Client other = getClient(trade_reqId);
 		/* Prevent a dupe? */
 		inTrade = false;
-		if (tellOther && validClient(trade_reqId)) {
+		if (tellOther && validClient(trade_reqId))
 			other.declineTrade(false);
-			other.inTrade = false;
-		}
 		/* Clear the trade! */
 		for (GameItem item : offeredItems) {
 			if (item.getAmount() > 0) {
@@ -6709,7 +6728,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void tradeReq(int id) {
-		// followPlayer(id);
 		facePlayer(id);
 		if (!Server.trading) {
 			send(new SendMessage("Trading has been temporarily disabled"));
@@ -6724,7 +6742,7 @@ public class Client extends Player implements Runnable {
 		Client other = (Client) PlayerHandler.players[id];
 		if (validClient(trade_reqId)) {
 			setFocus(other.getPosition().getX(), other.getPosition().getY());
-			if (inTrade || inDuel || other.inTrade || other.inDuel) {
+			if (isBusy() || other.isBusy()) {
 				send(new SendMessage("That player is busy at the moment"));
 				trade_reqId = 0;
 				return;
@@ -6900,6 +6918,10 @@ public class Client extends Player implements Runnable {
 	public void duelReq(int pid) {
 		facePlayer(pid);
 		Client other = getClient(pid);
+		if(isBusy() || other.isBusy()) {
+			send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
+			return;
+		}
 		if (inWildy() || other.inWildy()) {
 			send(new SendMessage("You cant duel in the wilderness!"));
 			return;
@@ -6920,19 +6942,14 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		setFocus(other.getPosition().getX(), other.getPosition().getY());
-		if (inTrade || inDuel || other.inDuel || other.inTrade || other.duelFight || other.duelConfirmed
-				|| other.duelConfirmed2) {
+		if (isBusy() || other.isBusy() || other.duelConfirmed || other.duelConfirmed2) {
 			send(new SendMessage("Other player is busy at the moment"));
 			duelRequested = false;
 			return;
 		}
 		if (tradeLocked && other.playerRights < 1) {
 			return;
-		}
-		/*if (other.connectedFrom.equals(connectedFrom) && getGameWorldId() == 1) { //I decided to enable this, go wild! If we catch you dupe..Oh gosh!
-			duelRequested = false;
-			return;
-		}*/
+		} //I decided to enable duel from same ip, go wild! If we catch you dupe..Oh gosh!
 		if (duelRequested && other.duelRequested && duel_with == other.getSlot() && other.duel_with == getSlot()) {
 			openDuel();
 			other.openDuel();
@@ -7735,21 +7752,18 @@ public class Client extends Player implements Runnable {
 						int empty_amount = getInvAmt(230);
 						leftOver = leftOver == 3 ? Utils.pot_3_dose[i] : leftOver == 2 ? Utils.pot_2_dose[i] : leftOver == 1 ? Utils.pot_1_dose[i] : -1;
 						if(inv_amt > 0 && !addItem(GetNotedItem(id), inv_amt)) {
-							GroundItem item = new GroundItem(getPosition().copy(), GetNotedItem(id), inv_amt, getSlot(), -1);
-							Ground.items.add(item);
-							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(id).toLowerCase());
+							Ground.addFloorItem(this, GetNotedItem(id), inv_amt);
+							ItemLog.playerDrop(this, GetNotedItem(id), inv_amt, getPosition().copy(), "Decant dropped " + GetItemName(id).toLowerCase());
 							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(id).toLowerCase()+" to the floor!"));
 						}
 						if(inv_empty > 0 && (inv_empty + empty_amount) < 1000 && !addItem(230, inv_empty)) { //Empty vials
-							GroundItem item = new GroundItem(getPosition().copy(), 230, inv_empty, getSlot(), -1);
-							Ground.items.add(item);
-							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(230).toLowerCase());
+							Ground.addFloorItem(this, 230, inv_empty);
+							ItemLog.playerDrop(this, 230, inv_empty, getPosition().copy(), "Decant dropped " + GetItemName(230).toLowerCase());
 							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(230).toLowerCase()+" to the floor!"));
 						} else if(inv_empty < 0) deleteItem(230, inv_empty * -1);
 						if(leftOver > 0 && !addItem(leftOver, 1)) {
-							GroundItem item = new GroundItem(getPosition().copy(), leftOver, 1, getSlot(), -1);
-							Ground.items.add(item);
-							ItemLog.playerDrop(this, item.id, item.amount, getPosition().copy(), "Decant dropped " + GetItemName(leftOver).toLowerCase());
+							Ground.addFloorItem(this, leftOver, 1);
+							ItemLog.playerDrop(this, leftOver, 1, getPosition().copy(), "Decant dropped " + GetItemName(leftOver).toLowerCase());
 							send(new SendMessage("<col=FF0000>You dropped the "+GetItemName(leftOver).toLowerCase()+" to the floor!"));
 						}
 					}
@@ -8061,8 +8075,8 @@ public class Client extends Player implements Runnable {
 		}
 		getDamage().clear();
 		if(slot >= 0) {
-			Ground.items.add(new GroundItem(getPosition().copy(), 526, 1, slot, -1));
 			if (validClient(slot)) {
+				Ground.addFloorItem(getClient(slot), 526, 1);
 				getClient(slot).send(new SendMessage("You have defeated " + getPlayerName() + "!"));
 				yellKilled(getClient(slot).getPlayerName() + " has just slain " + getPlayerName() + " in the wild!");
 				Client other = getClient(slot);
@@ -8364,6 +8378,10 @@ public class Client extends Player implements Runnable {
 			resetAction();
 			return;
 		}
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be doing this!"));
+			return;
+		}
 
 		int itemOne = playerSkillAction.get(3), itemTwo = playerSkillAction.get(4), itemMake = playerSkillAction.get(1);
 		int amount = playerSkillAction.get(2);
@@ -8557,6 +8575,10 @@ public class Client extends Player implements Runnable {
 		int amount = goldCraftingCount;
 		int item = jewelry[goldIndex][goldSlot];
 		int xp = jewelry_xp[goldIndex][goldSlot];
+		if (isBusy()) {
+			send(new SendMessage("You are currently busy to be crafting!"));
+			return;
+		}
         if (amount <= 0) {
 			goldCrafting = false;
 			resetAction();
@@ -8650,36 +8672,7 @@ public class Client extends Player implements Runnable {
 		return bow;
 	}
 
-	public void RottenTomato(final Client c) {
-		for (int i = 0; i < PlayerHandler.players.length; i++) {
-			Client o = (Client) PlayerHandler.players[i];
-			final int oX = c.getPosition().getX();
-			final int oY = c.getPosition().getY();
-			final int pX = o.getPosition().getX();
-			final int pY = o.getPosition().getY();
-			final int offX = (oY - pY) * -1;
-			final int offY = (oX - pX) * -1;
-			sendAnimation(2968);
-			EventManager.getInstance().registerEvent(new Event(600) {
-
-				@Override
-				public void execute() {
-					o.gfx0(1282);
-					this.stop();
-				}
-			});
-			if (playerHasItem(2518, 1)) {
-				deleteItem(2518, 1);
-			} else {
-				deleteItem(2518, Equipment.Slot.WEAPON.getId());
-				deleteItem(2518, 1);
-			}
-			checkItemUpdate();
-		}
-	}
-
 	public boolean checkInv = false;
-
 	public void openUpOtherInventory(String player) {
 		if (IsBanking || isShopping() || duelFight) {
 			send(new SendMessage("Please finish with what you are doing!"));
@@ -8792,47 +8785,29 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-	private final ArrayList<GroundItem> displayItems = new ArrayList<>();
-
-	public void updateItems() {
-		if (!displayItems.isEmpty()) {
-			for (GroundItem display : displayItems) {
-				send(new RemoveGroundItem(new GameItem(display.id, display.amount), new Position(display.x, display.y, display.z)));
+	public void updateGroundItems() {
+		/* Untradeable items prio 1! */
+		if (!Ground.untradeable_items.isEmpty())
+			for (GroundItem item : Ground.untradeable_items) {
+				if(item.isTaken() || dbId != item.playerId || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104)) continue;
+				send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
 			}
-			displayItems.clear();
-		}
-		for (GroundItem ground : Ground.items) {
-			int x = Math.abs(getPosition().getX() - ground.x), y = Math.abs(getPosition().getY() - ground.y);
-			//boolean displayTime = (System.currentTimeMillis() - ground.dropped >= ground.timeDisplay || !ground.canDespawn);
-			if (x >= -114 && x <= 114 && y >= -114 && y <= 114) {
-				if (ground.canDespawn && ground.visible && ground.playerId != dbId
-						&& Server.itemManager.isTradable(ground.id)) {
-					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
-					displayItems.add(ground);
-				} else if (dbId == ground.playerId && ground.canDespawn) {
-					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
-					displayItems.add(ground);
-				} else if (!ground.canDespawn && !ground.taken) {
-					send(new CreateGroundItem(new GameItem(ground.id, ground.amount), new Position(ground.x, ground.y, ground.z)));
-					displayItems.add(ground);
-				}
+		/* Tradeable items prio 2! */
+		if (!Ground.tradeable_items.isEmpty())
+			for (GroundItem item : Ground.tradeable_items) {
+				if(item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104)) continue;
+				send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
 			}
-		}
+		/* Static ground items prio last! */
+		if (!Ground.ground_items.isEmpty())
+			for (GroundItem item : Ground.ground_items) {
+				if(item.isTaken() || !item.visible || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104)) continue;
+				send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+				send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
+			}
 	}
-
-	/*
-					if (!item.canDespawn && item.taken && now - item.dropped >= item.timeDisplay) {
-					item.taken = false;
-					item.visible = false;
-				}
-				boolean displayTime = (now - item.dropped >= item.timeDisplay || !item.canDespawn);
-				if ((!item.visible && displayTime) || ((!item.visible && !item.canDespawn && !item.taken) && displayTime)) {
-					if (Server.itemManager.isTradable(item.id) && dbId != item.playerId) {
-						item.visible = true;
-						send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-					}
-				}
-	 */
 
 	public void sendFrame248(int MainFrame, int SubFrame) {
 		getOutputStream().createFrame(248);
@@ -9015,30 +8990,6 @@ public class Client extends Player implements Runnable {
 
 	public void dropAllItems() {
 		//BAHAHAHAAHAH
-      /*for (int i = 0; i < bankItems.length; i++) {
-          if (bankItems[i] > 0) {
-	    		  GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), bankItems[i] - 1, bankItemsN[i], getSlot(), -1);
-	    		  bankItems[i] = 0;
-	    		  bankItemsN[i] = 0;
-	    		  Ground.items.add(drop);
-          }
-        }
-      for (int i = 0; i < playerItems.length; i++) {
-          if (playerItems[i] > 0) {
-    		  GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), playerItems[i] - 1, playerItemsN[i], getSlot(), -1);
-    		  playerItems[i] = 0;
-    		  playerItemsN[i] = 0;
-    		  Ground.items.add(drop);
-          }
-        }
-        for (int i = 0; i < getEquipment().length; i++) {
-          if (getEquipment()[i] > 0) {
-  		  GroundItem drop = new GroundItem(getPosition().getX(), getPosition().getY(), getEquipment()[i] - 1, getEquipmentN()[i], getSlot(), -1);
-  		 getEquipment()[i] = 0;
-  		 getEquipmentN()[i] = 0;
-  		  Ground.items.add(drop);
-          }
-        }*/
 		resetPos();
 		modYell(getPlayerName() + " is currently bug abusing on a item!");
 	}
@@ -9186,8 +9137,7 @@ public class Client extends Player implements Runnable {
 			int amount = item.getAmount() - getFreeSpace();
 			if(Server.itemManager.isStackable(item.getId())) {
 				if(getFreeSpace() == 0) {
-					GroundItem groundItem = new GroundItem(getPosition().copy(), item.getId(), item.getAmount(), getSlot(), -1);
-					Ground.items.add(groundItem);
+					Ground.addFloorItem(this, item.getId(), item.getAmount());
 					send(new SendMessage("Some items have been dropped to the ground!"));
 					ItemLog.playerDrop(this, item.getId(), item.getAmount(), getPosition().copy(), "Claim Items Dropped");
 				} else addItem(item.getId(), item.getAmount());
@@ -9196,8 +9146,7 @@ public class Client extends Player implements Runnable {
 				for(int i = 0; i < getFreeSpace(); i++)
 					addItem(item.getId(), 1);
 				for(int i = 0; i < amount; i++) {
-					GroundItem groundItem = new GroundItem(getPosition().copy(), item.getId(), 1, getSlot(), -1);
-					Ground.items.add(groundItem);
+					Ground.addFloorItem(this, item.getId(), 1);
 				}
 				send(new SendMessage("Some items have been dropped to the ground!"));
 				ItemLog.playerDrop(this, item.getId(), amount, getPosition().copy(), "Claim Items Dropped");
@@ -9217,5 +9166,8 @@ public class Client extends Player implements Runnable {
     }
 	public boolean doingTeleport() {
 		return tStage > 0;
+	}
+	public boolean isBusy() {
+		return inTrade || inDuel || duelFight || IsBanking;
 	}
 }

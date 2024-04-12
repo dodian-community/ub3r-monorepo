@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.item;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.utilities.DbTables;
@@ -17,8 +18,71 @@ public class ItemManager {
     final int defaultStandAnim = 808, defaultWalkAnim = 819, defaultRunAnim = 824, defaultAttackAnim = 806;
 
     public ItemManager() {
+        loadGlobalItems();
         loadItems();
         //Server.slots.loadGamble(); // Gamble :D
+    }
+
+    public void loadGlobalItems() {
+        /* Troll items */
+        Ground.addGroundItem(new Position(2611, 3096, 0), 11862, 1, 100);
+        Ground.addGroundItem(new Position(2612, 3096, 0), 11863, 1, 100);
+        Ground.addGroundItem(new Position(2563, 9511, 0), 1631, 1, 100);
+        Ground.addGroundItem(new Position(2564, 9511, 0), 6571, 1, 100);
+        /* Yanille starter items */
+        Ground.addGroundItem(new Position(2605, 3104, 0), 1277, 1, 33);
+        Ground.addGroundItem(new Position(2607, 3104, 0), 1171, 1, 33);
+        /* Snape grass spawns!*/
+        Ground.addGroundItem(new Position(2810, 3203, 0), 231, 1, 100);
+        Ground.addGroundItem(new Position(2807, 3204, 0), 231, 1, 100);
+        Ground.addGroundItem(new Position(2804, 3207, 0), 231, 1, 100);
+        Ground.addGroundItem(new Position(2801, 3210, 0), 231, 1, 100);
+        /* Limpwurt spawns!*/
+        Ground.addGroundItem(new Position(2874, 3475, 0), 225, 1, 100);
+        Ground.addGroundItem(new Position(2876, 3001, 0), 225, 1, 100);
+        /* White berries spawns!*/
+        Ground.addGroundItem(new Position(2935, 3489, 0), 239, 1, 100);
+        Ground.addGroundItem(new Position(2877, 3000, 0), 239, 1, 100);
+        /* Red Spider egg spawn*/
+        Ground.addGroundItem(new Position(3595, 3479, 0), 223, 1, 100);
+        Ground.addGroundItem(new Position(3597, 3479, 0), 223, 1, 100);
+        /* Seaweed Brimhaven */
+        Ground.addGroundItem(new Position(2797, 3211, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2795, 3212, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2792, 3213, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2789, 3214, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2786, 3215, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2784, 3217, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2782, 3219, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2779, 3219, 0), 401, 1, 25);
+        /* Seaweed Bandit camp aka Sand crabs */
+        Ground.addGroundItem(new Position(3143, 2991, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3143, 2988, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3145, 2985, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3147, 2983, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3149, 2980, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3147, 2977, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3145, 2975, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(3143, 2973, 0), 401, 1, 25);
+        /* Seaweed Catherby */
+        Ground.addGroundItem(new Position(2860, 3427, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2858, 3427, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2856, 3426, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2855, 3425, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2852, 3425, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2850, 3427, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2848, 3429, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2846, 3431, 0), 401, 1, 25);
+        /* Seaweed Ardougne */
+        Ground.addGroundItem(new Position(2641, 3255, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2644, 3254, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2645, 3252, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2645, 3250, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2643, 3248, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2641, 3246, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2641, 3243, 0), 401, 1, 25);
+        Ground.addGroundItem(new Position(2642, 3240, 0), 401, 1, 25);
+
     }
 
     public void loadItems() {

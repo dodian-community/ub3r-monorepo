@@ -16,8 +16,7 @@ public enum UpdateFlag {
     FORCED_MOVEMENT(0x400, -1),
     APPEARANCE(0x10, 0x2),
     CHAT(0x80, -1),
-    DUMMY(0, 0) // Dummy is required when initializing NPCs, causes update with no flags
-    ;
+    DUMMY(0, 0); // Dummy is required when initializing NPCs, causes update with no flags
 
     private int playerMask, npcMask;
 

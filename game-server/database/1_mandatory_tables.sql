@@ -109,6 +109,10 @@ create table if not exists characters
     mgroup          varchar(255)         default '0'                                          not null,
     lastvote        bigint(255)          default 0                                            not null,
     Boss_Log        text                                                                      null,
+    Monster_Log        text                                                                      null,
+    effects        text                                                                      null,
+    dailyReward        text                                                                      null,
+    farming        text                                                                      null,
     fightStyle      tinyint              default 0                                            not null,
     songUnlocked    text                                                                      null,
     uuid            varchar(255)                                                              null,
@@ -122,27 +126,6 @@ create table if not exists characters
     prayer          varchar(255)         default ''                                           not null,
     boosted         varchar(255)         default ''                                           not null,
     INDEX (id, name)
-)
-    engine = InnoDB;
-
-create table if not exists chat_log
-(
-    username  varchar(255) null,
-    message   varchar(255) null,
-    timestamp varchar(255) null
-)
-    engine = InnoDB;
-
-create table if not exists drop_log
-(
-    username  varchar(255) null,
-    item      int(255)     null,
-    amount    int(255)     null,
-    type      varchar(255) null,
-    timestamp varchar(255) null,
-    x         int(10)      null,
-    y         int(10)      null,
-    z         int(10)      null
 )
     engine = InnoDB;
 
@@ -167,25 +150,28 @@ create table if not exists pete_co
     ForLater_1   int      null
 );
 
-create table if not exists pickup_log
+create table if not exists uber3_item_log
 (
-    username  varchar(255) null,
-    item      int(255)     null,
-    amount    int(255)     null,
-    type      varchar(255) null,
-    timestamp varchar(255) null,
-    x         int(10)      null,
-    y         int(10)      null,
-    z         int(10)      null
+    receiver int      null,
+    type int      null,
+    from_id int      null,
+    item_id int      null,
+    item_amount int      null,
+    timestamp datetime null
+    x int      null,
+    y int      null,
+    z int      null,
+    reason   longtext              null
 )
     engine = InnoDB;
 
-create table if not exists pm_log
+create table if not exists uber3_chat_log
 (
-    sender    varchar(255) null,
-    receiver  varchar(255) null,
+    type int      null,
+    sender int      null,
+    receiver int      null,
     message   varchar(255) null,
-    timestamp varchar(255) null
+    timestamp datetime null
 )
     engine = InnoDB;
 
@@ -198,7 +184,7 @@ create table if not exists uber3_actions
 
 create table if not exists uber3_command_log
 (
-    userId int(12)     not null,
+    userId int     not null,
     name   varchar(25) null,
     time   text        not null,
     action text        not null
@@ -280,10 +266,16 @@ create table if not exists uber3_logs
 )
     engine = InnoDB;
 
-create table if not exists uber3_misc
+create table if not exists uber3_refunds
 (
-    id      int not null,
-    players int not null
+    date datetime not null,
+    issuedBy     int           not null,
+    receivedBy     int           not null,
+    item     int           null,
+    amount     int           null,
+    message             tinyint          default 0        not null,
+    claimed datetime null
+    primary key (date)
 )
     engine = InnoDB;
 

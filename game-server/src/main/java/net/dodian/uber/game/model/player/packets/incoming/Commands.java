@@ -3,22 +3,16 @@ package net.dodian.uber.game.model.player.packets.incoming;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
-import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.*;
@@ -32,11 +26,8 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Date;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -76,10 +67,17 @@ public class Commands implements Packet {
                     client.send(new SendMessage("You turned insta loot " + (client.instaLoot ? "on" : "off") + "!"));
                 }
                 if (cmd[0].equalsIgnoreCase("death")) {
-                    client.dealDamage(null, client.getCurrentHealth(), true);
+                    int type = Integer.parseInt(cmd[1]);
+                    if(type > 0 && type <= Entity.hitType.values().length) {
+                        System.out.println("wtf..." + client.getCurrentHealth());
+                        client.dealDamage(null, client.getCurrentHealth(), Entity.hitType.values()[type - 1]);
+                    } else client.send(new SendMessage("Only type 1 to " + Entity.hitType.values().length + " works!"));
+                }
+                if (cmd[0].equalsIgnoreCase("damage")) {
+                    client.dealDamage(null, 20, Entity.hitType.CRIT);
                 }
                 if (cmd[0].equalsIgnoreCase("dharok")) {
-                    client.dealDamage(null, client.getCurrentHealth() - 1, true);
+                    client.dealDamage(null, client.getCurrentHealth() - 1, Entity.hitType.CRIT);
                 }
                 if (cmd[0].equalsIgnoreCase("heal")) {
                     int overHeal = (int)(client.getMaxHealth() * 0.15);
@@ -118,46 +116,6 @@ public class Commands implements Packet {
                         client.send(new SendMessage("You set varbit " + id + " with value " + value));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id value"));
-                    }
-                }
-                if (cmd[0].equalsIgnoreCase("lamps")) {
-                    //173 = run config!
-                    try {
-                        int xp = 0, lamps = 0, lamp = 0;
-                        while(xp < 13034431) {
-                            int level = Skills.getLevelForExperience(xp);
-                            xp += level * 100;
-                            lamps++;
-                        }
-                        while(xp >= 13034431 && xp < 50_000_000) {
-                            int level = Skills.getLevelForExperience(xp);
-                            xp += level * 100;
-                            lamp++;
-                        }
-                        System.out.println("You need " + lamps + " to get from level 1 to 99 and " + (lamps + lamp) + " to get from 0 to 50m xp.");
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " value"));
-                    }
-                }
-                if (cmd[0].equalsIgnoreCase("woof")) {
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        if(id >= 0 && id <= 5) {
-                            final Npc npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + id);
-                            npc.requestAnim(6547, 0);
-                            npc.setText("Go fetch!");
-                            int offsetX = (9913 - npc.getPosition().getY());
-                            int offsetY = (3542 - npc.getPosition().getX());
-                            Position pos = new Position(3542, 9913, 0);
-                            int distance = client.distanceToPoint(pos.getX(), pos.getY());
-                            client.createProjectile(npc.getPosition().getY(), npc.getPosition().getX(), offsetY, offsetX, 50, 50 + (distance * 5), 338,
-                                    0, 35, 0, 51, 16, 64);
-                            GroundItem stick = new GroundItem(pos, new int[]{client.getSlot(), 4179, 1, 60});
-                            Ground.items.add(stick);
-                        } else
-                            client.send(new SendMessage("only 0 - 5!"));
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("farm")) {
@@ -219,26 +177,12 @@ public class Commands implements Packet {
                     client.send(new SendMessage("force move!"));
                     client.appendForcemovement(client.getPosition(), new Position(3333, 3333), 10, 20, 3);
                 }
-                if (cmd[0].equalsIgnoreCase("time_now")) {
-                    long now = System.currentTimeMillis();
-                    System.out.println("new timers: " + (now + 90_000_000) + ":" + (now + 3_600_000));
-                }
                 if (cmd[0].equalsIgnoreCase("plist")) {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());
                     System.out.println("test2..." + PlayerHandler.playersOnline.toString());
                 }
-                if (cmd[0].equalsIgnoreCase("wolf")) {
-                    if(client.getPosition().getX() < 3540 && client.getPosition().getY() < 6400)
-                        client.triggerTele(3543, 3463, 0,false);
-                    else
-                        client.triggerTele(3543, 3463 + 6400, 0,false);
-                    client.send(new SendMessage("Teleported to wolf!"));
-                }
                 if (cmd[0].equalsIgnoreCase("desert")) {
                         client.triggerTele(3230, 3107, 0,false);
-                }
-                if (cmd[0].equalsIgnoreCase("damage")) {
-                    client.dealDamage(null, 20, true);
                 }
                 if (cmd[0].equalsIgnoreCase("goup")) {
                     int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
@@ -269,9 +213,6 @@ public class Commands implements Packet {
                     client.reloadHp = !client.reloadHp;
                     client.send(new SendMessage("You set reload hp as " + client.reloadHp));
                 }
-                if (cmd[0].equalsIgnoreCase("chat")) {
-                    client.showPlayerOption(new String[]{ "Moo?", "Yes", "No" });
-                }
                 if (cmd[0].equalsIgnoreCase("face")) {
                     try {
                         int face = Integer.parseInt(cmd[1]);
@@ -301,30 +242,6 @@ public class Commands implements Packet {
                             client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " face"));
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("dumpdrop")) {
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        System.out.println("------Starting drop dump of '"+client.GetItemName(id)+"'------");
-                        for (NpcData data : Server.npcManager.getNpcData()) {
-                            for (NpcDrop drop : data.getDrops()) {
-                                if(!data.getDrops().isEmpty() && drop.getId() == id) {
-                                    System.out.println(drop.getChance() + "% chance to get "+drop.getMinAmount()+"-"+drop.getMaxAmount()+" of " + client.GetItemName(id) + ", from " + data.getName());
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id"));
-                    }
-                }
-                if (cmd[0].equalsIgnoreCase("herbs")) {
-                    String query = "select * from " + DbTables.GAME_NPC_DROPS + " where itemid='217' || itemid='218' || itemid='267' || itemid='268'";
-                    ResultSet results = getDbConnection().createStatement().executeQuery(query);
-                    while (results.next()) {
-                        int itemId = results.getInt("itemid");
-                        String itemName = Server.itemManager.getName(itemId);
-                        System.out.println(Server.npcManager.getName(results.getInt("npcid")) + " drops "+results.getInt("amt_min")+" - "+results.getInt("amt_max")+" of " + itemName.toLowerCase() + " "+ (!Server.itemManager.isNote(itemId) ? "(note)" : "") +" with a chance of " + (results.getDouble("percent") + "%"));
-                    }
-                }
                 if (cmd[0].equalsIgnoreCase("split")) { //Magic armour split!
                     int chance = Integer.parseInt(cmd[1]);
                     double[] array = {0.14, 0.4, 0.3, 0.08, 0.08};
@@ -332,23 +249,14 @@ public class Commands implements Packet {
                     for(int i = 0; i < array.length; i++)
                         client.send(new SendMessage(chance+ " is started and of that " + parts[i] + " should be " + (int)(chance * array[i]) + " stats!"));
                 }
-                if (cmd[0].equals("tomato")) {
-                    client.RottenTomato(client);
-                }
-                if (cmd[0].equals("date")) {
-                    //System.out.println("test..." + Date.valueOf("2024-03-29").getTime()); //1711666800000
-                    Date newDate = client.checkCalendarDate(client.today, -1);
-                    //Date date = new SimpleDateFormat("YYYY-MM-DD").parse("2024-03-28");
-                    System.out.println("days passed..." + client.today + ", " + newDate + ", " + newDate.getTime());
-                    //System.out.println("days passed..." + client.dateDays(client.today, newDate));
-                    //System.out.println("test..." + client.now.getTime() + ", " + Date.valueOf("2024-03-29").getTime());
-                    //System.out.println("test..." + client.dateDays(Date.valueOf("2024-03-29"), client.now));
-                }
                 if ((cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b")) && client.playerRights > 1 && getGameWorldId() < 2) {
                     client.openUpBank();
                 }
                 if (cmd[0].equals("party")) {
                     Balloons.triggerPartyEvent(client);
+                }
+                if (cmd[0].equalsIgnoreCase("event")) {
+                    Balloons.triggerBalloonEvent(client);
                 }
                 if (cmd[0].equals("gem")) {
                     /* Shilo village gem rock? */
@@ -391,68 +299,6 @@ public class Commands implements Packet {
                             client.boostedLevel[i] = 0;
                             client.refreshSkill(Skill.getSkill(i));
                         }
-                }
-                if (command.startsWith("bosspawn")) {
-                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
-                    if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
-                        client.respawnBoss(4130);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                        client.respawnBoss(4067);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
-                        client.respawnBoss(3964);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                        client.respawnBoss(8);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Ice queen
-                        client.respawnBoss(4922);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
-                        client.respawnBoss(3957);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                        client.respawnBoss(2585);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                        client.respawnBoss(5311);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
-                        client.respawnBoss(239);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                        client.respawnBoss(1443);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
-                        client.respawnBoss(1432);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                        client.respawnBoss(2261);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
-                        client.respawnBoss(2266);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
-                        client.respawnBoss(3127);
-                }
-                if (command.startsWith("bosstele")) {
-                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
-                    if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
-                        client.triggerTele(2543, 3091, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                        client.triggerTele(2566, 9507, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
-                        client.triggerTele(2613, 9521, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                        client.triggerTele(2698, 9771, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Nechrayel
-                        client.triggerTele(2866, 9951, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
-                        client.triggerTele(2889, 3426, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                        client.triggerTele(2626, 3084, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                        client.triggerTele(2554, 3278, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
-                        client.triggerTele(3315, 9374, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                        client.triggerTele(2572, 9529, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
-                        client.triggerTele(2907, 9805, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                        client.triggerTele(2776, 3206, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
-                        client.triggerTele(2905, 9727, 0,false);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
-                        client.triggerTele(2395, 5098, 0,false);
                 }
                 if (command.startsWith("telemob")) {
                     int mobId = Integer.parseInt(cmd[1]);
@@ -566,73 +412,20 @@ public class Commands implements Packet {
                     } else
                         client.send(new SendMessage("Need 4 free slots!"));
                 }
-                /*if (cmd[0].equals("refund")) {
-                    try {
-                        int id = Integer.parseInt(cmd[1]);
-                        int amt = Integer.parseInt(cmd[2]);
-                        String user = command.substring(cmd[0].length() + cmd[1].length() + cmd[2].length() + 3);
-                        try {
-                            Statement stm = getDbConnection().createStatement();
-                            String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-                            ResultSet results = stm.executeQuery(query);
-                            int userid = -1;
-                            if (results.next())
-                                userid = results.getInt("userid");
-                            if(userid >= 0) {
-                                stm.executeUpdate("INSERT INTO uber3_refunds(date, issuedBy, receivedBy, item, amount) VALUES('"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())+"', '"+client.dbId+"', '"+userid+"', '"+id+"', '"+amt+"')");
-                                client.send(new SendMessage("Account '"+user+"'("+userid+") have receieved "+amt+" of "+client.GetItemName(id).toLowerCase()+"."));
-                            } else client.send(new SendMessage("Account '"+user+"' do not exist!"));
-                            stm.close();
-                        } catch (Exception e) {
-                            System.out.println("issue: " + e.getMessage());
-                        }
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " id amount playername"));
-                    }
-                }*/
                 if (cmd[0].equalsIgnoreCase("emote")) {
                     int id = Integer.parseInt(cmd[1]);
                     client.requestAnim(id, 0);
                     client.send(new SendMessage("You set animation to: " + id));
                 }
+                if (cmd[0].equalsIgnoreCase("heat")) {
+                    client.UsingAgility = !client.UsingAgility;
+                    client.walkBlock = System.currentTimeMillis() + (600 * 30); //30 ticks!
+                    client.send(new SendMessage("You set agility to: " + client.UsingAgility));
+                }
                 if (cmd[0].equalsIgnoreCase("gfx")) {
                     int id = Integer.parseInt(cmd[1]);
                     client.animation(id, client.getPosition());
                     client.send(new SendMessage("You set gfx to: " + id));
-                }
-                if (command.startsWith("random")) {
-                    String otherPName = command.substring(7);
-                    int otherPIndex = PlayerHandler.getPlayerID(otherPName);
-                    if (otherPIndex != -1) {
-                        Client temp = (Client) PlayerHandler.players[otherPIndex];
-                        temp.showRandomEvent();
-                        client.send(new SendMessage("Random for " + temp.getPlayerName() + " triggered!"));
-                    }
-                }
-                if (cmd[0].equalsIgnoreCase("uselessbutstillfunny")) {
-                    EventManager.getInstance().registerEvent(new Event(1200) {
-                        int test = 3300;
-                        GroundItem item = null;
-
-                        @Override
-                        public void execute() {
-
-                            if (client.disconnected) {
-                                this.stop();
-                                return;
-                            }
-                            if (item == null) {
-                                item = new GroundItem(client.getPosition().copy(), test, 1, client.clientPid, -1);
-                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-                            } else {
-                                Ground.deleteItem(client, item, true);
-                                item = new GroundItem(new Position(client.getPosition().getX() + 1, client.getPosition().getY(), client.getPosition().getZ()), test, 1, client.clientPid, -1);
-                                client.send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
-                            }
-                            client.send(new SendMessage("Setting item..." + test));
-                            test++;
-                        }
-                    });
                 }
                 if (command.startsWith("update") && command.length() > 7) {
                     Server.updateSeconds = (Integer.parseInt(command.substring(7)) + 1);
@@ -657,9 +450,6 @@ public class Commands implements Packet {
                     int id = Integer.parseInt(cmd[1]);
                     client.send(new Sound(id));
                     client.send(new SendMessage("Sound playing..." + id));
-                }
-                if (cmd[0].equalsIgnoreCase("event")) {
-                    Balloons.triggerBalloonEvent(client);
                 }
                 if (cmd[0].equalsIgnoreCase("resetTask")) {
                     try {
@@ -758,30 +548,6 @@ public class Commands implements Packet {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " itemid min max procent(x:y or %)"));
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("drops")) {
-                    if (client.getPlayerNpc() < 1) {
-                        client.send(new SendMessage("please try to do ::pnpc id"));
-                        return;
-                    }
-                    try {
-                        boolean found = false;
-                        String query = "select * from " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc();
-                        ResultSet results = getDbConnection().createStatement().executeQuery(query);
-                        while (results.next()) {
-                            if (!found)
-                                client.send(new SendMessage("-----------DROPS FOR "
-                                        + Server.npcManager.getName(client.getPlayerNpc()).toUpperCase() + "-----------"));
-                            found = true;
-                            client.send(new SendMessage(
-                                    results.getInt("amt_min") + " - " + results.getInt("amt_max") + " " + client.GetItemName(results.getInt("itemid")) + "(" + results.getInt("itemid") + ") "
-                                            + results.getDouble("percent") + "%"));
-                        }
-                        if (!found)
-                            client.send(new SendMessage("Npc " + client.getPlayerNpc() + " has no assigned drops!"));
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Something bad happend with sql!"));
-                    }
-                }
                 if (specialRights && (cmd[0].equalsIgnoreCase("bank") || cmd[0].equalsIgnoreCase("b"))) {
                     client.openUpBank();
                 }
@@ -877,7 +643,7 @@ public class Commands implements Packet {
                     client.giveExperience(xp, Skill.getSkill(skill));
                     client.refreshSkill(Skill.getSkill(skill));
                 }
-                if (command.equalsIgnoreCase("reset") && client.playerRights > 1/*&& client.getPlayerName().equalsIgnoreCase("Logan")*/) {
+                if (command.equalsIgnoreCase("reset") && client.playerRights > 1) {
                     Skill.enabledSkills().forEach(skill -> {
                         client.setExperience(skill == Skill.HITPOINTS ? 1155 : 0, skill);
                         client.setLevel(skill == Skill.HITPOINTS ? 10 : 1, skill);
@@ -889,7 +655,7 @@ public class Commands implements Packet {
                 }
             } //End of Special rank commands
             if (client.playerRights > 0) {
-                if (cmd[0].equalsIgnoreCase("pnpc") && client.playerRights > 1 && getGameWorldId() < 2) {
+                if (cmd[0].equalsIgnoreCase("pnpc") && (specialRights || getGameWorldId() > 1)) {
                     try {
                         int npcId = Integer.parseInt(cmd[1]);
                         if (npcId <= 8195) {
@@ -905,8 +671,7 @@ public class Commands implements Packet {
                 if (cmd[0].equalsIgnoreCase("invis")) {
                     client.invis = !client.invis;
                     client.send(new SendMessage("You turn invis to " + client.invis));
-                    client.teleportToX = client.getPosition().getX();
-                    client.teleportToY = client.getPosition().getY();
+                    client.transport(client.getPosition()); //Transport to the realm of invisibility or leave it! hehe :D
                     CommandLog.recordCommand(client, command);
                 }
                 if (cmd[0].equalsIgnoreCase("teleto")) {
@@ -941,11 +706,9 @@ public class Commands implements Packet {
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
                             p.disconnected = true;
-                            CommandLog.recordCommand(client, command);
                             client.send(new SendMessage("Player " + p.getPlayerName() + " has been kicked!"));
-                        } else {
-                            client.send(new SendMessage("Player " + otherPName + " is not online!"));
-                        }
+                            CommandLog.recordCommand(client, command);
+                        } else client.send(new SendMessage("Player " + otherPName + " is not online!"));
                     } catch (Exception e) {
                         client.send(new SendMessage("Try entering a name you wish to kick.."));
                         client.send(new SendMessage(e.getMessage()));
@@ -1007,13 +770,20 @@ public class Commands implements Packet {
                     client.send(new SendString("@lre@Tits3@lre@", 8151));
                     client.sendQuestSomething(8143);
                     client.showInterface(8134);
-                    //client.flushOutStream();
                 }
                 if (cmd[0].equalsIgnoreCase("staffzone")) {
+                    if(client.inWildy()) {
+                        client.send(new SendMessage("Cant use this in the wilderness!"));
+                        return;
+                    }
                     client.teleportTo(2936, 4688, 0);
                     client.send(new SendMessage("Welcome to the staff zone!"));
                 }
                 if (cmd[0].equalsIgnoreCase("test_area")) {
+                    if(client.inWildy()) {
+                        client.send(new SendMessage("Cant use this in the wilderness!"));
+                        return;
+                    }
                     client.teleportTo(3260, 2784, 0);
                     client.send(new SendMessage("Welcome to the monster test area!"));
                 }
@@ -1130,6 +900,7 @@ public class Commands implements Packet {
                     }
                 }
             }
+            /* Regular player commands */
             if (cmd[0].equalsIgnoreCase("request")) {
                 Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83");
             }
@@ -1171,10 +942,6 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " or ::" + cmd[0] + " First_name or"));
                     client.send(new SendMessage("::" + cmd[0] + " First_name second_name"));
                 }
-            }
-            if ((command.equalsIgnoreCase("mypos") || command.equalsIgnoreCase("pos")) && (client.playerRights > 1 || getGameWorldId() > 1)) {
-                client.send(new SendMessage(
-                        "Your position is (" + client.getPosition().getX() + " , " + client.getPosition().getY() + ")"));
             }
             if (command.startsWith("noclip") && client.playerRights < 2 && getGameWorldId() == 1) {
                 client.disconnected = true;
@@ -1277,89 +1044,41 @@ public class Commands implements Packet {
                     break;
                 }
             }
-            /*if (cmd[0].equalsIgnoreCase("item") && specialRights) { //::item for server maintanance!
-                int newItemID = Integer.parseInt(cmd[1]);
-                int newItemAmount = Integer.parseInt(cmd[2]);
-                if (newItemID < 1 || newItemID > 22376) {
-                    client.send(new SendMessage("Stop pulling a River! Maximum itemid = 22376!"));
-                    return;
-                }
-                if (Server.itemManager.isStackable(newItemID))
-                    if (client.freeSlots() <= 0 && !client.playerHasItem(newItemID))
-                        client.send(new SendMessage("Not enough space in your inventory."));
-                    else
-                        client.addItem(newItemID, newItemAmount);
-                else {
-                    newItemAmount = Math.min(newItemAmount, client.freeSlots());
-                    if (newItemAmount > 0)
-                        for (int i = 0; i < newItemAmount; i++)
-                            client.addItem(newItemID, 1);
-                    else
-                        client.send(new SendMessage("Not enough space in your inventory."));
-                }
-            }*/
-            if (cmd[0].equalsIgnoreCase("checkloot")) {
-                try {
-                    int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
-                    int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
-                    amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
-                    amount = getGameWorldId() == 2 ? 100 : amount;
-                    NpcData n = Server.npcManager.getData(npcId);
-                    if (n == null)
-                        client.send(new SendMessage("This npc have no data!"));
-                    else if (n.getDrops().isEmpty())
-                        client.send(new SendMessage(n.getName() + " do not got any drops!"));
-                    else {
-                        ArrayList<Integer> lootedItem = new ArrayList<>();
-                        ArrayList<Integer> lootedAmount = new ArrayList<>();
-                        boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
-                        double chance, currentChance, checkChance;
-                        for (int LOOP = 0; LOOP < amount; LOOP++) {
-                            chance = Misc.chance(100000) / 1000D;
-                            currentChance = 0.0;
-                            itemDropped = false;
-                            for (NpcDrop drop : n.getDrops()) {
-                                if (drop == null) continue;
-                                checkChance = drop.getChance();
-                                if (wealth && drop.getChance() < 10.0)
-                                    checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
-
-                                if (drop.getChance() >= 100.0) { // 100% items!
-                                    int pos = lootedItem.lastIndexOf(drop.getId());
-                                    if (pos == -1) {
-                                        lootedItem.add(drop.getId());
-                                        lootedAmount.add(drop.getAmount());
-                                    } else
-                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
-                                } else if (checkChance + currentChance >= chance && !itemDropped) { // user won the roll
-                                    if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
-                                        if (client.checkItem(drop.getId()))
-                                            continue;
-                                    int pos = lootedItem.lastIndexOf(drop.getId());
-                                    if (pos == -1) {
-                                        lootedItem.add(drop.getId());
-                                        lootedAmount.add(drop.getAmount());
-                                    } else
-                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
-                                    itemDropped = true;
-                                }
-                                if (!itemDropped && drop.getChance() < 100.0)
-                                    currentChance += checkChance;
-                            }
-                        }
-                        client.send(new SendString("Loot from " + amount + " " + n.getName() + ", ID: " + npcId, 5383));
-                        client.checkBankInterface = true;
-                        client.sendBank(lootedItem, lootedAmount);
-                        client.resetItems(5064);
-                        client.send(new InventoryInterface(5292, 5063));
-                        if (wealth)
-                            client.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
+            if (command.equalsIgnoreCase("players")) {
+                client.send(new SendMessage("There are currently <col=006600>" + PlayerHandler.getPlayerCount() + "<col=0> players online!"));
+                client.send(new SendString("@dre@                    Uber 3.0", 8144));
+                client.clearQuestInterface();
+                client.send(new SendString("@dbl@Online players: @blu@" + PlayerHandler.getPlayerCount(), 8145));
+                int line = 8147;
+                int count = 0;
+                for (Player p : PlayerHandler.players) {
+                    if (p != null && p.dbId >= 0) {
+                        String title = "";
+                        if (p.playerRights == 1 && p.playerGroup == 5)
+                            title = "@blu@Mod ";
+                        else if (p.playerRights == 1 && p.playerGroup == 9)
+                            title = "@blu@Trial Mod ";
+                        else if (p.playerRights == 2 && p.playerGroup == 10)
+                            title = "@yel@Developer ";
+                        else if (p.playerRights == 2)
+                            title = "@yel@Admin ";
+                        client.send(new SendString("@bla@" + title + "@dbl@" + p.getPlayerName() + " @bla@(Level-" + p.determineCombatLevel() + ") @bla@is " + p.getPositionName(), line));
+                        line++;
+                        count++;
+                        if (line == 8196)
+                            line = 12174;
+                        if (count > 100)
+                            break;
                     }
-                } catch (Exception e) {
-                    client.send(new SendMessage("wrong usage! ::loot " + (client.getPlayerNpc() > 0 ? "amount" : "npcid amount")));
                 }
+                if (PlayerHandler.getPlayerCount() > 100) {
+                    client.send(new SendMessage("Note: there are too many players online to list, 100 are shown"));
+                }
+                client.sendQuestSomething(8143);
+                client.showInterface(8134);
             }
-            if (cmd[0].equalsIgnoreCase("tele") && (client.playerRights > 1 || getGameWorldId() > 1)) {
+            /* Special commands for beta or regular world */
+            if (cmd[0].equalsIgnoreCase("tele") && (specialRights || getGameWorldId() > 1)) {
                 try {
                     int newPosX = Integer.parseInt(cmd[1]);
                     int newPosY = Integer.parseInt(cmd[2]);
@@ -1370,7 +1089,11 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " x y or ::" + cmd[0] + " x y height"));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("forcetask") && (client.playerRights > 1 || getGameWorldId() > 1)) {
+            if ((command.equalsIgnoreCase("mypos") || command.equalsIgnoreCase("pos")) && (specialRights || getGameWorldId() > 1)) {
+                client.send(new SendMessage(
+                        "Your position is (" + client.getPosition().getX() + " , " + client.getPosition().getY() + ")"));
+            }
+            if (cmd[0].equalsIgnoreCase("forcetask") && (specialRights || getGameWorldId() > 1)) {
                 try {
                     int taskId = Integer.parseInt(cmd[1]);
                     int length = SlayerTask.slayerTasks.values().length - 1;
@@ -1409,39 +1132,6 @@ public class Commands implements Packet {
                 }
                 client.send(new SendMessage("You teleported all online to you!"));
             }
-            if (command.equalsIgnoreCase("players")) {
-                client.send(new SendMessage("There are currently <col=006600>" + PlayerHandler.getPlayerCount() + "<col=0> players online!"));
-                client.send(new SendString("@dre@                    Uber 3.0", 8144));
-                client.clearQuestInterface();
-                client.send(new SendString("@dbl@Online players: @blu@" + PlayerHandler.getPlayerCount(), 8145));
-                int line = 8147;
-                int count = 0;
-                for (Player p : PlayerHandler.players) {
-                    if (p != null && p.dbId >= 0) {
-                        String title = "";
-                        if (p.playerRights == 1 && p.playerGroup == 5)
-                            title = "@blu@Mod ";
-                        else if (p.playerRights == 1 && p.playerGroup == 9)
-                            title = "@blu@Trial Mod ";
-                        else if (p.playerRights == 2 && p.playerGroup == 10)
-                            title = "@yel@Developer ";
-                        else if (p.playerRights == 2)
-                            title = "@yel@Admin ";
-                        client.send(new SendString("@bla@" + title + "@dbl@" + p.getPlayerName() + " @bla@(Level-" + p.determineCombatLevel() + ") @bla@is " + p.getPositionName(), line));
-                        line++;
-                        count++;
-                        if (line == 8196)
-                            line = 12174;
-                        if (count > 100)
-                            break;
-                    }
-                }
-                if (PlayerHandler.getPlayerCount() > 100) {
-                    client.send(new SendMessage("Note: there are too many players online to list, 100 are shown"));
-                }
-                client.sendQuestSomething(8143);
-                client.showInterface(8134);
-            }
             if (command.startsWith("mod") && client.playerRights > 0) {
                 String text = command.substring(4);
                 text = Character.toUpperCase(text.charAt(0)) + text.substring(1);
@@ -1468,6 +1158,82 @@ public class Commands implements Packet {
                 } catch (Exception e) {
                     client.send(new SendMessage("Try entering a name you want to tradelock.."));
                 }
+            }
+            if (command.startsWith("bosspawn") && (getGameWorldId() > 1 || specialRights)) {
+                String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
+                if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
+                    client.respawnBoss(4130);
+                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                    client.respawnBoss(4067);
+                else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
+                    client.respawnBoss(3964);
+                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                    client.respawnBoss(8);
+                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Ice queen
+                    client.respawnBoss(4922);
+                else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
+                    client.respawnBoss(3957);
+                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                    client.respawnBoss(2585);
+                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                    client.respawnBoss(5311);
+                else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
+                    client.respawnBoss(239);
+                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                    client.respawnBoss(1443);
+                else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
+                    client.respawnBoss(1432);
+                else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
+                    client.respawnBoss(2261);
+                else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                    client.respawnBoss(2266);
+                else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
+                    client.respawnBoss(3127);
+                else if(npcName.equalsIgnoreCase(client.boss_name[14]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
+                    client.respawnBoss(4303);
+                else if(npcName.equalsIgnoreCase(client.boss_name[15]) || npcName.equalsIgnoreCase("kk")) //Kalphite king
+                    client.respawnBoss(4304);
+                else if(npcName.equalsIgnoreCase(client.boss_name[16])) //Venenatis
+                    client.respawnBoss(6610);
+                else client.send(new SendMessage("Could not find npc!" + npcName));
+            }
+            if (command.startsWith("bosstele") && (getGameWorldId() > 1 || specialRights)) {
+                String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
+                if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
+                    client.triggerTele(2543, 3091, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                    client.triggerTele(2566, 9507, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
+                    client.triggerTele(2613, 9521, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                    client.triggerTele(2698, 9771, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Nechrayel
+                    client.triggerTele(2866, 9951, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
+                    client.triggerTele(2889, 3426, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                    client.triggerTele(2626, 3084, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                    client.triggerTele(2554, 3278, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
+                    client.triggerTele(3315, 9374, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                    client.triggerTele(2572, 9529, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
+                    client.triggerTele(2907, 9805, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
+                    client.triggerTele(2776, 3206, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                    client.triggerTele(2905, 9727, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
+                    client.triggerTele(2393, 5090, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[14]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
+                    client.triggerTele(2393, 5090, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[15]) || npcName.equalsIgnoreCase("kk")) //Kalphite king
+                    client.triggerTele(2393, 5090, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[16])) //Venenatis
+                    client.triggerTele(2393, 5090, 0,false);
+                else client.send(new SendMessage("Could not find npcspawn!" + npcName));
             }
             /* Beta commands*/
             if (getGameWorldId() > 1) {
@@ -1502,72 +1268,6 @@ public class Commands implements Packet {
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid"));
                     }
-                }
-                if (command.startsWith("bosspawn") && !specialRights) {
-                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
-                    if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
-                        client.respawnBoss(4130);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                        client.respawnBoss(4067);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
-                        client.respawnBoss(3964);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                        client.respawnBoss(8);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Ice queen
-                        client.respawnBoss(4922);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
-                        client.respawnBoss(3957);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                        client.respawnBoss(2585);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                        client.respawnBoss(5311);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
-                        client.respawnBoss(239);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                        client.respawnBoss(1443);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
-                        client.respawnBoss(1432);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                        client.respawnBoss(2261);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
-                        client.respawnBoss(2266);
-                    else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
-                        client.respawnBoss(3127);
-                }
-                if (command.startsWith("bosstele") && !specialRights) {
-                    String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
-                        if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
-                            client.triggerTele(2543, 3091, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                            client.triggerTele(2566, 9507, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
-                            client.triggerTele(2613, 9521, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                            client.triggerTele(2698, 9771, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Nechrayel
-                            client.triggerTele(2866, 9951, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
-                            client.triggerTele(2889, 3426, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                            client.triggerTele(2626, 3084, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                            client.triggerTele(2554, 3278, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
-                            client.triggerTele(3315, 9374, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                            client.triggerTele(2572, 9529, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
-                            client.triggerTele(2907, 9805, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                            client.triggerTele(2776, 3206, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
-                            client.triggerTele(2905, 9727, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
-                            client.triggerTele(2393, 5090, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
-                            client.triggerTele(2393, 5090, 0,false);
-                        else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("kk")) //Kalphite king
-                            client.triggerTele(2393, 5090, 0,false);
                 }
                 if (cmd[0].equalsIgnoreCase("item")) {
                     int newItemID = Integer.parseInt(cmd[1]);

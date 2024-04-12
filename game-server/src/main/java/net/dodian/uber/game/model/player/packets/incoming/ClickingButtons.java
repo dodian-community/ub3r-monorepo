@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.player.Emotes;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
@@ -108,7 +107,7 @@ public class ClickingButtons implements Packet {
                 client.yellOn = false;
                 client.send(new SendMessage("You disabled the boss yell messages."));
                 break;
-            case 89223: // TODO: Check what this button do!
+            case 89223:
                 for (int i = 0; i < client.playerItems.length; i++) {
                     client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
                 }
@@ -485,7 +484,7 @@ public class ClickingButtons implements Packet {
                     };
                     client.send(new RemoveInterfaces());
                     client.genie = false;
-                    if (client.inDuel || client.duelFight || client.IsBanking || client.checkBankInterface || !client.playerHasItem(2528)) //To prevent stuff!
+                    if (client.isBusy() || client.checkBankInterface || !client.playerHasItem(2528)) //To prevent stuff!
                         break;
                     for (int i = 0; i < skillTrain.length; i++) {
                         Skill trainedSkill = Skill.getSkill(i);
@@ -526,8 +525,7 @@ public class ClickingButtons implements Packet {
                     client.randomed = false;
                     client.send(new RemoveInterfaces());
                     if (!client.addItem(2528, 1)) {
-                        GroundItem item = new GroundItem(client.getPosition(), 2528, 1, client.getSlot(), -1);
-                        Ground.items.add(item);
+                        Ground.addFloorItem(client, 2528, 1);
                         client.send(new SendMessage("You dropped the lamp on the floor!"));
                     } else client.checkItemUpdate();
                 }

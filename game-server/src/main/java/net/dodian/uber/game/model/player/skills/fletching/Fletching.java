@@ -36,6 +36,10 @@ public class Fletching {
             player.resetAction();
             return;
         }
+        if (player.isBusy()) {
+            player.send(new SendMessage("You are currently busy to be fletching!"));
+            return;
+        }
         player.fletchAmount--;
         player.send(new RemoveInterfaces());
         player.IsBanking = false;

@@ -10,13 +10,17 @@ public class TradeRequest implements Packet {
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int tw = client.getInputStream().readUnsignedWord();
+        Client other = client.getClient(tw);
+        if (!client.validClient(tw)) {
+            return;
+        }
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
             client.facePlayer(tw);
             client.requestAnim(1833, 0);
             return;
         }
-        if (client.inDuel || client.duelFight) {
-            client.send(new SendMessage("You are busy at the moment"));
+        if(client.isBusy() || other.isBusy()) {
+            client.send(new SendMessage(client.isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
         if (!client.inTrade) {

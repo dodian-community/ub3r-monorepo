@@ -31,7 +31,6 @@ public class ShopProcessor implements Job {
                         }
                     }
                 } else ShopHandler.ShopItemsDelay[i]++;
-            //System.out.println("hello?!" + DidUpdate);
             if (DidUpdate) {
                 for (int k = 1; k < Constants.maxPlayers; k++) {
                     if (PlayerHandler.players[k] != null) {
