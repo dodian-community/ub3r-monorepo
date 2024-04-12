@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -176,8 +175,7 @@ public class Balloons {
                         if (!droppedItems.isEmpty()) {
                             for (int i = 0; i < droppedItems.size(); i++) {
                                 if (droppedItems.get(i).getPosition().equals(pos)) {
-                                    GroundItem drop = new GroundItem(pos.copy(), droppedItems.get(i).getId(), droppedItems.get(i).getAmount(), c.getSlot(), -1);
-                                    Ground.items.add(drop);
+                                    Ground.addFloorItem(c, droppedItems.get(i).getId(), droppedItems.get(i).getAmount());
                                     c.send(new SendMessage("<col=664400>Something odd appears on the ground."));
                                     droppedItems.remove(i);
                                 }
@@ -329,37 +327,6 @@ public class Balloons {
         displayOfferItems(c);
         c.checkItemUpdate();
     }
-
-	/*public static void displayItems(Client c) {
-		c.getOutputStream().createFrameVarSizeWord(34);
-		c.getOutputStream().writeWord(2273);
-		//c.getOutputStream().writeWord(partyItems.size());
-		for (int i = 0; i < partyItems.size(); i++) {
-			c.getOutputStream().writeByte(i);
-			c.getOutputStream().writeWord(partyItems.get(i).getId() + 1);
-			if (partyItems.get(i).getId() > 254) {
-				c.getOutputStream().writeByte(255);
-				c.getOutputStream().writeDWord(partyItems.get(i).getAmount());
-			} else
-				c.getOutputStream().writeByte(partyItems.get(i).getAmount());
-		}
-		c.getOutputStream().endFrameVarSizeWord();
-	}
-	public static void displayOfferItems(Client c) {
-		c.getOutputStream().createFrameVarSizeWord(34);
-		c.getOutputStream().writeWord(2274);
-		//c.getOutputStream().writeWord(partyItems.size());
-		for (int i = 0; i < offeredItems.size(); i++) {
-			c.getOutputStream().writeByte(i);
-			c.getOutputStream().writeWord(offeredItems.get(i).getId() + 1);
-			if (offeredItems.get(i).getId() > 254) {
-				c.getOutputStream().writeByte(255);
-				c.getOutputStream().writeDWord(offeredItems.get(i).getAmount());
-			} else
-				c.getOutputStream().writeByte(offeredItems.get(i).getAmount());
-		}
-		c.getOutputStream().endFrameVarSizeWord();
-	}*/
 
     public static boolean eventActive() {
         return eventActive;

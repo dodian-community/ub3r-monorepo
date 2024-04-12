@@ -1,46 +1,34 @@
 package net.dodian.jobs.impl;
 
-import net.dodian.uber.game.model.item.ItemHandler;
-import net.dodian.utilities.Utils;
-import org.quartz.DisallowConcurrentExecution;
+import net.dodian.uber.game.model.item.Ground;
+import net.dodian.uber.game.model.item.GroundItem;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-@DisallowConcurrentExecution
-
 public class ItemProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
-
-        for (int i = 0; i <= 8000; i++) {
-            if (ItemHandler.globalItemID[i] != 0)
-                ItemHandler.globalItemTicks[i]++;
-
-            if ((ItemHandler.hideItemTimer + ItemHandler.showItemTimer) == ItemHandler.globalItemTicks[i]) {
-                if (!ItemHandler.globalItemStatic[i]) {
-                    ItemHandler.removeItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemAmount[i], ItemHandler.globalItemX[i],
-                            ItemHandler.globalItemY[i], ItemHandler.globalItemZ[i]);
-                } else {
-                    Utils.println("Item is static");
+        /* Not tradeble items on ground */
+        if (!Ground.untradeable_items.isEmpty() || !(Ground.untradeable_items.size() < 0)) {
+            for (GroundItem item : Ground.untradeable_items) {
+                item.reduceTime();
+                if (item.getDespawnTime() < 1)
+                    Ground.deleteItem(item);
+            }
+        }
+        /* Global ground items */
+        if (!Ground.ground_items.isEmpty() || !(Ground.ground_items.size() < 0)) {
+            for (GroundItem item : Ground.ground_items) {
+                if(item.isVisible() || !item.isTaken()) continue;
+                item.reduceTime();
+                if (item.getDespawnTime() < 1) {
+                    item.setTaken(false);
+                    item.visible = true;
+                    item.timeToDespawn = item.display;
+                    Ground.addItem(item);
                 }
             }
-
-            if (ItemHandler.showItemTimer == ItemHandler.globalItemTicks[i]) { // Phate:
-                // Item
-                // has
-                // expired,
-                // show
-                // to
-                // all
-                if (!ItemHandler.globalItemStatic[i]) {
-                    ItemHandler.createItemAll(ItemHandler.globalItemID[i], ItemHandler.globalItemX[i], ItemHandler.globalItemY[i], ItemHandler.globalItemZ[i],
-                            ItemHandler.globalItemAmount[i], ItemHandler.globalItemController[i]);
-                } else
-                    Utils.println("Item is static");
-            }
-
         }
-
     }
 
 }

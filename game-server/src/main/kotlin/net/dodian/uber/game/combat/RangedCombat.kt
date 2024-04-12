@@ -87,7 +87,7 @@ fun Client.handleRangedAttack(): Int {
             hit + Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
         if(hit >= npc.currentHealth) hit = npc.currentHealth
-        npc.dealDamage(this, hit, landCrit)
+        npc.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
 
         var hit2 = hit
         val chance = Misc.chance(8) == 1 && armourSet("karil")
@@ -95,7 +95,7 @@ fun Client.handleRangedAttack(): Int {
             stillgfx(401, npc.position, 100)
             hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
             if(hit2 >= npc.currentHealth) hit2 = npc.currentHealth
-            npc.dealDamage(this, hit2, landCrit)
+            npc.dealDamage(this, hit2, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
         }
         /* Experience */
         if(hit > 0) {
@@ -122,7 +122,7 @@ fun Client.handleRangedAttack(): Int {
         else if (!landHit) hit = 0
         if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) (hit * 0.6).toInt()
         if (hit >= player.currentHealth) hit = player.currentHealth
-        player.dealDamage(this, hit, landCrit)
+        player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
 
         var hit2 = hit
         val chance = Misc.chance(8) == 1 && armourSet("karil")
@@ -130,7 +130,8 @@ fun Client.handleRangedAttack(): Int {
             stillgfx(401, player.position, 100)
             hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
             if (hit2 >= player.currentHealth) hit2 = player.currentHealth
-            player.dealDamage(this, hit2, landCrit)
+            //player.dealDamage(this, hit2, landCrit)
+            player.dealDamage(this, hit2, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
         }
     }
         if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))

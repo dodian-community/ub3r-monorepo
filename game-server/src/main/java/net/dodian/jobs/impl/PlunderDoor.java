@@ -3,15 +3,12 @@ package net.dodian.jobs.impl;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.utilities.Misc;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
-@DisallowConcurrentExecution
 
 public class PlunderDoor implements Job {
     int hourTick = 4;

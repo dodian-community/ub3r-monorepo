@@ -47,7 +47,7 @@ public class DropParty implements Runnable {
 
             int dropX = 2658 + (int) (Math.random() * 9);
             int dropY = 3299 + (int) (Math.random() * 15);
-            Ground.items.add(new GroundItem(new Position(dropX, dropY, 0), dropItem.getId(), dropItem.getAmount(), -1, -1));
+            //TODO: If we want this, fix the ground items to display items instantly :L
 
             try {
                 Thread.sleep(3000);

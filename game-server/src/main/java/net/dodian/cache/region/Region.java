@@ -12,8 +12,8 @@ import java.util.zip.GZIPInputStream;
 public class Region {
 
     private static Region[] regions;
-    private int id;
-    private int[][][] clips = new int[4][][];
+    private final int id;
+    private final int[][][] clips = new int[4][][];
 
     public Region(int id) {
         this.id = id;
@@ -32,15 +32,13 @@ public class Region {
             }
             clips[height][x - regionAbsX][y - regionAbsY] |= shift;
         } catch (Exception e) {
+            System.out.println("Clipping wrong? " + e);
         }
     }
 
     private void removeClip(int x, int y, int height, int shift) {
         int regionAbsX = (id >> 8) * 64;
         int regionAbsY = (id & 0xff) * 64;
-        if (clips == null) {
-            return;
-        }
         if (clips[height] == null) {
             return;
         }

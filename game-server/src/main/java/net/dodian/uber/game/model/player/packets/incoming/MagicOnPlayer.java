@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
@@ -87,7 +87,7 @@ public class MagicOnPlayer implements Packet {
                     client.lastAttack = System.currentTimeMillis();
                     castOnPlayer.target = client;
                     client.target = castOnPlayer;
-                    castOnPlayer.dealDamage(client, hitDiff, hitCrit);
+                    castOnPlayer.dealDamage(client, hitDiff, hitCrit ? Entity.hitType.CRIT : Entity.hitType.STANDARD);
 
                     boolean chance = Misc.chance(8) == 1 && client.armourSet("ahrim");
                     if(chance && hitDiff > 0) { //Ahrim effect!

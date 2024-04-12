@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.npc;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -22,11 +23,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public static NpcUpdating getInstance() {
         return instance;
     }
-    private final Stream updateBlock = new Stream();
 
     @Override
     public void update(Player player, Stream stream) {
-        updateBlock.currentOffset = 0;
+        Stream updateBlock = new Stream(new byte[2048]);
 
         stream.createFrameVarSizeWord(65);
         stream.initBitAccess();
@@ -138,13 +138,14 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     @Override
     public void appendPrimaryHit(Npc npc, Stream stream) {
         stream.writeByteC(Math.min(npc.getDamageDealt(), 255));
-        if (npc.getDamageDealt() == 0) {
+        if (npc.getDamageDealt() == 0)
             stream.writeByteS(0);
-        } else if (npc.isCrit()) {
+        else if (npc.getHitType() == Entity.hitType.CRIT)
             stream.writeByteS(3);
-        } else {
+        else if (npc.getHitType() == Entity.hitType.POISON)
+            stream.writeByteS(2);
+        else
             stream.writeByteS(1);
-        }
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
         stream.writeByteS(value);
@@ -153,13 +154,14 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     public void appendPrimaryHit2(Npc npc, Stream stream) {
         stream.writeByteA(Math.min(npc.getDamageDealt2(), 255));
-        if (npc.getDamageDealt2() == 0) {
+        if (npc.getDamageDealt2() == 0)
             stream.writeByte(0);
-        } else if (npc.isCrit2()) {
+        else if (npc.getHitType2() == Entity.hitType.CRIT)
             stream.writeByte(-3);
-        } else {
+        else if (npc.getHitType2() == Entity.hitType.POISON)
+            stream.writeByte(-2);
+        else
             stream.writeByte(-1);
-        }
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
         stream.writeByteS(value);

@@ -13,6 +13,9 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
 
+var hit = 0
+var hit2 = 0
+
 fun Client.handleMeleeAttack(): Int {
     if (hasStaff() && autocast_spellIndex >= 0)
         return -1
@@ -50,7 +53,7 @@ fun Client.handleMeleeAttack(): Int {
              }
              if(keris) maxHit *= 2
          }
-        var hit = Utils.random(maxHit.toInt())
+        hit = Utils.random(maxHit.toInt())
         val criticalChance = getLevel(Skill.AGILITY) / 9
         val extra = getLevel(Skill.STRENGTH) * 0.195
         if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
@@ -83,22 +86,21 @@ fun Client.handleMeleeAttack(): Int {
                 hit *= 4
                 send(SendMessage("<col=8B4513>You punch a hole in the creatures exoskeleton!"))
             }
-            hit = handleSpecial(hit)
-            if(hit >= npc.currentHealth) hit = npc.currentHealth
-            npc.dealDamage(this, hit, landCrit && hit > 0)
-
+            if(!handleSpecial(landCrit)) { //Do stuff here!
+                if(hit >= npc.currentHealth) hit = npc.currentHealth
+                npc.dealDamage(this, hit, if(landCrit && hit > 0) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+            }
             var chance = Misc.chance(8) == 1 && armourSet("guthan")
             if(chance && hit > 0) { //Guthan effect!
                 stillgfx(398, npc.position, 100)
                 heal(hit, (getMaxHealth().toDouble() * 0.15).toInt())
             }
-            var hit2 = hit
             chance = Misc.chance(8) == 1 && armourSet("torag")
-            if(chance && hit2 > 0) { //Torag effect!
+            if(chance) { //Torag effect!
+                hit2 = hit / 2
                 stillgfx(399, npc.position, 0)
-                hit2 /= 2
                 if(hit2 >= npc.currentHealth) hit2 = npc.currentHealth
-                npc.dealDamage(this, hit2, landCrit && hit2 > 0)
+                npc.dealDamage(this, hit2, if(landCrit && hit2 > 0) Entity.hitType.CRIT else Entity.hitType.STANDARD)
             }
             if(hit > 0) {
                 if (fightType == 3) {
@@ -124,22 +126,21 @@ fun Client.handleMeleeAttack(): Int {
             if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
             if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) (hit * 0.6).toInt()
-            if(hit >= player.currentHealth) hit = player.currentHealth
-            hit = handleSpecial(hit)
-            player.dealDamage(this, hit, landCrit && landHit)
-
+            if(!handleSpecial(landCrit)) { //Do stuff here!
+                if(hit >= player.currentHealth) hit = player.currentHealth
+                player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+            }
             var chance = Misc.chance(8) == 1 && armourSet("guthan")
             if(chance && hit > 0) { //Guthan effect!
                 stillgfx(398, player.position, 100)
                 heal(hit, (getMaxHealth().toDouble() * 0.15).toInt())
             }
-            var hit2 = hit
             chance = Misc.chance(8) == 1 && armourSet("torag")
-            if(chance && hit2 > 0) { //Torag effect!
+            if(chance) { //Torag effect!
+                hit2 = hit / 2
                 stillgfx(399, player.position, 0)
-                hit2 /= 2
                 if(hit2 >= player.currentHealth) hit2 = player.currentHealth
-                player.dealDamage(this, hit2, landCrit)
+                player.dealDamage(this, hit2, Entity.hitType.STANDARD)
             }
         }
         if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
@@ -219,9 +220,8 @@ fun landHit(p: Client, t: Entity): Boolean {
     return true
 }
 
-fun Client.handleSpecial(hit: Int): Int {
+fun Client.handleSpecial(crit: Boolean): Boolean {
     val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
-    var newHit = hit
     val chance = Range(1, 8).value
     if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
         requestAnim(-1, 0)
@@ -231,14 +231,16 @@ fun Client.handleSpecial(hit: Int): Int {
         requestAnim(-1, 0)
         when (equipment[Equipment.Slot.WEAPON.id]) {
             1215 -> {
-                newHit = (newHit * 1.1).toInt()
+                hit = (hit * 1.1).toInt()
+                hit2 = Range(1, hit / 2).value
                 stillgfx(252, target.position, 55, true)
                 sendAnimation(1062)
-                var damage = Range(1, newHit / 2).value
-                if (damage >= npc.currentHealth) damage = npc.currentHealth
-                npc.dealDamage(this, damage, false)
-                giveExperience(40 * damage, Skill.getSkill(fightType))
-                giveExperience(13 * damage, Skill.HITPOINTS)
+                /* Damage portion! */
+                if(hit >= npc.currentHealth) hit = npc.currentHealth
+                    npc.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+                if (hit2 >= npc.currentHealth) hit2 = npc.currentHealth
+                    npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
+                return true
             }
             else -> sendAnimation(emote)
         }
@@ -247,17 +249,19 @@ fun Client.handleSpecial(hit: Int): Int {
         requestAnim(-1, 0)
         when (equipment[Equipment.Slot.WEAPON.id]) {
             1215 -> {
-                newHit = (newHit * 1.1).toInt()
+                hit = (hit * 1.1).toInt()
+                hit2 = Range(1, hit / 2).value
                 stillgfx(252, target.position, 55, true)
                 sendAnimation(1062)
-                var damage = Range(1, newHit / 2).value
-                if (damage >= player.currentHealth) damage = player.currentHealth
-                player.dealDamage(this, damage, false)
-                giveExperience(40 * damage, Skill.getSkill(fightType))
-                giveExperience(13 * damage, Skill.HITPOINTS)
+                /* Damage portion! */
+                if(hit >= player.currentHealth) hit = player.currentHealth
+                    player.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+                if (hit2 >= player.currentHealth) hit2 = player.currentHealth
+                    player.dealDamage(this, hit2, Entity.hitType.STANDARD)
+                return true
             }
             else ->  sendAnimation(emote)
         }
     }
-    return newHit
+    return false
 }

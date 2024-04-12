@@ -56,8 +56,7 @@ public class Werewolf {
                     }
                     c.teleportTo(pos.getX(), pos.getY(), 0);
                     giveEndExperience(160, true);
-                    GroundItem stick = new GroundItem(new Position(x, y, 0), new int[]{c.getSlot(), 4179, 1, 60});
-                    Ground.items.add(stick);
+                    Ground.addFloorItem(c, new Position(x, y, 0), 4179, 1, 100);
                     c.UsingAgility = false;
                     stop();
                 }

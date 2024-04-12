@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -346,7 +347,7 @@ public class ClickItem implements Packet {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.dealDamage(null, 10, true);
+                    client.dealDamage(null, 10, Entity.hitType.CRIT);
                     for(int skill = 0; skill < 4; skill++) {
                         skill = skill == 3 ? 4 : skill;
                         client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Objects.requireNonNull(Skill.getSkill(skill)))) * 0.15), Skill.getSkill(skill));

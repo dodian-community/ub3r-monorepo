@@ -71,6 +71,7 @@ public abstract class Player extends Entity {
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
     private boolean crit, crit2;
+    private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
     private boolean isNpc;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
@@ -203,8 +204,10 @@ public abstract class Player extends Entity {
             return;
         }
         Client c = ((Client) this);
+        boolean inDesert = getPositionName(getPosition()) == positions.DESERT && !c.UsingAgility;
+
         for(int i = 0; i < effects.size(); i++) {
-            if(effects.get(i) > 0 && (i != 0 || getPositionName(getPosition()) == positions.DESERT)) //Remove 1 tick from timer
+            if(effects.get(i) > 0 && (i != 0 || inDesert)) //Remove 1 tick from timer
                 effects.set(i, effects.get(i) - 1);
 
             if(i == 2 && effects.get(i)%10 == 0 && effects.get(i) > 0) {
@@ -246,7 +249,7 @@ public abstract class Player extends Entity {
                     c.addItem(229, 1);
                 }
                 if (!waterSource) { //Damage player!
-                    dealDamage(null, 3 + Misc.random(12), false);
+                    dealDamage(null, 3 + Misc.random(12), Entity.hitType.STANDARD);
                     c.send(new SendMessage("The thirst from the heat damage you!"));
                 } else {
                     c.requestAnim(829, 0);
@@ -372,14 +375,14 @@ public abstract class Player extends Entity {
 
     public abstract void update();
 
-    public void receieveDamage(Entity e, int amount, boolean crit) {
+    public void receieveDamage(Entity e, int amount, Entity.hitType type) {
         amount = Math.min(amount, currentHealth);
         if (getDamage().containsKey(e)) {
             getDamage().put(e, getDamage().get(e) + amount);
         } else {
             getDamage().put(e, amount);
         }
-        dealDamage(e, amount, crit);
+        dealDamage(e, amount, type);
     }
 
     public void println_debug(String str) {
@@ -839,7 +842,7 @@ public abstract class Player extends Entity {
 
     public abstract void sendpm(long name, int rights, byte[] chatmessage, int messagesize);
 
-    public void dealDamage(Entity attacker, int amt, boolean crit) {
+    public void dealDamage(Entity attacker, int amt, hitType type) {
         Client plr = ((Client) this);
         if(attacker != null) setLastCombat(16);
         if (deathStage >= 0 && getCurrentHealth() < 1)
@@ -856,14 +859,14 @@ public abstract class Player extends Entity {
             if(amt != oldDmg)
                 ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
         }
-        if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
-            this.crit = crit;
-            damageDealt = amt;
-            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
-        } else if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
-            this.crit2 = crit;
+        if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
+            this.hitType2 = type;
             damageDealt2 = amt;
             getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
+        } else if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
+            this.hitType = type;
+            damageDealt = amt;
+            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
         }
         setCurrentHealth(Math.max(getCurrentHealth() - amt, 0));
         ((Client) this).refreshSkill(Skill.HITPOINTS);
@@ -880,14 +883,14 @@ public abstract class Player extends Entity {
         boolean veracEffect = Misc.chance(8) == 1 && armourSet("verac");
         if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Player) {
             ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Player) attacker).dealDamage(plr, amt, crit);
+            ((Player) attacker).dealDamage(plr, amt, type);
         } else if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Npc) {
             ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Npc) attacker).dealDamage(plr, amt, crit);
+            ((Npc) attacker).dealDamage(plr, amt, type);
         }
     }
 
-    public void dealDamage(int amt, boolean crit, Entity attacker, Entity.damageType dmg) {
+    public void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType dmg) {
         Client plr = ((Client) this);
         Npc npc = ((Npc) attacker);
         if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
@@ -903,10 +906,10 @@ public abstract class Player extends Entity {
         else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
         else if(dmg.equals(damageType.JAD_RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt = 0;
         else if(dmg.equals(damageType.JAD_MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt = 0;
-        dealDamage(attacker, amt, crit);
+        dealDamage(attacker, amt, type);
     }
 
-    private void delayedHit(Entity source, Entity target, final int damage, final boolean b, int delay) {
+    private void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
         if(source instanceof Client && target instanceof Npc) {
             final Client p = (Client) source;
             final Npc n = (Npc) target;
@@ -921,7 +924,7 @@ public abstract class Player extends Entity {
                         stop();
                         return;
                     }
-                    n.dealDamage(p, damage, b);
+                    n.dealDamage(p, damage, type);
                     stop();
                 }
 
@@ -941,7 +944,7 @@ public abstract class Player extends Entity {
                         stop();
                         return;
                     }
-                    other.receieveDamage(p, damage, b);
+                    other.receieveDamage(p, damage, type);
                     stop();
                 }
 
@@ -1229,12 +1232,11 @@ public abstract class Player extends Entity {
     public int getDamageDealt2() {
         return this.damageDealt2;
     }
-
-    public boolean isCrit() {
-        return this.crit;
+    public Entity.hitType getHitType() {
+        return this.hitType;
     }
-    public boolean isCrit2() {
-        return this.crit2;
+    public Entity.hitType getHitType2() {
+        return this.hitType2;
     }
 
     public int getCurrentHealth() {
@@ -1505,8 +1507,9 @@ public abstract class Player extends Entity {
         int status = -1;
         for(Npc n : Server.npcManager.getNpcs()) {
             if(n.getId() == id && status == -1) {
-                n.respawn();
                 status = !n.alive ? 0 : 1;
+                if(!n.alive)
+                    n.respawn();
             }
         }
         String npcName = Server.npcManager.getName(id);

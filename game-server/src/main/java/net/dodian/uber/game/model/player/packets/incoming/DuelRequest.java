@@ -14,12 +14,12 @@ public class DuelRequest implements Packet {
         if (!client.validClient(PID)) {
             return;
         }
-        if (client.inTrade || client.inDuel || (client.duelFight && client.duel_with != PID)) {
-            client.send(new SendMessage("You are busy at the moment"));
-            return;
-        }
         if (client.inWildy() || other.inWildy()) {
             client.send(new SendMessage("You cant duel in the wilderness!"));
+            return;
+        }
+        if(client.isBusy() || other.isBusy()) {
+            client.send(new SendMessage(client.isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
         client.duelReq(PID);

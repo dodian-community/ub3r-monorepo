@@ -1,6 +1,7 @@
 package net.dodian.uber.game.combat
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -67,7 +68,7 @@ fun Client.handleMagicAttack(): Int {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
         if(hit >= npc.currentHealth) hit = npc.currentHealth
-        npc.dealDamage(this, hit, landCrit)
+        npc.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
 
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
         if(chance && hit > 0) { //Ahrim effect!
@@ -84,7 +85,8 @@ fun Client.handleMagicAttack(): Int {
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
         if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) (hit * 0.6).toInt()
         if(hit >= player.currentHealth) hit = player.currentHealth
-        player.dealDamage(this, hit, landCrit)
+        player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+
 
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
         if(chance && hit > 0) { //Ahrim effect!
