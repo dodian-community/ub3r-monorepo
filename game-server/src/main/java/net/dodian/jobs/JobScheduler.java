@@ -34,10 +34,7 @@ public class JobScheduler {
     }
 
     public boolean jobExists(Class<? extends Job> object) throws SchedulerException {
-        if (getScheduler().checkExists(new TriggerKey(entity.toString(), object.getName()))) {
-            return true;
-        }
-        return false;
+        return getScheduler().checkExists(new TriggerKey(entity.toString(), object.getName()));
     }
 
     public void deleteJob(Class<? extends Job> object) throws SchedulerException {

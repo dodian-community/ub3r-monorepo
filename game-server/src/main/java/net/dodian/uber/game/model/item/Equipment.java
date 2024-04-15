@@ -20,7 +20,7 @@ public class Equipment extends ItemContainer {
 
         HEAD(0), CAPE(1), NECK(2), WEAPON(3), CHEST(4), SHIELD(5), LEGS(7), BLESSING(8), HANDS(9), FEET(10), RING(12), ARROWS(13);
 
-        private int slotId;
+        private final int slotId;
 
         Slot(int slotId) {
             this.slotId = slotId;

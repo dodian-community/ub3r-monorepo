@@ -1416,17 +1416,41 @@ public class Client extends RSApplet {
                                         if (class9_1.actions != null) {
                                             for (int j4 = 4; j4 >= 0; j4--)
                                                 if (class9_1.actions[j4] != null) {
-                                                    menuActionName[menuActionRow] = class9_1.actions[j4] + " @lre@" + itemDef.name;
-                                                    if (j4 == 0)
-                                                        menuActionID[menuActionRow] = 632;
-                                                    if (j4 == 1)
-                                                        menuActionID[menuActionRow] = 78;
-                                                    if (j4 == 2)
-                                                        menuActionID[menuActionRow] = 867;
-                                                    if (j4 == 3)
-                                                        menuActionID[menuActionRow] = 431;
-                                                    if (j4 == 4)
-                                                        menuActionID[menuActionRow] = 53;
+                                                    if (!shiftIsDown) {
+                                                        menuActionName[menuActionRow] = class9_1.actions[j4] + " @lre@" + itemDef.name;
+                                                        if (j4 == 0)
+                                                            menuActionID[menuActionRow] = 632;
+                                                        if (j4 == 1)
+                                                            menuActionID[menuActionRow] = 78;
+                                                        if (j4 == 2)
+                                                            menuActionID[menuActionRow] = 867;
+                                                        if (j4 == 3)
+                                                            menuActionID[menuActionRow] = 431;
+                                                        if (j4 == 4)
+                                                            menuActionID[menuActionRow] = 53;
+                                                    } else {
+                                                        if(j4 != 0 && j4 != 3) menuActionName[menuActionRow] = class9_1.actions[j4] + " @lre@" + itemDef.name;
+                                                        if (j4 == 0) {
+                                                            menuActionName[menuActionRow] = class9_1.actions[3] + " @lre@" + itemDef.name;
+                                                            menuActionID[menuActionRow] = 431;
+                                                        }
+                                                        if (j4 == 1) {
+                                                            menuActionName[menuActionRow] = class9_1.actions[0] + " @lre@" + itemDef.name;
+                                                            menuActionID[menuActionRow] = 632;
+                                                        }
+                                                        if (j4 == 2) {
+                                                            menuActionName[menuActionRow] = class9_1.actions[1] + " @lre@" + itemDef.name;
+                                                            menuActionID[menuActionRow] = 78;
+                                                        }
+                                                        if (j4 == 3) {
+                                                            menuActionName[menuActionRow] = class9_1.actions[2] + " @lre@" + itemDef.name;
+                                                            menuActionID[menuActionRow] = 867;
+                                                        }
+                                                        if (j4 == 4) {
+                                                            menuActionName[menuActionRow] = class9_1.actions[4] + " @lre@" + itemDef.name;
+                                                            menuActionID[menuActionRow] = 53;
+                                                        }
+                                                    }
                                                     menuActionCmd1[menuActionRow] = itemDef.id;
                                                     menuActionCmd2[menuActionRow] = k2;
                                                     menuActionCmd3[menuActionRow] = class9_1.id;
@@ -2659,6 +2683,7 @@ public class Client extends RSApplet {
         settings.put("Width", "" + clientWidth);
         settings.put("Height", "" + clientHeight);
         settings.put("Roof", "" + roofsOff);
+        settings.put("Teleport", "" + lastTeleport);
         toggleSize(0);
         socketStream = null;
         loggedIn = false;
@@ -4047,6 +4072,8 @@ public class Client extends RSApplet {
                         inputTaken = true;
                         break;
                     default:
+                        if(class9.parentID == 12855 || class9.parentID == 1151)
+                            lastTeleport = class9.id;
                         stream.createFrame(185);
                         stream.writeWord(k);
                         break;
@@ -5341,9 +5368,9 @@ public class Client extends RSApplet {
                     int value = 0;
                     if (amountOrNameInput.length() > 0) {
                         value = !amountOrNameInput.toLowerCase().contains("k") && !amountOrNameInput.toLowerCase().contains("m") ? Integer.parseInt(amountOrNameInput) : Integer.parseInt(amountOrNameInput.substring(0, amountOrNameInput.length() - 1));
-                            if (amountOrNameInput.toLowerCase().endsWith("k")) {
+                            if (amountOrNameInput.length() < 9 && amountOrNameInput.toLowerCase().endsWith("k")) {
                                 value *= 1000;
-                            } else if (amountOrNameInput.toLowerCase().endsWith("m")) {
+                            } else if (amountOrNameInput.length() < 5 && amountOrNameInput.toLowerCase().endsWith("m")) {
                                 value *= 1000_000;
                             }
                     }
@@ -10069,7 +10096,7 @@ public class Client extends RSApplet {
                 EntityDef entityDef = npc.desc;
                 if (entityDef.childrenIDs != null)
                     entityDef = entityDef.method161();
-                if (entityDef != null && entityDef.aBoolean87 && entityDef.aBoolean84) {
+                if (entityDef != null && entityDef.minimapDot && entityDef.aBoolean84) {
                     int i1 = npc.x / 32 - myPlayer.x / 32;
                     int k3 = npc.y / 32 - myPlayer.y / 32;
                     markMinimap(mapDotNPC, i1, k3);
@@ -12789,6 +12816,7 @@ public class Client extends RSApplet {
     public static int cameraPos2 = 600;
     public static int clientWidth = 765, clientHeight = 503;
     public static int clientSize = 0;
+    public static int lastTeleport = -1;
     public int appletWidth = 765;
     public int appletHeight = 503;
     public int gameAreaWidth = 512;

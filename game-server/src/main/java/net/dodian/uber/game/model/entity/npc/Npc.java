@@ -11,7 +11,6 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -91,7 +90,7 @@ public class Npc extends Entity {
                 boss = true;
             } else if (id == 4304) { //Kalphite King
                 boss = true;
-            } else if (id == 6610) { //Venenatis (mage boss)
+            } else if (id == 6610) { //Spider Queen (mage boss)
                 boss = true;
             }
         }
@@ -274,14 +273,14 @@ public class Npc extends Entity {
         }
         if (currentHealth < 1) {
             alive = false;
-            currentHealth = Math.max(currentHealth, 0);
+            currentHealth = 0;
             die();
         }
     }
 
     public void attack() {
         CalculateMaxHit(true);
-        boolean multiAttack = getId() == 3127;
+        boolean multiAttack = getId() == 3127 || getId() == 4303 || getId() == 4304 || getId() == 6610;
         if(!multiAttack) {
             Client enemy = getTarget(true);
             if (enemy == null) {
@@ -324,7 +323,7 @@ public class Npc extends Entity {
                                 EventManager.getInstance().registerEvent(new Event(600) {
 
                                     public void execute() {
-                                        if(c.disconnected || c == null || c.getCurrentHealth() < 1) {
+                                        if(c.disconnected || c.getCurrentHealth() < 1) {
                                             stop();
                                             return;
                                         }
@@ -339,19 +338,69 @@ public class Npc extends Entity {
                         }
                     }
                 }
-            } else {
+            } else if(getId() == 4303) { //Kalphite Queen
                 /* Not added yet! */
-                System.out.println("Npcid " + getId() + " sends a multi attack!");
-                /*requestAnim(data.getAttackEmote(), 0);
-                for (Entity e : getDamage().keySet()) {
-                    if (e instanceof Player) {
-                        if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
-                            continue;
-                        enemy = Server.playerHandler.getClient(e.getSlot());
-                        int hitDiff = landHit(enemy, true) ? Utils.random(maxHit) : 0;
-                        enemy.dealDamage(hitDiff, false, this, damageType.MELEE);
+                boolean landMage = Misc.chance(8) == 1;
+                enemy = getSecondTarget(target, true);
+                assert target != null;
+                if(target.attackingNpc || enemy.attackingNpc) {
+                    if(landMage) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                     }
-                }*/
+                    if(landMage && enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else if(enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    }
+                }
+            } else if(getId() == 4304) { //Kalphite King
+                /* Not added yet! */
+                boolean landRanged = Misc.chance(8) == 1;
+                enemy = getSecondTarget(target, true);
+                assert target != null;
+                if(target.attackingNpc || enemy.attackingNpc) {
+                    if(landRanged) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    }
+                    if(landRanged && enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else if(enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    }
+                }
+            } else if(getId() == 6610) { //Spider Queen
+                /* Not added yet! */
+                boolean landMelee = Misc.chance(8) == 1;
+                enemy = getSecondTarget(target, true);
+                assert target != null;
+                if(target.attackingNpc || enemy.attackingNpc) {
+                    if(landMelee) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else {
+                        requestAnim(data.getAttackEmote(), 0);
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    }
+                    if(landMelee && enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    } else if(enemy != null) {
+                        requestAnim(data.getAttackEmote(), 0);
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    }
+                }
             }
             if(enemy == null) fighting = false;
             setLastAttack(getAttackTimer());
@@ -520,6 +569,24 @@ public class Npc extends Entity {
         }
         return killer;
     }
+    public Client getSecondTarget(Client first, boolean fighting) {
+        int highest = -1;
+        Client killer = null;
+        if (getDamage().isEmpty() || getDamage().size() < 2)
+            return null;
+        for (Entity e : getDamage().keySet()) {
+            if (e instanceof Player) {
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || e.equals(first)))
+                    continue;
+                int damage = getDamage().get(e);
+                if (damage > highest) {
+                    highest = damage == 0 ? -1 : damage;
+                    killer = (Client) e;
+                }
+            }
+        }
+        return killer;
+    }
 
     public int getNextWalkingDirection() {
         int dir;
@@ -602,9 +669,6 @@ public class Npc extends Entity {
         return combat;
     }
 
-    /**
-     * @return the lastAttack
-     */
     public void setLastAttack(int lastAttack) {
         this.lastAttack = lastAttack;
     }
@@ -895,8 +959,8 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 3021: //Deadly red spider!
-                boolean protection = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6720 || c.gotSlayerHelmet(c);
-                if(!protection) { //Sting the target!
+                boolean slayer_gloves = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6720 || c.gotSlayerHelmet(c);
+                if(!slayer_gloves) { //Sting the target!
                     hitDiff = 8 + Utils.random(22);
                     requestAnim(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, hitDiff >= 25 ? Entity.hitType.CRIT : Entity.hitType.STANDARD, this, damageType.TRUEDAMAGE);
@@ -905,8 +969,8 @@ public class Npc extends Entity {
                 } else attack = false;
                 break;
             case 414: //Banshee
-                protection = c.getEquipment()[0] == 4166 || c.gotSlayerHelmet(c);
-                if(!protection) { //Sting the target!
+                boolean earmuffs = c.getEquipment()[0] == 4166 || c.gotSlayerHelmet(c);
+                if(!earmuffs) { //echo damage the player
                     hitDiff = 10 + Utils.random(15);
                     requestAnim(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, hitDiff >= 22 ? Entity.hitType.CRIT : Entity.hitType.STANDARD, this, damageType.TRUEDAMAGE);
@@ -926,7 +990,7 @@ public class Npc extends Entity {
         EventManager.getInstance().registerEvent(new Event(delay * 600) {
 
             public void execute() {
-                if(c.disconnected || c == null || c.getCurrentHealth() < 1) {
+                if(c.disconnected || c.getCurrentHealth() < 1) {
                     stop();
                     return;
                 }

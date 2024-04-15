@@ -107,7 +107,10 @@ public class SocketHandler implements Runnable {
         if(player == null || player.disconnected) { //Fuck this check!
             return;
         }
-        player.disconnected = true;
+        if(player.UsingAgility)
+            player.xLog = true;
+        else
+            player.disconnected = true;
     }
 
     public boolean parsePackets() {
@@ -165,17 +168,6 @@ public class SocketHandler implements Runnable {
 
     public LinkedList<PacketData> getPackets() {
         return (LinkedList<PacketData>) myPackets;
-    }
-
-    /**
-     * @return if the thread is still running
-     */
-    public boolean isRunning() {
-        return processRunning;
-    }
-
-    public void setRunning(boolean running) {
-        this.processRunning = running;
     }
 
     public void queueOutput(byte[] copy) {

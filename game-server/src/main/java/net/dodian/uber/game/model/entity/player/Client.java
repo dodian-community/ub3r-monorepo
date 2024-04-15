@@ -26,6 +26,7 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.model.player.skills.agility.DesertCarpet;
 import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
@@ -166,7 +167,6 @@ public class Client extends Player implements Runnable {
 	public String properName = "";
 	public int actionButtonId = 0;
 	public long lastAttack = 0;
-	public long[] globalCooldown = new long[10];
 	public boolean validLogin = false;
 
 	public void ReplaceObject2(Position pos, int NewObjectID, int Face, int ObjectType) {
@@ -403,7 +403,6 @@ public class Client extends Player implements Runnable {
 		resetAction();
 		getOutputStream().createFrame(97);
 		getOutputStream().writeWord(interfaceid);
-		flushOutStream();
 	}
 
 	public int ancients = 1;
@@ -753,13 +752,13 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void logout() {
-		getOutputStream().createFrame(109);
 		send(new SendMessage("Please wait... logging out may take time"));
 		send(new SendString("     Please wait...", 2458));
 		if (!saveNeeded || !validClient || UsingAgility) {
 			if(UsingAgility) xLog = true;
 			return;
 		}
+		getOutputStream().createFrame(109); //Need to do this here as we logout!
 		Server.playerHandler.removePlayer(PlayerHandler.players[this.getSlot()]);
 		PlayerHandler.players[this.getSlot()] = null; //Just incase the player messes up?
 	}
@@ -1826,6 +1825,19 @@ public class Client extends Player implements Runnable {
 			wipeInv();
 			return;
 		}
+		if (wearID == 6583 || wearID == 7927) {
+			if(System.currentTimeMillis() < walkBlock) { //Not usable during a walkBlock!
+				return;
+			}
+			send(new RemoveInterfaces());
+			resetWalkingQueue();
+			morphTab("Unmorph");
+			morph = true;
+			isNpc = true;
+			setPlayerNpc(wearID == 6583 ? 2188 : 5538 + Misc.random(5));
+			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			return;
+		}
 		if (wearID == 4155) { //Enchanted gem
 			SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
 			if (checkTask != null && getSlayerData().get(3) > 0)
@@ -2047,20 +2059,7 @@ public class Client extends Player implements Runnable {
 		WriteEnergy();
 		pmstatus(2);
 		setConfigIds();
-		setSidebarInterface(0, 2423); // attack tab
-		setSidebarInterface(1, 24126); // skills tab
-		setSidebarInterface(2, 638); // quest tab
-		setSidebarInterface(3, 3213); // backpack tab
-		setSidebarInterface(4, 1644); // items wearing tab
-		setSidebarInterface(5, 5608); // pray tab
-		setSidebarInterface(6, 12855); // magic tab (ancient = 12855)
-		setSidebarInterface(7, -1); // ancient magicks
-		setSidebarInterface(8, 5065); // friend
-		setSidebarInterface(9, 5715); // ignore
-		setSidebarInterface(10, 2449); // logout tab
-		setSidebarInterface(11, 904); // wrench tab
-		setSidebarInterface(12, 147); // run tab
-		setSidebarInterface(13, 962); // harp tab
+		resetTabs(); //Set tabs!
       /*if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 2518) {
         getOutputStream().createFrameVarSize(104);
         getOutputStream().writeByteC(1);
@@ -2233,11 +2232,9 @@ public class Client extends Player implements Runnable {
 		else
 			QuestSend.serverInterface(this);
 		long now = System.currentTimeMillis();
-		if (now >= walkBlock && UsingAgility) {
+		if (now >= walkBlock && xLog) {
 			UsingAgility = false;
-			disconnected = xLog;
-			if (!disconnected)
-				getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			disconnected = true;
 		}
 		if (getWildLevel() < 1) {
 			if (wildyLevel > 0)
@@ -4513,6 +4510,33 @@ public class Client extends Player implements Runnable {
 				sendFrame164(4882);
 				NpcDialogueSend = true;
 				break;
+			case 17:
+				showNPCChat(NpcTalkTo, 599, new String[]{"Hello there Traveler.", "Do you fancy taking a carpet ride?" , "It will cost 5000 coins."});
+				nextDiag = 18;
+				NpcDialogueSend = true;
+			break;
+			case 18:
+				showPlayerChat(new String[]{"Where can your carpet take me to?"}, 615);
+				nextDiag = 19;
+				NpcDialogueSend = true;
+				break;
+			case 19:
+				showNPCChat(NpcTalkTo, 598, new String[]{"These are currently the places."});
+				nextDiag = 20;
+				NpcDialogueSend = true;
+				break;
+			case 20:
+				String[] carpet_options = new String[]{"Carpet rides cost 5k coins.", "", "", "", "Cancel"};
+				if(NpcTalkTo == 17) carpet_options = new String[]{carpet_options[0], "Pollnivneach", "Nardah", "Bedabin Camp", carpet_options[carpet_options.length - 1]};
+				else if(NpcTalkTo == 19) carpet_options = new String[]{carpet_options[0], "Pollnivneach", "Nardah", "Sophanem", carpet_options[carpet_options.length - 1]};
+				else if(NpcTalkTo == 20) carpet_options = new String[]{carpet_options[0], "Nardah", "Bedabin Camp", "Sophanem", carpet_options[carpet_options.length - 1]};
+				else if(NpcTalkTo == 22) carpet_options = new String[]{carpet_options[0], "Pollnivneach", "Sophanem", "Bedabin Camp", carpet_options[carpet_options.length - 1]};
+				else carpet_options = null;
+				if(carpet_options != null)
+					showPlayerOption(carpet_options);
+				else send(new RemoveInterfaces());
+				NpcDialogueSend = carpet_options != null;
+				break;
 			case 1000:
 				sendFrame200(4883, npcFace);
 				send(new SendString(GetNpcName(NpcTalkTo).replace("_", " "), 4884));
@@ -4959,6 +4983,52 @@ public class Client extends Player implements Runnable {
 			case 3649:
 				showPlayerOption(new String[]{ "Do you wish to travel?", "Yes", "No" });
 				break;
+			case 4753: //Start of potion making Zahur!
+				showNPCChat(NpcTalkTo, 591, new String[]{"Hello "+(getGender() == 1 ? "miss" : "mr")+" adventurer.", "What can I help you with today?"});
+				nextDiag = 4754;
+				NpcDialogueSend = true;
+			break;
+			case 4754:
+				showPlayerChat(new String[]{ "I heard you were a famous herbalist.", "I was wondering if you had some kind of service." }, 612);
+				nextDiag = 4755;
+				NpcDialogueSend = true;
+			break;
+			case 4755: //Start of potion making Zahur!
+				showNPCChat(NpcTalkTo, 591, new String[]{"I sure do have some services I can offer.", "Would you like me to make you a unfinish potion or", "Clean any of your herbs? They must all be noted."});
+				nextDiag = 4758;
+				NpcDialogueSend = true;
+			break;
+			case 4756:
+				herbMaking = 0;
+				herbOptions.clear();
+				for (int h = 0; h < Utils.grimy_herbs.length; h++)
+					if(playerHasItem(GetNotedItem(Utils.grimy_herbs[h])))
+						herbOptions.add(new RewardItem(GetNotedItem(Utils.grimy_herbs[h]), 0));
+				if(herbOptions.isEmpty())
+					showNPCChat(4753, 605, new String[]{"You got no herbs for me to clean!"});
+				else setHerbOptions();
+				NpcDialogueSend = true;
+			break;
+			case 4757:
+				herbMaking = 0;
+				herbOptions.clear();
+				for (int h = 0; h < Utils.herbs.length; h++)
+					if(playerHasItem(GetNotedItem(Utils.herbs[h])))
+						herbOptions.add(new RewardItem(GetNotedItem(Utils.herb_unf[h]), 0));
+				if(herbOptions.isEmpty())
+					showNPCChat(4753, 605, new String[]{"You got no herbs for me to make into unfinish potions!"});
+				else setHerbOptions();
+				NpcDialogueSend = true;
+				break;
+			case 4758: //Start of potion making Zahur!
+				showNPCChat(NpcTalkTo, 591, new String[]{"This service will cost you 200 coins per herb", "and 1000 coins per potion.", "I also got a nice store if you wish to take a look."});
+				nextDiag = 4759;
+				NpcDialogueSend = true;
+				break;
+			case 4759:
+				showPlayerOption(new String[]{"Select a option", "Visit the store", "Clean herbs", "Make unfinish potions"});
+				NpcDialogueSend = true;
+			break;
 			case 6481:
 				if(totalLevel() >= Skills.maxTotalLevel())
 					showNPCChat(NpcTalkTo, 591, new String[]{"I see that you have trained up all your skills.", "I am utmost impressed!"});
@@ -5075,11 +5145,6 @@ public class Client extends Player implements Runnable {
 		for (int i = 0; i < text.length; i++)
 			send(new SendString(text[i], base + 3 + i));
 		sendFrame164(base);
-	}
-	public void resetDialogueChat() {
-		send(new PlayerDialogueHead(0));
-		sendFrame200(0, -1);
-		sendFrame164(-1);
 	}
 
 	/* Equipment level checking */
@@ -5632,25 +5697,31 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void setLook(int[] parts) {
-		/*
-		 * if (parts.length != 13) { println("setLook:  Invalid array length!"); return;
-		 * }
-		 */
-		setGender(parts[0]);
-		setHead(parts[1]);
-		setBeard(parts[2]);
-		setTorso(parts[3]);
-		setArms(parts[4]);
-		setHands(parts[5]);
-		setLegs(parts[6]);
-		setFeet(parts[7]);
-		pHairC = parts[8];
-		pTorsoC = parts[9];
-		pLegsC = parts[10];
-		pFeetC = parts[11];
-		pSkinC = parts[12];
-		playerLooks = parts;
-		getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+		boolean canSet = true;
+		for(int i = 0; i < parts.length && canSet; i++) { //0 3 14 18 26 34 38 42 2 14 5 4 0
+			if(parts[i] < -1) {
+				canSet = false;
+				send(new SendMessage("You need to set your look again as it was bugged!"));
+				defaultCharacterLook(this);
+			}
+		}
+		if(canSet) {
+			setGender(parts[0]);
+			setHead(parts[1]);
+			setBeard(parts[2]);
+			setTorso(parts[3]);
+			setArms(parts[4]);
+			setHands(parts[5]);
+			setLegs(parts[6]);
+			setFeet(parts[7]);
+			pHairC = parts[8];
+			pTorsoC = parts[9];
+			pLegsC = parts[10];
+			pFeetC = parts[11];
+			pSkinC = parts[12];
+			playerLooks = parts;
+			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+		}
 	}
 
 	public boolean runeCheck() {
@@ -5686,6 +5757,7 @@ public class Client extends Player implements Runnable {
 			send(new SendString("", 2811));
 			send(new SendString("", 2831));
 			randomed = true;
+			clearTabs();
 			showInterface(2808);
 		}
 	}
@@ -6172,6 +6244,9 @@ public class Client extends Player implements Runnable {
 		/* Prayer action */
 		prayerAction = -1;
 		boneItem = -1;
+		/* dialogue! */
+		NpcWanneTalk = 0;
+		nextDiag = -1;
 		/* Animation shiez?! */
 		if (full) rerequestAnim();
 	}
@@ -6201,21 +6276,30 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void fill() {
-		if (fillingObj == 879) {
-			if(playerHasItem(229)) {
-				deleteItem(229, 1);
-				addItem(227, 1);
-				checkItemUpdate();
-				requestAnim(832, 0);
-			} else resetAction();
+		if (fillingObj == 879 || fillingObj == 873 || fillingObj == 874 || fillingObj == 6232 ||
+				fillingObj == 12279 || fillingObj == 14868 || fillingObj == 20358 || fillingObj == 25929) {
+			boolean canFill = fillStuff(229, 227, 832) || fillStuff(1980, 4458, 832) || fillStuff(1935, 1937, 832) ||
+			fillStuff(1825, 1823, 832) || fillStuff(1827, 1823, 832) || fillStuff(1829, 1823, 832) ||
+			fillStuff(1831, 1823, 832) || fillStuff(1925, 1929, 832) || fillStuff(1923, 1921, 832);
+			if(!canFill)
+				resetAction();
 		} else if (fillingObj == 14890) {
-			if(playerHasItem(1925)) {
-				deleteItem(1925, 1);
-				addItem(1783, 1);
-				checkItemUpdate();
-				requestAnim(895, 0);
-			} else resetAction();
+			if(!fillStuff(1925, 1783, 895))
+				resetAction();
+		} else if (fillingObj == 884 || fillingObj == 878 || fillingObj == 6249) {
+			if(!fillStuff(1925, 1929, 832))
+				resetAction();
 		}
+	}
+	private boolean fillStuff(int itemId, int fillId, int emote) {
+		if(playerHasItem(itemId)) {
+			deleteItem(itemId, 1);
+			addItem(fillId, 1);
+			checkItemUpdate();
+			requestAnim(emote, 0);
+			return true;
+		}
+		return false;
 	}
 
 	public long getSpinSpeed() {
@@ -7419,7 +7503,6 @@ public class Client extends Player implements Runnable {
 				playerPotato.clear();
 				return;
 			}
-
 		if (convoId == 0) {
 			if (button == 1) {
 				openUpBank();
@@ -7429,6 +7512,32 @@ public class Client extends Player implements Runnable {
 		}
 		if (NpcDialogue == 12) { //Slayer dialogue
 			nextDiag = button == 1 ? 13 : button == 2 ? 31 : button == 4 ? 14 : 34;
+		}
+		if(NpcDialogue == 20) { //Carpet Travel!
+			faceNpc(-1);
+			int missing = 5000;
+			long amount = getInvAmt(995) + getBankAmt(995);
+			/* Payment! */
+			if(amount >= 5000) {
+				if(getInvAmt(995) >= missing)
+					deleteItem(995, missing);
+				else {
+					missing -= getInvAmt(995);
+					deleteItem(995, getInvAmt(995));
+				}
+				if(missing > 0) deleteItemBank(995, missing);
+				checkItemUpdate();
+			}
+			/* Options to carpet transport! */
+			DesertCarpet carpet = new DesertCarpet(this);
+			if(button >= 4) {
+				showPlayerChat(new String[]{"No, thank you."}, 614);
+			} else if(amount < 5000)
+				showNPCChat(NpcTalkTo, 594, new String[]{"You do not have enough coins to do this!", "You are currently missing "+(missing - amount)+" coins."});
+			else if(NpcTalkTo == 17) carpet.sophanem(button - 1);
+			else if(NpcTalkTo == 19) carpet.bedabinCamp(button - 1);
+			else if(NpcTalkTo == 20) carpet.pollnivneach(button - 1);
+			else if(NpcTalkTo == 22) carpet.nardah(button - 1);
 		}
 		if (NpcDialogue == 32) { //Slayer dialogue
 			if (button == 1)
@@ -7566,12 +7675,12 @@ public class Client extends Player implements Runnable {
 			} else
 				send(new RemoveInterfaces());
 		} else if (NpcDialogue == 2182) {
-			if(checkUnlockPaid(1) > 0 || checkUnlock(1)) {
+			if (checkUnlockPaid(1) > 0 || checkUnlock(1)) {
 				showNPCChat(NpcTalkTo, 591, new String[]{"You have already paid me.", "Please step into my cave."});
-			} else if(button == 1) {
-				if(getInvAmt(621) > 0 || getBankAmt(621) > 0) {
+			} else if (button == 1) {
+				if (getInvAmt(621) > 0 || getBankAmt(621) > 0) {
 					addUnlocks(1, "1", checkUnlock(1) ? "1" : "0");
-					if(getInvAmt(621) > 0)
+					if (getInvAmt(621) > 0)
 						deleteItem(621, 1);
 					else deleteItemBank(621, 1);
 					checkItemUpdate();
@@ -7580,16 +7689,24 @@ public class Client extends Player implements Runnable {
 			} else if (button == 2) {
 				long amount = getInvAmt(995) + getBankAmt(995);
 				int total = 300_000;
-				if(amount >= total) {
+				if (amount >= total) {
 					addUnlocks(1, "1", checkUnlock(1) ? "1" : "0");
 					int remain = total - getInvAmt(995);
 					deleteItem(995, total);
-					if(remain > 0)
+					if (remain > 0)
 						deleteItemBank(995, remain);
 					checkItemUpdate();
 					showNPCChat(NpcTalkTo, 591, new String[]{"You can now step into the cave."});
-				} else showNPCChat(NpcTalkTo, 596, new String[]{"You need atleast "+(300_000 - amount)+" more coins to enter my cave!"});
+				} else
+					showNPCChat(NpcTalkTo, 596, new String[]{"You need atleast " + (300_000 - amount) + " more coins to enter my cave!"});
 			}
+		} else if (NpcDialogue == 4759) { //Zahur conversation!
+			if (button == 1) {
+				send(new RemoveInterfaces());
+				openUpShop(39);
+			} else if(button == 2) nextDiag = 4756;
+			else if(button == 3) nextDiag = 4757;
+			else send(new RemoveInterfaces());
 		} else if (NpcDialogue == 6483) {
 			if(button == 1)
 				nextDiag = NpcDialogue + 1;
@@ -7776,7 +7893,6 @@ public class Client extends Player implements Runnable {
 				getPlunder.resetPlunder();
 			send(new RemoveInterfaces());
 		} else if (NpcDialogue == 48054) {
-			resetDialogueChat();
 			if(getInvAmt(621) < 1) {
 				send(new SendMessage("You need a ship ticket to unlock this travel!"));
 			} else if (button == 1) {
@@ -7931,11 +8047,20 @@ public class Client extends Player implements Runnable {
 		getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
 	}
 
-	public void AddToCords(int X, int Y) {
-		newWalkCmdSteps = Math.abs(X + Y);
+	public void AddToCords(int X, int Y, boolean run) {
+		if(X < 0 && Y > 0)
+			newWalkCmdSteps = Math.abs(Y - X);
+		else if(Y < 0 && X > 0)
+			newWalkCmdSteps = Math.abs(X - Y);
+		else if(Y < 0 && X < 0)
+			newWalkCmdSteps = Math.abs(-X - Y);
+		else newWalkCmdSteps = Math.abs(X + Y);
+
+		if(newWalkCmdSteps == 1) newWalkCmdSteps = 2; //Need this incase value is 1!
 		if (newWalkCmdSteps % 2 != 0) {
 			newWalkCmdSteps /= 2;
 		}
+
 		if (++newWalkCmdSteps > 50) {
 			newWalkCmdSteps = 0;
 		}
@@ -7950,7 +8075,7 @@ public class Client extends Player implements Runnable {
 		newWalkCmdX[0] = newWalkCmdY[0] = tmpNWCX[0] = tmpNWCY[0] = 0;
 		int j1 = getPosition().getY();
 		j1 -= mapRegionY * 8;
-		newWalkCmdIsRunning = false;
+		newWalkCmdIsRunning = run; //isRunning = run;
 		for (i = 0; i < newWalkCmdSteps; i++) {
 			newWalkCmdX[i] += l;
 			newWalkCmdY[i] += j1;
@@ -7994,10 +8119,13 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWordA(speed[1]);
 		getOutputStream().writeByteA(speed[2]);*/
 	}
-
-	public void AddToCords(int X, int Y, long time) {
-		walkBlock = System.currentTimeMillis() + time;
-		AddToCords(X, Y);
+	public void AddToWalkCords(int X, int Y, long time) {
+		if(time > 0) walkBlock = System.currentTimeMillis() + time;
+		AddToCords(X, Y, false);
+	}
+	public void AddToRunCords(int X, int Y, long time) {
+		if(time > 0) walkBlock = System.currentTimeMillis() + time;
+		AddToCords(X, Y, true);
 	}
 
 	public void startAttack(Entity enemy) {
@@ -8022,12 +8150,10 @@ public class Client extends Player implements Runnable {
 		faceTarget(65535);
 	}
 
-	private void requestWeaponAnims() {
+	public void requestWeaponAnims() {
 		setStandAnim(Server.itemManager.getStandAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
 		setWalkAnim(Server.itemManager.getWalkAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
 		setRunAnim(Server.itemManager.getRunAnim(getEquipment()[Equipment.Slot.WEAPON.getId()]));
-		//Need to do some code here about fightType!
-		//fightType, weaponType
 	}
 
 	public int getWildLevel() {
@@ -8328,8 +8454,7 @@ public class Client extends Player implements Runnable {
 		this.skillY = skillY;
 		if (WanneBank > 0)
 			WanneBank = 0;
-		if (NpcWanneTalk > 0)
-			NpcWanneTalk = 0;
+		if (NpcWanneTalk > 0) NpcWanneTalk = 0;
 	}
 
 	public void spendTickets() {
@@ -9025,7 +9150,7 @@ public class Client extends Player implements Runnable {
 		teleportToZ = pos.getZ();
 	}
 	public void resetActionTeleport() {
-		if(getPositionName(getPosition()) == positions.DESERT_MENAPHOS) //Test area boost! MAybe do this for raid :O ?
+		if(getPositionName(getPosition()) == positions.DESERT_MENAPHOS && effects.get(2) > 0) //Test area boost! MAybe do this for raid :O ?
 			addEffectTime(2, 0);
 	}
 

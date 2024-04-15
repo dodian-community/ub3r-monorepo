@@ -56,6 +56,7 @@ public class PacketHandler {
         packets[155] = new ClickNpc();
         packets[17] = new ClickNpc2();
         packets[21] = new ClickNpc3();
+        packets[18] = new ClickNpc4();
 
         packets[128] = new TradeRequest();
         packets[139] = new Trade();

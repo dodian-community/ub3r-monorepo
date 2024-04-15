@@ -37,7 +37,7 @@ public class ClickNpc2 implements Packet {
                     return;
                 }
 
-                if (!client.goodDistanceEntity(tempNpc, 1)) {
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
                     return;
                 }
 
@@ -50,24 +50,15 @@ public class ClickNpc2 implements Packet {
     }
 
     public void clickNpc2(Client client, Npc tempNpc) {
-        int npcId = tempNpc.getId();
-        client.faceNpc(tempNpc.getSlot());
-        long time = System.currentTimeMillis();
-        if (time - client.globalCooldown[0] <= 50) {
-            client.send(new SendMessage("Action throttled... please wait longer before acting!"));
-            return;
-        }
-
-        client.globalCooldown[0] = time;
-        int npcX = tempNpc.getPosition().getX();
-        int npcY = tempNpc.getPosition().getY();
         if (!tempNpc.isAlive()) {
             client.send(new SendMessage("That monster has been killed!"));
             return;
         }
-
-        client.skillX = npcX;
-        client.setSkillY(npcY);
+        int npcId = tempNpc.getId();
+        client.resetAction();
+        client.faceNpc(tempNpc.getSlot());
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
         client.startFishing(npcId, 2);
 
         switch (npcId) {
@@ -83,6 +74,8 @@ public class ClickNpc2 implements Packet {
             client.stairDistance = 1;
         } else if (npcId == 1174) {
             client.WanneShop = 19;
+        } else if (npcId == 4753) {
+            client.WanneShop = 39;
         } else if (npcId == 2345) {
             client.NpcWanneTalk = npcId + 1;
         } else if (npcId == 2180) {
@@ -121,6 +114,14 @@ public class ClickNpc2 implements Packet {
             client.WanneShop = 36;
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 13;
+        } else if (npcId == 17) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 19) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 20) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 22) {
+            client.NpcWanneTalk = 20;
         } else {
             client.println_debug("atNPC 2: " + npcId);
         }

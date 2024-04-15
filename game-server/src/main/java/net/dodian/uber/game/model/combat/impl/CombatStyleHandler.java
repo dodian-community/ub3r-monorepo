@@ -132,17 +132,15 @@ public abstract class CombatStyleHandler {
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 2423:
-                if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.LUNGE_STR;
-                    player.fightType = 2;
-                } else if (player.fightType == 0)
+                if (player.fightType == 0)
                     player.weaponStyle = player.weaponStyle.CHOP;
                 else if (player.fightType == 2)
                     player.weaponStyle = player.weaponStyle.SLASH;
+                else if (player.fightType == 3)
+                    player.weaponStyle = player.weaponStyle.CONTROLLED;
                 else
                     player.weaponStyle = player.weaponStyle.BLOCK;
-                player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
+                player.varbit(43, player.fightType == 1 ? 3 : player.fightType == 0 ? 0 : player.fightType - 1);
                 break;
             case 3796:
                 if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT

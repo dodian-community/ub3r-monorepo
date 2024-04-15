@@ -11,9 +11,11 @@ import net.dodian.utilities.Misc;
  */
 public class NpcDrop {
 
-    private int id, minAmount, maxAmount;
-    private double percent;
-    private boolean rareShout = false;
+    private final int id;
+    private final int minAmount;
+    private final int maxAmount;
+    private final double percent;
+    private boolean rareShout;
 
     public NpcDrop(int id, int min, int max, double percent, boolean shout) {
         this.id = id;

@@ -11,7 +11,7 @@ public class Item {
     private int runAnim;
     private int attackAnim = 0;
     private int shopSellValue = 1, shopBuyValue = 0;
-    private int[] bonuses = new int[12];
+    private final int[] bonuses = new int[12];
     private boolean stackable = false;
     private boolean noteable = false;
     private boolean tradeable = true;
@@ -50,7 +50,7 @@ public class Item {
                 attackAnim = 451;
             premium = row.getInt("premium") == 1;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("item stuff wrong during load.." + e);
         }
     }
 

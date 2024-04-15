@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.item;
 
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -14,7 +13,7 @@ import java.util.Map;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ItemManager {
-    public Map<Integer, Item> items = new HashMap<Integer, Item>();
+    public Map<Integer, Item> items = new HashMap<>();
     final int defaultStandAnim = 808, defaultWalkAnim = 819, defaultRunAnim = 824, defaultAttackAnim = 806;
 
     public ItemManager() {
@@ -86,7 +85,7 @@ public class ItemManager {
     }
 
     public void loadItems() {
-        Statement s = null;
+        Statement s;
         try {
             try {
                 s = getDbConnection().createStatement();
@@ -97,21 +96,21 @@ public class ItemManager {
                 System.out.println("Loaded " + items.size() + " item definitions...");
                 s.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("item load wrong 1.." + e);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("item load wrong 2.." + e);
         }
     }
 
     public boolean isNote(int id) {
         Item i = items.get(id);
-        return i == null || id < 0 ? false : i.getNoteable();
+        return i != null && id >= 0 && i.getNoteable();
     }
 
     public boolean isStackable(int id) {
         Item i = items.get(id);
-        return i == null || id < 0 ? false : i.getStackable();
+        return i != null && id >= 0 && i.getStackable();
     }
 
     public boolean isTwoHanded(int id) {
@@ -197,10 +196,7 @@ public class ItemManager {
         if (id < 0)
             return false;
         Item i = items.get(id);
-        if (i != null && i.getSlot() == 4 && i.full) {
-            return true;
-        }
-        return false;
+        return i != null && i.getSlot() == 4 && i.full;
     }
 
     public boolean isFullHelm(int id) {
@@ -259,8 +255,8 @@ public class ItemManager {
                 String prefix = "";
                 if (isNote(i.getId()))
                     prefix = " (NOTED)";
-                c.send(new SendMessage(Character.toUpperCase(name.charAt(0)) + name.substring(1) + "" + prefix
-                        + ": Sell Price: " + i.getShopBuyValue() + ". Alchemy Price: " + i.getAlchemy() + ""));
+                c.send(new SendMessage(Character.toUpperCase(name.charAt(0)) + name.substring(1) + prefix
+                        + ": Sell Price: " + i.getShopBuyValue() + ". Alchemy Price: " + i.getAlchemy()));
                 send = true;
             }
         }

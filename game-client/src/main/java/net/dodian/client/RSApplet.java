@@ -565,6 +565,11 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
             Client.setTab(2);
         } else if(i == KeyEvent.VK_F7) {
             Client.setTab(1);
+        } else if(keyevent.isControlDown() && i == KeyEvent.VK_H) {
+            c.sendPacket185(21741, -1, 135); //Home teleport key aka Yanille!
+        } else if(keyevent.isControlDown() && i == KeyEvent.VK_P) {
+            int id = Client.lastTeleport;
+            if(id != -1) c.sendPacket185(id, -1, 135);
         }
         if (keyevent.isShiftDown()) {
             Client.shiftIsDown = true;

@@ -22,6 +22,12 @@ public final class EntityDef {
 
     private static void customValues(EntityDef def) {
         int id = (int) def.interfaceType;
+        if (id == 100 || id == 5935)
+            def.minimapDot = true;
+        if (id == 6080) {
+            def.standAnim = 6666;
+            def.walkAnim = 6666;
+        }
         if (id == 1510)
             def.actions = new String[]{"Shrimp", null, "Trout", null, null};
         if (id == 1511)
@@ -32,9 +38,19 @@ public final class EntityDef {
             def.actions = new String[]{"Sea Turtle", null, "Manta Ray", null, null};
         if (id == 2180)
             def.actions = new String[]{"Talk-to", null, "Pay", null, null};
+        if (id == 4753)
+            def.actions = new String[]{"Talk-to", null, "Trade", "Clean herbs", "Make unfinish potion(s)"};
         if (id == 4304) { //Kalphite King
             def.name = "Kalphite King";
-            def.combatLevel = 365;
+            def.combatLevel = 402;
+        }
+        if (id == 4303) { //Kalphite King
+            def.name = "Kalphite Queen";
+            def.combatLevel = 402;
+        }
+        if (id == 6610) { //Venenatis
+            def.name = "Spider Queen";
+            def.combatLevel = 402;
         }
     }
 
@@ -279,7 +295,7 @@ public final class EntityDef {
             else if (i == 92)
                 stream.readUnsignedWord();
             else if (i == 93)
-                aBoolean87 = false;
+                minimapDot = false;
             else if (i == 95)
                 combatLevel = stream.readUnsignedWord();
             else if (i == 97)
@@ -332,7 +348,7 @@ public final class EntityDef {
         anInt83 = -1;
         aBoolean84 = true;
         anInt86 = 128;
-        aBoolean87 = true;
+        minimapDot = true;
         anInt91 = 128;
         aBoolean93 = false;
     }
@@ -363,7 +379,7 @@ public final class EntityDef {
     public boolean aBoolean84;
     public int anInt85;
     public int anInt86;
-    public boolean aBoolean87;
+    public boolean minimapDot;
     public int childrenIDs[];
     public byte description[];
     public int anInt91;
