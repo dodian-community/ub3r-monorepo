@@ -13,6 +13,7 @@ import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.model.player.skills.agility.DesertCarpet;
 import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 
 import java.util.Objects;
@@ -52,7 +53,7 @@ public class ClickNpc implements Packet {
                     return;
                 }
 
-                if (!client.goodDistanceEntity(tempNpc, 1)) {
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
                     return;
                 }
 
@@ -65,7 +66,12 @@ public class ClickNpc implements Packet {
     }
 
     public void clickNpc(Client client, Npc tempNpc) {
+        if (!tempNpc.isAlive()) {
+            client.send(new SendMessage("That monster has been killed!"));
+            return;
+        }
         int npcId = tempNpc.getId();
+        client.resetAction();
         client.faceNpc(tempNpc.getSlot());
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
@@ -165,6 +171,16 @@ public class ClickNpc implements Packet {
             client.convoId = 4;
         } else if (npcId == 1174) {
             client.NpcWanneTalk = npcId;
+        } else if (npcId == 4753) {
+            client.NpcWanneTalk = npcId;
+        } else if (npcId == 17) {
+            client.NpcWanneTalk = 17;
+        } else if (npcId == 19) {
+            client.NpcWanneTalk = 17;
+        } else if (npcId == 20) {
+            client.NpcWanneTalk = 17;
+        } else if (npcId == 22) {
+            client.NpcWanneTalk = 17;
         } else if (npcId == 943) {
             int num = 0;
             for (Player p : PlayerHandler.players) {

@@ -20,14 +20,14 @@ public class GroundItem {
         this.id = id;
         this.amount = amount;
         this.dropper = dropper;
-        this.npc = npcId >= 0 ? true : false;
+        this.npc = npcId >= 0;
         if (npc)
             this.npcId = npcId;
         if(!Server.itemManager.isTradable(this.id)) { //untradeable items!!
             this.timeToDespawn = this.timeToDespawn + this.timeToShow;
             this.timeToShow = -1;
             this.type = 1;
-        } else this.type = 2;
+        }
         if (dropper > 0 && Server.playerHandler.validClient(dropper)) {
             Server.playerHandler.getClient(dropper).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
             playerId = Server.playerHandler.getClient(dropper).dbId;
@@ -58,7 +58,7 @@ public class GroundItem {
             this.timeToDespawn = drop[3];
             this.timeToShow = -1;
             this.type = 1;
-        } else this.type = 2;
+        }
         if (drop[0] >= 0 && Server.playerHandler.validClient(drop[0])) {
             Server.playerHandler.getClient(drop[0]).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
             playerId = Server.playerHandler.getClient(drop[0]).dbId;

@@ -75,6 +75,35 @@ public class ClickingButtons implements Packet {
                 client.setRefundOptions();
             return;
         }
+        if(client.herbMaking != -1) { //Herb making code
+            int size = client.herbOptions.size();
+            int checkSlot = 1;
+            int position = size - client.herbMaking;
+            if(actionButton == 9158 || actionButton == 9168 || actionButton == 9179 || actionButton == 9191)
+                checkSlot = 2;
+            else if(actionButton == 9169 || actionButton == 9180 || actionButton == 9192)
+                checkSlot = 3;
+            else if(actionButton == 9181 || actionButton == 9193)
+                checkSlot = 4;
+            else if(actionButton == 9194)
+                checkSlot = 5;
+            if(client.herbMaking == 0 && ((size > 3 && checkSlot == 5) || (size == 3 && checkSlot == 4) || (size == 1 && checkSlot == 2) || (size == 2 && checkSlot == 3))) { //Close!
+                client.herbMaking = -1;
+                client.send(new RemoveInterfaces());
+            } else if((position > 3) && checkSlot == 4)
+                client.herbMaking += 3;
+            else if(client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5)))
+                client.herbMaking -= 3;
+            else if (client.herbMaking + checkSlot <= size) { //When press button show us x amount interface
+                client.send(new RemoveInterfaces());
+                client.XinterfaceID = 4753;
+                client.XremoveSlot = client.herbMaking + checkSlot;
+                client.herbMaking = -1;
+                client.getOutputStream().createFrame(27);
+            }
+            client.setHerbOptions();
+            return;
+        }
         Emotes.doEmote(actionButton, client);
         switch (actionButton) {
             case 58073:
@@ -523,6 +552,7 @@ public class ClickingButtons implements Packet {
                     }
                 } else if (client.randomed && client.actionButtonId == client.statId[client.random_skill]) {
                     client.randomed = false;
+                    client.resetTabs();
                     client.send(new RemoveInterfaces());
                     if (!client.addItem(2528, 1)) {
                         Ground.addFloorItem(client, 2528, 1);
@@ -645,14 +675,14 @@ public class ClickingButtons implements Packet {
 
             case 14220: //Mace spike!
             case 33018: // jab (hally)
-            case 9127: // Controlled
             case 48009: // lash (whip)
+            case 9127: // Controlled
             case 18077: // lunge (spear)
             case 18080: // swipe (spear)
             case 18079: // pound (spear)
                 client.weaponStyle = actionButton == 14220 ? Player.fightStyle.SPIKE : actionButton == 33018 ? Player.fightStyle.JAB :
                 actionButton == 18077 ? Player.fightStyle.LUNGE : actionButton == 18079 ? Player.fightStyle.POUND_CON : actionButton == 18080 ? Player.fightStyle.SWIPE :
-                        Player.fightStyle.LASH;
+                actionButton == 9127 ? Player.fightStyle.CONTROLLED : Player.fightStyle.LASH;
                 client.fightType = 3;
                 CombatStyleHandler.setWeaponHandler(client);
             break;
@@ -660,13 +690,13 @@ public class ClickingButtons implements Packet {
             case 1079: // pound (staff)
             case 1176: // Gmaul!
             case 14221: //Mace pummel!
-            case 9128: // Aggressive
             case 18106: // slash 2h
             case 30091: // Slash claws
             case 22230: // kick (unarmed)
             case 21203: // impale (pickaxe)
             case 21202: // smash (pickaxe)
             case 18105: //Smash 2h
+            case 9128: // Aggressive
             case 6170: // smash (axe)
             case 6171: // hack (axe)
             case 33020: // swipe (hally)
@@ -690,7 +720,7 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 9154: // Log out
-                if (System.currentTimeMillis() < client.walkBlock) {
+                if (System.currentTimeMillis() < client.walkBlock && !client.UsingAgility) {
                     client.send(new SendMessage("You are unable to logout right now."));
                     break;
                 }
@@ -1084,7 +1114,11 @@ public class ClickingButtons implements Packet {
             case 83097:
                 client.questPage = client.questPage == 0 ? 1 : 0;
             break;
-
+            case 23132: //Morph shiet!
+            if(client.morph) {
+                client.unMorph();
+            }
+            break;
             default:
                 // System.out.println("Player stands in: X="+absX+" Y="+absY);
                 if (client.playerRights > 1) {

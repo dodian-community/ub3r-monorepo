@@ -198,7 +198,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         playerProps.writeByte(player.getGender());
         playerProps.writeByte((byte) player.headIcon); // Head icon aka prayer over head
         playerProps.writeByte((byte) player.skullIcon); // Skull icon
-        if (!player.isNpc()) {
+        if (!player.isNpc) {
             if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
                 playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
             } else {

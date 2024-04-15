@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Misc;
@@ -54,7 +53,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY(), 0);
+                    c.transport(new Position(pos.getX(), pos.getY(), 0));
                     giveEndExperience(160, true);
                     Ground.addFloorItem(c, new Position(x, y, 0), 4179, 1, 100);
                     c.UsingAgility = false;
@@ -72,7 +71,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY(), 0);
+                    c.transport(new Position(pos.getX(), pos.getY(), 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -89,7 +88,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY(), 0);
+                    c.transport(new Position(pos.getX(), pos.getY(), 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -106,7 +105,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY(), 0);
+                    c.transport(new Position(pos.getX(), pos.getY(), 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -123,7 +122,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY(), 0);
+                    c.transport(new Position(pos.getX(), pos.getY(), 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -153,7 +152,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY() + 1, 0);
+                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -171,7 +170,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY() + 1, 0);
+                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -189,7 +188,7 @@ public class Werewolf {
                         stop();
                         return;
                     }
-                    c.teleportTo(pos.getX(), pos.getY() + 1, 0);
+                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
                     giveEndExperience(160, true);
                     c.UsingAgility = false;
                     stop();
@@ -210,9 +209,8 @@ public class Werewolf {
             c.UsingAgility = true;
             final Npc npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 2); //shouting npc #2
             npc.setText("You smell good!!");
-            final int oldEmote = c.getWalkAnim();
             c.setWalkAnim(746);
-            c.AddToCords(0, 6, 3600);
+            c.AddToWalkCords(0, 6, 3600);
             EventManager.getInstance().registerEvent(new Event(600) {
                 int part = 0;
 
@@ -223,7 +221,7 @@ public class Werewolf {
                     }
                     part++;
                     if (part == 6) {
-                        c.setWalkAnim(oldEmote);
+                        c.requestWeaponAnims();
                         c.requestAnim(748, 0);
                         giveEndExperience(600, true);
                         c.UsingAgility = false;
@@ -247,16 +245,15 @@ public class Werewolf {
             c.UsingAgility = true;
             final Npc npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 3); //shouting npc #3
             npc.setText("You fetch good... Now bleed!");
-            final int oldEmote = c.getWalkAnim();
             c.setWalkAnim(737);
-            c.AddToCords(-3, 0, 1800);
+            c.AddToWalkCords(-3, 0, 1800);
             EventManager.getInstance().registerEvent(new Event(1800) {
                 public void execute() {
                     if (c.disconnected) {
                         stop();
                         return;
                     }
-                    c.setWalkAnim(oldEmote);
+                    c.requestWeaponAnims();
                     giveEndExperience(400, true);
                     c.UsingAgility = false;
                     stop();
@@ -280,17 +277,16 @@ public class Werewolf {
             final Npc lastNpc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 5); //shouting last npc
             npc.setText("Run adventurer.. RUN!!!");
             //TODO: Get the right animation!
-            final int oldEmote = c.getWalkAnim();
-            c.setWalkAnim(904);
-            int time = 22800; //38 distance!
-            c.AddToCords(0, -38, time);
+            c.setRunAnim(904);
+            int time = 22800 / 2; //38 distance!
+            c.AddToRunCords(0, -38, time);
             EventManager.getInstance().registerEvent(new Event(time) {
                 public void execute() {
                     if (c.disconnected) {
                         stop();
                         return;
                     }
-                    c.setWalkAnim(oldEmote);
+                    c.requestWeaponAnims();
                     giveEndExperience(1500, true);
                     lastNpc.setText("Hand in that juicy stick to me!");
                     c.UsingAgility = false;
@@ -305,7 +301,7 @@ public class Werewolf {
             c.showNPCChat(5927, 616, new String[]{"Thank you for that juicy stick.", "Have some agility knowledge!"});
             c.deleteItem(4179, 1);
             c.checkItemUpdate();
-            giveEndExperience(5500, false);
+            giveEndExperience(4000, false);
         } else c.showNPCChat(5927, 616, new String[]{"You do not have a stick to give me!"});
     }
 

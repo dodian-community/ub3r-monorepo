@@ -4,9 +4,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
-import net.dodian.uber.game.model.player.packets.outgoing.RemoveGroundItem;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 

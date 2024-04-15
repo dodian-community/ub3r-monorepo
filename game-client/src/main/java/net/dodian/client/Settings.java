@@ -67,6 +67,7 @@ public class Settings extends HashMap<String, String> {
         this.put("username", "");
         this.put("Announce", "0");
         this.put("Gather", "0");
+        this.put("Teleport", "-1");
     }
 
     public void saveSettings() {

@@ -92,11 +92,16 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
         client.send(new SendMessage("ItemOnObject: " + objectId + " at " + objectPosition.copy().toString()));
         return;
     }
-    if (item == 229 && objectId == 879) {
+    if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
+     objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929) { //Water source!
         client.fillingObj = objectId;
         client.filling = true;
     }
-    if (item == 1925 && objectId == 14890) {
+    if (objectId == 884 || objectId == 878 || objectId == 6249) { //Bucket on well!
+        client.fillingObj = objectId;
+        client.filling = true;
+    }
+    if (objectId == 14890) { //Sand pit
         client.fillingObj = objectId;
         client.filling = true;
     }

@@ -18,6 +18,7 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.packets.outgoing.SendSideTab;
 import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -70,9 +71,8 @@ public abstract class Player extends Entity {
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
-    private boolean crit, crit2;
     private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
-    private boolean isNpc;
+    public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
     public int actionTimer = 0;
@@ -139,6 +139,9 @@ public abstract class Player extends Entity {
      functionId (1 = use item on entity, 2 = click entity)
      */
     public ArrayList<Integer> playerPotato = new ArrayList<>();
+    //Herblore service
+    public int herbMaking = -1;
+    public ArrayList<RewardItem> herbOptions = new ArrayList<>();
     //Slayer
     private final ArrayList<Integer> slayerData = new ArrayList<>();
     private final ArrayList<Boolean> travelData = new ArrayList<>();
@@ -283,7 +286,7 @@ public abstract class Player extends Entity {
 
     public enum fightStyle {
         PUNCH, KICK, BLOCK, // Unarmed
-        STAB, LUNGE_STR, SLASH, // Dagger & sword
+        STAB, LUNGE_STR, SLASH, CONTROLLED, // Dagger & sword
         CHOP, LUNGE, // Scimitar & longsword & 2h (Smash instead of lunge
         HACK, SMASH, // Axe & battleaxe
         POUND, PUMMEL, SPIKE, // BLOCK // Mace & warhammer
@@ -553,7 +556,8 @@ public abstract class Player extends Entity {
             primaryDirection = getNextWalkingDirection();
             if (primaryDirection == -1)
                 return; // standing
-            if (isRunning && !temp.UsingAgility) {
+
+            if (isRunning) {
                 secondaryDirection = getNextWalkingDirection();
             }
 
@@ -736,11 +740,9 @@ public abstract class Player extends Entity {
             return;
         }
         if (newWalkCmdSteps > 0) {
-            int firstX = newWalkCmdX[0], firstY = newWalkCmdY[0]; // the point
-
-            // travel backwards to find a proper connection vertex
+            int firstX = newWalkCmdX[0], firstY = newWalkCmdY[0]; // travel backwards to find a proper connection vertex
             int lastDir;
-            boolean found;
+            boolean found = false;
             numTravelBackSteps = 0;
             int ptr = wQueueReadPtr;
             int dir = Utils.direction(currentX, currentY, firstX, firstY);
@@ -754,12 +756,11 @@ public abstract class Player extends Entity {
                     travelBackY[numTravelBackSteps++] = walkingQueueY[ptr];
                     dir = Utils.direction(walkingQueueX[ptr], walkingQueueY[ptr], firstX, firstY);
                     if (lastDir != dir) {
-                        //Not sure if we need this here or not!
+                        found = true;
                         break;
                     }
                 } while (ptr != wQueueWritePtr);
-            }  //Not sure if needed!
-
+            } else found = true;
 
             wQueueWritePtr = wQueueReadPtr;
             addToWalkingQueue(currentX, currentY);
@@ -778,12 +779,8 @@ public abstract class Player extends Entity {
                     wayPointY1 = travelBackY[numTravelBackSteps - 2];
                 }
                 dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
-                if (dir == -1 || (dir & 1) != 0) {
-                    println_debug("Fatal: The walking queue is corrupt! wp1=(" + wayPointX1 + ", " + wayPointY1 + "), "
-                            + "wp2=(" + wayPointX2 + ", " + wayPointY2 + ")");
-                } else {
+                if (!(dir == -1 || (dir & 1) != 0)) {
                     dir >>= 1;
-                    found = false;
                     int x = wayPointX1, y = wayPointY1;
                     while (x != wayPointX2 || y != wayPointY2) {
                         x += Utils.directionDeltaX[dir];
@@ -807,7 +804,7 @@ public abstract class Player extends Entity {
                 addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
             }
         }
-        isRunning = (newWalkCmdIsRunning || buttonOnRun);
+        isRunning = UsingAgility || System.currentTimeMillis() < walkBlock ? newWalkCmdIsRunning : buttonOnRun;
         newWalkCmdSteps = 0;
     }
 
@@ -1208,14 +1205,7 @@ public abstract class Player extends Entity {
 
     public void setRunAnim(int playerSER) {
         this.playerSER = playerSER;
-    }
-
-    public boolean isNpc() {
-        return this.isNpc;
-    }
-
-    public void setNpcMode(boolean isNpc) {
-        this.isNpc = isNpc;
+        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
     public int getPlayerNpc() {
@@ -1426,6 +1416,10 @@ public abstract class Player extends Entity {
         KEYDUNG("in Key dungeon.", 2559, 2622, 9475, 9534),
         IKOVDUNG("in the Temple of Ikov.", 2626, 2750, 9784, 9918),
         PARTYROOM("in the Partyroom.", 3035, 3055, 3370, 3385),
+        SOPHANEM_CARPET("near carpet travel", 3285, 3288, 2811, 2815),
+        POLLNIVNEACH_CARPET("near carpet travel", 3348, 3351, 2999, 3003),
+        NARDAH_CARPET("near carpet travel", 3399, 3402, 2916, 2919),
+        BANDIT_CAMP_CARPET("near carpet travel", 3180, 3183, 3041, 3045),
         DESERT_NARDAH("in the Nardah.", 3396, 3452, 2885, 2942), //3396, 2942, 3452, 2885
         DESERT_SOPHANEM("in the Sophanem.", 3271, 3322, 2747, 2809),
         DESERT_MENAPHOS("in the Menaphos.", 3202, 3270, 2750, 2809),
@@ -1803,6 +1797,60 @@ public abstract class Player extends Entity {
         else { //Got this incase we need to do future stuff for item examine!
             c.send(new SendMessage(Server.itemManager.getExamine(id)));
         }
+    }
+
+    public void resetTabs() {
+        Client c = ((Client) this);
+        c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
+        c.setSidebarInterface(1, 24126); // skills tab
+        c.setSidebarInterface(2, 638); // quest tab
+        c.setSidebarInterface(3, 3213); // backpack tab
+        c.setSidebarInterface(4, 1644); // items wearing tab
+        c.setSidebarInterface(5, 5608); // pray tab
+        c.setSidebarInterface(6, c.ancients == 1 ? 12855 : 1151);
+        c.setSidebarInterface(7, -1); //Unsure what this is!
+        c.setSidebarInterface(8, 5065); // friend
+        c.setSidebarInterface(9, 5715); // ignore
+        c.setSidebarInterface(10, 2449); // logout tab
+        c.setSidebarInterface(11, 904); // wrench tab
+        c.setSidebarInterface(12, 147); // run tab
+        c.setSidebarInterface(13, 962); // harp tab
+    }
+    public void clearTabs() {
+        for (int i = 0; i <= 13; i++)
+            ((Client) this).setSidebarInterface(i, -1); // attack tab
+    }
+    public void morphTab(String text) {
+        clearTabs();
+        ((Client) this).send(new SendSideTab(3));
+        ((Client) this).send(new SendString(text, 6020));
+        ((Client) this).setSidebarInterface(3, 6014);
+    }
+    public void unMorph() {
+        resetTabs();
+        morph = false;
+        isNpc = false;
+        setPlayerNpc(-1);
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+    }
+
+    public void setHerbOptions() {
+        Client c = ((Client) this);
+        if(herbOptions.isEmpty()) {
+            herbMaking = -1;
+            c.nextDiag = -1;
+            return;
+        }
+        int slot = herbMaking;
+        String[] text = new String[herbOptions.size() < 4 ? herbOptions.size() + 2 : herbOptions.size() - slot <= 3 ? herbOptions.size() - slot + 2 : 6];
+        text[0] = "What do you wish me to do?";
+        int position = Math.min(3, herbOptions.size() - slot);
+        for(int i = 0; i < position; i++)
+            text[i + 1] = c.GetItemName(herbOptions.get(slot + i).getId());
+        text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
+        if(text.length == 6)
+            text[position + 2] = slot == 0 ? "Close" : "Previous";
+        c.showPlayerOption(text);
     }
 
 }

@@ -37,6 +37,7 @@ public class Walking implements Packet {
             client.resetWalkingQueue();
             return;
         }
+        if(client.morph) client.unMorph();
         /* Combat checks! */
         if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
             client.resetAttack();
@@ -75,6 +76,7 @@ public class Walking implements Packet {
             int firstStepY = client.getInputStream().readSignedWordBigEndian();
             firstStepY -= client.mapRegionY * 8;
             client.newWalkCmdIsRunning = client.getInputStream().readSignedByteC() == 1;
+
             for (int i = 0; i < client.newWalkCmdSteps; i++) {
                 client.newWalkCmdX[i] += firstStepX;
                 client.newWalkCmdY[i] += firstStepY;
@@ -117,7 +119,9 @@ public class Walking implements Packet {
                 client.NpcDialogueSend = false;
                 client.send(new RemoveInterfaces());
             }
+            /* Dialogue options! */
             if(client.refundSlot != -1) client.refundSlot = -1;
+            if(client.herbMaking != -1) client.herbMaking = -1;
             // banking
             if (client.IsBanking) {
                 client.send(new RemoveInterfaces());

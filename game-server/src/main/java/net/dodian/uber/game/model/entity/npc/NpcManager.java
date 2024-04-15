@@ -3,10 +3,6 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-/**
- * @author Owner
- *
- */
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
@@ -49,12 +45,12 @@ public class NpcManager {
             }
             System.out.println("Loaded " + amount + " Npc Spawns");
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("something off with npc spawn!" + e);
         }
         int extraSpawns = 0;
         gnomeSpawn = nextIndex;
-        for(int i = 0; i < gnomePosition.length; i++) {
-            createNpc(6080, gnomePosition[i], 0);
+        for (Position position : gnomePosition) {
+            createNpc(6080, position, 0);
             extraSpawns++;
         }
         werewolfSpawn = nextIndex;
@@ -78,7 +74,7 @@ public class NpcManager {
             } else
                 c.send(new SendMessage("No npc with id of " + id));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("npc drop wrong during drop reload.." + e);
         }
     }
 
@@ -97,7 +93,7 @@ public class NpcManager {
             c.send(new SendMessage("Finished updating all '" + getData(id).getName() + "' npcs!"));
             results.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("npc drop wrong during reload of data.." + e);
         }
     }
 
@@ -105,7 +101,7 @@ public class NpcManager {
         if (!data.containsKey(id)) {
             try {
                 Statement statement = getDbStatement();
-                statement.executeUpdate("INSERT INTO " + DbTables.GAME_NPC_DEFINITIONS + " SET id = " + id);
+                statement.executeUpdate("INSERT INTO " + DbTables.GAME_NPC_DEFINITIONS + "(id, name, examine, size) VALUES("+id+", 'no_name', 'no_examine', '1')");
                 ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id='" + id + "'");
                 if (results.next()) {
                     data.put(results.getInt("id"), new NpcData(results));
@@ -113,7 +109,7 @@ public class NpcManager {
                 }
                 results.close();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("error? " + e);
             }
         } else if (!table.equalsIgnoreCase("new npc")) {
             try {
@@ -128,8 +124,7 @@ public class NpcManager {
                     c.send(new SendMessage("row name '" + table + "' do not exist in the database!"));
                 else if (e.getMessage().contains("Incorrect integer"))
                     c.send(new SendMessage("row name '" + table + "' need a int value!"));
-                else
-                    e.printStackTrace();
+                else System.out.println("npc drop wrong during config reload.." + e);
             }
         }
     }
@@ -158,7 +153,7 @@ public class NpcManager {
             }
             System.out.println("Loaded " + amount + " Npc Drops");
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("npc drop wrong during load of data.." + e);
         }
     }
 

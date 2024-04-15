@@ -35,6 +35,25 @@ public class ClickItem3 implements Packet {
                 client.send(new SendMessage("you disassemble the "+client.GetItemName(itemId).toLowerCase()+"."));
             }
         }
+        if (itemId == 1921 || itemId == 4456) {
+            client.deleteItem(itemId, itemSlot, 1);
+            client.addItemSlot(1923, 1, itemSlot);
+            client.checkItemUpdate();
+        }
+        if (itemId >= 4458 && itemId <= 4482) {
+            client.deleteItem(itemId, itemSlot, 1);
+            client.addItemSlot(1980, 1, itemSlot);
+            client.checkItemUpdate();
+        }
+        if (itemId == 1783 || itemId == 1927 || itemId == 1929 || itemId == 4286 || itemId == 4687) { //bucket empty!
+            client.deleteItem(itemId, itemSlot, 1);
+            client.addItemSlot(1925, 1, itemSlot);
+            client.checkItemUpdate();
+            if(itemId == 1927) { //Bucket of milk
+                client.requestAnim(0x33D, 0);
+                client.send(new SendMessage("You drank the milk and gained 15% magic penetration!"));
+            }
+        }
         if(itemId == 4155)
             QuestSend.showMonsterLog(client);
     }

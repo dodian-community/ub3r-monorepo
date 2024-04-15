@@ -659,7 +659,7 @@ public class Commands implements Packet {
                     try {
                         int npcId = Integer.parseInt(cmd[1]);
                         if (npcId <= 8195) {
-                            client.setNpcMode(npcId >= 0);
+                            client.isNpc = npcId >= 0;
                             client.setPlayerNpc(npcId >= 0 ? npcId : -1);
                             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                         }
@@ -1013,7 +1013,7 @@ public class Commands implements Packet {
                         Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 1, yell, client.getPosition().getX(),
                                 client.getPosition().getY()));
                         if (client.playerRights == 0) {
-                            client.yell("[Y]<col=000000>" + client.getPlayerName() + "<col=000000>: " + yell);
+                            client.yell("[YELL]<col=000000>" + client.getPlayerName() + "<col=0000ff>: " + yell);
                         } else if (client.playerRights == 1) {
                             client.yell("<col=0B610B>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr1@");
                         } else if (client.playerRights >= 2) {
@@ -1195,7 +1195,7 @@ public class Commands implements Packet {
                     client.respawnBoss(4304);
                 else if(npcName.equalsIgnoreCase(client.boss_name[16])) //Venenatis
                     client.respawnBoss(6610);
-                else client.send(new SendMessage("Could not find npc!" + npcName));
+                else client.send(new SendMessage("Could not find boss: " + npcName));
             }
             if (command.startsWith("bosstele") && (getGameWorldId() > 1 || specialRights)) {
                 String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
@@ -1233,7 +1233,7 @@ public class Commands implements Packet {
                     client.triggerTele(2393, 5090, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[16])) //Venenatis
                     client.triggerTele(2393, 5090, 0,false);
-                else client.send(new SendMessage("Could not find npcspawn!" + npcName));
+                else client.send(new SendMessage("Could not find boss spawn for: " + npcName));
             }
             /* Beta commands*/
             if (getGameWorldId() > 1) {
@@ -1260,7 +1260,7 @@ public class Commands implements Packet {
                     try {
                         int npcId = Integer.parseInt(cmd[1]);
                         if (npcId <= 8195) {
-                            client.setNpcMode(npcId >= 0);
+                            client.isNpc = npcId >= 0;
                             client.setPlayerNpc(npcId >= 0 ? npcId : -1);
                             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                         }

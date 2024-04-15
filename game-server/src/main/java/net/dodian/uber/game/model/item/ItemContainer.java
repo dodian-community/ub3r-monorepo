@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 public class ItemContainer {
 
-    private ArrayList<GameItem> items;
+    private final ArrayList<GameItem> items;
 
     public ItemContainer(int size) {
-        this.items = new ArrayList<GameItem>();
+        this.items = new ArrayList<>();
         for (int i = 0; i < size; i++)
             items.add(new GameItem(-1, 0));
     }
