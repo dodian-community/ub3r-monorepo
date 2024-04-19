@@ -40,6 +40,29 @@ public final class EntityDef {
             def.actions = new String[]{"Talk-to", null, "Pay", null, null};
         if (id == 4753)
             def.actions = new String[]{"Talk-to", null, "Trade", "Clean herbs", "Make unfinish potion(s)"};
+        if (id == 4642)
+            def.actions = new String[]{"Talk-to", null, "Trade", null, null};
+        if(id == 4649)
+            def.combatLevel = 66;
+        if (id == 695)
+            def.actions = new String[]{null, "Attack","Pickpocket", null, null};
+        if (id == 690) { //Bandit camp
+            def.name = "Bandit boss";
+            def.combatLevel = 91;
+            def.actions = new String[]{null, "Attack",null, null, null};
+        }
+        if (id == 738 || id == 3551) { //Pollnivneach thug boss!
+            def.name = id == 738 ? "Pollnivneach bandit boss" : "Menaphite thug boss";
+            def.combatLevel = 81;
+            def.actions = new String[]{null, "Attack",null, null, null};
+        }
+        if (id == 736 || id == 3549) { //Pollnivneach
+            def.standAnim = 808;
+            def.walkAnim = 819;
+            def.name = id == 736 ? "Pollnivneach bandit" : "Menaphite thug";
+            def.combatLevel = 45;
+            def.actions = new String[]{null, "Attack", "Pickpocket", null, null};
+        }
         if (id == 4304) { //Kalphite King
             def.name = "Kalphite King";
             def.combatLevel = 402;

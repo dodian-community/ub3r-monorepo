@@ -7701,8 +7701,6 @@ public class Client extends RSApplet {
     public static Client instance;
 
     void startUp() {
-        System.out.println("Will Connect to game server using: " + server + ":" + port);
-
         drawLoadingText(20, "Starting up");
         new CacheDownloader(this).downloadCache();
         if (Signlink.cache_dat != null) {

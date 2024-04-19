@@ -249,10 +249,8 @@ public class LoginManager {
                     String[] lines = Boss.split(" ");
                     for (int i = 0; i < lines.length; i++) {
                         String[] parts = lines[i].split(":");
-                        if (parts.length >= 2 && p.boss_amount.length > i) {
-                            int amount = Integer.parseInt(parts[1]);
-                            p.boss_amount[i] = amount;
-                        }
+                        if (parts.length >= 2 && p.boss_amount.length > i)
+                            p.bossCount(parts[0], Integer.parseInt(parts[1]));
                     }
                 }
                 String Monster = results.getString("Monster_Log");

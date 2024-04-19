@@ -62,14 +62,15 @@ fun Client.handleMeleeAttack(): Int {
         if (target is Npc) {
             val npc = Server.npcManager.getNpc(target.slot)
             val name = npc.npcName().lowercase()
-            val wolfBane = equipment[Equipment.Slot.WEAPON.id] == 2952 &&  when {
+            val wolfBane = equipment[Equipment.Slot.WEAPON.id] == 2952 && landHit && when {
                 name.lowercase().contains("vampyre") -> true
                 name.lowercase().contains("werewolf") -> true
                 else -> false
             }
-            val keris = equipment[Equipment.Slot.WEAPON.id] == 10581 &&  when {
+            val keris = equipment[Equipment.Slot.WEAPON.id] == 10581 && landHit && when {
                 name.lowercase().contains("kalphite") -> true
                 name.lowercase().contains("scarab") -> true
+                name.lowercase().contains("locust") -> true
                 name.lowercase().contains("spider") -> true
                 else -> false
             }
@@ -233,7 +234,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
             1215 -> {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
-                stillgfx(252, target.position, 55, true)
+                callGfxMask(252, 100)
                 sendAnimation(1062)
                 /* Damage portion! */
                 if(hit >= npc.currentHealth) hit = npc.currentHealth
@@ -251,7 +252,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
             1215 -> {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
-                stillgfx(252, target.position, 55, true)
+                callGfxMask(252, 100)
                 sendAnimation(1062)
                 /* Damage portion! */
                 if(hit >= player.currentHealth) hit = player.currentHealth

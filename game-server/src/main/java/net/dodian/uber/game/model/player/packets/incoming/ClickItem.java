@@ -126,6 +126,7 @@ public class ClickItem implements Packet {
                     }
                 break;
                 case 315: //Shrimp
+                case 2140: //Chicken
                 case 2142: //Meat
                     client.eat(3, item, slot);
                     used = false;

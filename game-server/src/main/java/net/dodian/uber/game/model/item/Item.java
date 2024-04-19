@@ -41,13 +41,10 @@ public class Item {
             shopSellValue = row.getInt("shopSellValue");
             shopBuyValue = row.getInt("shopBuyValue");
             Alchemy = row.getInt("Alchemy");
-
             standAnim = row.getInt("standAnim");
             walkAnim = row.getInt("walkAnim");
             runAnim = row.getInt("runAnim");
             attackAnim = row.getInt("attackAnim");
-            if (attackAnim == 806)
-                attackAnim = 451;
             premium = row.getInt("premium") == 1;
         } catch (Exception e) {
             System.out.println("item stuff wrong during load.." + e);

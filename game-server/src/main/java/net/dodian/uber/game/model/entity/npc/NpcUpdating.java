@@ -26,7 +26,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void update(Player player, Stream stream) {
-        Stream updateBlock = new Stream(new byte[2048]);
+        Stream updateBlock = new Stream(new byte[8192]);
 
         stream.createFrameVarSizeWord(65);
         stream.initBitAccess();

@@ -31,20 +31,23 @@ public class SocketHandler implements Runnable {
 
     public void run() {
         try {
-            while(processRunning) {
-                if (isConnected()) {
-                    while (writeOutput());
-                    flush();
-                    while (parsePackets());
+        while (processRunning) {
+            if (isConnected()) {
+                while (writeOutput());
+                flush();
+                while (parsePackets());
                     LinkedList<PacketData> temp = packets.getPackets();
                     if (temp != null) myPackets.addAll(temp);
-                } else myPackets.clear();
+                    Thread.sleep(50);
+            } else {
+                myPackets.clear();
+                break;
             }
-            Thread.sleep(50);
-        } catch (java.lang.Exception _ex) {
-            YellSystem.alertStaff("Something is up with socket handler!");
-            System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
         }
+            } catch (java.lang.Exception _ex) {
+                YellSystem.alertStaff("Something is up with socket handler!");
+                System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
+            }
     }
 
     private boolean isConnected() {
@@ -64,7 +67,6 @@ public class SocketHandler implements Runnable {
             return socket.getInputStream();
         } catch (IOException e) {
             logout();
-            //initialized
         }
         return null;
     }

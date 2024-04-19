@@ -28,14 +28,11 @@ public class MagicOnPlayer implements Packet {
         int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
         Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];
         int EnemyHP2 = castOnPlayer.getCurrentHealth();
-        if (client.getCombatTimer() > 0) {
+        if (!client.GoodDistance(EnemyX3, EnemyY3, client.getPosition().getX(), client.getPosition().getY(), 5) || client.getCombatTimer() > 0) {
             return;
         }
         if (!client.canAttack) {
             client.send(new SendMessage("You cannot attack your oppenent yet!"));
-            return;
-        }
-        if (!client.GoodDistance(EnemyX3, EnemyY3, client.getPosition().getX(), client.getPosition().getY(), 5)) {
             return;
         }
         int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());

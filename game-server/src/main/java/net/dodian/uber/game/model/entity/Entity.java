@@ -117,6 +117,13 @@ public abstract class Entity {
         }
         return 1;
     }
+    public int getDistanceDelay(int distance, boolean magic) {
+        int delay;
+        if(magic)
+            delay = 1 + (int)Math.floor((1 + distance) / 3);
+        else delay = 1 + (int)Math.floor((3 + distance) / 6);
+        return delay;
+    }
 
     public Position getPosition() {
         return this.position;
