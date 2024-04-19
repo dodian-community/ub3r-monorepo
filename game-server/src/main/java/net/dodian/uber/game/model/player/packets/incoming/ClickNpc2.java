@@ -83,7 +83,8 @@ public class ClickNpc2 implements Packet {
         } else if (npcId == 3648) {
             client.setTravelMenu();
         } else if (npcId == 1779) { // Start plunder
-            client.getPlunder.startPlunder();
+            //client.getPlunder.startPlunder();
+            client.showNPCChat(1779, 605, new String[]{"What are you even doing in here?!", "Begone from me!"});
         } else if (npcId == 506 || npcId == 527) {
             client.WanneShop = 3; // Yanille General Store
         } else if (npcId == 4965) { // Gnome general store

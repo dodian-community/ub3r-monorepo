@@ -181,6 +181,8 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 17;
         } else if (npcId == 22) {
             client.NpcWanneTalk = 17;
+        } else if (npcId == 1779) { //Plunder dialogue TODO!
+            client.showNPCChat(1779, 605, new String[]{"What are you even doing in here?!", "Begone from me!"});
         } else if (npcId == 943) {
             int num = 0;
             for (Player p : PlayerHandler.players) {

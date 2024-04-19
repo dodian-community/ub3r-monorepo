@@ -29,7 +29,7 @@ public class MagicOnNpc implements Packet {
         int EnemyX2 = tempNpc.getPosition().getX();
         int EnemyY2 = tempNpc.getPosition().getY();
         int EnemyHP2 = tempNpc.getCurrentHealth();
-        int distance = 4;
+        int distance = 5;
 
         int slot = -1, type = 0;
         for (int i2 = 0; i2 < client.ancientId.length && slot == -1; i2++) {
@@ -38,12 +38,11 @@ public class MagicOnNpc implements Packet {
                 type = i2%4;
             }
         }
-        if(slot == -1) client.magicId = slot; //Not sure if we need this but just incase!
+        if(slot == -1) client.magicId = slot; //Negative if slot is -1!
 
-        if (!client.goodDistanceEntity(tempNpc, distance) || (client.goodDistanceEntity(tempNpc, distance) && !canAttackNpc(client, id)) || client.getCombatTimer() > 0) {
+        if (!client.goodDistanceEntity(tempNpc, distance) || (client.goodDistanceEntity(tempNpc, distance) && !canAttackNpc(client, id))) {
             return;
         }
-        client.magicId = -1; //Reset here for magicId just incase!
         if(client.goodDistanceEntity(tempNpc, distance)) {
             client.resetWalkingQueue();
         }
@@ -51,8 +50,8 @@ public class MagicOnNpc implements Packet {
             client.send(new SendMessage("That monster has already been killed!"));
             return;
         }
-            if (client.getLevel(Skill.MAGIC) < client.requiredLevel[slot]) {
-                client.send(new SendMessage("You need a magic level of " + client.requiredLevel[slot]));
+            if (client.getLevel(Skill.MAGIC) < client.requiredLevel[slot] || client.getCombatTimer() > 0) {
+                if(client.getLevel(Skill.MAGIC) < client.requiredLevel[slot]) client.send(new SendMessage("You need a magic level of " + client.requiredLevel[slot]));
                 return;
             }
                 if (client.runeCheck()) {

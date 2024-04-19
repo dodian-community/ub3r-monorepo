@@ -79,7 +79,7 @@ public enum QuestSend {
         c.send(new SendString("@gre@Discord", 7340));
         if(c.playerRights > 0) {
             c.send(new SendString("@lre@---------@dre@Moderator@lre@---------", 7346));
-            c.send(new SendString("@gre@GameCp", 7341));
+            c.send(new SendString("@gre@Game CP", 7341));
         }
         return null;
     }
@@ -198,7 +198,7 @@ public enum QuestSend {
                      c.discord = true;
                      c.showPlayerOption(new String[]{"Are you sure you wish to open discord invite?", "Yes", "No"});
                  return true;
-                 case 28178:
+                 case 28173:
                      Player.openPage(c, "https://dodian.net/index.php?pageid=modcp");
                  return true;
              }

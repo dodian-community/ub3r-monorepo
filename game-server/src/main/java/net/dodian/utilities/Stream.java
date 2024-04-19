@@ -3,8 +3,8 @@ package net.dodian.utilities;
 public class Stream {
 
     public Stream(byte[] abyte0) {
-        buffer = abyte0;
         currentOffset = 0;
+        buffer = abyte0;
     }
 
     public byte readSignedByteA() {
@@ -154,7 +154,7 @@ public class Stream {
         try {
             buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
         } catch (Exception e) {
-            System.out.println("error creating frame.." + e);
+            System.out.println("error creating frame.." + e + ", "+id+", " + currentOffset + ", " + (byte)(id + packetEncryption.getNextKey()));
         }
     }
 

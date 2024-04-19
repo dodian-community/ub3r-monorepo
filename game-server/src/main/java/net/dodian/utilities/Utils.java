@@ -53,11 +53,11 @@ public class Utils {
     public static int[] fishTime = {1350, 1660, 2480, 3300, 2480, 4900, 5800, 6650};
     public static int[] fishTool = {303, 309, 301, 311, 303, 311, 301, 311};
     public static int[] fishExp = {110, 200, 440, 650, 780, 1100, 1450, 1900};
-    public static int[] cookIds = {317, 2134, 2132, 2307, 3363, 335, 331, 377, 371, 7944, 383, 395, 389};
-    public static int[] cookedIds = {315, 2142, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-    public static int[] burnId = {323, 2146, 2146, 2311, 3375, 343, 343, 381, 375, 7948, 387, 399, 393};
-    public static int[] cookExp = {150, 100, 100, 170, 200, 250, 350, 500, 720, 870, 1220, 1600, 2100};
-    public static int[] cookLevel = {1, 1, 1, 10, 15, 20, 30, 40, 50, 60, 70, 85, 95};
+    public static int[] cookIds = {317, 2134, 2132, 2138, 2307, 3363, 335, 331, 377, 371, 7944, 383, 395, 389};
+    public static int[] cookedIds = {315, 2142, 2142, 2140, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
+    public static int[] burnId = {323, 2146, 2146, 2144, 2311, 3375, 343, 343, 381, 375, 7948, 387, 399, 393};
+    public static int[] cookExp = {150, 100, 100, 50, 170, 200, 250, 350, 500, 720, 870, 1220, 1600, 2100};
+    public static int[] cookLevel = {1, 1, 1, 1, 10, 15, 20, 30, 40, 50, 60, 70, 85, 95};
 
     // Crafting
     public static int[] uncutGems = {1623, 1621, 1619, 1617, 1631, 6571, 1625, 1627, 1629}; //Opal, Jade and Topaz added later!

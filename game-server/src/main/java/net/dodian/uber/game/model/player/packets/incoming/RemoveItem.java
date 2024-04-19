@@ -54,7 +54,7 @@ public class RemoveItem implements Packet {
                 client.send(new SendMessage(client.tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
                 return;
             }
-            if (Server.itemManager.getShopBuyValue(removeID) < 1) {
+            if (Server.itemManager.getShopBuyValue(removeID) < 0 || !Server.itemManager.isTradable(removeID)) {
                 client.send(
                         new SendMessage("You cannot sell " + client.GetItemName(removeID).toLowerCase() + " in this store."));
                 return;

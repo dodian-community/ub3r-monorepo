@@ -46,7 +46,7 @@ public class EntityProcessor implements Job {
                         npc.removeEnemy(p); //Need to remove the enemy if we done with the check values!
                     }
                 } else if(!npc.getDamage().isEmpty() && (npc.getId() == 4303 || npc.getId() == 4304 || npc.getId() == 6610)) { //New bosses up to 2 loot table!
-                    p = npc.getTarget(false);
+                    p = npc.getSecondTarget(p, false);
                     if(p != null) {
                         double chance = (0.1 + (npc.getDamage().get(p) / (double)npc.getMaxHealth())) * 100; //10% + your damage profile!
                         double rate = Misc.chance(100000) / 1000D;
@@ -142,8 +142,8 @@ public class EntityProcessor implements Job {
                 if (!PlayerHandler.players[i].initialized) {
                     PlayerHandler.players[i].initialize();
                     PlayerHandler.players[i].initialized = true;
-                }
-                while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
+                } else
+                    while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
                 PlayerHandler.players[i].process();
                 PlayerHandler.players[i].postProcessing();
                 PlayerHandler.players[i].getNextPlayerMovement();

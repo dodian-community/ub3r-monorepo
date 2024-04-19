@@ -31,10 +31,10 @@ public class Thieving {
         MASTER_FARMER(3257, 70, 1200, new int[]{314}, new Range[]{new Range(4, 10)}, new int[]{100}, 0, ThievingType.PICKPOCKETING),
         CAGE(20873, 1, 150, new int[]{995}, new Range[]{new Range(20, 50)}, new int[]{100}, 0, ThievingType.OTHER),
         BAKER_STALL(11730, 10, 1000, new int[]{2309}, new Range[]{new Range(1, 1)}, new int[]{100}, 12, ThievingType.STALL_THIEVING),
-        FUR_STALL(11732, 40, 1800, new int[]{1751, 1753, 1739, 1759, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(500, 1200)}, new int[]{5, 10, 15, 20, 100}, 25, ThievingType.STALL_THIEVING),
-        SILVER_STALL(11734, 65, 2500, new int[]{2349, 2351, 2353, 2357, 2359, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(800, 1500)}, new int[]{5, 10, 15, 20, 25, 100}, 25, ThievingType.STALL_THIEVING),
+        FUR_STALL(11732, 40, 1800, new int[]{1751, 1753, 1739, 1759, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(150, 350)}, new int[]{5, 10, 15, 20, 100}, 25, ThievingType.STALL_THIEVING),
+        SILVER_STALL(11734, 65, 2500, new int[]{2349, 2351, 2353, 2357, 2359, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(300, 600)}, new int[]{5, 10, 15, 20, 25, 100}, 25, ThievingType.STALL_THIEVING),
         SPICE_STALL(11733, 80, 4800, new int[]{215, 213, 209, 207, 203, 199}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1)}, new int[]{5, 10, 20, 35, 55, 100}, 35, ThievingType.STALL_THIEVING),
-        GEM_STALL(11731, 90, 5800, new int[]{1617, 1619, 1621, 1623, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1200, 2500)}, new int[]{2, 5, 8, 15, 100}, 38, ThievingType.STALL_THIEVING);
+        GEM_STALL(11731, 90, 5800, new int[]{1617, 1619, 1621, 1623, 995}, new Range[]{new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(1, 1), new Range(500, 850)}, new int[]{2, 5, 8, 15, 100}, 38, ThievingType.STALL_THIEVING);
         //RINGBELL(6847, 1, 0, new int[] {4084}, new int[] {1}, new int[] {100}, 25000000, ThievingType.OTHER);
 
         ThievingData(int entityId, int requiredLevel, int receivedExperience, int[] item, Range[] itemAmount, int[] itemChance, int respawnTime, ThievingType type) {

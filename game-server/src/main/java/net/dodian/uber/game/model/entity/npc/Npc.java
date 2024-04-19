@@ -27,6 +27,7 @@ public class Npc extends Entity {
     public boolean hadFrenzy = false;
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, lastAttack = 0, maxHit;
     public boolean alive, visible = true, boss = false;
+    String miniBoss = "";
     private long deathTime = 0;
     public int[] boostedStat = {0, 0, 0, 0, 0}; //defence, attack, strength, magic dmg, range
     public int[] boostedStatOrig = {0, 0, 0, 0, 0}; //defence, attack, strength, magic dmg, range
@@ -93,6 +94,11 @@ public class Npc extends Entity {
             } else if (id == 6610) { //Spider Queen (mage boss)
                 boss = true;
             }
+            /* Mini bosses! */
+            if(id == 738 || id == 3551)
+                miniBoss = "the Pollnivneach.";
+            else if (id == 690)
+                miniBoss = "the Bandit camp.";
         }
         alive = true;
     }
@@ -461,6 +467,10 @@ public class Npc extends Entity {
                 p.yell("<col=FFFF00>System<col=000000> <col=292BA3>" + yell);
             }
         } else p.incrementMonsterLog(this);
+        if(!miniBoss.isEmpty()) { //Area type yell hehe!
+            String yell = npcName() + " has been slain by " + p.getPlayerName() + " (level-" + p.determineCombatLevel() + ")";
+            p.yellAreaKilled("<col=006400>" + yell, miniBoss);
+        }
 
         SlayerTask.slayerTasks task = SlayerTask.slayerTasks.getSlayerNpc(id);
         if (task != null) {
@@ -774,9 +784,55 @@ public class Npc extends Entity {
 
     public boolean specialCondition(Client c) {
         boolean attack = true;
+        int distance = c.distanceToPoint(getPosition(), c.getPosition());
         int hitDiff;
         c.setFocus(c.getPosition().getX(), c.getPosition().getY());
+        boolean halfHealth = currentHealth <= maxHealth / 2;
         switch(getId()) {
+            case 799: //Scarab Mage - 66
+            case 794: //Scarab Mage - 93
+                setLastAttack(getAttackTimer());
+                if(!halfHealth) { //Magic attack
+                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    sendArrow(c, 87, 88);
+                    delayGfx(c, 708, 89, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
+                    //requestAnim(708, 0);
+                } else { //Melee attack
+                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
+                    requestAnim(data.getAttackEmote(), 0);
+                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
+                }
+                break;
+            case 800: //Locust rider - melee - 68
+            case 795: //Locust rider - melee - 103
+                setLastAttack(getAttackTimer());
+                if(!halfHealth) { //Melee attack
+                    hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
+                    requestAnim(data.getAttackEmote(), 0);
+                    c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    //requestAnim(708, 0);
+                } else { //Ranged attack
+                    CalculateMaxHit(false);
+                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
+                    sendArrow(c, -1, 32);
+                    delayGfx(c, 5446, -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
+                }
+                break;
+            case 801: //Locust rider - ranged - 68
+            case 796: //Locust rider - ranged - 98
+                setLastAttack(getAttackTimer());
+                if(!halfHealth) { //Ranged attack
+                    CalculateMaxHit(false);
+                    hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
+                    sendArrow(c, 23, 14);
+                    delayGfx(c, data.getAttackEmote(), -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
+                    //requestAnim(708, 0);
+                } else { //Magic attack
+                    hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
+                    sendArrow(c, -1, 146);
+                    delayGfx(c, 5446, 147, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
+                }
+                break;
             case 260: //Green dragon
             case 265: //Blue Dragon
             case 247: //Red dragon
@@ -923,28 +979,28 @@ public class Npc extends Entity {
                 if(landChance == 1) { //Fire breath, guarantee hit as crit with 50% reduce dmg as melee
                     setText("Grrr!");
                     sendArrow(c, -1, 393);
-                    delayGfx(c, 81, -1, 2, (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer() / 2);
+                    delayGfx(c, 81, -1, getDistanceDelay(distance, true), (int)(maxHit * 0.5), true, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer());
                 } else if(landChance == 5) { //Blue breath, magic dmg
                     setText("Tsss!");
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     sendArrow(c, -1, 396);
-                    delayGfx(c, 82, -1, 2, hitDiff, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer() / 2);
+                    delayGfx(c, 82, -1, getDistanceDelay(distance, true), hitDiff, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer());
                 } else if(landChance == 10) { //Green breath, range dmg
                     setText("Rawr!!");
                     CalculateMaxHit(false);
                     hitDiff = Utils.random(maxHit);
                     sendArrow(c, -1, 394);
-                    delayGfx(c, 83, -1, 2, landHit(c, false) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer() / 2);
+                    delayGfx(c, 83, -1, getDistanceDelay(distance, false), landHit(c, false) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer());
                 } else if(landChance == 16) { //White breath, melee dmg check with 20% increase dmg
                     setText("Tss rawr!!");
                     CalculateMaxHit(true);
                     hitDiff = Utils.random((int)Math.floor(maxHit * 1.2));
                     sendArrow(c, -1, 395);
-                    delayGfx(c, 84, -1, 2, landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
-                    setLastAttack(getAttackTimer() / 2);
+                    delayGfx(c, 84, -1, getDistanceDelay(distance, false), landHit(c, true) ? hitDiff : 0, false, this, damageType.FIRE_BREATH);
+                    setLastAttack(getAttackTimer());
                 } else attack = false;
             break;
             case 3137: //Vampire effect!
@@ -995,9 +1051,10 @@ public class Npc extends Entity {
                     return;
                 }
                 if(getId() == 3127) c.stillgfx(gfx, c.getPosition().getY(), c.getPosition().getX());
+                else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
                 else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
                 c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
-                setLastAttack(getAttackTimer() - delay + 1);
+                setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
                 stop();
             }
         });
@@ -1009,9 +1066,10 @@ public class Npc extends Entity {
         int offsetY = (x - target.getPosition().getX()) * -1;
         int distance = target.distanceToPoint(getPosition(), target.getPosition());
         int speed = getId() == 3127 ? 100 + (distance * 5) : 50 + (distance * 5);
-        int height = getId() == 3127 ? 143 : 43;
+        int height = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 98 : 43;
+        int flightHeight = getId() == 3127 ? 143 : getId() == 796 || getId() == 801 ? 43 : height;
         setGfx(startGfx, height);
-        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, height, 35, -(target.getSlot() + 1), 51, 16);
+        target.arrowNpcGfx(this.getPosition(), offsetY, offsetX, 50, speed, flightGfx, flightHeight, 35, -(target.getSlot() + 1), 51, 16);
     }
 
     public void resetCombatTimer() {
@@ -1020,4 +1078,5 @@ public class Npc extends Entity {
                 ((Client) e).setLastCombat(0); //Reset combat timer if something get killed within 16 distance and you targeted it!
         }
     }
+
 }

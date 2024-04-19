@@ -91,8 +91,13 @@ public class Walking implements Packet {
                     client.resetWalkingQueue();
                     return;
                 }
-                if(packetType == 98 && !client.isBusy())
+                /* Npc dialogue + interface! */
+                if(client.NpcWanneTalk > 0) { //This to close dialogue somewhat whenever we walk away!
                     client.send(new RemoveInterfaces());
+                    client.NpcWanneTalk = -1;
+                } else if(!client.isBusy()) //If not busy clear interface!
+                    client.send(new RemoveInterfaces());
+                /* Other reset! */
                 client.rerequestAnim();
                 client.resetAction();
                 client.discord = false;

@@ -181,9 +181,6 @@ public class Commands implements Packet {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());
                     System.out.println("test2..." + PlayerHandler.playersOnline.toString());
                 }
-                if (cmd[0].equalsIgnoreCase("desert")) {
-                        client.triggerTele(3230, 3107, 0,false);
-                }
                 if (cmd[0].equalsIgnoreCase("goup")) {
                     int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
                     client.teleportTo(x, y, z + 1);
@@ -655,7 +652,7 @@ public class Commands implements Packet {
                 }
             } //End of Special rank commands
             if (client.playerRights > 0) {
-                if (cmd[0].equalsIgnoreCase("pnpc") && (specialRights || getGameWorldId() > 1)) {
+                if (cmd[0].equalsIgnoreCase("pnpc") && !specialRights && getGameWorldId() > 1) {
                     try {
                         int npcId = Integer.parseInt(cmd[1]);
                         if (npcId <= 8195) {
@@ -687,6 +684,9 @@ public class Commands implements Packet {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
                             if (p.wildyLevel > 0 && !specialRights) {
                                 client.send(new SendMessage("That player is in the wilderness!"));
+                                return;
+                            }
+                            if (client.UsingAgility || p.UsingAgility || System.currentTimeMillis() < client.walkBlock) { //Agility course + potential travel!
                                 return;
                             }
                             client.transport(p.getPosition().copy());
@@ -726,6 +726,9 @@ public class Commands implements Packet {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
                             if (p.wildyLevel > 0 && !specialRights) {
                                 client.send(new SendMessage("Can not teleport someone out of the wilderness! Contact a admin!"));
+                                return;
+                            }
+                            if (client.UsingAgility || p.UsingAgility || System.currentTimeMillis() < client.walkBlock) { //Agility course + potential travel!
                                 return;
                             }
                             p.transport(client.getPosition().copy());
@@ -780,11 +783,7 @@ public class Commands implements Packet {
                     client.send(new SendMessage("Welcome to the staff zone!"));
                 }
                 if (cmd[0].equalsIgnoreCase("test_area")) {
-                    if(client.inWildy()) {
-                        client.send(new SendMessage("Cant use this in the wilderness!"));
-                        return;
-                    }
-                    client.teleportTo(3260, 2784, 0);
+                    client.triggerTele(3260, 2784, 0, false);
                     client.send(new SendMessage("Welcome to the monster test area!"));
                 }
                 if (cmd[0].equalsIgnoreCase("busy") && client.playerRights > 1) {
@@ -1163,30 +1162,30 @@ public class Commands implements Packet {
                 String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
                 if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
                     client.respawnBoss(4130);
-                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                    client.respawnBoss(4067);
+                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                    client.respawnBoss(2585);
                 else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
                     client.respawnBoss(3964);
-                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                    client.respawnBoss(8);
-                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Ice queen
-                    client.respawnBoss(4922);
+                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                    client.respawnBoss(4067);
+                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                    client.respawnBoss(1443);
                 else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
                     client.respawnBoss(3957);
-                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                    client.respawnBoss(2585);
-                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                    client.respawnBoss(5311);
+                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                    client.respawnBoss(8);
+                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("queen")) //Ice queen
+                    client.respawnBoss(4922);
                 else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
                     client.respawnBoss(239);
-                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                    client.respawnBoss(1443);
+                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                    client.respawnBoss(5311);
                 else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
                     client.respawnBoss(1432);
-                else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                    client.respawnBoss(2261);
-                else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                else if(npcName.equalsIgnoreCase(client.boss_name[11]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
                     client.respawnBoss(2266);
+                else if(npcName.equalsIgnoreCase(client.boss_name[12])) //Dwayne
+                    client.respawnBoss(2261);
                 else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                     client.respawnBoss(3127);
                 else if(npcName.equalsIgnoreCase(client.boss_name[14]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
@@ -1201,38 +1200,38 @@ public class Commands implements Packet {
                 String npcName = command.substring(cmd[0].length() + 1).replaceAll(" ", "_");
                 if(npcName.equalsIgnoreCase(client.boss_name[0])) //Dad
                     client.triggerTele(2543, 3091, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
-                    client.triggerTele(2566, 9507, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[1]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
+                    client.triggerTele(2626, 3084, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[2]) || npcName.equalsIgnoreCase("san")) //San Tajalon
                     client.triggerTele(2613, 9521, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
-                    client.triggerTele(2698, 9771, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("queen")) //Nechrayel
-                    client.triggerTele(2866, 9951, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[3]) || npcName.equalsIgnoreCase("bkt")) //Black knight titan
+                    client.triggerTele(2566, 9507, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[4]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
+                    client.triggerTele(2572, 9529, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[5])) //Ungadulu
                     client.triggerTele(2889, 3426, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("abyssal")) //Abyssal guardian
-                    client.triggerTele(2626, 3084, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
-                    client.triggerTele(2554, 3278, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[6]) || npcName.equalsIgnoreCase("nech")) //Nechrayel
+                    client.triggerTele(2698, 9771, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[7]) || npcName.equalsIgnoreCase("queen")) //Ice Queen
+                    client.triggerTele(2866, 9951, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[8]) || npcName.equalsIgnoreCase("kbd")) //King black dragon
                     client.triggerTele(3315, 9374, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("jungle")) //Jungle demon
-                    client.triggerTele(2572, 9529, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[9]) || npcName.equalsIgnoreCase("mourner") || npcName.equalsIgnoreCase("head")) //Head mourner
+                    client.triggerTele(2554, 3278, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[10]) || npcName.equalsIgnoreCase("black")) //Black demon
                     client.triggerTele(2907, 9805, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[11])) //Dwayne
-                    client.triggerTele(2776, 3206, 0,false);
-                else if(npcName.equalsIgnoreCase(client.boss_name[12]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
+                else if(npcName.equalsIgnoreCase(client.boss_name[11]) || npcName.equalsIgnoreCase("prime")) //Dagannoth prime
                     client.triggerTele(2905, 9727, 0,false);
+                else if(npcName.equalsIgnoreCase(client.boss_name[12])) //Dwayne
+                    client.triggerTele(2776, 3206, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[13]) || npcName.equalsIgnoreCase("jad")) //TzTok-Jad
                     client.triggerTele(2393, 5090, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[14]) || npcName.equalsIgnoreCase("kq")) //Kalphite queen
-                    client.triggerTele(2393, 5090, 0,false);
+                    client.triggerTele(3489, 9495, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[15]) || npcName.equalsIgnoreCase("kk")) //Kalphite king
-                    client.triggerTele(2393, 5090, 0,false);
+                    client.triggerTele(1713, 9843, 0,false);
                 else if(npcName.equalsIgnoreCase(client.boss_name[16])) //Venenatis
-                    client.triggerTele(2393, 5090, 0,false);
+                    client.triggerTele(3218, 9934, 0,false);
                 else client.send(new SendMessage("Could not find boss spawn for: " + npcName));
             }
             /* Beta commands*/
@@ -1326,11 +1325,13 @@ public class Commands implements Packet {
                         int level = i == 3 ? 78 : 75;
                         client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(i));
                         client.setLevel(level, Skill.getSkill(i));
-                        client.refreshSkill(Skill.getSkill(i));
                         if(i == 3) {
                             client.maxHealth = level;
-                            client.heal(client.maxHealth);
-                        }
+                            client.heal(level);
+                        } else if (i == 5) {
+                            client.maxPrayer = level;
+                            client.pray(level);
+                        } else client.refreshSkill(Skill.getSkill(i));
                     }
                     client.getEquipment()[0] = 3751;
                     client.getEquipmentN()[0] = 1;

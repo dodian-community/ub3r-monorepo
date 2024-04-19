@@ -2664,12 +2664,12 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Shrimps (3 health)", "Rat meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
+			String[] s = {"Shrimps (3 health)", "Chicken (3 health)", "Meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
 					"Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
             for (String string : s) {
                 send(new SendString(string, slot++));
             }
-			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
+			int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == RANGED.getId()) {
 			changeInterfaceStatus(8825, false);
@@ -2820,9 +2820,9 @@ public class Client extends Player implements Runnable {
 			changeInterfaceStatus(8813, false);
 			slot = 8760;
 			String prem = " @red@(Premium only)";
-			String[] s = {"Shrimps", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
+			String[] s = {"Shrimps", "Chicken", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem};
-			String[] s1 = {"1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
+			String[] s1 = {"1", "1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
             for (String value : s) {
                 send(new SendString(value, slot++));
             }
@@ -2830,7 +2830,7 @@ public class Client extends Player implements Runnable {
             for (String string : s1) {
                 send(new SendString(string, slot++));
             }
-			int[] items = {315, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
+			int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == CRAFTING.getId()) {
 			changeInterfaceStatus(8827, true);
@@ -3253,6 +3253,15 @@ public class Client extends Player implements Runnable {
 				continue;
 			Client temp = (Client) p;
 			temp.send(new SendMessage(message + ":yell:"));
+		}
+	}
+
+	public void yellAreaKilled(String message, String area) {
+		for (Player p : PlayerHandler.players) {
+			if (p == null || !p.isActive || !p.getPositionName().contains(area))
+				continue;
+			Client temp = (Client) p;
+			temp.send(new SendMessage("<col=FFFF00>[Area]<col=000000> "+message + ":yell:"));
 		}
 	}
 
@@ -4265,14 +4274,14 @@ public class Client extends Player implements Runnable {
 		}
 		/* Item Values */
 		int original = itemID;
-		itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
 		int price = (int) Math.floor(GetShopBuyValue(itemID));
+		itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
 		/* Functions */
 		if (!Server.shopping || tradeLocked) {
 			send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
 			return;
 		}
-		if (price <= 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
+		if (price < 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
 			send(new SendMessage("You cannot sell " + GetItemName(itemID).toLowerCase() + " in this store."));
 			return;
 		}
@@ -4436,7 +4445,7 @@ public class Client extends Player implements Runnable {
 			case 3:
 				sendFrame200(4883, 591);
 				send(new SendString(GetNpcName(NpcTalkTo), 4884));
-				send(new SendString("Do you want to buy some runes?", 4885));
+				send(new SendString("Do you want to buy some magical gear?", 4885));
 				send(new SendString("Click here to continue", 4886));
 				send(new NpcDialogueHead(NpcTalkTo, 4883));
 				sendFrame164(4882);
@@ -6691,6 +6700,7 @@ public class Client extends Player implements Runnable {
 			case 317:
 				ran = 30 - getLevel(Skill.COOKING);
 				break;
+			case 2138:
 			case 2307:
 				ran = 36 - getLevel(Skill.COOKING);
 				break;
@@ -9013,7 +9023,6 @@ public class Client extends Player implements Runnable {
 						other.playerItems[i] = 0;
 				}
 			}
-			other.checkItemUpdate();
 			for (int i = 0; i < getEquipment().length; i++) {
 				if (other.getEquipment()[i] == id) {
 					int canRemove = Math.min(other.getEquipmentN()[i], amount);
@@ -9025,9 +9034,11 @@ public class Client extends Player implements Runnable {
 					other.deleteequiment(0, i);
 				}
 			}
-			if (totalItemRemoved > 0)
+			if (totalItemRemoved > 0) { //Update items only if there is any deleted!
 				send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
-			else
+				other.checkItemUpdate();
+				other.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+			} else
 				send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
 		} else { //Database check!
 			try {

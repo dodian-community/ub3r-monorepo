@@ -48,9 +48,8 @@ public abstract class Player extends Entity {
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
-    public String[] boss_name = {"Dad", "Black_Knight_Titan", "San_Tojalon", "Nechryael", "Ice_Queen", "Ungadulu",
-            "Abyssal_Guardian", "Head_Mourners", "King_Black_Dragon", "Jungle_Demon", "Black_Demon", "Dwayne", "Dagannoth_Prime",
-    "TzTok-Jad", "Kalphite_queen", "Kalphite_king", "Venenatis"};
+    public String[] boss_name = {"Dad", "Abyssal_Guardian", "San_Tojalon", "Black_Knight_Titan", "Jungle_Demon", "Ungadulu", "Nechryael", "Ice_Queen",
+            "King_Black_Dragon", "Head_Mourners", "Black_Demon", "Dagannoth_Prime", "Dwayne", "TzTok-Jad", "Kalphite_queen", "Kalphite_king", "Venenatis"};
     public int[] boss_amount = new int[boss_name.length];
     public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
@@ -167,6 +166,13 @@ public abstract class Player extends Entity {
 
     public boolean isShopping() {
         return MyShopID != -1;
+    }
+
+    public void bossCount(String name, int amount) {
+        for(int i = 0; i < boss_name.length; i++) {
+            if(boss_name[i].equalsIgnoreCase(name))
+                boss_amount[i] = amount;
+        }
     }
 
     public void defaultDailyReward(Client c) {
@@ -321,6 +327,7 @@ public abstract class Player extends Entity {
         //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
         return slayerData;
     }
+
     public void setTravel(String input) {
         if (input.isEmpty()) input = "0:0:0:0:0";
         String[] travel = input.split(":");
@@ -708,6 +715,8 @@ public abstract class Player extends Entity {
         IsStair = false; //What is this?!
         faceTarget(-1);
         getUpdateFlags().clear();
+        if(((Client) this).isActive) //If we active, please flush stream...Do we need this?!
+            ((Client) this).flushOutStream();
     }
 
     public void faceTarget(int index) {
@@ -841,7 +850,8 @@ public abstract class Player extends Entity {
 
     public void dealDamage(Entity attacker, int amt, hitType type) {
         Client plr = ((Client) this);
-        if(attacker != null) setLastCombat(16);
+        if(attacker != null && ((attacker.getType() == Type.NPC && ((Npc) attacker).getCurrentHealth() < 1) || (attacker.getType() == Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1)))
+            setLastCombat(16); //Sets this if the guy attacking is not below 1 health aka dead!
         if (deathStage >= 0 && getCurrentHealth() < 1)
             amt = 0;
         else if (amt > currentHealth) amt = currentHealth;
@@ -1010,7 +1020,6 @@ public abstract class Player extends Entity {
             default: return false;
         }
     }
-
     public boolean checkObsidianBonus(int id) {
         int[] acceptedItems = {
         11128, 6585, 6568, 6570, //Berserker necklace, fury, obsidian cape, fire cape,
@@ -1023,7 +1032,6 @@ public abstract class Player extends Entity {
                 return true;
         return false;
     }
-
     public boolean gotSlayerHelmet(Client c) {
         return c.GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
     }
