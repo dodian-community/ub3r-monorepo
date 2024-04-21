@@ -23,7 +23,7 @@ public class ClickNpc3 implements Packet {
 
         final WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         if (!client.playerPotato.isEmpty())

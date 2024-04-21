@@ -24,6 +24,9 @@ public class MagicOnPlayer implements Packet {
                 || PlayerHandler.players[playerIndex] == null) {
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         int EnemyX3 = PlayerHandler.players[playerIndex].getPosition().getX();
         int EnemyY3 = PlayerHandler.players[playerIndex].getPosition().getY();
         Client castOnPlayer = (Client) PlayerHandler.players[playerIndex];

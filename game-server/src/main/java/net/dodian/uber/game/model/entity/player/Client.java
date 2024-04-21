@@ -518,9 +518,9 @@ public class Client extends Player implements Runnable {
 
 	private void fillInStream(int forceRead) throws java.io.IOException {
 		getInputStream().currentOffset = 0;
-		//mySocketHandler.getInput().read(inStream.buffer, 0, forceRead);
-		int read = mySocketHandler.getSocket().getInputStream().read(getInputStream().buffer, 0, forceRead);
-		if(read < 0) System.out.println("Read is below 0 for some reason?!");
+		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
+		/*int read = mySocketHandler.getSocket().getInputStream().read(getInputStream().buffer, 0, forceRead);
+		if(read < 0) System.out.println("Read is below 0 for some reason?!");*/
 	}
 
 	private void fillInStream(PacketData pData) throws java.io.IOException {
@@ -8130,10 +8130,12 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeByteA(speed[2]);*/
 	}
 	public void AddToWalkCords(int X, int Y, long time) {
+		newWalkCmdIsRunning = false;
 		if(time > 0) walkBlock = System.currentTimeMillis() + time;
 		AddToCords(X, Y, false);
 	}
 	public void AddToRunCords(int X, int Y, long time) {
+		newWalkCmdIsRunning = true;
 		if(time > 0) walkBlock = System.currentTimeMillis() + time;
 		AddToCords(X, Y, true);
 	}

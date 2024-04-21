@@ -20,6 +20,9 @@ public class UseItemOnPlayer implements Packet {
         if (player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         if (itemId == 5733) { //Potato
             client.playerPotato.clear();
             client.playerPotato.add(0, 1);

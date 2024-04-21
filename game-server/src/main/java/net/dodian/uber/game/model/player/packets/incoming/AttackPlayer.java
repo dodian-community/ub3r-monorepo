@@ -19,6 +19,9 @@ public class AttackPlayer implements Packet {
             if (plr == null) {
                 return;
             }
+            if (client.randomed || client.UsingAgility) {
+                return;
+            }
             final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victim, plr.getPosition());
             client.setWalkToTask(task);
             EventManager.getInstance().registerEvent(new Event(600) {

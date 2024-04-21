@@ -341,7 +341,7 @@ public class Agility {
         }
         c.UsingAgility = true;
         c.setRunAnim(840);
-        c.AddToRunCords(1, 0, 600);
+        c.AddToRunCords(2, 0, 1200);
         EventManager.getInstance().registerEvent(new Event(600) {
             public void execute() {
                 c.requestWeaponAnims();
@@ -366,7 +366,7 @@ public class Agility {
         }
         c.UsingAgility = true;
         c.setRunAnim(840);
-        c.AddToWalkCords(1, 0, 600);
+        c.AddToRunCords(2, 0, 1200);
         EventManager.getInstance().registerEvent(new Event(600) {
             public void execute() {
                 c.requestWeaponAnims();
@@ -391,7 +391,7 @@ public class Agility {
         }
         c.UsingAgility = true;
         c.setRunAnim(840);
-        c.AddToWalkCords(1, 0, 600);
+        c.AddToRunCords(2, 0, 1200);
         EventManager.getInstance().registerEvent(new Event(600) {
             public void execute() {
                 c.requestWeaponAnims();

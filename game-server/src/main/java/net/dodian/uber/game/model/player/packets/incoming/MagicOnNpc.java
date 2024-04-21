@@ -23,6 +23,9 @@ public class MagicOnNpc implements Packet {
         if (tempNpc == null) { //No null shiet here!
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         client.target = tempNpc;
         client.magicId = client.getInputStream().readSignedWordA();
         int id = tempNpc.getId();

@@ -46,7 +46,7 @@ public class ClickObject implements Packet {
         client.setWalkToTask(task);
         if (getGameWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click1: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         EventManager.getInstance().registerEvent(new Event(600) {
@@ -322,13 +322,25 @@ public class ClickObject implements Packet {
         }
         if (objectID == 410 && objectPosition.getX() == 2925 && objectPosition.getY() == 3483) { //Guthix altar to cosmic
             client.requestAnim(645, 0);
-            //TODO: Fix random teleport with cosmic!
-            client.triggerTele(2162, 4833, 0, false);
+            int random = Misc.random(3);
+            switch(random) {
+                case 1: //East
+                    client.transport(new Position(2162 + Misc.random(2), 4831 + Misc.random(4), 0));
+                    break;
+                case 2: //South
+                    client.transport(new Position(2140 + Misc.random(4), 4811 + Misc.random(2), 0));
+                    break;
+                case 3: //West
+                    client.transport(new Position(2120 + Misc.random(2), 4831 + Misc.random(4), 0));
+                    break;
+                default: //North
+                    client.transport(new Position(2140 + Misc.random(4), 4853 + Misc.random(2), 0));
+            }
             return;
         }
         if (objectID == 14847) {
             client.requestAnim(645, 0);
-            client.triggerTele(2924, 3483, 0, false);
+            client.transport(new Position(2924, 3483, 0));
             return;
         }
         if (objectID == 1725) {
