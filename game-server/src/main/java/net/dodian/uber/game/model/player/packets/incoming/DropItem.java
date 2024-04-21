@@ -14,6 +14,9 @@ public class DropItem implements Packet {
         client.getInputStream().readUnsignedByte();
         client.getInputStream().readUnsignedByte();
         int slot = client.getInputStream().readUnsignedWordA();
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         if (droppedItem == 5733) {
             client.deleteItem(droppedItem, slot, 1);
             client.send(new SendMessage("A magical force removed this item from your inventory!"));

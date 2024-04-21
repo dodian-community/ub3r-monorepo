@@ -33,7 +33,7 @@ public class MagicOnObject implements Packet {
         client.setWalkToTask(task);
         if (getGameWorldId() > 1 && object != null)
             client.send(new SendMessage("Magic: id: "+magicID+", obj id:" + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         EventManager.getInstance().registerEvent(new Event(600) {

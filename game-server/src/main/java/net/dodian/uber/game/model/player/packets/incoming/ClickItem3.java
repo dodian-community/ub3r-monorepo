@@ -17,6 +17,9 @@ public class ClickItem3 implements Packet {
         if (client.playerItems[itemSlot] - 1 != itemId) {
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         if(itemId == 11864 || itemId == 11865) {
             if(client.freeSlots() < 8)
                 client.send(new SendMessage("you need " + (8 - client.freeSlots()) + " empty inventory slots to disassemble the "+client.GetItemName(itemId).toLowerCase()+"."));

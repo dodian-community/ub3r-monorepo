@@ -813,7 +813,7 @@ public abstract class Player extends Entity {
                 addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
             }
         }
-        isRunning = UsingAgility || System.currentTimeMillis() < walkBlock ? newWalkCmdIsRunning : buttonOnRun;
+        isRunning = UsingAgility && System.currentTimeMillis() < walkBlock ? newWalkCmdIsRunning : buttonOnRun;
         newWalkCmdSteps = 0;
     }
 

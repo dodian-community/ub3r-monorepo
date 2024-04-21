@@ -13,6 +13,9 @@ public class PickUpGroundItem implements Packet {
         int itemY = client.getInputStream().readSignedWordBigEndian();
         int itemID = client.getInputStream().readUnsignedWord();
         int itemX = client.getInputStream().readSignedWordBigEndian();
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         if (itemID >= 5509 && itemID <= 5515 && client.checkItem(itemID)) {
             client.send(new SendMessage("You already got this item!"));
             return;

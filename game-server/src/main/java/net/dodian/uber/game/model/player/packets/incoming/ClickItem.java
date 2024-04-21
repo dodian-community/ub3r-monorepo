@@ -30,6 +30,9 @@ public class ClickItem implements Packet {
         if (client.fillEssencePouch(itemId)) {
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         if (itemId == 5733) {
             try {
                 if (client.getPlayerNpc() < 1) {

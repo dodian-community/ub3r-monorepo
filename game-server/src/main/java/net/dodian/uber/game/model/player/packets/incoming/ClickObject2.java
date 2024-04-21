@@ -40,7 +40,7 @@ public class ClickObject2 implements Packet {
             client.addItem(1779, 1);
             client.checkItemUpdate();
         }
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         EventManager.getInstance().registerEvent(new Event(600) {

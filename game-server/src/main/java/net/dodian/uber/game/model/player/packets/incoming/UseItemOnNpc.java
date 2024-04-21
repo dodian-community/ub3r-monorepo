@@ -22,6 +22,9 @@ public class UseItemOnNpc implements Packet {
         if (tempNpc == null) {
             return;
         }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
         int npcId = tempNpc.getId();
         client.faceNpc(npcIndex);
         if (item == 5733) {

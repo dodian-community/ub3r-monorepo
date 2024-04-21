@@ -30,7 +30,7 @@ public class ClickNpc implements Packet {
         int npcId = tempNpc.getId();
         final WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         if (!client.playerPotato.isEmpty())
@@ -75,10 +75,8 @@ public class ClickNpc implements Packet {
         client.faceNpc(tempNpc.getSlot());
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
-        if (npcId == 5809) {
-            client.NpcWanneTalk = 804;
-            // openTan();
-        }
+        if (npcId == 5809)
+            client.openTan();
         if (npcId == 5792) {
             client.triggerTele(3045, 3372, 0, false);
             client.send(new SendMessage("Welcome to the party room!"));

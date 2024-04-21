@@ -20,6 +20,9 @@ public class AttackNpc implements Packet {
             if (tempNpc == null) {
                 return;
             }
+            if (client.randomed || client.UsingAgility) {
+                return;
+            }
             if ((getAttackStyle(client) != 0 && !client.goodDistanceEntity(tempNpc, 5)) || (getAttackStyle(client) == 0 && !client.goodDistanceEntity(tempNpc, 1))) {
                 final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, tempNpc.getPosition());
                 client.setWalkToTask(task);
