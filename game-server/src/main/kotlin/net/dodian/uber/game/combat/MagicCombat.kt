@@ -36,6 +36,7 @@ fun Client.handleMagicAttack(): Int {
     lastCombat = 16
     setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
+    checkItemUpdate()
     requestAnim(-1, 0)
     sendAnimation(1979)
     var maxHit = baseDamage[autocast_spellIndex] * magicBonusDamage()

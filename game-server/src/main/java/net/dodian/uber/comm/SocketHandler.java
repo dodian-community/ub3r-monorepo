@@ -33,17 +33,16 @@ public class SocketHandler implements Runnable {
         try {
         while (processRunning) {
             if (isConnected()) {
-                while (writeOutput());
-                flush();
-                while (parsePackets());
-                    LinkedList<PacketData> temp = packets.getPackets();
-                    if (temp != null) myPackets.addAll(temp);
-                    Thread.sleep(50);
+                writeOutput();
+                parsePackets();
+                LinkedList<PacketData> temp = packets.getPackets();
+                if (temp != null) myPackets.addAll(temp);
             } else {
                 myPackets.clear();
                 break;
             }
         }
+            Thread.sleep(50);
             } catch (java.lang.Exception _ex) {
                 YellSystem.alertStaff("Something is up with socket handler!");
                 System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
@@ -64,7 +63,7 @@ public class SocketHandler implements Runnable {
 
     public InputStream getInput() {
         try {
-            return socket.getInputStream();
+            return getSocket().getInputStream();
         } catch (IOException e) {
             logout();
         }
@@ -73,7 +72,7 @@ public class SocketHandler implements Runnable {
 
     public OutputStream getOutput() {
         try {
-            return socket.getOutputStream();
+            return getSocket().getOutputStream();
         } catch (IOException e) {
             logout();
         }
@@ -96,14 +95,6 @@ public class SocketHandler implements Runnable {
         }
     }
 
-    public void flush() {
-        try {
-            getOutput().flush();
-        } catch (IOException e) {
-            logout();
-        }
-    }
-
     public void logout() {
         this.processRunning = false;
         if(player == null || player.disconnected) { //Fuck this check!
@@ -111,24 +102,23 @@ public class SocketHandler implements Runnable {
         }
         if(player.UsingAgility)
             player.xLog = true;
-        else
-            player.disconnected = true;
+        else player.disconnected = true;
     }
 
-    public boolean parsePackets() {
+    public void parsePackets() {
         try {
             if (player.disconnected) {
                 this.processRunning = false;
-                return false;
+                return;
             }
             if (getInput() == null) {
                 this.processRunning = false;
-                return false;
+                return;
             }
 
             int avail = getInput().available();
             if (avail == 0) {
-                return false;
+                return;
             }
             if (player.packetType == -1) {
                 player.packetType = getInput().read() & 0xff;
@@ -143,11 +133,11 @@ public class SocketHandler implements Runnable {
                     player.packetSize = getInput().read() & 0xff;
                     avail--;
                 } else {
-                    return false;
+                    return;
                 }
             }
             if (avail < player.packetSize) {
-                return false;
+                return;
             }
             fillInStream(player.packetType, player.packetSize);
             player.timeOutCounter = 0;
@@ -156,14 +146,13 @@ public class SocketHandler implements Runnable {
             //player.saveStats(true); //We do not need this if we disconnect!
             player.disconnected = true;
             this.processRunning = false;
-            return false;
         }
-        return true;
     }
 
-    private void fillInStream(int id, int forceRead) throws java.io.IOException {
+    private void fillInStream(int id, int forceRead) throws IOException {
         byte[] data = new byte[forceRead];
         getInput().read(data, 0, forceRead);
+        //write(data, 0, forceRead);
         PacketData pData = new PacketData(id, data, forceRead);
         packets.add(pData);
     }
@@ -176,15 +165,14 @@ public class SocketHandler implements Runnable {
         outData.add(copy);
     }
 
-    public boolean writeOutput() {
+    public void writeOutput() {
         for (int i = 0; i < 20; i++) {
             if (outData.isEmpty())
-                return false;
+                return;
             byte[] data = outData.poll();
             if (data != null)
                 write(data);
         }
-        return false;
     }
 
 }

@@ -35,7 +35,7 @@ import java.util.*;
 
 public abstract class Player extends Entity {
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
-    public long disconnectAt = 0, longName = 0;
+    public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
@@ -426,7 +426,7 @@ public abstract class Player extends Entity {
             return false;
         int deltaX = otherPlr.getPosition().getX() - getPosition().getX(),
                 deltaY = otherPlr.getPosition().getY() - getPosition().getY();
-        return deltaX <= 15 && deltaX >= -16 && deltaY <= 15 && deltaY >= -16;
+        return deltaX <= 16 && deltaX >= -16 && deltaY <= 16 && deltaY >= -16;
     }
 
     public boolean withinDistance(Npc npc) {
@@ -463,7 +463,7 @@ public abstract class Player extends Entity {
     private int currentX, currentY; // relative x/y coordinates (to map region)
     // Note that mapRegionX*8+currentX yields absX
 
-    public static final int WALKING_QUEUE_SIZE = 50;
+    public static final int WALKING_QUEUE_SIZE = 80;
     public int[] walkingQueueX = new int[WALKING_QUEUE_SIZE], walkingQueueY = new int[WALKING_QUEUE_SIZE];
     public int wQueueReadPtr = 0; // points to slot for reading from queue
     public int wQueueWritePtr = 0; // points to (first free) slot for writing
@@ -500,7 +500,7 @@ public abstract class Player extends Entity {
             if (dir == -1)
                 wQueueReadPtr = (wQueueReadPtr + 1) % WALKING_QUEUE_SIZE;
             else if ((dir & 1) != 0) {
-                println_debug("Invalid waypoint in walking queue! at direction: " + dir);
+                println_debug("Invalid waypoint in walking queue!");
                 resetWalkingQueue();
                 return -1;
             }
@@ -508,9 +508,11 @@ public abstract class Player extends Entity {
         if (dir == -1)
             return -1;
         dir >>= 1;
+        Position newPos = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
         currentX += Utils.directionDeltaX[dir];
         currentY += Utils.directionDeltaY[dir];
-        getPosition().moveTo(getPosition().getX() + Utils.directionDeltaX[dir],getPosition().getY() + Utils.directionDeltaY[dir]);
+        newPos.move(Utils.directionDeltaX[dir], Utils.directionDeltaY[dir]);
+        getPosition().moveTo(newPos.getX(),newPos.getY());
         return dir;
     }
 
@@ -553,13 +555,13 @@ public abstract class Player extends Entity {
             currentY = teleportToY - 8 * mapRegionY;
             Position newPos = new Position(teleportToX, teleportToY, teleportToZ);
             resetWalkingQueue();
-            //Balloons.updateBalloons(temp);
-            //GlobalObject.updateObject(temp);
+
             teleportToX = teleportToY = -1;
             teleportToZ = 0;
             didTeleport = true;
             temp.getPosition().moveTo(newPos.getX(), newPos.getY(), newPos.getZ());
         } else {
+
             primaryDirection = getNextWalkingDirection();
             if (primaryDirection == -1)
                 return; // standing
@@ -714,9 +716,9 @@ public abstract class Player extends Entity {
     public void clearUpdateFlags() {
         IsStair = false; //What is this?!
         faceTarget(-1);
+        if(isActive && !disconnected)
+            ((Client) this).flushOutStream(); //Not sure if we need or if this causes issues!
         getUpdateFlags().clear();
-        if(((Client) this).isActive) //If we active, please flush stream...Do we need this?!
-            ((Client) this).flushOutStream();
     }
 
     public void faceTarget(int index) {

@@ -1119,6 +1119,9 @@ public class ClickingButtons implements Packet {
                 client.unMorph();
             }
             break;
+            case 74214:
+                client.buttonOnRun = !client.buttonOnRun;
+            break;
             default:
                 // System.out.println("Player stands in: X="+absX+" Y="+absY);
                 if (client.playerRights > 1) {
