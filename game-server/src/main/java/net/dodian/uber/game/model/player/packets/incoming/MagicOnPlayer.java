@@ -70,6 +70,7 @@ public class MagicOnPlayer implements Packet {
                     double critChance = (double) client.getLevel(Skill.AGILITY) / 9;
                     boolean hitCrit = Math.random() * 100 <= critChance * (client.getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 1.5 : 1);
                     client.deleteItem(565, 1);
+                    client.checkItemUpdate();
                     double dmg = client.baseDamage[slot] * magicBonusDamage(client);
                     hitDiff = Utils.random((int) dmg);
                     hitDiff = hitCrit ? hitDiff + (int)(Utils.dRandom2((extra))) : hitDiff;

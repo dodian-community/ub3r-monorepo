@@ -25,7 +25,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void update(Player player, Stream stream) {
-         Stream updateBlock = new Stream(new byte[8192]);//4096 is true here?!
+         Stream updateBlock = new Stream(new byte[8192]);//10k seems to be best here for w.e reason!
 
         if (Server.updateRunning) {
             stream.createFrame(114);

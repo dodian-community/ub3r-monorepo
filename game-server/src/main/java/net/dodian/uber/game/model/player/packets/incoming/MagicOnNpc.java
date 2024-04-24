@@ -64,6 +64,7 @@ public class MagicOnNpc implements Packet {
                     double critChance = client.getLevel(Skill.AGILITY) / 9D;
                     boolean hitCrit = Math.random() * 100 <= critChance * (client.getEquipment()[Equipment.Slot.SHIELD.getId()] == 4224 ? 1.5 : 1);
                     client.deleteItem(565, 1);
+                    client.checkItemUpdate();
                     double dmg = client.baseDamage[slot] * magicBonusDamage(client);
                     double hit = client.blackMaskImbueEffect(type) ? 1.2 * dmg : dmg;
                     hitDiff = Utils.random((int) hit);

@@ -466,8 +466,8 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			PlayerHandler.playersOnline.remove(longName);
-			PlayerHandler.allOnline.remove(longName);
+			//PlayerHandler.playersOnline.remove(longName);
+			//PlayerHandler.allOnline.remove(longName);
 			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			if(!disconnected)
@@ -784,7 +784,7 @@ public class Client extends Player implements Runnable {
 			/* Remove player from list! */
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
-			println_debug(getPlayerName() + " has logged out.");
+			println_debug(getPlayerName() + " has logged out correctly!");
       /*for (Player p : PlayerHandler.players) {
         if (p != null && !p.disconnected && p.dbId > 0) {
           if (p.getDamage().containsKey(getSlot())) {
@@ -2302,9 +2302,6 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeByteA(0);
 			getOutputStream().writeString("null");
 			getOutputStream().endFrameVarSize();
-		}
-		if (disconnectAt > 0 && now >= disconnectAt) {
-			disconnected = true;
 		}
 		if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
 			pickUpItem(attemptGround.x, attemptGround.y);
@@ -5467,10 +5464,6 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void itemsToVScreen_old() {
-		if (disconnectAt > 0) {
-			acceptDuelWon();
-			return;
-		}
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(6822);
 		getOutputStream().writeWord(otherOfferedItems.toArray().length);

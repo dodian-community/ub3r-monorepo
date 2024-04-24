@@ -192,10 +192,11 @@ public class Npc extends Entity {
                 "attack - " + this.getAttack(),
                 "strength - " + this.getStrength(),
                 "defence - " + this.getDefence(),
-                "magic dmg - " + String.format("%3.1f", this.getMagic() * 100D) + "% (maxHit: " + magicDamage + ")",
+                "magic - " + String.format("%3.1f", this.getMagic() * 100D) + "%",
                 "ranged - " + this.getRange(),
                 "Max hit Range: " + rangeMaxHit,
-                "Max hit Melee: " + this.maxHit
+                "Max hit Melee: " + this.maxHit,
+                "Max hit Magic: " + magicDamage
         };
         client.send(new SendString("@dre@               Uber 3.0 Npc Configs", 8144));
         client.clearQuestInterface();
@@ -229,9 +230,10 @@ public class Npc extends Entity {
                 "strength - " + this.getStrength(),
                 "defence - " + this.getDefence(),
                 "ranged - " + this.getRange(),
-                "magic dmg - " + String.format("%3.1f", this.getMagic() * 100D) + "% (maxHit: " + magicDamage + ")",
+                "magic - " + String.format("%3.1f", this.getMagic() * 100D) + "%",
                 "Max hit Range: " + rangeMaxHit,
-                "Max hit Melee: " + this.maxHit
+                "Max hit Melee: " + this.maxHit,
+                "Max hit Magic: " + magicDamage
         };
         client.send(new SendString("@dre@               Data for " + npcName(), 8144));
         client.clearQuestInterface();
@@ -345,70 +347,79 @@ public class Npc extends Entity {
                     }
                 }
             } else if(getId() == 4303) { //Kalphite Queen
-                /* Not added yet! */
-                boolean landMage = Misc.chance(8) == 1;
                 enemy = getSecondTarget(target, true);
-                assert target != null;
-                if(target.attackingNpc || enemy.attackingNpc) {
-                    if(landMage) {
-                        requestAnim(data.getAttackEmote(), 0);
+                if(target == null && enemy != null)
+                    setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
+                else if (target != null) setFocus(target.getPosition().getX(), target.getPosition().getY());
+                boolean landRanged = Misc.chance(6) == 1;
+                //278 = start gfx!, 288 = range gfx!
+                if(!landRanged) {
+                    requestAnim(data.getAttackEmote(), 0);
+                    if(target != null && target.attackingNpc)
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else {
-                        requestAnim(data.getAttackEmote(), 0);
-                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    if(enemy != null && enemy.attackingNpc)
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                } else { //Ranged!
+                    if(target != null && target.attackingNpc) {
+                        sendArrow(target, -1, 288);
+                        delayGfx(target, 6240, -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(landMage && enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else if(enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    if(enemy != null && enemy.attackingNpc) {
+                        sendArrow(target, -1, 288);
+                        delayGfx(target, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 4304) { //Kalphite King
-                /* Not added yet! */
-                boolean landRanged = Misc.chance(8) == 1;
                 enemy = getSecondTarget(target, true);
-                assert target != null;
-                if(target.attackingNpc || enemy.attackingNpc) {
-                    if(landRanged) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else {
-                        requestAnim(data.getAttackEmote(), 0);
-                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                if(target == null && enemy != null)
+                    setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
+                else if (target != null) setFocus(target.getPosition().getX(), target.getPosition().getY());
+                boolean landMagic = Misc.chance(6) == 1;
+                //279 = start gfx!, 289 = range gfx!, 280 = magic gfx!
+                if(!landMagic) {
+                    if(target != null && target.attackingNpc) {
+                        sendArrow(target, -1, 289);
+                        delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), landHit(target, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
                     }
-                    if(landRanged && enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else if(enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    if(enemy != null && enemy.attackingNpc) {
+                        sendArrow(enemy, -1, 289);
+                        delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), landHit(enemy, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
+                    }
+                } else { //Magic!
+                    if(target != null && target.attackingNpc) {
+                        sendArrow(target, 279, 280);
+                        delayGfx(target, 6234, 281, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
+                    }
+                    if(enemy != null && enemy.attackingNpc) {
+                        sendArrow(target, 279, 280);
+                        delayGfx(target, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 6610) { //Spider Queen
-                /* Not added yet! */
-                boolean landMelee = Misc.chance(8) == 1;
                 enemy = getSecondTarget(target, true);
-                assert target != null;
-                if(target.attackingNpc || enemy.attackingNpc) {
-                    if(landMelee) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else {
-                        requestAnim(data.getAttackEmote(), 0);
-                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                if(target == null && enemy != null)
+                    setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
+                else if (target != null) setFocus(target.getPosition().getX(), target.getPosition().getY());
+                boolean landMelee = Misc.chance(6) == 1;
+                //magic earth wave or surge gfx's
+                if(!landMelee) {
+                    if(target != null && target.attackingNpc) {
+                        sendArrow(target, 164, 165);
+                        delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(landMelee && enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    } else if(enemy != null) {
-                        requestAnim(data.getAttackEmote(), 0);
-                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    if(enemy != null && enemy.attackingNpc) {
+                        sendArrow(enemy, 164, 165);
+                        delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
+                } else { //Melee!
+                    requestAnim(5327, 0);
+                    if(target != null && target.attackingNpc)
+                        target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
+                    if(enemy != null && enemy.attackingNpc)
+                        enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                 }
             }
-            if(enemy == null) fighting = false;
+            if(target == null && enemy == null) fighting = false; //Think we need this!
             setLastAttack(getAttackTimer());
         }
     }
@@ -586,7 +597,7 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || e.equals(first)))
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || first == e))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
@@ -814,7 +825,7 @@ public class Npc extends Entity {
                 } else { //Ranged attack
                     CalculateMaxHit(false);
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    sendArrow(c, -1, 32);
+                    sendArrow(c, -1, 276);
                     delayGfx(c, 5446, -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
                 }
                 break;
@@ -1054,7 +1065,8 @@ public class Npc extends Entity {
                 else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
                 else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
                 c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
-                setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
+                if(getId() != 4303 && getId() != 4304 && getId() != 6610)
+                    setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
                 stop();
             }
         });

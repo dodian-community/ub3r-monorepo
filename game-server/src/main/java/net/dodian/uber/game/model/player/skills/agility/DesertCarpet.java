@@ -106,9 +106,11 @@ public class DesertCarpet {
         if (c.getPosition().getX() < 3347 && c.getPosition().getX() > 3349 && c.getPosition().getY() != 3002 && c.getPosition().getY() != 3003) { //Two corners!
             return;
         }
-        int x = 1, y = 0;
-        if(c.getPosition().getX() == 3348 && c.getPosition().getY() == 3003)
-            y = 1;
+        int x = 0, y = 1;
+        if((c.getPosition().getX() == 3347 && c.getPosition().getY() == 3002) || (c.getPosition().getX() == 3348 && c.getPosition().getY() == 3003)) {
+            y = 0;
+            x = 1;
+        }
         boolean time = c.getPosition().getX() == 3347 && c.getPosition().getY() == 3002;
         c.send(new RemoveInterfaces());
         c.faceNpc(-1);

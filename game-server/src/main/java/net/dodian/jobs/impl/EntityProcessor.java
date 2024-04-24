@@ -142,9 +142,9 @@ public class EntityProcessor implements Job {
                 if (!PlayerHandler.players[i].initialized) {
                     PlayerHandler.players[i].initialize();
                     PlayerHandler.players[i].initialized = true;
-                } else
-                    while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
+                }
                 PlayerHandler.players[i].process();
+                while (PlayerHandler.players[i].packetProcess()); //Dodian's way of handling packets..Omegalul!
                 PlayerHandler.players[i].postProcessing();
                 PlayerHandler.players[i].getNextPlayerMovement();
             }
