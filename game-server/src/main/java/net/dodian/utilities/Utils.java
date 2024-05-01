@@ -3,6 +3,8 @@ package net.dodian.utilities;
 // a collection of misc methods
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Utils {
     public static int[] buttons_smelting = {15147, 15146, 10247, 9110, 15151, 15150, 15149, 15148, 15155, 15154, 15153,
@@ -321,4 +323,9 @@ public class Utils {
 
     // translates our direction convention to the one used in the protocol
     public static byte xlateDirectionToClient[] = new byte[]{1, 2, 4, 7, 6, 5, 3, 0};
+
+	public static void println_debug(String message) {
+		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		System.out.println("[" + timestamp + "] " + message);
+	}
 }

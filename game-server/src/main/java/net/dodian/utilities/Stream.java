@@ -1,10 +1,12 @@
 package net.dodian.utilities;
 
+import static net.dodian.utilities.Utils.println_debug;
+
 public class Stream {
 
-    public Stream(byte[] abyte0) {
+    public Stream(byte[] buffer) {
         currentOffset = 0;
-        buffer = abyte0;
+        this.buffer = buffer;
     }
 
     public byte readSignedByteA() {
@@ -151,11 +153,15 @@ public class Stream {
     }
 
     public void createFrame(int id) {
-        try {
-            buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
-        } catch (Exception e) {
-            System.out.println("error creating frame.." + e + ", "+id+", " + currentOffset + ", " + (byte)(id + packetEncryption.getNextKey()));
+        if (buffer.length < currentOffset) {
+            println_debug(String.format("Error Creating Packet: Opcode=%3s%n - Buffer Size=%s bytes, Current Byte=%s", id, buffer.length, currentOffset));
+            Thread.dumpStack();
+            System.out.println("-----------------------------------------------------------------------------");
+
+            return;
         }
+
+        buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
     }
 
     private static final int frameStackSize = 10;
@@ -298,7 +304,7 @@ public class Stream {
 
     public java.lang.String readString() {
         int i = currentOffset;
-        while (buffer[currentOffset++] != 10);
+        while (buffer[currentOffset++] != 10) ;
         return new String(buffer, i, currentOffset - i - 1);
     }
 
@@ -342,6 +348,7 @@ public class Stream {
     public int bitPosition = 0;
 
     public static int[] bitMaskOut = new int[32];
+
     static {
         for (int i = 0; i < 32; i++)
             bitMaskOut[i] = (1 << i) - 1;
