@@ -356,9 +356,13 @@ public class Client extends Player implements Runnable {
 		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		System.out.println("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
 	}
+
 	public void print_debug(String str) {
-		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		System.out.print("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
+		// TODO: Is this method necessary? I commented out the implementation of it and will just redirect it to the println variant.
+		println_debug(str);
+
+		// String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		// System.out.print("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
 	}
 
 	public void println(String str) {
@@ -450,9 +454,7 @@ public class Client extends Player implements Runnable {
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
 		outputStream = new Stream(new byte[8192]);
-		outputStream.currentOffset = 0;
 		inputStream = new Stream(new byte[8192]);
-		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
 	}
 
@@ -656,7 +658,7 @@ public class Client extends Player implements Runnable {
 				returnCode = 14;
 				disconnected = true;
 			}
-			print_debug("Name check..." + longName + ":" + properName + " ");
+			println_debug("Name check..." + longName + ":" + properName + " ");
 			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
 			switch (playerGroup) {
 				case 6: // root admin
@@ -728,7 +730,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		if (getSlot() == -1 || returnCode != 2) {
-			print_debug("..."+ (getSlot() == -1 ? "-1" : "" + getSlot()) +" where return code is " + returnCode);
+			print_debug("...slot="+ (getSlot() == -1 ? "-1" : "" + getSlot()) +" where return code is: " + returnCode);
 			return;
 		}
 		isActive = true;
@@ -2045,6 +2047,7 @@ public class Client extends Player implements Runnable {
 	// prior to starting the regular communication
 	public void initialize() {
 		/* Login write settings! */
+		// TODO: Figure out why this causes an error
 		getOutputStream().createFrame(249);
 		getOutputStream().writeByteA(playerIsMember); // 1 = member, 0 = f2p
 		getOutputStream().writeWordBigEndianA(getSlot());

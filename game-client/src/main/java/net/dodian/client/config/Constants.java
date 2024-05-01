@@ -9,7 +9,7 @@ public class Constants {
 	/*
 	 * Client Configurations
 	 */
-	public static double    SERVER_VERSION = 1.5;
+	public static double SERVER_VERSION         = 1.5;
 	public static String WINDOW_TITLE     		= "Dodian.net Client - Uber Server 3.0 (Client: "+SERVER_VERSION+")";
 
 	/*

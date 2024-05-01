@@ -157,7 +157,7 @@ create table if not exists uber3_item_log
     from_id int      null,
     item_id int      null,
     item_amount int      null,
-    timestamp datetime null
+    timestamp datetime null,
     x int      null,
     y int      null,
     z int      null,
@@ -274,7 +274,7 @@ create table if not exists uber3_refunds
     item     int           null,
     amount     int           null,
     message             tinyint          default 0        not null,
-    claimed datetime null
+    claimed datetime null,
     primary key (date)
 )
     engine = InnoDB;
@@ -284,6 +284,7 @@ create table if not exists uber3_npcs
     id          int auto_increment
         primary key,
     name        varchar(255)     default 'no name' null,
+    examine     text             default null      null,
     combat      int              default 0         null,
     attackEmote int              default 806       null,
     deathEmote  int              default 836       null,

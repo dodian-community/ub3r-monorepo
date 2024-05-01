@@ -6,7 +6,7 @@ import java.nio.file.Path
 private val initializedFile = Path.of("./.initialized_database").toFile()
 
 fun initializeDatabase() {
-    if (initializedFile.exists()) return else initializedFile.createNewFile()
+    if (initializedFile.exists()) return
 
     val dbSqlPath = Path.of("./").resolve("database")
 
@@ -25,6 +25,7 @@ fun initializeDatabase() {
         println()
     }
     println("Successfully imported database in ${(System.currentTimeMillis() / 1000) - startTime} seconds")
+    initializedFile.createNewFile()
 }
 
 fun isDatabaseInitialized() = initializedFile.exists()
