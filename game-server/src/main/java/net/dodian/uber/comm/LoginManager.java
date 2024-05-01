@@ -24,10 +24,17 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 public class LoginManager {
 
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
-        if (PlayerHandler.isPlayerOn(playerName)) //Already online!
+        if (PlayerHandler.isPlayerOn(playerName)) { // Already online!
+			System.out.printf("%s players online:%n", PlayerHandler.playersOnline.size());
+			PlayerHandler.playersOnline.forEach((lName, client) -> System.out.printf("- %s (%s), session start=%tc %n", client.playerName, client.longName, client.now));
+            System.out.println();
+
             return 5;
+        }
+
         if (playerName.isEmpty()) //To short name!
             return 3;
+
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
@@ -40,7 +47,7 @@ public class LoginManager {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
                     if (!md5pass.equals(results.getString("password"))
-                    && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
+                            && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
                         return 3;
                     }
                     p.otherGroups = results.getString("membergroupids").split(",");
@@ -74,7 +81,7 @@ public class LoginManager {
                 if (isBanned(p.dbId)) {
                     return 4;
                 }
-                if(Login.isUidBanned(LoginManager.UUID)) {
+                if (Login.isUidBanned(LoginManager.UUID)) {
                     return 22;
                 }
                 String[] look = results.getString("look").isEmpty() ? null : results.getString("look").split(" ");
@@ -90,7 +97,7 @@ public class LoginManager {
                 p.UUID = results.getString("uuid");
                 int x = results.getInt("x"), y = results.getInt("y"), z = results.getInt("height");
                 p.loginPosition(x, y, z);
-                if(x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!
+                if (x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!
                 p.mutedTill = results.getLong("unmutetime");
                 /* Set stats */
                 p.fightType = results.getInt("fightStyle");
@@ -135,19 +142,19 @@ public class LoginManager {
                         p.refreshSkill(skill);
                     });
                 }
-                if(!prayer.isEmpty()) {
-                    for(int i = 1; i < prayer_prase.length; i++)
+                if (!prayer.isEmpty()) {
+                    for (int i = 1; i < prayer_prase.length; i++)
                         p.getPrayerManager().togglePrayer(Prayers.Prayer.forButton(Integer.parseInt(prayer_prase[i])));
                 }
-                if(!boosted.isEmpty()) {
+                if (!boosted.isEmpty()) {
                     p.lastRecover = Integer.parseInt(boosted_prase[0]);
-                    for(int i = 0; i < boosted_prase.length - 1; i++)
+                    for (int i = 0; i < boosted_prase.length - 1; i++)
                         p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
                 }
                 results2.close();
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
-                if(!inventory.isEmpty()) {
+                if (!inventory.isEmpty()) {
                     String[] parse = inventory.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -174,7 +181,7 @@ public class LoginManager {
                 }
                 /* Sets Equipment */
                 String equip = (results.getString("equipment")).trim();
-                if(!equip.isEmpty()) {
+                if (!equip.isEmpty()) {
                     String[] parse = equip.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -183,10 +190,10 @@ public class LoginManager {
                             int id = Integer.parseInt(parse2[1]);
                             int amount = Integer.parseInt(parse2[2]);
                             if (id <= 24000) {
-                                if(p.checkEquip(id, slot, -1)) {
+                                if (p.checkEquip(id, slot, -1)) {
                                     p.getEquipment()[slot] = id;
                                     p.getEquipmentN()[slot] = amount;
-                                } else if(p.freeSlots() == 0 || !p.addItem(id, amount)) {
+                                } else if (p.freeSlots() == 0 || !p.addItem(id, amount)) {
                                     Ground.addFloorItem(p, id, amount);
                                     ItemLog.playerDrop(p, id, amount, p.getPosition().copy(), "Equipment check drop");
                                     p.send(new SendMessage("<col=FF0000>You dropped the " + Server.itemManager.getName(Integer.parseInt(parse2[1])).toLowerCase() + " on the floor!!!"));
@@ -200,17 +207,17 @@ public class LoginManager {
                 p.setTravel(results.getString("travel"));
                 /* Sets Unlocks */
                 String unlocks = (results.getString("unlocks")).trim();
-                for(int i = 0; i < p.unlockLength; i++) {
-                    if(!unlocks.isEmpty()) {
+                for (int i = 0; i < p.unlockLength; i++) {
+                    if (!unlocks.isEmpty()) {
                         String[] parse = unlocks.split(":");
-                        if(i < parse.length)  {
+                        if (i < parse.length) {
                             p.addUnlocks(i, parse[i].split(","));
                         } else p.addUnlocks(i, "0", "0");
                     } else p.addUnlocks(i, "0", "0");
                 }
                 /* Sets Bank */
                 String bank = (results.getString("bank")).trim();
-                if(!bank.isEmpty()) {
+                if (!bank.isEmpty()) {
                     String[] parse = bank.split(" ");
                     for (String s : parse) {
                         String[] parse2 = s.split("-");
@@ -268,7 +275,7 @@ public class LoginManager {
                 String effect = results.getString("effects");
                 if (effect != null && !effect.isEmpty()) {
                     String[] lines = effect.split(":");
-                    for(int i = 0; i < lines.length; i++) {
+                    for (int i = 0; i < lines.length; i++) {
                         int amount = Integer.parseInt(lines[i]);
                         p.effects.add(i, amount);
                     }
@@ -277,11 +284,11 @@ public class LoginManager {
                 String daily = results.getString("dailyReward");
                 if (daily != null && !daily.isEmpty()) { //If empty or null!
                     String[] lines = daily.split(";");
-                    for(int i = 0; i < lines.length; i++) {
+                    for (int i = 0; i < lines.length; i++) {
                         String[] parts = lines[i].split(",");
                         boolean newDay = p.dateDays(new Date(Long.parseLong(parts[0])), p.today) > 0;
-                        if(i == 0) { //Battle staff loading!
-                            if(newDay) {
+                        if (i == 0) { //Battle staff loading!
+                            if (newDay) {
                                 p.dailyReward.add(0, p.today.getTime() + "");
                                 p.dailyReward.add(1, "6000");
                                 p.dailyReward.add(2, parts[2]);
@@ -325,10 +332,10 @@ public class LoginManager {
 
     public void updatePlayerForumRegistration(Client p) {
         try {
-        Statement statement = getDbConnection().createStatement();
-        String newStatsAccount = "UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='40' WHERE userid = '" + p.dbId + "'";
-        statement.executeUpdate(newStatsAccount);
-        statement.close();
+            Statement statement = getDbConnection().createStatement();
+            String newStatsAccount = "UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='40' WHERE userid = '" + p.dbId + "'";
+            statement.executeUpdate(newStatsAccount);
+            statement.close();
         } catch (Exception e) {
             System.out.println("Something wrong with updating a players forum rights " + e);
         }

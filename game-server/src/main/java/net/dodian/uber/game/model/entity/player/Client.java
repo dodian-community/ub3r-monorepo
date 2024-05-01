@@ -658,6 +658,7 @@ public class Client extends Player implements Runnable {
 				returnCode = 14;
 				disconnected = true;
 			}
+
 			println_debug("Name check..." + longName + ":" + properName + " ");
 			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
 			switch (playerGroup) {
