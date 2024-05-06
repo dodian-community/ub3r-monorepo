@@ -453,8 +453,10 @@ public class Client extends Player implements Runnable {
 		super(_playerId);
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[8192]);
-		inputStream = new Stream(new byte[8192]);
+		outputStream = new Stream(new byte[8192 * 2]); //not sure if we need more than twice!
+		outputStream.currentOffset = 0;
+		inputStream = new Stream(new byte[8192 * 2]);
+		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
 	}
 
