@@ -24,7 +24,7 @@ public final class EntityDef {
         int id = (int) def.interfaceType;
         if (id == 100 || id == 5935)
             def.minimapDot = true;
-        if (id == 6080) {
+        if (id == 6080 || id == 4965) {
             def.standAnim = 6666;
             def.walkAnim = 6666;
         }
@@ -74,6 +74,10 @@ public final class EntityDef {
         if (id == 6610) { //Venenatis
             def.name = "Spider Queen";
             def.combatLevel = 402;
+        }
+        if (id == 5842) { //Cow = easter...huh?!
+            def.actions = new String[]{"Talk-to", null, null, null, null};
+            def.combatLevel = 0;
         }
     }
 

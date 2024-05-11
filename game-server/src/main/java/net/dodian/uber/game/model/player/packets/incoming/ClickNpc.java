@@ -16,6 +16,7 @@ import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.agility.DesertCarpet;
 import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 
+import java.util.Date;
 import java.util.Objects;
 
 public class ClickNpc implements Packet {
@@ -179,6 +180,14 @@ public class ClickNpc implements Packet {
             client.NpcWanneTalk = 17;
         } else if (npcId == 22) {
             client.NpcWanneTalk = 17;
+        } else if (npcId == 5842) { //Compensate dialogue!
+            boolean canClaim = new Date().before(new Date("06/1/2024")) && !client.checkItem(7927);
+            if (canClaim) {
+                client.showNPCChat(npcId, 595, new String[]{"Here take a easter ring for all your troubles.", "Enjoy your stay at Dodian."});
+                client.addItem(7927, 1);
+                client.checkItemUpdate();
+            } else
+                client.showNPCChat(npcId, 595, new String[]{client.checkItem(7927) ? "You already got the ring." : "It is not May anymore."});
         } else if (npcId == 1779) { //Plunder dialogue TODO!
             client.showNPCChat(1779, 605, new String[]{"What are you even doing in here?!", "Begone from me!"});
         } else if (npcId == 943) {

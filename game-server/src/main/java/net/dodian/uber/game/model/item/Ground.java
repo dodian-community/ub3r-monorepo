@@ -50,7 +50,6 @@ public class Ground {
     public static GroundItem findGroundItem(int id, int x, int y, int z) {
         boolean tradeable = Server.itemManager.isTradable(id);
         if(!tradeable) {
-            System.out.println("wtf..." + Ground.untradeable_items.isEmpty());
             if (!Ground.ground_items.isEmpty())
                 for (GroundItem item : Ground.ground_items) {
                     if(item.x == x && item.y == y && item.z == z && item.id == id)

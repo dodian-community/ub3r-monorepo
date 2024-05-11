@@ -5,8 +5,8 @@ import static net.dodian.utilities.Utils.println_debug;
 public class Stream {
 
     public Stream(byte[] buffer) {
-        currentOffset = 0;
         this.buffer = buffer;
+        currentOffset = 0;
     }
 
     public byte readSignedByteA() {

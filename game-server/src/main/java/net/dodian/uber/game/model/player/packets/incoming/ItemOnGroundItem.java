@@ -16,12 +16,12 @@ public class ItemOnGroundItem implements Packet {
         int floorY = client.getInputStream().readUnsignedWordA();
         int unknown3 = client.getInputStream().readUnsignedWordBigEndianA();
         int floorX = client.getInputStream().readUnsignedByte();
-        System.out.println("Unknown1 = " + unknown1);
+        /*System.out.println("Unknown1 = " + unknown1);
         System.out.println("Unknown2 = " + unknown2);
         System.out.println("FloorID = " + floorID);
         System.out.println("FloorY = " + floorY);
         System.out.println("Unknown3 = " + unknown3);
-        System.out.println("FloorX = " + floorX);
+        System.out.println("FloorX = " + floorX);*/
     }
 
 }
