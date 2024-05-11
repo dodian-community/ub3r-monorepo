@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
+import java.util.Date;
+
 public class PickUpGroundItem implements Packet {
 
     @Override
@@ -18,6 +20,10 @@ public class PickUpGroundItem implements Packet {
         }
         if (itemID >= 5509 && itemID <= 5515 && client.checkItem(itemID)) {
             client.send(new SendMessage("You already got this item!"));
+            return;
+        }
+        if(itemID == 7927 && new Date().before(new Date("06/1/2024")) && client.checkItem(7927)) {
+            client.send(new SendMessage("You already got this ring! Wait until after May!"));
             return;
         }
         if (System.currentTimeMillis() - client.lastAction <= 600 || (client.attemptGround != null && client.attemptGround.id == itemID)) {

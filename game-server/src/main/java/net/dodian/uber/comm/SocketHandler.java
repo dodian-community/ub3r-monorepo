@@ -8,165 +8,171 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SocketHandler implements Runnable {
 
     private final Client player;
     private final Socket socket;
+    private final AtomicBoolean processRunning = new AtomicBoolean(true);
 
-    private boolean processRunning;
-
-    private final PacketQueue packets = new PacketQueue();
-    private final Queue<PacketData> myPackets = new LinkedList<>();
+    private final Queue<PacketData> myPackets = new ConcurrentLinkedQueue<>();
     private final Queue<byte[]> outData = new ConcurrentLinkedQueue<>();
+
+    private InputStream inputStream;
+    private OutputStream outputStream;
 
     public SocketHandler(Client player, Socket socket) {
         this.player = player;
         this.socket = socket;
-        this.processRunning = true;
+        initializeStreams();
     }
 
-    public void run() { //50 ms per packet!
-            while (processRunning) {
-                if (isConnected()) {
-                    writeOutput();
-                    parsePackets();
-                    LinkedList<PacketData> temp = packets.getPackets();
-                    if (temp != null) myPackets.addAll(temp);
-                } else {
-                    myPackets.clear();
-                    break;
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (java.lang.Exception _ex) {
-                    YellSystem.alertStaff("Something is up with socket handler!");
-                    System.out.println("SocketHandling is throwing errors: " + _ex.getMessage());
-                }
-            }
-    }
-
-    private boolean isConnected() {
-        return getInput() != null && getOutput() != null;
-    }
-
-    public Client getPlayer() {
-        return player;
-    }
-
-    public Socket getSocket() {
-        return socket;
+    private void initializeStreams() {
+        try {
+            this.inputStream = this.socket.getInputStream();
+            this.outputStream = this.socket.getOutputStream();
+        } catch (IOException e) {
+            YellSystem.alertStaff("SocketHandler: Failed to initialize streams: " + e.getMessage());
+            player.disconnected = true;
+        }
     }
 
     public InputStream getInput() {
-        try {
-            return getSocket().getInputStream();
-        } catch (IOException e) {
-            logout();
+        return inputStream;
+    }
+
+    public OutputStream getOutput() {
+        return outputStream;
+    }
+
+    @Override
+    public void run() {
+        while (processRunning.get() && isConnected() && !player.disconnected) {
+            writeOutput();
+            flush();
+            parsePackets();
+            player.timeOutCounter = 0;
         }
-        return null;
+        cleanup();
+    }
+
+    private boolean isConnected() {
+        return socket != null && !socket.isClosed() && socket.isConnected() && !player.disconnected;
     }
 
     public void flush() {
         try {
-            getOutput().flush();
+            if (outputStream != null) {
+                synchronized (outputStream) {
+                    outputStream.flush();
+                }
+            }
         } catch (IOException e) {
-            logout();
+            player.disconnected = true;
+            System.out.println("SocketHandler: Failed to flush output stream: " + e.getMessage());
         }
-    }
-
-    public OutputStream getOutput() {
-        try {
-            return getSocket().getOutputStream();
-        } catch (IOException e) {
-            logout();
-        }
-        return null;
     }
 
     public void write(byte[] array) {
         try {
-            getOutput().write(array);
+            if (outputStream != null) {
+                synchronized (outputStream) {
+                    outputStream.write(array);
+                }
+            }
         } catch (IOException e) {
-            logout();
+            player.disconnected = true;
+            System.out.println("SocketHandler: Failed to write output array: " + e.getMessage());
         }
     }
 
-    public void write(byte[] data, int i, int length) {
+    public void write(byte[] data, int off, int length) {
         try {
-            getOutput().write(data, i, length);
+            if (outputStream != null) {
+                synchronized (outputStream) {
+                    outputStream.write(data, off, length);
+                }
+            }
         } catch (IOException e) {
-            logout();
+            player.disconnected = true;
+            System.out.println("SocketHandler: Failed to write output data: " + e.getMessage());
         }
     }
 
     public void logout() {
-        this.processRunning = false;
-        if(player == null || player.disconnected) { //Fuck this check!
-            return;
+        if (processRunning.getAndSet(false)) {
+            player.disconnected = true;
+            cleanup();
+            YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!");
         }
-        if(player.UsingAgility)
-            player.xLog = true;
-        else player.disconnected = true;
     }
 
-    public void parsePackets() {
+    private void cleanup() {
         try {
-            if (player.disconnected) {
-                this.processRunning = false;
-                return;
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
             }
-            if (getInput() == null) {
-                this.processRunning = false;
+        } catch (IOException e) {
+            System.out.println("SocketHandler Cleanup Exception: " + e.getMessage());
+        }
+    }
+
+    private void parsePackets() {
+        try {
+            if (player.disconnected || inputStream == null) {
+                processRunning.set(false);
                 return;
             }
 
-            int avail = getInput().available();
+            int avail = inputStream.available();
             if (avail == 0) {
                 return;
             }
+
             if (player.packetType == -1) {
-                player.packetType = getInput().read() & 0xff;
+                player.packetType = inputStream.read() & 0xff;
                 if (player.inStreamDecryption != null) {
                     player.packetType = player.packetType - player.inStreamDecryption.getNextKey() & 0xff;
                 }
                 player.packetSize = Constants.PACKET_SIZES[player.packetType];
                 avail--;
             }
+
             if (player.packetSize == -1) {
                 if (avail > 0) {
-                    player.packetSize = getInput().read() & 0xff;
+                    player.packetSize = inputStream.read() & 0xff;
                     avail--;
                 } else {
                     return;
                 }
             }
+
             if (avail < player.packetSize) {
                 return;
             }
+
             fillInStream(player.packetType, player.packetSize);
             player.timeOutCounter = 0;
             player.packetType = -1;
-        } catch (java.lang.Exception __ex) {
-            //player.saveStats(true); //We do not need this if we disconnect!
+        } catch (IOException e) {
             player.disconnected = true;
-            this.processRunning = false;
+            processRunning.set(false);
+            System.out.println("SocketHandler: Error in parsePackets: " + e.getMessage());
         }
     }
 
     private void fillInStream(int id, int forceRead) throws IOException {
         byte[] data = new byte[forceRead];
-        getInput().read(data, 0, forceRead);
-        //write(data, 0, forceRead);
+        inputStream.read(data, 0, forceRead);
         PacketData pData = new PacketData(id, data, forceRead);
-        packets.add(pData);
+        myPackets.add(pData);
     }
 
-    public LinkedList<PacketData> getPackets() {
-        return (LinkedList<PacketData>) myPackets;
+    public Queue<PacketData> getPackets() {
+        return myPackets;
     }
 
     public void queueOutput(byte[] copy) {
@@ -175,12 +181,13 @@ public class SocketHandler implements Runnable {
 
     public void writeOutput() {
         for (int i = 0; i < 20; i++) {
-            if (outData.isEmpty())
+            if (outData.isEmpty()) {
                 return;
+            }
             byte[] data = outData.poll();
-            if (data != null)
+            if (data != null) {
                 write(data);
+            }
         }
     }
-
 }

@@ -453,9 +453,11 @@ public class Client extends Player implements Runnable {
 		super(_playerId);
 		mySock = s;
 		mySocketHandler = new SocketHandler(this, s);
-		outputStream = new Stream(new byte[8192 * 2]); //not sure if we need more than twice!
+		/* Items enabled! */
+
+		outputStream = new Stream(new byte[1_000_000]); //not sure if we need more than twice!
 		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[8192 * 2]);
+		inputStream = new Stream(new byte[1_000_000]);
 		inputStream.currentOffset = 0;
 		readPtr = writePtr = 0;
 	}
@@ -470,8 +472,8 @@ public class Client extends Player implements Runnable {
 			return;
 		} // already shutdown
 		try {
-			//PlayerHandler.playersOnline.remove(longName);
-			//PlayerHandler.allOnline.remove(longName);
+			PlayerHandler.playersOnline.remove(longName);
+			PlayerHandler.allOnline.remove(longName);
 			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
 				saveStats(true, true);
 			if(!disconnected)
@@ -517,14 +519,12 @@ public class Client extends Player implements Runnable {
 	// two methods that are only used for login procedure
 	private void directFlushOutStream() throws java.io.IOException {
 		mySocketHandler.getOutput().write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
-		getOutputStream().currentOffset = 0; // reset
+		getOutputStream().currentOffset = 0;
 	}
 
 	private void fillInStream(int forceRead) throws java.io.IOException {
 		getInputStream().currentOffset = 0;
 		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
-		/*int read = mySocketHandler.getSocket().getInputStream().read(getInputStream().buffer, 0, forceRead);
-		if(read < 0) System.out.println("Read is below 0 for some reason?!");*/
 	}
 
 	private void fillInStream(PacketData pData) throws java.io.IOException {
@@ -2066,36 +2066,21 @@ public class Client extends Player implements Runnable {
 		pmstatus(2);
 		setConfigIds();
 		resetTabs(); //Set tabs!
-      /*if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 2518) {
-        getOutputStream().createFrameVarSize(104);
-        getOutputStream().writeByteC(1);
-        getOutputStream().writeByteA(1);
-        getOutputStream().writeString("Throw At");
-        getOutputStream().endFrameVarSize();
-      } else {
-        getOutputStream().createFrameVarSize(104);
-        getOutputStream().writeByteC(1);
-        getOutputStream().writeByteA(0);
-        getOutputStream().writeString("null");
-        getOutputStream().endFrameVarSize();
-      }*/ //We want this for snowballs????
-		//send(new SendMessage("Please vote! You can earn your reward by doing ::redeem "+getPlayerName()+" every 6hrs."));
-//    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
-//    send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
-//    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
-		/* Reset values for items */
-		checkItemUpdate(); //Inventory
-		for(int i = 0; i < Equipment.SIZE; i++) //Equipment
-			setEquipment(getEquipment()[i], getEquipmentN()[i], i);
-		/* Set a player active to a world! */
-		PlayerHandler.playersOnline.put(longName, this);
-		PlayerHandler.allOnline.put(longName, getGameWorldId());
+		/*send(new SendMessage("Please vote! You can earn your reward by doing ::redeem "+getPlayerName()+" every 6hrs."));
+    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
+   send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
+    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
+    */
 		/* Sets look! */
 		if (lookNeeded) {
 			defaultCharacterLook(this);
 			showInterface(3559);
 		} else
 			setLook(playerLooks);
+		/* Reset values for items */
+		checkItemUpdate(); //Inventory
+		for(int i = 0; i < Equipment.SIZE; i++) //Equipment
+			setEquipment(getEquipment()[i], getEquipmentN()[i], i);
 		//Login.banUid(); //Not sure what this do!
 		//Arrays.fill(lastMessage, ""); //We need this?!
 		/* Friend configs! */
@@ -2104,7 +2089,6 @@ public class Client extends Player implements Runnable {
 				c.refreshFriends();
 			}
 		}
-		//replaceDoors(); //Not sure we need this at this point!
 		send(new SendString("Click here to logout", 2458)); //Logout text incase!
 		/* Report a player interface text */
 		send(new SendString("Using this will send a notification to all online mods", 5967));
@@ -2142,6 +2126,9 @@ public class Client extends Player implements Runnable {
 			System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
 		}
 		loaded = true;
+		/* Set a player active to a world! */
+		PlayerHandler.playersOnline.put(longName, this);
+		PlayerHandler.allOnline.put(longName, getGameWorldId());
 	}
 
 	public void update() { //Update npc before player!
@@ -4235,6 +4222,10 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You can't trade this item"));
 			return;
 		}
+		if(itemID == 7927 && new Date().before(new Date("06/1/2024")) && other.checkItem(7927)) {
+			send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
+			return;
+		}
 		if (Server.itemManager.isStackable(itemID)) {
 			boolean inTrade = false;
 			for (GameItem item : offeredItems) {
@@ -4292,7 +4283,6 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("Can't sell that item to the store!"));
 			return;
 		}
-		System.out.println("I send here?!");
 		int slot = -1;
 		for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
 			if (ShopHandler.ShopItems[MyShopID][i] <= 0 && slot == -1)
@@ -5569,6 +5559,10 @@ public class Client extends Player implements Runnable {
 		}
 		if (!Server.itemManager.isTradable(itemID)) {
 			send(new SendMessage("You can't trade this item"));
+			return;
+		}
+		if(itemID == 7927 && new Date().before(new Date("06/1/2024")) && other.checkItem(7927)) {
+			send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
 			return;
 		}
 		if (Server.itemManager.isStackable(itemID)) {
