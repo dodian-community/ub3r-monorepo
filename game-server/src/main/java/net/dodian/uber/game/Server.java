@@ -18,7 +18,6 @@ import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
@@ -30,20 +29,29 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.utilities.DotEnvKt.getDatabaseInitialize;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class Server implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     private static int delay = 50;
@@ -53,9 +61,9 @@ public class Server implements Runnable {
     public static long updateStartTime, serverStartup;
     public Player player;
     public Client c;
-    public static ArrayList<String> connections = new ArrayList<>();
-    public static ArrayList<String> banned = new ArrayList<>();
-    public static ArrayList<RS2Object> objects = new ArrayList<>();
+    public static List<String> connections = Collections.synchronizedList(new ArrayList<>());
+    public static List<String> banned = Collections.synchronizedList(new ArrayList<>());
+    public static List<RS2Object> objects = Collections.synchronizedList(new ArrayList<>());
     public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
@@ -65,8 +73,11 @@ public class Server implements Runnable {
     public static PyramidPlunder entryObject = null;
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
-    public static Map<String, Long> tempConns = new HashMap<>();
+    public static Map<String, Long> tempConns = new ConcurrentHashMap<>();
 
+    private Selector selector;
+    private ExecutorService connectionHandlerExecutor;
+    private ScheduledExecutorService timeoutExecutor;
 
     public static void main(String args[]) throws Exception {
         System.out.println();
@@ -80,11 +91,12 @@ public class Server implements Runnable {
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
-        //ConnectionList.getInstance(); //Let us not utilize this for now!
-        /* NPC Data*/
+
+        /* NPC Data */
         npcManager = new NpcManager();
         npcManager.loadSpawns();
         System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
+
         /* Player Stuff */
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
@@ -93,22 +105,25 @@ public class Server implements Runnable {
         thieving = new Thieving();
         clientHandler = new Server();
         login = new Login();
+
         /* Load cache */
         Cache.load();
         ObjectDef.loadConfig();
         Region.load();
         Rangable.load();
+
         // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
         GameObjectData.init();
-        loadObjects(); //sql disabled
-        new DoorHandler(); //sql disabled
+        loadObjects(); // SQL disabled
+        new DoorHandler(); // SQL disabled
+
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
         new Thread(clientHandler).start(); // launch server listener
         new Thread(login).start();
-        //new Thread(new VotingIncentiveManager()).start();
+
         /* Processes */
         job = new JobScheduler();
         job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
@@ -118,67 +133,156 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
         job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
         entryObject = new PyramidPlunder();
+
         /* Done loading */
         System.gc();
-        serverStartup = System.currentTimeMillis(); //System.currentTimeMillis() - serverStartup
+        serverStartup = System.currentTimeMillis();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
-    public static Server clientHandler = null; // handles all the clients
-    public static java.net.ServerSocket clientListener = null;
-    public static boolean shutdownServer = false; // set this to true in order to
-    // shut down and kill the server
-    public static boolean shutdownClientHandler; // signals ClientHandler to shut
-    // down
+    public static Server clientHandler = null;
+    public static ServerSocketChannel serverSocketChannel = null;
+    public static boolean shutdownServer = false;
+    public static boolean shutdownClientHandler;
     public static PlayerHandler playerHandler = null;
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
 
     public void run() {
-        // setup the listener
+        System.out.println("Starting server listener.");
+
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(DotEnvKt.getServerPort(), 1, null);
-            while (true) {
-                try {
-                    if (clientListener == null)
-                        continue;
-                    java.net.Socket s = clientListener.accept();
-                    if (s == null)
-                        continue;
-                    s.setTcpNoDelay(true);
-                    String connectingHost = "" + s.getRemoteSocketAddress();
-                    connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
-                    if (antiddos && !tempConns.containsKey(connectingHost)) {
-                        s.close();
-                    } else {
-                        //ConnectionList.getInstance().addConnection(s.getInetAddress());
-                        tempConns.remove(connectingHost);
-                        connections.add(connectingHost);
-                        if (checkHost(connectingHost)) {
-                            nullConnections++;
-                            playerHandler.newPlayerClient(s, connectingHost);
-                        } else {
-                            s.close();
-                        }
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.bind(new java.net.InetSocketAddress(DotEnvKt.getServerPort()));
+            serverSocketChannel.configureBlocking(false);
+            selector = Selector.open();
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+            connectionHandlerExecutor = Executors.newFixedThreadPool(10);//up to 10 threads for handling connections
+
+
+            System.out.println("Server listening on port: " + DotEnvKt.getServerPort());
+
+            while (!shutdownClientHandler) {
+                selector.select();
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> it = selectedKeys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    it.remove();
+
+                    if (key.isAcceptable()) {
+                        connectionHandlerExecutor.submit(() -> {
+                            try {
+                                handleAccept(key);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    } else if (key.isReadable()) {
+                        handleRead(key);
                     }
-                    Thread.sleep(delay);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
+                Thread.sleep(delay);
             }
-        } catch (java.io.IOException ioe) {
+        } catch (Exception e) {
             if (!shutdownClientHandler) {
-                Utils.println("Server is already in use.");
+                System.out.println("Server is already in use.");
             } else {
-                Utils.println("ClientHandler was shut down.");
+                System.out.println("ClientHandler was shut down.");
+            }
+            e.printStackTrace();
+        } finally {
+            if (connectionHandlerExecutor != null) {
+                connectionHandlerExecutor.shutdown();
+            }
+            if (timeoutExecutor != null) {
+                timeoutExecutor.shutdown();
             }
         }
     }
 
-    public static Thread createNewConnection(SocketHandler socketHandler) {
-        return new Thread(socketHandler);
+    private void handleAccept(SelectionKey key) throws IOException {
+        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverChannel.accept();
+        socketChannel.configureBlocking(false);
+        SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
+
+        String connectingHost = socketChannel.getRemoteAddress().toString();
+        connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
+        System.out.println("Connection attempt from: " + connectingHost);
+
+        if (antiddos) {
+            if (tempConns.containsKey(connectingHost)) {
+                tempConns.remove(connectingHost);
+            } else {
+                System.out.println("Connection from " + connectingHost + " denied due to anti-DDOS measures.");
+                closeChannel(socketChannel);
+                return;
+            }
+        }
+
+        connections.add(connectingHost);
+        if (checkHost(connectingHost)) {
+            nullConnections++;
+            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
+            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
+            clientKey.attach(newClient);
+        } else {
+            System.out.println("Host " + connectingHost + " rejected.");
+            closeChannel(socketChannel);
+        }
+    }
+
+
+    private void closeChannel(SocketChannel channel) {
+        try {
+            channel.close();
+        } catch (IOException e) {
+            // Handle the exception appropriately (e.g., log the error)
+            e.printStackTrace();
+        }
+    }
+
+    private void handleRead(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        int bytesRead = 0;
+        try {
+            bytesRead = socketChannel.read(buffer);
+        } catch (IOException e) {
+            if (e instanceof java.net.SocketException && e.getMessage().equals("Connection reset")) {
+                System.out.println("Connection reset by client: " + socketChannel.getRemoteAddress());
+                closeChannel(socketChannel);
+                return;
+            }
+            throw e;
+        }
+
+        if (bytesRead == -1) {
+            handleConnectionClosed(socketChannel);
+        } else {
+            buffer.flip();
+            Client client = (Client) key.attachment();
+            if (client != null) {
+                client.processData(buffer);
+            } else {
+                // Handle the case when the client is not attached to the key
+                System.out.println("No client attached to the key for socket: " + socketChannel.getRemoteAddress());
+                closeChannel(socketChannel);
+            }
+        }
+    }
+
+    private void handleConnectionClosed(SocketChannel socketChannel) {
+        try {
+            System.out.println("Connection closed by client: " + socketChannel.getRemoteAddress());
+            closeChannel(socketChannel);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void logError(String message) {
@@ -198,10 +302,9 @@ public class Server implements Runnable {
     }
 
     public boolean checkHost(String host) {
-        for (String h : banned) {
-            if (h.equals(host))
-                return false;
-        }
+        if (banned.contains(host))
+            return false;
+
         int num = 0;
         for (String h : connections) {
             if (host.equals(h)) {
@@ -209,7 +312,7 @@ public class Server implements Runnable {
             }
         }
         if (num > 5) {
-            //anHost(host, num);
+            // banHost(host, num);
             return false;
         }
         return true;
@@ -237,5 +340,4 @@ public class Server implements Runnable {
             e.printStackTrace();
         }
     }
-
 }

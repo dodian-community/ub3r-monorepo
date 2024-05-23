@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
+import java.nio.channels.SocketChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,7 @@ public class PlayerHandler {
         }
     }
 
-    public void newPlayerClient(java.net.Socket s, String connectedFrom) {
+    public Client newPlayerClient(SocketChannel socketChannel, String connectingHost) {
         int slot = -1;
         for (int i = 1; i < players.length; i++) {
             if (players[i] == null || players[i].disconnected) {
@@ -39,15 +40,23 @@ public class PlayerHandler {
                 break;
             }
         }
-        if (slot == -1)
-            return; // no free slot found - world is full
-        Client newClient = new Client(s, slot);
+        if (slot == -1) {
+            System.out.println("No free slot found - world is full");
+            return null; // no free slot found - world is full
+        }
+
+        Client newClient = new Client(socketChannel, slot);
         newClient.handler = this;
-        (new Thread(newClient)).start();
         players[slot] = newClient;
-        players[slot].connectedFrom = connectedFrom;
-        players[slot].ip = s.getInetAddress().hashCode();
+        players[slot].connectedFrom = connectingHost;
+        players[slot].ip = socketChannel.socket().getInetAddress().hashCode();
         Player.localId = slot;
+        System.out.println("New player client initialized. Slot: " + slot + ", IP: " + players[slot].ip);
+
+        // Initialize login process for the new client
+        newClient.run();
+
+        return newClient;
     }
 
     public static int getPlayerCount() {
