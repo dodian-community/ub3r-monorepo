@@ -37,6 +37,8 @@ import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.NumberFormat;
@@ -446,20 +448,21 @@ public class Client extends Player implements Runnable {
 	public int readPtr, writePtr;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
 	private SocketHandler mySocketHandler;
+	private SocketChannel socketChannel;
 	public int timeOutCounter = 0; // to detect timeouts on the connection to the client
 	public int returnCode = 2; // Tells the client if the login was successfull
+	public Cryption outStreamEncryption;
 
-	public Client(java.net.Socket s, int _playerId) {
+
+	public Client(SocketChannel socketChannel, int _playerId) {
 		super(_playerId);
-		mySock = s;
-		mySocketHandler = new SocketHandler(this, s);
-		/* Items enabled! */
+		this.socketChannel = socketChannel;
+		this.mySocketHandler = new SocketHandler(this, socketChannel);
 
-		outputStream = new Stream(new byte[1_000_000]); //not sure if we need more than twice!
-		outputStream.currentOffset = 0;
-		inputStream = new Stream(new byte[1_000_000]);
-		inputStream.currentOffset = 0;
-		readPtr = writePtr = 0;
+		this.outputStream = new Stream(new byte[1_000_000]);
+		this.inputStream = new Stream(new byte[1_000_000]);
+
+		System.out.println("Client initialized with player ID: " + _playerId);
 	}
 
 	public void shutdownError(String errorMessage) {
@@ -468,29 +471,33 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void destruct() {
-		if (mySock == null) {
-			return;
-		} // already shutdown
+		if (mySocketHandler != null) {
+			mySocketHandler.logout();
+		}
+
 		try {
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
-			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
+			if (saveNeeded && !tradeSuccessful) {
 				saveStats(true, true);
-			if(!disconnected)
+			}
+			if (!disconnected) {
 				disconnected = true;
-			/* Reset socket of player! */
-			mySock.close();
-			mySock = null;
+			}
+			if (socketChannel != null && socketChannel.isOpen()) {
+				socketChannel.close();
+			}
 			mySocketHandler = null;
 			inputStream = null;
 			outputStream = null;
 			isActive = false;
 			buffer = null;
-		} catch (java.io.IOException ioe) {
-			System.out.println("error in destruct " + ioe);
+		} catch (IOException ioe) {
+			System.out.println("Error in destruct: " + ioe);
 		}
 		super.destruct();
 	}
+
 
 	public Stream getInputStream() {
 		return this.inputStream;
@@ -504,119 +511,167 @@ public class Client extends Player implements Runnable {
 		packet.send(this);
 	}
 
+
 	// writes any data in outStream to the relaying buffer
 	public void flushOutStream() {
 		if (disconnected || getOutputStream().currentOffset == 0) {
 			return;
 		}
-			int length = getOutputStream().currentOffset;
-			byte[] copy = new byte[length];
-			System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
+
+		int length = getOutputStream().currentOffset;
+		byte[] copy = new byte[length];
+		System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
+
+		if (outStreamEncryption != null) {
+			for (int i = 0; i < length; i++) {
+				copy[i] = (byte) (copy[i] + outStreamEncryption.getNextKey());
+			}
+		}
+
+		if (mySocketHandler != null) {
 			mySocketHandler.queueOutput(copy);
-			getOutputStream().currentOffset = 0;
+		}
+		getOutputStream().currentOffset = 0;
 	}
 
 	// two methods that are only used for login procedure
 	private void directFlushOutStream() throws java.io.IOException {
-		mySocketHandler.getOutput().write(getOutputStream().buffer, 0, getOutputStream().currentOffset);
+		ByteBuffer buffer = ByteBuffer.wrap(getOutputStream().buffer, 0, getOutputStream().currentOffset);
+		while (buffer.hasRemaining()) {
+			mySocketHandler.getSocketChannel().write(buffer);
+		}
 		getOutputStream().currentOffset = 0;
 	}
 
-	private void fillInStream(int forceRead) throws java.io.IOException {
+	private void fillInStream(int forceRead) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(forceRead);
+		int bytesRead = 0;
+		while (bytesRead < forceRead) {
+			int result = mySocketHandler.getSocketChannel().read(buffer);
+			if (result == -1) {
+				throw new IOException("End of stream reached");
+			}
+			bytesRead += result;
+		}
+		buffer.flip();
+
+		// Apply decryption to the input stream if decryption is set up
+		if (inStreamDecryption != null) {
+			for (int i = 0; i < forceRead; i++) {
+				byte decryptedByte = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
+				getInputStream().buffer[i] = decryptedByte;
+			}
+		} else {
+			buffer.get(getInputStream().buffer, 0, forceRead);
+		}
+
 		getInputStream().currentOffset = 0;
-		mySocketHandler.getInput().read(getInputStream().buffer, 0, forceRead);
 	}
 
-	private void fillInStream(PacketData pData) throws java.io.IOException {
+	private void fillInStream(PacketData pData) throws IOException {
 		getInputStream().currentOffset = 0;
 		getInputStream().buffer = pData.getData();
 		currentPacket = pData;
 	}
 
+	public void processData(ByteBuffer buffer) {
+		mySocketHandler.parsePackets(buffer);
+	}
+
+
+
+	@Override
 	public void run() {
-		// we just accepted a new connection - handle the login stuff
+		System.out.println("Starting login process for client.");
 		isActive = false;
 		long serverSessionKey, clientSessionKey;
-//	if (!KeyServer.verifiedKeys()){
-//		System.out.println("User rejected due to unverified client.");
-//		disconnected = true;
-//		returnCode = 4;
-//	}
-		// randomize server part of the session key
-		serverSessionKey = ((long) (java.lang.Math.random() * 99999999D) << 32)
-				+ (long) (java.lang.Math.random() * 99999999D);
+
+		serverSessionKey = ((long) (Math.random() * 99999999D) << 32) + (long) (Math.random() * 99999999D);
+		System.out.println("Generated server session key: " + serverSessionKey);
 
 		try {
 			returnCode = 2;
 			fillInStream(2);
 			int checkId = getInputStream().readUnsignedByte();
 			if (checkId != 14) {
-				println_debug("Could not process client with id: " + checkId);
+				System.out.println("Invalid client ID: " + checkId);
 				disconnected = true;
 				return;
 			}
 			getInputStream().readUnsignedByte();
+
 			for (int i = 0; i < 8; i++) {
-				mySocketHandler.getOutput().write(10);
+				mySocketHandler.writeByte((byte) 10);
+				System.out.println("Writing byte 10 to client.");
 			}
-			mySocketHandler.getOutput().write(0);
-			//out.write(0);
+			mySocketHandler.writeByte((byte) 0);
+			System.out.println("Writing byte 0 to client.");
+
 			getOutputStream().writeQWord(serverSessionKey);
+			System.out.println("Wrote server session key to output stream.");
 			directFlushOutStream();
 			fillInStream(2);
-			int loginType = getInputStream().readUnsignedByte(); // this is either 16
+			int loginType = getInputStream().readUnsignedByte();
 			if (loginType != 16 && loginType != 18) {
-				println_debug("Unexpected login type " + loginType);
+				System.out.println("Unexpected login type: " + loginType);
 				return;
 			}
+			System.out.println("Login type: " + loginType);
+
 			int loginPacketSize = getInputStream().readUnsignedByte();
-			int loginEncryptPacketSize = loginPacketSize - (36 + 1 + 1 + 2); // the
+			int loginEncryptPacketSize = loginPacketSize - (36 + 1 + 1 + 2);
 			if (loginEncryptPacketSize <= 0) {
-				println_debug("Zero RSA packet size!");
+				System.out.println("Zero RSA packet size!");
 				return;
 			}
+			System.out.println("Login packet size: " + loginPacketSize + ", Encrypted packet size: " + loginEncryptPacketSize);
+
 			fillInStream(loginPacketSize);
 			if (getInputStream().readUnsignedByte() != 255 || getInputStream().readUnsignedWord() != 317) {
 				returnCode = 6;
 			}
 			getInputStream().readUnsignedByte();
-			for (int i = 0; i < 9; i++) { //Client shiet?!
+			for (int i = 0; i < 9; i++) {
 				getInputStream().readDWord();
 			}
 
-			loginEncryptPacketSize--; // don't count length byte
+			loginEncryptPacketSize--;
 			int tmp = getInputStream().readUnsignedByte();
 			if (loginEncryptPacketSize != tmp) {
-				shutdownError("Encrypted packet data length (" + loginEncryptPacketSize
-						+ ") different from length byte thereof (" + tmp + ")");
+				shutdownError("Encrypted packet data length mismatch.");
 				return;
 			}
 			tmp = getInputStream().readUnsignedByte();
 			if (tmp != 10) {
-				shutdownError("Encrypted packet Id was " + tmp + " but expected 10");
+				shutdownError("Encrypted packet ID mismatch.");
 				return;
 			}
+
 			clientSessionKey = getInputStream().readQWord();
 			serverSessionKey = getInputStream().readQWord();
+			System.out.println("Client session key: " + clientSessionKey + ", Server session key: " + serverSessionKey);
 
 			String customClientVersion = getInputStream().readString();
 			officialClient = customClientVersion.equals(getGameClientCustomVersion());
 			setPlayerName(getInputStream().readString());
+			System.out.println("Player name: " + getPlayerName());
 			if (getPlayerName() == null || getPlayerName().isEmpty()) {
 				setPlayerName("player" + getSlot());
+				System.out.println("Assigned default player name: " + getPlayerName());
 			}
+
 			playerPass = getInputStream().readString();
+			System.out.println("Player password received.");
 			String playerServer;
 			try {
 				playerServer = getInputStream().readString();
 			} catch (Exception e) {
-				playerServer = "play.dodian.com";
+				playerServer = "play.dodian.net";
 			}
+			System.out.println("Player server: " + playerServer);
+
 			setPlayerName(getPlayerName().toLowerCase());
-			char[] validChars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-					's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-					'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-					'_', ' '};
+			char[] validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_ ".toCharArray();
 			setPlayerName(getPlayerName().trim());
 
 			int[] sessionKey = new int[4];
@@ -630,6 +685,7 @@ public class Client extends Player implements Runnable {
 			}
 			outStreamDecryption = new Cryption(sessionKey);
 			getOutputStream().packetEncryption = outStreamDecryption;
+			System.out.println("Session keys set for encryption.");
 
 			int letters = 0;
 			for (int i = 0; i < getPlayerName().length(); i++) {
@@ -637,10 +693,9 @@ public class Client extends Player implements Runnable {
 				for (char validChar : validChars) {
 					if (getPlayerName().charAt(i) == validChar) {
 						valid = true;
-						// break;
-					}
-					if (valid && getPlayerName().charAt(i) != '_' && getPlayerName().charAt(i) != ' ') {
-						letters++;
+						if (getPlayerName().charAt(i) != '_' && getPlayerName().charAt(i) != ' ') {
+							letters++;
+						}
 					}
 				}
 				if (!valid) {
@@ -652,32 +707,34 @@ public class Client extends Player implements Runnable {
 				returnCode = 3;
 				disconnected = true;
 			}
+
 			char first = getPlayerName().charAt(0);
 			properName = Character.toUpperCase(first) + getPlayerName().substring(1).toLowerCase();
 			setPlayerName(properName.replace("_", " "));
 			longName = Utils.playerNameToInt64(getPlayerName());
-			if (Server.updateRunning && (Server.updateStartTime + (Server.updateSeconds * 1000L)) - System.currentTimeMillis() < 60000) { //Checks if update!
+			if (Server.updateRunning && (Server.updateStartTime + (Server.updateSeconds * 1000L)) - System.currentTimeMillis() < 60000) {
 				returnCode = 14;
 				disconnected = true;
 			}
 
-			println_debug("Name check..." + longName + ":" + properName + " ");
+			System.out.println("Name check..." + longName + ":" + properName);
 			int loadgame = Server.loginManager.loadgame(this, getPlayerName(), playerPass);
 			switch (playerGroup) {
-				case 6: // root admin
-				case 18: // root admin
-				case 10: // content dev
+				case 6:
+				case 18:
+				case 10:
 					playerRights = 2;
 					premium = true;
 					break;
-				case 9: // player moderator
-				case 5: // global mod
+				case 9:
+				case 5:
 					playerRights = 1;
 					premium = true;
 					break;
 				default:
-					if(playerGroup == 2)
+					if (playerGroup == 2) {
 						Server.loginManager.updatePlayerForumRegistration(this);
+					}
 					premium = true;
 					playerRights = 0;
 			}
@@ -689,8 +746,8 @@ public class Client extends Player implements Runnable {
 				if (!temp.isEmpty()) {
 					int group = Integer.parseInt(temp);
 					switch (group) {
-						case 14: //Premium members but everyone is premium currently! Also can be handled in a better way!
-						break;
+						case 14:
+							break;
 						case 3:
 						case 19:
 							playerRights = 1;
@@ -704,41 +761,47 @@ public class Client extends Player implements Runnable {
 					transport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ()));
 				}
 			} else {
-				if (returnCode != 6 && returnCode != 5)
+				if (returnCode != 6 && returnCode != 5) {
 					returnCode = loadgame;
+				}
 				disconnected = true;
 				teleportToX = 0;
 				teleportToY = 0;
 			}
+
 			if (getSlot() == -1) {
-				mySocketHandler.getOutput().write(7);
+				mySocketHandler.writeByte((byte) 7);
 			} else if (playerServer.equals("INVALID")) {
-				mySocketHandler.getOutput().write(10);
+				mySocketHandler.writeByte((byte) 10);
 			} else {
-				if (mySocketHandler.getOutput() != null)
-					mySocketHandler.getOutput().write(returnCode); // login response (1: wait 2seconds,
-					// 2=login successfull, 4=ban :-)
-				else
+				if (mySocketHandler != null) {
+					mySocketHandler.writeByte((byte) returnCode);
+					System.out.println("Wrote return code: " + returnCode + " to client.");
+				} else {
 					returnCode = 21;
-				if (returnCode == 21)
-					mySocketHandler.getOutput().write(loginDelay);
+				}
+				if (returnCode == 21) {
+					mySocketHandler.writeByte((byte) loginDelay);
+					System.out.println("Wrote login delay: " + loginDelay + " to client.");
+				}
 			}
-			mySocketHandler.getOutput().write(getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights); // mod level
-			mySocketHandler.getOutput().write(0);
+			mySocketHandler.writeByte((byte) (getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights));
+			mySocketHandler.writeByte((byte) 0);
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-			print_debug("....Success login of " + getPlayerName());
-		} catch (java.lang.Exception __ex) {
+
+			if (returnCode == 2) {
+				System.out.println("....Success login of " + getPlayerName());
+			}
+		} catch (Exception __ex) {
 			destruct();
-			print_debug("....Failed destruct..." + __ex.getMessage());
+			System.out.println("....Failed destruct..." + __ex.getMessage());
 			return;
 		}
 		if (getSlot() == -1 || returnCode != 2) {
-			print_debug("...slot="+ (getSlot() == -1 ? "-1" : "" + getSlot()) +" where return code is: " + returnCode);
+			System.out.println("Slot: " + getSlot() + " Return Code: " + returnCode);
 			return;
 		}
 		isActive = true;
-		Thread mySocketThread = Server.createNewConnection(mySocketHandler);
-		mySocketThread.start();
 		packetSize = 0;
 		packetType = -1;
 		readPtr = 0;
