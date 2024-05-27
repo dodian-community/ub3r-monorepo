@@ -6,6 +6,7 @@ import net.dodian.utilities.Utils;
 import java.nio.channels.SocketChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerHandler {
@@ -32,32 +33,44 @@ public class PlayerHandler {
         }
     }
 
-    public Client newPlayerClient(SocketChannel socketChannel, String connectingHost) {
-        int slot = -1;
-        for (int i = 1; i < players.length; i++) {
-            if (players[i] == null || players[i].disconnected) {
-                slot = i;
-                break;
+
+    public CompletableFuture<Client> newPlayerClient(SocketChannel socketChannel, String connectingHost) {
+        return CompletableFuture.supplyAsync(() -> {
+            int slot = -1;
+            for (int i = 1; i < players.length; i++) {
+                if (players[i] == null || players[i].disconnected) {
+                    slot = i;
+                    break;
+                }
             }
-        }
-        if (slot == -1) {
-            System.out.println("No free slot found - world is full");
-            return null; // no free slot found - world is full
-        }
+            if (slot == -1) {
+                System.out.println("No free slot found - world is full");
+                return null; // no free slot found - world is full
+            }
 
-        Client newClient = new Client(socketChannel, slot);
-        newClient.handler = this;
-        players[slot] = newClient;
-        players[slot].connectedFrom = connectingHost;
-        players[slot].ip = socketChannel.socket().getInetAddress().hashCode();
-        Player.localId = slot;
-        System.out.println("New player client initialized. Slot: " + slot + ", IP: " + players[slot].ip);
+            Client newClient = new Client(socketChannel, slot);
+            newClient.handler = this;
+            players[slot] = newClient;
+            players[slot].connectedFrom = connectingHost;
+            players[slot].ip = socketChannel.socket().getInetAddress().hashCode();
+            Player.localId = slot;
+            System.out.println("New player client initialized. Slot: " + slot + ", IP: " + players[slot].ip);
 
-        // Initialize login process for the new client
-        newClient.run();
+            // Initialize login process for the new client
+            try {
+                newClient.run();
+            } catch (Exception e) {
+                System.out.println("Failed to initialize client: " + e.getMessage());
+                e.printStackTrace();
+                newClient.destruct();
+                return null;
+            }
 
-        return newClient;
+            return newClient;
+        });
     }
+
+
 
     public static int getPlayerCount() {
         int count = 0;

@@ -1,5 +1,6 @@
-package net.dodian.uber.comm;
+package net.dodian.uber.game.network;
 
+import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
