@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.PacketData;
-import net.dodian.uber.comm.SocketHandler;
+import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;

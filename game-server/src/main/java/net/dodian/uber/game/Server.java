@@ -1,24 +1,19 @@
 package net.dodian.uber.game;
 
 import net.dodian.cache.Cache;
-import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
-import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
@@ -29,8 +24,6 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -41,7 +34,9 @@ import java.nio.channels.SocketChannel;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
@@ -51,8 +46,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class Server implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
-
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     private static int delay = 50;
     public static int TICK = 600;
@@ -61,9 +54,9 @@ public class Server implements Runnable {
     public static long updateStartTime, serverStartup;
     public Player player;
     public Client c;
-    public static List<String> connections = Collections.synchronizedList(new ArrayList<>());
-    public static List<String> banned = Collections.synchronizedList(new ArrayList<>());
-    public static List<RS2Object> objects = Collections.synchronizedList(new ArrayList<>());
+    public static ArrayList<String> connections = new ArrayList<>();
+    public static ArrayList<String> banned = new ArrayList<>();
+    public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
@@ -73,11 +66,9 @@ public class Server implements Runnable {
     public static PyramidPlunder entryObject = null;
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
-    public static Map<String, Long> tempConns = new ConcurrentHashMap<>();
+    public static Map<String, Long> tempConns = new HashMap<>();
+    private final Map<String, CompletableFuture<Client>> pendingClients = new ConcurrentHashMap<>();
 
-    private Selector selector;
-    private ExecutorService connectionHandlerExecutor;
-    private ScheduledExecutorService timeoutExecutor;
 
     public static void main(String args[]) throws Exception {
         System.out.println();
@@ -115,8 +106,6 @@ public class Server implements Runnable {
         // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
-        GameObjectData.init();
-        loadObjects(); // SQL disabled
         new DoorHandler(); // SQL disabled
 
         /* Start Threads */
@@ -148,6 +137,7 @@ public class Server implements Runnable {
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
+    private Selector selector;
 
     public void run() {
         System.out.println("Starting server listener.");
@@ -160,9 +150,6 @@ public class Server implements Runnable {
             selector = Selector.open();
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-            connectionHandlerExecutor = Executors.newFixedThreadPool(10);//up to 10 threads for handling connections
-
-
             System.out.println("Server listening on port: " + DotEnvKt.getServerPort());
 
             while (!shutdownClientHandler) {
@@ -174,13 +161,7 @@ public class Server implements Runnable {
                     it.remove();
 
                     if (key.isAcceptable()) {
-                        connectionHandlerExecutor.submit(() -> {
-                            try {
-                                handleAccept(key);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
+                        handleAccept(key);
                     } else if (key.isReadable()) {
                         handleRead(key);
                     }
@@ -194,47 +175,44 @@ public class Server implements Runnable {
                 System.out.println("ClientHandler was shut down.");
             }
             e.printStackTrace();
-        } finally {
-            if (connectionHandlerExecutor != null) {
-                connectionHandlerExecutor.shutdown();
-            }
-            if (timeoutExecutor != null) {
-                timeoutExecutor.shutdown();
-            }
         }
     }
+
+
+    // In Server.java
+    // In Server.java
 
     private void handleAccept(SelectionKey key) throws IOException {
-        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
-        SocketChannel socketChannel = serverChannel.accept();
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverSocketChannel.accept();
         socketChannel.configureBlocking(false);
-        SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
 
-        String connectingHost = socketChannel.getRemoteAddress().toString();
-        connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
+        String connectingHost = socketChannel.socket().getInetAddress().getHostAddress();
         System.out.println("Connection attempt from: " + connectingHost);
 
-        if (antiddos) {
-            if (tempConns.containsKey(connectingHost)) {
-                tempConns.remove(connectingHost);
-            } else {
-                System.out.println("Connection from " + connectingHost + " denied due to anti-DDOS measures.");
-                closeChannel(socketChannel);
-                return;
-            }
-        }
 
-        connections.add(connectingHost);
-        if (checkHost(connectingHost)) {
-            nullConnections++;
-            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
-            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
-            clientKey.attach(newClient);
-        } else {
-            System.out.println("Host " + connectingHost + " rejected.");
+        SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
+
+        CompletableFuture<Client> newClientFuture = playerHandler.newPlayerClient(socketChannel, connectingHost);
+        pendingClients.put(connectingHost, newClientFuture);
+
+        newClientFuture.thenAccept(newClient -> {
+            if (newClient != null) {
+                clientKey.attach(newClient);
+                pendingClients.remove(connectingHost);
+            } else {
+                System.out.println("Failed to initialize client for host: " + connectingHost);
+                closeChannel(socketChannel);
+                pendingClients.remove(connectingHost);
+            }
+        }).exceptionally(ex -> {
+            System.out.println("Error initializing client: " + ex.getMessage());
             closeChannel(socketChannel);
-        }
+            pendingClients.remove(connectingHost);
+            return null;
+        });
     }
+
 
 
     private void closeChannel(SocketChannel channel) {
@@ -281,24 +259,13 @@ public class Server implements Runnable {
             System.out.println("Connection closed by client: " + socketChannel.getRemoteAddress());
             closeChannel(socketChannel);
         } catch (IOException e) {
+            // Handle the exception appropriately (e.g., log the error)
             e.printStackTrace();
         }
     }
 
     public static void logError(String message) {
         Utils.println(message);
-    }
-
-    public static int totalHostConnection(String host) {
-        int num = 0;
-        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
-            Player p = PlayerHandler.players[slot];
-            if (p != null) {
-                if (host.equals(p.connectedFrom))
-                    num++;
-            }
-        }
-        return num;
     }
 
     public boolean checkHost(String host) {
@@ -316,28 +283,5 @@ public class Server implements Runnable {
             return false;
         }
         return true;
-    }
-
-    public void banHost(String host, int num) {
-        try {
-            Utils.println("BANNING HOST " + host + " (flooding)");
-            banned.add(host);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error banning host " + host);
-        }
-    }
-
-    public static void loadObjects() {
-        try {
-            Statement statement = getDbConnection().createStatement();
-            ResultSet results = statement.executeQuery("SELECT * from " + DbTables.GAME_OBJECT_DEFINITIONS);
-            while (results.next()) {
-                objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
-            }
-            statement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
