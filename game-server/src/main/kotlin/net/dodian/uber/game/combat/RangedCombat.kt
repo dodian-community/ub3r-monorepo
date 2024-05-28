@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
+import net.dodian.uber.game.network.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers

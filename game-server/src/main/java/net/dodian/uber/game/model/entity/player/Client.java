@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.PacketData;
-import net.dodian.uber.comm.SocketHandler;
+import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
@@ -19,9 +19,8 @@ import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
-import net.dodian.uber.game.model.player.packets.OutgoingPacket;
-import net.dodian.uber.game.model.player.packets.PacketHandler;
-import net.dodian.uber.game.model.player.packets.outgoing.*;
+import net.dodian.uber.game.network.packets.OutgoingPacket;
+import net.dodian.uber.game.network.packets.PacketHandler;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -31,6 +30,7 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.network.packets.outgoing.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
@@ -323,7 +323,7 @@ public class Client extends Player implements Runnable {
 			getOutputStream().writeByte(initDistance); // Initial distance from source (in the
 			// direction of the missile) //64
 		} catch (Exception e) {
-			Server.logError(e.getMessage());
+			//Server.logError(e.getMessage());
 		}
 	}
 
@@ -537,15 +537,8 @@ public class Client extends Player implements Runnable {
 		// we just accepted a new connection - handle the login stuff
 		isActive = false;
 		long serverSessionKey, clientSessionKey;
-//	if (!KeyServer.verifiedKeys()){
-//		System.out.println("User rejected due to unverified client.");
-//		disconnected = true;
-//		returnCode = 4;
-//	}
-		// randomize server part of the session key
 		serverSessionKey = ((long) (java.lang.Math.random() * 99999999D) << 32)
 				+ (long) (java.lang.Math.random() * 99999999D);
-
 		try {
 			returnCode = 2;
 			fillInStream(2);

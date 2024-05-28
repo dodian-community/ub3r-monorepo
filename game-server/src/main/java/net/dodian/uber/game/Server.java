@@ -8,31 +8,27 @@ import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.SocketHandler;
+import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
-import net.dodian.uber.game.model.object.RS2Object;
+
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-import net.dodian.utilities.DbTables;
+
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +37,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Server implements Runnable {
 
@@ -55,7 +50,6 @@ public class Server implements Runnable {
     public Client c;
     public static ArrayList<String> connections = new ArrayList<>();
     public static ArrayList<String> banned = new ArrayList<>();
-    public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
@@ -102,7 +96,7 @@ public class Server implements Runnable {
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
         GameObjectData.init();
-        loadObjects(); //sql disabled
+        ObjectLoaderService.loadObjects(); // Use the new ObjectLoaderService
         new DoorHandler(); //sql disabled
         /* Start Threads */
         new Thread(EventManager.getInstance()).start();
@@ -222,19 +216,6 @@ public class Server implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error banning host " + host);
-        }
-    }
-
-    public static void loadObjects() {
-        try {
-            Statement statement = getDbConnection().createStatement();
-            ResultSet results = statement.executeQuery("SELECT * from " + DbTables.GAME_OBJECT_DEFINITIONS);
-            while (results.next()) {
-                objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
-            }
-            statement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

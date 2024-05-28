@@ -1,9 +1,9 @@
 package net.dodian.uber.game.model.player.casino;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.network.packets.outgoing.RemoveInterfaces;
+import net.dodian.uber.game.network.packets.outgoing.SendMessage;
+import net.dodian.uber.game.network.packets.outgoing.SendString;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;

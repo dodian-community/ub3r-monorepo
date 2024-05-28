@@ -5,7 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.network.packets.outgoing.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
