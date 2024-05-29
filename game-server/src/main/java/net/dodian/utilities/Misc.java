@@ -3,7 +3,7 @@ package net.dodian.utilities;
 import net.dodian.cache.object.CacheObject;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.cache.object.ObjectLoader;
-import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.object.ObjectLoaderService;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
@@ -505,7 +505,7 @@ public class Misc {
                 return new GameObjectDef(object, 2, 0, new Position(x, y));
             }
         }
-        for (RS2Object obj : Server.objects) {
+        for (RS2Object obj : ObjectLoaderService.objects) {
             if (obj.id == object && obj.x == x && obj.y == y) {
                 return new GameObjectDef(object, obj.type, 0, new Position(x, y));
             }
