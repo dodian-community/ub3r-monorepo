@@ -551,12 +551,12 @@ public class Client extends Player implements Runnable {
 	}
 
 	private void fillInStream(int forceRead) throws IOException {
-		// Reuse a pre-allocated buffer to avoid frequent allocations
-		ByteBuffer buffer = ByteBuffer.allocate(forceRead);
+		// Use a larger pre-allocated buffer to reduce allocations
+		ByteBuffer buffer = ByteBuffer.allocate(8192);
 		int bytesRead = 0;
 
 		// Read data in larger chunks to reduce the number of I/O operations
-		while (bytesRead < forceRead) {
+		while (buffer.position() < forceRead) {
 			int result = mySocketHandler.getSocketChannel().read(buffer);
 			if (result == -1) {
 				throw new IOException("End of stream reached");
@@ -567,11 +567,9 @@ public class Client extends Player implements Runnable {
 
 		// Apply decryption to the input stream if decryption is set up
 		if (inStreamDecryption != null) {
-			byte[] decryptedData = new byte[forceRead];
 			for (int i = 0; i < forceRead; i++) {
-				decryptedData[i] = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
+				getInputStream().buffer[i] = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
 			}
-			System.arraycopy(decryptedData, 0, getInputStream().buffer, 0, forceRead);
 		} else {
 			buffer.get(getInputStream().buffer, 0, forceRead);
 		}
