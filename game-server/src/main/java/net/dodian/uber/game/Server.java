@@ -8,7 +8,6 @@ import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
@@ -19,19 +18,20 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
-
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-
+import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static net.dodian.utilities.DotEnvKt.*;
@@ -41,7 +41,7 @@ import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 public class Server implements Runnable {
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
-    private static int delay = 50;
+    private static int delay = 100;
     public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
@@ -60,6 +60,7 @@ public class Server implements Runnable {
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map<String, Long> tempConns = new HashMap<>();
+    private Map<String, Integer> connectionCounts = new ConcurrentHashMap<>();
 
 
     public static void main(String args[]) throws Exception {
@@ -74,12 +75,10 @@ public class Server implements Runnable {
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
-        //ConnectionList.getInstance(); //Let us not utilize this for now!
-        /* NPC Data*/
         npcManager = new NpcManager();
         npcManager.loadSpawns();
         System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
-        /* Player Stuff */
+
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         loginManager = new LoginManager();
@@ -87,23 +86,21 @@ public class Server implements Runnable {
         thieving = new Thieving();
         clientHandler = new Server();
         login = new Login();
-        /* Load cache */
+
         Cache.load();
         ObjectDef.loadConfig();
         Region.load();
         Rangable.load();
-        // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
         GameObjectData.init();
-        ObjectLoaderService.loadObjects(); // Use the new ObjectLoaderService
-        new DoorHandler(); //sql disabled
-        /* Start Threads */
+        ObjectLoaderService.loadObjects();
+        new DoorHandler();
+
         new Thread(EventManager.getInstance()).start();
-        new Thread(clientHandler).start(); // launch server listener
+        new Thread(clientHandler).start();
         new Thread(login).start();
-        //new Thread(new VotingIncentiveManager()).start();
-        /* Processes */
+
         job = new JobScheduler();
         job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
         job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class);
@@ -112,67 +109,148 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
         job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
         entryObject = new PyramidPlunder();
-        /* Done loading */
+
         System.gc();
-        serverStartup = System.currentTimeMillis(); //System.currentTimeMillis() - serverStartup
+        serverStartup = System.currentTimeMillis();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
-    public static Server clientHandler = null; // handles all the clients
-    public static java.net.ServerSocket clientListener = null;
-    public static boolean shutdownServer = false; // set this to true in order to
-    // shut down and kill the server
-    public static boolean shutdownClientHandler; // signals ClientHandler to shut
-    // down
+    public static Server clientHandler = null;
+    public static Selector selector = null;
+    public static boolean shutdownServer = false;
+    public static boolean shutdownClientHandler;
     public static PlayerHandler playerHandler = null;
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
 
+
+    public static ServerSocketChannel serverSocketChannel = null;
+
     public void run() {
-        // setup the listener
+        System.out.println("Starting server listener.");
+
         try {
             shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(DotEnvKt.getServerPort(), 1, null);
-            while (true) {
-                try {
-                    if (clientListener == null)
-                        continue;
-                    java.net.Socket s = clientListener.accept();
-                    if (s == null)
-                        continue;
-                    s.setTcpNoDelay(true);
-                    String connectingHost = "" + s.getRemoteSocketAddress();
-                    connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
-                    if (antiddos && !tempConns.containsKey(connectingHost)) {
-                        s.close();
-                    } else {
-                        //ConnectionList.getInstance().addConnection(s.getInetAddress());
-                        tempConns.remove(connectingHost);
-                        connections.add(connectingHost);
-                        if (checkHost(connectingHost)) {
-                            nullConnections++;
-                            playerHandler.newPlayerClient(s, connectingHost);
-                        } else {
-                            s.close();
-                        }
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.bind(new java.net.InetSocketAddress(DotEnvKt.getServerPort()));
+            serverSocketChannel.configureBlocking(false);
+            selector = Selector.open();
+            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+            System.out.println("Server listening on port: " + DotEnvKt.getServerPort());
+
+            while (!shutdownClientHandler) {
+                selector.select();
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> it = selectedKeys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    it.remove();
+
+                    if (key.isAcceptable()) {
+                        handleAccept(key);
+                    } else if (key.isReadable()) {
+                        handleRead(key);
                     }
-                    Thread.sleep(delay);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
+               Thread.sleep(delay);
             }
-        } catch (java.io.IOException ioe) {
+        } catch (Exception e) {
             if (!shutdownClientHandler) {
-                Utils.println("Server is already in use.");
+                System.out.println("Server is already in use.");
             } else {
-                Utils.println("ClientHandler was shut down.");
+                System.out.println("ClientHandler was shut down.");
+            }
+            e.printStackTrace();
+        }
+    }
+
+    private void handleAccept(SelectionKey key) throws IOException {
+        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverChannel.accept();
+        socketChannel.configureBlocking(false);
+        SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
+
+        String connectingHost = socketChannel.getRemoteAddress().toString();
+        connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
+        System.out.println("Connection attempt from: " + connectingHost);
+
+        if (antiddos) {
+            if (tempConns.containsKey(connectingHost)) {
+                tempConns.remove(connectingHost);
+            } else {
+                System.out.println("Connection from " + connectingHost + " denied due to anti-DDOS measures.");
+                closeChannel(socketChannel);
+                return;
+            }
+        }
+
+        synchronized (connections) {
+            connections.add(connectingHost);
+        }
+
+        if (checkHost(connectingHost)) {
+            nullConnections++;
+            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
+            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
+            clientKey.attach(newClient);
+        } else {
+            nullConnections++;
+            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
+            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
+            clientKey.attach(newClient);
+        }
+    }
+
+
+    private void closeChannel(SocketChannel channel) {
+        try {
+            channel.close();
+        } catch (IOException e) {
+            // Handle the exception appropriately (e.g., log the error)
+            e.printStackTrace();
+        }
+    }
+
+    private void handleRead(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        int bytesRead = 0;
+        try {
+            bytesRead = socketChannel.read(buffer);
+        } catch (IOException e) {
+            if (e instanceof java.net.SocketException && e.getMessage().equals("Connection reset")) {
+                System.out.println("Connection reset by client: " + socketChannel.getRemoteAddress());
+                closeChannel(socketChannel);
+                return;
+            }
+            throw e;
+        }
+
+        if (bytesRead == -1) {
+            handleConnectionClosed(socketChannel);
+        } else {
+            buffer.flip();
+            Client client = (Client) key.attachment();
+            if (client != null) {
+                client.processData(buffer);
+            } else {
+                // Handle the case when the client is not attached to the key
+                System.out.println("No client attached to the key for socket: " + socketChannel.getRemoteAddress());
+                closeChannel(socketChannel);
             }
         }
     }
 
-    public static Thread createNewConnection(SocketHandler socketHandler) {
-        return new Thread(socketHandler);
+    private void handleConnectionClosed(SocketChannel socketChannel) {
+        try {
+            System.out.println("Connection closed by client: " + socketChannel.getRemoteAddress());
+            closeChannel(socketChannel);
+        } catch (IOException e) {
+            // Handle the exception appropriately (e.g., log the error)
+            e.printStackTrace();
+        }
     }
 
     public static void logError(String message) {
@@ -192,20 +270,17 @@ public class Server implements Runnable {
     }
 
     public boolean checkHost(String host) {
-        for (String h : banned) {
-            if (h.equals(host))
-                return false;
-        }
-        int num = 0;
-        for (String h : connections) {
-            if (host.equals(h)) {
-                num++;
-            }
-        }
-        if (num > 5) {
-            //anHost(host, num);
-            return false;
-        }
+      //  if (banned.contains(host)) {
+       //     return false;
+      //  }
+
+        int count = connectionCounts.getOrDefault(host, 0);
+       // if (count > 5) {
+            // banHost(host, count);
+         //   return false;
+       // }
+
+        connectionCounts.put(host, count + 1);
         return true;
     }
 
@@ -218,5 +293,4 @@ public class Server implements Runnable {
             System.out.println("Error banning host " + host);
         }
     }
-
 }

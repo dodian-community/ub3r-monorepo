@@ -1,4 +1,4 @@
-package net.dodian.uber.comm;
+package net.dodian.uber.game.network;
 
 import java.util.Arrays;
 
