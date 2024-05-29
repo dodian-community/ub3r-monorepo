@@ -2,7 +2,7 @@ package net.dodian.uber.game.network.packets.incoming;
 
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.game.ObjectLoaderService;
+import net.dodian.uber.game.model.object.ObjectLoaderService;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
