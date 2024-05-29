@@ -565,19 +565,12 @@ public class Client extends Player implements Runnable {
 		}
 		buffer.flip();
 
-		// Apply decryption to the input stream if decryption is set up
-		if (inStreamDecryption != null) {
-			byte[] decryptedData = new byte[forceRead];
-			for (int i = 0; i < forceRead; i++) {
-				decryptedData[i] = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
-			}
-			System.arraycopy(decryptedData, 0, getInputStream().buffer, 0, forceRead);
-		} else {
-			buffer.get(getInputStream().buffer, 0, forceRead);
-		}
+		// Directly transfer data to the input stream buffer
+		buffer.get(getInputStream().buffer, 0, forceRead);
 
 		getInputStream().currentOffset = 0;
 	}
+
 
 
 
