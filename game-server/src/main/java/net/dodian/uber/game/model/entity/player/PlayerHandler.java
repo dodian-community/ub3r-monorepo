@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,44 +34,37 @@ public class PlayerHandler {
         }
     }
 
-
-    public CompletableFuture<Client> newPlayerClient(SocketChannel socketChannel, String connectingHost) {
-        return CompletableFuture.supplyAsync(() -> {
-            int slot = -1;
-            for (int i = 1; i < players.length; i++) {
-                if (players[i] == null || players[i].disconnected) {
+    public Client newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
+        int slot = -1;
+        synchronized (PlayerHandler.players) {
+            for (int i = 1; i < PlayerHandler.players.length; i++) {
+                if (PlayerHandler.players[i] == null || PlayerHandler.players[i].disconnected) {
                     slot = i;
                     break;
                 }
             }
-            if (slot == -1) {
-                System.out.println("No free slot found - world is full");
-                return null; // no free slot found - world is full
-            }
+        }
 
-            Client newClient = new Client(socketChannel, slot);
-            newClient.handler = this;
-            players[slot] = newClient;
-            players[slot].connectedFrom = connectingHost;
-            players[slot].ip = socketChannel.socket().getInetAddress().hashCode();
-            Player.localId = slot;
-            System.out.println("New player client initialized. Slot: " + slot + ", IP: " + players[slot].ip);
+        if (slot == -1) {
+            System.out.println("No free slot found - world is full");
+            return null; // no free slot found - world is full
+        }
 
-            // Initialize login process for the new client
-            try {
-                newClient.run();
-            } catch (Exception e) {
-                System.out.println("Failed to initialize client: " + e.getMessage());
-                e.printStackTrace();
-                newClient.destruct();
-                return null;
-            }
+        Client newClient = new Client(socketChannel, slot);
+        newClient.handler = this;
+        synchronized (PlayerHandler.players) {
+            PlayerHandler.players[slot] = newClient;
+        }
+        newClient.connectedFrom = connectedFrom;
+        newClient.ip = socketChannel.socket().getInetAddress().hashCode();
+        Player.localId = slot;
+        System.out.println("New player client initialized. Slot: " + slot + ", IP: " + newClient.ip);
 
-            return newClient;
-        });
+        // Initialize login process for the new client asynchronously
+        CompletableFuture.runAsync(() -> newClient.run());
+
+        return newClient;
     }
-
-
 
     public static int getPlayerCount() {
         int count = 0;

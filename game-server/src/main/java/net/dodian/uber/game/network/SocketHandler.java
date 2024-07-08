@@ -1,38 +1,32 @@
 package net.dodian.uber.game.network;
 
-import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.utilities.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SocketHandler {
-    private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
-
     private final Client player;
     private final SocketChannel socketChannel;
     private final Queue<PacketData> myPackets = new ConcurrentLinkedQueue<>();
     private final Queue<byte[]> outData = new ConcurrentLinkedQueue<>();
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReentrantLock writeLock = new ReentrantLock();
 
     public SocketHandler(Client player, SocketChannel socketChannel) {
         this.player = player;
         this.socketChannel = socketChannel;
-        logger.info("SocketHandler initialized for player: {}", player != null ? player.getPlayerName() : "null");
+        System.out.println("SocketHandler initialized for player: " + (player != null ? player.getPlayerName() : "null"));
     }
 
     public void processPacket(PacketData packet) {
-        logger.info("Processing packet for player: {} - Packet ID: {}", player != null ? player.getPlayerName() : "null", packet.getId());
+        System.out.println("Processing packet for player: " + (player != null ? player.getPlayerName() : "null") + " - Packet ID: " + packet.getId());
         myPackets.add(packet);
         sendPackets();
     }
@@ -47,13 +41,13 @@ public class SocketHandler {
     public void writeByte(byte b) {
         if (isConnected()) {
             ByteBuffer buffer = ByteBuffer.wrap(new byte[]{b});
-            lock.writeLock().lock();
+            writeLock.lock();
             try {
                 socketChannel.write(buffer);
             } catch (IOException e) {
                 handleDisconnect(e, "writeByte");
             } finally {
-                lock.writeLock().unlock();
+                writeLock.unlock();
             }
         }
     }
@@ -64,7 +58,8 @@ public class SocketHandler {
             YellSystem.alertStaff(player.getPlayerName() + " has disconnected unexpectedly!");
         }
         cleanup();
-        logger.error("SocketHandler: Failed to {}: {}", action, e.getMessage(), e);
+        System.out.println("SocketHandler: Failed to " + action + ": " + e.getMessage());
+        e.printStackTrace(); // Log the exception stack trace for debugging
     }
 
     public void logout() {
@@ -81,7 +76,8 @@ public class SocketHandler {
                 socketChannel.close();
             }
         } catch (IOException e) {
-            logger.error("SocketHandler Cleanup Exception: {}", e.getMessage(), e);
+            System.out.println("SocketHandler Cleanup Exception: " + e.getMessage());
+            e.printStackTrace(); // Log the exception stack trace for debugging
         }
     }
 
@@ -125,7 +121,7 @@ public class SocketHandler {
 
     private void sendPackets() {
         if (!myPackets.isEmpty() && isConnected()) {
-            lock.writeLock().lock();
+            writeLock.lock();
             try {
                 while (!myPackets.isEmpty()) {
                     PacketData packet = myPackets.poll();
@@ -137,14 +133,14 @@ public class SocketHandler {
             } catch (IOException e) {
                 handleDisconnect(e, "sendPackets");
             } finally {
-                lock.writeLock().unlock();
+                writeLock.unlock();
             }
         }
     }
 
     private void writeOutput() {
         if (!outData.isEmpty() && isConnected()) {
-            lock.writeLock().lock();
+            writeLock.lock();
             try {
                 while (!outData.isEmpty() && isConnected()) {
                     byte[] data = outData.poll();
@@ -153,16 +149,17 @@ public class SocketHandler {
                         try {
                             socketChannel.write(buffer);
                         } catch (IOException e) {
-                            if ("Broken pipe".equals(e.getMessage())) {
-                                logger.error("Broken pipe error while writing to client: {}", player != null ? player.getPlayerName() : "null");
+                            if (e.getMessage().equals("Broken pipe")) {
+                                System.out.println("Broken pipe error while writing to client: " + (player != null ? player.getPlayerName() : "null"));
                                 handleDisconnect(e, "writeOutput");
                                 return;
                             }
+
                         }
                     }
                 }
             } finally {
-                lock.writeLock().unlock();
+                writeLock.unlock();
             }
         }
     }

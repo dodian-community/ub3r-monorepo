@@ -1,7 +1,9 @@
 package net.dodian.uber.game;
 
 import net.dodian.cache.Cache;
+import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
+import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
@@ -20,34 +22,27 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DotEnvKt.getDatabaseInitialize;
-import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class Server implements Runnable {
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
-    private static int delay = 50;
+    private static int delay = 100;
     public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
@@ -67,7 +62,7 @@ public class Server implements Runnable {
     public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map<String, Long> tempConns = new HashMap<>();
-    private final Map<String, CompletableFuture<Client>> pendingClients = new ConcurrentHashMap<>();
+    private Map<String, Integer> connectionCounts = new ConcurrentHashMap<>();
 
 
     public static void main(String args[]) throws Exception {
@@ -82,13 +77,10 @@ public class Server implements Runnable {
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
-
-        /* NPC Data */
         npcManager = new NpcManager();
         npcManager.loadSpawns();
         System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
 
-        /* Player Stuff */
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         loginManager = new LoginManager();
@@ -97,23 +89,20 @@ public class Server implements Runnable {
         clientHandler = new Server();
         login = new Login();
 
-        /* Load cache */
         Cache.load();
         ObjectDef.loadConfig();
         Region.load();
         Rangable.load();
-
-        // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
-        new DoorHandler(); // SQL disabled
+        GameObjectData.init();
+        //ObjectLoaderService.loadObjects(); <--- Not sure what this is!!! :O
+        new DoorHandler();
 
-        /* Start Threads */
         new Thread(EventManager.getInstance()).start();
-        new Thread(clientHandler).start(); // launch server listener
+        new Thread(clientHandler).start();
         new Thread(login).start();
 
-        /* Processes */
         job = new JobScheduler();
         job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
         job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class);
@@ -123,21 +112,22 @@ public class Server implements Runnable {
         job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
         entryObject = new PyramidPlunder();
 
-        /* Done loading */
         System.gc();
         serverStartup = System.currentTimeMillis();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
     public static Server clientHandler = null;
-    public static ServerSocketChannel serverSocketChannel = null;
+    public static Selector selector = null;
     public static boolean shutdownServer = false;
     public static boolean shutdownClientHandler;
     public static PlayerHandler playerHandler = null;
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
-    private Selector selector;
+
+
+    public static ServerSocketChannel serverSocketChannel = null;
 
     public void run() {
         System.out.println("Starting server listener.");
@@ -178,41 +168,42 @@ public class Server implements Runnable {
         }
     }
 
-
-    // In Server.java
-    // In Server.java
-
     private void handleAccept(SelectionKey key) throws IOException {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-        SocketChannel socketChannel = serverSocketChannel.accept();
+        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverChannel.accept();
         socketChannel.configureBlocking(false);
-
-        String connectingHost = socketChannel.socket().getInetAddress().getHostAddress();
-        System.out.println("Connection attempt from: " + connectingHost);
-
-
         SelectionKey clientKey = socketChannel.register(selector, SelectionKey.OP_READ);
 
-        CompletableFuture<Client> newClientFuture = playerHandler.newPlayerClient(socketChannel, connectingHost);
-        pendingClients.put(connectingHost, newClientFuture);
+        String connectingHost = socketChannel.getRemoteAddress().toString();
+        connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
+        System.out.println("Connection attempt from: " + connectingHost);
 
-        newClientFuture.thenAccept(newClient -> {
-            if (newClient != null) {
-                clientKey.attach(newClient);
-                pendingClients.remove(connectingHost);
+        if (antiddos) {
+            if (tempConns.containsKey(connectingHost)) {
+                tempConns.remove(connectingHost);
             } else {
-                System.out.println("Failed to initialize client for host: " + connectingHost);
+                System.out.println("Connection from " + connectingHost + " denied due to anti-DDOS measures.");
                 closeChannel(socketChannel);
-                pendingClients.remove(connectingHost);
+                return;
             }
-        }).exceptionally(ex -> {
-            System.out.println("Error initializing client: " + ex.getMessage());
-            closeChannel(socketChannel);
-            pendingClients.remove(connectingHost);
-            return null;
-        });
-    }
+        }
 
+        synchronized (connections) {
+            connections.add(connectingHost);
+        }
+
+        if (checkHost(connectingHost)) {
+            nullConnections++;
+            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
+            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
+            clientKey.attach(newClient);
+        } else {
+            nullConnections++;
+            System.out.println("Host " + connectingHost + " accepted. Total connections: " + connections.size());
+            Client newClient = playerHandler.newPlayerClient(socketChannel, connectingHost);
+            clientKey.attach(newClient);
+        }
+    }
 
 
     private void closeChannel(SocketChannel channel) {
@@ -268,20 +259,40 @@ public class Server implements Runnable {
         Utils.println(message);
     }
 
-    public boolean checkHost(String host) {
-        if (banned.contains(host))
-            return false;
-
+    public static int totalHostConnection(String host) {
         int num = 0;
-        for (String h : connections) {
-            if (host.equals(h)) {
-                num++;
+        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
+            Player p = PlayerHandler.players[slot];
+            if (p != null) {
+                if (host.equals(p.connectedFrom))
+                    num++;
             }
         }
-        if (num > 5) {
-            // banHost(host, num);
-            return false;
-        }
+        return num;
+    }
+
+    public boolean checkHost(String host) {
+        //  if (banned.contains(host)) {
+        //     return false;
+        //  }
+
+        int count = connectionCounts.getOrDefault(host, 0);
+        // if (count > 5) {
+        // banHost(host, count);
+        //   return false;
+        // }
+
+        connectionCounts.put(host, count + 1);
         return true;
+    }
+
+    public void banHost(String host, int num) {
+        try {
+            Utils.println("BANNING HOST " + host + " (flooding)");
+            banned.add(host);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error banning host " + host);
+        }
     }
 }
