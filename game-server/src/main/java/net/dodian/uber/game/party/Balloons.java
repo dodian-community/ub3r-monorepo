@@ -9,8 +9,8 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.network.packets.outgoing.InventoryInterface;
+import net.dodian.uber.game.network.packets.outgoing.SendMessage;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 

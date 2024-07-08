@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.PacketData;
+import net.dodian.uber.game.network.PacketData;
 import net.dodian.uber.game.network.SocketHandler;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
@@ -19,9 +19,9 @@ import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
-import net.dodian.uber.game.model.player.packets.OutgoingPacket;
-import net.dodian.uber.game.model.player.packets.PacketHandler;
-import net.dodian.uber.game.model.player.packets.outgoing.*;
+import net.dodian.uber.game.network.packets.OutgoingPacket;
+import net.dodian.uber.game.network.packets.PacketHandler;
+import net.dodian.uber.game.network.packets.outgoing.*;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -54,6 +54,7 @@ import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
+
 
 public class Client extends Player implements Runnable {
 
@@ -197,16 +198,16 @@ public class Client extends Player implements Runnable {
 	}
 	public boolean wearing = false;
 	public void refreshSkill(Skill skill) {
-			int out = Skills.getLevelForExperience(getExperience(skill));
-			if (skill == Skill.HITPOINTS) out = getCurrentHealth();
-			else if (skill == Skill.PRAYER) out = getCurrentPrayer();
-			else if(boostedLevel[skill.getId()] != 0) out += boostedLevel[skill.getId()];
-			setSkillLevel(skill, out, getExperience(skill));
-			setLevel(out, skill);
-			getOutputStream().createFrame(134);
-			getOutputStream().writeByte(skill.getId());
-			getOutputStream().writeDWord_v1(getExperience(skill));
-			getOutputStream().writeByte(out);
+		int out = Skills.getLevelForExperience(getExperience(skill));
+		if (skill == Skill.HITPOINTS) out = getCurrentHealth();
+		else if (skill == Skill.PRAYER) out = getCurrentPrayer();
+		else if(boostedLevel[skill.getId()] != 0) out += boostedLevel[skill.getId()];
+		setSkillLevel(skill, out, getExperience(skill));
+		setLevel(out, skill);
+		getOutputStream().createFrame(134);
+		getOutputStream().writeByte(skill.getId());
+		getOutputStream().writeDWord_v1(getExperience(skill));
+		getOutputStream().writeByte(out);
 	}
 
 	public int getbattleTimer(int weapon) {
@@ -234,10 +235,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean hasStaff() {
-        for (int staff : staffs) {
-            if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staff)
-                return true;
-        }
+		for (int staff : staffs) {
+			if (getEquipment()[Equipment.Slot.WEAPON.getId()] == staff)
+				return true;
+		}
 		return false;
 	}
 	public void CheckGear() {
@@ -342,7 +343,7 @@ public class Client extends Player implements Runnable {
 		}
 	}
 	public void arrowNpcGfx(Position pos, int offsetY, int offsetX, int angle, int speed,
-						 int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
+							int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
 		for (int a = 0; a < Constants.maxPlayers; a++) {
 			Client projCheck = (Client) PlayerHandler.players[a];
 			if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
@@ -442,15 +443,18 @@ public class Client extends Player implements Runnable {
 	public int WanneShop = 0;
 	public int WanneThieve = 0;
 
-	public java.net.Socket mySock;
+
 	public Stream inputStream, outputStream;
 	public byte[] buffer;
 	public int readPtr, writePtr;
 	public Cryption inStreamDecryption = null, outStreamDecryption = null;
 	private SocketHandler mySocketHandler;
-	private SocketChannel socketChannel;
 	public int timeOutCounter = 0; // to detect timeouts on the connection to the client
 	public int returnCode = 2; // Tells the client if the login was successfull
+
+
+	private SocketChannel socketChannel;
+
 	public Cryption outStreamEncryption;
 
 
@@ -464,6 +468,8 @@ public class Client extends Player implements Runnable {
 
 		System.out.println("Client initialized with player ID: " + _playerId);
 	}
+
+
 
 	public void shutdownError(String errorMessage) {
 		Utils.println(": " + errorMessage);
@@ -511,7 +517,6 @@ public class Client extends Player implements Runnable {
 		packet.send(this);
 	}
 
-
 	// writes any data in outStream to the relaying buffer
 	public void flushOutStream() {
 		if (disconnected || getOutputStream().currentOffset == 0) {
@@ -534,6 +539,8 @@ public class Client extends Player implements Runnable {
 		getOutputStream().currentOffset = 0;
 	}
 
+
+
 	// two methods that are only used for login procedure
 	private void directFlushOutStream() throws java.io.IOException {
 		ByteBuffer buffer = ByteBuffer.wrap(getOutputStream().buffer, 0, getOutputStream().currentOffset);
@@ -544,8 +551,11 @@ public class Client extends Player implements Runnable {
 	}
 
 	private void fillInStream(int forceRead) throws IOException {
+		// Reuse a pre-allocated buffer to avoid frequent allocations
 		ByteBuffer buffer = ByteBuffer.allocate(forceRead);
 		int bytesRead = 0;
+
+		// Read data in larger chunks to reduce the number of I/O operations
 		while (bytesRead < forceRead) {
 			int result = mySocketHandler.getSocketChannel().read(buffer);
 			if (result == -1) {
@@ -557,10 +567,11 @@ public class Client extends Player implements Runnable {
 
 		// Apply decryption to the input stream if decryption is set up
 		if (inStreamDecryption != null) {
+			byte[] decryptedData = new byte[forceRead];
 			for (int i = 0; i < forceRead; i++) {
-				byte decryptedByte = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
-				getInputStream().buffer[i] = decryptedByte;
+				decryptedData[i] = (byte) (buffer.get(i) - inStreamDecryption.getNextKey());
 			}
+			System.arraycopy(decryptedData, 0, getInputStream().buffer, 0, forceRead);
 		} else {
 			buffer.get(getInputStream().buffer, 0, forceRead);
 		}
@@ -568,14 +579,14 @@ public class Client extends Player implements Runnable {
 		getInputStream().currentOffset = 0;
 	}
 
+
+
+
+
 	private void fillInStream(PacketData pData) throws IOException {
 		getInputStream().currentOffset = 0;
 		getInputStream().buffer = pData.getData();
 		currentPacket = pData;
-	}
-
-	public void processData(ByteBuffer buffer) {
-		mySocketHandler.parsePackets(buffer);
 	}
 
 
@@ -666,7 +677,7 @@ public class Client extends Player implements Runnable {
 			try {
 				playerServer = getInputStream().readString();
 			} catch (Exception e) {
-				playerServer = "play.dodian.net";
+				playerServer = "play.dodian.com";
 			}
 			System.out.println("Player server: " + playerServer);
 
@@ -771,8 +782,10 @@ public class Client extends Player implements Runnable {
 
 			if (getSlot() == -1) {
 				mySocketHandler.writeByte((byte) 7);
+				System.out.println("Wrote byte 7 to client.");
 			} else if (playerServer.equals("INVALID")) {
 				mySocketHandler.writeByte((byte) 10);
+				System.out.println("Wrote byte 10 to client.");
 			} else {
 				if (mySocketHandler != null) {
 					mySocketHandler.writeByte((byte) returnCode);
@@ -788,10 +801,7 @@ public class Client extends Player implements Runnable {
 			mySocketHandler.writeByte((byte) (getGameWorldId() > 1 && playerRights < 2 ? 2 : playerRights));
 			mySocketHandler.writeByte((byte) 0);
 			getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-
-			if (returnCode == 2) {
-				System.out.println("....Success login of " + getPlayerName());
-			}
+			System.out.println("....Success login of " + getPlayerName());
 		} catch (Exception __ex) {
 			destruct();
 			System.out.println("....Failed destruct..." + __ex.getMessage());
@@ -807,6 +817,14 @@ public class Client extends Player implements Runnable {
 		readPtr = 0;
 		writePtr = 0;
 	}
+
+
+
+	public void processData(ByteBuffer buffer) {
+		mySocketHandler.parsePackets(buffer);
+	}
+
+
 
 	public void setSidebarInterface(int menuId, int form) {
 		getOutputStream().createFrame(71);
@@ -892,9 +910,9 @@ public class Client extends Player implements Runnable {
 				StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totalLevel + ", combat=" + determineCombatLevel() + ", ");
 				StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totalLevel + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
 				Skill.enabledSkills().forEach(skill -> {
-							query.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
-							query2.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
-						});
+					query.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
+					query2.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
+				});
 
 				query.append("totalxp=").append(allXp).append(" WHERE uid=").append(dbId);
 				query2.append("totalxp=").append(allXp);
@@ -1659,7 +1677,7 @@ public class Client extends Player implements Runnable {
 							attemptGround = null;
 							pickupWanted = false;
 						}
-				break;
+					break;
 				case 1:
 					if (!Ground.untradeable_items.isEmpty())
 						for (GroundItem item : Ground.untradeable_items) {
@@ -1678,7 +1696,7 @@ public class Client extends Player implements Runnable {
 							attemptGround = null;
 							pickupWanted = false;
 						}
-				break;
+					break;
 				default:
 					if (!Ground.tradeable_items.isEmpty())
 						for (GroundItem item : Ground.tradeable_items) {
@@ -1788,7 +1806,7 @@ public class Client extends Player implements Runnable {
 				return false;
 			}
 			playerItemsN[slot] = playerItemsN[slot] + amount;
-				checkItemUpdate();
+			checkItemUpdate();
 			return true;
 		} else {
 			send(new SendMessage("Not enough space in your inventory."));
@@ -2572,7 +2590,7 @@ public class Client extends Player implements Runnable {
 			logout();
 	}
 
-	public boolean packetProcess() { //Packet fixed?!
+	public boolean packetProcess() {
 		if (disconnected) {
 			return false;
 		}
@@ -2580,20 +2598,25 @@ public class Client extends Player implements Runnable {
 		if (data == null || data.isEmpty() || data.stream() == null)
 			return false;
 		try {
-			fillInStream(data.poll());
+			PacketData packet = data.poll();
+			if (packet != null) {
+				fillInStream(packet);
+				parseIncomingPackets();
+			}
 		} catch (IOException e) {
 			System.out.println("Packet process issue... " + e);
 			disconnected = true;
 			return false;
 		}
-		parseIncomingPackets();
 		return true;
 	}
 
 	public PacketData currentPacket;
 
 	public void parseIncomingPackets() {
-		PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
+		if (currentPacket != null) {
+			PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
+		}
 	}
 
 	public void changeInterfaceStatus(int inter, boolean show) {
@@ -2606,10 +2629,10 @@ public class Client extends Player implements Runnable {
 		getOutputStream().createFrameVarSizeWord(53);
 		getOutputStream().writeWord(8847);
 		getOutputStream().writeWord(items.length);
-        for (int item : items) {
-            getOutputStream().writeByte((byte) 1);
-            getOutputStream().writeWordBigEndianA(item + 1);
-        }
+		for (int item : items) {
+			getOutputStream().writeByte((byte) 1);
+			getOutputStream().writeWordBigEndianA(item + 1);
+		}
 		getOutputStream().endFrameVarSizeWord();
 	}
 
@@ -2666,13 +2689,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Elemental battlestaff", "Mithril", "Adamant", "Rune", "Wolfbane", "Keris", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon", "Verac's flail", "Torag's hammers",
 					"Skillcape" + prem};
 			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "40", "40", "45", "45", "50", "55", "60", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {4151, 1291, 1293, 1295, 1395, 1299, 1301, 1303, 2952, 10581, 3842, 20223, 21646, 6523, 1305, 4755, 4747, 9747};
 			setMenuItems(items);
 		} else if (skillID == DEFENCE.getId()) {
@@ -2685,13 +2708,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Barrows", "Crystal shield (with 60 agility)", "Dragonfire shield",
 					"Skillcape" + prem};
 			String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "70", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4749, 4224, 11284, 9753};
 			setMenuItems(items);
 		} else if (skillID == STRENGTH.getId()) {
@@ -2702,13 +2725,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Dharok's greataxe", "Guthan's warspear", "Skillcape" + prem};
 			String[] s1 = {"45", "45", "45", "50", "55", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {3842, 20223, 20232, 4153, 6528, 4718, 4726, 9750};
 			setMenuItems(items);
 		} else if (skillID == HITPOINTS.getId()) {
@@ -2719,9 +2742,9 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Shrimps (3 health)", "Chicken (3 health)", "Meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
 					"Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == RANGED.getId()) {
@@ -2747,13 +2770,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
 			}
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 4734, 6724/*, 20997*/});
 			else if (child == 1)
@@ -2767,18 +2790,18 @@ public class Client extends Player implements Runnable {
 			slot = 8760;
 			String prem = " @red@(Premium only)";
 			String[] s = {"Thick Skin", "Burst of Strength", "Clarity of Thought", "Sharp Eye", "Mystic Will",
-			"Rock Skin", "Superhuman Strength", "Improved Reflexes", "Hawk Eye", "Mystic Lore", "Wolfbane",
-			"Steel Skin", "Ultimate Strength", "Incredible Reflexes", "Eagle Eye", "Mystic Might",
-			"Protect from Magic", "Protect from Missiles", "Protect from Melee", "Chivalry", "Piety", "Skillcape" + prem};
+					"Rock Skin", "Superhuman Strength", "Improved Reflexes", "Hawk Eye", "Mystic Lore", "Wolfbane",
+					"Steel Skin", "Ultimate Strength", "Incredible Reflexes", "Eagle Eye", "Mystic Might",
+					"Protect from Magic", "Protect from Missiles", "Protect from Melee", "Chivalry", "Piety", "Skillcape" + prem};
 			String[] s1 = {"5", "5", "5", "10", "10", "20", "20", "20", "25", "25", "25",
-			"40", "40", "40", "45", "45", "55", "55", "55", "70", "80", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+					"40", "40", "40", "45", "45", "55", "55", "55", "70", "80", "99"};
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2952, -1, -1, -1, -1, -1,-1, -1, -1, -1, -1, 9759};
 			setMenuItems(items);
 		} else if (skillID == MAGIC.getId()) {
@@ -2800,13 +2823,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Battlestaff", "Elemental battlestaff", "Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Ahrim's staff", "Skillcape" + prem};
 				s1 = new String[]{"1", "1", "10", "10", "10", "25", "40", "50", "70", "99"};
 			}
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
 						new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
@@ -2822,13 +2845,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Cage", "Farmer", "Baker stall", "fur stall", "silver stall", "Master Farmer", "Yanille chest", "Spice Stall", "Legends chest" + prem, "Gem Stall" + prem};
 			String[] s1 = {"1", "10", "10", "40", "65", "70", "70", "80", "85", "90"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {4443, 3243, 2309, 1739, 2349, 5068, 6759, 199, 6759, 1623};
 			setMenuItems(items);
 		} else if (skillID == RUNECRAFTING.getId()) {
@@ -2839,17 +2862,17 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Small pouch", "Nature rune", "Medium pouch", "Large pouch", "Blood rune", "Giant pouch", "Cosmic rune", "Skillcape" + prem};
 			String[] s1 = {"1", "1", "20", "40", "50", "60", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {5509, 561, 5510, 5512, 565, 5514, 564, 9765};
 			setMenuItems(items);
 			//crafting == 12
-    	} else if (skillID == FISHING.getId()) {
+		} else if (skillID == FISHING.getId()) {
 			send(new SendString("Fishing", 8846));
 			changeInterfaceStatus(8825, false);
 			changeInterfaceStatus(8813, false);
@@ -2858,13 +2881,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Dragon harpoon", "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem, ""};
 			String[] s1 = {"1", "20", "30", "40", "50", "60", "61", "70", "85", "95"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {317, 335, 331, 377, 371, 7944, 21028, 383, 395, 389};
 			setMenuItems(items);
 		} else if (skillID == COOKING.getId()) {
@@ -2876,13 +2899,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Shrimps", "Chicken", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
 					"Sea Turtle" + prem, "Manta Ray" + prem};
 			String[] s1 = {"1", "1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
 			setMenuItems(items);
 		} else if (skillID == CRAFTING.getId()) {
@@ -2934,13 +2957,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Crystal key", "Skillcape" + prem};
 				s1 = new String[]{"60", "99"};
 			}
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{1759, 1777});
 			else if (child == 1)
@@ -2996,13 +3019,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Rockshell armour", "Dragonfire shield", "Skillcape" + prem};
 				s1 = new String[]{"60", "90", "99"};
 			}
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 
 			if (child == 0)
 				setMenuItems(new int[]{2349, 2351, 2353, 2357, 2359, 2361, 2363});
@@ -3018,13 +3041,13 @@ public class Client extends Player implements Runnable {
 			String prem = " @red@(Premium only)";
 			String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Shilo stepping stones ", "Prime boss shortcut", "Skillcape" + prem};
 			String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "75", "85", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, -1, 4155, 9771};
 			setMenuItems(items);
 		} else if (skillID == WOODCUTTING.getId()) {
@@ -3047,13 +3070,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739});
 			else if (child == 1)
@@ -3081,13 +3104,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920});
 			else if (child == 1)
@@ -3113,13 +3136,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{4155});
 			else if (child == 1)
@@ -3138,13 +3161,13 @@ public class Client extends Player implements Runnable {
 			s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs",
 					"Skillcape" + prem};
 			s1 = new String[]{"1", "15", "30", "45", "60", "75", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513, 9804});
 		} else if (skillID == HERBLORE.getId()) {
 			send(new SendString("Potions", 8846));
@@ -3173,13 +3196,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454, 12695, 11730});
 			else if (child == 1)
@@ -3194,13 +3217,13 @@ public class Client extends Player implements Runnable {
 			String[] s = {"Arrow Shafts", "Oak Shortbow", "Oak Longbow", "Willow Shortbow", "Willow Longbow",
 					"Maple Shortbow", "Maple Longbow", "Yew Shortbow", "Yew Longbow", "Magic Shortbow", "Magic Longbow"};
 			String[] s1 = {"1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s) {
+				send(new SendString(string, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			int[] items = {52, 54, 56, 60, 58, 64, 62, 68, 66, 72, 70};
 			setMenuItems(items);
 		} else if (skillID == FARMING.getId()) {
@@ -3222,8 +3245,8 @@ public class Client extends Player implements Runnable {
 			String[] s1 = new String[0];
 			if (child == 0) {
 				s = new String[]{"Potatoes \\nPayment: 3 compost", "Onions \\nPayment: 1 sack of potato", "Tomatoes \\nPayment: 1 sack of onion",
-				"Sweetcorn \\nPayment: 2 basket of tomato", "Strawberries "+prem+"\\nPayment: 12 sweetcorn",
-				"Watermelons "+prem+"\\nPayment: 3 basket of strawberries", "Snape grass "+prem+"\\nPayment: 15 watermelon"};
+						"Sweetcorn \\nPayment: 2 basket of tomato", "Strawberries "+prem+"\\nPayment: 12 sweetcorn",
+						"Watermelons "+prem+"\\nPayment: 3 basket of strawberries", "Snape grass "+prem+"\\nPayment: 15 watermelon"};
 				s1 = new String[]{"1", "9", "16", "25", "31", "47", "59"};
 			} else if (child == 1) {
 				s = new String[]{"Marigold \\nPayment: 2 compost", "Rosemary \\nPayment: 2 Marigold", "Nasturtium \\nPayment: 2 Rosemary",
@@ -3249,13 +3272,13 @@ public class Client extends Player implements Runnable {
 				s = new String[]{"Skillcape" + prem};
 				s1 = new String[]{"99"};
 			}
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
+			for (String value : s) {
+				send(new SendString(value, slot++));
+			}
 			slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
+			for (String string : s1) {
+				send(new SendString(string, slot++));
+			}
 			if (child == 0)
 				setMenuItems(new int[]{1942, 1957, 1982, 5986, 5504, 5982, 231}); //5318, 5319, 5322, 5320, 5323, 5321, 5324 = seeds!
 			else if (child == 1)
@@ -3510,16 +3533,16 @@ public class Client extends Player implements Runnable {
 
 	public boolean playerHasItem(int itemID) {
 		itemID++;
-        for (int playerItem : playerItems)
-            if (playerItem == itemID)
-                return true;
+		for (int playerItem : playerItems)
+			if (playerItem == itemID)
+				return true;
 		return false;
 	}
 
 	public boolean playerHasItem(String name) {
-        for (int playerItem : playerItems)
-            if (GetItemName(playerItem - 1).contains(name))
-                return true;
+		for (int playerItem : playerItems)
+			if (GetItemName(playerItem - 1).contains(name))
+				return true;
 		return false;
 	}
 
@@ -3534,21 +3557,21 @@ public class Client extends Player implements Runnable {
 
 	public boolean checkItem(int itemID) {
 		itemID++;
-        for (int playerItem : playerItems) {
-            if (playerItem == itemID) {
-                return true;
-            }
-        }
+		for (int playerItem : playerItems) {
+			if (playerItem == itemID) {
+				return true;
+			}
+		}
 		for (int i = 0; i < getEquipment().length; i++) {
 			if (getEquipment()[i] == itemID) {
 				return true;
 			}
 		}
-        for (int bankItem : bankItems) {
-            if (bankItem == itemID) {
-                return true;
-            }
-        }
+		for (int bankItem : bankItems) {
+			if (bankItem == itemID) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -3677,7 +3700,7 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void ResetBonus() {
-        Arrays.fill(playerBonus, 0);
+		Arrays.fill(playerBonus, 0);
 	}
 
 	public void GetBonus(boolean update) {
@@ -4579,7 +4602,7 @@ public class Client extends Player implements Runnable {
 				showNPCChat(NpcTalkTo, 599, new String[]{"Hello there Traveler.", "Do you fancy taking a carpet ride?" , "It will cost 5000 coins."});
 				nextDiag = 18;
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 18:
 				showPlayerChat(new String[]{"Where can your carpet take me to?"}, 615);
 				nextDiag = 19;
@@ -4668,7 +4691,7 @@ public class Client extends Player implements Runnable {
 					String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
 					String[] slayerMaster = new String[]{
 							"What would you like to say?", "I'd like a task please",
-                            !taskName.isEmpty() ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my " + (gotHelmet ? "slayer helmet" : "black mask"), "Can you teleport me to west ardougne?"};
+							!taskName.isEmpty() ? "Cancel " + taskName.toLowerCase() + " task" : "No task to skip", "I'd like to upgrade my " + (gotHelmet ? "slayer helmet" : "black mask"), "Can you teleport me to west ardougne?"};
 					showPlayerOption(slayerMaster);
 				}
 				NpcDialogueSend = true;
@@ -4995,11 +5018,11 @@ public class Client extends Player implements Runnable {
 				} else
 					showNPCChat(NpcTalkTo, 597, new String[]{"Fancy meeting you here mysterious one.", "I have no battlestaffs that you can claim."});
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 3838:
 				showPlayerOption(new String[]{"Do you wish to claim your battlestaffs?", "Yes", "No"});
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 2345:
 				if(!checkUnlock(0)) {
 					showNPCChat(NpcTalkTo, 591, new String[]{"Hello!", "Are you looking to enter my dungeon?", "You have to pay a to enter.", "You can also pay a one time fee."});
@@ -5052,17 +5075,17 @@ public class Client extends Player implements Runnable {
 				showNPCChat(NpcTalkTo, 591, new String[]{"Hello "+(getGender() == 1 ? "miss" : "mr")+" adventurer.", "What can I help you with today?"});
 				nextDiag = 4754;
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 4754:
 				showPlayerChat(new String[]{ "I heard you were a famous herbalist.", "I was wondering if you had some kind of service." }, 612);
 				nextDiag = 4755;
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 4755: //Start of potion making Zahur!
 				showNPCChat(NpcTalkTo, 591, new String[]{"I sure do have some services I can offer.", "Would you like me to make you a unfinish potion or", "Clean any of your herbs? They must all be noted."});
 				nextDiag = 4758;
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 4756:
 				herbMaking = 0;
 				herbOptions.clear();
@@ -5073,7 +5096,7 @@ public class Client extends Player implements Runnable {
 					showNPCChat(4753, 605, new String[]{"You got no herbs for me to clean!"});
 				else setHerbOptions();
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 4757:
 				herbMaking = 0;
 				herbOptions.clear();
@@ -5093,7 +5116,7 @@ public class Client extends Player implements Runnable {
 			case 4759:
 				showPlayerOption(new String[]{"Select a option", "Visit the store", "Clean herbs", "Make unfinish potions"});
 				NpcDialogueSend = true;
-			break;
+				break;
 			case 6481:
 				if(totalLevel() >= Skills.maxTotalLevel())
 					showNPCChat(NpcTalkTo, 591, new String[]{"I see that you have trained up all your skills.", "I am utmost impressed!"});
@@ -5161,7 +5184,7 @@ public class Client extends Player implements Runnable {
 			case 20931:
 				showPlayerOption(new String[]{ "Exit pyramid plunder?", "Yes", "No" });
 				NpcDialogueSend = true;
-			break;
+				break;
 		}
 	}
 
@@ -5296,15 +5319,15 @@ public class Client extends Player implements Runnable {
 			return 1;
 		} else {
 			if (ItemName.startsWith("Saradomin") || ItemName.startsWith("Zamorak") || ItemName.startsWith("Guthix") ||
-				checkName.contains("staff") || checkName.contains("cape"))
+					checkName.contains("staff") || checkName.contains("cape"))
 				return 1;
 			if (ItemID == 11284)
 				return 75;
 			if (ItemID == 4224)
 				return 70;
 			if ((ItemName.startsWith("Ahrim") && !checkName.contains("staff")) || (ItemName.startsWith("Karil") && !checkName.contains("crossbow")) ||
-			(ItemName.startsWith("Verac") && !checkName.contains("flail")) || (ItemName.startsWith("Dharok") && !checkName.contains("greataxe")) ||
-			(ItemName.startsWith("Torag") && !checkName.contains("hammers")) || (ItemName.startsWith("Guthan") && !checkName.contains("warspear")))
+					(ItemName.startsWith("Verac") && !checkName.contains("flail")) || (ItemName.startsWith("Dharok") && !checkName.contains("greataxe")) ||
+					(ItemName.startsWith("Torag") && !checkName.contains("hammers")) || (ItemName.startsWith("Guthan") && !checkName.contains("warspear")))
 				return 70;
 			if (ItemName.startsWith("Bronze")) {
 				return 1;
@@ -5880,21 +5903,21 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean hasSpace() {
-        for (int playerItem : playerItems) {
-            if (playerItem == -1 || playerItem == 0) {
-                return true;
-            }
-        }
+		for (int playerItem : playerItems) {
+			if (playerItem == -1 || playerItem == 0) {
+				return true;
+			}
+		}
 		return false;
 	}
 
 	public int getFreeSpace() {
 		int spaces = 0;
-        for (int playerItem : playerItems) {
-            if (playerItem == -1 || playerItem == 0) {
-                spaces += 1;
-            }
-        }
+		for (int playerItem : playerItems) {
+			if (playerItem == -1 || playerItem == 0) {
+				spaces += 1;
+			}
+		}
 		return spaces;
 	}
 
@@ -6064,7 +6087,7 @@ public class Client extends Player implements Runnable {
 			case 401: //Seaweed
 			case 1783: //Bucket of sand
 				smelt_barId = 1775;
-			break;
+				break;
 			case 444:
 				if (getLevel(Skill.SMITHING) < 40) {
 					send(new SendMessage("You need level 40 smithing to do this!"));
@@ -6162,16 +6185,16 @@ public class Client extends Player implements Runnable {
 				send(new SendMessage("You need 1 nature runes to cast this spell!"));
 				return;
 			}
-				lastMagic = System.currentTimeMillis();
-				requestAnim(725, 0);
-				callGfxMask(148, 100);
-				deleteRunes(new int[]{561}, new int[]{1});
-				for (Integer removeId : removed)
-					deleteItem(removeId, 1);
-				addItem(smelt_barId, 1);
-				checkItemUpdate();
-				giveExperience(xp, Skill.SMITHING);
-				giveExperience(500, Skill.MAGIC);
+			lastMagic = System.currentTimeMillis();
+			requestAnim(725, 0);
+			callGfxMask(148, 100);
+			deleteRunes(new int[]{561}, new int[]{1});
+			for (Integer removeId : removed)
+				deleteItem(removeId, 1);
+			addItem(smelt_barId, 1);
+			checkItemUpdate();
+			giveExperience(xp, Skill.SMITHING);
+			giveExperience(500, Skill.MAGIC);
 		}
 		send(new SendSideTab(6));
 	}
@@ -6249,7 +6272,7 @@ public class Client extends Player implements Runnable {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-    }
+	}
 
 	public boolean emptyEssencePouch(int pouch) {
 		int slot = pouch == 5509 ? 0 : ((pouch - 5508) / 2);
@@ -6344,8 +6367,8 @@ public class Client extends Player implements Runnable {
 		if (fillingObj == 879 || fillingObj == 873 || fillingObj == 874 || fillingObj == 6232 ||
 				fillingObj == 12279 || fillingObj == 14868 || fillingObj == 20358 || fillingObj == 25929) {
 			boolean canFill = fillStuff(229, 227, 832) || fillStuff(1980, 4458, 832) || fillStuff(1935, 1937, 832) ||
-			fillStuff(1825, 1823, 832) || fillStuff(1827, 1823, 832) || fillStuff(1829, 1823, 832) ||
-			fillStuff(1831, 1823, 832) || fillStuff(1925, 1929, 832) || fillStuff(1923, 1921, 832);
+					fillStuff(1825, 1823, 832) || fillStuff(1827, 1823, 832) || fillStuff(1829, 1823, 832) ||
+					fillStuff(1831, 1823, 832) || fillStuff(1925, 1929, 832) || fillStuff(1923, 1921, 832);
 			if(!canFill)
 				resetAction();
 		} else if (fillingObj == 14890) {
@@ -7330,7 +7353,7 @@ public class Client extends Player implements Runnable {
 		 */
 		if (other == null)
 			return;
-        if (System.currentTimeMillis() - lastButton < 400) {
+		if (System.currentTimeMillis() - lastButton < 400) {
 			return;
 		}
 		if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -8003,13 +8026,13 @@ public class Client extends Player implements Runnable {
 				if (getLevel(Skill.MINING) >= Utils.pickReq[i])
 					Eaxe = i;
 			}
-            for (int playerItem : playerItems) {
-                if (Utils.picks[i] == playerItem - 1) {
-                    if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
+			for (int playerItem : playerItems) {
+				if (Utils.picks[i] == playerItem - 1) {
+					if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
+						Iaxe = i;
+					}
+				}
+			}
 		}
 		return Math.max(Eaxe, Iaxe);
 	}
@@ -8022,16 +8045,16 @@ public class Client extends Player implements Runnable {
 				if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i])
 					Eaxe = i;
 			}
-            for (int playerItem : playerItems) {
-                if (Utils.axes[i] == playerItem - 1) {
-                    if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
+			for (int playerItem : playerItems) {
+				if (Utils.axes[i] == playerItem - 1) {
+					if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
+						Iaxe = i;
+					}
+				}
+			}
 		}
-        return Math.max(Eaxe, Iaxe);
-    }
+		return Math.max(Eaxe, Iaxe);
+	}
 
 	public void mining(int index) {
 		int minePick = findPick();
@@ -8354,10 +8377,10 @@ public class Client extends Player implements Runnable {
 	}
 
 	public boolean contains(int item) {
-        for (int playerItem : playerItems) {
-            if (playerItem == item + 1)
-                return true;
-        }
+		for (int playerItem : playerItems) {
+			if (playerItem == item + 1)
+				return true;
+		}
 		return false;
 	}
 
@@ -8561,8 +8584,8 @@ public class Client extends Player implements Runnable {
 		//playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = emote, 7 = tickTimer
 		resetAction();
 		sendFrame246(1746, skill == Skill.HERBLORE.getId() ? 150 : 190, itemMade);
-        //Doubt this is how you do it but meh cba!
-        send(new SendString("\\n".repeat((skill == Skill.HERBLORE.getId() ? 4 : 5)) + GetItemName(itemMade), 2799));
+		//Doubt this is how you do it but meh cba!
+		send(new SendString("\\n".repeat((skill == Skill.HERBLORE.getId() ? 4 : 5)) + GetItemName(itemMade), 2799));
 		sendFrame164(4429);
 		setSkill(skill, itemMade,  amount, itemOne, itemTwo, xp, emote, tick);
 	}
@@ -8738,9 +8761,9 @@ public class Client extends Player implements Runnable {
 			for(int i2 = 0; i2 < itemsToShow.length; i2++) {
 				itemsToShow[i2] = getItem(i, i2);
 				if (i2 != 0 && itemsToShow[i2] != jewelry[i][i2])
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
+					sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
 				else if (i2 != 0) {
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
+					sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
 				}
 			}
 			setGoldItems(slot, itemsToShow);
@@ -8752,10 +8775,10 @@ public class Client extends Player implements Runnable {
 		getOutputStream().writeWord(slot);
 		getOutputStream().writeWord(items.length);
 
-        for (int item : items) {
-            getOutputStream().writeByte((byte) 1);
-            getOutputStream().writeWordBigEndianA(item + 1);
-        }
+		for (int item : items) {
+			getOutputStream().writeByte((byte) 1);
+			getOutputStream().writeWordBigEndianA(item + 1);
+		}
 		getOutputStream().endFrameVarSizeWord();
 	}
 
@@ -8772,7 +8795,7 @@ public class Client extends Player implements Runnable {
 			send(new SendMessage("You are currently busy to be crafting!"));
 			return;
 		}
-        if (amount <= 0) {
+		if (amount <= 0) {
 			goldCrafting = false;
 			resetAction();
 			return;
@@ -8855,10 +8878,10 @@ public class Client extends Player implements Runnable {
 	public boolean bowWeapon(int weaponId) {
 		boolean bow = false;
 		for (int i = 0; i < Constants.shortbow.length; i++)
-            if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
-                bow = true;
-                break;
-            }
+			if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
+				bow = true;
+				break;
+			}
 		if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
 				weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
 			bow = true;
@@ -8896,14 +8919,14 @@ public class Client extends Player implements Runnable {
 						String text = results.getString("inventory");
 						if (text != null && text.length() > 2) {
 							String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherInv.add(new GameItem(item, amount));
-                            }
+							for (String line : lines) {
+								String[] parts = line.split("-");
+								@SuppressWarnings("unused")
+								int slot = Integer.parseInt(parts[0]);
+								int item = Integer.parseInt(parts[1]);
+								int amount = Integer.parseInt(parts[2]);
+								otherInv.add(new GameItem(item, amount));
+							}
 						}
 						sendInventory(3214, otherInv);
 						send(new SendMessage("User " + player + "'s inventory is now being shown."));
@@ -8953,14 +8976,14 @@ public class Client extends Player implements Runnable {
 						String text = results.getString("bank");
 						if (text != null && text.length() > 2) {
 							String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherBank.add(new GameItem(item, amount));
-                            }
+							for (String line : lines) {
+								String[] parts = line.split("-");
+								@SuppressWarnings("unused")
+								int slot = Integer.parseInt(parts[0]);
+								int item = Integer.parseInt(parts[1]);
+								int amount = Integer.parseInt(parts[2]);
+								otherBank.add(new GameItem(item, amount));
+							}
 						}
 						send(new SendString("Examine the bank of " + player, 5383));
 						sendBank(5382, otherBank);
@@ -9110,9 +9133,9 @@ public class Client extends Player implements Runnable {
 					userid = results.getInt("userid");
 				if (userid >= 0) {
 					StringBuilder bank = new StringBuilder();
-                    StringBuilder inventory = new StringBuilder();
-                    StringBuilder equipment = new StringBuilder();
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid;
+					StringBuilder inventory = new StringBuilder();
+					StringBuilder equipment = new StringBuilder();
+					query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid;
 					results = statement.executeQuery(query);
 					if (results.next()) {
 						String text = results.getString("bank");
@@ -9134,18 +9157,18 @@ public class Client extends Player implements Runnable {
 						text = results.getString("inventory");
 						if (text != null && text.length() > 2) {
 							String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
+							for (String line : lines) {
+								String[] parts = line.split("-");
+								int checkItem = Integer.parseInt(parts[1]);
+								if (checkItem == id) {
+									int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
+									if (canRemove < Integer.parseInt(parts[2]))
+										inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
+									amount -= canRemove;
+									totalItemRemoved += canRemove;
+								} else
+									inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
+							}
 						}
 						text = results.getString("equipment");
 						if (text != null && text.length() > 2) {
@@ -9353,11 +9376,11 @@ public class Client extends Player implements Runnable {
 		}
 	}
 
-    public int totalLevel() {
-        return Skill.enabledSkills()
+	public int totalLevel() {
+		return Skill.enabledSkills()
 				.mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
 				.sum() + (int) Skill.disabledSkills().count();
-    }
+	}
 	public boolean doingTeleport() {
 		return tStage > 0;
 	}

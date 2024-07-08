@@ -1,0 +1,9 @@
+package net.dodian.uber.game.network.packets;
+
+import net.dodian.uber.game.model.entity.player.Client;
+
+public interface Packet {
+
+    void ProcessPacket(Client client, int packetType, int packetSize);
+
+}
