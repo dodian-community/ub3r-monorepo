@@ -7,8 +7,6 @@ import java.nio.channels.SocketChannel;
 import java.net.InetSocketAddress;
 import java.io.IOException;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,11 +56,10 @@ public class PlayerHandler {
             players[slot].connectedFrom = connectedFrom;
             players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
             Player.localId = slot;
-
             clientThreadPool.submit(newClient); // Use thread pool to manage client threads
-            logger.info("New client connected from " + connectedFrom + " at slot " + slot);
+            //logger.info("New client connected from " + connectedFrom + " at slot " + slot); -> Old Debug
         } catch (IOException e) {
-            logger.severe("Error configuring new client connection: " + e.getMessage());
+            //logger.severe("Error configuring new client connection: " + e.getMessage()); -> Old Debug
             closeSocketChannel(socketChannel);
         }
     }
@@ -96,7 +93,7 @@ public class PlayerHandler {
     public static boolean isPlayerOn(String playerName) {
         long playerId = Utils.playerNameToLong(playerName);
         if (playersOnline.containsKey(playerId)) {
-            logger.info("Player is already logged in as: " + playerName);
+            //logger.info("Player is already logged in as: " + playerName); -> Old Debug
             return true;
         }
         return false;
@@ -114,7 +111,7 @@ public class PlayerHandler {
         Client temp = (Client) plr;
         if (temp != null) {
             temp.destruct(); // Destruct after player has saved!
-            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
+            //logger.info("Finished removing player: '" + temp.getPlayerName() + "'"); -> Old Debug
             players[temp.getSlot()] = null; // Clear the player from the slot
         } else {
             logger.warning("Tried to remove a null player!");

@@ -1,7 +1,6 @@
 package net.dodian.uber.comm;
 
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
 
 import java.io.EOFException;
@@ -111,7 +110,7 @@ public class SocketHandler implements Runnable {
         if (processRunning.getAndSet(false)) {
             player.disconnected = true;
             cleanup();
-            YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!");
+            //YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!"); //-> Old Debug!
         }
     }
 
@@ -124,7 +123,7 @@ public class SocketHandler implements Runnable {
                 socketChannel.close();
             }
             player.disconnected = true;
-            YellSystem.alertStaff(player.getPlayerName() + " has disconnected.");
+            //YellSystem.alertStaff(player.getPlayerName() + " has disconnected."); //-> Old Debug!
         } catch (IOException e) {
             logger.warning("SocketHandler Cleanup Exception: " + e.getMessage());
         }

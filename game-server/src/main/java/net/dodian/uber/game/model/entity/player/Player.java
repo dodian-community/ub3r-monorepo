@@ -40,7 +40,7 @@ public abstract class Player extends Entity {
     public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
-    public boolean premium = false, randomed = false;
+    public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;

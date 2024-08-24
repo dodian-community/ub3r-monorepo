@@ -34,11 +34,11 @@ fun Client.canAttackNpc(npcId: Int): Boolean {
     return true
 }
 fun Client.getAttackStyle() : Int {
-    if (hasStaff() && (autocast_spellIndex >= 0 || magicId != -1))
+    if (hasStaff() && (autocast_spellIndex >= 0 || magicId >= 0))
         return 2
-    if (!hasStaff() && magicId != -1)
+    else if (!hasStaff() && magicId >= 0)
         return 2
-    if (usingBow)
+    else if (usingBow)
         return 1
     return 0
 }

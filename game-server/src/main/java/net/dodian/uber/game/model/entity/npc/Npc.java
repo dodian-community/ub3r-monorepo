@@ -25,6 +25,8 @@ import net.dodian.utilities.Utils;
 public class Npc extends Entity {
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
+    public int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
+    public int[] burnDamage = new int[]{-1, -1, 4, 0, 5}; //Player or npc (0 or 1), id, time left in ticks, damage, stopTime.
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, lastAttack = 0, maxHit;
     public boolean alive, visible = true, boss = false;
     String miniBoss = "";
@@ -570,6 +572,9 @@ public class Npc extends Entity {
             boostedStatOrig[i] = 0;
             boostedStat[i] = 0;
         }
+        /* REset effect! */
+        poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Default
+        burnDamage = new int[]{-1, -1, 4, 0, 0}; //Default
     }
 
     public Client getTarget(boolean fighting) {
@@ -1089,6 +1094,57 @@ public class Npc extends Entity {
             if (e instanceof Player && getPosition().withinDistance(e.getPosition(), 16) && ((Client) e).getCurrentHealth() > 0)
                 ((Client) e).setLastCombat(0); //Reset combat timer if something get killed within 16 distance and you targeted it!
         }
+    }
+
+    public void inflictEffect(int type, boolean player, int id, int damage, int times) {
+        //type = 0 is poison, 1 is burn, 2 is bleed
+        switch(type) {
+            case 0: //poison
+                break;
+            case 1: //burn
+                boolean canBurn = !npcName().toLowerCase().contains("demon") && !npcName().toLowerCase().contains("dragon") && getId() != 3957 &&
+                getId() != 239 && getId() != 3127 && getId() != 8 && //Ungadulu + jad + nechryael + kbd cant burn!
+                        getId() != 2193 && getId() != 3123 && getId() != 2154 && getId() != 2167; //Tzhaar cavern immune to fire!
+                if(burnDamage[0] == -1 && canBurn) {
+                    burnDamage = new int[]{player ? 0 : 1, id, 4, damage, times};
+                    if(player) getClient(id).send(new SendMessage("You start to burn your target!"));
+                }
+                break;
+            case 2: //bleed
+                break;
+        }
+    }
+
+    public void effectChange() {
+        //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage
+        if(!isAlive()) {
+            return;
+        }
+        /* Reduce */
+        if(poisonDamage[0] > -1) poisonDamage[2]--;
+        if(burnDamage[0] > -1) burnDamage[2]--;
+        /* Damage! */
+        if(poisonDamage[0] > -1 && poisonDamage[2] == 0) {
+            poisonDamage[2] = 100; //Every 60 sec
+            poisonDamage[5] --;
+            if(validClient(poisonDamage[1])) {
+                dealDamage(getClient(poisonDamage[1]), poisonDamage[4], Entity.hitType.POISON);
+                if(poisonDamage[5] == 0) {
+                    poisonDamage[4]--;
+                    poisonDamage[5] = 4;
+                }
+                if(poisonDamage[4] <= 0) poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Stop poison damage!
+            } else poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Default
+        }
+        if(burnDamage[0] > -1 && burnDamage[2] == 0) {
+            burnDamage[2] = 4; //Every 2.4 sec3
+            burnDamage[4]--;
+            if(validClient(burnDamage[1])) {
+                dealDamage(getClient(burnDamage[1]), burnDamage[3], Entity.hitType.BURN);
+                if(burnDamage[4] <= 0) burnDamage = new int[]{-1, -1, 4, 0, 0}; //Stop burn damage!
+            } else burnDamage = new int[]{-1, -1, 4, 0, 0}; //Default
+        }
+        /* Stop! */
     }
 
 }

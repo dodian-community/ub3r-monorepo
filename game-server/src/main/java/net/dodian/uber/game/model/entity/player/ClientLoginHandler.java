@@ -27,21 +27,17 @@ public class ClientLoginHandler {
 
     public void handleLogin() {
         client.isActive = false;//flag for if login is complete
-
         long serverSessionKey, clientSessionKey;
-
         serverSessionKey = ((long) (Math.random() * 99999999D) << 32)
                 + (long) (Math.random() * 99999999D);
-
         System.out.println("Starting login process for client on slot: " + client.getSlot());
-
         try {
             client.returnCode = 2;
             ByteBuffer buffer = ByteBuffer.allocate(2);
             readFully(buffer);
             buffer.flip();
             int checkId = buffer.get() & 0xff;
-            System.out.println("Received checkId: " + checkId);
+            //System.out.println("Received checkId: " + checkId); -> Old debug!
             if (checkId != 14) {
                 client.println_debug("Could not process client with id: " + checkId);
                 client.disconnected = true;
@@ -61,21 +57,19 @@ public class ClientLoginHandler {
             longBuffer.putLong(serverSessionKey);
             longBuffer.flip();
             socketChannel.write(longBuffer);
-
-            System.out.println("Sent server session key: " + serverSessionKey);
-
+            //System.out.println("Sent server session key: " + serverSessionKey); -> Old Debug
             buffer.clear();
             readFully(buffer);
             buffer.flip();
             int loginType = buffer.get() & 0xff;
-            System.out.println("Received login type: " + loginType);
+            //System.out.println("Received login type: " + loginType); -> Old Debug
             if (loginType != 16 && loginType != 18) {
                 client.println_debug("Unexpected login type " + loginType);
                 return;
             }
             int loginPacketSize = buffer.get() & 0xff;
             int loginEncryptPacketSize = loginPacketSize - (36 + 1 + 1 + 2);
-            System.out.println("Login packet size: " + loginPacketSize + ", Encrypted size: " + loginEncryptPacketSize);
+            //System.out.println("Login packet size: " + loginPacketSize + ", Encrypted size: " + loginEncryptPacketSize); -> Old Debug
             if (loginEncryptPacketSize <= 0) {
                 client.println_debug("Zero RSA packet size!");
                 return;
@@ -109,8 +103,7 @@ public class ClientLoginHandler {
 
             clientSessionKey = loginBuffer.getLong();
             serverSessionKey = loginBuffer.getLong();
-            System.out.println("Client session key: " + clientSessionKey + ", Server session key: " + serverSessionKey);
-
+            //System.out.println("Client session key: " + clientSessionKey + ", Server session key: " + serverSessionKey); -> Old Debug
             String customClientVersion = readString(loginBuffer);
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
             client.setPlayerName(readString(loginBuffer));
@@ -124,8 +117,7 @@ public class ClientLoginHandler {
             } catch (Exception e) {
                 playerServer = "play.dodian.com";
             }
-            System.out.println("Player name: " + client.getPlayerName() + ", Server: " + playerServer);
-
+            //System.out.println("Player name: " + client.getPlayerName() + ", Server: " + playerServer); -> Old Debug!
             client.setPlayerName(client.getPlayerName().toLowerCase());
             char[] validChars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -175,8 +167,7 @@ public class ClientLoginHandler {
                 client.returnCode = 14;
                 client.disconnected = true;
             }
-
-            System.out.println("Name check..." + client.longName + ":" + client.properName + " ");
+            //System.out.println("Name check..." + client.longName + ":" + client.properName + " "); -> Old debug!
             int loadgame = Server.loginManager.loadgame(client, client.getPlayerName(), client.playerPass);
             switch (client.playerGroup) {
                 case 6: // root admin
@@ -240,20 +231,18 @@ public class ClientLoginHandler {
             responseBuffer.put((byte) 0);
             responseBuffer.flip();
             socketChannel.write(responseBuffer);
-
-            System.out.println("Sent login response. Return code: " + client.returnCode + ", Rights: " + client.playerRights);
-
             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-            client.print_debug("....Success login of " + client.getPlayerName());
+            if(client.validLogin && !client.disconnected) client.print_debug("....Success login of " + client.getPlayerName());
+            //else client.print_debug("....Invalid login of " + client.getPlayerName() + ", " + client.returnCode + ", Rights: " + client.playerRights); -> Debug if needed!
         } catch (Exception __ex) {
             destruct();
             client.print_debug("....Failed destruct..." + __ex.getMessage());
-            __ex.printStackTrace();
+            //__ex.printStackTrace(); //Do we need?
             return;
         }
 
         if (client.getSlot() == -1 || client.returnCode != 2) {
-            client.print_debug("...slot="+ (client.getSlot() == -1 ? "-1" : "" + client.getSlot()) +" where return code is: " + client.returnCode);
+            //client.print_debug("...slot="+ (client.getSlot() == -1 ? "-1" : "" + client.getSlot()) +" where return code is: " + client.returnCode); -> Old debug!
             return;
         }
 
@@ -265,7 +254,7 @@ public class ClientLoginHandler {
         client.readPtr = 0;
         client.writePtr = 0;
 
-        System.out.println("Login process completed successfully for " + client.getPlayerName());
+        //System.out.println("Login process completed successfully for " + client.getPlayerName()); -> Old Debug!
     }
 
 

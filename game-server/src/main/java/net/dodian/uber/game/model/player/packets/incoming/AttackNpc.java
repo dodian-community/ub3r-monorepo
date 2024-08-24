@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.*;
 
@@ -15,6 +16,7 @@ public class AttackNpc implements Packet {
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int npcIndex = client.getInputStream().readUnsignedWordA();
+        if(client.magicId >= 0) client.magicId = -1;
         if (client.deathStage < 1) {
             Npc tempNpc = Server.npcManager.getNpc(npcIndex);
             if (tempNpc == null) {
