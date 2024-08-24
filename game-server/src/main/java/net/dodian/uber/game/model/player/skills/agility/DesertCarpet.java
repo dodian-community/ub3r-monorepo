@@ -4,8 +4,8 @@ import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.network.packets.outgoing.RemoveInterfaces;
-import net.dodian.uber.game.network.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
 public class DesertCarpet {
     final Client c;

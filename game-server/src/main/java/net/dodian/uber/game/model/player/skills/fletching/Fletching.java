@@ -2,8 +2,8 @@ package net.dodian.uber.game.model.player.skills.fletching;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.network.packets.outgoing.RemoveInterfaces;
-import net.dodian.uber.game.network.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 
 public class Fletching {

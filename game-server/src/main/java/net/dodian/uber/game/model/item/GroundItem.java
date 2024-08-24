@@ -5,8 +5,8 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.network.packets.outgoing.CreateGroundItem;
-import net.dodian.uber.game.network.packets.outgoing.RemoveGroundItem;
+import net.dodian.uber.game.model.player.packets.outgoing.CreateGroundItem;
+import net.dodian.uber.game.model.player.packets.outgoing.RemoveGroundItem;
 
 public class GroundItem {
     public int x, y, z, id, amount, dropper, playerId = -1, npcId = -1, type = 2;
