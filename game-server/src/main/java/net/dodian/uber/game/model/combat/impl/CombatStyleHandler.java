@@ -6,8 +6,8 @@ import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.network.packets.outgoing.SendMessage;
-import net.dodian.uber.game.network.packets.outgoing.SendString;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.packets.outgoing.SendString;
 
 public abstract class CombatStyleHandler {
 
