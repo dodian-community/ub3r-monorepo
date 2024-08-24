@@ -1,8 +1,8 @@
 package net.dodian.uber.game.model.music;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.network.packets.outgoing.SetRegionSong;
-import net.dodian.uber.game.network.packets.outgoing.SongSetting;
+import net.dodian.uber.game.model.player.packets.outgoing.SetRegionSong;
+import net.dodian.uber.game.model.player.packets.outgoing.SongSetting;
 
 /**
  * @author Dashboard

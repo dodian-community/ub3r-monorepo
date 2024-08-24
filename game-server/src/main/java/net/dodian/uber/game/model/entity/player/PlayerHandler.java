@@ -3,29 +3,38 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
-import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.net.InetSocketAddress;
+import java.io.IOException;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class PlayerHandler {
+
+    private static final Logger logger = Logger.getLogger(PlayerHandler.class.getName());
+
+    private static final ExecutorService clientThreadPool = Executors.newCachedThreadPool();
+    private static final AtomicInteger nextSlot = new AtomicInteger(1); // Starts from 1, assuming 0 is reserved
 
     public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<>();
     public static int cycle = 1;
-    //Players online!
+
     public static Player[] players = new Player[Constants.maxPlayers];
 
-    // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
     public boolean validClient(int index) {
         Client p = (Client) players[index];
         return p != null && !p.disconnected && p.dbId >= 0;
     }
 
     public Client getClient(int index) {
-        return ((Client) players[index]);
+        return (Client) players[index];
     }
 
     public PlayerHandler() {
@@ -34,68 +43,69 @@ public class PlayerHandler {
         }
     }
 
-    public Client newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
-        int slot = -1;
-        synchronized (PlayerHandler.players) {
-            for (int i = 1; i < PlayerHandler.players.length; i++) {
-                if (PlayerHandler.players[i] == null || PlayerHandler.players[i].disconnected) {
-                    slot = i;
-                    break;
-                }
-            }
-        }
-
+    public void newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
+        int slot = findFreeSlot();
         if (slot == -1) {
-            System.out.println("No free slot found - world is full");
-            return null; // no free slot found - world is full
+            logger.warning("No free slots available for a new player connection.");
+            return; // no free slot found - world is full
         }
 
-        Client newClient = new Client(socketChannel, slot);
-        newClient.handler = this;
-        synchronized (PlayerHandler.players) {
-            PlayerHandler.players[slot] = newClient;
+        try {
+            socketChannel.configureBlocking(false); // Set non-blocking as early as possible
+            Client newClient = new Client(socketChannel, slot);
+            newClient.handler = this;
+            players[slot] = newClient;
+            players[slot].connectedFrom = connectedFrom;
+            players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
+            Player.localId = slot;
+
+            clientThreadPool.submit(newClient); // Use thread pool to manage client threads
+            logger.info("New client connected from " + connectedFrom + " at slot " + slot);
+        } catch (IOException e) {
+            logger.severe("Error configuring new client connection: " + e.getMessage());
+            closeSocketChannel(socketChannel);
         }
-        newClient.connectedFrom = connectedFrom;
-        newClient.ip = socketChannel.socket().getInetAddress().hashCode();
-        Player.localId = slot;
-        System.out.println("New player client initialized. Slot: " + slot + ", IP: " + newClient.ip);
+    }
 
-        // Initialize login process for the new client asynchronously
-        CompletableFuture.runAsync(() -> newClient.run());
+    private int findFreeSlot() {
+        int startSlot = nextSlot.get();
+        int slot = startSlot;
+        do {
+            if (players[slot] == null || players[slot].disconnected) {
+                nextSlot.set((slot + 1) % Constants.maxPlayers); // Cycle through slots
+                return slot;
+            }
+            slot = (slot + 1) % Constants.maxPlayers;
+        } while (slot != startSlot);
 
-        return newClient;
+        return -1; // No free slots
+    }
+
+    private void closeSocketChannel(SocketChannel socketChannel) {
+        try {
+            socketChannel.close();
+        } catch (IOException closeError) {
+            logger.warning("Error closing socket channel: " + closeError.getMessage());
+        }
     }
 
     public static int getPlayerCount() {
-        int count = 0;
-        for (Player player : players) {
-            if (player != null && !player.disconnected) {
-                count++;
-            }
-        }
-        return count;
+        return (int) playersOnline.values().stream().filter(player -> !player.disconnected).count();
     }
 
-    public static boolean isPlayerOn(String playerName) { //Already logged in!
-        int otherPIndex = getPlayerID(playerName);
-        if (otherPIndex != -1) {
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
+    public static boolean isPlayerOn(String playerName) {
+        long playerId = Utils.playerNameToLong(playerName);
+        if (playersOnline.containsKey(playerId)) {
+            logger.info("Player is already logged in as: " + playerName);
             return true;
         }
-        /*if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) { //Old code test!
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            System.out.println("[" + timestamp + "] is already logged in as: " + Utils.playerNameToLong(playerName));
-            return true;
-        }*/ //old code!
         return false;
     }
 
     public static int getPlayerID(String playerName) {
-        if (PlayerHandler.playersOnline.containsKey(Utils.playerNameToLong(playerName))) {
-            return PlayerHandler.playersOnline.get(Utils.playerNameToLong(playerName)).getSlot();
-        }
-        return -1;
+        long playerId = Utils.playerNameToLong(playerName);
+        Client client = playersOnline.get(playerId);
+        return client != null ? client.getSlot() : -1;
     }
 
     public int lastchatid = 1; // PM System
@@ -103,18 +113,16 @@ public class PlayerHandler {
     public void removePlayer(Player plr) {
         Client temp = (Client) plr;
         if (temp != null) {
-            temp.destruct(); //Destruct after player have saved!
-            temp.println_debug("Finished sending a destruct to remove the player... '"+temp.getPlayerName()+"'");
-        } else System.out.println("tried to remove nulled player!");
+            temp.destruct(); // Destruct after player has saved!
+            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
+            players[temp.getSlot()] = null; // Clear the player from the slot
+        } else {
+            logger.warning("Tried to remove a null player!");
+        }
     }
 
     public static Player getPlayer(String name) {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] != null && players[i].getPlayerName().equalsIgnoreCase(name)) {
-                return players[i];
-            }
-        }
-        return null;
+        long playerId = Utils.playerNameToLong(name);
+        return playersOnline.get(playerId);
     }
-
 }
