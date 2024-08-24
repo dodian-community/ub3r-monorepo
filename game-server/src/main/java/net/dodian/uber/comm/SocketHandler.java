@@ -11,25 +11,23 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
+import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-import java.util.ArrayDeque;
-
-
 
 public class SocketHandler implements Runnable {
-
     private static final Logger logger = Logger.getLogger(SocketHandler.class.getName());
-    private static final int BUFFER_SIZE = 8000;
-    private static final long READ_TIMEOUT = 5000; // 5 seconds
-    private static final int MAX_BUFFERS = 100;
+    private static final int BUFFER_SIZE = 16384;
+    private static final long SELECTOR_TIMEOUT = 10; // Reduced to 10ms for more frequent checks
+    private static final int MAX_BUFFERS = 1000;
 
     private final Client player;
     private final SocketChannel socketChannel;
     private final AtomicBoolean processRunning = new AtomicBoolean(true);
-    private final PacketQueue myPackets = new PacketQueue();
-    private final Queue<ByteBuffer> outData = new ConcurrentLinkedQueue<>();
+    private final Queue<PacketData> incomingPackets = new ConcurrentLinkedQueue<>();
+    private final Deque<ByteBuffer> outData = new ArrayDeque<>();
     private final ArrayDeque<ByteBuffer> bufferPool = new ArrayDeque<>(MAX_BUFFERS);
 
     private ByteBuffer inputBuffer;
@@ -65,8 +63,8 @@ public class SocketHandler implements Runnable {
     }
 
     private void returnBufferToPool(ByteBuffer buffer) {
-        buffer.clear();
         if (bufferPool.size() < MAX_BUFFERS) {
+            buffer.clear();
             bufferPool.offerLast(buffer);
         }
     }
@@ -75,11 +73,10 @@ public class SocketHandler implements Runnable {
     public void run() {
         try {
             while (processRunning.get() && isConnected()) {
-                if (selector.select(READ_TIMEOUT) > 0) {
+                int readyOps = selector.select(SELECTOR_TIMEOUT);
+                if (readyOps > 0) {
                     for (SelectionKey key : selector.selectedKeys()) {
-                        if (!key.isValid()) {
-                            continue;
-                        }
+                        if (!key.isValid()) continue;
                         if (key.isReadable()) {
                             parsePackets();
                         }
@@ -88,22 +85,13 @@ public class SocketHandler implements Runnable {
                         }
                     }
                     selector.selectedKeys().clear();
-                } else {
-
-                    if (player.disconnected) {
-                        break;
-                    }
-
-                    logger.warning("Read timeout for player: " + player.getPlayerName());
-                    break;
                 }
 
-                if (!outData.isEmpty() && !player.disconnected) {
-                    SelectionKey key = socketChannel.keyFor(selector);
-                    if (key == null || (key.interestOps() & SelectionKey.OP_WRITE) == 0) {
-                        socketChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                    }
+                // Check for write operations even if selector didn't return any
+                if (!outData.isEmpty()) {
+                    writeOutput();
                 }
+
                 player.timeOutCounter = 0;
             }
         } catch (EOFException e) {
@@ -118,8 +106,6 @@ public class SocketHandler implements Runnable {
     private boolean isConnected() {
         return socketChannel != null && socketChannel.isOpen() && socketChannel.isConnected() && !player.disconnected;
     }
-
-
 
     public void logout() {
         if (processRunning.getAndSet(false)) {
@@ -159,9 +145,7 @@ public class SocketHandler implements Runnable {
                 packetType = player.inStreamDecryption != null
                         ? (packetType - player.inStreamDecryption.getNextKey() & 0xff)
                         : packetType;
-
                 packetSize = getPacketSize(packetType);
-
                 switch (packetSize) {
                     case -1:
                         if (!inputBuffer.hasRemaining()) return;
@@ -184,8 +168,7 @@ public class SocketHandler implements Runnable {
             packetBuffer.flip();
             byte[] data = new byte[packetSize];
             packetBuffer.get(data);
-            PacketData pData = new PacketData(packetType, data, packetSize);
-            myPackets.add(pData); // Updated to use PacketQueue
+            incomingPackets.offer(new PacketData(packetType, data, packetSize));
             packetType = -1;
             packetSize = -1;
         }
@@ -201,47 +184,51 @@ public class SocketHandler implements Runnable {
     }
 
     public Queue<PacketData> getPackets() {
-
-        return myPackets.getPackets();
+        return incomingPackets;
     }
 
-
-    public synchronized void queueOutput(byte[] copy) {
+    public void queueOutput(byte[] data, int offset, int length) {
         if (!isConnected()) {
             logger.warning("Attempted to queue output for disconnected player: " + player.getPlayerName());
             return;
         }
+
         ByteBuffer buffer = getBufferFromPool();
-        buffer.put(copy);
+        buffer.put(data, offset, length);
         buffer.flip();
-        outData.add(buffer);
-        try {
-            SelectionKey key = socketChannel.keyFor(selector);
-            if (key == null || (key.interestOps() & SelectionKey.OP_WRITE) == 0) {
-                socketChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-            }
-        } catch (IOException e) {
-            logger.warning("SocketHandler: Error registering write operation: " + e.getMessage());
-            cleanup();
+        outData.offerLast(buffer);
+
+        SelectionKey key = socketChannel.keyFor(selector);
+        if (key != null && (key.interestOps() & SelectionKey.OP_WRITE) == 0) {
+            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
         }
     }
-
-
 
     private void writeOutput() throws IOException {
         ByteBuffer buffer;
         while ((buffer = outData.peek()) != null) {
-            socketChannel.write(buffer);
+            int bytesWritten = socketChannel.write(buffer);
+            if (bytesWritten == 0) {
+
+                break;
+            }
+
             if (!buffer.hasRemaining()) {
                 outData.poll();
-                returnBufferToPool(buffer); // Reuse the buffer
+                returnBufferToPool(buffer);
             } else {
+
                 break;
             }
         }
-        if (outData.isEmpty()) {
-            socketChannel.register(selector, SelectionKey.OP_READ);
+
+        SelectionKey key = socketChannel.keyFor(selector);
+        if (key != null) {
+            if (outData.isEmpty()) {
+                key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+            } else {
+                key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+            }
         }
     }
 }
-//packet

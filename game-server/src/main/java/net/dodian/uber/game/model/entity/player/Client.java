@@ -527,10 +527,9 @@ public class Client extends Player implements Runnable {
 		if (disconnected || getOutputStream().currentOffset == 0) {
 			return;
 		}
+
 		int length = getOutputStream().currentOffset;
-		byte[] copy = new byte[length];
-		System.arraycopy(getOutputStream().buffer, 0, copy, 0, copy.length);
-		mySocketHandler.queueOutput(copy);
+		mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
 		getOutputStream().currentOffset = 0;
 	}
 
@@ -545,25 +544,28 @@ public class Client extends Player implements Runnable {
 		if (disconnected) {
 			return false;
 		}
+
 		Queue<PacketData> packets = mySocketHandler.getPackets();
-		//System.out.println("Packets received: " + (packets != null ? packets.size() : 0)); // Debug line
-		if (packets == null || packets.isEmpty()) {
+		if (packets.isEmpty()) {
 			return false;
 		}
+
 		try {
-			for (PacketData packet : packets) {
-				//System.out.println("Processing packet: Type=" + packet.getId() + ", Length=" + packet.getLength());
+			PacketData packet;
+			while ((packet = packets.poll()) != null) {
 				fillInStream(packet);
 				currentPacket = packet;
 				parseIncomingPackets();
 			}
 		} catch (IOException e) {
-			System.out.println("Packet process issue... " + e);
+			System.err.println("Packet process error: " + e.getMessage());
 			disconnected = true;
 			return false;
 		}
+
 		return true;
 	}
+
 
 	public PacketData currentPacket;
 
