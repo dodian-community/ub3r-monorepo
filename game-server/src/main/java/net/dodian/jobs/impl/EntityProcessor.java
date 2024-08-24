@@ -89,6 +89,7 @@ public class EntityProcessor implements Job {
             handleNpcSpecialCases(npc);
         }
 
+        npc.effectChange();
         handleNpcRandomActions(npc);
     }
 

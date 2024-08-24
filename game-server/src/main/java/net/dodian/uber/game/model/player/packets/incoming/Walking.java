@@ -38,10 +38,6 @@ public class Walking implements Packet {
             return;
         }
         if(client.morph) client.unMorph();
-        /* Combat checks! */
-        if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
-            client.resetAttack();
-        client.faceTarget(-1);
         /* Check a players inventory! */
         if (client.checkInv) {
             client.checkInv = false;
@@ -107,9 +103,10 @@ public class Walking implements Packet {
                 client.checkInv = false;
                 client.resetItems(3214);
             }
-            if(client.attackingNpc || client.attackingPlayer) //Adding a check for reset due to walking away!
+            /* Combat checks! */
+            if(packetType != 98 && (client.attackingNpc || client.attackingPlayer)) //Adding a check for reset due to walking away!
                 client.resetAttack();
-            client.faceTarget(-1);
+                client.faceTarget(65535);
             }
             // stairs check
             if (client.stairs > 0) {

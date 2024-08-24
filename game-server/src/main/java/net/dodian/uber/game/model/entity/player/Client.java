@@ -580,12 +580,6 @@ public class Client extends Player implements Runnable {
 		loginHandler.handleLogin();
 	}
 
-
-
-
-
-
-
 	public void setSidebarInterface(int menuId, int form) {
 		getOutputStream().createFrame(71);
 		getOutputStream().writeWord(form);
@@ -1972,7 +1966,7 @@ public class Client extends Player implements Runnable {
 		PlayerHandler.allOnline.put(longName, getGameWorldId());
 	}
 
-	public void update() { //Update npc before player!
+	public void update() { //Update player before npc for some reason!
 		PlayerUpdating.getInstance().update(this, outputStream);
 		flushOutStream();
 		NpcUpdating.getInstance().update(this, outputStream);
@@ -1989,6 +1983,10 @@ public class Client extends Player implements Runnable {
 		setStunTimer(Math.max(getStunTimer() - 1, 0));
 		setSnareTimer(Math.max(getSnareTimer() - 1, 0));
 		changeEffectTime();
+		if(genieCombatFlag && !isInCombat()) { //Genie random!
+			genieCombatFlag = false;
+			showRandomEvent();
+		}
 		/* Daily stuff */
 		if(dailyLogin == 0)
 			battlestavesData();
@@ -3626,9 +3624,9 @@ public class Client extends Player implements Runnable {
 		return Type;
 	}
 
-	public void OpenSmithingFrame(int Type) {
+	public void OpenSmithingFrame(int Type) { //Not touching smithing interface anymore!!!
 		int Type2 = Type - 1;
-		int Length = 23;
+		int Length = 22;
 		// Sending amount of bars + make text green if lvl is highenough
 		send(new SendString("", 1132)); // Wire
 		send(new SendString("", 1096));
@@ -3637,7 +3635,6 @@ public class Client extends Player implements Runnable {
 		send(new SendString("", 1135)); // Studs
 		send(new SendString("", 1134));
 		String bar, color, color2, name = "";
-
 		if (Type == 1) {
 			name = "Bronze ";
 		} else if (Type == 2) {
@@ -3712,15 +3709,18 @@ public class Client extends Player implements Runnable {
 		Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][21][0]; // Plate
 		// body
 		Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][21][1];
-		Constants.SmithingItems[4][0] = -1; // Lantern
-		Constants.SmithingItems[4][1] = 0;
 		color2 = "@bla@";
-		if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][22][2]) {
-			color2 = "@whi@";
+		if(Type != -1 && Type <= 3) { //Second stuff!
+			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][Length][2]) {
+				color2 = "@whi@";
+			}
+			Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][Length][0]; // Lantern
+			Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][Length][1];
+			send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][Length][0]).replace(name, ""), 11461));
+		} else {
+			Constants.SmithingItems[4][0] = -1; // Second stuff for smithing!
+			Constants.SmithingItems[4][1] = 0;
 		}
-		Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][22][0]; // Lantern
-		Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][22][1];
-		send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][22][0]).replace(name, ""), 11461));
 		SetSmithing(1121);
 		Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][3][0]; // Medium
 		Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][3][1];
@@ -3744,7 +3744,7 @@ public class Client extends Player implements Runnable {
 		Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][11][1];
 		Constants.SmithingItems[3][0] = -1; // Wire
 		Constants.SmithingItems[3][1] = 0;
-		for (int i = 0; i < 22; i++) {
+		for (int i = 0; i < Length; i++) {
 			if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][i][2]) {
 				color2 = "@whi@";
 			} else
@@ -5584,12 +5584,18 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void triggerRandom(int xp) {
+		if(genieCombatFlag || randomed) { //Cant get a genie if we have it flagged from combat or we already got it open xD
+			return;
+		}
 		xp /= 5;
 		int reduceChance = Math.min(xp < 50 ? xp : xp < 100 ? (xp * 3) / 2 : xp < 200 ? xp * 2 : xp < 400 ? xp * 3 : xp * 4, 3000);
 		reduceChance *= 2 + Misc.random(8);
 		//System.out.println("testing..." + reduceChance + ", " + Math.min(reduceChance, 7000));
 		if (Misc.chance(6500 - Math.min(reduceChance, 6000)) == 1) {
-			showRandomEvent();
+			if(isInCombat()) { //Fix for slayer or perhaps future random event while combat? 0.0
+				genieCombatFlag = true;
+				send(new SendMessage("You got a genie random! Stop attack for a bit to get it."));
+			} else showRandomEvent();
 			chestEvent = 0;
 		}
 		if(chestEvent >= 50) { //Prevent auto clicking I believe!
@@ -7968,10 +7974,11 @@ public class Client extends Player implements Runnable {
 		//rerequestAnim();
 		if (target instanceof Npc)
 			attackingNpc = false;
-		else
+		else {
 			attackingPlayer = false;
+		}
+		magicId = -1;
 		target = null;
-		faceTarget(65535);
 	}
 
 	public void requestWeaponAnims() {
