@@ -483,19 +483,45 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void destruct() {
-		if (socketChannel == null) {
-			return;
-		} // already shutdown
-		try {
-			//PlayerHandler.playersOnline.remove(longName);
-			//PlayerHandler.allOnline.remove(longName);
+		if (socketChannel == null && mySocketHandler == null) {
+			return; // already shutdown
+		}
 
-			if (saveNeeded && !tradeSuccessful) //Attempt to fix a potential dupe?
+		try {
+			// Remove from online players lists
+			PlayerHandler.playersOnline.remove(longName);
+			PlayerHandler.allOnline.remove(longName);
+
+			if (saveNeeded && !tradeSuccessful) {
 				saveStats(true, true);
-			if(!disconnected)
+			}
+
+			if (!disconnected) {
 				disconnected = true;
-			/* Reset socket of player! */
-			socketChannel.close();
+			}
+
+			// Use SocketHandler to properly close the connection
+			if (mySocketHandler != null) {
+				mySocketHandler.logout();
+			}
+
+			// Close socketChannel if it's still open
+			if (socketChannel != null && socketChannel.isOpen()) {
+				socketChannel.close();
+			}
+
+			// Clear any remaining packets or buffers
+			if (mySocketHandler != null) {
+				mySocketHandler.getPackets().clear();
+			}
+
+			// Remove from PlayerHandler.players array
+			if (handler != null && getSlot() >= 0 && getSlot() < Constants.maxPlayers) {
+				PlayerHandler.players[getSlot()] = null;
+				PlayerHandler.usedSlots.clear(getSlot()); // Mark the slot as available
+			}
+
+			// Null out references
 			socketChannel = null;
 			mySocketHandler = null;
 			inputStream = null;
@@ -503,12 +529,21 @@ public class Client extends Player implements Runnable {
 			isActive = false;
 			inputBuffer = null;
 			outputBuffer = null;
-		} catch (java.io.IOException ioe) {
-			System.out.println("error in destruct " + ioe);
-		}
-		super.destruct();
-	}
+			handler = null;
+			connectedFrom = null;
+			longName = Long.parseLong(null);
+			inStreamDecryption = null;
+			outStreamDecryption = null;
+			packetSize = 0;
+			packetType = -1;
 
+
+		} catch (IOException ioe) {
+			System.out.println("Error in destruct method: " + ioe.getMessage());
+		} finally {
+			super.destruct();
+		}
+	}
 
 	public Stream getInputStream() {
 		return this.inputStream;
