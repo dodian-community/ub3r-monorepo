@@ -140,6 +140,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeByteC(Math.min(npc.getDamageDealt(), 255));
         if (npc.getDamageDealt() == 0)
             stream.writeByteS(0);
+        else if (npc.getHitType() == Entity.hitType.BURN)
+            stream.writeByteS(4);
         else if (npc.getHitType() == Entity.hitType.CRIT)
             stream.writeByteS(3);
         else if (npc.getHitType() == Entity.hitType.POISON)
@@ -156,6 +158,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         stream.writeByteA(Math.min(npc.getDamageDealt2(), 255));
         if (npc.getDamageDealt2() == 0)
             stream.writeByte(0);
+        else if (npc.getHitType2() == Entity.hitType.BURN)
+            stream.writeByte(-4);
         else if (npc.getHitType2() == Entity.hitType.CRIT)
             stream.writeByte(-3);
         else if (npc.getHitType2() == Entity.hitType.POISON)

@@ -14,8 +14,10 @@ import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
 fun Client.handleRangedAttack(): Int {
-    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
+    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
+    if(goodDistanceEntity(target, 5))
+        resetWalkingQueue();
     if (target is Player && duelFight && duelRule[0]) {
         send(SendMessage("Ranged has been disabled for this duel!"))
         resetAttack()
@@ -81,6 +83,7 @@ fun Client.handleRangedAttack(): Int {
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
     val landHit = landHitRanged(this, target)
+    if(landHit && hit < 1) hit = 1 //Osrs style of hit, max hit is 1 or 1 - maxHit if you land a hit!
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit && landHit)

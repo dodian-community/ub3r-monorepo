@@ -14,16 +14,56 @@ import net.dodian.utilities.Utils
 import kotlin.math.min
 
 fun Client.handleMagicAttack(): Int {
-    val slot = autocast_spellIndex%4
-    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
+    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
-    if (target is Player && duelFight && duelRule[2]) {
-        send(SendMessage("Magic has been disabled for this duel!"))
-        resetAttack()
-        return 0
+    if(goodDistanceEntity(target, 5))
+        resetWalkingQueue();
+    /* Player combat check */
+    if(target is Player) { //Pvp checks (duel and wilderness)
+        val player = Server.playerHandler.getClient(target.slot)
+        if (duelFight && duelRule[2]) {
+            send(SendMessage("Magic has been disabled for this duel!"))
+            resetAttack()
+            return 0
+        }
+        if (!(duelFight && duel_with == target.slot) && !Server.pking) {
+            send(SendMessage("Pking has been disabled"));
+            resetAttack()
+            return 0
+        }
+        if (!canAttack) {
+            send(SendMessage("You cannot attack your oppenent yet!"));
+            resetAttack()
+            return 0
+        }
+        if (!(duelFight && duel_with == target.slot) && (!player.inWildy() || !inWildy())) {
+            send(SendMessage("You can't attack that player"));
+            resetAttack()
+            return 0
+        }
     }
-    if (getLevel(Skill.MAGIC) < requiredLevel[autocast_spellIndex]) {
-        send(SendMessage("You need a magic level of ${requiredLevel[autocast_spellIndex]} to cast this spell!"))
+    /*int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());
+    if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlayer.wildyLevel)
+                || client.duelFight && client.duel_with == castOnPlayer.getSlot()) || !castOnPlayer.saveNeeded) {
+        client.send(new SendMessage("You can't attack that player"));
+        return;
+    }*/ //TODO: Fix wildy checks if we release wilderness!
+
+    var slot = autocast_spellIndex
+    var type = 0
+    if(slot >= 0 && magicId < 0)
+        type = autocast_spellIndex%4
+    else {
+        for(checkSlot in 1..ancientId.size)
+            if(magicId == ancientId[checkSlot]) {
+                slot = checkSlot
+                type = checkSlot%4
+                break
+            }
+    }
+    /* Checks after known magic cast! */
+    if (getLevel(Skill.MAGIC) < requiredLevel[slot]) {
+        send(SendMessage("You need a magic level of ${requiredLevel[slot]} to cast this spell!"))
         resetAttack()
         return 0
     }
@@ -32,14 +72,13 @@ fun Client.handleMagicAttack(): Int {
         return 0
     }
 
-    combatTimer = coolDown[slot]
+    combatTimer = coolDown[type]
     lastCombat = 16
     setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
     checkItemUpdate()
-    requestAnim(-1, 0)
     sendAnimation(1979)
-    var maxHit = baseDamage[autocast_spellIndex] * magicBonusDamage()
+    var maxHit = baseDamage[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
         if(getSlayerDamage(checkNpc.id, true) == 2)
@@ -57,7 +96,11 @@ fun Client.handleMagicAttack(): Int {
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
     val landCrit = Math.random() * 100 <= criticalChance
     /* Magic graphics! */
-    when (slot) {
+    when (type) {
+        0 //Burn effect!
+        -> stillgfx(357, target.position.y, target.position.x)
+        1 //Shadow effect, poison?!
+        -> stillgfx(379, target.position.y, target.position.x)
         2 //Blood effect
         -> stillgfx(377, target.position.y, target.position.x)
         3 //Freeze effect
@@ -68,15 +111,21 @@ fun Client.handleMagicAttack(): Int {
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
-        if(hit >= npc.currentHealth) hit = npc.currentHealth
-        npc.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
-
+        if (hit >= npc.currentHealth) hit = npc.currentHealth
+        npc.dealDamage(this, hit, if (landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
-        if(chance && hit > 0) { //Ahrim effect!
-            stillgfx(400, npc.position, 100)
-            heal(hit / 2)
-        } else if(slot == 2) //Heal effect!
-            heal(hit / 3)
+        /* Ancient effects */
+        if(type == 2) { //Heal effect
+            if(!chance)
+                heal(hit / 3)
+            else if(hit > 0) { //Burn effect
+                stillgfx(400, npc.position, 100)
+                heal(hit / 2)
+            }
+        } else if (type == 0 && hit > 0) {
+            if((Misc.chance(6) == 1) || (armourSet("ahrim") && Misc.chance(3) == 1)) //Do burn!
+                npc.inflictEffect(1, true, getSlot(), slot/4 + 1, 5)
+        }
         /* Give experience */
         giveExperience(40 * hit, Skill.MAGIC)
         giveExperience(13 * hit, Skill.HITPOINTS)
@@ -87,14 +136,24 @@ fun Client.handleMagicAttack(): Int {
         if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) (hit * 0.6).toInt()
         if(hit >= player.currentHealth) hit = player.currentHealth
         player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
-
-
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
-        if(chance && hit > 0) { //Ahrim effect!
-            stillgfx(400, player.position, 100)
-            heal(hit / 2)
-        } else if(slot == 2) //Heal effect!
-            heal(hit / 3)
+        /* Ancient effects */
+        if(type == 2) { //Heal effect
+            if(!chance)
+                heal(hit / 3)
+            else if(hit > 0) {
+                stillgfx(400, player.position, 100)
+                heal(hit / 2)
+            }
+        } else if (type == 0) { //Burn effect
+            /*if((Misc.chance(6) == 1) || (armourSet("ahrim") && Misc.chance(3) == 1)) //Do burn!
+                System.out.println("BURN! " + (autocast_spellIndex/4 + 1)) */
+        }
+    }
+
+    if(magicId >= 0) { //Set this because auto magicId should be set to -1 after one cast!
+        magicId = -1
+        if(autocast_spellIndex < 0) target = null //Set this as no target if we got no autocast set!
     }
 
     if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))

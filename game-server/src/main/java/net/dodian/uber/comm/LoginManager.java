@@ -25,10 +25,10 @@ public class LoginManager {
 
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
         if (PlayerHandler.isPlayerOn(playerName)) { // Already online!
-			System.out.printf("%s players online:%n", PlayerHandler.playersOnline.size());
+			/*System.out.printf("%s players online:%n", PlayerHandler.playersOnline.size());
 			PlayerHandler.playersOnline.forEach((lName, client) -> System.out.printf("- %s (%s), session start=%tc %n", client.playerName, client.longName, client.now));
             System.out.println();
-
+            */ //Old Debug!
             return 5;
         }
 

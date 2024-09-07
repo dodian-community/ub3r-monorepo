@@ -566,7 +566,6 @@ public class ClickingButtons implements Packet {
             case 1094:
             case 1093:
                 client.autocast_spellIndex = -1; //Reset autocast!
-                client.resetAttack(); //Reset attack when picking new autocast?
                 client.setSidebarInterface(0, 1689);
                 break;
             case 51133:
