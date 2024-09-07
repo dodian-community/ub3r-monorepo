@@ -1,7 +1,10 @@
 package net.dodian.uber.comm;
 
-import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -9,18 +12,18 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Queue;
 import java.util.Deque;
+import java.util.Queue;
 import java.util.ArrayDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 public class SocketHandler implements Runnable {
-    private static final Logger logger = Logger.getLogger(SocketHandler.class.getName());
-    private static final int BUFFER_SIZE = 16384;
-    private static final long SELECTOR_TIMEOUT = 10; // Reduced to 10ms for more frequent checks
+    private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
+    public static final int BUFFER_SIZE = 8192; // 8KB buffer size
+    private static final long SELECTOR_TIMEOUT = 10; // 10ms for more frequent checks
     private static final int MAX_BUFFERS = 1000;
+    private static final int MAX_WRITES_PER_CYCLE = 10; // Limit writes per cycle
 
     private final Client player;
     private final SocketChannel socketChannel;
@@ -30,10 +33,8 @@ public class SocketHandler implements Runnable {
     private final ArrayDeque<ByteBuffer> bufferPool = new ArrayDeque<>(MAX_BUFFERS);
 
     private ByteBuffer inputBuffer;
-    private ByteBuffer packetBuffer;
     private Selector selector;
-    private int packetSize = -1;
-    private int packetType = -1;
+    private PacketParser packetParser;
 
     public SocketHandler(Client player, SocketChannel socketChannel) throws IOException {
         this.player = player;
@@ -43,11 +44,11 @@ public class SocketHandler implements Runnable {
         this.socketChannel.register(selector, SelectionKey.OP_READ);
         initializeBuffers();
         initializeBufferPool();
+        this.packetParser = new PacketParser();
     }
 
     private void initializeBuffers() {
         this.inputBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-        this.packetBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
     }
 
     private void initializeBufferPool() {
@@ -94,9 +95,9 @@ public class SocketHandler implements Runnable {
                 player.timeOutCounter = 0;
             }
         } catch (EOFException e) {
-            logger.info("Client disconnected: " + player.getPlayerName());
+            logger.info("Client disconnected: {}", player.getPlayerName());
         } catch (IOException e) {
-            logger.severe("SocketHandler: Error in run: " + e.getMessage());
+            logger.error("SocketHandler: Error in run", e);
         } finally {
             cleanup();
         }
@@ -110,12 +111,15 @@ public class SocketHandler implements Runnable {
         if (processRunning.getAndSet(false)) {
             player.disconnected = true;
             cleanup();
-            //YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!"); //-> Old Debug!
+            YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!");
         }
     }
 
     private void cleanup() {
         try {
+            // Attempt to flush any remaining data
+            flushRemainingData();
+
             if (selector != null && selector.isOpen()) {
                 selector.close();
             }
@@ -123,9 +127,30 @@ public class SocketHandler implements Runnable {
                 socketChannel.close();
             }
             player.disconnected = true;
-            //YellSystem.alertStaff(player.getPlayerName() + " has disconnected."); //-> Old Debug!
+            logger.info("{} has disconnected.", player.getPlayerName());
         } catch (IOException e) {
-            logger.warning("SocketHandler Cleanup Exception: " + e.getMessage());
+            logger.warn("SocketHandler Cleanup Exception", e);
+        }
+    }
+
+    private void flushRemainingData() {
+        try {
+            ByteBuffer buffer;
+            while ((buffer = outData.poll()) != null) {
+                while (buffer.hasRemaining()) {
+                    int written = socketChannel.write(buffer);
+                    if (written == 0) {
+                        // Buffer is full, try again later
+                        Thread.sleep(1);
+                    }
+                }
+                returnBufferToPool(buffer);
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to flush remaining data", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("Interrupted while flushing remaining data", e);
         }
     }
 
@@ -137,75 +162,14 @@ public class SocketHandler implements Runnable {
         }
 
         inputBuffer.flip();
-        while (inputBuffer.hasRemaining()) {
-            if (packetType == -1) {
-                if (!inputBuffer.hasRemaining()) break;
-                packetType = inputBuffer.get() & 0xff;
-                packetType = player.inStreamDecryption != null
-                        ? (packetType - player.inStreamDecryption.getNextKey() & 0xff)
-                        : packetType;
-                packetSize = getPacketSize(packetType);
-                switch (packetSize) {
-                    case -1:
-                        if (!inputBuffer.hasRemaining()) return;
-                        packetSize = inputBuffer.get() & 0xff;
-                        break;
-                    case -2:
-                        if (inputBuffer.remaining() < 2) return;
-                        packetSize = inputBuffer.getShort() & 0xffff;
-                        break;
-                }
-            }
-
-            if (inputBuffer.remaining() < packetSize) break;
-
-            packetBuffer.clear();
-            for (int i = 0; i < packetSize; i++) {
-                packetBuffer.put(inputBuffer.get());
-            }
-
-            packetBuffer.flip();
-            byte[] data = new byte[packetSize];
-            packetBuffer.get(data);
-            incomingPackets.offer(new PacketData(packetType, data, packetSize));
-            packetType = -1;
-            packetSize = -1;
-        }
-
+        packetParser.parsePackets(inputBuffer, player, incomingPackets);
         inputBuffer.compact();
     }
 
-    private int getPacketSize(int packetType) {
-        if (packetType < 0 || packetType >= Constants.PACKET_SIZES.length) {
-            return -1; // Invalid packet type
-        }
-        return Constants.PACKET_SIZES[packetType];
-    }
-
-    public Queue<PacketData> getPackets() {
-        return incomingPackets;
-    }
-
-    public void queueOutput(byte[] data, int offset, int length) {
-        if (!isConnected()) {
-            logger.warning("Attempted to queue output for disconnected player: " + player.getPlayerName());
-            return;
-        }
-
-        ByteBuffer buffer = getBufferFromPool();
-        buffer.put(data, offset, length);
-        buffer.flip();
-        outData.offerLast(buffer);
-
-        SelectionKey key = socketChannel.keyFor(selector);
-        if (key != null && (key.interestOps() & SelectionKey.OP_WRITE) == 0) {
-            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-        }
-    }
-
     private void writeOutput() throws IOException {
+        int writesThisCycle = 0;
         ByteBuffer buffer;
-        while ((buffer = outData.peek()) != null) {
+        while ((buffer = outData.peek()) != null && writesThisCycle < MAX_WRITES_PER_CYCLE) {
             int bytesWritten = socketChannel.write(buffer);
             if (bytesWritten == 0) {
 
@@ -215,19 +179,42 @@ public class SocketHandler implements Runnable {
             if (!buffer.hasRemaining()) {
                 outData.poll();
                 returnBufferToPool(buffer);
+                writesThisCycle++;
             } else {
 
                 break;
             }
         }
 
+        // Update the interest ops based on whether we have more data to write
         SelectionKey key = socketChannel.keyFor(selector);
-        if (key != null) {
+        if (key != null && key.isValid()) {
             if (outData.isEmpty()) {
                 key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
             } else {
                 key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
             }
+        }
+    }
+
+    public Queue<PacketData> getPackets() {
+        return incomingPackets;
+    }
+
+    public void queueOutput(byte[] data, int offset, int length) {
+        if (!isConnected()) {
+            logger.warn("Attempted to queue output for disconnected player: {}", player.getPlayerName());
+            return;
+        }
+
+        ByteBuffer buffer = getBufferFromPool();
+        buffer.put(data, offset, length);
+        buffer.flip();
+        outData.offerLast(buffer);
+
+        SelectionKey key = socketChannel.keyFor(selector);
+        if (key != null && key.isValid() && (key.interestOps() & SelectionKey.OP_WRITE) == 0) {
+            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
         }
     }
 }
