@@ -46,6 +46,8 @@ public class PlayerHandler {
             return;
         }
 
+        logger.info("Attempting to create new client in slot: " + slot);
+
         Client newClient = null;
 
         try {
@@ -62,7 +64,14 @@ public class PlayerHandler {
             if (newClient.isActive) {
                 Player.localId = slot;
                 usedSlots.set(slot);
+                playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
+                logger.info("Player " + newClient.getPlayerName() + " successfully added to slot " + slot);
+            } else {
+                logger.info("Client created but not active for slot " + slot);
             }
+
+           // printPlayerSlots();
+            printPlayerCount();
         } catch (IOException e) {
             logger.severe("Error configuring new client connection: " + e.getMessage());
             closeSocketChannel(socketChannel);
@@ -70,7 +79,12 @@ public class PlayerHandler {
     }
 
     private int findFreeSlot() {
-        return usedSlots.nextClearBit(1);
+        for (int i = 1; i <= Constants.maxPlayers; i++) {
+            if (!usedSlots.get(i)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void closeSocketChannel(SocketChannel socketChannel) {
@@ -82,7 +96,7 @@ public class PlayerHandler {
     }
 
     public static int getPlayerCount() {
-        return usedSlots.get(1, Constants.maxPlayers + 1).cardinality();
+        return usedSlots.cardinality();
     }
 
     public static boolean isPlayerOn(String playerName) {
@@ -116,10 +130,27 @@ public class PlayerHandler {
         } else {
             logger.warning("Tried to remove a null player!");
         }
+        printPlayerSlots();
+        printPlayerCount();
     }
 
     public static Player getPlayer(String name) {
         long playerId = Utils.playerNameToLong(name);
         return playersOnline.get(playerId);
+    }
+
+    public void printPlayerSlots() {
+        StringBuilder sb = new StringBuilder("Used slots: ");
+        for (int i = 1; i <= Constants.maxPlayers; i++) {
+            if (usedSlots.get(i)) {
+                sb.append(i).append(", ");
+            }
+        }
+        logger.info(sb.toString());
+    }
+
+    public void printPlayerCount() {
+        logger.info("Player count: " + getPlayerCount());
+        logger.info("Players online: " + playersOnline.size());
     }
 }
