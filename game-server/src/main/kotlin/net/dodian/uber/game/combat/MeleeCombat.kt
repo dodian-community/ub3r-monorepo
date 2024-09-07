@@ -17,11 +17,13 @@ var hit = 0
 var hit2 = 0
 
 fun Client.handleMeleeAttack(): Int {
-    if (hasStaff() && autocast_spellIndex >= 0)
+    if (hasStaff() && (autocast_spellIndex >= 0 || magicId >= 0))
         return -1
-    if (usingBow)
+    else if (!hasStaff() && magicId >= 0)
         return -1
-    if (combatTimer > 0 || stunTimer > 0) //Need this to be a check here!
+    else if (usingBow)
+        return -1
+    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
     if (target is Player && duelFight && duelRule[1]) {
         send(SendMessage("Melee has been disabled for this duel!"))
@@ -59,6 +61,7 @@ fun Client.handleMeleeAttack(): Int {
         if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance * 1.5
         val landCrit = Math.random() * 100 <= criticalChance
         val landHit = landHit(this, target)
+        if(landHit && hit < 1) hit = 1 //Osrs style of hit, max hit is 1 or 1 - maxHit if you land a hit!
         if (target is Npc) {
             val npc = Server.npcManager.getNpc(target.slot)
             val name = npc.npcName().lowercase()
@@ -225,11 +228,9 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
     val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
     val chance = Range(1, 8).value
     if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
-        requestAnim(-1, 0)
         sendAnimation(emote)
     } else if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        requestAnim(-1, 0)
         when (equipment[Equipment.Slot.WEAPON.id]) {
             1215 -> {
                 hit = (hit * 1.1).toInt()
@@ -247,7 +248,6 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
         }
     } else if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)
-        requestAnim(-1, 0)
         when (equipment[Equipment.Slot.WEAPON.id]) {
             1215 -> {
                 hit = (hit * 1.1).toInt()
