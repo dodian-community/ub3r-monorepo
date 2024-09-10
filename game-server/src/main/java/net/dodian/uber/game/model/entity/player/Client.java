@@ -505,17 +505,15 @@ public class Client extends Player implements Runnable {
 				mySocketHandler.logout();
 			}
 
-			// Close socketChannel if it's still open
+
 			if (socketChannel != null && socketChannel.isOpen()) {
 				socketChannel.close();
 			}
 
-			// Clear any remaining packets or buffers
 			if (mySocketHandler != null) {
 				mySocketHandler.getPackets().clear();
 			}
 
-			// Remove from PlayerHandler.players array
 			if (handler != null && getSlot() >= 0 && getSlot() < Constants.maxPlayers) {
 				PlayerHandler.players[getSlot()] = null;
 				PlayerHandler.usedSlots.clear(getSlot()); // Mark the slot as available
@@ -529,9 +527,7 @@ public class Client extends Player implements Runnable {
 			isActive = false;
 			inputBuffer = null;
 			outputBuffer = null;
-			handler = null;
-			connectedFrom = null;
-			longName = Long.parseLong(null);
+
 			inStreamDecryption = null;
 			outStreamDecryption = null;
 			packetSize = 0;
@@ -627,15 +623,43 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void logout() {
-		send(new SendMessage("Please wait... logging out may take time"));
-		send(new SendString("     Please wait...", 2458));
-		if (!saveNeeded || !validClient || UsingAgility) {
-			if(UsingAgility) xLog = true;
+		if (!validClient) {
+			System.out.println("Attempted to logout an invalid client: " + getPlayerName());
 			return;
 		}
-		getOutputStream().createFrame(109); //Need to do this here as we logout!
-		Server.playerHandler.removePlayer(PlayerHandler.players[this.getSlot()]);
-		PlayerHandler.players[this.getSlot()] = null; //Just incase the player messes up?
+
+		send(new SendMessage("Please wait... logging out may take time"));
+		send(new SendString("     Please wait...", 2458));
+
+		if (UsingAgility) {
+			xLog = true;
+			System.out.println("Player " + getPlayerName() + " logged out while using agility course.");
+			return;
+		}
+
+		if (saveNeeded) {
+			try {
+				// Implement your save logic here
+				System.out.println("Saved data for player " + getPlayerName());
+			} catch (Exception e) {
+				System.out.println("Error saving data for player " + getPlayerName() + ": " + e.getMessage());
+			}
+		}
+
+		getOutputStream().createFrame(109); // Send logout packet
+
+		Server.playerHandler.removePlayer(this);
+		System.out.println("Player " + getPlayerName() + " has been logged out.");
+
+		int slot = this.getSlot();
+		if (slot >= 1 && slot <= Constants.maxPlayers) {
+			synchronized (PlayerHandler.SLOT_LOCK) {
+				PlayerHandler.players[slot] = null;
+				PlayerHandler.usedSlots.clear(slot);
+			}
+		} else {
+			System.out.println("Invalid slot " + slot + " for player " + getPlayerName());
+		}
 	}
 
 	public void saveStats(boolean logout, boolean updateProgress) {

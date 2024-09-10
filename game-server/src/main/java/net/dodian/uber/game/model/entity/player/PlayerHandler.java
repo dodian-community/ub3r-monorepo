@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 public class PlayerHandler {
 
     private static final Logger logger = Logger.getLogger(PlayerHandler.class.getName());
+    static final Object SLOT_LOCK = new Object();
 
     static final BitSet usedSlots = new BitSet(Constants.maxPlayers + 1);
 
@@ -39,11 +40,14 @@ public class PlayerHandler {
     }
 
     public void newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
-        int slot = findFreeSlot();
-        if (slot == -1 || slot > Constants.maxPlayers) {
-            logger.warning("No free slots available for a new player connection.");
-            closeSocketChannel(socketChannel);
-            return;
+        int slot;
+        synchronized (SLOT_LOCK) {
+            slot = findFreeSlot();
+            if (slot == -1 || slot > Constants.maxPlayers) {
+                logger.warning("No free slots available for a new player connection.");
+                closeSocketChannel(socketChannel);
+                return;
+            }
         }
 
         logger.info("Attempting to create new client in slot: " + slot);
@@ -63,25 +67,32 @@ public class PlayerHandler {
             // Mark the slot as used only after successful login
             if (newClient.isActive) {
                 Player.localId = slot;
-                usedSlots.set(slot);
                 playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
                 logger.info("Player " + newClient.getPlayerName() + " successfully added to slot " + slot);
             } else {
                 logger.info("Client created but not active for slot " + slot);
+                synchronized (SLOT_LOCK) {
+                    usedSlots.clear(slot);  // Free the slot if login wasn't successful
+                }
             }
 
-           // printPlayerSlots();
             printPlayerCount();
         } catch (IOException e) {
             logger.severe("Error configuring new client connection: " + e.getMessage());
             closeSocketChannel(socketChannel);
+            synchronized (SLOT_LOCK) {
+                usedSlots.clear(slot);  // Free the slot if an exception occurred
+            }
         }
     }
 
     private int findFreeSlot() {
-        for (int i = 1; i <= Constants.maxPlayers; i++) {
-            if (!usedSlots.get(i)) {
-                return i;
+        synchronized (SLOT_LOCK) {
+            for (int i = 1; i <= Constants.maxPlayers; i++) {
+                if (!usedSlots.get(i)) {
+                    usedSlots.set(i);  // Mark the slot as used immediately
+                    return i;
+                }
             }
         }
         return -1;
@@ -124,7 +135,9 @@ public class PlayerHandler {
             int slot = temp.getSlot();
             players[slot] = null;
             if (temp.isActive && slot >= 1 && slot <= Constants.maxPlayers) {
-                usedSlots.clear(slot); // Mark the slot as available
+                synchronized (SLOT_LOCK) {
+                    usedSlots.clear(slot); // Mark the slot as available
+                }
             }
             playersOnline.remove(Utils.playerNameToLong(temp.getPlayerName()));
         } else {
