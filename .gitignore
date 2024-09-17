@@ -101,3 +101,5 @@ gradle-app.setting
 .env
 .initialized_database
 game-server/.DS_Store
+*.gz
+/data
