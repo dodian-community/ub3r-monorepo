@@ -482,13 +482,20 @@ public class Client extends Player implements Runnable {
 		destruct();
 	}
 
+	@Override
 	public void destruct() {
-		if (socketChannel == null && mySocketHandler == null) {
-			return; // already shutdown
+		if (mySocketHandler == null) {
+			return;
 		}
 
 		try {
-			// Remove from online players lists
+			getOutputStream().createFrame(109);
+
+			if (mySocketHandler != null) {
+				mySocketHandler.logout();
+				mySocketHandler.awaitCleanup();
+			}
+
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
 
@@ -496,48 +503,18 @@ public class Client extends Player implements Runnable {
 				saveStats(true, true);
 			}
 
-			if (!disconnected) {
-				disconnected = true;
-			}
-
-			// Use SocketHandler to properly close the connection
-			if (mySocketHandler != null) {
-				mySocketHandler.logout();
-			}
-
-
-			if (socketChannel != null && socketChannel.isOpen()) {
-				socketChannel.close();
-			}
-
-			if (mySocketHandler != null) {
-				mySocketHandler.getPackets().clear();
-			}
-
-			if (handler != null && getSlot() >= 0 && getSlot() < Constants.maxPlayers) {
-				PlayerHandler.players[getSlot()] = null;
-				PlayerHandler.usedSlots.clear(getSlot()); // Mark the slot as available
-			}
-
-			// Null out references
-			socketChannel = null;
 			mySocketHandler = null;
 			inputStream = null;
 			outputStream = null;
-			isActive = false;
 			inputBuffer = null;
 			outputBuffer = null;
-
 			inStreamDecryption = null;
 			outStreamDecryption = null;
-			packetSize = 0;
-			packetType = -1;
 
-
-		} catch (IOException ioe) {
-			System.out.println("Error in destruct method: " + ioe.getMessage());
-		} finally {
+			System.gc();
 			super.destruct();
+		} catch (InterruptedException e) {
+			System.out.println("Interrupted while waiting for SocketHandler cleanup: "+ e.getMessage());
 		}
 	}
 
@@ -623,43 +600,15 @@ public class Client extends Player implements Runnable {
 	}
 
 	public void logout() {
-		if (!validClient) {
-			System.out.println("Attempted to logout an invalid client: " + getPlayerName());
-			return;
-		}
-
 		send(new SendMessage("Please wait... logging out may take time"));
 		send(new SendString("     Please wait...", 2458));
-
-		if (UsingAgility) {
-			xLog = true;
-			System.out.println("Player " + getPlayerName() + " logged out while using agility course.");
+		if (!saveNeeded || !validClient || UsingAgility) {
+			if(UsingAgility) xLog = true;
 			return;
 		}
-
-		if (saveNeeded) {
-			try {
-				// Implement your save logic here
-				System.out.println("Saved data for player " + getPlayerName());
-			} catch (Exception e) {
-				System.out.println("Error saving data for player " + getPlayerName() + ": " + e.getMessage());
-			}
-		}
-
-		getOutputStream().createFrame(109); // Send logout packet
-
-		Server.playerHandler.removePlayer(this);
-		System.out.println("Player " + getPlayerName() + " has been logged out.");
-
-		int slot = this.getSlot();
-		if (slot >= 1 && slot <= Constants.maxPlayers) {
-			synchronized (PlayerHandler.SLOT_LOCK) {
-				PlayerHandler.players[slot] = null;
-				PlayerHandler.usedSlots.clear(slot);
-			}
-		} else {
-			System.out.println("Invalid slot " + slot + " for player " + getPlayerName());
-		}
+		getOutputStream().createFrame(109); //Need to do this here as we logout!
+		flushOutStream();
+		destruct();
 	}
 
 	public void saveStats(boolean logout, boolean updateProgress) {

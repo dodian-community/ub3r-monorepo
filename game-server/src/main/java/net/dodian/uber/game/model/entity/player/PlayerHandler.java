@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
+import net.dodian.uber.comm.Memory;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
@@ -61,8 +62,8 @@ public class PlayerHandler {
             players[slot] = newClient;
             players[slot].connectedFrom = connectedFrom;
             players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
-            newClient.run(); // Directly run the client instead of submitting to a thread pool
-            logger.info("New client connected from " + connectedFrom + " at slot " + slot);
+            newClient.run(); //TODO thread pool would be better
+            // logger.info("New client connected from " + connectedFrom + " at slot " + slot);
 
             // Mark the slot as used only after successful login
             if (newClient.isActive) {
@@ -76,7 +77,7 @@ public class PlayerHandler {
                 }
             }
 
-            printPlayerCount();
+            Memory.getSingleton().process(); // Print memory usage after adding player
         } catch (IOException e) {
             logger.severe("Error configuring new client connection: " + e.getMessage());
             closeSocketChannel(socketChannel);
@@ -143,8 +144,8 @@ public class PlayerHandler {
         } else {
             logger.warning("Tried to remove a null player!");
         }
-        printPlayerSlots();
-        printPlayerCount();
+
+        Memory.getSingleton().process(); // Print memory usage after removing player
     }
 
     public static Player getPlayer(String name) {
@@ -152,18 +153,7 @@ public class PlayerHandler {
         return playersOnline.get(playerId);
     }
 
-    public void printPlayerSlots() {
-        StringBuilder sb = new StringBuilder("Used slots: ");
-        for (int i = 1; i <= Constants.maxPlayers; i++) {
-            if (usedSlots.get(i)) {
-                sb.append(i).append(", ");
-            }
-        }
-        logger.info(sb.toString());
-    }
 
-    public void printPlayerCount() {
-        logger.info("Player count: " + getPlayerCount());
-        logger.info("Players online: " + playersOnline.size());
-    }
+
+
 }
