@@ -63,7 +63,7 @@ public class PlayerHandler {
             players[slot].connectedFrom = connectedFrom;
             players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
             newClient.run(); //TODO thread pool would be better
-            // logger.info("New client connected from " + connectedFrom + " at slot " + slot);
+           // logger.info("New client connected from " + connectedFrom + " at slot " + slot);
 
             // Mark the slot as used only after successful login
             if (newClient.isActive) {
