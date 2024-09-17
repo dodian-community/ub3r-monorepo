@@ -482,13 +482,20 @@ public class Client extends Player implements Runnable {
 		destruct();
 	}
 
+	@Override
 	public void destruct() {
-		if (socketChannel == null && mySocketHandler == null) {
-			return; // already shutdown
+		if (mySocketHandler == null) {
+			return;
 		}
 
 		try {
-			// Remove from online players lists
+			getOutputStream().createFrame(109);
+
+			if (mySocketHandler != null) {
+				mySocketHandler.logout();
+				mySocketHandler.awaitCleanup();
+			}
+
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
 
@@ -496,52 +503,18 @@ public class Client extends Player implements Runnable {
 				saveStats(true, true);
 			}
 
-			if (!disconnected) {
-				disconnected = true;
-			}
-
-			// Use SocketHandler to properly close the connection
-			if (mySocketHandler != null) {
-				mySocketHandler.logout();
-			}
-
-			// Close socketChannel if it's still open
-			if (socketChannel != null && socketChannel.isOpen()) {
-				socketChannel.close();
-			}
-
-			// Clear any remaining packets or buffers
-			if (mySocketHandler != null) {
-				mySocketHandler.getPackets().clear();
-			}
-
-			// Remove from PlayerHandler.players array
-			if (handler != null && getSlot() >= 0 && getSlot() < Constants.maxPlayers) {
-				PlayerHandler.players[getSlot()] = null;
-				PlayerHandler.usedSlots.clear(getSlot()); // Mark the slot as available
-			}
-
-			// Null out references
-			socketChannel = null;
 			mySocketHandler = null;
 			inputStream = null;
 			outputStream = null;
-			isActive = false;
 			inputBuffer = null;
 			outputBuffer = null;
-			handler = null;
-			connectedFrom = null;
-			longName = Long.parseLong(null);
 			inStreamDecryption = null;
 			outStreamDecryption = null;
-			packetSize = 0;
-			packetType = -1;
 
-
-		} catch (IOException ioe) {
-			System.out.println("Error in destruct method: " + ioe.getMessage());
-		} finally {
+			System.gc();
 			super.destruct();
+		} catch (InterruptedException e) {
+			System.out.println("Interrupted while waiting for SocketHandler cleanup: "+ e.getMessage());
 		}
 	}
 
@@ -634,8 +607,8 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		getOutputStream().createFrame(109); //Need to do this here as we logout!
-		Server.playerHandler.removePlayer(PlayerHandler.players[this.getSlot()]);
-		PlayerHandler.players[this.getSlot()] = null; //Just incase the player messes up?
+		flushOutStream();
+		destruct();
 	}
 
 	public void saveStats(boolean logout, boolean updateProgress) {
