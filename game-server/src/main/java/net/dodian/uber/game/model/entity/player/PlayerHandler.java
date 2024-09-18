@@ -63,7 +63,6 @@ public class PlayerHandler {
             players[slot].connectedFrom = connectedFrom;
             players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
             newClient.run(); //TODO thread pool would be better
-           // logger.info("New client connected from " + connectedFrom + " at slot " + slot);
 
             // Mark the slot as used only after successful login
             if (newClient.isActive) {
@@ -78,8 +77,9 @@ public class PlayerHandler {
             }
 
             Memory.getSingleton().process(); // Print memory usage after adding player
-        } catch (IOException e) {
-            logger.severe("Error configuring new client connection: " + e.getMessage());
+        } catch (Exception e) {
+            logger.severe("Error processing new client connection: " + e.getMessage());
+            e.printStackTrace();  // This will give us more detailed error information
             closeSocketChannel(socketChannel);
             synchronized (SLOT_LOCK) {
                 usedSlots.clear(slot);  // Free the slot if an exception occurred
@@ -108,7 +108,7 @@ public class PlayerHandler {
     }
 
     public static int getPlayerCount() {
-        return usedSlots.cardinality();
+        return (int) playersOnline.size();
     }
 
     public static boolean isPlayerOn(String playerName) {
@@ -152,8 +152,4 @@ public class PlayerHandler {
         long playerId = Utils.playerNameToLong(name);
         return playersOnline.get(playerId);
     }
-
-
-
-
 }
