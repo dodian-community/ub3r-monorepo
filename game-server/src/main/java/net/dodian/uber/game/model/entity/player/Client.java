@@ -14,6 +14,7 @@ import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
+import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.npc.NpcUpdating;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
@@ -498,6 +499,7 @@ public class Client extends Player implements Runnable {
 
 			PlayerHandler.playersOnline.remove(longName);
 			PlayerHandler.allOnline.remove(longName);
+			System.out.println("Destructed the playerSlot: " + getSlot());
 
 			if (saveNeeded && !tradeSuccessful) {
 				saveStats(true, true);
@@ -1687,11 +1689,7 @@ public class Client extends Player implements Runnable {
 			return;
 		}
 		if (wearID == 4155) { //Enchanted gem
-			SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
-			if (checkTask != null && getSlayerData().get(3) > 0)
-				send(new SendMessage("You need to kill " + getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
-			else
-				send(new SendMessage("You need to be assigned a task!"));
+			SlayerTask.sendTask(this);
 			return;
 		}
 		if (duelFight && duelRule[3]) {
@@ -4652,20 +4650,20 @@ public class Client extends Player implements Runnable {
 			case 15:
 				if (getSlayerData().get(0) != -1) {
 					int slayerMaster = getSlayerData().get(0);
-					String out = "Talk to me to get a new task!";
+					String[] test;
 					SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
 					if (checkTask != null && getSlayerData().get(3) > 0)
-						out = "You need to kill " + getSlayerData().get(3) + " more " + checkTask.getTextRepresentation();
-					sendFrame200(4883, npcFace);
-					send(new SendString(GetNpcName(slayerMaster), 4884));
-					send(new SendString(out, 4885));
-					send(new SendString("Click here to continue", 4886));
-					send(new NpcDialogueHead(slayerMaster, 4883));
-					sendFrame164(4882);
-				} else
-					send(new SendMessage("You have yet to get a task. Talk to a slayer master!"));
+						test = new String[]{"You're currently assigned to " + checkTask.getTextRepresentation() + ";", "you have "+getSlayerData().get(3)+" more to go.", "Your current streak is " + getSlayerData().get(4) + "."};
+					else test = new String[]{"You currently have no task.", "Speak to me again to get a new one!"};
+					showNPCChat(slayerMaster, npcFace, test);
+				} else send(new SendMessage("You have yet to get a task. Talk to a slayer master!"));
 				NpcDialogueSend = true;
 				break;
+			case 16:
+				SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
+				showPlayerOption(new String[]{"Reset count for " + checkTask.getTextRepresentation(), "Yes", "No" });
+				NpcDialogueSend = true; //Do we need?!
+			break;
 			case 21:
 				showNPCChat(getGender() == 0 ? 1306 : 1307, 588, new String[]{
 						"Hello there, would you like to change your looks?",
@@ -7348,6 +7346,21 @@ public class Client extends Player implements Runnable {
 		}
 		if (NpcDialogue == 12) { //Slayer dialogue
 			nextDiag = button == 1 ? 13 : button == 2 ? 31 : button == 4 ? 14 : 34;
+		}
+		if(NpcDialogue == 16) {
+			if(button == 1) { //Reset count!
+				SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
+				if(checkTask != null) { //I love me some nesting bullcrap..Wohoo!!!
+					for (int i = 0; i < checkTask.getNpcId().length; i++) {
+						for (int slot = 0; slot < monsterName.size(); slot++) {
+							if (monsterName.get(slot).equalsIgnoreCase(Server.npcManager.getName(checkTask.getNpcId()[i])))
+								monsterCount.set(slot, 0);
+						}
+					}
+					send(new SendMessage(checkTask.getTextRepresentation() + " have now been reseted!"));
+				} //No such task!
+			}
+			send(new RemoveInterfaces());
 		}
 		if(NpcDialogue == 20) { //Carpet Travel!
 			faceNpc(-1);

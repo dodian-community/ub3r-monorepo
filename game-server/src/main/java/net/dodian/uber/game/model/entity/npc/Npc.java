@@ -497,7 +497,7 @@ public class Npc extends Entity {
                         int[] taskStreak = {1000, 500, 250, 100, 50, 10};
                         int[] experience = {50, 30, 20, 11, 6, 2};
                         int bonusXp = -1;
-                        p.send(new SendMessage("<col=FF8C00>You have completed your slayer task!"));
+                        p.send(new SendMessage("<col=FF8C00>You have completed your slayer task! <col=FF0000>|</col> Current streak is " + p.getSlayerData().get(4) + "."));
                         for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
                             if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
                                 bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;

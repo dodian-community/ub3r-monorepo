@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.player.skills.slayer;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Range;
 
@@ -192,6 +193,14 @@ public class SlayerTask {
             }
         }
         return slayer;
+    }
+
+    public static void sendTask(Client client) {
+        SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
+        if (checkTask != null && client.getSlayerData().get(3) > 0)
+            client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more of " + checkTask.getTextRepresentation() + " <col=FF0000>|</col> Current streak is " + client.getSlayerData().get(4) + "."));
+        else
+            client.send(new SendMessage("You need to be assigned a task!"));
     }
 
 }

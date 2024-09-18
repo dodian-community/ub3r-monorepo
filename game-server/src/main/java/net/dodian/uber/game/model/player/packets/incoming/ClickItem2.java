@@ -12,6 +12,7 @@ public class ClickItem2 implements Packet {
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int itemId = client.getInputStream().readUnsignedWordA();
         int itemSlot = client.getInputStream().readSignedWordBigEndianA();
+        String itemName = client.GetItemName(client.playerItems[itemSlot] - 1);
         if (client.playerItems[itemSlot] - 1 != itemId) {
             return;
         }
@@ -36,12 +37,14 @@ public class ClickItem2 implements Packet {
             };
             client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
         }
-        if(client.playerHasItem("Slayer helm")) {
-            SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
-            if (checkTask != null && client.getSlayerData().get(3) > 0)
-                client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
-            else
-                client.send(new SendMessage("You need to be assigned a task!"));
+        if(itemName.startsWith("Slayer helm")) {
+            SlayerTask.sendTask(client);
+        }
+        if(itemId == 4155) { //Partner on slayer gem!
+            System.out.println("Hello!");
+            client.NpcDialogue = 16;
+            client.NpcDialogueSend = false;
+            client.nextDiag = -1;
         }
         if (itemId == 11997) {
             client.send(new SendMessage("Event is over! Will use in the future?!")); //I need to bring these back to Duke!

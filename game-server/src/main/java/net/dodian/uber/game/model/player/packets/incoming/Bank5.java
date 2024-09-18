@@ -61,11 +61,7 @@ public class Bank5 implements Packet {
             } else if (removeID == 4566) {
                 client.requestAnim(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
-                if (checkTask != null && client.getSlayerData().get(3) > 0)
-                    client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more " + checkTask.getTextRepresentation()));
-                else
-                    client.send(new SendMessage("You need to be assigned a task!"));
+                SlayerTask.sendTask(client);
             } else if (Server.itemManager.getName(removeID).toLowerCase().startsWith("cow")) {
                 client.requestForceChat("Moooooo!");
             } else {
