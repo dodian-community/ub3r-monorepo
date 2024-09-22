@@ -490,7 +490,7 @@ public class Client extends Player implements Runnable {
 		}
 
 		try {
-			getOutputStream().createFrame(109);
+		
 
 			if (mySocketHandler != null) {
 				mySocketHandler.logout();
