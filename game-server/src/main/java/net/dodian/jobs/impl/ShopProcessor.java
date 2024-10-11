@@ -26,11 +26,11 @@ public class ShopProcessor implements Job {
                                 ShopHandler.ShopItemsN[i][j] += restockAmount > 1 ? (int) restockAmount : 1;
                             } else Server.shopHandler.DiscountItem(i, j);
                         }
-                            if (j >= ShopHandler.ShopItemsStandard[i]) Server.shopHandler.DiscountItem(i, j);
-                            DidUpdate = true;
-                        }
+                        if (j >= ShopHandler.ShopItemsStandard[i]) Server.shopHandler.DiscountItem(i, j);
+                        DidUpdate = true;
                     }
-                } else ShopHandler.ShopItemsDelay[i]++;
+                }
+            } else ShopHandler.ShopItemsDelay[i]++;
             if (DidUpdate) {
                 for (int k = 1; k < Constants.maxPlayers; k++) {
                     if (PlayerHandler.players[k] != null) {
@@ -39,10 +39,10 @@ public class ShopProcessor implements Job {
                         }
                     }
                 }
-            ShopHandler.ShopItemsDelay[i] = 0;
-            DidUpdate = false;
+                ShopHandler.ShopItemsDelay[i] = 0;
+                DidUpdate = false;
+            }
         }
-    }
 
     }
 

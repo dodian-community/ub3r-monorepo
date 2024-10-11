@@ -1,5 +1,6 @@
 package net.dodian.utilities
 
+import net.dodian.database.dbClient
 import org.apache.ibatis.jdbc.ScriptRunner
 import java.nio.file.Path
 
@@ -16,7 +17,7 @@ fun initializeDatabase() {
     dbSqlPath.toFile().walk().filter { it.isFile }.forEach {
         val currentTime = System.currentTimeMillis() / 1000
         println("Importing file: ${it.absolutePath}")
-        ScriptRunner(dbConnection).apply {
+        ScriptRunner(dbClient.connection).apply {
             setAutoCommit(true)
             setStopOnError(true)
             setLogWriter(null)

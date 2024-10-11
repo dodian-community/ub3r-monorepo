@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import static net.dodian.utilities.DatabaseKt.getDb;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
@@ -37,6 +38,13 @@ public class LoginManager {
 
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
+
+            int returnCode = getDb().executeQuery(query, (results) -> {
+                p.dbId = results.getInt("userid");
+
+                return 1;
+            });
+
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
                 p.dbId = results.getInt("userid");
@@ -76,7 +84,8 @@ public class LoginManager {
         if (loadCharacterResponse > 0) return loadCharacterResponse;
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
-            ResultSet results = getDbConnection().createStatement().executeQuery(query);
+            Statement statement = getDbConnection().createStatement();
+            ResultSet results = statement.executeQuery(query);
             if (results.next()) {
                 if (isBanned(p.dbId)) {
                     return 4;
@@ -109,7 +118,8 @@ public class LoginManager {
                 String[] boosted_prase = boosted.split(":");
                 int prayerLevel = !prayer.isEmpty() ? Integer.parseInt(prayer_prase[0]) : 0;
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
-                ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
+                Statement stmt2 = getDbConnection().createStatement();
+                ResultSet results2 = stmt2.executeQuery(query2);
                 if (results2.next()) {
                     Skill.enabledSkills().forEach(skill -> {
                         try {
@@ -128,7 +138,7 @@ public class LoginManager {
                         }
                     });
                 } else {
-                    Statement statement = getDbConnection().createStatement();
+                    statement = getDbConnection().createStatement();
                     String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "')";
                     statement.executeUpdate(newStatsAccount);
                     statement.close();
@@ -151,6 +161,7 @@ public class LoginManager {
                     for (int i = 0; i < boosted_prase.length - 1; i++)
                         p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
                 }
+                stmt2.close();
                 results2.close();
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
@@ -309,11 +320,12 @@ public class LoginManager {
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;
                 PlayerHandler.playersOnline.put(p.longName, p);
+                statement.close();
                 results.close();
                 //p.println("Loading Process Completed  [" + p.playerRights + ", " + p.dbId + ", " + elapsed + "]");
                 return 0;
             } else {
-                Statement statement = getDbConnection().createStatement();
+                statement = getDbConnection().createStatement();
                 String newAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS + "(id, name, equipment, inventory, bank, friends, songUnlocked)" + " VALUES ('"
                         + p.dbId + "', '" + playerName + "', '', '', '', '', '0')";
                 statement.executeUpdate(newAccount);
@@ -344,7 +356,10 @@ public class LoginManager {
 
     public boolean isBanned(int id) throws SQLException {
         String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + id + "'";
-        ResultSet results = getDbConnection().createStatement().executeQuery(query);
+        Statement statement = getDbConnection().createStatement();
+        ResultSet results = statement.executeQuery(query);
+        statement.close();
+        results.close();
         Date now = new Date();
         if (results.next())
             return now.getTime() < results.getLong("unbantime");

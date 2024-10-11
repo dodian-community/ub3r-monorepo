@@ -1,23 +1,6 @@
-package net.dodian.utilities
+package net.dodian.database
 
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.SQLException
-import java.sql.Statement
-
-val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC"
-
-val dbConnection: Connection = connect()
-
-val dbStatement: Statement = dbConnection.createStatement()
-
-private fun connect(): Connection {
-    val con = DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword)
-    if (!con.isValid(0))
-        error("Failed to connect to database")
-
-    return con;
-}
+import net.dodian.utilities.databaseTablePrefix
 
 enum class DbTables(val table: String) {
     WEB_USERS_TABLE("user"),

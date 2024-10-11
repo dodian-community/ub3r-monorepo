@@ -43,6 +43,7 @@ public class NpcManager {
                 amount++;
                 createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
             }
+            results.close();
             System.out.println("Loaded " + amount + " Npc Spawns");
         } catch (Exception e) {
             System.out.println("something off with npc spawn!" + e);
@@ -71,6 +72,7 @@ public class NpcManager {
                             results.getDouble("percent"), results.getBoolean("rareShout"));
                 }
                 c.send(new SendMessage("Finished reloading all drops for " + data.get(id).getName()));
+                results.close();
             } else
                 c.send(new SendMessage("No npc with id of " + id));
         } catch (Exception e) {
@@ -91,6 +93,7 @@ public class NpcManager {
             }
             reloadDrops(c, id); //Need to set drops!
             c.send(new SendMessage("Finished updating all '" + getData(id).getName() + "' npcs!"));
+            statement.close();
             results.close();
         } catch (Exception e) {
             System.out.println("npc drop wrong during reload of data.." + e);
@@ -107,6 +110,7 @@ public class NpcManager {
                     data.put(results.getInt("id"), new NpcData(results));
                     c.send(new SendMessage("Added default config values to the npc!"));
                 }
+                statement.close();
                 results.close();
             } catch (Exception e) {
                 System.out.println("error? " + e);
@@ -151,6 +155,7 @@ public class NpcManager {
                         System.out.println("Invalid key: " + results.getInt("npcid"));
                 }
             }
+            results.close();
             System.out.println("Loaded " + amount + " Npc Drops");
         } catch (Exception e) {
             System.out.println("npc drop wrong during load of data.." + e);

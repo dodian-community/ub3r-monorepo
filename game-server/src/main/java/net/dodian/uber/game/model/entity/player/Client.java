@@ -1957,7 +1957,8 @@ public class Client extends Player implements Runnable {
 		try {
 			String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='"+dbId+"' AND message='0' AND claimed IS NULL ORDER BY date ASC";
 			Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_UPDATABLE);
-			boolean gotResult = stm.executeQuery(query).next();
+			ResultSet result = stm.executeQuery(query);
+			boolean gotResult = result.next();
 			if(gotResult) {
 				send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
 				stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
