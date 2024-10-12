@@ -142,6 +142,7 @@ public class SlotMachine {
                     Coins_Lose = results.getInt("Coins");
                 }
             }
+            results.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

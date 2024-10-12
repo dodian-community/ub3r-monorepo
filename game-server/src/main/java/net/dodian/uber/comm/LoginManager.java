@@ -24,49 +24,46 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 public class LoginManager {
 
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
-        if (PlayerHandler.isPlayerOn(playerName)) { // Already online!
-			/*System.out.printf("%s players online:%n", PlayerHandler.playersOnline.size());
-			PlayerHandler.playersOnline.forEach((lName, client) -> System.out.printf("- %s (%s), session start=%tc %n", client.playerName, client.longName, client.now));
-            System.out.println();
-            */ //Old Debug!
-            return 5;
-        }
-
-        if (playerName.isEmpty()) //To short name!
+        int returnCode = 0;
+        if (PlayerHandler.isPlayerOn(playerName))
+            return 5; //Already logged in, do not attempt check!
+        if (playerName.isEmpty()) //Name is empty!
             return 3;
 
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
+                /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
                 p.playerGroup = results.getInt("usergroupid");
-                //if(p.playerGroup != 10 && p.playerGroup != 6) return 8; //Maintanance check!
+                p.otherGroups = results.getString("membergroupids").split(",");
+                /* if(p.playerGroup != 10 && p.playerGroup != 6) { //Maintanance check!
+                    results.close();
+                    return 8;
+                }*/
                 if (results.getString("username").equals(playerName)
                         || results.getString("username").equalsIgnoreCase(playerName)) {
                     String playerSalt = results.getString("salt");
                     String md5pass = Client.passHash(playerPass, playerSalt);
                     if (!md5pass.equals(results.getString("password"))
                             && (!net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") || (!p.connectedFrom.equals("127.0.0.1") && !(net.dodian.utilities.DotEnvKt.getServerDebugMode() && (p.playerGroup == 40 || p.playerGroup == 34 || p.playerGroup == 11))))) {
-                        return 3;
+                        returnCode = 3;
+                    } else { //Values from forum!
+                        p.newPms = (results.getInt("pmunread"));
                     }
-                    p.otherGroups = results.getString("membergroupids").split(",");
-                    p.newPms = (results.getInt("pmunread"));
-                } else
-                    return 12;
+                } else returnCode = 12;
             } else if (net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") && net.dodian.utilities.DotEnvKt.getServerDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
                 getDbConnection().createStatement().executeUpdate(newUserQuery);
                 return loadCharacterGame(p, playerName, playerPass);
-            } else {
-                return 12;
-            }
+            } else returnCode = 12;
             results.close();
         } catch (Exception e) {
             System.out.println("Failed to load player: " + playerName + ", " + e);
-            return 13;
+            returnCode = 13;
         }
-        return 0;
+        return returnCode;
     }
 
     public static String UUID;
@@ -79,9 +76,11 @@ public class LoginManager {
             ResultSet results = getDbConnection().createStatement().executeQuery(query);
             if (results.next()) {
                 if (isBanned(p.dbId)) {
+                    results.close(); //If user banned, close statement!
                     return 4;
                 }
                 if (Login.isUidBanned(LoginManager.UUID)) {
+                    results.close(); //If user uid banned, close statement!
                     return 22;
                 }
                 String[] look = results.getString("look").isEmpty() ? null : results.getString("look").split(" ");
@@ -320,14 +319,12 @@ public class LoginManager {
                 String newStatsAccount = "INSERT INTO " + DbTables.GAME_CHARACTERS_STATS + "(uid)" + " VALUES ('" + p.dbId + "') ON DUPLICATE KEY UPDATE uid=uid";
                 statement.executeUpdate(newStatsAccount);
                 statement.close();
-                results.close();
                 return loadgame(p, playerName, playerPass);
             }
         } catch (Exception e) {
             System.out.println("Something wrong with loading a player..." + e);
             return 13;
         }
-        // return 13;
     }
 
     public void updatePlayerForumRegistration(Client p) {
@@ -343,12 +340,13 @@ public class LoginManager {
     }
 
     public boolean isBanned(int id) throws SQLException {
+        boolean banned = false;
         String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + id + "'";
         ResultSet results = getDbConnection().createStatement().executeQuery(query);
         Date now = new Date();
-        if (results.next())
-            return now.getTime() < results.getLong("unbantime");
-        return false;
+        if (results.next()) banned = now.getTime() < results.getLong("unbantime");
+        results.close();
+        return banned;
     }
 
 }
