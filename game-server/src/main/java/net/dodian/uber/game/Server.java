@@ -26,6 +26,8 @@ import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -39,6 +41,7 @@ import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class Server {
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
     public static int TICK = 600;
@@ -70,11 +73,16 @@ public class Server {
 
     private static ServerConnectionHandler connectionHandler;
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
+        logger.info("Info log!");
+        logger.error("Error log!");
+        logger.warn("Warning log!");
+        logger.debug("Debug log!");
+
         System.out.println();
-        System.out.println(" ____ ___ ");
-        System.out.println(" / __ \\____ ____/ (_)___ _____ ");
-        System.out.println(" / / / / __ \\/ __ / / __ `/ __ \\ ");
+        System.out.println("    ____ ");
+        System.out.println("   / __ \\____ ____/ (_)___ _____ ");
+        System.out.println("  / / / / __ \\/ __ / / __ `/ __ \\ ");
         System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / / ");
         System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/ ");
         System.out.println();
