@@ -1464,7 +1464,12 @@ public class Client extends Player implements Runnable {
 				default:
 					if (!Ground.tradeable_items.isEmpty())
 						for (GroundItem item : Ground.tradeable_items) {
-							if(item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z) continue;
+							if (item == null)
+								continue;
+
+							if(item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
+								continue;
+
 							if (premiumItem(id) && !premium) {
 								send(new SendMessage("You must be a premium member to use this item"));
 								attemptGround = null;
