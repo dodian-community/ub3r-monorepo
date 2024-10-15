@@ -14,7 +14,6 @@ import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
-import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.npc.NpcUpdating;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
@@ -490,7 +489,7 @@ public class Client extends Player implements Runnable {
 		}
 
 		try {
-		
+
 
 			if (mySocketHandler != null) {
 				mySocketHandler.logout();
@@ -1464,7 +1463,7 @@ public class Client extends Player implements Runnable {
 				default:
 					if (!Ground.tradeable_items.isEmpty())
 						for (GroundItem item : Ground.tradeable_items) {
-							if (item == null)
+							if (item == null) // Possibly fixing a null pointer happening on the if statement below.
 								continue;
 
 							if(item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
