@@ -8730,6 +8730,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
                 statement.close();
+                results.close();
             } catch (Exception e) {
                 System.out.println("issue: " + e.getMessage());
             }
