@@ -32,7 +32,8 @@ public class LoginManager {
 
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
-            ResultSet results = getDbConnection().createStatement().executeQuery(query);
+            Statement stmt = getDbConnection().createStatement();
+            ResultSet results = stmt.executeQuery(query);
             if (results.next()) {
                 /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
@@ -55,9 +56,12 @@ public class LoginManager {
                 } else returnCode = 12;
             } else if (net.dodian.utilities.DotEnvKt.getServerEnv().equals("dev") && net.dodian.utilities.DotEnvKt.getServerDebugMode()) {
                 String newUserQuery = "INSERT INTO " + DbTables.WEB_USERS_TABLE + " SET username = '" + playerName + "', passworddate = '', birthday_search = ''";
-                getDbConnection().createStatement().executeUpdate(newUserQuery);
+                Statement stmt2 = getDbConnection().createStatement();
+                stmt2.executeUpdate(newUserQuery);
+                stmt2.close();
                 return loadCharacterGame(p, playerName, playerPass);
             } else returnCode = 12;
+            stmt.close();
             results.close();
         } catch (Exception e) {
             System.out.println("Failed to load player: " + playerName + ", " + e);
@@ -73,7 +77,8 @@ public class LoginManager {
         if (loadCharacterResponse > 0) return loadCharacterResponse;
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
-            ResultSet results = getDbConnection().createStatement().executeQuery(query);
+            Statement stmt = getDbConnection().createStatement();
+            ResultSet results = stmt.executeQuery(query);
             if (results.next()) {
                 if (isBanned(p.dbId)) {
                     results.close(); //If user banned, close statement!
@@ -108,7 +113,8 @@ public class LoginManager {
                 String[] boosted_prase = boosted.split(":");
                 int prayerLevel = !prayer.isEmpty() ? Integer.parseInt(prayer_prase[0]) : 0;
                 String query2 = "select * from " + DbTables.GAME_CHARACTERS_STATS + " where uid = '" + p.dbId + "'";
-                ResultSet results2 = getDbConnection().createStatement().executeQuery(query2);
+                Statement stmt2 = getDbConnection().createStatement();
+                ResultSet results2 = stmt2.executeQuery(query2);
                 if (results2.next()) {
                     Skill.enabledSkills().forEach(skill -> {
                         try {
@@ -150,6 +156,7 @@ public class LoginManager {
                     for (int i = 0; i < boosted_prase.length - 1; i++)
                         p.boost(Integer.parseInt(boosted_prase[i + 1]), Skill.getSkill(i));
                 }
+                stmt2.close();
                 results2.close();
                 /* Sets Inventory */
                 String inventory = (results.getString("inventory").trim());
@@ -308,6 +315,7 @@ public class LoginManager {
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;
                 PlayerHandler.playersOnline.put(p.longName, p);
+                stmt.close();
                 results.close();
                 //p.println("Loading Process Completed  [" + p.playerRights + ", " + p.dbId + ", " + elapsed + "]");
                 return 0;
@@ -342,9 +350,11 @@ public class LoginManager {
     public boolean isBanned(int id) throws SQLException {
         boolean banned = false;
         String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + id + "'";
-        ResultSet results = getDbConnection().createStatement().executeQuery(query);
+        Statement stmt = getDbConnection().createStatement();
+        ResultSet results = stmt.executeQuery(query);
         Date now = new Date();
         if (results.next()) banned = now.getTime() < results.getLong("unbantime");
+        stmt.close();
         results.close();
         return banned;
     }

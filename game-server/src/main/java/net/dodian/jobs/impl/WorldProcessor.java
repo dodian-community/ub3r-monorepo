@@ -74,12 +74,13 @@ public class WorldProcessor implements Job {
                             /* Mute check */
                             String query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id='" + c.dbId + "'";
                             Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-                            boolean gotResult = stm.executeQuery(query).next();
-                            if (gotResult) {
+                            ResultSet result = stm.executeQuery(query);
+                            if (result.next()) {
                                 long checkTime = stm.getResultSet().getLong("unmutetime");
                                 if(checkTime != c.mutedTill) c.mutedTill = checkTime; //Incase we need to update the mute timer!
                             }
                             stm.close();
+                            result.close();
                             /* Ban check */
                             if(Server.loginManager.isBanned(c.dbId)) c.disconnected = true;
                         }
