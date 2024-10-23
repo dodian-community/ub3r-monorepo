@@ -314,7 +314,6 @@ public class LoginManager {
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();
                 p.loadingDone = true;
-                PlayerHandler.playersOnline.put(p.longName, p);
                 stmt.close();
                 results.close();
                 //p.println("Loading Process Completed  [" + p.playerRights + ", " + p.dbId + ", " + elapsed + "]");

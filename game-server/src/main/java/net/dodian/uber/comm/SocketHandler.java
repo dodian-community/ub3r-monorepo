@@ -84,7 +84,6 @@ public class SocketHandler implements Runnable {
         if (processRunning.getAndSet(false)) {
             player.disconnected = true;
             cleanup();
-            YellSystem.alertStaff(player.getPlayerName() + " has logged out correctly!");
         }
     }
 

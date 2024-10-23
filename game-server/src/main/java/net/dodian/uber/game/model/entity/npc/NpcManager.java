@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class NpcManager {
@@ -38,13 +39,15 @@ public class NpcManager {
     public void loadSpawns() {
         try {
             int amount = 0;
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_SPAWNS);
+            Statement statement = getDbConnection().createStatement();
+            ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_SPAWNS);
             while (results.next()) {
                 amount++;
                 createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
             }
             System.out.println("Loaded " + amount + " Npc Spawns");
             results.close();
+            statement.close();
         } catch (Exception e) {
             System.out.println("something off with npc spawn!" + e);
         }
@@ -66,13 +69,15 @@ public class NpcManager {
         try {
             if (data.containsKey(id)) {
                 data.get(id).getDrops().clear();
-                ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DROPS + " where npcid='" + id + "'");
+                Statement statement = getDbConnection().createStatement();
+                ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DROPS + " where npcid='" + id + "'");
                 while (results.next()) {
                     data.get(id).addDrop(results.getInt("itemid"), results.getInt("amt_min"), results.getInt("amt_max"),
                             results.getDouble("percent"), results.getBoolean("rareShout"));
                 }
                 c.send(new SendMessage("Finished reloading all drops for " + data.get(id).getName()));
                 results.close();
+                statement.close();
             } else
                 c.send(new SendMessage("No npc with id of " + id));
         } catch (Exception e) {
@@ -82,7 +87,7 @@ public class NpcManager {
 
     public void reloadAllData(Client c, int id) {
         try {
-            Statement statement = getDbStatement();
+            Statement statement = getDbConnection().createStatement();
             ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id='" + id + "'");
             if (results.next()) {
                 data.replace(results.getInt("id"), new NpcData(results));
@@ -93,6 +98,7 @@ public class NpcManager {
             }
             reloadDrops(c, id); //Need to set drops!
             c.send(new SendMessage("Finished updating all '" + getData(id).getName() + "' npcs!"));
+            results.close();
             statement.close();
         } catch (Exception e) {
             System.out.println("npc drop wrong during reload of data.." + e);
@@ -102,20 +108,21 @@ public class NpcManager {
     public void reloadNpcConfig(Client c, int id, String table, String value) {
         if (!data.containsKey(id)) {
             try {
-                Statement statement = getDbStatement();
+                Statement statement = getDbConnection().createStatement();
                 statement.executeUpdate("INSERT INTO " + DbTables.GAME_NPC_DEFINITIONS + "(id, name, examine, size) VALUES("+id+", 'no_name', 'no_examine', '1')");
                 ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id='" + id + "'");
                 if (results.next()) {
                     data.put(results.getInt("id"), new NpcData(results));
                     c.send(new SendMessage("Added default config values to the npc!"));
                 }
+                results.close();
                 statement.close();
             } catch (Exception e) {
                 System.out.println("error? " + e);
             }
         } else if (!table.equalsIgnoreCase("new npc")) {
             try {
-                Statement statement = getDbStatement();
+                Statement statement = getDbConnection().createStatement();
                 String query = "UPDATE " + DbTables.GAME_NPC_DEFINITIONS + " SET " + table + " = '" + value + "' WHERE id = '" + id + "'";
                 statement.executeUpdate(query);
                 c.send(new SendMessage("You updated '" + table + "' with value '" + value + "'!"));
@@ -134,7 +141,8 @@ public class NpcManager {
     public void loadData() {
         try {
             int amount = 0;
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS);
+            Statement statement = getDbConnection().createStatement();
+            ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS);
             while (results.next()) {
                 amount++;
                 data.put(results.getInt("id"), new NpcData(results));
@@ -154,6 +162,7 @@ public class NpcManager {
                 }
             }
             System.out.println("Loaded " + amount + " Npc Drops");
+            statement.close();
             results.close();
         } catch (Exception e) {
             System.out.println("npc drop wrong during load of data.." + e);
