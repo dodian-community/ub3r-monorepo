@@ -561,7 +561,7 @@ public class Client extends Player implements Runnable {
         }
 
         Queue<PacketData> packets = mySocketHandler.getPackets();
-        if (packets.isEmpty()) {
+        if (packets.isEmpty() || packets == null) {
             return false;
         }
 
@@ -1432,8 +1432,12 @@ public class Client extends Player implements Runnable {
                 case 0:
                     if (!Ground.ground_items.isEmpty())
                         for (GroundItem item : Ground.ground_items) {
+                            /* Checks to stop or prevent! */
+                            if (attemptGround == null) //Break here as we do not check if no value!
+                                break;
                             if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
                                 continue;
+
                             if (premiumItem(id) && !premium) {
                                 send(new SendMessage("You must be a premium member to use this item"));
                                 attemptGround = null;
@@ -1452,8 +1456,12 @@ public class Client extends Player implements Runnable {
                 case 1:
                     if (!Ground.untradeable_items.isEmpty())
                         for (GroundItem item : Ground.untradeable_items) {
+                            /* Checks to stop or prevent! */
+                            if (attemptGround == null) //Break here as we do not check if no value!
+                                break;
                             if (item.isTaken() || dbId != item.playerId || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
                                 continue;
+
                             if (premiumItem(id) && !premium) {
                                 send(new SendMessage("You must be a premium member to use this item"));
                                 attemptGround = null;
@@ -1472,9 +1480,9 @@ public class Client extends Player implements Runnable {
                 default:
                     if (!Ground.tradeable_items.isEmpty())
                         for (GroundItem item : Ground.tradeable_items) {
-                            if (item == null) // Possibly fixing a null pointer happening on the if statement below.
-                                continue;
-
+                            /* Checks to stop or prevent! */
+                            if (attemptGround == null) //Break here as we do not check if no value!
+                                break;
                             if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
                                 continue;
 
