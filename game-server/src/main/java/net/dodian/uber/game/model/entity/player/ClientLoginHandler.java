@@ -106,6 +106,8 @@ public class ClientLoginHandler {
             //System.out.println("Client session key: " + clientSessionKey + ", Server session key: " + serverSessionKey); -> Old Debug
             String customClientVersion = readString(loginBuffer);
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
+            if(!client.officialClient)
+                client.returnCode = 6;
             client.setPlayerName(readString(loginBuffer));
             if (client.getPlayerName() == null || client.getPlayerName().isEmpty()) {
                 client.setPlayerName("player" + client.getSlot());

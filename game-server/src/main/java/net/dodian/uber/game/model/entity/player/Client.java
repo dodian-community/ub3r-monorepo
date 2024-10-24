@@ -561,13 +561,13 @@ public class Client extends Player implements Runnable {
         }
 
         Queue<PacketData> packets = mySocketHandler.getPackets();
-        if (packets.isEmpty() || packets == null) {
+        if (packets.isEmpty()) {
             return false;
         }
 
         try {
             PacketData packet;
-            while ((packet = packets.poll()) != null) {
+            while ((packet = packets.poll()) != null && mySocketHandler != null) {
                 fillInStream(packet);
                 currentPacket = packet;
                 parseIncomingPackets();
