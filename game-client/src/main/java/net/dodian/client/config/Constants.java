@@ -9,13 +9,13 @@ public class Constants {
 	/*
 	 * Client Configurations
 	 */
-	public static double SERVER_VERSION         = 1.5;
+	public static double SERVER_VERSION         = 1.6;
 	public static String WINDOW_TITLE     		= "Dodian.net Client - Uber Server 3.0 (Client: "+SERVER_VERSION+")";
 
 	/*
 	 * Server Connection Details
 	 */
-	public static String SERVER_HOSTNAME  		= "127.0.0.1"; // play.dodian.net for live server 127.0.0.1
+	public static String SERVER_HOSTNAME  		= "play.dodian.net"; // play.dodian.net for live server 127.0.0.1
 	public static int    SERVER_GAME_PORT 		= 43594; //43594 main game, 6565 is beta testing
 	public static int	 SERVER_JAGGRAB_PORT	= SERVER_GAME_PORT;
 

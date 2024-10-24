@@ -36,7 +36,7 @@ public final class EntityDef {
             def.actions = new String[]{"Monkfish", null, "Shark", null, null};
         if (id == 1517)
             def.actions = new String[]{"Sea Turtle", null, "Manta Ray", null, null};
-        if (id == 2180)
+        if (id == 2180 || id == 1105 || id == 1107 || id == 1103)
             def.actions = new String[]{"Talk-to", null, "Pay", null, null};
         if (id == 4753)
             def.actions = new String[]{"Talk-to", null, "Trade", "Clean herbs", "Make unfinish potion(s)"};

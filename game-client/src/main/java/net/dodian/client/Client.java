@@ -6921,7 +6921,7 @@ public class Client extends RSApplet {
                 stream.writeDWord(ai[1]);
                 stream.writeDWord(ai[2]);
                 stream.writeDWord(ai[3]);
-                stream.writeString("C0W456753211"); //1543456788
+                stream.writeString("GGhh5563AD%dda"); //1543456788
                 stream.writeString(s);
                 stream.writeString(s1);
                 stream.doKeys();
@@ -7075,12 +7075,12 @@ public class Client extends RSApplet {
             }
             if (k == 6) {
                 loginMessage1 = "Dodian has been updated!";
-                loginMessage2 = "Opened a new window for you to download!";
-                try {
+                loginMessage2 = "Restart the launcher to update!";
+                /*try {
                     Desktop.getDesktop().browse(new URI(CLIENT_DOWNLOAD_URL));
                 } catch (Exception e) {
                     pushMessage("Failed to open url! ", 9, "");
-                }
+                }*/
                 return;
             }
             if (k == 7) {
