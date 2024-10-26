@@ -25,15 +25,15 @@ public class AttackNpc implements Packet {
             if (client.randomed || client.UsingAgility) {
                 return;
             }
-            if ((getAttackStyle(client) != 0 && !client.goodDistanceEntity(tempNpc, 5)) || (getAttackStyle(client) == 0 && !client.goodDistanceEntity(tempNpc, 1))) {
+            boolean rangedAttack = getAttackStyle(client) != 0;
+            if ((rangedAttack && client.goodDistanceEntity(tempNpc, 5)) || client.goodDistanceEntity(tempNpc, 1)) {
+                client.resetWalkingQueue();
+                client.startAttack(tempNpc);
+                return;
+            }
+            if ((rangedAttack && !client.goodDistanceEntity(tempNpc, 5)) || (getAttackStyle(client) == 0 && !client.goodDistanceEntity(tempNpc, 1))) {
                 final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, tempNpc.getPosition());
                 client.setWalkToTask(task);
-                if ((getAttackStyle(client) != 0 && client.goodDistanceEntity(tempNpc, 5)) || client.goodDistanceEntity(tempNpc, 1)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(tempNpc);
-                    client.setWalkToTask(null);
-                    return;
-                }
                 EventManager.getInstance().registerEvent(new Event(600) {
                     @Override
                     public void execute() {
@@ -49,9 +49,6 @@ public class AttackNpc implements Packet {
                         }
                     }
                 });
-            } else { //In range so attack!
-                client.resetWalkingQueue();
-                client.startAttack(tempNpc);
             }
         }
     }
