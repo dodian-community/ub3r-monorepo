@@ -25,11 +25,7 @@ fun Client.handleMeleeAttack(): Int {
         return -1
     if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
-    if (target is Player && duelFight && duelRule[1]) {
-        send(SendMessage("Melee has been disabled for this duel!"))
-        resetAttack()
-        return 0
-    }
+
         combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
         lastCombat = 16
         setFocus(target.position.x, target.position.y)

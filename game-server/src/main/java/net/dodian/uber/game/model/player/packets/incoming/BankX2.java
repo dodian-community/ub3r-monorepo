@@ -114,9 +114,9 @@ public class BankX2 implements Packet {
         } else if (client.XinterfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, client.offeredPartyItems.get(client.XremoveSlot).getId(), EnteredAmount, client.XremoveSlot);
             client.checkItemUpdate();
-        } else if (client.XinterfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        } else if (client.XinterfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
-        } else if (client.XinterfaceID == 6669 && client.inDuel) { // remove from duel window
+        } else if (client.XinterfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(client.XremoveID, client.XremoveSlot, EnteredAmount);
         } else if (client.XinterfaceID == 3900 && client.XremoveID != -1) { // Shop interface
             int id = client.XremoveID, slot = client.XremoveSlot;
@@ -130,9 +130,9 @@ public class BankX2 implements Packet {
             client.sellItem(id, slot, EnteredAmount);
             client.checkItemUpdate();
             client.send(new InventoryInterface(3824, 3822)); //Need this to close interface, yikes!
-        } else if (client.XinterfaceID == 3322 && client.inTrade) { // remove from bag to trade window
+        } else if (client.XinterfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(client.XremoveID, client.XremoveSlot, EnteredAmount);
-        } else if (client.XinterfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (client.XinterfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(client.XremoveID, client.XremoveSlot, EnteredAmount);
         }
     }

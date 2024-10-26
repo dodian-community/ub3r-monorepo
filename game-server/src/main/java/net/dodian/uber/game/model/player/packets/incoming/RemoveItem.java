@@ -18,9 +18,9 @@ public class RemoveItem implements Packet {
         if (client.playerRights == 2) {
             client.println_debug("RemoveItem: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
         }
-        if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        if (interfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, 1);
-        } else if (interfaceID == 6669 && client.inDuel) { // remove from duel window
+        } else if (interfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(removeID, removeSlot, 1);
         } else if (interfaceID == 1688) {
             if(client.hasSpace()) {
@@ -41,11 +41,9 @@ public class RemoveItem implements Packet {
             client.fromBank(removeID, removeSlot, 1);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, 1, removeSlot);
-        } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to
-            // trade
-            // window
+        } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, 1);
-        } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(removeID, removeSlot, 1);
         } else if (interfaceID >= 4233 && interfaceID <= 4257) {
             client.startGoldCrafting(interfaceID, removeSlot, 1);

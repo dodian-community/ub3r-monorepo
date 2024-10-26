@@ -739,14 +739,17 @@ public class ClickingButtons implements Packet {
                 break;
 
             case 21011:
-                if(client.IsBanking) {
+                if(!client.IsBanking) {
+                    break; //We do not need this function without you banking!
+                }
                     client.takeAsNote = !client.takeAsNote;
                     client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
                     client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
-                }
                 break;
             case 21010:
-                if(client.IsBanking) {
+                if(!client.IsBanking) {
+                    break; //We do not need this function without you banking!
+                }
                     if (client.freeSlots() < 28) {
                         for (int i = 0; i < 28; i++)
                             if (client.playerItems[i] > 0)
@@ -755,7 +758,6 @@ public class ClickingButtons implements Packet {
                         client.checkItemUpdate();
                     } else
                         client.send(new SendMessage("You do not have anything that can be banked!"));
-                }
                 break;
 
             case 13092:
@@ -922,7 +924,6 @@ public class ClickingButtons implements Packet {
                     break;
                 }
                 client.duelConfirmed = true;
-                client.canOffer = false;
                 if (o.duelConfirmed) {
                     /*
                      * Danno: Fix; stop a duel with all combat styles disabled.
@@ -940,7 +941,6 @@ public class ClickingButtons implements Packet {
                         return;
                     }
                     client.canOffer = false;
-                    o.canOffer = false;
                     client.confirmDuel();
                     o.confirmDuel();
                 } else {

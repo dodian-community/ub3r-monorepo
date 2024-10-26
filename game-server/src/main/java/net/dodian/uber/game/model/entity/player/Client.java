@@ -169,7 +169,6 @@ public class Client extends Player implements Runnable {
     public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
     public String properName = "";
     public int actionButtonId = 0;
-    public long lastAttack = 0;
     public boolean validLogin = false;
 
     public void ReplaceObject2(Position pos, int NewObjectID, int Face, int ObjectType) {
@@ -461,13 +460,10 @@ public class Client extends Player implements Runnable {
 
     private ByteBuffer inputBuffer;
     private ByteBuffer outputBuffer;
-    private SocketChannel socketChannel;
-    public Cryption outStreamEncryption;
 
 
     public Client(SocketChannel socketChannel, int _playerId) throws IOException {
         super(_playerId);
-        this.socketChannel = socketChannel;
         mySocketHandler = new SocketHandler(this, socketChannel);
 
         /* Items enabled! */
@@ -482,12 +478,6 @@ public class Client extends Player implements Runnable {
         this.loginHandler = new ClientLoginHandler(this, socketChannel);//moved the login stuff
     }
 
-
-    public void shutdownError(String errorMessage) {
-        Utils.println(": " + errorMessage);
-        destruct();
-    }
-
     @Override
     public void destruct() {
         if (mySocketHandler == null) {
@@ -495,12 +485,8 @@ public class Client extends Player implements Runnable {
         }
 
         try {
-
-
-            if (mySocketHandler != null) {
-                mySocketHandler.logout();
-                mySocketHandler.awaitCleanup();
-            }
+            mySocketHandler.logout();
+            mySocketHandler.awaitCleanup();
 
             PlayerHandler.playersOnline.remove(longName);
             PlayerHandler.allOnline.remove(longName);
@@ -875,10 +861,10 @@ public class Client extends Player implements Runnable {
     public boolean giveExperience(int amount, Skill skill) {
         if (amount < 1)
             return false;
-        if (randomed) {
+        /*if (randomed) {
             send(new SendMessage("You must answer the genie before you can gain experience!"));
             return false;
-        }
+        }*/ //Due to combat bug, I decided to remove this code. Might need a revisit if we wish to keep!
         amount = amount * getGameMultiplierGlobalXp();
         int oldXP = getExperience(skill),
                 newXP = Math.min(getExperience(skill) + amount, 200000000);
@@ -3976,14 +3962,14 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton >= 200) {
-            lastButton = System.currentTimeMillis();
-        } else {
+        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+            if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
+        lastButton = System.currentTimeMillis();
         try {
             Client other = getClient(trade_reqId);
-            if (!inTrade || !validClient(trade_reqId) || !canOffer) {
+            if (!inTrade || !validClient(trade_reqId)) {
                 declineTrade();
                 return;
             }
@@ -5385,8 +5371,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton < 200)
+        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+            if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
+        }
         lastButton = System.currentTimeMillis();
         if (!Server.itemManager.isStackable(itemID))
             amount = Math.min(amount, getInvAmt(itemID));
@@ -5398,10 +5386,6 @@ public class Client extends Player implements Runnable {
         }
         Client other = getClient(duel_with);
         if (!inDuel || !validClient(duel_with)) {
-            declineDuel();
-            return;
-        }
-        if (!canOffer) {
             declineDuel();
             return;
         }
@@ -5517,15 +5501,15 @@ public class Client extends Player implements Runnable {
             }
         }
         duelConfirmed = false;
-        other.duelConfirmed = false;
         resetItems(3214);
-        other.resetItems(3214);
         resetItems(3322);
-        other.resetItems(3322);
         refreshDuelScreen();
+        send(new SendString("", 6684));
+        other.duelConfirmed = false;
+        other.resetItems(3214);
+        other.resetItems(3322);
         other.refreshDuelScreen();
         other.send(new SendString("", 6684));
-
     }
 
     public static String passHash(String in, String salt) {
@@ -6719,8 +6703,8 @@ public class Client extends Player implements Runnable {
     public void confirmScreen() {
         canOffer = false;
         inTrade = true;
-        resetItems(3214);
-        send(new InventoryInterface(3443, 3213)); // trade confirm + normal bag
+        resetItems(3322);
+        send(new InventoryInterface(3443, 3321)); // trade confirm
         Client other = getClient(trade_reqId);
         /* Reset item containers! */
         getOutputStream().createFrameVarSizeWord(53);
@@ -6953,6 +6937,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void confirmDuel() {
+        canOffer = false;
+        resetItems(3322);
+        send(new InventoryInterface(6412, 3321)); // Duel confirm
         Client other = getClient(duel_with);
         if (!validClient(duel_with)) {
             declineDuel();
@@ -7014,7 +7001,6 @@ public class Client extends Player implements Runnable {
         }
         send(new SendString("Hitpoints will be restored", 8250));
         send(new SendString("", 6571));
-        showInterface(6412);
     }
 
     public void startDuel() {

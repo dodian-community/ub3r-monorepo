@@ -24,7 +24,6 @@ public class Walking implements Packet {
         if (packetType != 98) {
             client.setWalkToTask(null);
         }
-        if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
         /* Auto decline when walk away from trade! */
         if(client.inTrade && (packetType == 164 || packetType == 248)) client.declineTrade();
         /* Auto decline when walk away from duel! */
@@ -104,10 +103,12 @@ public class Walking implements Packet {
                 client.resetItems(3214);
             }
             /* Combat checks! */
-            if(packetType != 98 && (client.attackingNpc || client.attackingPlayer)) //Adding a check for reset due to walking away!
+            if(packetType != 98 && (client.attackingNpc || client.attackingPlayer)) { //Adding a check for reset due to walking away!
                 client.resetAttack();
+            }
                 client.faceTarget(65535);
             }
+            if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
             // stairs check
             if (client.stairs > 0) {
                 client.resetStairs();
@@ -126,8 +127,8 @@ public class Walking implements Packet {
             if(client.herbMaking != -1) client.herbMaking = -1;
             // banking
             if (client.IsBanking) {
-                client.send(new RemoveInterfaces());
                 client.IsBanking = false;
+                client.send(new RemoveInterfaces());
                 client.checkItemUpdate();
             }
             if(client.checkBankInterface) {
@@ -143,8 +144,8 @@ public class Walking implements Packet {
             // shopping
             if (client.isShopping()) {
                 client.MyShopID = -1;
-                client.checkItemUpdate();
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
     }
 

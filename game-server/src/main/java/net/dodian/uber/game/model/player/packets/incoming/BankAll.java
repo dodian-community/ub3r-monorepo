@@ -24,13 +24,13 @@ public class BankAll implements Packet {
             client.fromBank(removeID, removeSlot, -2);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, !stack ? 8 : Integer.MAX_VALUE, removeSlot);
-        } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window
+        } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
-        } else if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        } else if (interfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
-        } else if (interfaceID == 6669 && client.inDuel) { // remove from duel window
+        } else if (interfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(removeID, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
-        } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(removeID, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (interfaceID == 3823) { // Show value to sell items
             if(client.playerRights < 2) {

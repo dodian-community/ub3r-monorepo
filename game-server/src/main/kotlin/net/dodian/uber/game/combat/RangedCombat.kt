@@ -17,12 +17,8 @@ fun Client.handleRangedAttack(): Int {
     if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
     if(goodDistanceEntity(target, 5))
-        resetWalkingQueue();
-    if (target is Player && duelFight && duelRule[0]) {
-        send(SendMessage("Ranged has been disabled for this duel!"))
-        resetAttack()
-        return 0
-    }
+        resetWalkingQueue()
+
     if(equipmentN[Equipment.Slot.ARROWS.id] < 1) {
         deleteequiment(equipment[Equipment.Slot.ARROWS.id], Equipment.Slot.ARROWS.id)
         resetAttack()

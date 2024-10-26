@@ -44,25 +44,60 @@ fun Client.getAttackStyle() : Int {
 }
 
 fun Client.attackTarget(): Boolean {
-    if (target is Npc) {
+    var attackStyle = getAttackStyle()
+    /* Do checks each tick for player + npc */
+    if(target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (npc.currentHealth < 1 || deathTimer > 0 || !canAttackNpc(npc.id)) {
             resetAttack()
             return false
         }
     }
-    if (target is Player) {
-        val plr = Server.playerHandler.getClient(target.slot)
-        if (plr.currentHealth < 1 || deathTimer > 0) {
+    if(target is Player) { //Pvp checks (duel and wilderness)
+        val player = Server.playerHandler.getClient(target.slot)
+        if (duelFight && attackStyle == 0 && duelRule[1]) {
+            send(SendMessage("Melee has been disabled for this duel!"))
+            resetAttack()
+            return false
+        }
+        if (duelFight && attackStyle == 1 && duelRule[0]) {
+            send(SendMessage("Ranged has been disabled for this duel!"))
+            resetAttack()
+            return false
+        }
+        if (duelFight && attackStyle == 2 && duelRule[2]) {
+            send(SendMessage("Magic has been disabled for this duel!"))
+            resetAttack()
+            return false
+        }
+        if (!(duelFight && duel_with == target.slot) && !Server.pking) {
+            send(SendMessage("Pking has been disabled"));
+            resetAttack()
+            return false
+        }
+        if (!canAttack) {
+            send(SendMessage("You cannot attack your oppenent yet!"));
+            resetAttack()
+            return false
+        }
+        if (!(duelFight && duel_with == target.slot) && (!player.inWildy() || !inWildy())) {
+            send(SendMessage("You can't attack that player!"));
             resetAttack()
             return false
         }
     }
-    if(getAttackStyle() == 2 && handleMagicAttack() == 1)
+    /*int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());
+if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlayer.wildyLevel)
+            || client.duelFight && client.duel_with == castOnPlayer.getSlot()) || !castOnPlayer.saveNeeded) {
+    client.send(new SendMessage("You can't attack that player"));
+    return;
+}*/ //TODO: Fix wildy checks if we release wilderness!
+    /* Style check to attack! */
+    if(attackStyle == 2 && handleMagicAttack() == 1)
         return true
-    if(getAttackStyle() == 1 && handleRangedAttack() == 1)
+    if(attackStyle == 1 && handleRangedAttack() == 1)
         return true
-    if(getAttackStyle() == 0 && handleMeleeAttack() == 1)
+    if(attackStyle == 0 && handleMeleeAttack() == 1)
         return true
     return false
 }

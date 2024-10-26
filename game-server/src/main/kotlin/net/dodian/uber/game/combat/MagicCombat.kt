@@ -17,37 +17,7 @@ fun Client.handleMagicAttack(): Int {
     if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
         return 0
     if(goodDistanceEntity(target, 5))
-        resetWalkingQueue();
-    /* Player combat check */
-    if(target is Player) { //Pvp checks (duel and wilderness)
-        val player = Server.playerHandler.getClient(target.slot)
-        if (duelFight && duelRule[2]) {
-            send(SendMessage("Magic has been disabled for this duel!"))
-            resetAttack()
-            return 0
-        }
-        if (!(duelFight && duel_with == target.slot) && !Server.pking) {
-            send(SendMessage("Pking has been disabled"));
-            resetAttack()
-            return 0
-        }
-        if (!canAttack) {
-            send(SendMessage("You cannot attack your oppenent yet!"));
-            resetAttack()
-            return 0
-        }
-        if (!(duelFight && duel_with == target.slot) && (!player.inWildy() || !inWildy())) {
-            send(SendMessage("You can't attack that player"));
-            resetAttack()
-            return 0
-        }
-    }
-    /*int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());
-    if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlayer.wildyLevel)
-                || client.duelFight && client.duel_with == castOnPlayer.getSlot()) || !castOnPlayer.saveNeeded) {
-        client.send(new SendMessage("You can't attack that player"));
-        return;
-    }*/ //TODO: Fix wildy checks if we release wilderness!
+        resetWalkingQueue()
 
     var slot = autocast_spellIndex
     var type = 0

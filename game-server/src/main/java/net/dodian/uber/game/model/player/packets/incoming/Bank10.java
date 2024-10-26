@@ -17,9 +17,9 @@ public class Bank10 implements Packet {
         int removeSlot = client.getInputStream().readUnsignedWordA();
         if (getGameWorldId() > 1)
             client.println_debug("RemoveItem 10: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
-        if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        if (interfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, 10);
-        } else if (interfaceID == 6669 && client.inDuel) { // remove from duel window
+        } else if (interfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(removeID, removeSlot, 10);
         } else if (interfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
@@ -31,9 +31,9 @@ public class Bank10 implements Packet {
             client.fromBank(removeID, removeSlot, 10);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, 10, removeSlot);
-        } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window
+        } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, 10);
-        } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(removeID, removeSlot, 10);
         } else if (interfaceID >= 4233 && interfaceID <= 4257) {
             client.startGoldCrafting(interfaceID, removeSlot, 10);
