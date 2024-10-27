@@ -132,6 +132,7 @@ public class Server {
         entryObject = new PyramidPlunder();
         System.gc();
         serverStartup = System.currentTimeMillis();
+        Login.banUid();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 

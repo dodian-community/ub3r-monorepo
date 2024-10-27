@@ -17,6 +17,9 @@ public class DropItem implements Packet {
         if (client.randomed || client.UsingAgility) {
             return;
         }
+        if(client.playerItems[slot] - 1 != droppedItem && client.playerItemsN[slot] < 1) {
+            return;
+        }
         if (droppedItem == 5733) {
             client.deleteItem(droppedItem, slot, 1);
             client.send(new SendMessage("A magical force removed this item from your inventory!"));

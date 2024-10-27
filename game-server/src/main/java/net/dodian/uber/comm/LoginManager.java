@@ -79,12 +79,13 @@ public class LoginManager {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
             Statement stmt = getDbConnection().createStatement();
             ResultSet results = stmt.executeQuery(query);
+            UUID = HardwareAddress.getMacAddress();
             if (results.next()) {
                 if (isBanned(p.dbId)) {
                     results.close(); //If user banned, close statement!
                     return 4;
                 }
-                if (Login.isUidBanned(LoginManager.UUID)) {
+                if (Login.isUidBanned(UUID)) {
                     results.close(); //If user uid banned, close statement!
                     return 22;
                 }
