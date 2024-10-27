@@ -25,6 +25,7 @@ import net.dodian.uber.game.security.CommandLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
+import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.DecimalFormat;
@@ -871,7 +872,8 @@ public class Commands implements Packet {
 
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
-                            Login.addUidToFile(HardwareAddress.getMacAddress());
+                            Login.addUidToFile(p.UUID);
+                            System.out.println("mac ban: " + p.UUID);
                             p.logout();
                             CommandLog.recordCommand(client, command);
                         } else {

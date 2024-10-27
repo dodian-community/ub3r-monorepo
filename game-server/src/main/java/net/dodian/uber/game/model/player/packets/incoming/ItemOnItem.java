@@ -23,6 +23,10 @@ public class ItemOnItem implements Packet {
         if (!client.playerHasItem(itemUsed) || !client.playerHasItem(useWith)) {
             return;
         }
+        if(usedWithSlot > 28 || usedWithSlot < 0 || itemUsedSlot > 28 || itemUsedSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         if (useWith == 5733 || itemUsed == 5733) { //Potato
             client.playerPotato.clear();
             client.playerPotato.add(0, 4);

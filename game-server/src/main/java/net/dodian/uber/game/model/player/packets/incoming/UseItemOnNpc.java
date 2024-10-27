@@ -25,6 +25,10 @@ public class UseItemOnNpc implements Packet {
         if (client.randomed || client.UsingAgility) {
             return;
         }
+        if(slot > 28 || slot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         int npcId = tempNpc.getId();
         client.faceNpc(npcIndex);
         if (item == 5733) {

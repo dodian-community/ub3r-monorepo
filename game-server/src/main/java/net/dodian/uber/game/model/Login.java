@@ -46,36 +46,44 @@ public class Login extends Thread {
     }
     public static Collection<String> bannedUid = new ArrayList<String>();
 
+    public static boolean isUidBanned(String[] UUID) {
+        for(int i = 0; i < UUID.length; i++)
+            if(isUidBanned(UUID[i])) return true;
+        return false;
+    }
     public static boolean isUidBanned(String UUID) {
         return bannedUid.contains(UUID);
     }
 
     public static void banUid() {
         try {
-            BufferedReader in = new BufferedReader(new FileReader("./data/starters/UUIDBans.txt"));
+            BufferedReader in = new BufferedReader(new FileReader("./data/UUIDBans.txt"));
             String data;
             try {
                 while ((data = in.readLine()) != null) {
                     bannedUid.add(data);
-                    System.out.println(data);
                 }
             } finally {
                 in.close();
             }
         } catch (FileNotFoundException fnf) {
-            // This file is never found during debug / dev testing so this quiets that exception - Nightleaf
+            System.out.println("Could not find the file!");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void addUidToFile(String UUID) {
+    public static void addUidToFile(String[] UUID) {
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter("./data/UUIDBans.txt", true));
             try {
-                bannedUid.add(UUID);
-                out.write(UUID);
-                out.newLine();
+                for(int i = 0; i < UUID.length; i++) {
+                    if(!isUidBanned(UUID[i])) {
+                        bannedUid.add(UUID[i]);
+                        out.write(UUID[i]);
+                        out.newLine();
+                    }
+                }
             } finally {
                 out.close();
             }

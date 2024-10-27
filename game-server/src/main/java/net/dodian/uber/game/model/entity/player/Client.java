@@ -90,6 +90,7 @@ public class Client extends Player implements Runnable {
     public CopyOnWriteArrayList<Friend> ignores = new CopyOnWriteArrayList<>();
     public boolean tradeLocked = false;
     public boolean officialClient = true;
+    public String[] UUID = null;
     /*
      * Danno: Last row all disabled. As none have effect.
      */
@@ -735,7 +736,7 @@ public class Client extends Player implements Runnable {
                 if (elapsed > 10000) {
                     last = ", lastlogin = '" + System.currentTimeMillis() + "'";
                 }
-                statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET uuid= '" + LoginManager.UUID + "', pkrating=" + 1500 + ", health="
+                statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET pkrating=" + 1500 + ", health="
                         + getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
                         + "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='" + effect + "'"
                         + ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
