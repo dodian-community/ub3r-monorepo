@@ -19,6 +19,10 @@ public class ClickItem2 implements Packet {
         if (client.randomed || client.UsingAgility) {
             return;
         }
+        if(itemSlot > 28 || itemSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         int slot = itemId == 5509 ? 0 : ((itemId - 5508) / 2);
         if (slot >= 0 && slot <= 3) {
             client.send(new SendMessage("There is " + client.runePouchesAmount[slot] + " rune essence in this pouch!"));

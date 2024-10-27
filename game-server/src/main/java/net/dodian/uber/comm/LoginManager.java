@@ -14,6 +14,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.DbTables;
 
+import java.net.InetAddress;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -70,8 +71,6 @@ public class LoginManager {
         return returnCode;
     }
 
-    public static String UUID;
-
     public int loadgame(Client p, String playerName, String playerPass) {
         int loadCharacterResponse = loadCharacterGame(p, playerName, playerPass);
         if (loadCharacterResponse > 0) return loadCharacterResponse;
@@ -79,13 +78,12 @@ public class LoginManager {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
             Statement stmt = getDbConnection().createStatement();
             ResultSet results = stmt.executeQuery(query);
-            UUID = HardwareAddress.getMacAddress();
             if (results.next()) {
                 if (isBanned(p.dbId)) {
                     results.close(); //If user banned, close statement!
                     return 4;
                 }
-                if (Login.isUidBanned(UUID)) {
+                if (Login.isUidBanned(p.UUID)) {
                     results.close(); //If user uid banned, close statement!
                     return 22;
                 }
@@ -99,7 +97,6 @@ public class LoginManager {
                     p.setLook(parts);
                 }
                 p.latestNews = results.getInt("news"); //Sets the latest news for a user!
-                p.UUID = results.getString("uuid");
                 int x = results.getInt("x"), y = results.getInt("y"), z = results.getInt("height");
                 p.loginPosition(x, y, z);
                 if (x < 1 || y < 1) p.resetPos(); //Incase a player has no coordination value!

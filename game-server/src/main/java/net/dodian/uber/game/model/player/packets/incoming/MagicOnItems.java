@@ -24,6 +24,10 @@ public class MagicOnItems implements Packet {
         if (client.randomed || client.randomed2) {
             return;
         }
+        if(castOnSlot > 28 || castOnSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         if (castSpell == 1173) {
             client.resetAction();
             if (client.getLevel(Skill.MAGIC) < 43) {

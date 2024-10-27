@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 
+import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -37,7 +38,6 @@ public class ClientLoginHandler {
             readFully(buffer);
             buffer.flip();
             int checkId = buffer.get() & 0xff;
-            //System.out.println("Received checkId: " + checkId); -> Old debug!
             if (checkId != 14) {
                 client.println_debug("Could not process client with id: " + checkId);
                 client.disconnected = true;
@@ -108,6 +108,7 @@ public class ClientLoginHandler {
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
             if(!client.officialClient)
                 client.returnCode = 6;
+            client.UUID = readString(loginBuffer).split("-");
             client.setPlayerName(readString(loginBuffer));
             if (client.getPlayerName() == null || client.getPlayerName().isEmpty()) {
                 client.setPlayerName("player" + client.getSlot());

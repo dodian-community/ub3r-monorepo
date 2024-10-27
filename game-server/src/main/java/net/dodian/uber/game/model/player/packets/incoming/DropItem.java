@@ -17,6 +17,10 @@ public class DropItem implements Packet {
         if (client.randomed || client.UsingAgility) {
             return;
         }
+        if(slot > 28 || slot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         if(client.playerItems[slot] - 1 != droppedItem && client.playerItemsN[slot] < 1) {
             return;
         }

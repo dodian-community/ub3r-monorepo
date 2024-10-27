@@ -79,7 +79,7 @@ public final class ConnectionList {
     }
 
     public static boolean isSameMac(final String macAddress) throws UnknownHostException, SocketException {
-        return HardwareAddress.getMacAddress().equals(macAddress);
+        return HardwareAddress.getMacAddress(InetAddress.getByName(macAddress)).equals(macAddress);
     }
 
     /**

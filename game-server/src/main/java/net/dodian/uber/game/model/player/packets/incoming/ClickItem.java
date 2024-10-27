@@ -33,6 +33,10 @@ public class ClickItem implements Packet {
         if (client.randomed || client.UsingAgility) {
             return;
         }
+        if(itemSlot > 28 || itemSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         if (itemId == 5733) {
             try {
                 if (client.getPlayerNpc() < 1) {

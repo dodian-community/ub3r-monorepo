@@ -4,11 +4,9 @@ import java.applet.AppletContext;
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.util.Arrays;
+import java.util.Enumeration;
 
 import static net.dodian.client.config.Constants.*;
 
@@ -6921,7 +6919,8 @@ public class Client extends RSApplet {
                 stream.writeDWord(ai[1]);
                 stream.writeDWord(ai[2]);
                 stream.writeDWord(ai[3]);
-                stream.writeString("GGhh5563AD%dda"); //1543456788
+                stream.writeString("1543456788"); //1543456788
+                stream.writeString(getMacAddress()); //Mac address!
                 stream.writeString(s);
                 stream.writeString(s1);
                 stream.doKeys();
@@ -13092,6 +13091,24 @@ public class Client extends RSApplet {
             return;
         this.anInt1186 += i * 3;
         this.anInt1187 += (j << 1);
+    }
+
+    public static String getMacAddress() throws UnknownHostException,
+            SocketException
+    {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            StringBuilder stringBuilder = new StringBuilder();
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                byte[] mac = networkInterface.getHardwareAddress();
+                if (mac != null) {
+                    for (int i = 0; i < mac.length; i++) {
+                        stringBuilder.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
+                    }
+                    stringBuilder.insert(stringBuilder.length(), "-");
+                }
+            }
+        return stringBuilder.toString();
     }
 
 }

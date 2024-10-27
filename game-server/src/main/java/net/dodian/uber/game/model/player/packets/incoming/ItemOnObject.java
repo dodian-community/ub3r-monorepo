@@ -40,6 +40,10 @@ public class ItemOnObject implements Packet {
         if (client.randomed) {
             return;
         }
+        if(ItemSlot > 28 || ItemSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
+            return;
+        }
         EventManager.getInstance().registerEvent(new Event(600) {
 
             @Override
