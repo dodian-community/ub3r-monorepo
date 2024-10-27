@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.cache.object.GameObjectDef;
+import net.dodian.uber.comm.HardwareAddress;
 import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ChatLine;
@@ -863,38 +864,21 @@ public class Commands implements Packet {
                     client.openUpOtherInventory(player);
                     CommandLog.recordCommand(client, command);
                 }
-                if (command.startsWith("uuidban") && client.playerRights > 0) {
+                if (command.startsWith("banmac") && client.playerRights > 0) {
                     try {
-                        String otherPName = command.substring(5);
+                        String otherPName = command.substring(7);
                         int otherPIndex = PlayerHandler.getPlayerID(otherPName);
 
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
-                            Login.addUidToBanList(LoginManager.UUID);
-                            Login.addUidToFile(LoginManager.UUID);
+                            Login.addUidToFile(HardwareAddress.getMacAddress());
                             p.logout();
+                            CommandLog.recordCommand(client, command);
                         } else {
-                            client.send(new SendMessage("Error UUID banning player. Name doesn't exist or player is offline."));
+                            client.send(new SendMessage("Error MAC banning player. Name doesn't exist or player is offline."));
                         }
                     } catch (Exception e) {
-                        client.send(new SendMessage("Invalid Syntax! Use as ::uuidban PLAYERNAME"));
-                    }
-                }
-
-                if (command.startsWith("unuuidban") && client.playerRights > 0) {
-                    try {
-                        String otherPName = command.substring(5);
-                        int otherPIndex = PlayerHandler.getPlayerID(otherPName);
-
-                        if (otherPIndex != -1) {
-                            Client p = (Client) PlayerHandler.players[otherPIndex];
-                            Login.removeUidFromBanList(LoginManager.UUID);
-                            p.logout();
-                        } else {
-                            client.send(new SendMessage("Error unbanning UUID of player. Name doesn't exist or player is offline."));
-                        }
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Invalid Syntax! Use as ::unuuidban PLAYERNAME"));
+                        client.send(new SendMessage("Invalid Syntax! Use as ::banmac PlayerName"));
                     }
                 }
             }

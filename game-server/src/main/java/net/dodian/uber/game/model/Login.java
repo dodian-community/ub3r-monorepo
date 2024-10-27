@@ -46,22 +46,8 @@ public class Login extends Thread {
     }
     public static Collection<String> bannedUid = new ArrayList<String>();
 
-    public static void unUidBanUser(String name) {
-        bannedUid.remove(name);
-        deleteFromFile("./data/starters/UUIDBans.txt", name);
-    }
-
-    public static void addUidToBanList(String UUID) {
-        bannedUid.add(UUID);
-    }
-
     public static boolean isUidBanned(String UUID) {
         return bannedUid.contains(UUID);
-    }
-
-    public static void removeUidFromBanList(String UUID) {
-        bannedUid.remove(UUID);
-        deleteFromFile("./data/starters/UUIDBans.txt", UUID);
     }
 
     public static void banUid() {
@@ -70,7 +56,7 @@ public class Login extends Thread {
             String data;
             try {
                 while ((data = in.readLine()) != null) {
-                    addUidToBanList(data);
+                    bannedUid.add(data);
                     System.out.println(data);
                 }
             } finally {
@@ -85,10 +71,11 @@ public class Login extends Thread {
 
     public static void addUidToFile(String UUID) {
         try {
-            BufferedWriter out = new BufferedWriter(new FileWriter("./data/starters/UUIDBans.txt", true));
+            BufferedWriter out = new BufferedWriter(new FileWriter("./data/UUIDBans.txt", true));
             try {
-                out.newLine();
+                bannedUid.add(UUID);
                 out.write(UUID);
+                out.newLine();
             } finally {
                 out.close();
             }
