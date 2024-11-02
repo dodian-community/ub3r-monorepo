@@ -47,12 +47,13 @@ public class Login extends Thread {
     public static Collection<String> bannedUid = new ArrayList<String>();
 
     public static boolean isUidBanned(String[] UUID) {
-        for(int i = 0; i < UUID.length; i++)
-            if(isUidBanned(UUID[i])) return true;
+        /*for(int i = 0; i < UUID.length; i++)
+            if(isUidBanned(UUID[i]) || !UUID[i].contains(":") || UUID[i].split(":").length < 1) return true;*/
         return false;
     }
     public static boolean isUidBanned(String UUID) {
-        return bannedUid.contains(UUID);
+        //return bannedUid.contains(UUID);
+        return false;
     }
 
     public static void banUid() {

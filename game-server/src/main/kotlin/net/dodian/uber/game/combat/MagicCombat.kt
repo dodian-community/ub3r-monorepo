@@ -24,12 +24,14 @@ fun Client.handleMagicAttack(): Int {
     if(slot >= 0 && magicId < 0)
         type = autocast_spellIndex%4
     else {
-        for(checkSlot in 1..ancientId.size)
-            if(magicId == ancientId[checkSlot]) {
-                slot = checkSlot
-                type = checkSlot%4
-                break
-            }
+        if(ancients == 1) {
+            for (checkSlot in 0..ancientId.size)
+                if (magicId == ancientId[checkSlot]) {
+                    slot = checkSlot
+                    type = checkSlot % 4
+                    break
+                }
+        } else return 0 //Unhandled regular magic!
     }
     /* Checks after known magic cast! */
     if (getLevel(Skill.MAGIC) < requiredLevel[slot]) {

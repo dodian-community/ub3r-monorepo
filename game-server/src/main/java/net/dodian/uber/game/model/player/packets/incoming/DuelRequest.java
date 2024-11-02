@@ -11,7 +11,7 @@ public class DuelRequest implements Packet {
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int PID = (Utils.HexToInt(client.getInputStream().buffer, 0, packetSize) / 1000);
         Client other = client.getClient(PID);
-        if (!client.validClient(PID)) {
+        if (!client.validClient(PID) || client.getSlot() == PID) {
             return;
         }
         if (client.inWildy() || other.inWildy()) {

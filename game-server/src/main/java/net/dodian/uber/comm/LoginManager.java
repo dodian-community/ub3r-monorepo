@@ -74,6 +74,7 @@ public class LoginManager {
     public int loadgame(Client p, String playerName, String playerPass) {
         int loadCharacterResponse = loadCharacterGame(p, playerName, playerPass);
         if (loadCharacterResponse > 0) return loadCharacterResponse;
+        if(p.playerGroup == 3) return 12; //Not register users!
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
             Statement stmt = getDbConnection().createStatement();
