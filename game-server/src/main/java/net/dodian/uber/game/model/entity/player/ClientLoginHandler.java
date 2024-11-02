@@ -108,7 +108,7 @@ public class ClientLoginHandler {
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
             if(!client.officialClient)
                 client.returnCode = 6;
-            client.UUID = readString(loginBuffer).split("-");
+            //client.UUID = readString(loginBuffer).split("-"); //TODO: Fix Better check on computer
             client.setPlayerName(readString(loginBuffer));
             if (client.getPlayerName() == null || client.getPlayerName().isEmpty()) {
                 client.setPlayerName("player" + client.getSlot());

@@ -51,7 +51,7 @@ public class Memory {
             }
         }
 
-        System.out.println("Used Slots: " + PlayerHandler.usedSlots);
+        //System.out.println("Used Slots: " + PlayerHandler.usedSlots); <---Error!
     }
 
     private List<String> getClientNames() {

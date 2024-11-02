@@ -226,31 +226,24 @@ public class ClickingButtons implements Packet {
                 if (System.currentTimeMillis() - client.lastButton < 1000) {
                     client.lastButton = System.currentTimeMillis();
                     break;
-                } else {
-                    client.lastButton = System.currentTimeMillis();
                 }
-                Client dw = client.getClient(client.duel_with);
-                /*
-                 * Danno: Sometimes dcs a player. So we break if other player is null.
-                 */
-                if (dw == null)
+                client.lastButton = System.currentTimeMillis();
+                Client o = client.getClient(client.duel_with);
+                if (o == null || client.getSlot() == o.getSlot() || !client.inDuel || client.duelConfirmed2) {
                     break;
-                client.canOffer = false;
+                }
                 if (!client.validClient(client.duel_with)) {
                     client.declineDuel();
-                }
-                if (client.duelConfirmed2) {
-                    break;
-                }
+                } else client.canOffer = false;
                 client.duelConfirmed2 = true;
-                if (dw.duelConfirmed2) {
+                if (o.duelConfirmed2) {
                     client.removeEquipment();
-                    dw.removeEquipment();
+                    o.removeEquipment();
                     client.startDuel();
-                    dw.startDuel();
+                    o.startDuel();
                 } else {
                     client.send(new SendString("Waiting for other player...", 6571));
-                    dw.send(new SendString("Other player has accepted", 6571));
+                    o.send(new SendString("Other player has accepted", 6571));
                 }
                 break;
             case 15147: // bronze
@@ -903,10 +896,10 @@ public class ClickingButtons implements Packet {
                 client.setSidebarInterface(0, 328);
                 break;
             case 26018:
-                if (!client.inDuel || !client.validClient(client.duel_with)) {
+                o = client.getClient(client.duel_with);
+                if (o == null || client.getSlot() == o.getSlot() || !client.inDuel || client.duelConfirmed) {
                     break;
                 }
-                Client o = client.getClient(client.duel_with);
                 boolean sendMsgToOther = client.getMaxHealth() - client.getCurrentHealth() == 0 && o.getMaxHealth() - o.getCurrentHealth() != 0;
                 if (o.getMaxHealth() - o.getCurrentHealth() != 0 || client.getMaxHealth() - client.getCurrentHealth() != 0) {
                     client.send(new SendMessage(sendMsgToOther ? "Your opponent is low on health!" : "You are low on health, so please heal up!"));
@@ -920,8 +913,8 @@ public class ClickingButtons implements Packet {
                 } else {
                     client.lastButton = System.currentTimeMillis();
                 }
-                if (client.duelConfirmed) {
-                    break;
+                if (!client.validClient(client.duel_with)) {
+                    client.declineDuel();
                 }
                 client.duelConfirmed = true;
                 if (o.duelConfirmed) {

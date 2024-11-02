@@ -11,7 +11,7 @@ public class TradeRequest implements Packet {
     public void ProcessPacket(Client client, int packetType, int packetSize) {
         int tw = client.getInputStream().readUnsignedWord();
         Client other = client.getClient(tw);
-        if (!client.validClient(tw)) {
+        if (!client.validClient(tw) || client.getSlot() == tw) {
             return;
         }
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
