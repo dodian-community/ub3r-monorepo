@@ -6,24 +6,26 @@ import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
+
 public class DropItem implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
-        int droppedItem = client.getInputStream().readUnsignedWordA();
-        client.getInputStream().readUnsignedByte();
-        client.getInputStream().readUnsignedByte();
-        int slot = client.getInputStream().readUnsignedWordA();
+        int droppedItem, slot;
+        droppedItem = client.getInputStream().readSignedWordA();
+        client.getInputStream().readUnsignedWordA(); //Interface id!
+        slot = client.getInputStream().readUnsignedWordA();
         if (client.randomed || client.UsingAgility) {
             return;
         }
-        if(slot > 28 || slot < 0) { //No need to go out of scope!
-            client.disconnected = true;
+        if(slot > 27 || slot < 0) { //No need to go out of scope!
+            //client.disconnected = true; //Do we need a disconnect here?!
             return;
         }
-        if(client.playerItems[slot] - 1 != droppedItem && client.playerItemsN[slot] < 1) {
+        if((client.playerItems[slot] - 1 != droppedItem || client.playerItems[slot] - 1 < 0) || client.playerItemsN[slot] < 1) {
             return;
-        }
+        } //Will this fix the dupe?!
         if (droppedItem == 5733) {
             client.deleteItem(droppedItem, slot, 1);
             client.send(new SendMessage("A magical force removed this item from your inventory!"));
