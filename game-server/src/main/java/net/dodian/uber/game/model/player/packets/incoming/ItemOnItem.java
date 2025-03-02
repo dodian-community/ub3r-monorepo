@@ -35,6 +35,7 @@ public class ItemOnItem implements Packet {
             client.playerPotato.add(3, 1);
             return;
         }
+        client.farming.saplingMaking(client, useWith, usedWithSlot, itemUsed, itemUsedSlot);
         int otherItem = client.playerItems[usedWithSlot] - 1;
         boolean knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605);
         if ((itemUsed == 2383 && useWith == 2382) || (itemUsed == 2382 && useWith == 2383)) {

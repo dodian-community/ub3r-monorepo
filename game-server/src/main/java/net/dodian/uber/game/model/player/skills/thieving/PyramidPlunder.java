@@ -39,7 +39,7 @@ public class PyramidPlunder {
         for(int i = 0; i < nextRoom.length; i++)
             nextRoom[i] = Misc.random(3);
         /* Timer every 15 minute to reset stuff! */
-        JobScheduler.ScheduleStaticRepeatForeverJob(900_000, PlunderDoor.class);
+        JobScheduler.ScheduleRepeatForeverJob(900_000, PlunderDoor.class);
     }
 
     public PyramidPlunder(Client c) {

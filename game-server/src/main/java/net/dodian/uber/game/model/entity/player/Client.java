@@ -1,6 +1,5 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.comm.PacketData;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.Constants;
@@ -51,13 +50,14 @@ import java.io.FileWriter;
 /* Kotlin imports */
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
+import net.dodian.uber.game.skills.*;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
 
 
 public class Client extends Player implements Runnable {
-
+    public Farming farming = new Farming();
     public Fletching fletching = new Fletching();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
@@ -857,6 +857,12 @@ public class Client extends Player implements Runnable {
             if (bankItems[i] == itemID + 1)
                 slot = i;
         return slot == -1 ? 0 : bankItemsN[slot];
+    }
+    public int getBankSlot(int itemID) {
+        int slot = -1;
+        for (int i = 0; i < bankSize() && slot == -1; i++)
+            if (bankItems[i] == itemID + 1) slot = i;
+        return slot;
     }
 
     public boolean giveExperience(int amount, Skill skill) {

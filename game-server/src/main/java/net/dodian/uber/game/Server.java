@@ -61,7 +61,6 @@ public class Server {
     public static NpcManager npcManager = null;
     public static LoginManager loginManager = null;
     public static PyramidPlunder entryObject = null;
-    public static JobScheduler job = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
@@ -79,6 +78,7 @@ public class Server {
         logger.warn("Warning log!");
         logger.debug("Debug log!");
 
+        serverStartup = System.currentTimeMillis();
         System.out.println();
         System.out.println("    ____ ");
         System.out.println("   / __ \\____ ____/ (_)___ _____ ");
@@ -122,16 +122,15 @@ public class Server {
         }
 
         new Thread(login).start();
-        job = new JobScheduler();
-        job.ScheduleStaticRepeatForeverJob(TICK, EntityProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, GroundItemProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, ItemProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, ShopProcessor.class);
-        job.ScheduleStaticRepeatForeverJob(TICK, ObjectProcess.class);
-        job.ScheduleStaticRepeatForeverJob(TICK * 100, WorldProcessor.class);
+        /* Processor for various stuff */
+        JobScheduler.ScheduleRepeatForeverJob(TICK, EntityProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, WorldProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, FarmingProcess.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ItemProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ShopProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ObjectProcess.class);
         entryObject = new PyramidPlunder();
         System.gc();
-        serverStartup = System.currentTimeMillis();
         Login.banUid();
         System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
