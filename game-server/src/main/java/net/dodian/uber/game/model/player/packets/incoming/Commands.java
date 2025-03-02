@@ -1,8 +1,6 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.cache.object.GameObjectDef;
-import net.dodian.uber.comm.HardwareAddress;
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.Login;
@@ -25,7 +23,6 @@ import net.dodian.uber.game.security.CommandLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
-import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.DecimalFormat;
@@ -123,11 +120,12 @@ public class Commands implements Packet {
                     try {
                         boolean gotValue = true;
                         int value = Integer.parseInt(cmd[1]);
+                        int config = 0;
                         switch(value) {
                             case 0: //Reset default value
-                                client.varbit(529, 0); //Patches
-                                client.varbit(905, 0); //Gout tuber patch!
-                                client.varbit(1057, 0); //Compost bin
+                                client.varbit(529, config); //Patches
+                                client.varbit(905, config); //Gout tuber patch!
+                                client.varbit(1057, config); //Compost bin
                             break;
                             case 1: //Empty test for Trollheim
                                 client.varbit(529, (3 + 2 + 295) | 2 << 6); //Herb patch for trollheim!
@@ -136,14 +134,14 @@ public class Commands implements Packet {
                                 //client.varbit(905, 0); <- Gout tuber patch!
                             break;
                             case 2: //Compost bin
-                                client.varbit(1057, 30);
+                                //client.varbit(1057, 30);
+                                client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
                             break;
                             case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
                                 int[] startConfig = {51, 5, 22, 3}; //Allotment, Allotment, flower, herb
                                 int[] stage = {0, 1, 2, 2};
                                 int[] patch = {0, 1, 2, 2};
-                                int config = 0;
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
                                     if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
@@ -167,11 +165,17 @@ public class Commands implements Packet {
                                     }
                                 }
                             break;
+                            case 5: //TODO test
+
+                            break;
+                            case 6: //TODO test2
+                            break;
                             default: gotValue = false;
                         }
                         client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
+                        System.out.println("send...." + e.toString());
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("forcemove")) {

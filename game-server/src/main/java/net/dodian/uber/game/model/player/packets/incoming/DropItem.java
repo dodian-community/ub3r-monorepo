@@ -20,7 +20,7 @@ public class DropItem implements Packet {
             return;
         }
         if(slot > 27 || slot < 0) { //No need to go out of scope!
-            //client.disconnected = true; //Do we need a disconnect here?!
+            client.disconnected = true; //Do we need a disconnect here?!
             return;
         }
         if((client.playerItems[slot] - 1 != droppedItem || client.playerItems[slot] - 1 < 0) || client.playerItemsN[slot] < 1) {

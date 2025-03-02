@@ -8,8 +8,18 @@ import org.quartz.JobExecutionException;
 
 public class ItemProcessor implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        if (!Ground.tradeable_items.isEmpty()) {
+            for (GroundItem item : Ground.tradeable_items) {
+                item.reduceTime();
+                if(!item.isTaken() && !item.isVisible() && item.timeToShow < 1) {
+                    item.visible = true;
+                    item.itemDisplay();
+                } else if (item.getDespawnTime() < 1)
+                    Ground.deleteItem(item);
+            }
+        }
         /* Not tradeble items on ground */
-        if (!Ground.untradeable_items.isEmpty() || !(Ground.untradeable_items.size() < 0)) {
+        if (!Ground.untradeable_items.isEmpty()) {
             for (GroundItem item : Ground.untradeable_items) {
                 item.reduceTime();
                 if (item.getDespawnTime() < 1)
@@ -17,7 +27,7 @@ public class ItemProcessor implements Job {
             }
         }
         /* Global ground items */
-        if (!Ground.ground_items.isEmpty() || !(Ground.ground_items.size() < 0)) {
+        if (!Ground.ground_items.isEmpty()) {
             for (GroundItem item : Ground.ground_items) {
                 if(item.isVisible() || !item.isTaken()) continue;
                 item.reduceTime();
