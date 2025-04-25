@@ -61,6 +61,8 @@ public class Client extends Player implements Runnable {
     public Fletching fletching = new Fletching();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
+    public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 
+    public boolean isLoggingOut = false; //new flag 
     long lastBar = 0;
     public long lastSave, lastProgressSave;
     public long lastClickAltar = 0;
@@ -489,9 +491,11 @@ public class Client extends Player implements Runnable {
             mySocketHandler.logout();
             mySocketHandler.awaitCleanup();
 
+
             PlayerHandler.playersOnline.remove(longName);
             PlayerHandler.allOnline.remove(longName);
             System.out.println("Destructed the playerSlot: " + getSlot());
+            isLoggingOut = false;
 
             if (saveNeeded && !tradeSuccessful) {
                 saveStats(true, true);
@@ -546,6 +550,10 @@ public class Client extends Player implements Runnable {
         if (disconnected) {
             return false;
         }
+        if (isLoggingOut) {
+
+            return false;
+        }
 
         Queue<PacketData> packets = mySocketHandler.getPackets();
         if (packets.isEmpty()) {
@@ -594,16 +602,38 @@ public class Client extends Player implements Runnable {
         send(new SendString(String.valueOf(Math.max(Skills.getLevelForExperience(XP), 1)), skill.getLevelComponent()));
     }
 
+
+
+   
     public void logout() {
+        if (isLoggingOut) {
+
+            return;
+        }
+        long currentTime = System.currentTimeMillis();
+
+
+        if (currentTime - lastDropTime < 600) {
+            send(new SendMessage("You cannot log out so soon after dropping an item."));
+
+            return;
+        }
+        isLoggingOut = true;
         send(new SendMessage("Please wait... logging out may take time"));
         send(new SendString("     Please wait...", 2458));
         if (!saveNeeded || !validClient || UsingAgility) {
-            if (UsingAgility) xLog = true;
+            if (UsingAgility) {
+                xLog = true; // Existing logic for agility delay
+            }
+
+            isLoggingOut = false;
+
             return;
         }
-        getOutputStream().createFrame(109); //Need to do this here as we logout!
+
+        getOutputStream().createFrame(109);
         flushOutStream();
-        destruct();
+
     }
 
     public void saveStats(boolean logout, boolean updateProgress) {
