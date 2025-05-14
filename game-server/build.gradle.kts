@@ -45,6 +45,8 @@ dependencies {
 
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("org.mybatis:mybatis:3.5.10")
+
+    implementation("com.google.code.gson:gson:2.7")
 }
 
 tasks.withType<KotlinCompile> {

@@ -309,6 +309,15 @@ public class LoginManager {
                         }
                     }
                 } else p.defaultDailyReward(p); //TODO: If ever need more daily stuff, need to fix code!
+                /* Farming loading */
+                /*p.farmingJson.FarmingLoad("{\"CATHERBY\":\"NONE,EMPTY,0,-1\",\"ARDOUGNE\":\"NONE,EMPTY,0,-1\"}\n" +
+                        "{\"CATHERBY_WEST\":[\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\"],\"CATHERBY_EAST\":[\"EMPTY,WEED,false,0,0,-1\"]}");
+                */ //Junk test value, can be deleted! TODO: DELETE PLZ!
+                String farmingData = results.getString("farming");
+                if (farmingData != null && !farmingData.isEmpty()) {
+                    p.farmingJson.FarmingLoad(farmingData);
+                } else p.farmingJson.FarmingLoad("");
+                p.varbit(1057, 31);
                 /* Account timers */
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();

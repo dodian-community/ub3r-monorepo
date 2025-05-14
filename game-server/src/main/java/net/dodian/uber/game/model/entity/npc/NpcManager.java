@@ -23,6 +23,7 @@ public class NpcManager {
     public int gnomeSpawn = -1, werewolfSpawn = -1;
     Position[] gnomePosition = {  new Position(2475, 3428, 0), new Position(2476, 3423, 1), new Position(2475, 3419, 2), new Position(2485, 3421, 2), new Position(2487, 3423, 0), new Position(2486, 3430, 0) };
     Position[] werewolfPosition = {  new Position(3540, 9873, 0), new Position(3540, 9890, 0), new Position(3537, 9903, 0), new Position(3533, 9908, 0), new Position(3528, 9913, 0), new Position(3527, 9865, 0) };
+    public int dagaRex = -1, dagaSupreme = -1;
     int nextIndex = 1;
 
     public NpcManager() {
@@ -62,6 +63,12 @@ public class NpcManager {
             createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
             extraSpawns++;
         }
+        /* Daganoth kings */
+        dagaRex = nextIndex;
+        createNpc(2267, new Position(3329, 3359, 0), 2);
+        dagaSupreme = nextIndex;
+        createNpc(2265, new Position(3333, 3359, 0), 2);
+        extraSpawns += 2;
         System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
     }
 

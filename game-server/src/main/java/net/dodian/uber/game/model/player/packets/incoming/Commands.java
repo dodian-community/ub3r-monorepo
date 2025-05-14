@@ -20,12 +20,14 @@ import net.dodian.uber.game.model.player.packets.outgoing.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.ChatLog;
 import net.dodian.uber.game.security.CommandLog;
+import net.dodian.uber.game.skills.FarmingData;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -134,21 +136,23 @@ public class Commands implements Packet {
                                 //client.varbit(905, 0); <- Gout tuber patch!
                             break;
                             case 2: //Compost bin
-                                //client.varbit(1057, 30);
-                                client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
+                                client.varbit(1057, 32);
+                                //client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
                             break;
                             case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {51, 5, 22, 3}; //Allotment, Allotment, flower, herb
-                                int[] stage = {0, 1, 2, 2};
-                                int[] patch = {0, 1, 2, 2};
+                                int[] startConfig = {12, 5, 7, 3}; //Allotment, Allotment, flower, herb
+                                int[] stage = {2, 2, 2, 2};
+                                int[] patch = {3, 3, 3, 3}; //3 = dead, 2 = disease, 1 = watered for allotment + flower.
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
-                                    if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
+                                    /*if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
                                         stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
                                         check = 2 << 6;
-                                    } else if (i == 3) check = 0 << 6;
-                                    config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
+                                    } else if (i == 3) check = 0 << 6;*/
+                                    if(i == 3)
+                                        config |= ((startConfig[i] + stage[i]) | 1 << 4)<< (i << 3); //3 << 3 = 24
+                                    else config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
                                 }
                                 client.varbit(529,  config);
                             break;
@@ -166,13 +170,22 @@ public class Commands implements Packet {
                                 }
                             break;
                             case 5: //TODO test
-
+                                System.out.println("test..." + client.farming.findPatch(7580));
                             break;
                             case 6: //TODO test2
+                                System.out.println("Test...." + Arrays.toString(FarmingData.patchState.values()));
+                            break;
+                            case 7:
+                                client.varbit(529,  (1 << 6 | 5) << 24); // 5 = stage 2 guam..Here we can get it diseased / dead!
+                            break;
+                            case 10:
+                                client.teleportTo(2808, 3464, 0);
+                                client.send(new SendMessage("Welcome to Catherby patch!"));
                             break;
                             default: gotValue = false;
                         }
-                        client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
+                        if(value != 10)
+                            client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
                         System.out.println("send...." + e.toString());

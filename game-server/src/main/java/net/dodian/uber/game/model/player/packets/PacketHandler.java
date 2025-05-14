@@ -48,6 +48,7 @@ public class PacketHandler {
         packets[252] = new ClickObject2();
         packets[70] = new ClickObject3();
         packets[234] = new ClickObject4();
+        packets[228] = new ClickObject5();
 
         packets[122] = new ClickItem();
         packets[16] = new ClickItem2();

@@ -112,6 +112,8 @@ public class ClickObject implements Packet {
         if (Balloons.lootBalloon(client, objectPosition.copy()) && objectID >= 115 && objectID <= 122) {
             return;
         }
+        client.farming.interactBin(client, objectID, 1);
+        client.farming.clickPatch(client, objectID);
         if (objectID == 26193) {
             Balloons.openInterface(client);
             return;

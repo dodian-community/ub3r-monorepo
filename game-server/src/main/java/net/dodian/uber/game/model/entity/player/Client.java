@@ -58,6 +58,7 @@ import static net.dodian.utilities.DotEnvKt.*;
 
 public class Client extends Player implements Runnable {
     public Farming farming = new Farming();
+    public FarmingJson farmingJson = new FarmingJson();
     public Fletching fletching = new Fletching();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
@@ -770,7 +771,7 @@ public class Client extends Player implements Runnable {
                         + getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
                         + "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='" + effect + "'"
                         + ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
-                        + ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', dailyReward = '" + daily_reward + "',Boss_Log='"
+                        + ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', farming = '"+farmingJson.FarmingSave()+"', dailyReward = '" + daily_reward + "',Boss_Log='"
                         + boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
                         ", prayer='" + prayer + "', boosted='" + boosted + "'" + last
                         + " WHERE id = " + dbId);

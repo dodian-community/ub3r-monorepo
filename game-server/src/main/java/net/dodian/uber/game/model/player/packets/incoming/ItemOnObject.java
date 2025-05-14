@@ -91,6 +91,7 @@ public void preformObject(Client client, int objectId, int item, int slot, Posit
     int UsedOnY = objectPosition.getY();
     client.setFocus(UsedOnX, UsedOnY);
 
+    client.farming.interactItemBin(client, objectId, item);
     if (item == 5733) {
         client.send(new SendMessage("ItemOnObject: " + objectId + " at " + objectPosition.copy().toString()));
         return;
