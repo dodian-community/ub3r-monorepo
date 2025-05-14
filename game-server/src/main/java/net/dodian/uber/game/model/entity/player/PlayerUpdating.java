@@ -271,13 +271,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         playerProps.writeByte(player.playerLooks[11]); // feet color
         playerProps.writeByte(player.playerLooks[12]); // skin color (0-6)
         playerProps.writeWord(player.getStandAnim()); // standAnimIndex
+        playerProps.writeWord(player.getStandAnim()); // standTurnAnimIndex, 823 default
         playerProps.writeWord(player.getWalkAnim()); // standTurnAnimIndex, 823 default
         playerProps.writeWord(player.getWalkAnim()); // walkAnimIndex
         playerProps.writeWord(player.getWalkAnim()); // turn180AnimIndex, 820 default
         playerProps.writeWord(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
         playerProps.writeWord(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
         playerProps.writeWord(player.getRunAnim()); // runAnimIndex
-
         playerProps.writeQWord(Utils.playerNameToInt64(player.getPlayerName()));
         playerProps.writeByte(player.determineCombatLevel()); // combat level
         playerProps.writeWord(0); // incase != 0, writes skill-%d

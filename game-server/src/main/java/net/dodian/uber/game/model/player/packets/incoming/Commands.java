@@ -1012,6 +1012,61 @@ public class Commands implements Packet {
                     client.send(new SendMessage("You are currently muted!"));
                 }
             }
+            if (cmd[0].equalsIgnoreCase("loot_new")) {
+                try {
+                    int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
+                    int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
+                    amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
+                    NpcData n = Server.npcManager.getData(npcId);
+                    if (n == null)
+                        client.send(new SendMessage("This npc have no data!"));
+                    else if (n.getDrops().isEmpty())
+                        client.send(new SendMessage(n.getName() + " do not got any drops!"));
+                    else {
+                        ArrayList<Integer> lootedItem = new ArrayList<>();
+                        ArrayList<Integer> lootedAmount = new ArrayList<>();
+                        boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
+                        double chance, currentChance;
+                        for (int LOOP = 0; LOOP < amount; LOOP++) {
+                            chance = Misc.chance(100000) / 1000D;
+                            currentChance = 0.0;
+                            itemDropped = false;
+                            for (NpcDrop drop : n.getDrops()) {
+                                if (drop == null) continue;
+
+                                if (wealth && drop.getChance() < 10.0) //Ring of wealth effect!
+                                    currentChance += drop.getId() >= 5509 && drop.getId() <= 5515 ? 0.0 : drop.getChance() <= 1.0 ? 0.2 : 0.1;
+
+                                if (drop.getChance() >= 100.0) { // 100% items!
+                                    int pos = lootedItem.lastIndexOf(drop.getId());
+                                    if (pos == -1) {
+                                        lootedItem.add(drop.getId());
+                                        lootedAmount.add(drop.getAmount());
+                                    } else
+                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
+                                } else if (drop.getChance() + currentChance >= chance && !itemDropped) { // user won the roll
+                                    if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
+                                        if (client.checkItem(drop.getId()))
+                                            continue;
+                                    int pos = lootedItem.lastIndexOf(drop.getId());
+                                    if (pos == -1) {
+                                        lootedItem.add(drop.getId());
+                                        lootedAmount.add(drop.getAmount());
+                                    } else
+                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
+                                    itemDropped = true;
+                                }
+                                if (!itemDropped && drop.getChance() < 100.0)
+                                    currentChance += drop.getChance();
+                            }
+                        }
+                        for (int i = 0; i < lootedItem.size(); i++)
+                            client.send(new SendString("Loot from " + amount + " " + n.getName() + ", ID: " + npcId, 5383));
+                        client.sendBank(lootedItem, lootedAmount);
+                        client.send(new InventoryInterface(5292, 5063));
+                        if (wealth)
+                            client.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
+                    }
             if (cmd[0].equalsIgnoreCase("examine")) {
                 int definition = Integer.parseInt(cmd[1]);
                 int id = Integer.parseInt(cmd[2]);
