@@ -80,9 +80,11 @@ public class ObjectDefinitionParser {
                     switch (configCode) {
                         case 1:
                             int someCounter = buf.get() & 0xFF;
-                            for (int i = 0; i < someCounter; i++) {
-                                buf.getShort();
-                                buf.get();
+                            if(someCounter > 0 && someCounter <= 5) {
+                                for (int i = 0; i < someCounter; i++) {
+                                    buf.getShort();
+                                    buf.get();
+                                }
                             }
                             break;
                         case 2:
@@ -93,8 +95,10 @@ public class ObjectDefinitionParser {
                             break;
                         case 5:
                             someCounter = buf.get() & 0xFF;
-                            for (int i = 0; i < someCounter; i++) {
-                                buf.getShort();
+                            if(someCounter < 5) {
+                                for (int i = 0; i < someCounter; i++) {
+                                    buf.getShort();
+                                }
                             }
                             break;
                         case 14:

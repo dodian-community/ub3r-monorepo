@@ -19,6 +19,7 @@ public abstract class Entity {
     private final Position originalPosition;
     private final Position facePosition;
     private final int slot;
+    private int gfxId, gfxHeight;
     private final Type type;
 
     private final UpdateFlags updateFlags;
@@ -27,10 +28,11 @@ public abstract class Entity {
 
     private int animationDelay;
     private int animationId;
+    private String text;
 
-    private Map<Entity, Integer> damage = new HashMap<Entity, Integer>();
+    private final Map<Entity, Integer> damage = new HashMap<>();
 
-    private JobScheduler jobScheduler = new JobScheduler(this);
+    private final JobScheduler jobScheduler = new JobScheduler(this);
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
@@ -47,12 +49,29 @@ public abstract class Entity {
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
     }
 
+    public void setGfx(int id, int height) {
+        this.gfxId = id;
+        this.gfxHeight = height;
+        getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+    }
+    public int getGfxHeight() {
+        return this.gfxHeight;
+    }
+    public int getGfxId() {
+        return this.gfxId;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+        getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
+    }
+    public String getText() {
+        return text;
+    }
+
     public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
-        if (dist <= distance) {
-            return true;
-        }
-        return false;
+        return dist <= distance;
     }
 
     public int getSlot() {
@@ -93,14 +112,17 @@ public abstract class Entity {
     }
 
     public int getSize() {
-        if (type != null && type == Type.NPC && ((Npc) this) != null && Server.npcManager.getData(((Npc) this).getId()) != null) {
+        if (type != null && type == Type.NPC && Server.npcManager.getData(((Npc) this).getId()) != null) {
             return Server.npcManager.getData(((Npc) this).getId()).getSize();
         }
         return 1;
     }
-
-    public int getSizeMinusOne() {
-        return getSize() - 1;
+    public int getDistanceDelay(int distance, boolean magic) {
+        int delay;
+        if(magic)
+            delay = 1 + (int)Math.floor((1 + distance) / 3);
+        else delay = 1 + (int)Math.floor((3 + distance) / 6);
+        return delay;
     }
 
     public Position getPosition() {
@@ -144,8 +166,15 @@ public abstract class Entity {
         return this.updateFlags;
     }
 
-    public enum Type {
-        NPC, PLAYER;
+    public enum Type { NPC, PLAYER }
+
+    public enum damageType {
+        MELEE, RANGED, MAGIC, //Standard
+        FIRE_BREATH, JAD_MAGIC, JAD_RANGED, //Special
+        BLOODATTACK, TRUEDAMAGE //Unique
+    }
+    public enum hitType {
+        STANDARD, CRIT, POISON, BURN, BLEED //Bleed is custom and thus got no hitsplat yet!
     }
 
 }

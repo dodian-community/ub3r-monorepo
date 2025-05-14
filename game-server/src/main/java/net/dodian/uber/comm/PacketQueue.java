@@ -1,42 +1,26 @@
 package net.dodian.uber.comm;
 
-import java.util.LinkedList;
+import net.dodian.uber.comm.PacketData;
+
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PacketQueue {
+    private final Queue<PacketData> packets = new ConcurrentLinkedQueue<>();
 
-    /**
-     * The list of packets in the queue
-     */
-    private Queue<PacketData> packets = new LinkedBlockingQueue<PacketData>();
-
-    /**
-     * Adds a packet to the queue
-     */
     public void add(PacketData p) {
-        packets.add(p);
+        packets.offer(p);
     }
 
-    /**
-     * Returns if there is packets to process
-     */
-    public boolean hasPackets() {
-        return !packets.isEmpty();
+    public Queue<PacketData> getPackets() {
+        return packets;
     }
 
-    /**
-     * Returns the packets currently in the list and removes them from the backing
-     * store
-     */
-    public LinkedList<PacketData> getPackets() {
-        LinkedList<PacketData> tmpList = null;
-        synchronized (packets) {
-            tmpList = new LinkedList<PacketData>();
-            tmpList.addAll(packets);
-            packets.clear();
-        }
-        return tmpList;
+    public PacketData poll() {
+        return packets.poll();
     }
 
+    public boolean isEmpty() {
+        return packets.isEmpty();
+    }
 }

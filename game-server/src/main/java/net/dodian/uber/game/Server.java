@@ -7,181 +7,132 @@ import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
-import net.dodian.uber.comm.ConnectionList;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.Memory;
 import net.dodian.uber.comm.SocketHandler;
 import net.dodian.uber.game.event.EventManager;
-import net.dodian.uber.game.model.ChatLine;
-import net.dodian.uber.game.model.ChatProcess;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.item.Ground;
-import net.dodian.uber.game.model.item.GroundItem;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.utilities.DbTables;
+import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static net.dodian.DotEnvKt.*;
+import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
-/**
- * Testing..
- *
- * @author Arch337
- */
-public class Server implements Runnable {
+public class Server {
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static boolean trading = true, dueling = true, chatOn = true, pking = true, dropping = true, banking = true, shopping = true;
-    private static int delay = 0;
-    public static long lastRunite = 0;
-    public static boolean updateAnnounced;
+    public static int TICK = 600;
     public static boolean updateRunning;
     public static int updateSeconds;
-    public static long updateStartTime;
+    public static long updateStartTime, serverStartup;
     public Player player;
     public Client c;
-    public static ArrayList<String> connections = new ArrayList<>();
-    public static ArrayList<String> banned = new ArrayList<>();
+    public static ArrayList connections = new ArrayList<>();
+    public static ArrayList banned = new ArrayList<>();
+
+    public static CopyOnWriteArrayList chat = new CopyOnWriteArrayList<>();
     public static ArrayList<RS2Object> objects = new ArrayList<>();
-    public static CopyOnWriteArrayList<ChatLine> chat = new CopyOnWriteArrayList<>();
-    private static ChatProcess chatprocess = null;
     public static int nullConnections = 0;
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
-    public static SlotMachine slots = new SlotMachine();
-    public static Map<String, Long> tempConns = new HashMap<>();
     public static LoginManager loginManager = null;
+    public static PyramidPlunder entryObject = null;
+    public static SlotMachine slots = new SlotMachine();
+    public static Map tempConns = new HashMap<>();
+    public static Server clientHandler = null;
+    public static boolean shutdownServer = false;
+    public static PlayerHandler playerHandler = null;
+    public static Thieving thieving = null;
+    public static ShopHandler shopHandler = null;
+    public static boolean antiddos = false;
 
+    private static ServerConnectionHandler connectionHandler;
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
+        logger.info("Info log!");
+        logger.error("Error log!");
+        logger.warn("Warning log!");
+        logger.debug("Debug log!");
+
+        serverStartup = System.currentTimeMillis();
         System.out.println();
-        System.out.println("    ____            ___               ");
-        System.out.println("   / __ \\____  ____/ (_)___ _____    ");
-        System.out.println("  / / / / __ \\/ __  / / __ `/ __ \\  ");
-        System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / /    ");
-        System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/  ");
+        System.out.println("    ____ ");
+        System.out.println("   / __ \\____ ____/ (_)___ _____ ");
+        System.out.println("  / / / / __ \\/ __ / / __ `/ __ \\ ");
+        System.out.println(" / /_/ / /_/ / /_/ / / /_/ / / / / ");
+        System.out.println("/_____/\\____/\\____/_/\\____/_/ /_/ ");
         System.out.println();
 
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }
 
-        new JobScheduler();
-        ConnectionList.getInstance();
+        npcManager = new NpcManager();
+        npcManager.loadSpawns();
+        System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
+        itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
-        Memory.getSingleton().process();
-
+        clientHandler = new Server();
+        login = new Login();
         Cache.load();
-        // Load regions
         ObjectDef.loadConfig();
         Region.load();
         Rangable.load();
-
-        // Load objects
         ObjectLoader objectLoader = new ObjectLoader();
         objectLoader.load();
-
         GameObjectData.init();
         loadObjects();
-
-        login = new Login();
-        new Thread(login).start();
-        chatprocess = new ChatProcess();
-        new Thread(chatprocess).start();
-        itemManager = new ItemManager();
         new DoorHandler();
-        //new Thread(new VotingIncentiveManager()).start();
-        /* Processes */
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, PlayerProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, ItemProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, ShopProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, GroundItemProcessor.class);
-        JobScheduler.ScheduleStaticRepeatForeverJob(600, ObjectProcess.class);
-
-        npcManager = new NpcManager();
         new Thread(EventManager.getInstance()).start();
-        new Thread(npcManager).start();
-        clientHandler = new Server();
-        (new Thread(clientHandler)).start(); // launch server listener
-        System.gc();
-        setGlobalItems();
-        System.out.println("Server is now running on world " + getGameWorldId() + "!");
-    }
 
-    public static Server clientHandler = null; // handles all the clients
-    public static java.net.ServerSocket clientListener = null;
-    public static boolean shutdownServer = false; // set this to true in order to
-    // shut down and kill the server
-    public static boolean shutdownClientHandler; // signals ClientHandler to shut
-    // down
-    public static PlayerHandler playerHandler = null;
-    public static Thieving thieving = null;
-    public static ShopHandler shopHandler = null;
-    public static boolean antiddos = false;
-
-    public void run() {
-        // setup the listener
         try {
-            shutdownClientHandler = false;
-            clientListener = new java.net.ServerSocket(getServerPort(), 1, null);
-            while (true) {
-                try {
-                    if (clientListener == null)
-                        continue;
-                    java.net.Socket s = clientListener.accept();
-                    if (s == null)
-                        continue;
-                    s.setTcpNoDelay(true);
-                    String connectingHost = "" + s.getRemoteSocketAddress();
-                    connectingHost = connectingHost.substring(1, connectingHost.indexOf(":"));
-                    if (antiddos && !tempConns.containsKey(connectingHost)) {
-                        s.close();
-                    } else {
-                        ConnectionList.getInstance().addConnection(s.getInetAddress());
-                        tempConns.remove(connectingHost);
-                        connections.add(connectingHost);
-                        if (checkHost(connectingHost)) {
-                            nullConnections++;
-                            playerHandler.newPlayerClient(s, connectingHost);
-                        } else {
-                            s.close();
-                        }
-                    }
-                    Thread.sleep(delay);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (java.io.IOException ioe) {
-            if (!shutdownClientHandler) {
-                Utils.println("Server is already in use.");
-            } else {
-                Utils.println("ClientHandler was shut down.");
-            }
+            connectionHandler = new ServerConnectionHandler(DotEnvKt.getServerPort(), playerHandler);
+            new Thread(connectionHandler).start();
+            System.out.println("Server connection handler started on port " + DotEnvKt.getServerPort());
+        } catch (IOException e) {
+            System.out.println("Failed to start server connection handler: " + e.getMessage());
+            System.exit(1);
         }
+
+        new Thread(login).start();
+        /* Processor for various stuff */
+        JobScheduler.ScheduleRepeatForeverJob(TICK, EntityProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, WorldProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, FarmingProcess.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ItemProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ShopProcessor.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK, ObjectProcess.class);
+        entryObject = new PyramidPlunder();
+        System.gc();
+        Login.banUid();
+        System.out.println("Server is now running on world " + getGameWorldId() + "!");
     }
 
     public static Thread createNewConnection(SocketHandler socketHandler) {
@@ -204,33 +155,8 @@ public class Server implements Runnable {
         return num;
     }
 
-    public boolean checkHost(String host) {
-        for (String h : banned) {
-            if (h.equals(host))
-                return false;
-        }
-        int num = 0;
-        for (String h : connections) {
-            if (host.equals(h)) {
-                num++;
-            }
-        }
-        if (num > 5) {
-            //anHost(host, num);
-            return false;
-        }
-        return true;
-    }
 
-    public void banHost(String host, int num) {
-        try {
-            Utils.println("BANNING HOST " + host + " (flooding)");
-            banned.add(host);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error banning host " + host);
-        }
-    }
+
 
     public static void loadObjects() {
         try {
@@ -245,34 +171,10 @@ public class Server implements Runnable {
         }
     }
 
-    public static void setGlobalItems() { //I set global item spawn here as I do not have a config file for it yet!
-        //Yanille
-		/*
-		Ground.items.add(new GroundItem(2642, 3123, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2641, 3123, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2641, 3122, 401, 1, 30 * 1000));
-		//CAtherby
-		Ground.items.add(new GroundItem(2849, 3427, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2850, 3427, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2850, 3426, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2849, 3428, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2849, 3429, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2848, 3429, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2848, 3430, 401, 1, 30 * 1000));
-		for(int i = 0; i < 4; i++)
-			Ground.items.add(new GroundItem(2839 + i, 3433, 401, 1, 30 * 1000));
-		Ground.items.add(new GroundItem(2842, 3432, 401, 1, 30 * 1000));
-		*/
-        /* Troll items */
-        Ground.items.add(new GroundItem(2611, 3096, 1048, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2612, 3096, 1040, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2563, 9511, 1631, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2564, 9511, 6571, 1, 30 * 1000));
-        /* End of troll */
-        Ground.items.add(new GroundItem(2605, 3104, 1277, 1, 30 * 1000));
-        Ground.items.add(new GroundItem(2607, 3104, 1171, 1, 30 * 1000));
+    public static void shutdown() {
+        if (connectionHandler != null) {
+            connectionHandler.shutdown();
+        }
+        // Add any other shutdown logic here
     }
-
-    public static int EnergyRegian = 60;
-
 }

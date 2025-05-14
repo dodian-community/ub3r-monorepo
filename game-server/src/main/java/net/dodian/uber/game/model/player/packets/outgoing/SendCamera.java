@@ -35,7 +35,7 @@ public class SendCamera implements OutgoingPacket {
             client.getOutputStream().writeWord(z);
             client.getOutputStream().writeByte(speed);
             client.getOutputStream().writeByte(angle);
-            client.flushOutStream();
+            //client.flushOutStream();
         } else if (mode.equals("rotation")) {
             client.getOutputStream().createFrame(177);
             client.getOutputStream().writeByte((byte) x);
@@ -59,7 +59,7 @@ public class SendCamera implements OutgoingPacket {
             client.getOutputStream().writeByte(speed);
             client.getOutputStream().writeByte(angle);
         }
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

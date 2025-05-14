@@ -25,7 +25,7 @@ public final class ConnectionList {
      * Private constructor for this class
      */
     private ConnectionList() {
-        connectionMap = new Hashtable<InetAddress, Integer>(500);
+        connectionMap = new Hashtable<InetAddress, Integer>();
     }
 
     /**
@@ -79,7 +79,7 @@ public final class ConnectionList {
     }
 
     public static boolean isSameMac(final String macAddress) throws UnknownHostException, SocketException {
-        return HardwareAddress.getMacAddress().equals(macAddress);
+        return HardwareAddress.getMacAddress(InetAddress.getByName(macAddress)).equals(macAddress);
     }
 
     /**

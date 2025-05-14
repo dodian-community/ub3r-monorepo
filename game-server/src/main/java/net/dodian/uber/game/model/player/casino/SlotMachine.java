@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
@@ -119,6 +119,7 @@ public class SlotMachine {
                 trackDice(2, amt);
         }
         // c.showInterface(6675);
+        c.checkItemUpdate();
         c.setInterfaceWalkable(6675);
     }
 
@@ -141,6 +142,7 @@ public class SlotMachine {
                     Coins_Lose = results.getInt("Coins");
                 }
             }
+            results.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

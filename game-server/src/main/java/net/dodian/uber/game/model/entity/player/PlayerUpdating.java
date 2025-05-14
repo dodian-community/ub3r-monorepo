@@ -3,10 +3,10 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.utilities.Misc;
 import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
@@ -25,20 +25,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void update(Player player, Stream stream) {
-        Stream updateBlock = new Stream(new byte[10000]);
-        updateBlock.currentOffset = 0;
+         Stream updateBlock = new Stream(new byte[8192]);//10k seems to be best here for w.e reason!
 
-        if (Server.updateRunning && !Server.updateAnnounced) {
+        if (Server.updateRunning) {
             stream.createFrame(114);
-            stream.writeWordBigEndian(Server.updateSeconds * 50 / 30);
+            int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
+            stream.writeWordBigEndian(seconds * 50 / 30);
         }
-        if (player.didMapRegionChange()) {
-            stream.createFrame(73);
-            stream.writeWordA(player.mapRegionX + 6);
-            stream.writeWord(player.mapRegionY + 6);
-            ((Client) player).updateItems();
-        }
-        PlayerUpdating.updateLocalPlayerMovement(player, stream);
+
+
+        updateLocalPlayerMovement(player, stream);
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
         player.getUpdateFlags().setRequired(UpdateFlag.CHAT, false);
         appendBlockUpdate(player, updateBlock);
@@ -78,7 +74,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (updateBlock.currentOffset > 0) {
             stream.writeBits(11, 2047);
             stream.finishBitAccess();
-
             stream.writeBytes(updateBlock.buffer, updateBlock.currentOffset, 0);
         } else {
             stream.finishBitAccess();
@@ -87,10 +82,17 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
 
-    public static void updateLocalPlayerMovement(Player player, Stream stream) {
+    public void updateLocalPlayerMovement(Player player, Stream stream) {
+        /* Noob! */
+        if(player.didMapRegionChange()) {
+            stream.createFrame(73);
+            stream.writeWordA(player.mapRegionX + 6);
+            stream.writeWord(player.mapRegionY + 6);
+            ((Client) player).updateGroundItems();
+        }
         stream.createFrameVarSizeWord(81);
         stream.initBitAccess();
-        if (player.didTeleport() || player.didMapRegionChange()) {
+        if (player.didTeleport()) {
             stream.writeBits(1, 1);
             stream.writeBits(2, 3); // updateType
             stream.writeBits(2, player.getPosition().getZ());
@@ -104,22 +106,21 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (player.getUpdateFlags().isUpdateRequired()) {
                 stream.writeBits(1, 1);
                 stream.writeBits(2, 0);
-            } else {
+            } else
                 stream.writeBits(1, 0);
-            }
-        } else {
-            stream.writeBits(1, 1);
+        } else
             if (player.getSecondaryDirection() == -1) {
+                stream.writeBits(1, 1);
                 stream.writeBits(2, 1);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
                 stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
             } else {
+                stream.writeBits(1, 1);
                 stream.writeBits(2, 2);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
                 stream.writeBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
                 stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
             }
-        }
     }
 
 
@@ -134,6 +135,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 updateMask |= flag.getMask(player.getType());
             }
         }
+
         if (updateMask >= 0x100) {
             updateMask |= 0x40;
             stream.writeByte(updateMask & 0xFF);
@@ -141,8 +143,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         } else
             stream.writeByte(updateMask);
 
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGraphic(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
@@ -151,6 +151,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             appendForcedChatText(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
             appendPlayerChatText(player, stream);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
+            player.appendMask400Update(stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
             appendFaceCharacter(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
@@ -187,16 +189,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendFaceCharacter(Player player, Stream stream) {
-        stream.writeWordBigEndian(player.getFaceNpc());
+        stream.writeWordBigEndian(player.getFaceTarget());
     }
 
     public static void appendPlayerAppearance(Player player, Stream str) {
         Stream playerProps = new Stream(new byte[128]);
         playerProps.currentOffset = 0;
         playerProps.writeByte(player.getGender());
-        playerProps.writeByte((byte) player.getHeadIcon()); // Head icon aka prayer over head
-        playerProps.writeByte((byte) player.getSkullIcon()); // Skull icon
-        if (!player.isNpc()) {
+        playerProps.writeByte((byte) player.headIcon); // Head icon aka prayer over head
+        playerProps.writeByte((byte) player.skullIcon); // Skull icon
+        if (!player.isNpc) {
             if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
                 playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
             } else {
@@ -270,12 +272,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         playerProps.writeByte(player.playerLooks[12]); // skin color (0-6)
         playerProps.writeWord(player.getStandAnim()); // standAnimIndex
         playerProps.writeWord(player.getStandAnim()); // standTurnAnimIndex, 823 default
+        playerProps.writeWord(player.getWalkAnim()); // standTurnAnimIndex, 823 default
         playerProps.writeWord(player.getWalkAnim()); // walkAnimIndex
         playerProps.writeWord(player.getWalkAnim()); // turn180AnimIndex, 820 default
         playerProps.writeWord(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
         playerProps.writeWord(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
         playerProps.writeWord(player.getRunAnim()); // runAnimIndex
-
         playerProps.writeQWord(Utils.playerNameToInt64(player.getPlayerName()));
         playerProps.writeByte(player.determineCombatLevel()); // combat level
         playerProps.writeWord(0); // incase != 0, writes skill-%d
@@ -291,38 +293,42 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendPrimaryHit(Player player, Stream stream) {
-        try {
-            stream.writeByte(player.getHitDiff()); // What the perseon got 'hit' for
-            if (player.getHitDiff() == 0) {
+        synchronized(this) {
+            stream.writeByte(Math.min(player.getDamageDealt(), 255)); // What the perseon got 'hit' for
+            if (player.getDamageDealt() == 0)
                 stream.writeByteA(0);
-            } else {
-                stream.writeByteA(player.isCrit() ? 3 : 1);
-            }
-            stream.writeByteC(player.getCurrentHealth()); // Their current hp, for HP bar
-            stream.writeByte(Skills.getLevelForExperience(player.getExperience(Skill.HITPOINTS))); // Their
-            player.setCrit(false); // bar
-            player.setInCombat(true);
-            player.setLastCombat(System.currentTimeMillis());
-        } catch (Exception e) {
-            e.printStackTrace();
+            else if (player.getHitType() == Entity.hitType.BURN)
+                stream.writeByteA(4);
+            else if (player.getHitType() == Entity.hitType.CRIT)
+                stream.writeByteA(3);
+            else if (player.getHitType() == Entity.hitType.POISON)
+                stream.writeByteA(2);
+            else
+                stream.writeByteA(1);
+            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
+            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
+            stream.writeByteC(value);
+            stream.writeByte(100);
         }
     }
 
     public void appendPrimaryHit2(Player player, Stream stream) {
-        try {
-            stream.writeByte(player.getHitDiff()); // What the perseon got 'hit' for
-            if (player.getHitDiff() == 0) {
+        synchronized(this) {
+            stream.writeByte(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
+            if (player.getDamageDealt2() == 0)
                 stream.writeByteS(0);
-            } else {
-                stream.writeByteS(player.isCrit() ? 3 : 1);
-            }
-            stream.writeByte(player.getCurrentHealth()); // Their current hp, for HP bar
-            stream.writeByte(Skills.getLevelForExperience(player.getExperience(Skill.HITPOINTS))); // Their
-            player.setCrit(false); // bar
-            player.setInCombat(true);
-            player.setLastCombat(System.currentTimeMillis());
-        } catch (Exception e) {
-            e.printStackTrace();
+            else if (player.getHitType2() == Entity.hitType.BURN)
+                stream.writeByteS(4);
+            else if (player.getHitType2() == Entity.hitType.CRIT)
+                stream.writeByteS(3);
+            else if (player.getHitType2() == Entity.hitType.POISON)
+                stream.writeByteS(2);
+            else
+                stream.writeByteS(1);
+            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
+            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
+            stream.writeByte(value);
+            stream.writeByteC(100);
         }
     }
 

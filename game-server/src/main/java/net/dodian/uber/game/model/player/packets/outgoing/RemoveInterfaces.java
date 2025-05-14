@@ -7,10 +7,10 @@ public class RemoveInterfaces implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        client.IsBanking = false;
+        client.checkBankInterface = false;
         client.currentSkill = -1;
         client.getOutputStream().createFrame(219);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

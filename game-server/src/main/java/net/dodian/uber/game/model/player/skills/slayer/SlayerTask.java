@@ -1,6 +1,7 @@
 package net.dodian.uber.game.model.player.skills.slayer;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Range;
 
@@ -24,7 +25,7 @@ public class SlayerTask {
         DRUID("Druids", false, new Range(1, 30), new Range(20, 35), 3098),
         GREATER_DEMON("Greater Demon", true, new Range(55, 200), new Range(30, 60), 2025),
         BERSERK_BARBARIAN_SPIRIT("Berserk Barbarian Spirits", true, new Range(70, 200), new Range(25, 60), 5565),
-        MITHRIL_DRAGON("Mithril Dragons", true, new Range(83, 200), new Range(15, 40), 2919),
+        MITHRIL_DRAGON("Mithril Dragons", true, new Range(83, 200), new Range(10, 25), 2919),
         BLOODVELD("Bloodveld", true, new Range(53, 93), new Range(25, 60), 484),
         GARGOYLES("Gargoyles", true, new Range(63, 200), new Range(25, 60), 412),
         ABERRANT_SPECTRE("Aberrant spectre", true, new Range(73, 200), new Range(25, 60), 2),
@@ -39,7 +40,7 @@ public class SlayerTask {
         BLACK_KNIGHT_TITAN("Black knight titan", false, new Range(1, 200), new Range(10, 30), 4067),
         JUNGLE_DEMON("Jungle demon", false, new Range(1, 200), new Range(10, 30), 1443),
         BLACK_DEMON("Black Demon", true, new Range(60, 200), new Range(10, 30), 1432),
-        DAGANNOTH_PRIME("Dagannoth prime", false, new Range(90, 200), new Range(10, 30), 2266),
+        DAGANNOTH_PRIME("Dagannoth prime", false, new Range(86, 200), new Range(12, 24), 2266),
         UNGADULU("Ungadulu", false, new Range(1, 200), new Range(10, 30), 3957),
         ICE_QUEEN("Ice queen", false, new Range(1, 200), new Range(10, 30), 4922),
         NECHRYAEL("Nechryael", false, new Range(1, 200), new Range(10, 30), 8),
@@ -129,7 +130,9 @@ public class SlayerTask {
                 i++; //Skip task we already have got before!
             } else if (mazchna[i].getAssignedLevelRange().getFloor() <= slayerLevel
                     && slayerLevel <= mazchna[i].getAssignedLevelRange().getCeiling()) {
-                if (mazchna[i] == slayerTasks.LESSER_DEMON && !c.checkItem(2383) && !c.checkItem(989)) {
+                if(mazchna[i] == slayerTasks.HEAD_MOURNER && (c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80))
+                    slayer.add(mazchna[i]);
+                else if (mazchna[i] == slayerTasks.LESSER_DEMON && !c.checkItem(2383) && !c.checkItem(989)) {
                     slayer.add(mazchna[i]);
                     slayer.add(mazchna[i]);
                 } else if (mazchna[i] == slayerTasks.SKELE_HELLHOUNDS && !c.checkItem(2382) && !c.checkItem(989)) {
@@ -171,7 +174,9 @@ public class SlayerTask {
                 i++; //Skip task we already have got before!
             } else if (duradel[i].getAssignedLevelRange().getFloor() <= slayerLevel
                     && slayerLevel <= duradel[i].getAssignedLevelRange().getCeiling()) {
-                if (duradel[i] == slayerTasks.SAN_TOJALON) {
+                if(duradel[i] == slayerTasks.HEAD_MOURNER && (c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80))
+                    slayer.add(duradel[i]);
+                else if (duradel[i] == slayerTasks.SAN_TOJALON) {
                     if (c.checkItem(1544))
                         slayer.add(duradel[i]);
                 } else if (duradel[i] == slayerTasks.BLACK_KNIGHT_TITAN) {
@@ -188,6 +193,14 @@ public class SlayerTask {
             }
         }
         return slayer;
+    }
+
+    public static void sendTask(Client client) {
+        SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData().get(1));
+        if (checkTask != null && client.getSlayerData().get(3) > 0)
+            client.send(new SendMessage("You need to kill " + client.getSlayerData().get(3) + " more of " + checkTask.getTextRepresentation() + " <col=FF0000>|</col> Current streak is " + client.getSlayerData().get(4) + "."));
+        else
+            client.send(new SendMessage("You need to be assigned a task!"));
     }
 
 }

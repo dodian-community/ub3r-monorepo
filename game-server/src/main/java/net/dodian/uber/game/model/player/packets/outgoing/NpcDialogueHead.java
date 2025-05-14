@@ -17,7 +17,7 @@ public class NpcDialogueHead implements OutgoingPacket {
         client.getOutputStream().createFrame(75);
         client.getOutputStream().writeWordBigEndianA(mainFrame);
         client.getOutputStream().writeWordBigEndianA(subFrame);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

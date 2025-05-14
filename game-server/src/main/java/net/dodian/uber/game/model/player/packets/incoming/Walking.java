@@ -1,71 +1,59 @@
 package net.dodian.uber.game.model.player.packets.incoming;
 
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.utilities.Utils;
+
+import static net.dodian.utilities.DotEnvKt.getServerEnv;
 
 public class Walking implements Packet {
 
     @Override
     public void ProcessPacket(Client client, int packetType, int packetSize) {
+        long currentTime = System.currentTimeMillis();
         if (packetType == 248)
             packetSize -= 14;
-
+        if(client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient || !client.pLoaded || currentTime < client.walkBlock) {
+            return;
+        }
+        if(client.doingTeleport() || client.getPlunder.looting) { //In the midst of something like plunder or teleport
+            return;
+        }
         if (packetType != 98) {
             client.setWalkToTask(null);
         }
-        if (!client.pLoaded || System.currentTimeMillis() < client.walkBlock) {
+        /* Auto decline when walk away from trade! */
+        if(client.inTrade && (packetType == 164 || packetType == 248)) client.declineTrade();
+        /* Auto decline when walk away from duel! */
+        else if(client.inDuel && !client.duelFight && (packetType == 164 || packetType == 248)) client.declineDuel();
+        if (client.genie) client.genie = false;
+        if (client.antique) client.antique = false;
+        if (!client.playerPotato.isEmpty()) client.playerPotato.clear();
+        if(client.getStunTimer() > 0 || client.getSnareTimer() > 0) { //In the midst of a teleport to stop movement!
+            client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
+            client.resetWalkingQueue();
             return;
         }
-        if (client.getCurrentHealth() < 1 || client.deathStage > 0) { //You are dead here!
-            return;
-        }
-        if (client.randomed) {
-            return;
-        }
-        if (client.inTrade) {
-            return;
-        }
+        if(client.morph) client.unMorph();
+        /* Check a players inventory! */
         if (client.checkInv) {
             client.checkInv = false;
             client.resetItems(3214);
         }
-        if (client.genie)
-            client.genie = false;
-        if (!client.playerPotato.isEmpty())
-            client.playerPotato.clear();
-        if (client.NpcDialogue == 1001)
-            client.setInterfaceWalkable(-1);
-        client.convoId = -1;
-        client.resetAction();
-        long currentTime = System.currentTimeMillis();
-        if (currentTime < client.snaredUntil) {
-            client.send(new SendMessage("You are ensnared!"));
+        if(client.pickupWanted) { //Reset attempt to pickup if you walk away!
+            client.pickupWanted = false;
+            client.attemptGround = null;
+        }
+        /* Combat checks! */
+        if(packetType != 98 && (client.getStunTimer() > 0 || client.getSnareTimer() > 0)) { //In the midst of a teleport to stop movement!
+            client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
+            client.resetWalkingQueue();
             return;
         }
-        if (!client.validClient) {
-            client.send(new SendMessage("You can't move on this account"));
-            return;
-        }
-        client.resetAttackNpc();
-        client.send(new RemoveInterfaces());
-        client.rerequestAnim();
-        if (client.deathStage == 0) {
+        /* Code for when you trigger the walking! */
             client.newWalkCmdSteps = packetSize - 5;
-            if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
-                if (client.newWalkCmdSteps > 0)
-                    client.send(new SendMessage("You cannot move during this duel!"));
-                client.newWalkCmdSteps = 0;
-                return;
-            }
-            if (client.newWalkCmdSteps % 2 != 0) {
-                client.println_debug("Warning: walkTo(" + packetType + ") command malformed: "
-                        + Utils.Hex(client.getInputStream().buffer, 0, packetSize));
-            }
             client.newWalkCmdSteps /= 2;
             if (++client.newWalkCmdSteps > Player.WALKING_QUEUE_SIZE) {
                 client.newWalkCmdSteps = 0;
@@ -83,54 +71,82 @@ public class Walking implements Packet {
             int firstStepY = client.getInputStream().readSignedWordBigEndian();
             firstStepY -= client.mapRegionY * 8;
             client.newWalkCmdIsRunning = client.getInputStream().readSignedByteC() == 1;
+
             for (int i = 0; i < client.newWalkCmdSteps; i++) {
                 client.newWalkCmdX[i] += firstStepX;
                 client.newWalkCmdY[i] += firstStepY;
             }
+            if(packetType == 98 && getServerEnv().equals("dev"))
+                System.out.println("walking: " + client.newWalkCmdSteps);
+            /* Closing of stuff if we send "walk" value! */
+            if(client.newWalkCmdSteps > 0) {
+                if (client.inDuel/* && (duelRule[5] || duelRule[9]) */) {
+                    if(packetType != 98)
+                        client.send(new SendMessage("You cannot move during this duel!"));
+                    client.resetWalkingQueue();
+                    return;
+                }
+                /* Npc dialogue + interface! */
+                if(client.NpcWanneTalk > 0) { //This to close dialogue somewhat whenever we walk away!
+                    client.send(new RemoveInterfaces());
+                    client.NpcWanneTalk = -1;
+                } else if(!client.isBusy()) //If not busy clear interface!
+                    client.send(new RemoveInterfaces());
+                /* Other reset! */
+                client.rerequestAnim();
+                client.resetAction();
+                client.discord = false;
+                if(!client.playerSkillAction.isEmpty()) client.playerSkillAction.clear(); //Need to clear if you walk away!
+            /* Check a players inventory! */
+            if (client.checkInv) {
+                client.checkInv = false;
+                client.resetItems(3214);
+            }
+            /* Combat checks! */
+            if(packetType != 98 && (client.attackingNpc || client.attackingPlayer)) { //Adding a check for reset due to walking away!
+                client.resetAttack();
+            }
+                client.faceTarget(65535);
+            }
+            if(client.chestEventOccur && packetType != 98) client.chestEventOccur = false;
             // stairs check
             if (client.stairs > 0) {
                 client.resetStairs();
             }
-            // woodcutting check
-            if (client.woodcuttingIndex >= 0) {
-                client.rerequestAnim();
-                client.resetWC();
-            }
-            // attack check
-            if (client.IsAttacking == true) {
-                client.ResetAttack();
-            }
-            // smithing check
-            if (client.smithing[0] > 0) {
-                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                client.rerequestAnim();
-                client.resetSM();
-                client.send(new RemoveInterfaces());
-            }
             // Npc Talking
+            if (client.NpcDialogue == 1001) client.setInterfaceWalkable(-1);
+            client.convoId = -1;
             if (client.NpcDialogue > 0) {
                 client.NpcDialogue = 0;
                 client.NpcTalkTo = 0;
                 client.NpcDialogueSend = false;
                 client.send(new RemoveInterfaces());
             }
+            /* Dialogue options! */
+            if(client.refundSlot != -1) client.refundSlot = -1;
+            if(client.herbMaking != -1) client.herbMaking = -1;
             // banking
             if (client.IsBanking) {
                 client.IsBanking = false;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
+            }
+            if(client.checkBankInterface) {
+                client.checkBankInterface = false;
+                client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
             if (client.isPartyInterface) {
                 client.isPartyInterface = false;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
             // shopping
-            if (client.IsShopping == true) {
-                client.IsShopping = false;
-                client.MyShopID = 0;
-                client.UpdateShop = false;
+            if (client.isShopping()) {
+                client.MyShopID = -1;
                 client.send(new RemoveInterfaces());
+                client.checkItemUpdate();
             }
-        }
     }
 
 }

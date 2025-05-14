@@ -17,13 +17,11 @@ public class CreateGroundItem implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        client.getOutputStream().createFrame(85);
-        client.getOutputStream().writeByteC(position.getY() - (client.mapRegionY * 8));
-        client.getOutputStream().writeByteC(position.getX() - (client.mapRegionX * 8));
+        client.send(new SetMap(position));
         client.getOutputStream().createFrame(44);
         client.getOutputStream().writeWordBigEndianA(item.getId());
         client.getOutputStream().writeWord(item.getAmount());
-        client.getOutputStream().writeByte(0);
+        client.getOutputStream().writeByte(position.getZ());
     }
 
 }

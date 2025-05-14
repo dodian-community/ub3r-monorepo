@@ -49,12 +49,12 @@ public final class RSInterface {
             }
             int k1 = stream.readUnsignedByte();
             if (k1 > 0) {
-                rsInterface.valueIndexArray = new int[k1][];
+                rsInterface.scripts = new int[k1][];
                 for (int l1 = 0; l1 < k1; l1++) {
                     int i3 = stream.readUnsignedWord();
-                    rsInterface.valueIndexArray[l1] = new int[i3];
+                    rsInterface.scripts[l1] = new int[i3];
                     for (int l4 = 0; l4 < i3; l4++)
-                        rsInterface.valueIndexArray[l1][l4] = stream.readUnsignedWord();
+                        rsInterface.scripts[l1][l4] = stream.readUnsignedWord();
 
                 }
 
@@ -338,10 +338,10 @@ public final class RSInterface {
         rsi.anIntArray212[0] = 1;
         rsi.anIntArray245 = new int[1];
         rsi.anIntArray245[0] = 1;
-        rsi.valueIndexArray = new int[1][3];
-        rsi.valueIndexArray[0][0] = 5;
-        rsi.valueIndexArray[0][1] = setconfig;
-        rsi.valueIndexArray[0][2] = 0;
+        rsi.scripts = new int[1][3];
+        rsi.scripts[0][0] = 5;
+        rsi.scripts[0][1] = setconfig;
+        rsi.scripts[0][2] = 0;
         rsi.atActionType = 4;
         rsi.width = width;
         rsi.hoverType = -1;
@@ -371,10 +371,10 @@ public final class RSInterface {
         rsi.anIntArray212 = new int[1];
         rsi.anIntArray245[0] = 1;
         rsi.anIntArray212[0] = configId;
-        rsi.valueIndexArray = new int[1][3];
-        rsi.valueIndexArray[0][0] = 5;
-        rsi.valueIndexArray[0][1] = configFrame;
-        rsi.valueIndexArray[0][2] = 0;
+        rsi.scripts = new int[1][3];
+        rsi.scripts[0][0] = 5;
+        rsi.scripts[0][1] = configFrame;
+        rsi.scripts[0][2] = 0;
     }
 
     public static void addText(int id, String text, TextDrawingArea tda[], int idx, int color, boolean center, boolean shadow) {
@@ -449,10 +449,10 @@ public final class RSInterface {
         Tab.anIntArray212 = new int[1];
         Tab.anIntArray245[0] = 1;
         Tab.anIntArray212[0] = configID;
-        Tab.valueIndexArray = new int[1][3];
-        Tab.valueIndexArray[0][0] = 5;
-        Tab.valueIndexArray[0][1] = configFrame;
-        Tab.valueIndexArray[0][2] = 0;
+        Tab.scripts = new int[1][3];
+        Tab.scripts[0][0] = 5;
+        Tab.scripts[0][1] = configFrame;
+        Tab.scripts[0][2] = 0;
         Tab.sprite1 = imageLoader(bID, bName);
         Tab.sprite2 = imageLoader(bID2, bName);
         Tab.tooltip = tT;
@@ -679,7 +679,7 @@ public final class RSInterface {
     public boolean centerText;
     public int scrollPosition;
     public String actions[];
-    public int valueIndexArray[][];
+    public int scripts[][];
     public boolean aBoolean227;
     public String aString228;
     public int hoverType;
@@ -767,11 +767,11 @@ public final class RSInterface {
         rsInterface.anIntArray212 = new int[1];
         rsInterface.anIntArray245[0] = 3;
         rsInterface.anIntArray212[0] = runeAmount;
-        rsInterface.valueIndexArray = new int[1][4];
-        rsInterface.valueIndexArray[0][0] = 4;
-        rsInterface.valueIndexArray[0][1] = 3214;
-        rsInterface.valueIndexArray[0][2] = RuneID;
-        rsInterface.valueIndexArray[0][3] = 0;
+        rsInterface.scripts = new int[1][4];
+        rsInterface.scripts[0][0] = 4;
+        rsInterface.scripts[0][1] = 3214;
+        rsInterface.scripts[0][2] = RuneID;
+        rsInterface.scripts[0][3] = 0;
         rsInterface.centerText = true;
         rsInterface.textDrawingAreas = font[0];
         rsInterface.textShadow = true;

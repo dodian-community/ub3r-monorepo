@@ -2,7 +2,7 @@ package net.dodian.uber.game;
 
 public class Constants {
 
-    public static final int maxPlayers = 1024;
+    public static final int maxPlayers = 2000;
 
     public static int[] logs = {1521, 1519, 1517, 1515, 1513};
     public static int[] shortbows = {54, 60, 64, 68, 72};
@@ -13,10 +13,10 @@ public class Constants {
     public static int[] longreq = {25, 40, 55, 70, 85};
     public static int[] longexp = {150, 252, 348, 450, 552};
     public static int[] longbow = {845, 847, 851, 855, 859};
-    public static int[] heads = {39, 40, 41, 42, 43, 44};
-    public static int[] arrows = {882, 884, 886, 888, 890, 892};
-    public static int[] required = {1, 15, 30, 45, 60, 75};
-    public static int[] xp = {20, 38, 75, 113, 150, 188};
+    public static int[] heads = {39, 40, 41, 42, 43, 44, 11237};
+    public static int[] arrows = {882, 884, 886, 888, 890, 892, 11212};
+    public static int[] required = {1, 15, 30, 45, 60, 75, 90};
+    public static int[] xp = {7, 13, 25, 38, 50, 63, 75};
     public static int[] darttip = {819, 820, 821, 822, 823, 824};
     public static int[] darts = {806, 807, 808, 809, 810, 811};
     public static int[] darttip_required = {1, 22, 37, 52, 67, 81};
@@ -31,7 +31,7 @@ public class Constants {
     public static int[] chests = {1135, 2499, 2501, 2503};
     public static int[] chestLevels = {58, 70, 79, 88};
 
-    public static int smithing_frame[][][] = {
+    public static int[][][] smithing_frame = {
             {{1205, 1, 1, 1, 1125, 1094}, {1351, 1, 1, 1, 1126, 1091}, {1422, 1, 2, 1, 1129, 1093},
                     {1139, 1, 3, 1, 1127, 1102}, {1277, 1, 3, 1, 1128, 1085}, {819, 10, 4, 1, 1124, 1107},
                     {4819, 15, 4, 1, 13357, 13358}, {39, 15, 5, 1, 1130, 1108}, {1321, 1, 5, 2, 1116, 1087},
@@ -81,9 +81,9 @@ public class Constants {
                     {1113, 1, 96, 3, 1109, 1098}, {1201, 1, 97, 3, 1115, 1105}, {3101, 1, 98, 2, 8428, 8429},
                     {1319, 1, 99, 3, 1090, 1088}, {1093, 1, 99, 3, 1111, 1100}, {1079, 1, 99, 3, 1110, 1099},
                     {1127, 1, 99, 5, 1112, 1101}}};
-    public static int SmithingItems[][] = new int[5][5];
+    public static int[][] SmithingItems = new int[5][5];
 
-    public static final int PACKET_SIZES[] = {0, 0, 0, 1, -1, 0, 0, 0, 0, 0, // 0
+    public static final int[] PACKET_SIZES = { 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, // 0
             0, 0, 0, 0, 8, 0, 6, 2, 2, 0, // 10-19
             0, 2, 0, 6, 0, 12, 0, 0, 0, 0, // 20-29
             0, 0, 0, 0, 0, 8, 4, 0, 0, 2, // 30

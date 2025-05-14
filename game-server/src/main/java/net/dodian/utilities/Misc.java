@@ -27,12 +27,12 @@ import java.util.Random;
  */
 public class Misc {
 
-    private static char xlateTable[] = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
+    private static char[] xlateTable = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
             'y', 'f', 'g', 'p', 'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '!',
             '?', '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\', '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[',
             ']'};
 
-    private static char decodeBuf[] = new char[4096];
+    private static char[] decodeBuf = new char[4096];
 
     private static Random random = new Random();
 
@@ -89,6 +89,13 @@ public class Misc {
     public static int chance(int range) { // 1 till range
         range = range < 1 ? 0 : range; //Need to not be negative!
         return (int) ((java.lang.Math.random() * range) + 1);
+    }
+
+    public static double getCurrentHP(int maxHp, int currentHp) {
+        double value = (double) currentHp > 0.0 ? (double) currentHp : 0.01;
+        double max = (double) maxHp;
+        double x = max / value;
+        return x * 100.0;
     }
 
     public static String format(int num) {
@@ -186,6 +193,11 @@ public class Misc {
          * x1 <= objectX + objectXSize - 1; x1++) { if (goodDistance(x1, y1,
          * playerX, playerY, 1)) { return new Position(x1, y1, height); } } } }
          */
+        return null;
+    }
+    public static Position goodDistanceObject(int objectX, int objectY, int playerX, int playerY, int distance, int z) {
+        if (goodDistance(playerX, playerY, objectX, objectY, distance))
+            return new Position(objectX, objectY, z);
         return null;
     }
 

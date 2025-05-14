@@ -1,12 +1,11 @@
 package net.dodian.utilities;
 
+import static net.dodian.utilities.Utils.println_debug;
+
 public class Stream {
 
-    public Stream() {
-    }
-
-    public Stream(byte abyte0[]) {
-        buffer = abyte0;
+    public Stream(byte[] buffer) {
+        this.buffer = buffer;
         currentOffset = 0;
     }
 
@@ -128,42 +127,46 @@ public class Stream {
         buffer[currentOffset++] = (byte) (i >> 8);
     }
 
-    public void readBytes_reverse(byte abyte0[], int i, int j) {
+    public void readBytes_reverse(byte[] abyte0, int i, int j) {
         for (int k = (j + i) - 1; k >= j; k--) {
             abyte0[k] = buffer[currentOffset++];
 
         }
     }
 
-    public void writeBytes_reverse(byte abyte0[], int i, int j) {
+    public void writeBytes_reverse(byte[] abyte0, int i, int j) {
         for (int k = (j + i) - 1; k >= j; k--)
             buffer[currentOffset++] = abyte0[k];
 
     }
 
-    public void readBytes_reverseA(byte abyte0[], int i, int j) {
+    public void readBytes_reverseA(byte[] abyte0, int i, int j) {
         for (int k = (j + i) - 1; k >= j; k--)
             abyte0[k] = (byte) (buffer[currentOffset++] - 128);
 
     }
 
-    public void writeBytes_reverseA(byte abyte0[], int i, int j) {
+    public void writeBytes_reverseA(byte[] abyte0, int i, int j) {
         for (int k = (j + i) - 1; k >= j; k--)
             buffer[currentOffset++] = (byte) (abyte0[k] + 128);
 
     }
 
     public void createFrame(int id) {
-        try {
-            buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (buffer.length < currentOffset) {
+            println_debug(String.format("Error Creating Packet: Opcode=%3s%n - Buffer Size=%s bytes, Current Byte=%s", id, buffer.length, currentOffset));
+            Thread.dumpStack();
+            System.out.println("-----------------------------------------------------------------------------");
+
+            return;
         }
+
+        buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
     }
 
     private static final int frameStackSize = 10;
     private int frameStackPtr = -1;
-    private int frameStack[] = new int[frameStackSize];
+    private final int[] frameStack = new int[frameStackSize];
 
     public void createFrameVarSize(int id) { // creates a variable sized frame
         buffer[currentOffset++] = (byte) (id + packetEncryption.getNextKey());
@@ -250,7 +253,7 @@ public class Stream {
         buffer[currentOffset++] = 10;
     }
 
-    public void writeBytes(byte abyte0[], int i, int j) {
+    public void writeBytes(byte[] abyte0, int i, int j) {
         for (int k = j; k < j + i; k++)
             buffer[currentOffset++] = abyte0[k];
 
@@ -301,12 +304,11 @@ public class Stream {
 
     public java.lang.String readString() {
         int i = currentOffset;
-        while (buffer[currentOffset++] != 10)
-            ;
+        while (buffer[currentOffset++] != 10) ;
         return new String(buffer, i, currentOffset - i - 1);
     }
 
-    public void readBytes(byte abyte0[], int i, int j) {
+    public void readBytes(byte[] abyte0, int i, int j) {
         for (int k = j; k < j + i; k++)
             abyte0[k] = buffer[currentOffset++];
 
@@ -322,18 +324,18 @@ public class Stream {
         bitPosition += numBits;
 
         for (; numBits > bitOffset; bitOffset = 8) {
-            buffer[bytePos] &= ~bitMaskOut[bitOffset]; // mask out the desired
+            buffer[bytePos] &= (byte) ~bitMaskOut[bitOffset]; // mask out the desired
             // area
-            buffer[bytePos++] |= (value >> (numBits - bitOffset)) & bitMaskOut[bitOffset];
+            buffer[bytePos++] |= (byte) ((value >> (numBits - bitOffset)) & bitMaskOut[bitOffset]);
 
             numBits -= bitOffset;
         }
         if (numBits == bitOffset) {
-            buffer[bytePos] &= ~bitMaskOut[bitOffset];
-            buffer[bytePos] |= value & bitMaskOut[bitOffset];
+            buffer[bytePos] &= (byte) ~bitMaskOut[bitOffset];
+            buffer[bytePos] |= (byte) (value & bitMaskOut[bitOffset]);
         } else {
-            buffer[bytePos] &= ~(bitMaskOut[numBits] << (bitOffset - numBits));
-            buffer[bytePos] |= (value & bitMaskOut[numBits]) << (bitOffset - numBits);
+            buffer[bytePos] &= (byte) ~(bitMaskOut[numBits] << (bitOffset - numBits));
+            buffer[bytePos] |= (byte) ((value & bitMaskOut[numBits]) << (bitOffset - numBits));
         }
     }
 
@@ -341,11 +343,11 @@ public class Stream {
         currentOffset = (bitPosition + 7) / 8;
     }
 
-    public byte buffer[] = null;
-    public int currentOffset = 0;
+    public byte[] buffer;
+    public int currentOffset;
     public int bitPosition = 0;
 
-    public static int bitMaskOut[] = new int[32];
+    public static int[] bitMaskOut = new int[32];
 
     static {
         for (int i = 0; i < 32; i++)

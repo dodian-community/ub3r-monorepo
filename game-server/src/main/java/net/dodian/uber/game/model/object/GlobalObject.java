@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.object;
 
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -21,7 +22,7 @@ public class GlobalObject {
             }
             Client c = (Client) p;
             if (c.withinDistance(o))
-                c.ReplaceObject(o.x, o.y, o.id, o.face, o.type);
+                c.ReplaceObject2(new Position(o.x, o.y, o.z), o.id, o.face, o.type);
         }
     }
 

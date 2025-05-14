@@ -171,4 +171,9 @@ public class Cryption {
     public int cryptVar1 = 0;
     public int cryptVar2 = 0;
     public int cryptVar3 = 0;
+
+    // Method to initialize the Cryption with a given Stream
+    public void init(Stream stream) {
+        stream.packetEncryption = this;
+    }
 }

@@ -10,18 +10,13 @@ import org.quartz.impl.StdSchedulerFactory;
 public class JobScheduler {
 
     private static Scheduler scheduler;
-    private Entity entity;
-
-    public JobScheduler() throws SchedulerException {
-        scheduler = new StdSchedulerFactory().getScheduler();
-        scheduler.start();
-    }
+    private final Entity entity;
 
     public JobScheduler(Entity entity) {
         this.entity = entity;
     }
 
-    public void scheduleJob(int milliSeconds, Class<? extends Job> object) throws SchedulerException {
+    public void scheduleJob(int milliSeconds, Class<? extends Job> object, Entity entity) throws SchedulerException {
         JobDetail job = JobBuilder.newJob(object).build();
 
         job.getJobDataMap().put("entity", entity);
@@ -30,14 +25,12 @@ public class JobScheduler {
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMilliseconds(milliSeconds).repeatForever())
                 .build();
 
+        startJobScheduler();
         scheduler.scheduleJob(job, trigger);
     }
 
     public boolean jobExists(Class<? extends Job> object) throws SchedulerException {
-        if (getScheduler().checkExists(new TriggerKey(entity.toString(), object.getName()))) {
-            return true;
-        }
-        return false;
+        return getScheduler().checkExists(new TriggerKey(entity.toString(), object.getName()));
     }
 
     public void deleteJob(Class<? extends Job> object) throws SchedulerException {
@@ -46,15 +39,23 @@ public class JobScheduler {
         }
     }
 
-    public static void ScheduleStaticRepeatForeverJob(int milliSeconds, Class<? extends Job> object)
-            throws SchedulerException {
+    public static void ScheduleRepeatForeverJob(int milliSeconds, Class<? extends Job> object) {
         JobDetail job = JobBuilder.newJob(object).build();
 
         Trigger trigger = TriggerBuilder.newTrigger()
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMilliseconds(milliSeconds).repeatForever())
                 .build();
+        try {
+            startJobScheduler();
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException e) {
+            //TODO: Add exceptions stored debug!
+        }
+    }
 
-        scheduler.scheduleJob(job, trigger);
+    public static void startJobScheduler() throws SchedulerException {
+        scheduler = new StdSchedulerFactory().getScheduler();
+        scheduler.start();
     }
 
     public Scheduler getScheduler() {

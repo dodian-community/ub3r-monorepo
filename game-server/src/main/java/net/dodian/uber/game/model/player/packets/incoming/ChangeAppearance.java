@@ -21,21 +21,6 @@ public class ChangeAppearance implements Packet {
         int legsC = client.getInputStream().readSignedByte();
         int feetC = client.getInputStream().readSignedByte();
         int skinC = client.getInputStream().readSignedByte();
-
-    /*client.getPlayerLook()[0] = gender;
-    client.setGender(gender);
-    client.setHead(head);
-    client.setBeard(jaw);
-    client.setTorso(torso);
-    client.setArms(arms);
-    client.setHands(hands);
-    client.setLegs(legs);
-    client.setFeet(feet);
-    client.getPlayerLook()[1] = hairC;
-    client.getPlayerLook()[2] = torsoC;
-    client.getPlayerLook()[3] = legsC;
-    client.getPlayerLook()[4] = feetC;
-    client.getPlayerLook()[5] = skinC;*/
         client.playerLooks[0] = gender;
         client.playerLooks[1] = head;
         client.playerLooks[2] = jaw;
@@ -50,7 +35,6 @@ public class ChangeAppearance implements Packet {
         client.playerLooks[11] = feetC;
         client.playerLooks[12] = skinC;
         client.setLook(client.playerLooks);
-        //client.send(new SendMessage("Thanks for setting your character! Please relog for equip to show up!"));
         client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 

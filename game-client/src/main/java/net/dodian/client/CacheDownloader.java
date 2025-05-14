@@ -18,7 +18,7 @@ public class CacheDownloader {
      * Only things you need to change
      *
      */
-    private final int VERSION = 5; // Version of net.dodian.client.cache
+    private final int VERSION = 9; // Version of net.dodian.client.cache
 
     // Link to the cache
     private String cacheLink = CACHE_DOWNLOAD_URL;

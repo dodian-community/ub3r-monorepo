@@ -70,7 +70,7 @@ public final class ObjectDef {
             def.actions = new String[5];
             def.actions[0] = "Smith";
         }
-        if (def.type == 3994) {
+        if (def.type == 3994 || def.type == 16469 || def.type == 11666 || def.type == 30157) {
             def.actions = new String[5];
             def.actions[0] = "Smelt";
             def.actions[1] = "Gold Craft";
@@ -102,6 +102,10 @@ public final class ObjectDef {
         if (def.type == 7461 || def.type == 7494) {
             def.name = "Runite Rock";
         }
+        if (def.type == 19052) {
+            def.actions = new String[5];
+            def.actions[0] = "Climb-down";
+        }
         if (def.type == 16664 /*&& def.anInt744 == 2603 && anInt761 == 3078*/) {
             //anInt744 anInt761
             //def.actions[2] = "Boss Check";
@@ -118,6 +122,14 @@ public final class ObjectDef {
         }
         if (def.type == 4528) {
             def.name = "The Oaktree Fountain";
+            def.actions = new String[5];
+        }
+        if (def.type == 585) {
+            def.name = "Statue of king Nozemi";
+            def.actions = new String[5];
+        }
+        if (def.type == 586) {
+            def.name = "Statue of the holy Pro Noob";
             def.actions = new String[5];
         }
 

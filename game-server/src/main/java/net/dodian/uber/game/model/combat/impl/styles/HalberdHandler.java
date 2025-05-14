@@ -16,17 +16,17 @@ public class HalberdHandler extends CombatStyleHandler {
                 case ACCURATE_RANGED:
                 case CONTROLLED_MELEE:
                     client.setCombatStyle(CombatStyles.CONTROLLED_MELEE);
-                    client.frame87(43, 0);
+                    client.varbit(43, 0);
                     break;
                 case AGGRESSIVE_MELEE:
                 case RAPID_RANGED:
                     client.setCombatStyle(CombatStyles.AGGRESSIVE_MELEE);
-                    client.frame87(43, 1);
+                    client.varbit(43, 1);
                     break;
                 case DEFENSIVE_MELEE:
                 case LONGRANGE_RANGED:
                     client.setCombatStyle(CombatStyles.DEFENSIVE_MELEE);
-                    client.frame87(43, 2);
+                    client.varbit(43, 2);
                     break;
             }
         }

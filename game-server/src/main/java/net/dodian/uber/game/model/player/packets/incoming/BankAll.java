@@ -19,22 +19,33 @@ public class BankAll implements Packet {
                 client.bankItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID), removeSlot);
+            client.checkItemUpdate();
         } else if (interfaceID == 5382) { // remove from bank
-            client.fromBank(removeID, removeSlot, client.bankItemsN[removeSlot]);
+            client.fromBank(removeID, removeSlot, -2);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, !stack ? 8 : Integer.MAX_VALUE, removeSlot);
-        } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window
+        } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
-        } else if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        } else if (interfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeID));
-        } else if (interfaceID == 6669 && client.inDuel) { // remove from duel window
+        } else if (interfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(removeID, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
-        } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(removeID, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (interfaceID == 3823) { // Show value to sell items
-            client.sellItem(removeID, removeSlot, 10);
+            if(client.playerRights < 2) {
+                client.sellItem(removeID, removeSlot, 10);
+            } else {
+                client.getOutputStream().createFrame(27);
+                client.XinterfaceID = interfaceID;
+                client.XremoveID = removeID;
+                client.XremoveSlot = removeSlot;
+            }
         } else if (interfaceID == 3900) { // Show value to buy items
-            client.buyItem(removeID, removeSlot, 10);
+            client.getOutputStream().createFrame(27);
+            client.XinterfaceID = interfaceID;
+            client.XremoveID = removeID;
+            client.XremoveSlot = removeSlot;
         }
 
     }

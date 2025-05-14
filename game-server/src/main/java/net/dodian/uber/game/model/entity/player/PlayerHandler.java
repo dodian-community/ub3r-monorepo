@@ -1,116 +1,155 @@
 package net.dodian.uber.game.model.entity.player;
 
+import net.dodian.uber.comm.Memory;
 import net.dodian.uber.game.Constants;
 import net.dodian.utilities.Utils;
 
+import java.nio.channels.SocketChannel;
+import java.net.InetSocketAddress;
+import java.io.IOException;
+
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.BitSet;
+import java.util.logging.Logger;
 
 public class PlayerHandler {
 
-    public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
-    public static int cycle = 0;
-    public static Player[] players = new Player[Constants.maxPlayers];
-    public static int playerSlotSearchStart = 1; // where we start searching at when
-    // adding a new player
-    public static String kickNick = "";
-    public static int playerCount = 0;
-    public static String[] playersCurrentlyOn = new String[Constants.maxPlayers];
+    private static final Logger logger = Logger.getLogger(PlayerHandler.class.getName());
+    static final Object SLOT_LOCK = new Object();
 
-    // public static ArrayList<PkMatch> matches = new ArrayList<PkMatch>();
+    static final BitSet usedSlots = new BitSet(Constants.maxPlayers + 1);
+
+    public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<>();
+    public static int cycle = 1;
+
+    public static Player[] players = new Player[Constants.maxPlayers + 1];
+
     public boolean validClient(int index) {
         Client p = (Client) players[index];
-        return p != null && !p.disconnected && p.dbId > 0;
+        return p != null && !p.disconnected && p.dbId >= 0;
     }
 
     public Client getClient(int index) {
-        return ((Client) players[index]);
+        return (Client) players[index];
     }
 
     public PlayerHandler() {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
+        for (int i = 1; i <= Constants.maxPlayers; i++) {
             players[i] = null;
         }
     }
 
-    public void newPlayerClient(java.net.Socket s, String connectedFrom) {
-        int slot = -1;
-        for (int i = 1; i < players.length; i++) {
-            if (players[i] == null || players[i].disconnected) {
-                slot = i;
-                break;
+    public void newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
+        int slot;
+        synchronized (SLOT_LOCK) {
+            slot = findFreeSlot();
+            if (slot == -1 || slot > Constants.maxPlayers) {
+                logger.warning("No free slots available for a new player connection.");
+                closeSocketChannel(socketChannel);
+                return;
             }
         }
 
-        Client newClient = new Client(s, slot);
-        newClient.handler = this;
-        (new Thread(newClient)).start();
-        if (slot == -1)
-            return;
-        players[slot] = newClient;
-        players[slot].connectedFrom = connectedFrom;
-        Player.localId = slot;
-        players[slot].lastPacket = System.currentTimeMillis();
-        playerSlotSearchStart = slot + 1;
-        if (playerSlotSearchStart > Constants.maxPlayers)
-            playerSlotSearchStart = 1;
-    }
+        logger.info("Attempting to create new client in slot: " + slot);
 
-    public static int getPlayerCount() {
-        int count = 0;
-        for (Player player : players) {
-            if (player != null && !player.disconnected && player.dbId > 0) {
-                count++;
+        Client newClient = null;
+
+        try {
+            socketChannel.configureBlocking(false);
+            newClient = new Client(socketChannel, slot);
+            newClient.handler = this;
+            players[slot] = newClient;
+            players[slot].connectedFrom = connectedFrom;
+            players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
+            newClient.run(); //TODO thread pool would be better
+
+            // Mark the slot as used only after successful login
+            if (newClient.isActive) {
+                Player.localId = slot;
+                playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
+                logger.info("Player " + newClient.getPlayerName() + " successfully added to slot " + slot);
+            } else {
+                logger.info("Client created but not active for slot " + slot);
+                synchronized (SLOT_LOCK) {
+                    usedSlots.clear(slot);  // Free the slot if login wasn't successful
+                }
+            }
+
+            Memory.getSingleton().process(); // Print memory usage after adding player
+        } catch (Exception e) {
+            logger.severe("Error processing new client connection: " + e.getMessage());
+            e.printStackTrace();  // This will give us more detailed error information
+            closeSocketChannel(socketChannel);
+            synchronized (SLOT_LOCK) {
+                usedSlots.clear(slot);  // Free the slot if an exception occurred
             }
         }
-        return count;
     }
 
-    public void updatePlayerNames() {
-        playerCount = 0;
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] != null) {
-                playersCurrentlyOn[i] = players[i].getPlayerName();
-                playerCount++;
-            } else
-                playersCurrentlyOn[i] = "";
-        }
-    }
-
-    public static boolean isPlayerOn(String playerName) {
-        return playersOnline.containsKey(Utils.playerNameToInt64(playerName));
-    }
-
-    public static int getPlayerID(String playerName) {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (playersCurrentlyOn[i] != null) {
-                if (playersCurrentlyOn[i].equalsIgnoreCase(playerName))
+    private int findFreeSlot() {
+        synchronized (SLOT_LOCK) {
+            for (int i = 1; i <= Constants.maxPlayers; i++) {
+                if (!usedSlots.get(i)) {
+                    usedSlots.set(i);  // Mark the slot as used immediately
                     return i;
+                }
             }
         }
         return -1;
     }
 
+    private void closeSocketChannel(SocketChannel socketChannel) {
+        try {
+            socketChannel.close();
+        } catch (IOException closeError) {
+            logger.warning("Error closing socket channel: " + closeError.getMessage());
+        }
+    }
+
+    public static int getPlayerCount() {
+        return (int) playersOnline.size();
+    }
+
+    public static boolean isPlayerOn(String playerName) {
+        long playerId = Utils.playerNameToLong(playerName);
+        if (playersOnline.containsKey(playerId)) {
+            logger.info("Player is already logged in as: " + playerName);
+            return true;
+        }
+        return false;
+    }
+
+    public static int getPlayerID(String playerName) {
+        long playerId = Utils.playerNameToLong(playerName);
+        Client client = playersOnline.get(playerId);
+        return client != null ? client.getSlot() : -1;
+    }
+
     public int lastchatid = 1; // PM System
 
     public void removePlayer(Player plr) {
-        if (plr == null)
-            return;
         Client temp = (Client) plr;
-        if (temp.dbId > 0 && temp.saveNeeded) {
-            temp.saveStats(true);
-            Utils.println("Disconnecting lagged out valid player " + plr.getPlayerName());
+        if (temp != null) {
+            temp.destruct();
+            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
+            int slot = temp.getSlot();
+            players[slot] = null;
+            if (temp.isActive && slot >= 1 && slot <= Constants.maxPlayers) {
+                synchronized (SLOT_LOCK) {
+                    usedSlots.clear(slot); // Mark the slot as available
+                }
+            }
+            playersOnline.remove(Utils.playerNameToLong(temp.getPlayerName()));
+        } else {
+            logger.warning("Tried to remove a null player!");
         }
-        plr.destruct();
+
+        Memory.getSingleton().process(); // Print memory usage after removing player
     }
 
     public static Player getPlayer(String name) {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (players[i] != null && players[i].getPlayerName().equalsIgnoreCase(name)) {
-                return players[i];
-            }
-        }
-
-        return null;
+        long playerId = Utils.playerNameToLong(name);
+        return playersOnline.get(playerId);
     }
-
 }

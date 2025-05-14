@@ -7,10 +7,11 @@ import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class Bank5 implements Packet {
 
@@ -21,24 +22,25 @@ public class Bank5 implements Packet {
         int removeSlot = client.getInputStream().readSignedWordBigEndian();
         if (getGameWorldId() > 1)
             client.println_debug("RemoveItem 5: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
-        if (interfaceID == 3322 && client.inDuel) { // remove from bag to duel window
+        if (interfaceID == 3322 && client.inDuel && client.canOffer) { // remove from bag to duel window
             client.stakeItem(removeID, removeSlot, 5);
-        } else if (interfaceID == 6669) { // remove from duel window
+        } else if (interfaceID == 6669 && client.inDuel && client.canOffer) { // remove from duel window
             client.fromDuel(removeID, removeSlot, 5);
         } else if (interfaceID == 5064) { // remove from bag to bank
             if (client.IsBanking)
                 client.bankItem(removeID, removeSlot, 5);
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, 5, removeSlot);
+            client.checkItemUpdate();
         } else if (interfaceID == 5382) { // remove from bank
             client.fromBank(removeID, removeSlot, 5);
         } else if (interfaceID == 2274) { // remove from party
             Balloons.removeOfferItems(client, removeID, 5, removeSlot);
-        } else if (interfaceID == 3322 && client.inTrade) { // remove from bag to trade window
+        } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // remove from bag to trade window
             client.tradeItem(removeID, removeSlot, 5);
-        } else if (interfaceID == 3415 && client.inTrade) { // remove from trade window
+        } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // remove from trade window
             client.fromTrade(removeID, removeSlot, 5);
-        } else if (interfaceID >= 4233 && interfaceID <= 4245) {
+        } else if (interfaceID >= 4233 && interfaceID <= 4257) {
             client.startGoldCrafting(interfaceID, removeSlot, 5);
         } else if (interfaceID == 3823) { // Show value to sell items
             client.sellItem(removeID, removeSlot, 1);
@@ -58,6 +60,8 @@ public class Bank5 implements Packet {
                 client.send(new SendMessage(quotes[Misc.random(quotes.length - 1)]));
             } else if (removeID == 4566) {
                 client.requestAnim(1835, 0);
+            } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
+                SlayerTask.sendTask(client);
             } else if (Server.itemManager.getName(removeID).toLowerCase().startsWith("cow")) {
                 client.requestForceChat("Moooooo!");
             } else {

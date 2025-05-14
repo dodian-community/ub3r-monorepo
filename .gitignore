@@ -100,3 +100,6 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/gradle,intellij+iml,java
 .env
 .initialized_database
+game-server/.DS_Store
+*.gz
+/data

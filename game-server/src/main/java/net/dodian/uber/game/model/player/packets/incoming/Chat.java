@@ -17,7 +17,7 @@ public class Chat implements Packet {
             client.send(new SendMessage("Please use another client"));
             return;
         }
-        if (client.muted) {
+        if (client.isMuted()) {
             client.send(new SendMessage("You are currently muted!"));
             return;
         }
@@ -31,8 +31,8 @@ public class Chat implements Packet {
         client.getInputStream().readBytes_reverseA(client.getChatText(), client.getChatTextSize(), 0);
         String chat = Utils.textUnpack(client.getChatText(), packetSize - 2);
         client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true);
-        ChatLog.recordChat(client.getPlayerName(), chat);
-        client.println_debug("Text [" + client.getChatTextEffects() + "," + client.getChatTextColor() + "]: " + chat);
+        ChatLog.recordPublicChat(client, chat);
+        //client.println_debug("Text [" + client.getChatTextEffects() + "," + client.getChatTextColor() + "]: " + chat);
         Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 2, chat, client.getPosition().getX(),
                 client.getPosition().getY()));
     }

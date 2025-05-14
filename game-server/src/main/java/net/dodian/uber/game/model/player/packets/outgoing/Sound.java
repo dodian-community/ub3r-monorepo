@@ -8,27 +8,27 @@ import net.dodian.uber.game.model.player.packets.OutgoingPacket;
  */
 public class Sound implements OutgoingPacket {
 
-    public final int soundId, delay, byteSetting;
+    public final int soundId, delay, volume;
 
-    public Sound(int soundId, int byteSetting, int delay) {
+    public Sound(int soundId, int volume, int delay) {
         this.soundId = soundId;
-        this.byteSetting = byteSetting;
+        this.volume = volume;
         this.delay = delay;
     }
 
     public Sound(int soundId, int delay) {
-        this(soundId, 0, delay);
+        this(soundId, 4, delay);
     }
 
     public Sound(int soundId) {
-        this(soundId, 0);
+        this(soundId, 4, 0);
     }
 
     @Override
     public void send(Client client) {
         client.getOutputStream().createFrame(174);
         client.getOutputStream().writeWord(soundId);
-        client.getOutputStream().writeByte(0);
+        client.getOutputStream().writeByte(volume);
         client.getOutputStream().writeWord(delay);
     }
 

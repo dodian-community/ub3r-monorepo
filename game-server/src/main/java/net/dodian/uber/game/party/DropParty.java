@@ -1,5 +1,6 @@
 package net.dodian.uber.game.party;
 
+import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
 import net.dodian.uber.game.model.item.Ground;
@@ -46,7 +47,7 @@ public class DropParty implements Runnable {
 
             int dropX = 2658 + (int) (Math.random() * 9);
             int dropY = 3299 + (int) (Math.random() * 15);
-            Ground.items.add(new GroundItem(dropX, dropY, dropItem.getId(), dropItem.getAmount(), -1, -1));
+            //TODO: If we want this, fix the ground items to display items instantly :L
 
             try {
                 Thread.sleep(3000);

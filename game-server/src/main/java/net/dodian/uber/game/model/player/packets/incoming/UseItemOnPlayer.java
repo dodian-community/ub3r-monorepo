@@ -17,7 +17,10 @@ public class UseItemOnPlayer implements Packet {
         int CrackerSlot = client.getInputStream().readSignedWordBigEndian();
         Client player = ((Client) PlayerHandler.players[playerSlot]);
 
-        if (playerSlot < 0 || player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
+        if (player == null || playerSlot > Constants.maxPlayers || !client.playerHasItem(itemId)) {
+            return;
+        }
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         if (itemId == 5733) { //Potato
@@ -41,6 +44,7 @@ public class UseItemOnPlayer implements Packet {
                 client.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
             } else {
                 player.addItem(partyHat, 1);
+                client.checkItemUpdate();
                 player.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from " + client.getPlayerName()));
                 client.send(new SendMessage(player.getPlayerName() + " got a  " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
             }

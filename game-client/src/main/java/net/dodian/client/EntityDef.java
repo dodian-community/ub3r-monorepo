@@ -22,6 +22,12 @@ public final class EntityDef {
 
     private static void customValues(EntityDef def) {
         int id = (int) def.interfaceType;
+        if (id == 100 || id == 5935)
+            def.minimapDot = true;
+        if (id == 6080 || id == 4965) {
+            def.standAnim = 6666;
+            def.walkAnim = 6666;
+        }
         if (id == 1510)
             def.actions = new String[]{"Shrimp", null, "Trout", null, null};
         if (id == 1511)
@@ -30,6 +36,49 @@ public final class EntityDef {
             def.actions = new String[]{"Monkfish", null, "Shark", null, null};
         if (id == 1517)
             def.actions = new String[]{"Sea Turtle", null, "Manta Ray", null, null};
+        if (id == 2180 || id == 1105 || id == 1107 || id == 1103)
+            def.actions = new String[]{"Talk-to", null, "Pay", null, null};
+        if (id == 4753)
+            def.actions = new String[]{"Talk-to", null, "Trade", "Clean herbs", "Make unfinish potion(s)"};
+        if (id == 4642)
+            def.actions = new String[]{"Talk-to", null, "Trade", null, null};
+        if(id == 4649)
+            def.combatLevel = 66;
+        if (id == 695)
+            def.actions = new String[]{null, "Attack","Pickpocket", null, null};
+        if (id == 690) { //Bandit camp
+            def.name = "Bandit boss";
+            def.combatLevel = 91;
+            def.actions = new String[]{null, "Attack",null, null, null};
+        }
+        if (id == 738 || id == 3551) { //Pollnivneach thug boss!
+            def.name = id == 738 ? "Pollnivneach bandit boss" : "Menaphite thug boss";
+            def.combatLevel = 81;
+            def.actions = new String[]{null, "Attack",null, null, null};
+        }
+        if (id == 736 || id == 3549) { //Pollnivneach
+            def.standAnim = 808;
+            def.walkAnim = 819;
+            def.name = id == 736 ? "Pollnivneach bandit" : "Menaphite thug";
+            def.combatLevel = 45;
+            def.actions = new String[]{null, "Attack", "Pickpocket", null, null};
+        }
+        if (id == 4304) { //Kalphite King
+            def.name = "Kalphite King";
+            def.combatLevel = 402;
+        }
+        if (id == 4303) { //Kalphite King
+            def.name = "Kalphite Queen";
+            def.combatLevel = 402;
+        }
+        if (id == 6610) { //Venenatis
+            def.name = "Spider Queen";
+            def.combatLevel = 402;
+        }
+        if (id == 5842) { //Cow = easter...huh?!
+            def.actions = new String[]{"Talk-to", null, null, null, null};
+            def.combatLevel = 0;
+        }
     }
 
     public Model method160() {
@@ -273,7 +322,7 @@ public final class EntityDef {
             else if (i == 92)
                 stream.readUnsignedWord();
             else if (i == 93)
-                aBoolean87 = false;
+                minimapDot = false;
             else if (i == 95)
                 combatLevel = stream.readUnsignedWord();
             else if (i == 97)
@@ -326,7 +375,7 @@ public final class EntityDef {
         anInt83 = -1;
         aBoolean84 = true;
         anInt86 = 128;
-        aBoolean87 = true;
+        minimapDot = true;
         anInt91 = 128;
         aBoolean93 = false;
     }
@@ -357,7 +406,7 @@ public final class EntityDef {
     public boolean aBoolean84;
     public int anInt85;
     public int anInt86;
-    public boolean aBoolean87;
+    public boolean minimapDot;
     public int childrenIDs[];
     public byte description[];
     public int anInt91;

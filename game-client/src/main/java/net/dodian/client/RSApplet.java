@@ -248,6 +248,15 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
 
     public void mouseWheelMoved(MouseWheelEvent event) {
         int rotation = event.getWheelRotation();
+        if(Client.shiftIsDown) {
+            if (Client.cameraPos2 <= 300 && rotation == -1 || Client.cameraPos2 >= 900 && rotation == 1) {
+                return;
+            }
+            int diff = rotation == -1 ? -30 : 30;
+            Client.cameraPos2 = Client.cameraPos2 + diff;
+            return;
+        }
+        handleInterfaceScrolling(event);
         if (mouseX > 0 && mouseX < 512 && mouseY > Client.clientHeight - 165 && mouseY < Client.clientHeight - 25) {
             if (rotation < 0) {
                 if (Client.getClient().aClass9_1059.scrollPosition < 1) {
@@ -304,40 +313,64 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
 
     public void handleInterfaceScrolling(MouseWheelEvent event) {
         int rotation = event.getWheelRotation();
-        int positionX = 0;
-        int positionY = 0;
-        int width = 0;
-        int height = 0;
-        int offsetX = 0;
-        int offsetY = 0;
-        int childID = 0;
+        int positionX, positionY, width, height;
+        int offsetX, offsetY, newScrollPos;
         /* Tab interface scrolling */
         int tabInterfaceID = Client.tabInterfaceIDs[Client.tabID];
         if (tabInterfaceID != -1) {
             RSInterface tab = RSInterface.interfaceCache[tabInterfaceID];
             offsetX = Client.clientSize == 0 ? Client.clientWidth - 218 : (Client.clientSize == 0 ? 28 : Client.clientWidth - 197);
             offsetY = Client.clientSize == 0 ? Client.clientHeight - 298 : (Client.clientSize == 0 ? 37 : Client.clientHeight - (Client.clientWidth >= 1000 ? 37 : 74) - 267);
-            if (tab.children == null) {
+            /*if (tab.children == null) {
                 return;
-            }
+            }*/
             for (int index = 0; index < tab.children.length; index++) {
-                if (RSInterface.interfaceCache[tab.children[index]].scrollMax > 0) {
-                    childID = index;
+                RSInterface child = RSInterface.interfaceCache[tab.children[index]];
+                if (child.scrollMax > 0) {
                     positionX = tab.childX[index];
                     positionY = tab.childY[index];
-                    width = RSInterface.interfaceCache[tab.children[index]].width;
-                    height = RSInterface.interfaceCache[tab.children[index]].height;
-                    break;
-                }
-            }
-            if (mouseX > offsetX + positionX && mouseY > offsetY + positionY && mouseX < offsetX + positionX + width && mouseY < offsetY + positionY + height) {
-                if (RSInterface.interfaceCache[tab.children[childID]].scrollPosition > 0) {
-                    RSInterface.interfaceCache[tab.children[childID]].scrollPosition += rotation * 30;
-                    return;
-                } else {
-                    if (rotation > 0) {
-                        RSInterface.interfaceCache[tab.children[childID]].scrollPosition += rotation * 30;
+                    width = child.width;
+                    height = child.height;
+                    if (mouseX >= offsetX + positionX && mouseY >= offsetY + positionY
+                            && mouseX < offsetX + positionX + width
+                            && mouseY < offsetY + positionY + height) {
+                        newScrollPos = child.scrollPosition + rotation * 30;
+                        if (newScrollPos > child.scrollMax - child.height) {
+                            newScrollPos = child.scrollMax - child.height;
+                        } else if (newScrollPos < 0) {
+                            newScrollPos = 0;
+                        }
+                        if (Client.instance.activeInterfaceType != 0) {
+                            Client.instance.anInt1088 -= newScrollPos - child.scrollPosition;
+                        }
+                        child.scrollPosition = newScrollPos;
                         return;
+                    }
+                }
+                if (child.children != null) {
+                    for (int indexOfIndex = 0; indexOfIndex < child.children.length; indexOfIndex++) {
+                        RSInterface childOfChild = RSInterface.interfaceCache[child.children[indexOfIndex]];
+                        if (childOfChild.scrollMax > 0) {
+                            positionX = child.childX[indexOfIndex];
+                            positionY = child.childY[indexOfIndex];
+                            width = childOfChild.width;
+                            height = childOfChild.height;
+                            if (mouseX >= offsetX + positionX && mouseY >= offsetY + positionY
+                                    && mouseX < offsetX + positionX + width
+                                    && mouseY < offsetY + positionY + height) {
+                                newScrollPos = childOfChild.scrollPosition + rotation * 30;
+                                if (newScrollPos > childOfChild.scrollMax - childOfChild.height) {
+                                    newScrollPos = childOfChild.scrollMax - childOfChild.height;
+                                } else if (newScrollPos < 0) {
+                                    newScrollPos = 0;
+                                }
+                                if (Client.instance.activeInterfaceType != 0) {
+                                    Client.instance.anInt1088 -= newScrollPos - childOfChild.scrollPosition;
+                                }
+                                childOfChild.scrollPosition = newScrollPos;
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -348,23 +381,50 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
             offsetX = Client.clientSize == 0 ? 4 : (Client.clientWidth / 2) - 356;
             offsetY = Client.clientSize == 0 ? 4 : (Client.clientHeight / 2) - 230;
             for (int index = 0; index < rsi.children.length; index++) {
-                if (RSInterface.interfaceCache[rsi.children[index]].scrollMax > 0) {
-                    childID = index;
+                RSInterface child = RSInterface.interfaceCache[rsi.children[index]];
+                if (child.scrollMax > 0) {
                     positionX = rsi.childX[index];
                     positionY = rsi.childY[index];
-                    width = RSInterface.interfaceCache[rsi.children[index]].width;
-                    height = RSInterface.interfaceCache[rsi.children[index]].height;
-                    break;
-                }
-            }
-            if (mouseX > offsetX + positionX && mouseY > offsetY + positionY && mouseX < offsetX + positionX + width && mouseY < offsetY + positionY + height) {
-                if (RSInterface.interfaceCache[rsi.children[childID]].scrollPosition > 0) {
-                    RSInterface.interfaceCache[rsi.children[childID]].scrollPosition += rotation * 30;
-                    return;
-                } else {
-                    if (rotation > 0) {
-                        RSInterface.interfaceCache[rsi.children[childID]].scrollPosition += rotation * 30;
+                    width = child.width;
+                    height = child.height;
+                    if (mouseX > offsetX + positionX && mouseY > offsetY + positionY && mouseX < offsetX + positionX + width && mouseY < offsetY + positionY + height) {
+                        newScrollPos = child.scrollPosition + rotation * 30;
+                        if (newScrollPos > child.scrollMax - child.height) {
+                            newScrollPos = child.scrollMax - child.height;
+                        } else if (newScrollPos < 0) {
+                            newScrollPos = 0;
+                        }
+                        if (Client.instance.activeInterfaceType != 0) {
+                            Client.instance.anInt1088 -= newScrollPos - child.scrollPosition;
+                        }
+                        child.scrollPosition = newScrollPos;
                         return;
+                    }
+                }
+                if(child.children != null) {
+                    for (int indexOfIndex = 0; indexOfIndex < child.children.length; indexOfIndex++) {
+                        RSInterface childOfChild = RSInterface.interfaceCache[child.children[indexOfIndex]];
+                        if (childOfChild.scrollMax > 0) {
+                            positionX = child.childX[indexOfIndex];
+                            positionY = child.childY[indexOfIndex];
+                            width = childOfChild.width;
+                            height = childOfChild.height;
+                            if (mouseX >= offsetX + positionX && mouseY >= offsetY + positionY
+                                    && mouseX < offsetX + positionX + width
+                                    && mouseY < offsetY + positionY + height) {
+                                newScrollPos = childOfChild.scrollPosition + rotation * 30;
+                                if (newScrollPos > childOfChild.scrollMax - childOfChild.height) {
+                                    newScrollPos = childOfChild.scrollMax - childOfChild.height;
+                                } else if (newScrollPos < 0) {
+                                    newScrollPos = 0;
+                                }
+                                if (Client.instance.activeInterfaceType != 0) {
+                                    Client.instance.anInt1088 -= newScrollPos - childOfChild.scrollPosition;
+                                }
+                                childOfChild.scrollPosition = newScrollPos;
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -437,6 +497,7 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
         idleTime = 0;
         mouseX = -1;
         mouseY = -1;
+        Client.shiftIsDown = false; //Mouse out of bounds -> no shift click!
     }
 
     public int mouseWheelX;
@@ -490,26 +551,30 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
             c.clearTopInterfaces();
             return;
         }
-        if (i == KeyEvent.VK_SHIFT) {
-            c.shiftIsDown = true;
+        if(i == KeyEvent.VK_F1) {
+            Client.setTab(3);
+        } else if(i == KeyEvent.VK_F2) {
+            Client.setTab(4);
+        } else if(i == KeyEvent.VK_F3) {
+            Client.setTab(5);
+        } else if(i == KeyEvent.VK_F4) {
+            Client.setTab(6);
+        } else if(i == KeyEvent.VK_F5) {
+            Client.setTab(0);
+        } else if(i == KeyEvent.VK_F6) {
+            Client.setTab(2);
+        } else if(i == KeyEvent.VK_F7) {
+            Client.setTab(1);
+        } else if(keyevent.isControlDown() && i == KeyEvent.VK_H) {
+            c.sendPacket185(21741, -1, 135); //Home teleport key aka Yanille!
+        } else if(keyevent.isControlDown() && i == KeyEvent.VK_P) {
+            int id = Client.lastTeleport;
+            if(id != -1) c.sendPacket185(id, -1, 135);
         }
-		/*if(j == 96) {
-			net.dodian.client.Client.consoleOpen = !net.dodian.client.Client.consoleOpen;
-		}
-		if(i ==  KeyEvent.VK_ESCAPE){
-			net.dodian.client.Client.getClient().toggleSize(0);
-		}
-		if(i == KeyEvent.VK_F1) {
-			net.dodian.client.Client.setTab(4);
-		} else if(i == KeyEvent.VK_F2) {
-			net.dodian.client.Client.setTab(5);
-		} else if(i == KeyEvent.VK_F3) {
-			net.dodian.client.Client.setTab(6);
-		} else if(i == KeyEvent.VK_F4) {
-			net.dodian.client.Client.setTab(7);
-		} else if(i == KeyEvent.VK_F5) {
-			net.dodian.client.Client.setTab(0);
-		}*/
+        if (keyevent.isShiftDown()) {
+            Client.shiftIsDown = true;
+        }
+        //net.dodian.client.Client.consoleOpen = !net.dodian.client.Client.consoleOpen; -> j == 96?
         if (j < 30)
             j = 0;
         if (i == 37)
@@ -554,7 +619,7 @@ public class RSApplet extends Applet implements Runnable, MouseListener, MouseMo
         char c = keyevent.getKeyChar();
         Client cl = Client.getClient();
         if (i == KeyEvent.VK_SHIFT) {
-            cl.shiftIsDown = false;
+            Client.shiftIsDown = false;
         }
         if (i == 17) {
             resizing = false;

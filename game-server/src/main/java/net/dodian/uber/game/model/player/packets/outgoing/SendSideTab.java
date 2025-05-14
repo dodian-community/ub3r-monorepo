@@ -15,7 +15,7 @@ public class SendSideTab implements OutgoingPacket {
     public void send(Client client) {
         client.getOutputStream().createFrame(106);
         client.getOutputStream().writeByteC(tabId);
-        client.flushOutStream();
+        //client.flushOutStream();
     }
 
 }

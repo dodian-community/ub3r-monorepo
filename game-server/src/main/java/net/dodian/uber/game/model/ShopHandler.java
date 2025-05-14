@@ -10,11 +10,11 @@ import java.io.IOException;
 public class ShopHandler {
     public static int MaxShops = 101; // 1 more because we don't use [0] !
     public static int MaxShopItems = 40;
-    public static int MaxShowDelay = 90;
+    public static int MaxShowDelay = 100;
     public static int TotalShops = 0;
     public static int[][] ShopItems = new int[MaxShops][MaxShopItems];
     public static int[][] ShopItemsN = new int[MaxShops][MaxShopItems];
-    public static int[][] ShopItemsDelay = new int[MaxShops][MaxShopItems];
+    public static int[] ShopItemsDelay = new int[MaxShops];
     public static int[][] ShopItemsSN = new int[MaxShops][MaxShopItems];
     public static int[] ShopItemsStandard = new int[MaxShops];
     public static String[] ShopName = new String[MaxShops];
@@ -38,7 +38,7 @@ public class ShopHandler {
 
     public void DiscountItem(int ShopID, int ArrayID) {
         ShopItemsN[ShopID][ArrayID] -= 1;
-        if (ShopItemsN[ShopID][ArrayID] <= 0) {
+        if (ShopItemsN[ShopID][ArrayID] <= 0 && ArrayID >= ShopHandler.ShopItemsStandard[ShopID]) {
             ShopItemsN[ShopID][ArrayID] = 0;
             ResetItem(ShopID, ArrayID);
         }
@@ -47,13 +47,20 @@ public class ShopHandler {
     public void ResetItem(int ShopID, int ArrayID) {
         ShopItems[ShopID][ArrayID] = 0;
         ShopItemsN[ShopID][ArrayID] = 0;
-        ShopItemsDelay[ShopID][ArrayID] = 0;
+        ShopItemsDelay[ShopID] = 0;
     }
 
     public static void resetAnItem(int ShopID, int ArrayID) {
         ShopItems[ShopID][ArrayID] = -1;
         ShopItemsN[ShopID][ArrayID] = 0;
-        ShopItemsDelay[ShopID][ArrayID] = 0;
+        ShopItemsDelay[ShopID] = 0;
+    }
+
+    public static boolean findDefaultItem(int shopId, int id) {
+        for(int i = 0; i < ShopItemsStandard[shopId]; i++)
+            if(ShopItems[shopId][i] -1 == id)
+                return true;
+        return false;
     }
 
     @SuppressWarnings("resource")

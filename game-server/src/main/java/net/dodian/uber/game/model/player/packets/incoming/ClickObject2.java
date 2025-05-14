@@ -13,12 +13,13 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.utilities.Misc;
 
+import java.util.Objects;
 import java.util.Random;
 
-import static net.dodian.DotEnvKt.getGameWorldId;
+import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ClickObject2 implements Packet {
 
@@ -35,10 +36,11 @@ public class ClickObject2 implements Packet {
         client.setWalkToTask(task);
         if (getGameWorldId() > 1 && object != null)
             client.send(new SendMessage("Obj click2: " + object.getId() + ", " + object.getName() + ", Coord: " + objectX + ", " + objectY + ", " + (def == null ? "Def is null!" : def.getFace())));
-        if (objectID == 14896) {
+        if (objectID == 14896 || objectID == 14909) {
             client.addItem(1779, 1);
+            client.checkItemUpdate();
         }
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         EventManager.getInstance().registerEvent(new Event(600) {
@@ -46,7 +48,7 @@ public class ClickObject2 implements Packet {
             @Override
             public void execute() {
 
-                if (client == null || client.disconnected) {
+                if (client.disconnected) {
                     this.stop();
                     return;
                 }
@@ -56,11 +58,11 @@ public class ClickObject2 implements Packet {
                 }
                 Position objectPosition = null;
                 if (def != null)
-                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
+                    objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(def.getFace()), object.getSizeY(def.getFace()), client.getPosition().getZ());
                 else {
                     Object o = new Object(objectID, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), task.getWalkToPosition().getZ(), 10);
                     if (GlobalObject.hasGlobalObject(o)) {
-                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
+                        objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), Objects.requireNonNull(object).getSizeX(o.face), object.getSizeY(o.type), client.getPosition().getZ());
                     } else if (object != null)
                         objectPosition = Misc.goodDistanceObject(task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getX(), client.getPosition().getY(), object.getSizeX(), object.getSizeY(), client.getPosition().getZ());
                 }
@@ -75,12 +77,9 @@ public class ClickObject2 implements Packet {
     }
 
     public void clickObject2(Client client, int objectID, Position position, GameObjectData obj) {
-        System.out.println("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
+        //System.out.println("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
         if (client.adding) {
             client.objects.add(new RS2Object(objectID, position.getX(), position.getY(), 2));
-        }
-        if (getGameWorldId() > 0) {
-            client.println_debug("atObject2: " + position.getX() + "," + position.getY() + " objectID: " + objectID);
         }
         if (System.currentTimeMillis() < client.walkBlock) {
             return;
@@ -100,8 +99,13 @@ public class ClickObject2 implements Packet {
             case 378: //Empty chest
                 client.send(new SendMessage("this chest is empty!"));
                 break;
+            case 7962:
+                client.send(new SendMessage("Inspect"));
+                break;
+            case 20931: //Quick exit pyramid plunder
+                client.getPlunder.resetPlunder();
+            break;
         }
-		
 		/*if (objectID == 2564) {
 			client.skillX = position.getX();
 			client.setSkillY(position.getY());
@@ -132,7 +136,7 @@ public class ClickObject2 implements Packet {
             client.setSkillY(position.getY());
             client.WanneThieve = 4877;
         }
-        if (objectID == 3994 || objectID == 11666) { //Gold craft
+        if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) { //Gold craft
             client.showItemsGold();
             client.showInterface(4161);
         }
@@ -141,7 +145,7 @@ public class ClickObject2 implements Packet {
 			client.setSkillY(position.getY());
 			client.WanneThieve = 2562;
 		}*/
-        if (objectID == 25824) {
+        if (objectID == 25824 || objectID == 14889) {
             client.spinning = true;
             client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         }
@@ -151,7 +155,6 @@ public class ClickObject2 implements Packet {
         }
         if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
                 || (objectID == 6084) || objectName.contains("bank booth")) {
-            //System.out.println("Banking..");
             client.skillX = position.getX();
             client.setSkillY(position.getY());
             client.WanneBank = 1;

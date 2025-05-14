@@ -12,7 +12,7 @@ public class UpdateChat implements Packet {
         client.getInputStream().readUnsignedByte();
         client.Privatechat = client.getInputStream().readUnsignedByte();
         client.getInputStream().readUnsignedByte();
-        if (System.currentTimeMillis() - client.lastButton < 750) {
+        if (System.currentTimeMillis() - client.lastButton < 600) {
             return;
         }
         client.lastButton = System.currentTimeMillis();

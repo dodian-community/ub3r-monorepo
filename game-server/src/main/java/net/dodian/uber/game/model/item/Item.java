@@ -11,7 +11,7 @@ public class Item {
     private int runAnim;
     private int attackAnim = 0;
     private int shopSellValue = 1, shopBuyValue = 0;
-    private int[] bonuses = new int[12];
+    private final int[] bonuses = new int[12];
     private boolean stackable = false;
     private boolean noteable = false;
     private boolean tradeable = true;
@@ -33,23 +33,21 @@ public class Item {
             full = row.getInt("full") == 1 == true;
             mask = row.getInt("full") == 2 == true;
             stackable = row.getBoolean("stackable");
-            name = row.getString("name").replace("_", " ");
+            if(row.getString("name") != null)
+                name = row.getString("name").replace("_", " ");
             for (int i = 0; i < bonuses.length; i++) {
                 bonuses[i] = row.getInt("bonus" + (i + 1));
             }
             shopSellValue = row.getInt("shopSellValue");
             shopBuyValue = row.getInt("shopBuyValue");
             Alchemy = row.getInt("Alchemy");
-
             standAnim = row.getInt("standAnim");
             walkAnim = row.getInt("walkAnim");
             runAnim = row.getInt("runAnim");
             attackAnim = row.getInt("attackAnim");
-            if (attackAnim == 806)
-                attackAnim = 451;
             premium = row.getInt("premium") == 1;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("item stuff wrong during load.." + e);
         }
     }
 

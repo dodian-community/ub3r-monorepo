@@ -1,219 +1,207 @@
 package net.dodian.uber.comm;
 
-import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.LinkedList;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SocketHandler implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
+    private static final int BUFFER_SIZE = 8192;
+    private static final long SELECTOR_TIMEOUT = 10;
+    private static final int MAX_WRITES_PER_CYCLE = 10;
 
-    private Client player;
-    private Socket socket;
+    private final Client player;
+    private final SocketChannel socketChannel;
+    private final AtomicBoolean processRunning = new AtomicBoolean(true);
+    private final Queue<PacketData> incomingPackets = new ConcurrentLinkedQueue<>();
+    private final Queue<ByteBuffer> outData = new ConcurrentLinkedQueue<>();
+    private final ReentrantLock outputLock = new ReentrantLock();
+    private final Condition cleanupDone = outputLock.newCondition();
 
-    private boolean processRunning;
+    private ByteBuffer inputBuffer;
+    private Selector selector;
+    private PacketParser packetParser;
 
-    private PacketQueue packets = new PacketQueue();
-    private Queue<PacketData> myPackets = new LinkedList<PacketData>();
-    private Queue<byte[]> outData = new ConcurrentLinkedQueue<byte[]>();
-
-    public SocketHandler(Client player, Socket socket) {
+    public SocketHandler(Client player, SocketChannel socketChannel) throws IOException {
         this.player = player;
-        this.socket = socket;
-        this.processRunning = true;
+        this.socketChannel = socketChannel;
+        this.socketChannel.configureBlocking(false);
+        this.selector = Selector.open();
+        this.socketChannel.register(selector, SelectionKey.OP_READ);
+        this.inputBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+        this.packetParser = new PacketParser();
     }
 
+    @Override
     public void run() {
-        long lastProcess = System.currentTimeMillis();
-        while (processRunning) {
-            if (!isConnected()) {
-                myPackets.clear();
-                break;
-            }
-            while (writeOutput())
-                ;
-            /**
-             * Send all output
-             */
-            flush();
-            if (lastProcess + 50 <= System.currentTimeMillis()) {
-                while (parsePackets())
-                    ;
-                /**
-                 * Grabs temp packets from packetQueue
-                 */
-                LinkedList<PacketData> temp = packets.getPackets();
-                /**
-                 * Adds the packets to the myPackets queue
-                 */
-                if (myPackets == null)
-                    myPackets.clear();
-                if (temp != null)
-                    myPackets.addAll(temp);
-                lastProcess = System.currentTimeMillis();
-            }
-            try {
-                Thread.sleep(50);
-            } catch (java.lang.Exception _ex) {
+        try {
+            while (processRunning.get() && isConnected()) {
+                int readyOps = selector.select(SELECTOR_TIMEOUT);
+                if (readyOps > 0) {
+                    for (SelectionKey key : selector.selectedKeys()) {
+                        if (!key.isValid()) continue;
+                        if (key.isReadable()) {
+                            parsePackets();
+                        }
+                        if (key.isWritable()) {
+                            writeOutput();
+                        }
+                    }
+                    selector.selectedKeys().clear();
+                }
 
+                if (!outData.isEmpty()) {
+                    writeOutput();
+                }
+
+                player.timeOutCounter = 0;
             }
+        } catch (IOException e) {
+            logger.error("SocketHandler: Error in run", e);
+        } finally {
+            cleanup(); // Ensure cleanup even on exceptions
         }
     }
 
     private boolean isConnected() {
-        return getInput() != null && getOutput() != null;
-    }
-
-    public Client getPlayer() {
-        return player;
-    }
-
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public InputStream getInput() {
-        try {
-            return socket.getInputStream();
-        } catch (IOException e) {
-            logout();
-        }
-        return null;
-    }
-
-    public OutputStream getOutput() {
-        try {
-            return socket.getOutputStream();
-        } catch (IOException e) {
-            logout();
-        }
-        return null;
-    }
-
-    public void write(byte[] array) {
-        try {
-            getOutput().write(array);
-        } catch (IOException e) {
-            logout();
-        }
-    }
-
-    public void write(byte[] data, int i, int length) {
-        try {
-            getOutput().write(data, i, length);
-        } catch (IOException e) {
-            logout();
-        }
-    }
-
-    public void flush() {
-        try {
-            getOutput().flush();
-        } catch (IOException e) {
-            logout();
-        }
+        return socketChannel != null && socketChannel.isOpen() && socketChannel.isConnected() && !player.disconnected;
     }
 
     public void logout() {
-        this.processRunning = false;
-        if (player == null)
-            return;
-        if (player.disconnected) // Already disconnected.
-            return;
-        if (player.loggingOut) {
+        if (processRunning.getAndSet(false)) {
             player.disconnected = true;
-        } else {
-            player.logout();
+            cleanup();
         }
     }
 
-    public boolean parsePackets() {
+    private void cleanup() {
+        outputLock.lock();
         try {
-            if (player.disconnected) {
-                this.processRunning = false;
-                return false;
+            flushRemainingData();
+            if (selector != null) {
+                selector.close();
             }
-            if (getInput() == null) {
-                this.processRunning = false;
-                return false;
+            if (socketChannel != null) {
+                socketChannel.close();
             }
+            logger.info("{} has disconnected.", player.getPlayerName());
 
-            int avail = getInput().available();
-            if (avail == 0) {
-                return false;
-            }
-            if (player.packetType == -1) {
-                player.packetType = getInput().read() & 0xff;
-                if (player.inStreamDecryption != null) {
-                    player.packetType = player.packetType - player.inStreamDecryption.getNextKey() & 0xff;
+            // Signal cleanup completion
+            cleanupDone.signalAll();
+        } catch (IOException e) {
+            logger.warn("SocketHandler Cleanup Exception", e);
+        } finally {
+            outputLock.unlock();
+            player.disconnected = true; // Ensure disconnection
+        }
+    }
+
+    private void flushRemainingData() {
+        outputLock.lock();
+        try {
+            ByteBuffer buffer;
+            while ((buffer = outData.poll()) != null) {
+                while (buffer.hasRemaining()) {
+                    socketChannel.write(buffer);
                 }
-                player.packetSize = Constants.PACKET_SIZES[player.packetType];
-                avail--;
             }
-            if (player.packetSize == -1) {
-                if (avail > 0) {
-                    player.packetSize = getInput().read() & 0xff;
-                    avail--;
+        } catch (IOException e) {
+            logger.warn("Failed to flush remaining data", e);
+        } finally {
+            outputLock.unlock();
+        }
+    }
+
+    private void parsePackets() throws IOException {
+        inputBuffer.clear();
+        int bytesRead = socketChannel.read(inputBuffer);
+        if (bytesRead == -1) {
+            throw new IOException("Client disconnected");
+        }
+
+        inputBuffer.flip();
+        packetParser.parsePackets(inputBuffer, player, incomingPackets);
+        inputBuffer.compact();
+    }
+
+    private void writeOutput() throws IOException {
+        outputLock.lock();
+        try {
+            int writesThisCycle = 0;
+            ByteBuffer buffer;
+            while ((buffer = outData.peek()) != null && writesThisCycle < MAX_WRITES_PER_CYCLE) {
+                int bytesWritten = socketChannel.write(buffer);
+                if (bytesWritten == 0) break;
+
+                if (!buffer.hasRemaining()) {
+                    outData.poll();
+                    writesThisCycle++;
                 } else {
-                    return false;
+                    break;
                 }
             }
-            if (avail < player.packetSize) {
-                return false;
+
+            updateInterestOps();
+        } finally {
+            outputLock.unlock();
+        }
+    }
+
+    private void updateInterestOps() {
+        SelectionKey key = socketChannel.keyFor(selector);
+        if (key != null && key.isValid()) {
+            int ops = SelectionKey.OP_READ;
+            if (!outData.isEmpty()) {
+                ops |= SelectionKey.OP_WRITE;
             }
-            fillInStream(player.packetType, player.packetSize);
-            player.timeOutCounter = 0;
-            player.packetType = -1;
-        } catch (java.lang.Exception __ex) {
-            player.saveStats(true);
-            player.disconnected = true;
-            this.processRunning = false;
-            return false;
+            key.interestOps(ops);
         }
-        return true;
     }
 
-    private void fillInStream(int id, int forceRead) throws java.io.IOException {
-        byte[] data = new byte[forceRead];
-        getInput().read(data, 0, forceRead);
-        PacketData pData = new PacketData(id, data, forceRead);
-        packets.add(pData);
+    public Queue<PacketData> getPackets() {
+        return incomingPackets;
     }
 
-    public LinkedList<PacketData> getPackets() {
-        return (LinkedList<PacketData>) myPackets;
-    }
-
-    /**
-     * @return if the thread is still running
-     */
-    public boolean isRunning() {
-        return processRunning;
-    }
-
-    public void setRunning(boolean running) {
-        this.processRunning = running;
-    }
-
-    public void queueOutput(byte[] copy) {
-        outData.add(copy);
-    }
-
-    public boolean writeOutput() {
-        for (int i = 0; i < 20; i++) {
-            if (outData.isEmpty())
-                return false;
-            byte[] data = (byte[]) outData.poll();
-            if (data == null)
-                continue;
-            write(data);
+    public void queueOutput(byte[] data, int offset, int length) {
+        if (!isConnected()) {
+            logger.warn("Attempted to queue output for disconnected player: {}", player.getPlayerName());
+            return;
         }
-        return false;
+
+        outputLock.lock();
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(length);
+            buffer.put(data, offset, length);
+            buffer.flip();
+            outData.offer(buffer);
+
+            updateInterestOps();
+        } finally {
+            outputLock.unlock();
+        }
     }
 
+    public void awaitCleanup() throws InterruptedException {
+        outputLock.lock();
+        try {
+            while (processRunning.get()) {
+                cleanupDone.await(); // Wait for cleanup signal
+            }
+        } finally {
+            outputLock.unlock();
+        }
+    }
 }

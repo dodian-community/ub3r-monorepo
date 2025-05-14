@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.skills.Thieving;
+import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 
 public class ClickNpc2 implements Packet {
 
@@ -22,7 +22,7 @@ public class ClickNpc2 implements Packet {
 
         final WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
-        if (client.randomed) {
+        if (client.randomed || client.UsingAgility) {
             return;
         }
         if (!client.playerPotato.isEmpty())
@@ -37,7 +37,7 @@ public class ClickNpc2 implements Packet {
                     return;
                 }
 
-                if (!client.goodDistanceEntity(tempNpc, 1)) {
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
                     return;
                 }
 
@@ -50,28 +50,15 @@ public class ClickNpc2 implements Packet {
     }
 
     public void clickNpc2(Client client, Npc tempNpc) {
-        int npcId = tempNpc.getId();
-        client.faceNPC(tempNpc.getSlot());
-        long time = System.currentTimeMillis();
-        if (time - client.globalCooldown[0] <= 50) {
-            client.send(new SendMessage("Action throttled... please wait longer before acting!"));
-            return;
-        }
-
-        client.globalCooldown[0] = time;
-        int npcX = tempNpc.getPosition().getX();
-        int npcY = tempNpc.getPosition().getY();
-		/*if (Math.abs(client.getPosition().getX() - npcX) > 50 || Math.abs(client.getPosition().getY() - npcY) > 50) {
-			// send(new SendMessage("Client hack detected!");
-			// break;
-		}*/
         if (!tempNpc.isAlive()) {
             client.send(new SendMessage("That monster has been killed!"));
             return;
         }
-
-        client.skillX = npcX;
-        client.setSkillY(npcY);
+        int npcId = tempNpc.getId();
+        client.resetAction();
+        client.faceNpc(tempNpc.getSlot());
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
         client.startFishing(npcId, 2);
 
         switch (npcId) {
@@ -80,114 +67,62 @@ public class ClickNpc2 implements Packet {
                 Thieving.attemptSteal(client, npcId, tempNpc.getPosition());
                 break;
         }
-        if (npcId == 394 || npcId == 495 || npcId == 2619) { /* Banking */
+        if (npcId == 394 || npcId == 395 || npcId == 7677) { /* Banking */
             client.WanneBank = 1;
-        } else if (npcId == 5034 || npcId == 844
-                || npcId == 462) { /*
-         * Essence Mine Guys
-         */
+        } else if (npcId == 5034 || npcId == 844 || npcId == 462) {
             client.stairs = 26;
             client.stairDistance = 1;
-            client.Essence = npcId == 5034 ? 1 : npcId == 844 ? 2 : 3;
         } else if (npcId == 1174) {
+            client.WanneShop = 19;
+        } else if (npcId == 4753) {
             client.WanneShop = 39;
+        } else if (npcId == 2345) {
+            client.NpcWanneTalk = npcId + 1;
+        } else if (npcId == 2180) {
+            client.NpcWanneTalk = npcId + 1;
+        } else if (npcId == 3648) {
+            client.setTravelMenu();
+        } else if (npcId == 1779) { // Start plunder
+            //client.getPlunder.startPlunder();
+            client.showNPCChat(1779, 605, new String[]{"What are you even doing in here?!", "Begone from me!"});
+        } else if (npcId == 506 || npcId == 527) {
+            client.WanneShop = 3; // Yanille General Store
+        } else if (npcId == 4965) { // Gnome general store
+            client.WanneShop = 4;
+        } else if (npcId == 1032) { // Catherby general store
+            client.WanneShop = 5;
+        } else if (npcId == 538) {
+            client.WanneShop = 6; // Just a general store?
+        } else if (npcId == 6478) { //Axe store
+            client.WanneShop = 7;
+        } else if (npcId == 3890) { //Pickaxe store
+            client.WanneShop = 8;
         } else if (npcId == 637) { // Aubury rune shop
             client.WanneShop = 9; // Aubury Magic Shop
-        } else if (npcId == 522 || npcId == 523) { // Shop Keeper +
-            // Assistant
-            client.WanneShop = 1; // Varrock General Store
-        } else if (npcId == 506 || npcId == 527) { // Shop Keeper +
-            // Assistant
-            client.WanneShop = 3; // Falador General Store
-        } else if (npcId == 577) { // Cassie
-            client.WanneShop = 4; // Falador Shield Shop
-        } else if (npcId == 580) { // Flynn
-            client.WanneShop = 5; // Falador Mace Shop
-        } else if (npcId == 538) { // Peksa
-            client.WanneShop = 6; // Barbarian Vullage Helmet Shop
-        } else if (npcId == 546) { // Zaff
-            client.WanneShop = 7; // Varrock Staff Shop
-        } else if (npcId == 548) { // Thessalia
-            client.WanneShop = 8; // Varrock Cloth shop
         } else if (npcId == 535) { // Horvik
             client.WanneShop = 10; // Varrock Armor shop
-        } else if (npcId == 584) { // Heruin
-            client.WanneShop = 12; // Falador Gem Shop
-        } else if (npcId == 581) { // Wayne
-            client.WanneShop = 13; // Falador Chainmail Shop
-        } else if (npcId == 585) { // Rommik
-            client.WanneShop = 14; // Rimmington Crafting Shop
-        } else if (npcId == 531 || npcId == 530) { // Shop Keeper +
-            // Assistant
-            client.WanneShop = 15; // Rimmington General Store
-        } else if (npcId == 1860) { // Brian
-            client.WanneShop = 16; // Rimmington Archery Shop
-        } else if (npcId == 557) { // Wydin
-            client.WanneShop = 17; // Port Sarim Food Shop
-        } else if (npcId == 1027) { // Gerrant
-            client.WanneShop = 18; // Port Sarim Fishing Shop
-        } else if (npcId == 559) { // Brian
-            client.WanneShop = 19; // Port Sarim Battleaxe Shop
-        } else if (npcId == 556) { // Grum
-            client.WanneShop = 20; // Port Sarim Jewelery Shop
-        } else if (npcId == 583) { // Betty
-            client.WanneShop = 21; // Port Sarim Magic Shop
-        } else if (npcId == 520 || npcId == 521) { // Shop Keeper +
-            // Assistant
-            client.WanneShop = 22; // Lumbridge General Store
-        } else if (npcId == 519) { // Bob
-
-            client.WanneShop = 23; // Lumbridge Axe Shop
-        } else if (npcId == 541) { // Zeke
-
-            client.WanneShop = 24; // Al-Kharid Scimitar Shop
-        } else if (npcId == 545) { // Dommik
-
-            client.WanneShop = 25; // Al-Kharid Crafting Shop
-        } else if (npcId == 524 || npcId == 525) { // Shop Keeper +
-            // Assistant
-
-            client.WanneShop = 26; // Al-Kharid General Store
-        } else if (npcId == 542) { // Louie Legs
-
-            client.WanneShop = 27; // Al-Kharid Legs Shop
-        } else if (npcId == 544) { // Ranael
-
-            client.WanneShop = 28; // Al-Kharid Skirt Shop
-        } else if (npcId == 2621) { // Hur-Koz
-
-            client.WanneShop = 29; // TzHaar Shop Weapons,Amour
-        } else if (npcId == 2622) { // Hur-Lek
-
-            client.WanneShop = 30; // TzHaar Shop Runes
-        } else if (npcId == 2620) { // Hur-Tel
-
-            client.WanneShop = 31; // TzHaar Shop General Store
-        } else if (npcId == 692) { // Throwing shop
-
-            client.WanneShop = 32; // Authentic Throwing Weapons
         } else if (npcId == 6060) { // Bow and arrows
             client.WanneShop = 11;
-        } else if (npcId == 6059) { // Archer's Armour
-
-            client.WanneShop = 34; // Aaron's Archery Appendages
-        } else if (npcId == 537) { // Scavvo
-
-            client.WanneShop = 35; // Champion's Rune shop
-        } else if (npcId == 536) { // Valaine
-
-            client.WanneShop = 36; // Champion's guild shop
-        } else if (npcId == 933) { // Legend's Shop
-
-            client.WanneShop = 37; // Legend's Shop
-        } else if (npcId == 932) { // Legends General Store
-
-            client.WanneShop = 38; // Legend's Gen. Store
+        } else if (npcId == 1027) { // Gerrant
+            client.WanneShop = 16; // Fishing shop
         } else if (npcId == 5809) {
-
-            client.WanneShop = 25; // Crafting shop
+            client.WanneShop = 18; // Crafting shop
+        } else if (npcId == 6059) { // Archer's Armour
+            client.WanneShop = 30; // Cape store!
+        } else if (npcId == 3837) { // Baba Yaga
+            client.WanneShop = 33;
+        } else if (npcId == 4642) { // Shanty
+            client.WanneShop = 36;
         } else if (npcId == 402 || npcId == 403 || npcId == 405) {
             client.NpcWanneTalk = 13;
+        } else if (npcId == 17) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 19) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 20) {
+            client.NpcWanneTalk = 20;
+        } else if (npcId == 22) {
+            client.NpcWanneTalk = 20;
         } else {
             client.println_debug("atNPC 2: " + npcId);
         }

@@ -1,9 +1,12 @@
 package net.dodian.uber.comm;
 
+import java.util.Arrays;
+
 public class PacketData {
 
-    private int id, length;
-    private byte[] data;
+    private final int id;
+    private int length;
+    private final byte[] data;
 
     public PacketData(int id, byte[] data, int length) {
         this.id = id;
@@ -28,7 +31,7 @@ public class PacketData {
     }
 
     public String toString() {
-        return "[" + id + "]" + data;
+        return "[" + id + "]" + Arrays.toString(data);
     }
 
 }

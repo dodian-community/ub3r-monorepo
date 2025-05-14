@@ -2,11 +2,12 @@ package net.dodian.uber.game.model.player.packets.incoming;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.packets.Packet;
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.herblore.Herblore;
+import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
@@ -15,6 +16,7 @@ import net.dodian.utilities.Utils;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Objects;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
@@ -26,6 +28,13 @@ public class ClickItem implements Packet {
         int itemSlot = client.getInputStream().readUnsignedWordA();
         int itemId = client.getInputStream().readUnsignedWordBigEndian();
         if (client.fillEssencePouch(itemId)) {
+            return;
+        }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if(itemSlot > 28 || itemSlot < 0) { //No need to go out of scope!
+            client.disconnected = true;
             return;
         }
         if (itemId == 5733) {
@@ -53,9 +62,9 @@ public class ClickItem implements Packet {
                 statement.close();
                 Server.npcManager.createNpc(client.getPlayerNpc(), new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()), 0);
                 client.send(new SendMessage("Npc added = " + client.getPlayerNpc() + ", at x = " + client.getPosition().getX()
-                        + " y = " + client.getPosition().getY() + ""));
+                        + " y = " + client.getPosition().getY() + "."));
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Potato sql error " + e);
             }
             return;
         }
@@ -63,10 +72,15 @@ public class ClickItem implements Packet {
             client.openGenie();
             return;
         }
-        if (System.currentTimeMillis() - client.lastAction >= 600) {
+        if (itemId == 6543) {
+            client.openAntique();
+            return;
+        }
+        if((itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051)
+            clickItem(client, itemSlot, itemId);
+        else if (System.currentTimeMillis() - client.lastAction > 100) { //Due to how system handles time need this for 1 tick delay! Perhaps better way to do it?
             clickItem(client, itemSlot, itemId);
             client.lastAction = System.currentTimeMillis();
-            // client.actionTimer = 10;
         }
     }
 
@@ -85,9 +99,6 @@ public class ClickItem implements Packet {
             client.send(new SendMessage("RewardItem cannot be used in a duel!"));
             return;
         }
-        if (Herblore.cleanHerb(client, item, slot)) {
-            return;
-        }
         if (Prayer.buryBones(client, item, slot)) {
             return;
         }
@@ -96,325 +107,284 @@ public class ClickItem implements Packet {
                 case 1856:
                     used = false;
                     client.guideBook();
-                    break;
+                break;
                 case 199:
                 case 203:
                 case 207:
                 case 209:
                 case 213:
                 case 215:
-                    for (int i = 0; i < Utils.grimy_herbs.length; i++) {
-                        if (client.getLevel(Skill.HERBLORE) < Utils.grimy_herbs_lvl[i]) {
-                            client
-                                    .send(new SendMessage("You need level " + Utils.grimy_herbs_lvl[i] + " herblore to clean this herb."));
-                            return;
+                case 217:
+                case 219:
+                case 3049: //Toadflax
+                case 3051: //Snapdragon
+                    for (int i = 0; i < Utils.grimy_herbs.length && used; i++) {
+                        if(Utils.grimy_herbs[i] == item) {
+                            used = false;
+                            if (Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE)) < Utils.grimy_herbs_lvl[i]) {
+                                client.send(new SendMessage("You need level " + Utils.grimy_herbs_lvl[i] + " herblore to clean this herb."));
+                            } else {
+                                client.giveExperience(Utils.grimy_herbs_xp[i], Skill.HERBLORE);
+                                client.deleteItem(item, slot, 1);
+                                client.addItemSlot(item == 3051 || item == 3049 ? item - 51 : item + 50, 1, slot);
+                                client.send(new SendMessage("You clean the "+client.GetItemName(item)+"."));
+                            }
                         }
-                        client.addExperience(Utils.grimy_herbs_xp[i] * 5, Skill.HERBLORE);
                     }
-                    break;
-                case 315:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 3);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the shrimps"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 333:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 5);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the trout"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 329:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 7);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the salmon"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 379:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 12);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the lobster"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 373:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 14);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the swordfish"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 7946:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 16);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the monkfish"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 385:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 20);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the shark"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 397:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 22);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the sea turtle"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 391:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 24);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the manta ray"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 2309:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 5);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the bread"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 1959:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 2);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the pumpkin"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
-                case 1961:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(0x33D, 0);
-                    client.animationReset = System.currentTimeMillis() + 800;
-                    client.setCurrentHealth(client.getCurrentHealth() + 2);
-                    if (client.getCurrentHealth() > client.getLevel(Skill.HITPOINTS)) {
-                        client.setCurrentHealth(client.getLevel(Skill.HITPOINTS));
-                    }
-                    client.send(new SendMessage("You eat the easter egg"));
-                    client.refreshSkill(Skill.HITPOINTS);
-                    break;
+                break;
+                case 315: //Shrimp
+                case 2140: //Chicken
+                case 2142: //Meat
+                    client.eat(3, item, slot);
+                    used = false;
+                break;
+                case 2309: //Bread
+                    client.eat(5, item, slot);
+                    used = false;
+                break;
+                case 3369: //Thin Snail
+                    client.eat(7, item, slot);
+                    used = false;
+                break;
+                case 333: //Trout
+                    client.eat(8, item, slot);
+                    used = false;
+                break;
+                case 329: //Salmon
+                    client.eat(10, item, slot);
+                    used = false;
+                break;
+                case 379: //Lobster
+                    client.eat(12, item, slot);
+                    used = false;
+                break;
+                case 373: //Swordfish
+                    client.eat(14, item, slot);
+                    used = false;
+                break;
+                case 7946: //Monkfish
+                    client.eat(16, item, slot);
+                    used = false;
+                break;
+                case 385: //Shark
+                    client.eat(20, item, slot);
+                    used = false;
+                break;
+                case 397: //Sea turtle
+                    client.eat(22, item, slot);
+                    used = false;
+                break;
+                case 391: //Manta ray
+                    client.eat(24, item, slot);
+                    used = false;
+                break;
+                case 1959: //Pumpkin
+                case 1961: //Easter egg
+                    client.eat(2, item, slot);
+                    used = false;
+                break;
                 case 121: // regular attack potion
                 case 123:
                 case 125:
                 case 2428:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the attack potion"));
-                    client.attackPot = 12.5;
-                    client.refreshSkill(Skill.ATTACK);
-                    if (item < 125) {
-                        nextId = item + 2;
-                    } else if (item == 2428) {
-                        nextId = 121;
-                    } else {
-                        nextId = 229;
-                    }
-                    break;
-                case 757:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.send(new SendMessage("You drink the attack potion"));
-                    client.attackPot = 30;
-                    client.refreshSkill(Skill.ATTACK);
+                    client.boost(3 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.1), Skill.ATTACK);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the attack potion." : "You drink the attack potion."));
                     break;
                 case 113:
                 case 115: // regular str
                 case 117:
                 case 119:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the strength potion"));
-                    client.strengthPot = 12.5;
-                    client.refreshSkill(Skill.STRENGTH);
-                    if (item < 119) {
-                        nextId = item + 2;
-                    } else {
-                        nextId = 229;
-                    }
-                    client.CalculateMaxHit();
+                    client.boost(3 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.STRENGTH)) * 0.1), Skill.STRENGTH);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the strength potion." : "You drink the strength potion."));
                     break;
                 case 2432:
                 case 133: // regular def
                 case 135:
                 case 137:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                    if (client.deathStage > 0 || client.deathTimer > 0 ||client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the defense potion"));
-                    client.defensePot = 12.5;
-                    client.refreshSkill(Skill.DEFENCE);
-                    if (item < 137) {
-                        nextId = item + 2;
-                    } else if (item == 2432) {
-                        nextId = 133;
-                    } else {
-                        nextId = 229;
-                    }
-                    break;
-                case 2440:
-                case 157:
-                case 159:
-                case 161:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
-                        return;
-                    }
-                    client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the super strength potion"));
-                    client.strengthPot = 20.0;
-                    client.refreshSkill(Skill.STRENGTH);
-                    if (item < 161) {
-                        nextId = item + 2;
-                    } else if (item == 2440) {
-                        nextId = 157;
-                    } else {
-                        nextId = 229;
-                    }
+                    client.boost(3 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.1), Skill.DEFENCE);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the defense potion." : "You drink the defense potion."));
                     break;
                 case 2436:
                 case 145:
                 case 147:
                 case 149:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the super attack potion"));
-                    client.attackPot = 20.0;
-                    client.refreshSkill(Skill.ATTACK);
-                    if (item < 149) {
-                        nextId = item + 2;
-                    } else if (item == 2436) {
-                        nextId = 145;
-                    } else {
-                        nextId = 229;
-                    }
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.ATTACK);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the super attack potion." : "You drink the super attack potion."));
                     break;
-                case 169://ranging potion
-                case 171:
-                case 173:
-                case 2444:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                case 2440:
+                case 157:
+                case 159:
+                case 161:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the ranging potion"));
-                    client.rangePot = 20.0;
-                    client.refreshSkill(Skill.RANGED);
-                    if (item < 173) {
-                        nextId = item + 2;
-                    } else if (item == 2444) {
-                        nextId = 169;
-                    } else {
-                        nextId = 229;
-                    }
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.STRENGTH)) * 0.15), Skill.STRENGTH);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the super strength potion." : "You drink the super strength potion."));
                     break;
                 case 2442:
                 case 163:
                 case 165:
                 case 167:
-                    if (client.deathStage > 0 || client.deathTimer > 0) {
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
                         return;
                     }
                     client.requestAnim(1327, 0);
-                    client.animationReset = System.currentTimeMillis() + 750;
-                    client.send(new SendMessage("You drink the super defense potion"));
-                    client.defensePot = 20.0;
+                    client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.DEFENCE)) * 0.15), Skill.DEFENCE);
                     client.refreshSkill(Skill.DEFENCE);
-                    if (item < 167) {
-                        nextId = item + 2;
-                    } else if (item == 2442) {
-                        nextId = 163;
-                    } else {
-                        nextId = 229;
-                    }
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the super defense potion." : "You drink the super defense potion."));
                     break;
+                case 2444: //4 dose
+                case 169://ranging potion
+                case 171:
+                case 173:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.boost(4 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.RANGED)) * 0.12), Skill.RANGED);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the ranging potion." : "You drink the ranging potion."));
+                    break;
+                case 139://prayer potion
+                case 141:
+                case 143:
+                case 2434: //4dose
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.pray(8 + (int)(client.getMaxPrayer() * 0.25));
+                    client.refreshSkill(Skill.PRAYER);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the prayer potion." : "You drink the prayer potion."));
+                    break;
+                case 3026://Super restore potion
+                case 3028:
+                case 3030:
+                case 3024: //4dose
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.pray(10 + (int)(client.getMaxPrayer() * 0.28));
+                    client.refreshSkill(Skill.PRAYER);
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the restore potion." : "You drink the restore potion."));
+                    break;
+                case 12695: //Super combat potion
+                case 12697:
+                case 12699:
+                case 12701:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    for(int skill = 0; skill < 3; skill++)
+                        client.boost(5 + (int)(Skills.getLevelForExperience(client.getExperience(Skill.ATTACK)) * 0.15), Skill.getSkill(skill));
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the super combat potion." : "You drink the super combat potion."));
+                    break;
+                case 11730: //Overload
+                case 11731:
+                case 11732:
+                case 11733:
+                    if (client.deathStage > 0 || client.deathTimer > 0 || client.inDuel || client.getCurrentHealth() < 11) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.dealDamage(null, 10, Entity.hitType.CRIT);
+                    for(int skill = 0; skill < 4; skill++) {
+                        skill = skill == 3 ? 4 : skill;
+                        client.boost(5 + (int) (Skills.getLevelForExperience(client.getExperience(Objects.requireNonNull(Skill.getSkill(skill)))) * 0.15), Skill.getSkill(skill));
+                    }
+                    int ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2;
+                    client.addEffectTime(2, 200 + ticks); //200 ticks = 120 seconds = 2 minutes!, max ticks = (99 + 1) * 2 = 200 aka 2 minute for a total of 4 minutes.
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the overload potion." : "You drink the overload potion."));
+                break;
+                case 2452:
+                case 2454:
+                case 2456:
+                case 2458:
+                    if((client.effects.size() > 1 && client.effects.get(1) > 50) || client.deathStage > 0 || client.deathTimer > 0 || client.inDuel) {
+                        return;
+                    }
+                    client.requestAnim(1327, 0);
+                    client.addEffectTime(1, 500); //500 ticks = 300 seconds = 5 minutes!
+                    for(int i = 0; i < Utils.pot_4_dose.length && nextId == -1; i++)
+                        nextId = Utils.pot_4_dose[i] == item ? Utils.pot_3_dose[i] :
+                                Utils.pot_3_dose[i] == item ? Utils.pot_2_dose[i] :
+                                        Utils.pot_2_dose[i] == item ? Utils.pot_1_dose[i] :
+                                                Utils.pot_1_dose[i] == item ? 229 : -1;
+                    client.send(new SendMessage(nextId == 229 ? "You empty the anti-fire potion." : "You drink the anti-fire potion."));
+                break;
                 case 4155:
                     if (client.inTrade || client.inDuel)
                         break;
@@ -424,13 +394,27 @@ public class ClickItem implements Packet {
                     used = false;
                     break;
                 case 11877:
-                    client.deleteItem(11877, 1);
-                    client.addItem(230, 100);
+                    client.deleteItem(11877, slot, 1);
+                    if(!client.playerHasItem(230))
+                        client.addItemSlot(230,100, slot);
+                    else
+                        client.addItem(230, 100);
                     used = false;
                     break;
                 case 11879:
-                    client.deleteItem(11879, 1);
-                    client.addItem(228, 100);
+                    client.deleteItem(11879, slot, 1);
+                    if(!client.playerHasItem(228))
+                        client.addItemSlot(228,100, slot);
+                    else
+                        client.addItem(228, 100);
+                    used = false;
+                    break;
+                case 12859:
+                    client.deleteItem(12859, slot,1);
+                    if(!client.playerHasItem(222))
+                        client.addItemSlot(222,100, slot);
+                    else
+                        client.addItem(222, 100);
                     used = false;
                     break;
 //      case 3062:
@@ -456,7 +440,7 @@ public class ClickItem implements Packet {
 //    	  break;
                 case 6199: //Something here!
                     int[] idss = {6856, 6857, 6859, 6861, 6860, 6858};
-                    int rs = Utils.random(idss.length) - 1;
+                    int rs = Utils.random(idss.length - 1);
                     client.deleteItem(6199, 1);
                     client.addItem(idss[rs], 1);
                     client.send(new SendMessage("Thank you for waiting patiently on us, take this as a token of gratitude!"));
@@ -476,8 +460,8 @@ public class ClickItem implements Packet {
                     }
                     /* Delete item and add stuff! */
                     client.deleteItem(item, 1);
-                    for (int i = 0; i < xPresents.length; i++)
-                        client.addItem(xPresents[i], 3 + Misc.random(6));
+                    for (int xPresent : xPresents)
+                        client.addItem(xPresent, 3 + Misc.random(6));
                     break;
                 case 6542:
                 case 11996:
@@ -524,6 +508,7 @@ public class ClickItem implements Packet {
         if (nextId > 0) {
             client.addItemSlot(nextId, 1, slot);
         }
+        client.checkItemUpdate();
     }
 
 }
