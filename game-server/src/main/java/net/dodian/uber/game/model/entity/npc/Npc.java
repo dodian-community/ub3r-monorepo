@@ -57,8 +57,20 @@ public class Npc extends Entity {
                 level[i] = data.getLevel()[i];
             }
             CalculateMaxHit(true);
-            this.currentHealth = data.getHP();
-            this.maxHealth = data.getHP();
+            if(slot == Server.npcManager.dagaRex || slot == Server.npcManager.dagaSupreme) { //Not sure yet if it will work!
+                int dagaHealth = data.getHP();
+                int otherIndex = slot == Server.npcManager.dagaRex ? Server.npcManager.dagaSupreme : Server.npcManager.dagaRex;
+                if(otherIndex != -1) {
+                    dagaHealth += Server.npcManager.getNpc(otherIndex).currentHealth;
+                    Server.npcManager.getNpc(otherIndex).currentHealth = dagaHealth;
+                    Server.npcManager.getNpc(otherIndex).maxHealth = dagaHealth;
+                }
+                this.currentHealth = dagaHealth;
+                this.maxHealth = dagaHealth;
+            } else {
+                this.currentHealth = data.getHP();
+                this.maxHealth = data.getHP();
+            }
 
             //Boss?
             if (id == 4130) { //Dad
@@ -272,6 +284,21 @@ public class Npc extends Entity {
             getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
         }
         currentHealth -= hitDiff;
+        /* Daganoth kings mechanic dodian style! */
+        int otherIndex = this == Server.npcManager.getNpc(Server.npcManager.dagaRex) ? Server.npcManager.dagaSupreme : this == Server.npcManager.getNpc(Server.npcManager.dagaSupreme) ? Server.npcManager.dagaRex : -1;
+        if(otherIndex != -1) {
+            int dmg = hitDiff;
+            Server.npcManager.getNpc(otherIndex).currentHealth -= hitDiff;
+            if (validClient(client)) {
+                if (Server.npcManager.getNpc(otherIndex).getDamage().containsKey(client)) {
+                    dmg += Server.npcManager.getNpc(otherIndex).getDamage().get(client);
+                    Server.npcManager.getNpc(otherIndex).getDamage().remove(client);
+                }
+                Server.npcManager.getNpc(otherIndex).getDamage().put(client, dmg);
+                Server.npcManager.getNpc(otherIndex).fighting = true;
+            }
+        }
+        /* Dmg profile! */
         int dmg = hitDiff;
         if (validClient(client)) {
             if (getDamage().containsKey(client)) {
@@ -281,11 +308,9 @@ public class Npc extends Entity {
             getDamage().put(client, dmg);
             fighting = true;
         }
-        if (currentHealth < 1) {
-            alive = false;
-            currentHealth = 0;
-            die();
-        }
+        if (currentHealth < 1) die();
+        if(otherIndex != -1 && Server.npcManager.getNpc(otherIndex).currentHealth < 1) //Daganoth kings!
+            Server.npcManager.getNpc(otherIndex).die();
     }
 
     public void attack() {
@@ -467,6 +492,7 @@ public class Npc extends Entity {
     public void die() {
         resetCombatTimer();
         alive = false;
+        currentHealth = 0;
         fighting = false;
         deathTime = System.currentTimeMillis();
         requestAnim(deathEmote, 0);

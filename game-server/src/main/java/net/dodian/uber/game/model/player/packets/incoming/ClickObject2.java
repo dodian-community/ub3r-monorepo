@@ -131,6 +131,7 @@ public class ClickObject2 implements Packet {
 			client.setSkillY(position.getY());
 			client.WanneThieve = 2560;
 		}*/
+        client.farming.inspectPatch(client, objectID);
         if (objectID == 4877) {
             client.skillX = position.getX();
             client.setSkillY(position.getY());
