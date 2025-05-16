@@ -57,7 +57,7 @@ class FarmingData() {
         CATHERBY_EAST(Position(2860,3433,0), arrayOf(7965), arrayOf(fruitTreePatch.values()).toList()),
         ARDOUGNE_EAST(Position(2666,3374,0), arrayOf(7849, 8554, 8555, 8152),
         arrayOf(flowerPatch.values(), allotmentPatch.values(), allotmentPatch.values(), herbPatch.values()).toList()),
-        ARDOUGNE_SOUTH(Position(2617,3225,0), arrayOf(7580), arrayOf(bushPatch.values()).toList()),
+        ARDOUGNE_SOUTH(Position(2617,3225,0), arrayOf(7580), arrayOf(bushPatch.values()).toList())
     }
     enum class patchState {
         WEED, GROWING, DISEASE, DEAD, HARVEST, WATER, STUMP //Two last are not common for all patches!

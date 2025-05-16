@@ -1,6 +1,8 @@
 package net.dodian.uber.game.skills
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonPrimitive
+import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
@@ -9,7 +11,7 @@ import net.dodian.uber.game.skills.FarmingData.patches
 
 class Farming () {
     val farmData = FarmingData()
-    /* TODO: Fix shiet */
+
     fun Client.updateFarming() {
         //send(SendMessage("test"))
         //System.out.println("Farming tick...")
@@ -49,6 +51,24 @@ class Farming () {
             }
         }
         /* Farming Patches */
+        for(patch in FarmingData.patches.values()) { /* Patches default values */
+            if (farmingJson.getPatchData().get(patch.name) != null) {
+                val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
+                (0..patch.objectId.size-1).forEach { slot ->
+                    val objectId = patch.objectId[slot]
+                    /* Weed generation */
+                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() > 0) {
+                        val checkPos = slot*6
+                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
+                        if(farmPatches.get(checkPos + 4).asInt == 3) {
+                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
+                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
+                            System.out.println("I will regenerate weed!")
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun compostGrow(status: String) : Boolean {
@@ -126,6 +146,19 @@ class Farming () {
                 } else if (FarmingData.compostState.DONE.toString().equals(farmCompost.get(1).asString)) {
                     farmCompost.set(1, JsonPrimitive(FarmingData.compostState.OPEN.toString()))
                     updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                } else if (FarmingData.compostState.OPEN.toString().equals(farmCompost.get(1).asString)) {
+                    if(playerHasItem(farmData.BUCKET)) {
+                        deleteItem(farmData.BUCKET, 1)
+                        addItem(if(farmCompost.get(0).asString.equals(FarmingData.compost.SUPER.toString())) 6034 else 6032, 1)
+                        farmCompost.set(2, JsonPrimitive(farmCompost.get(2).asInt - 1))
+                        if(farmCompost.get(2).asInt == 0) {
+                            farmCompost.set(0, JsonPrimitive(FarmingData.compost.NONE.toString()))
+                            farmCompost.set(1, JsonPrimitive(FarmingData.compostState.EMPTY.toString()))
+                            farmCompost.set(3, JsonPrimitive(0))
+                        }
+                        checkItemUpdate()
+                        updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                    } else send(SendMessage("You are missing a bucket to be filled with compost."))
                 }
             } else if (objectId == compost.objectId && option == 5) {
                 //TODO: Fix a compost dump message!
@@ -145,33 +178,49 @@ class Farming () {
         }
     }
 
-    fun addFarmValue(farmEnum : String, slot : Int, value : String) { //Going to make it easier to change a value!
-        
-    }
-
-    fun Client.clickPatch(objectId : Int) {
-        val findData = findPatch(objectId)
-        if(findData != "null") { //hehe
-            send(SendMessage("Value is fine..." + findData))
+    fun Client.clickPatch(objectId : Int) : Boolean {
+        for(patch in FarmingData.patches.values()) { /* Patches default values */
+            if (farmingJson.getPatchData().get(patch.name) != null) {
+                val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
+                (0..patch.objectId.size - 1).forEach { slot ->
+                    val checkPos = slot * 6
+                    if (patch.objectId[slot] == objectId) { //We got the correct objectId!
+                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() < 3) {
+                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
+                            send(SendMessage("Test raking..."))
+                            return true
+                        }
+                    }
+                }
+            }
         }
+            return false
     }
     fun Client.inspectPatch(objectId : Int) {
-
+        val findData = findPatch(objectId, 0)
+        if(!findData.isEmpty()) { //Value to check for a patch!
+            val messageOne = "This is a " + GameObjectData.forId(objectId).name.lowercase() +"."
+            val messageTwo = "The soil has not been treated."
+            val messageThree = "The patch needs weeding."
+            send(SendMessage(messageOne + " " + messageTwo + " " + messageThree))
+        }
     }
-
     fun Client.loadPatch() {
 
     }
-
     fun Client.savePatch() {
 
     }
-    fun findPatch(objectId : Int) : String {
-        for (patch in patches.values())
-            for (slot in patch.objectId.indices)
-                if(patch.objectId[slot] == objectId)
-                    return patch.farmData[slot].toString()
-        return "null"
+    fun Client.findPatch(objectId : Int, value : Int) : String {
+        if(value >= 6) return "" //Cant have a value beyond 6!
+        for (patch in patches.values()) {
+            val slot = patch.objectId.indexOf(objectId)
+            if(slot != -1) {
+                val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
+                return farmPatch.get((slot * 6) + value).asString
+            }
+        }
+        return ""
     }
     fun Client.updateFarmPatch(compost : String, status: String, amount : Int) {
 

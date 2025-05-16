@@ -10,15 +10,13 @@ class FarmingJson() {
     private var farmingPatchValues = JsonObject()
 
     fun FarmingSave() : String {
-        var jsonString = ""
+        var jsonString = "[" + farmingCompostValues.toString() + ",\n" + farmingPatchValues.toString() + "]"
         /* Compost */
-        jsonString += farmingCompostValues
-        jsonString += "\n"
-        /* Farm Patches */
-        jsonString += farmingPatchValues
         /*System.out.println("test...")
         System.out.println(jsonString)
         System.out.println("-------------------------") */
+        //System.out.println("json string?")
+        //System.out.println(jsonString)
         return jsonString
     }
     fun FarmingShow() : String {
@@ -36,9 +34,6 @@ class FarmingJson() {
         if(new) {
             for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 val farmCompost = JsonArray()
-                /*farmCompost.add(FarmingData.compost.NONE.toString())
-                farmCompost.add(if(compost.name.equals("CATHERBY")) FarmingData.compostState.FILLED.toString() else FarmingData.compostState.EMPTY.toString())
-                farmCompost.add(if(compost.name.equals("CATHERBY")) 14 else 0)*/
                 farmCompost.add(FarmingData.compost.NONE.toString())
                 farmCompost.add(FarmingData.compostState.EMPTY.toString())
                 farmCompost.add(0)
@@ -47,8 +42,8 @@ class FarmingJson() {
             }
             for (patch in FarmingData.patches.values()) { /* Patches default values */
                 val farmPatch = JsonArray()
-                for(patches in patch.farmData) {
-                    farmPatch.add("EMPTY")
+                (0..patch.farmData.size-1).forEach { slot ->
+                    farmPatch.add(FarmingData.compost.NONE.toString())
                     farmPatch.add(FarmingData.patchState.WEED.toString())
                     farmPatch.add("false")
                     farmPatch.add(0)
@@ -58,9 +53,8 @@ class FarmingJson() {
                 farmingPatchValues.add(patch.name, farmPatch)
             }
         } else { /* Values from save! */
-            val splitValue = farmString.split("\n")
-            val json = JsonParser()
-            farmingCompostValues = json.parse(splitValue[0]) as JsonObject
+            val farmJsonShiet = JsonParser().parse(farmString)
+            farmingCompostValues = farmJsonShiet.asJsonArray.get(0) as JsonObject
             for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 if(farmingCompostValues.get(compost.name) == null) {
                     for(compost in FarmingData.compostBin.values()) { /* Compost default values */
@@ -73,12 +67,12 @@ class FarmingJson() {
                     }
                 }
             }
-            farmingPatchValues = json.parse(splitValue[1]) as JsonObject
+            farmingPatchValues = farmJsonShiet.asJsonArray.get(1) as JsonObject
             for (patch in FarmingData.patches.values()) { /* Patches default values */
                 if (farmingPatchValues.get(patch.name) == null) {
                     val farmPatch = JsonArray()
-                    for(patches in patch.farmData) {
-                        farmPatch.add("EMPTY")
+                    (0..farmPatch.size()-1).forEach { slot ->
+                        farmPatch.add(FarmingData.compost.NONE.toString())
                         farmPatch.add(FarmingData.patchState.WEED.toString())
                         farmPatch.add("false")
                         farmPatch.add(0)
