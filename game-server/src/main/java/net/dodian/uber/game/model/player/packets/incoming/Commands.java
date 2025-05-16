@@ -20,14 +20,12 @@ import net.dodian.uber.game.model.player.packets.outgoing.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.ChatLog;
 import net.dodian.uber.game.security.CommandLog;
-import net.dodian.uber.game.skills.FarmingData;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 
 import java.sql.Connection;
 import java.sql.Statement;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -128,34 +126,32 @@ public class Commands implements Packet {
                                 client.varbit(529, config); //Patches
                                 client.varbit(905, config); //Gout tuber patch!
                                 client.varbit(1057, config); //Compost bin
-                            break;
+                                break;
                             case 1: //Empty test for Trollheim
                                 client.varbit(529, (3 + 2 + 295) | 2 << 6); //Herb patch for trollheim!
                                 //client.varbit(529, (102 + 193) | 2 << 6); //Herb patch for trollheim!
                                 //client.varbit(905, 3 + 2 + (1 << 6 | 1 << 7));
                                 //client.varbit(905, 0); <- Gout tuber patch!
-                            break;
+                                break;
                             case 2: //Compost bin
-                                client.varbit(1057, 32);
-                                //client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
-                            break;
+                                //client.varbit(1057, 30);
+                                client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
+                                break;
                             case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {12, 5, 7, 3}; //Allotment, Allotment, flower, herb
-                                int[] stage = {2, 2, 2, 2};
-                                int[] patch = {3, 3, 3, 3}; //3 = dead, 2 = disease, 1 = watered for allotment + flower.
+                                int[] startConfig = {51, 5, 22, 3}; //Allotment, Allotment, flower, herb
+                                int[] stage = {0, 1, 2, 2};
+                                int[] patch = {0, 1, 2, 2};
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
-                                    /*if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
+                                    if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
                                         stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
                                         check = 2 << 6;
-                                    } else if (i == 3) check = 0 << 6;*/
-                                    if(i == 3)
-                                        config |= ((startConfig[i] + stage[i]) | 1 << 4)<< (i << 3); //3 << 3 = 24
-                                    else config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
+                                    } else if (i == 3) check = 0 << 6;
+                                    config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
                                 }
                                 client.varbit(529,  config);
-                            break;
+                                break;
                             case 4: //Farm patch in tree gnome!
                                 config = 0;
                                 while(config < 2000) {
@@ -168,24 +164,15 @@ public class Commands implements Packet {
                                         System.out.println("msg: " + e.getMessage());
                                     }
                                 }
-                            break;
+                                break;
                             case 5: //TODO test
-                                System.out.println("test..." + client.farming.findPatch(7580));
-                            break;
+
+                                break;
                             case 6: //TODO test2
-                                System.out.println("Test...." + Arrays.toString(FarmingData.patchState.values()));
-                            break;
-                            case 7:
-                                client.varbit(529,  (1 << 6 | 5) << 24); // 5 = stage 2 guam..Here we can get it diseased / dead!
-                            break;
-                            case 10:
-                                client.teleportTo(2808, 3464, 0);
-                                client.send(new SendMessage("Welcome to Catherby patch!"));
-                            break;
+                                break;
                             default: gotValue = false;
                         }
-                        if(value != 10)
-                            client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
+                        client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
                         System.out.println("send...." + e.toString());
@@ -232,9 +219,9 @@ public class Commands implements Packet {
                     try {
                         int face = Integer.parseInt(cmd[1]);
                         Npc n = null;
-                            for (Npc npc : Server.npcManager.getNpcs()) {
-                                if (client.getPosition().equals(npc.getPosition())) n = npc;
-                            }
+                        for (Npc npc : Server.npcManager.getNpcs()) {
+                            if (client.getPosition().equals(npc.getPosition())) n = npc;
+                        }
                         if(n == null)
                             client.send(new SendMessage("Could not find a npc on this spot!"));
                         else {
@@ -254,7 +241,7 @@ public class Commands implements Packet {
                                 client.send(new SendMessage("'"+n.npcName()+"' is already facing the way you want it!"));
                         }
                     } catch (Exception e) {
-                            client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " face"));
+                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " face"));
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("split")) { //Magic armour split!
@@ -1010,94 +997,39 @@ public class Commands implements Packet {
                             return;
                         }
                     }
-                        String yell = Character.toUpperCase(text.charAt(0)) + text.substring(1);
-                        Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 1, yell, client.getPosition().getX(),
-                                client.getPosition().getY()));
-                        if (client.playerRights == 0) {
-                            client.yell("[YELL]<col=000000>" + client.getPlayerName() + "<col=0000ff>: " + yell);
-                        } else if (client.playerRights == 1) {
-                            client.yell("<col=0B610B>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr1@");
-                        } else if (client.playerRights >= 2) {
-                            client.yell("<col=FFFF00>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr2@");
-                        }
-                        ChatLog.recordYellChat(client, yell);
+                    String yell = Character.toUpperCase(text.charAt(0)) + text.substring(1);
+                    Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 1, yell, client.getPosition().getX(),
+                            client.getPosition().getY()));
+                    if (client.playerRights == 0) {
+                        client.yell("[YELL]<col=000000>" + client.getPlayerName() + "<col=0000ff>: " + yell);
+                    } else if (client.playerRights == 1) {
+                        client.yell("<col=0B610B>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr1@");
+                    } else if (client.playerRights >= 2) {
+                        client.yell("<col=FFFF00>" + client.getPlayerName() + "<col=000000>: <col=0B610B>" + yell + "@cr2@");
+                    }
+                    ChatLog.recordYellChat(client, yell);
                 } else {
                     client.send(new SendMessage("You are currently muted!"));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("loot_new")) {
-                try {
-                    int npcId = client.getPlayerNpc() > 0 && cmd.length == 2 ? client.getPlayerNpc() : Integer.parseInt(cmd[1]);
-                    int amount = client.getPlayerNpc() > 0 && cmd.length == 2 ? Integer.parseInt(cmd[1]) : Integer.parseInt(cmd[2]);
-                    amount = amount < 1 ? 1 : Math.min(amount, 10000); // need to set amount 1 - 10000!
-                    NpcData n = Server.npcManager.getData(npcId);
-                    if (n == null)
-                        client.send(new SendMessage("This npc have no data!"));
-                    else if (n.getDrops().isEmpty())
-                        client.send(new SendMessage(n.getName() + " do not got any drops!"));
-                    else {
-                        ArrayList<Integer> lootedItem = new ArrayList<>();
-                        ArrayList<Integer> lootedAmount = new ArrayList<>();
-                        boolean wealth = client.getEquipment()[Equipment.Slot.RING.getId()] == 2572, itemDropped;
-                        double chance, currentChance;
-                        for (int LOOP = 0; LOOP < amount; LOOP++) {
-                            chance = Misc.chance(100000) / 1000D;
-                            currentChance = 0.0;
-                            itemDropped = false;
-                            for (NpcDrop drop : n.getDrops()) {
-                                if (drop == null) continue;
-
-                                if (wealth && drop.getChance() < 10.0) //Ring of wealth effect!
-                                    currentChance += drop.getId() >= 5509 && drop.getId() <= 5515 ? 0.0 : drop.getChance() <= 1.0 ? 0.2 : 0.1;
-
-                                if (drop.getChance() >= 100.0) { // 100% items!
-                                    int pos = lootedItem.lastIndexOf(drop.getId());
-                                    if (pos == -1) {
-                                        lootedItem.add(drop.getId());
-                                        lootedAmount.add(drop.getAmount());
-                                    } else
-                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
-                                } else if (drop.getChance() + currentChance >= chance && !itemDropped) { // user won the roll
-                                    if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
-                                        if (client.checkItem(drop.getId()))
-                                            continue;
-                                    int pos = lootedItem.lastIndexOf(drop.getId());
-                                    if (pos == -1) {
-                                        lootedItem.add(drop.getId());
-                                        lootedAmount.add(drop.getAmount());
-                                    } else
-                                        lootedAmount.set(pos, lootedAmount.get(pos) + drop.getAmount());
-                                    itemDropped = true;
-                                }
-                                if (!itemDropped && drop.getChance() < 100.0)
-                                    currentChance += drop.getChance();
-                            }
-                        }
-                        for (int i = 0; i < lootedItem.size(); i++)
-                            client.send(new SendString("Loot from " + amount + " " + n.getName() + ", ID: " + npcId, 5383));
-                        client.sendBank(lootedItem, lootedAmount);
-                        client.send(new InventoryInterface(5292, 5063));
-                        if (wealth)
-                            client.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
-                    }
             if (cmd[0].equalsIgnoreCase("examine")) {
                 int definition = Integer.parseInt(cmd[1]);
                 int id = Integer.parseInt(cmd[2]);
                 switch(definition) {
                     case 1025: //Npc examine!
                         client.examineNpc(client, id);
-                    break;
+                        break;
                     case 1448: //Ground item examine!
                     case 1125: //Item examine!
                         int amount = cmd.length < 4 ? 1 : Integer.parseInt(cmd[3]);
                         client.examineItem(client, id, amount);
-                    break;
+                        break;
                     case 1226: //Object examine!
                         int x = Integer.parseInt(cmd[3]);
                         int y = Integer.parseInt(cmd[4]);
                         int z = Integer.parseInt(cmd[5]);
                         client.examineObject(client, id, new Position(x, y, z));
-                    break;
+                        break;
                 }
             }
             if (command.equalsIgnoreCase("players")) {
