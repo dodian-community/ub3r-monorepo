@@ -41,7 +41,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
-    implementation("org.quartz-scheduler:quartz:2.3.2")
+    implementation("org.quartz-scheduler:quartz:2.5.0")
 
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("org.mybatis:mybatis:3.5.10")

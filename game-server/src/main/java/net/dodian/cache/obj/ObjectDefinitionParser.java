@@ -210,7 +210,9 @@ public class ObjectDefinitionParser {
                     buf.getShort();
                 }
             } while (true);
-
+            if(id >= 8552 && id <= 8560) name = "Allotment";
+            if(id >= 7848 && id <= 7852) name = "Flower Patch";
+            if(id >= 8151 && id <= 8155) name = "Herb Patch";
             listener.objectDefinitionParsed(
                     new GameObjectData(id, name, desc, sizeX, sizeY, isSolid, isWalkable, hasActions, boolean64, 2));
 
