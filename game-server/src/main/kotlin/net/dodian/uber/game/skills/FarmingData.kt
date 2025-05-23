@@ -15,9 +15,6 @@ class FarmingData() {
     enum class allotmentPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val harvestExp : Int, val harvestItem: Int) {
         POTATO(1,3, 5, 55, 12, 25, 444),
         ONION(9,3, 5, 55,12, 25, 444);
-        /*companion object {
-            fun getLevel(level: Int): flowerPatch? = flowerPatch.values().singleOrNull { it.level == level }
-        }*/
     }
 
     enum class herbPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val harvestExp : Int, val harvestItem: Int) {
@@ -52,12 +49,12 @@ class FarmingData() {
     }
 
     enum class patches(val updatePos: Position, val objectId: Array<Int>, val farmData: List<Array<out Enum<*>>>) {
-        CATHERBY_WEST(Position(2809,3463,0), arrayOf(7848, 8552, 8553, 8151),
-        arrayOf(flowerPatch.values(), allotmentPatch.values(), allotmentPatch.values(), herbPatch.values()).toList()),
-        CATHERBY_EAST(Position(2860,3433,0), arrayOf(7965), arrayOf(fruitTreePatch.values()).toList()),
-        ARDOUGNE_EAST(Position(2666,3374,0), arrayOf(7849, 8554, 8555, 8152),
-        arrayOf(flowerPatch.values(), allotmentPatch.values(), allotmentPatch.values(), herbPatch.values()).toList()),
-        ARDOUGNE_SOUTH(Position(2617,3225,0), arrayOf(7580), arrayOf(bushPatch.values()).toList())
+        CATHERBY_WEST(Position(2809,3463,0), arrayOf(8552, 8553, 7848, 8151),
+        listOf(allotmentPatch.values(), allotmentPatch.values(), flowerPatch.values(), herbPatch.values())),
+        CATHERBY_EAST(Position(2860,3433,0), arrayOf(7965), listOf(fruitTreePatch.values())),
+        ARDOUGNE_EAST(Position(2666,3374,0), arrayOf(8554, 8555, 7849, 8152),
+            listOf(allotmentPatch.values(), allotmentPatch.values(), flowerPatch.values(), herbPatch.values())),
+        ARDOUGNE_SOUTH(Position(2617,3225,0), arrayOf(7580), listOf(bushPatch.values()))
     }
     enum class patchState {
         WEED, GROWING, DISEASE, DEAD, HARVEST, WATER, STUMP //Two last are not common for all patches!

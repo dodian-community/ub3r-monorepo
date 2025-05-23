@@ -74,7 +74,6 @@ public class LoginManager {
     public int loadgame(Client p, String playerName, String playerPass) {
         int loadCharacterResponse = loadCharacterGame(p, playerName, playerPass);
         if (loadCharacterResponse > 0) return loadCharacterResponse;
-        System.out.println("sending a pulse...");
         if(p.playerGroup == 3) return 12; //Not register users!
         try {
             String query = "select * from " + DbTables.GAME_CHARACTERS + " where id = '" + p.dbId + "'";
@@ -315,10 +314,9 @@ public class LoginManager {
                         "{\"CATHERBY_WEST\":[\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\"],\"CATHERBY_EAST\":[\"EMPTY,WEED,false,0,0,-1\"]}");
                 */ //Junk test value, can be deleted! TODO: DELETE PLZ!
                 String farmingData = results.getString("farming");
-                System.out.println("data? " + farmingData);
                 if (farmingData != null && !farmingData.isEmpty()) {
-                    p.farmingJson.FarmingLoad(farmingData);
-                } else p.farmingJson.FarmingLoad("");
+                    p.farmingJson.farmingLoad(farmingData);
+                } else p.farmingJson.farmingLoad("");
                 /* Account timers */
                 p.lastSave = System.currentTimeMillis();
                 p.start = System.currentTimeMillis();

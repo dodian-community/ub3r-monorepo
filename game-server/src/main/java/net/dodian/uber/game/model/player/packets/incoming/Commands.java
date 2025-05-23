@@ -139,18 +139,20 @@ public class Commands implements Packet {
                                 break;
                             case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {51, 5, 22, 3}; //Allotment, Allotment, flower, herb
-                                int[] stage = {0, 1, 2, 2};
-                                int[] patch = {0, 1, 2, 2};
+                                int[] startConfig = {0, 0, 0, 0}; //Allotment, Allotment, flower, herb
+                                int[] stage = {1, 1, 1, 1};
+                                int[] patch = {0, 0, 0, 0};
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
                                     if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
                                         stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
                                         check = 2 << 6;
                                     } else if (i == 3) check = 0 << 6;
+                                    System.out.println("farm shiez test..." + config);
                                     config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
                                 }
                                 client.varbit(529,  config);
+                                System.out.println("farm shiez..." + config);
                                 break;
                             case 4: //Farm patch in tree gnome!
                                 config = 0;

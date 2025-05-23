@@ -125,7 +125,7 @@ public class Server {
         /* Processor for various stuff */
         JobScheduler.ScheduleRepeatForeverJob(TICK, EntityProcessor.class);
         JobScheduler.ScheduleRepeatForeverJob(TICK * 100, WorldProcessor.class);
-        JobScheduler.ScheduleRepeatForeverJob((TICK * 100) / 20, FarmingProcess.class);
+        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, FarmingProcess.class);
         JobScheduler.ScheduleRepeatForeverJob(TICK, ItemProcessor.class);
         JobScheduler.ScheduleRepeatForeverJob(TICK, ShopProcessor.class);
         JobScheduler.ScheduleRepeatForeverJob(TICK, ObjectProcess.class);

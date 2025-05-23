@@ -47,6 +47,8 @@ dependencies {
     implementation("org.mybatis:mybatis:3.5.10")
 
     implementation("com.google.code.gson:gson:2.7")
+    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
+    implementation("com.zaxxer:HikariCP:6.3.0")
 }
 
 tasks.withType<KotlinCompile> {
