@@ -50,7 +50,7 @@ class FarmingData() {
 
     enum class patches(val updatePos: Position, val objectId: Array<Int>, val farmData: List<Array<out Enum<*>>>) {
         CATHERBY_WEST(Position(2809,3463,0), arrayOf(8552, 8553, 7848, 8151),
-        listOf(allotmentPatch.values(), allotmentPatch.values(), flowerPatch.values(), herbPatch.values())),
+            listOf(allotmentPatch.values(), allotmentPatch.values(), flowerPatch.values(), herbPatch.values())),
         CATHERBY_EAST(Position(2860,3433,0), arrayOf(7965), listOf(fruitTreePatch.values())),
         ARDOUGNE_EAST(Position(2666,3374,0), arrayOf(8554, 8555, 7849, 8152),
             listOf(allotmentPatch.values(), allotmentPatch.values(), flowerPatch.values(), herbPatch.values())),

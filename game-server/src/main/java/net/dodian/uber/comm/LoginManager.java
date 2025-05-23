@@ -30,7 +30,6 @@ public class LoginManager {
             return 5; //Already logged in, do not attempt check!
         if (playerName.isEmpty()) //Name is empty!
             return 3;
-
         try {
             String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + playerName + "'";
             Statement stmt = getDbConnection().createStatement();

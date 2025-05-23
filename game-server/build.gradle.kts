@@ -30,14 +30,22 @@ tasks.jar {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("io.github.cdimascio:dotenv-kotlin:6.2.2")
+    implementation("org.apache.logging.log4j:log4j-api:2.20.0")
+    implementation("org.apache.logging.log4j:log4j-core:2.20.0")
+    implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
-    implementation("org.quartz-scheduler:quartz:2.3.2")
+    implementation("org.quartz-scheduler:quartz:2.5.0")
 
-    implementation("mysql:mysql-connector-java:8.0.28")
-    implementation("org.mybatis:mybatis:3.5.9")
+    implementation("mysql:mysql-connector-java:8.0.29")
+    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("org.mybatis:mybatis:3.5.10")
+
+    implementation("com.google.code.gson:gson:2.7")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
