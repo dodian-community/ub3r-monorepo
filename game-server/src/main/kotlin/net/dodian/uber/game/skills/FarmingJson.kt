@@ -9,17 +9,11 @@ class FarmingJson() {
     private var farmingCompostValues = JsonObject()
     private var farmingPatchValues = JsonObject()
 
-    fun FarmingSave() : String {
+    fun farmingSave() : String {
         var jsonString = "[" + farmingCompostValues.toString() + ",\n" + farmingPatchValues.toString() + "]"
-        /* Compost */
-        /*System.out.println("test...")
-        System.out.println(jsonString)
-        System.out.println("-------------------------") */
-        //System.out.println("json string?")
-        //System.out.println(jsonString)
         return jsonString
     }
-    fun FarmingShow() : String {
+    fun farmingShow() : String {
         var jsonString = ""
         /* Compost */
         jsonString += farmingCompostValues
@@ -29,7 +23,7 @@ class FarmingJson() {
         return jsonString
     }
 
-    fun FarmingLoad(farmString : String) {
+    fun farmingLoad(farmString : String) {
         val new = farmString.isEmpty()
         if(new) {
             for(compost in FarmingData.compostBin.values()) { /* Compost default values */
@@ -45,10 +39,11 @@ class FarmingJson() {
                 (0..patch.farmData.size-1).forEach { slot ->
                     farmPatch.add(FarmingData.compost.NONE.toString())
                     farmPatch.add(FarmingData.patchState.WEED.toString())
-                    farmPatch.add("false")
-                    farmPatch.add(0)
-                    farmPatch.add(0)
-                    farmPatch.add(-1)
+                    farmPatch.add("false") //Protected
+                    farmPatch.add(0) //0 = alive, 1 = disease, 2 = died, 3 = water
+                    farmPatch.add(0) //stages
+                    farmPatch.add(0) //timer
+                    farmPatch.add(-1) //planted at date
                 }
                 farmingPatchValues.add(patch.name, farmPatch)
             }
@@ -74,16 +69,17 @@ class FarmingJson() {
                     (0..farmPatch.size()-1).forEach { slot ->
                         farmPatch.add(FarmingData.compost.NONE.toString())
                         farmPatch.add(FarmingData.patchState.WEED.toString())
-                        farmPatch.add("false")
-                        farmPatch.add(0)
-                        farmPatch.add(0)
-                        farmPatch.add(-1)
+                        farmPatch.add("false") //Protected
+                        farmPatch.add(0) //0 = alive, 1 = disease, 2 = died, 3 = water
+                        farmPatch.add(0) //stages
+                        farmPatch.add(0) //timer
+                        farmPatch.add(-1) //planted at date
                     }
                     farmingPatchValues.add(patch.name, farmPatch)
                 }
             }
         }
-        System.out.println(FarmingSave())
+        //System.out.println(FarmingSave())
     }
 
     fun getCompostData() : JsonObject {
@@ -92,5 +88,7 @@ class FarmingJson() {
     fun getPatchData() : JsonObject {
         return farmingPatchValues
     }
+
+    val PATCHAMOUNT = 7
 
 }

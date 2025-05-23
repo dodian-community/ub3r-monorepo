@@ -771,7 +771,7 @@ public class Client extends Player implements Runnable {
                         + getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
                         + "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='" + effect + "'"
                         + ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
-                        + ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', farming = '"+farmingJson.FarmingSave()+"', dailyReward = '" + daily_reward + "',Boss_Log='"
+                        + ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', farming = '"+farmingJson.farmingSave()+"', dailyReward = '" + daily_reward + "',Boss_Log='"
                         + boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
                         ", prayer='" + prayer + "', boosted='" + boosted + "'" + last
                         + " WHERE id = " + dbId);
@@ -1943,7 +1943,6 @@ public class Client extends Player implements Runnable {
         getOutputStream().createFrame(107); // resets something in the client
         setChatOptions(0, 0, 0);
         varbit(287, 1); //SPLIT PRIVATE CHAT ON/OFF
-        varbit(529, 0); //All farming patches weeded!
         /* Server tab stuff! */
         QuestSend.clearQuestName(this);
         questPage = 1;

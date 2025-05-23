@@ -1,6 +1,5 @@
 package net.dodian.uber.game.skills
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonPrimitive
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
@@ -8,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.FarmingData.patches
+import kotlin.math.absoluteValue
 
 class Farming () {
     val farmData = FarmingData()
@@ -57,13 +57,14 @@ class Farming () {
                 (0..patch.objectId.size-1).forEach { slot ->
                     val objectId = patch.objectId[slot]
                     /* Weed generation */
-                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() > 0) {
-                        val checkPos = slot*6
-                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                        if(farmPatches.get(checkPos + 4).asInt == 3) {
-                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
-                            System.out.println("I will regenerate weed!")
+                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 4).toInt() > 0) {
+                        val checkPos = slot * farmingJson.PATCHAMOUNT
+                        farmPatches.set(checkPos + 5, JsonPrimitive(farmPatches.get(checkPos + 5).asInt + 1))
+                        if(farmPatches.get(checkPos + 5).asInt == 3) {
+                            farmPatches.set(checkPos + 5, JsonPrimitive(0))
+                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt - 1))
+                            updateFarmPatch()
+                            //System.out.println("I will regenerate weed!")
                         }
                     }
                 }
@@ -76,17 +77,16 @@ class Farming () {
     }
     fun Client.updateCompost(compost : String, status: String, amount : Int) {
         if(FarmingData.compostState.CLOSED.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(status)) 32 else 65)
+            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 32 else 65)
         else if(FarmingData.compostState.DONE.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(status)) 31 else 64)
+            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 31 else 64)
         else if(FarmingData.compostState.OPEN.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(status)) 15 + amount else 47 + amount)
+            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 15 + amount else 47 + amount)
         else if(FarmingData.compostState.FILLED.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(status)) 0 + amount else 32 + amount)
+            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 0 + amount else 32 + amount)
         else varbit(1057, 0)
     }
     fun Client.updateCompost() {
-        //TODO: Loop all compost bins and update the ones that are needed!
         varbit(1057, 0)
         for(compost in FarmingData.compostBin.values()) { /* Compost default values */
             if (farmingJson.getCompostData().get(compost.name) != null) {
@@ -183,11 +183,12 @@ class Farming () {
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0..patch.objectId.size - 1).forEach { slot ->
-                    val checkPos = slot * 6
+                    val checkPos = slot * farmingJson.PATCHAMOUNT
                     if (patch.objectId[slot] == objectId) { //We got the correct objectId!
-                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() < 3) {
-                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
+                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 4).toInt() < 3) {
+                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
                             send(SendMessage("Test raking..."))
+                            updateFarmPatch()
                             return true
                         }
                     }
@@ -203,13 +204,8 @@ class Farming () {
             val messageTwo = "The soil has not been treated."
             val messageThree = "The patch needs weeding."
             send(SendMessage(messageOne + " " + messageTwo + " " + messageThree))
+            updateFarmPatch()
         }
-    }
-    fun Client.loadPatch() {
-
-    }
-    fun Client.savePatch() {
-
     }
     fun Client.findPatch(objectId : Int, value : Int) : String {
         if(value >= 6) return "" //Cant have a value beyond 6!
@@ -217,16 +213,46 @@ class Farming () {
             val slot = patch.objectId.indexOf(objectId)
             if(slot != -1) {
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
-                return farmPatch.get((slot * 6) + value).asString
+                return farmPatch.get((slot * farmingJson.PATCHAMOUNT) + value).asString
             }
         }
         return ""
     }
-    fun Client.updateFarmPatch(compost : String, status: String, amount : Int) {
-
+    fun Client.updateFarmPatch(patch : FarmingData.patches) {
+        if (farmingJson.getPatchData().get(patch.name) != null) {
+            var value = 0
+            (0..patch.objectId.size - 1).forEach { slot ->
+                val checkPos = slot * farmingJson.PATCHAMOUNT
+                val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
+                val enumText: String = farmPatch.get(checkPos).asString
+                //val patchName = patch.farmData.get(slot).get(farmPatch.get(checkPos).asString).to
+                //patch..get(checkPos).asString
+                val startConfig = if(FarmingData.compost.NONE.toString() == enumText) 0 else 10
+                val change = farmPatch.get(checkPos + 3).asInt
+                val stage = farmPatch.get(checkPos + 4).asInt
+                val newValue = ((startConfig + stage).or(change)) shl (slot shl(3))
+                //System.out.println("text?" + stage + ", " + startConfig + ", " + farmPatch.get(checkPos + 3).asInt)
+                //farmPatches.get(checkPos + 2).asInt
+                //System.out.println("or? " + (((0 + 1) or check) shl (slot shl(3))) + ", " + value + ", " + startConfig + ", " + check)
+                //or(((startConfig + stage) or check) shl (slot shl 3))
+                value = value.or(newValue)
+                //TODO: Fix herb patch update of disease!
+                //value |= ((startConfig + stage) | 0) << (checkPos << 3)
+                //value or ((startConfig + stage) or 0) shl (checkPos shl 3)
+                //updateFarmPatch(farmPatches.get(checkPos).asString,farmPatches.get(checkPos + 1).asString, farmPatches.get(checkPos + 2).asInt)
+            }
+            //System.out.println("check..." + value)
+            varbit(529, value)
+        }
     }
     fun Client.updateFarmPatch() {
-
+        varbit(529, 0)
+        for(patch in FarmingData.patches.values()) {
+            if (farmingJson.getPatchData().get(patch.name) != null) {
+                if(distanceToPoint(patch.updatePos, position) <= 32)
+                    updateFarmPatch(patch)
+            }
+        }
     }
 
     fun Client.saplingMaking(itemOne : Int, itemOneSlot : Int, itemTwo : Int, itemTwoSlot : Int) {

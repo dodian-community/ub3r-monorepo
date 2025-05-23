@@ -1,7 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.6.21"
 }
 
 application {
@@ -44,12 +42,13 @@ dependencies {
     implementation("org.quartz-scheduler:quartz:2.5.0")
 
     implementation("mysql:mysql-connector-java:8.0.29")
+    implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("org.mybatis:mybatis:3.5.10")
 
     implementation("com.google.code.gson:gson:2.7")
 }
 
-tasks.withType<KotlinCompile> {
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "11"
@@ -58,8 +57,4 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-tasks.withType<Jar> {
-    archiveFileName.set("ub3r-server.jar")
 }
