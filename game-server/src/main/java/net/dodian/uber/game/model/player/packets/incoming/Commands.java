@@ -139,20 +139,21 @@ public class Commands implements Packet {
                                 break;
                             case 3:
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {0, 0, 0, 0}; //Allotment, Allotment, flower, herb
+                                int[] startConfig = {5, 5, 0, 0}; //Allotment, Allotment, flower, herb
                                 int[] stage = {1, 1, 1, 1};
-                                int[] patch = {0, 0, 0, 0};
+                                int[] patch = {1, 1, 0, 0};
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
-                                    if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
-                                        stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
-                                        check = 2 << 6;
-                                    } else if (i == 3) check = 0 << 6;
-                                    System.out.println("farm shiez test..." + config);
+                                    if (i == 3) check = 0 << 6;
+                                    /*if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
+                                        //stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
+                                        //check = 2 << 6;
+                                    } else if (i == 3) check = 0 << 6;*/
+                                    //System.out.println("farm shiez test..." + config);
                                     config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
                                 }
                                 client.varbit(529,  config);
-                                System.out.println("farm shiez..." + config);
+                                //System.out.println("farm shiez..." + config);
                                 break;
                             case 4: //Farm patch in tree gnome!
                                 config = 0;
@@ -168,7 +169,8 @@ public class Commands implements Packet {
                                 }
                                 break;
                             case 5: //TODO test
-
+                                System.out.println("value..." + (((3 + 2 + 293) | 2 << 6) << (3 << 3)));
+                                client.varbit(529,  ((10 + 2 + 283) | 2 << 6) << (3 << 3)); //295 = x | 2 << 6
                                 break;
                             case 6: //TODO test2
                                 break;
@@ -180,9 +182,9 @@ public class Commands implements Packet {
                         System.out.println("send...." + e.toString());
                     }
                 }
-                if (cmd[0].equalsIgnoreCase("forcemove")) {
+                if (cmd[0].equalsIgnoreCase("forcemove")) { //We are still in testing for agility, not sure what each values do yet... :oof:
                     client.send(new SendMessage("force move!"));
-                    client.appendForcemovement(client.getPosition(), new Position(3333, 3333), 10, 20, 3);
+                    client.appendForcemovement(client.getPosition(), new Position(client.getPosition().getX(), client.getPosition().getY() + 10), 5, 5, 3);
                 }
                 if (cmd[0].equalsIgnoreCase("plist")) {
                     System.out.println("test1..." + PlayerHandler.allOnline.toString());
