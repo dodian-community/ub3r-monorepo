@@ -183,8 +183,8 @@ class Farming () {
                 (0..patch.objectId.size - 1).forEach { slot ->
                     val checkPos = slot * farmingJson.PATCHAMOUNT
                     if (patch.objectId[slot] == objectId) { //We got the correct objectId!
-                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() < 3) {
-                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
+                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 4).toInt() < 3) {
+                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
                             send(SendMessage("Test raking..."))
                             updateFarmPatch()
                             return true
