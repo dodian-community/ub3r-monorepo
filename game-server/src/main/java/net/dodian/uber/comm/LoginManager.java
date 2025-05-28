@@ -313,7 +313,7 @@ public class LoginManager {
                         "{\"CATHERBY_WEST\":[\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\",\"EMPTY,WEED,false,0,0,-1\"],\"CATHERBY_EAST\":[\"EMPTY,WEED,false,0,0,-1\"]}");
                 */ //Junk test value, can be deleted! TODO: DELETE PLZ!
                 String farmingData = results.getString("farming");
-                if (farmingData != null && !farmingData.isEmpty()) {
+                if (farmingData != null && !farmingData.equals("[]")) {
                     p.farmingJson.farmingLoad(farmingData);
                 } else p.farmingJson.farmingLoad("");
                 /* Account timers */

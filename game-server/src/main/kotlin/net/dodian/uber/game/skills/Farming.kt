@@ -13,8 +13,6 @@ class Farming () {
     val farmData = FarmingData()
 
     fun Client.updateFarming() {
-        //send(SendMessage("test"))
-        //System.out.println("Farming tick...")
         /* Saplings in inventory + bank! */
         for (sapling in FarmingData.sapling.values()) {
             for(slot in playerItems.indices)
@@ -57,12 +55,12 @@ class Farming () {
                 (0..patch.objectId.size-1).forEach { slot ->
                     val objectId = patch.objectId[slot]
                     /* Weed generation */
-                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 4).toInt() > 0) {
+                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() > 0) {
                         val checkPos = slot * farmingJson.PATCHAMOUNT
-                        farmPatches.set(checkPos + 5, JsonPrimitive(farmPatches.get(checkPos + 5).asInt + 1))
-                        if(farmPatches.get(checkPos + 5).asInt == 3) {
-                            farmPatches.set(checkPos + 5, JsonPrimitive(0))
-                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt - 1))
+                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
+                        if(farmPatches.get(checkPos + 4).asInt == 3) {
+                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
+                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
                             updateFarmPatch()
                             //System.out.println("I will regenerate weed!")
                         }
@@ -219,30 +217,25 @@ class Farming () {
         return ""
     }
     fun Client.updateFarmPatch(patch : FarmingData.patches) {
-        if (farmingJson.getPatchData().get(patch.name) != null) {
+        if (farmingJson.getPatchData().get(patch.name) != null && patch.objectId.size > 1) { //4 patches in one!
             var value = 0
-            (0..patch.objectId.size - 1).forEach { slot ->
+            (0..patch.objectId.size - 2).forEach { slot ->
                 val checkPos = slot * farmingJson.PATCHAMOUNT
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
-                val enumText: String = farmPatch.get(checkPos).asString
-                //val patchName = patch.farmData.get(slot).get(farmPatch.get(checkPos).asString).to
-                //patch..get(checkPos).asString
-                val startConfig = if(FarmingData.compost.NONE.toString() == enumText) 0 else 10
-                val change = farmPatch.get(checkPos + 3).asInt
-                val stage = farmPatch.get(checkPos + 4).asInt
-                val newValue = ((startConfig + stage).or(change)) shl (slot shl(3))
-                //System.out.println("text?" + stage + ", " + startConfig + ", " + farmPatch.get(checkPos + 3).asInt)
-                //farmPatches.get(checkPos + 2).asInt
-                //System.out.println("or? " + (((0 + 1) or check) shl (slot shl(3))) + ", " + value + ", " + startConfig + ", " + check)
-                //or(((startConfig + stage) or check) shl (slot shl 3))
+                val enumText = farmPatch.get(checkPos).toString()
+                val startConfig = if(FarmingData.compost.NONE.toString() == enumText) 0 else 5
+                val change = if(farmPatch.get(checkPos + 1).asString == "WATER") 1 else if (farmPatch.get(checkPos + 1).asString == "DISEASE") 2
+                else if (farmPatch.get(checkPos + 1).asString == "DEAD") 3 else 0
+                val stage = farmPatch.get(checkPos + 3).asInt
+                val newValue = ((startConfig + stage).or(change shl 6)) shl (slot shl(3))
                 value = value.or(newValue)
-                //TODO: Fix herb patch update of disease!
-                //value |= ((startConfig + stage) | 0) << (checkPos << 3)
-                //value or ((startConfig + stage) or 0) shl (checkPos shl 3)
-                //updateFarmPatch(farmPatches.get(checkPos).asString,farmPatches.get(checkPos + 1).asString, farmPatches.get(checkPos + 2).asInt)
             }
-            //System.out.println("check..." + value)
-            varbit(529, value)
+            //varbit(529, value)
+        } else if (farmingJson.getPatchData().get(patch.name) != null) {
+            val value = 0
+            val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
+            val enumText = farmPatch.get(0).toString()
+            //varbit(529, value)
         }
     }
     fun Client.updateFarmPatch() {
@@ -253,6 +246,14 @@ class Farming () {
                     updateFarmPatch(patch)
             }
         }
+    }
+    fun findPatch(enum : String) : Nothing? {
+        var check = null
+        //check = FarmingData.fruitTreePatch.findEnum(enum) as Nothing?
+        //check = FarmingData.treePatch.findEnum(enum) as Nothing?
+        check = FarmingData.allotmentPatch.findEnum(enum) as Nothing?
+        System.out.println("hmm..." + check)
+        return check
     }
 
     fun Client.saplingMaking(itemOne : Int, itemOneSlot : Int, itemTwo : Int, itemTwoSlot : Int) {

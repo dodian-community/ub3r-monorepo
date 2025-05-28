@@ -11,7 +11,8 @@ class FarmingJson() {
 
     fun farmingSave() : String {
         var jsonString = "[" + farmingCompostValues.toString() + ",\n" + farmingPatchValues.toString() + "]"
-        return jsonString
+        //return jsonString
+        return "[]"
     }
     fun farmingShow() : String {
         var jsonString = ""
@@ -40,7 +41,6 @@ class FarmingJson() {
                     farmPatch.add(FarmingData.compost.NONE.toString())
                     farmPatch.add(FarmingData.patchState.WEED.toString())
                     farmPatch.add("false") //Protected
-                    farmPatch.add(0) //0 = alive, 1 = disease, 2 = died, 3 = water
                     farmPatch.add(0) //stages
                     farmPatch.add(0) //timer
                     farmPatch.add(-1) //planted at date
@@ -70,7 +70,6 @@ class FarmingJson() {
                         farmPatch.add(FarmingData.compost.NONE.toString())
                         farmPatch.add(FarmingData.patchState.WEED.toString())
                         farmPatch.add("false") //Protected
-                        farmPatch.add(0) //0 = alive, 1 = disease, 2 = died, 3 = water
                         farmPatch.add(0) //stages
                         farmPatch.add(0) //timer
                         farmPatch.add(-1) //planted at date
@@ -89,6 +88,6 @@ class FarmingJson() {
         return farmingPatchValues
     }
 
-    val PATCHAMOUNT = 7
+    val PATCHAMOUNT = 6
 
 }

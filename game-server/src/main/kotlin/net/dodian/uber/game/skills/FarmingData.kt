@@ -10,27 +10,57 @@ class FarmingData() {
 
     enum class flowerPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val harvestExp : Int, val harvestItem: Int) {
         MARIGOLD(2,3, 4, 55, 12, 25, 444);
+        companion object {
+            fun findEnum(hex: String): flowerPatch? {
+                return flowerPatch.values().find { it.name == hex }
+            }
+        }
     }
 
     enum class allotmentPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val harvestExp : Int, val harvestItem: Int) {
         POTATO(1,3, 5, 55, 12, 25, 444),
         ONION(9,3, 5, 55,12, 25, 444);
+        companion object {
+            fun findEnum(hex: String): allotmentPatch? {
+                return allotmentPatch.values().find { it.name == hex }
+            }
+        }
     }
 
     enum class herbPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val harvestExp : Int, val harvestItem: Int) {
         GUAM(10,3, 5,  55,12, 25, 199);
+        companion object {
+            fun findEnum(hex: String): herbPatch? {
+                return herbPatch.values().find { it.name == hex }
+            }
+        }
     }
 
     enum class bushPatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val healthId : Int, val clearId : Int, val checkExp : Int, val harvestExp : Int, val harvestItem: Int) {
         REDBERRY(20,3, 5, 55,12, 12, 8, 350, 12, 1951);
+        companion object {
+            fun findEnum(hex: String): bushPatch? {
+                return bushPatch.values().find { it.name == hex }
+            }
+        }
     }
 
     enum class fruitTreePatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val healthId : Int, val clearId : Int, val checkExp : Int, val harvestExp : Int, val harvestItem: Int) {
         APPLE(25,3, 5, 55, 12, 12, 8, 350, 12, 1951);
+        companion object {
+            fun findEnum(hex: String): fruitTreePatch? {
+                return fruitTreePatch.values().find { it.name == hex }
+            }
+        }
     }
 
     enum class treePatch(val level : Int, val startConfig : Int, val stages : Int, val diseaseChance: Int, val plantExp : Int, val healthId : Int, val treeId : Int, val stumpId : Int, val checkExp : Int, val harvestItem: Int) {
         ACORN(15,3, 5, 55,12, 12, 8, 9,350,1951);
+        companion object {
+            fun findEnum(hex: String): treePatch? {
+                return values().find { it.name == hex }
+            }
+        }
     }
 
     enum class sapling(val farmLevel : Int, val treeSeed : Int, val plantedId : Int, val waterId : Int, val saplingId : Int) {
@@ -59,9 +89,10 @@ class FarmingData() {
     enum class patchState {
         WEED, GROWING, DISEASE, DEAD, HARVEST, WATER, STUMP //Two last are not common for all patches!
     }
-    enum class compost(val divideValue: Int) {
-        NONE(1), REGULAR(4), SUPER(8) //chance/divideValue
+    enum class compost(val divideValue: Int) { //chance/divideValue
+        NONE(1), REGULAR(4), SUPER(7), DUNG(10)
     }
+
 
     enum class compostBin(val updatePos: Position, val objectId: Int, val ticks: Int) {
         CATHERBY(Position(2804,3464,0), 7837, 4),

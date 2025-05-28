@@ -7994,13 +7994,13 @@ public class Client extends Player implements Runnable {
             return;
         }
         System.out.println("x = " + startPos.getX() + ", " + startPos.getY());
-        int startX = startPos.getLocalX();
-        int startY = startPos.getLocalY();
+        int startX = startPos.getX();
+        int startY = startPos.getY();
         int endX = endPos.getX();
         int endY = endPos.getY();
 
-        m4001 = startX;
-        m4002 = startY;
+        m4001 = startPos.getLocalX();
+        m4002 = startPos.getLocalY();
         m4003 = startX + endX;
         m4004 = startY + endY;
         m4006 = speed[0];
