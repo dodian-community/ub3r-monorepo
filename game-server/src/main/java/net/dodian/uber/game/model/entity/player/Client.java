@@ -1989,14 +1989,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 6071));
         //RegionMusic.sendSongSettings(this); //Music from client 2.95
         /* Done loading in a character! */
-        send(new SendMessage("Welcome to Uber Server"));
-        if (newPms > 0) {
-            send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
-        }
-        if (playerGroup <= 3) {
-            send(new SendMessage("Please activate your forum account by checking your mail or junk mail."));
-            send(new SendMessage("If you still cant find it, contact a staff member."));
-        }
+//
         /* Check for refunded items! */
         try {
             String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND message='0' AND claimed IS NULL ORDER BY date ASC";
@@ -2011,9 +2004,22 @@ public class Client extends Player implements Runnable {
             System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
         }
         loaded = true;
+
+        /* Initialize save timers */
+        lastSave = System.currentTimeMillis();
+        lastProgressSave = lastSave;
         /* Set a player active to a world! */
         PlayerHandler.playersOnline.put(longName, this);
         PlayerHandler.allOnline.put(longName, getGameWorldId());
+        //moved the welcome message down, seems that the client was not ready alsways for this to be sent
+        send(new SendMessage("Welcome to Uber Server"));
+        if (newPms > 0) {
+            send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
+        }
+        if (playerGroup <= 3) {
+            send(new SendMessage("Please activate your forum account by checking your mail or junk mail."));
+            send(new SendMessage("If you still cant find it, contact a staff member."));
+        }
     }
 
     public void update() { //Update player before npc for some reason!
