@@ -96,7 +96,7 @@ public class PlayerInitializer {
     }
     
     /**
-     * Checks for any refunded items the player needs to claim.
+     * Checks for any  refunded items the player needs to claim.
      */
     private void checkRefundedItems(Client client) {
         try {
