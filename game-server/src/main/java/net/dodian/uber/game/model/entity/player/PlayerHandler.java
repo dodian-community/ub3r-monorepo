@@ -151,7 +151,7 @@ public class PlayerHandler {
         Client temp = (Client) plr;
         if (temp != null) {
             temp.destruct();
-            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
+            logger.info("PlayerHandler: Finished removing player : '" + temp.getPlayerName() + "'");
             int slot = temp.getSlot();
             players[slot] = null;
             if (temp.isActive && slot >= 1 && slot <= Constants.maxPlayers) {
