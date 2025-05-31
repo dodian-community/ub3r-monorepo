@@ -57,23 +57,29 @@ public class PlayerHandler {
 
         try {
             socketChannel.configureBlocking(false);
+
             newClient = new Client(socketChannel, slot);
             newClient.handler = this;
-            players[slot] = newClient;
-            players[slot].connectedFrom = connectedFrom;
-            players[slot].ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
-            newClient.run(); //TODO thread pool would be better
+            newClient.connectedFrom = connectedFrom;
+            newClient.ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
 
-            // Mark the slot as used only after successful login
-            if (newClient.isActive) {
-                Player.localId = slot;
-                playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
-                logger.info("Player " + newClient.getPlayerName() + " successfully added to slot " + slot);
-            } else {
-                logger.info("Client created but not active for slot " + slot);
-                synchronized (SLOT_LOCK) {
-                    usedSlots.clear(slot);  // Free the slot if login wasn't successful
+            try {
+                newClient.run(); //TODO thread pool would be better
+                // Only add client players array if login was successful
+                if (newClient.isActive) {
+                    players[slot] = newClient;
+                    Player.localId = slot;
+                    playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
+                } else {
+                    logger.warning("Login failed - Client not active for slot " + slot);
+                    synchronized (SLOT_LOCK) {
+                        usedSlots.clear(slot);
+                    }
                 }
+            } catch (Exception e) {
+                logger.severe("Error during client initialization: " + e.getMessage());
+                logger.severe("Player array state during error: " + getPlayerArrayState());
+                throw e; // Re-throw to be handled by the outer try-catch
             }
 
             Memory.getSingleton().process(); // Print memory usage after adding player
@@ -105,6 +111,19 @@ public class PlayerHandler {
         } catch (IOException closeError) {
             logger.warning("Error closing socket channel: " + closeError.getMessage());
         }
+    }
+    
+
+    private String getPlayerArrayState() {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < players.length; i++) {
+            if (players[i] != null) {
+                if (sb.length() > 1) sb.append(", ");
+                sb.append(i).append(":").append(players[i].getPlayerName());
+                if (!players[i].isActive) sb.append(" (inactive)");
+            }
+        }
+        return sb.append("]").toString();
     }
 
     public static int getPlayerCount() {

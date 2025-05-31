@@ -65,6 +65,7 @@ public class ClientLoginHandler {
             //System.out.println("Received login type: " + loginType); -> Old Debug
             if (loginType != 16 && loginType != 18) {
                 client.println_debug("Unexpected login type " + loginType);
+                client.disconnected = true;
                 return;
             }
             int loginPacketSize = buffer.get() & 0xff;
@@ -72,6 +73,7 @@ public class ClientLoginHandler {
             //System.out.println("Login packet size: " + loginPacketSize + ", Encrypted size: " + loginEncryptPacketSize); -> Old Debug
             if (loginEncryptPacketSize <= 0) {
                 client.println_debug("Zero RSA packet size!");
+                client.disconnected = true;
                 return;
             }
 
@@ -81,6 +83,7 @@ public class ClientLoginHandler {
 
             if (loginBuffer.get() != (byte)255 || loginBuffer.getShort() != 317) {
                 client.returnCode = 6;
+                client.disconnected = true;
                 System.out.println("Invalid login protocol");
             }
             loginBuffer.get(); // Skip one byte
@@ -98,6 +101,7 @@ public class ClientLoginHandler {
             tmp = loginBuffer.get() & 0xff;
             if (tmp != 10) {
                 shutdownError("Encrypted packet Id was " + tmp + " but expected 10");
+                client.disconnected = true;
                 return;
             }
 
@@ -108,6 +112,7 @@ public class ClientLoginHandler {
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
             if(!client.officialClient)
                 client.returnCode = 6;
+            client.disconnected = true;
             //client.UUID = readString(loginBuffer).split("-"); //TODO: Fix Better check on computer
             client.setPlayerName(readString(loginBuffer));
             if (client.getPlayerName() == null || client.getPlayerName().isEmpty()) {
@@ -240,6 +245,7 @@ public class ClientLoginHandler {
         } catch (Exception __ex) {
             destruct();
             client.print_debug("....Failed destruct..." + __ex.getMessage());
+            client.disconnected = true;
             //__ex.printStackTrace(); //Do we need?
             return;
         }
@@ -264,6 +270,7 @@ public class ClientLoginHandler {
     private void readFully(ByteBuffer buffer) throws IOException {
         while (buffer.hasRemaining()) {
             if (socketChannel.read(buffer) == -1) {
+                client.disconnected = true;
                 throw new IOException("End of stream");
             }
         }
@@ -291,6 +298,7 @@ public class ClientLoginHandler {
             if (client.saveNeeded)
                 client.saveStats(true);
             socketChannel.close();
+            client.disconnected = true;
         } catch (java.io.IOException ioe) {
             System.out.println("error in destruct " + ioe);
         }
