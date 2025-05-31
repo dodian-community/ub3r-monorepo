@@ -605,7 +605,7 @@ public class Client extends Player implements Runnable {
 
 
 
-   
+
     public void logout() {
         if (isLoggingOut) {
 
@@ -1932,94 +1932,9 @@ public class Client extends Player implements Runnable {
         getOutputStream().writeByte(tradeBlock); // On = 0, Friends = 1, Off = 2
     }
 
-    // upon connection of a new client all the info has to be sent to client
-    // prior to starting the regular communication
-    public void initialize() {
-        /* Login write settings! */
-        // TODO: Figure out why this causes an error
-        getOutputStream().createFrame(249);
-        getOutputStream().writeByteA(playerIsMember); // 1 = member, 0 = f2p
-        getOutputStream().writeWordBigEndianA(getSlot());
-        getOutputStream().createFrame(107); // resets something in the client
-        setChatOptions(0, 0, 0);
-        varbit(287, 1); //SPLIT PRIVATE CHAT ON/OFF
-        /* Server tab stuff! */
-        QuestSend.clearQuestName(this);
-        questPage = 1;
-        /* Energy */
-        WriteEnergy();
-        pmstatus(2);
-        setConfigIds();
-        resetTabs(); //Set tabs!
-		/*send(new SendMessage("Please vote! You can earn your reward by doing ::redeem "+getPlayerName()+" every 6hrs."));
-    send(new SendMessage("<col=CB1D1D>Santa has come! A bell MUST be rung to celebrate!!!"));
-   send(new SendMessage("<col=CB1D1D>Click it for a present!! =)"));
-    send(new SendMessage("@redPlease have one inventory space open! If you don't PM Logan.."));
-    */
-        /* Sets look! */
-        if (lookNeeded) {
-            defaultCharacterLook(this);
-            showInterface(3559);
-        } else
-            setLook(playerLooks);
-        /* Reset values for items */
-        checkItemUpdate(); //Inventory
-        for (int i = 0; i < Equipment.SIZE; i++) //Equipment
-            setEquipment(getEquipment()[i], getEquipmentN()[i], i);
-        //Login.banUid(); //Not sure what this do!
-        //Arrays.fill(lastMessage, ""); //We need this?!
-        /* Friend configs! */
-        for (Client c : PlayerHandler.playersOnline.values()) {
-            if (c.hasFriend(longName)) {
-                c.refreshFriends();
-            }
-        }
-        send(new SendString("Click here to logout", 2458)); //Logout text incase!
-        /* Report a player interface text */
-        send(new SendString("Using this will send a notification to all online mods", 5967));
-        send(new SendString("@yel@Then click below to indicate which of our rules is being broken.", 5969));
-        send(new SendString("4: Bug abuse (includes noclip)", 5974));
-        send(new SendString("5: Dodian staff impersonation", 5975));
-        send(new SendString("6: Monster luring or abuse", 5976));
-        send(new SendString("8: Item Duplication", 5978));
-        send(new SendString("10: Misuse of yell channel", 5980));
-        send(new SendString("12: Possible duped items", 5982));
-        send(new SendString("Old magic", 12585));
-        send(new SendString("", 6067));
-        send(new SendString("", 6071));
-        //RegionMusic.sendSongSettings(this); //Music from client 2.95
-        /* Done loading in a character! */
-//
-        /* Check for refunded items! */
-        try {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND message='0' AND claimed IS NULL ORDER BY date ASC";
-            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-            boolean gotResult = stm.executeQuery(query).next();
-            if (gotResult) {
-                send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-                stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
-            }
-            stm.close();
-        } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-        }
-        loaded = true;
 
-        /* Initialize save timers */
-        lastSave = System.currentTimeMillis();
-        lastProgressSave = lastSave;
-        /* Set a player active to a world! */
-        PlayerHandler.playersOnline.put(longName, this);
-        PlayerHandler.allOnline.put(longName, getGameWorldId());
-        //moved the welcome message down, seems that the client was not ready alsways for this to be sent
-        send(new SendMessage("Welcome to Uber Server"));
-        if (newPms > 0) {
-            send(new SendMessage("You have " + newPms + " new messages.  Check your inbox at Dodian.net to view them."));
-        }
-        if (playerGroup <= 3) {
-            send(new SendMessage("Please activate your forum account by checking your mail or junk mail."));
-            send(new SendMessage("If you still cant find it, contact a staff member."));
-        }
+    public void initialize() {
+        new PlayerInitializer().initializePlayer(this);
     }
 
     public void update() { //Update player before npc for some reason!
