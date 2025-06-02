@@ -49,28 +49,71 @@ public class SocketHandler implements Runnable {
     public void run() {
         try {
             while (processRunning.get() && isConnected()) {
-                int readyOps = selector.select(SELECTOR_TIMEOUT);
-                if (readyOps > 0) {
-                    for (SelectionKey key : selector.selectedKeys()) {
-                        if (!key.isValid()) continue;
-                        if (key.isReadable()) {
-                            parsePackets();
+                try {
+                    int readyOps = selector.select(SELECTOR_TIMEOUT);
+                    if (readyOps > 0) {
+                        for (SelectionKey key : selector.selectedKeys()) {
+                            if (!key.isValid()) {
+                                key.cancel();
+                                continue;
+                            }
+                            try {
+                                if (key.isReadable()) {
+                                    parsePackets();
+                                }
+                                if (key.isWritable()) {
+                                    writeOutput();
+                                }
+                            } catch (IOException e) {
+                                if (processRunning.get()) {  // Only log if we weren't already shutting down
+                                    if (e.getMessage() != null &&
+                                        (e.getMessage().contains("reset") ||
+                                         e.getMessage().contains("closed") ||
+                                         e.getMessage().contains("endpoint") ||
+                                         e.getMessage().contains("disconnected"))) {
+                                        logger.debug("Connection closed for {}: {}",
+                                            player != null ? player.getPlayerName() : "unknown", e.getMessage());
+                                    } else {
+                                        logger.warn("Network error for {}: {}",
+                                            player != null ? player.getPlayerName() : "unknown", e.getMessage());
+                                    }
+                                }
+                                // Exit run() on read errors
+                                return;
+                            }
                         }
-                        if (key.isWritable()) {
+                        selector.selectedKeys().clear();
+                    }
+
+                    if (!outData.isEmpty()) {
+                        try {
                             writeOutput();
+                        } catch (IOException e) {
+                            if (processRunning.get()) {  // Only log if we weren't already shutting down
+                                logger.debug("Error writing to socket for {}: {}",
+                                    player != null ? player.getPlayerName() : "unknown", e.getMessage());
+                            }
+                            // Exit run() on write errors
+                            return;
                         }
                     }
-                    selector.selectedKeys().clear();
-                }
 
-                if (!outData.isEmpty()) {
-                    writeOutput();
-                }
 
-                player.timeOutCounter = 0;
+                    if (player != null) {
+                        player.timeOutCounter = 0;
+                    }
+                } catch (Exception e) {
+                    // Only log if this wasn't a normal disconnection
+                    if (processRunning.get()) {
+                        logger.warn("Error in network loop for {}: {}",
+                            player != null ? player.getPlayerName() : "unknown", e.getMessage());
+                    }
+                    break; // Exit the main loop on any unhandled exception
+                }
             }
-        } catch (IOException e) {
-            logger.error("SocketHandler: Error in run", e);
+        } catch (Exception e) {
+            logger.error("Fatal error in SocketHandler for {}: {}",
+                player != null ? player.getPlayerName() : "unknown", e.getMessage(), e);
         } finally {
             cleanup(); // Ensure cleanup even on exceptions
         }
@@ -81,31 +124,79 @@ public class SocketHandler implements Runnable {
     }
 
     public void logout() {
-        if (processRunning.getAndSet(false)) {
-            player.disconnected = true;
+        if (!processRunning.getAndSet(false)) {
+            return; // Already shutting down
+        }
+
+        try {
+            if (player != null) {
+                logger.debug("Initiating logout for player: {}", player.getPlayerName());
+                player.disconnected = true;
+
+                // Wake up selector if it's blocked in select()
+                if (selector != null && selector.isOpen()) {
+                    selector.wakeup();
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Error during logout for player {}: {}",
+                    player != null ? player.getPlayerName() : "unknown", e.getMessage());
+        } finally {
             cleanup();
         }
     }
 
     private void cleanup() {
+        if (!processRunning.compareAndSet(true, false)) {
+            return;
+        }
+
         outputLock.lock();
         try {
-            flushRemainingData();
-            if (selector != null) {
-                selector.close();
+            try {
+                // Try to flush any remaining data
+                flushRemainingData();
+            } catch (Exception e) {
+                logger.debug("Error flushing remaining data during cleanup for {}: {}",
+                    player.getPlayerName(), e.getMessage());
             }
-            if (socketChannel != null) {
-                socketChannel.close();
-            }
-            logger.info("{} has disconnected.", player.getPlayerName());
 
-            // Signal cleanup completion
-            cleanupDone.signalAll();
-        } catch (IOException e) {
-            logger.warn("SocketHandler Cleanup Exception", e);
+            if (selector != null) {
+                try {
+                    selector.close();
+                } catch (IOException e) {
+                    logger.debug("Error closing selector for {}: {}",
+                        player.getPlayerName(), e.getMessage());
+                }
+            }
+
+            if (socketChannel != null) {
+                try {
+                    if (socketChannel.isOpen()) {
+                        socketChannel.close();
+                    }
+                } catch (IOException e) {
+                    logger.debug("Error closing socket for {}: {}",
+                        player.getPlayerName(), e.getMessage());
+                }
+            }
+
+            logger.info("{} has disconnected.", player.getPlayerName());
         } finally {
-            outputLock.unlock();
-            player.disconnected = true; // Ensure disconnection
+            try {
+                // Signal any waiting threads that cleanup is complete
+                cleanupDone.signalAll();
+            } finally {
+                try {
+                    // Ensure player is marked as disconnected
+                    if (player != null) {
+                        player.disconnected = true;
+
+                    }
+                } finally {
+                    outputLock.unlock();
+                }
+            }
         }
     }
 
@@ -119,22 +210,38 @@ public class SocketHandler implements Runnable {
                 }
             }
         } catch (IOException e) {
-            logger.warn("Failed to flush remaining data", e);
+            logger.error("Failed to flush remaining data", e);
         } finally {
             outputLock.unlock();
         }
     }
 
     private void parsePackets() throws IOException {
-        inputBuffer.clear();
-        int bytesRead = socketChannel.read(inputBuffer);
-        if (bytesRead == -1) {
-            throw new IOException("Client disconnected");
-        }
+        try {
+            inputBuffer.clear();
+            int bytesRead = socketChannel.read(inputBuffer);
+            if (bytesRead == -1) {
+                throw new IOException("Client disconnected gracefully");
+            }
 
-        inputBuffer.flip();
-        packetParser.parsePackets(inputBuffer, player, incomingPackets);
-        inputBuffer.compact();
+            // Handle connection reset by peer
+            if (bytesRead == 0 && !socketChannel.isConnected()) {
+                throw new IOException("Connection reset by peer");
+            }
+
+            inputBuffer.flip();
+            if (inputBuffer.hasRemaining()) {
+                packetParser.parsePackets(inputBuffer, player, incomingPackets);
+            }
+            inputBuffer.compact();
+        } catch (IOException e) {
+            if (e.getMessage() != null && e.getMessage().contains("reset")) {
+                logger.debug("Connection reset by peer for {}: {}", player.getPlayerName(), e.getMessage());
+            } else {
+                logger.warn("Error reading from socket for {}: {}", player.getPlayerName(), e.getMessage());
+            }
+            throw e; // Re-throw to trigger cleanup
+        }
     }
 
     private void writeOutput() throws IOException {

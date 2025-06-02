@@ -3,12 +3,20 @@ package net.dodian.uber.comm;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.reflect.Field;
+import java.util.stream.Collectors;
 
 public class Memory {
+    private static final Logger logger = LoggerFactory.getLogger(Memory.class);
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_GREEN = "\u001B[32m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_CYAN = "\u001B[36m";
 
     private static Memory singleton = null;
 
@@ -25,33 +33,39 @@ public class Memory {
         Runtime r = Runtime.getRuntime();
         int onlinePlayer = PlayerHandler.getPlayerCount();
         int memoryUsage = (int) ((r.totalMemory() - r.freeMemory()) / mb);
+        int maxMemory = (int) (r.maxMemory() / mb);
         List<String> clientNames = getClientNames();
 
-        System.out.println("Players Online: " + onlinePlayer +
-                " | Memory Usage: " + memoryUsage + "MB" +
-                " | Players in ConcurrentHashMap: " + PlayerHandler.playersOnline.size());
+        logger.info("--------------------------------------------------------------------------------"); // Separator line
+        
+        String stats = String.format("%sPlayers Online: %d | Memory Usage: %d/%dMB | Players in ConcurrentHashMap: %d%s",
+                ANSI_CYAN,
+                onlinePlayer,
+                memoryUsage,
+                maxMemory,
+                PlayerHandler.playersOnline.size(),
+                ANSI_RESET);
+        logger.info(stats);
 
-        System.out.println("Client Names: " + String.join(", ", clientNames));
-
-        System.out.println("Player Array Information:");
-        for (int i = 1; i < PlayerHandler.players.length; i++) {
-            Player player = PlayerHandler.players[i];
-            if (player instanceof Client) {
-                Client client = (Client) player;
-                
-
-                System.out.println("Slot " + i + ": " + client.getPlayerName() 
-                        );
-
-                if (!client.isActive && client.getPlayerName() != null) {
-                    System.out.println("  WARNING: Inactive client with non-null name in slot " + i);
+        if (!clientNames.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Client Names: ").append(String.join(", ", clientNames));
+            for (int i = 1; i < PlayerHandler.players.length; i++) {
+                Player player = PlayerHandler.players[i];
+                if (player instanceof Client) {
+                    Client client = (Client) player;
+                    if (client.getPlayerName() != null) {
+                        sb.append(String.format("  Slot %d : %-16s | disconnected = %-5s | isActive = %-5s",
+                            i, client.getPlayerName(), client.disconnected, client.isActive));
+                    }
                 }
-
-                printSpecificFields(client);
             }
+            logger.info(sb.toString());
+            logger.info("--------------------------------------------------------------------------------"); // Separator line
+        } else {
+            logger.info("No players online");
+            logger.info("--------------------------------------------------------------------------------"); // Separator line
         }
-
-        //System.out.println("Used Slots: " + PlayerHandler.usedSlots); <---Error!
     }
 
     private List<String> getClientNames() {
@@ -65,21 +79,5 @@ public class Memory {
             }
         }
         return names;
-    }
-
-   
-    private void printSpecificFields(Client client) {
-        try {
-            Field disconnectedField = Client.class.getField("disconnected");
-            Field isActiveField = Client.class.getField("isActive");
-
-            boolean disconnected = disconnectedField.getBoolean(client);
-            boolean isActive = isActiveField.getBoolean(client);
-
-            System.out.println("  disconnected = " + disconnected);
-            System.out.println("  isActive = " + isActive);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            System.out.println("  Unable to access specific fields: " + e.getMessage());
-        }
     }
 }
