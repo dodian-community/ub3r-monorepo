@@ -489,13 +489,16 @@ public class Client extends Player implements Runnable {
         }
 
         try {
-            mySocketHandler.logout();
+            if (!isLoggingOut) { //call if not logging out/xlog
+                mySocketHandler.logout();
+            }
+
             mySocketHandler.awaitCleanup();
 
-
+            // Remove from online players and log the removal
             PlayerHandler.playersOnline.remove(longName);
-            PlayerHandler.allOnline.remove(longName);
-            System.out.println("Destructed the playerSlot: " + getSlot());
+            println("Thread removed from Server");
+
             isLoggingOut = false;
 
             if (saveNeeded && !tradeSuccessful) {
@@ -513,7 +516,8 @@ public class Client extends Player implements Runnable {
             System.gc();
             super.destruct();
         } catch (InterruptedException e) {
-            System.out.println("Interrupted while waiting for SocketHandler cleanup: " + e.getMessage());
+            println("ERROR: Interrupted during SocketHandler cleanup: " + e.getMessage());
+            Thread.currentThread().interrupt(); // Preserve interrupt status
         }
     }
 
@@ -634,6 +638,7 @@ public class Client extends Player implements Runnable {
 
         getOutputStream().createFrame(109);
         flushOutStream();
+        mySocketHandler.logout();
 
     }
 

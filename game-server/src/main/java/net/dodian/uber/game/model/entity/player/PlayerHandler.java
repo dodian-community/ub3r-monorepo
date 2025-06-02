@@ -10,11 +10,12 @@ import java.io.IOException;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.BitSet;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PlayerHandler {
 
-    private static final Logger logger = Logger.getLogger(PlayerHandler.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(PlayerHandler.class);
     static final Object SLOT_LOCK = new Object();
 
     static final BitSet usedSlots = new BitSet(Constants.maxPlayers + 1);
@@ -45,7 +46,7 @@ public class PlayerHandler {
         synchronized (SLOT_LOCK) {
             slot = findFreeSlot();
             if (slot == -1 || slot > Constants.maxPlayers) {
-                logger.warning("No free slots available for a new player connection.");
+                logger.warn("No free slots available for a new player connection.");
                 closeSocketChannel(socketChannel);
                 return;
             }
@@ -71,20 +72,20 @@ public class PlayerHandler {
                     Player.localId = slot;
                     playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
                 } else {
-                    logger.warning("Login failed - Client not active for slot " + slot);
+                    logger.warn("Login failed - Client not active for slot {}", slot);
                     synchronized (SLOT_LOCK) {
                         usedSlots.clear(slot);
                     }
                 }
             } catch (Exception e) {
-                logger.severe("Error during client initialization: " + e.getMessage());
-                logger.severe("Player array state during error: " + getPlayerArrayState());
+                logger.error("Error during client initialization: {}", e.getMessage(), e);
+                logger.error("Player array state during error: {}", getPlayerArrayState());
                 throw e; // Re-throw to be handled by the outer try-catch
             }
 
             Memory.getSingleton().process(); // Print memory usage after adding player
         } catch (Exception e) {
-            logger.severe("Error processing new client connection: " + e.getMessage());
+            logger.error("Error processing new client connection: {}", e.getMessage(), e);
             e.printStackTrace();  // This will give us more detailed error information
             closeSocketChannel(socketChannel);
             synchronized (SLOT_LOCK) {
@@ -109,7 +110,7 @@ public class PlayerHandler {
         try {
             socketChannel.close();
         } catch (IOException closeError) {
-            logger.warning("Error closing socket channel: " + closeError.getMessage());
+            logger.warn("Error closing socket channel: {}", closeError.getMessage(), closeError);
         }
     }
     
@@ -151,7 +152,7 @@ public class PlayerHandler {
         Client temp = (Client) plr;
         if (temp != null) {
             temp.destruct();
-            logger.info("PlayerHandler: Finished removing player : '" + temp.getPlayerName() + "'");
+            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
             int slot = temp.getSlot();
             players[slot] = null;
             if (temp.isActive && slot >= 1 && slot <= Constants.maxPlayers) {
@@ -161,7 +162,7 @@ public class PlayerHandler {
             }
             playersOnline.remove(Utils.playerNameToLong(temp.getPlayerName()));
         } else {
-            logger.warning("Tried to remove a null player!");
+            logger.warn("Tried to remove a null player!");
         }
 
         Memory.getSingleton().process(); // Print memory usage after removing player
