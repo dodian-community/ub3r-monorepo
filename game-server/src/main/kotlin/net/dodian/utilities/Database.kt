@@ -5,18 +5,57 @@ import java.sql.DriverManager
 import java.sql.SQLException
 import java.sql.Statement
 
-val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC"
+private val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC&autoReconnect=true"
 
-val dbConnection: Connection = connect()
 
-val dbStatement: Statement = dbConnection.createStatement()
+private var _dbConnection: Connection? = null
+
+
+val dbConnection: Connection
+    get() {
+        val conn = _dbConnection
+        return if (conn != null && conn.isValid(1)) {
+            conn
+        } else {
+            when {
+                conn == null -> println("[DB] Creating initial database connection...")
+                !conn.isValid(1) -> println("[DB] Connection invalid, creating new connection...")
+                else -> println("[DB] Connection state unknown, renewing...")
+            }
+
+            try {
+                conn?.close()
+                if (conn != null) {
+                    println("[DB] Old connection closed")
+                }
+            } catch (e: SQLException) {
+                println("[DB] Error closing old connection: ${e.message}")
+            }
+            
+            // Create new connection
+            try {
+                connect().also { 
+                    _dbConnection = it
+                    println("[DB] New connection established successfully")
+                }
+            } catch (e: Exception) {
+                println("[DB] Failed to create new connection: ${e.message}")
+                throw e
+            }
+        }
+    }
+
+
+val dbStatement: Statement
+    get() = dbConnection.createStatement()
 
 private fun connect(): Connection {
-    val con = DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword)
-    if (!con.isValid(0))
-        error("Failed to connect to database")
-
-    return con;
+    println("[DB] Attempting to connect to database...")
+    return DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword).apply {
+        autoCommit = true
+        setNetworkTimeout(Runnable::run, 30000) // 30 second timeout
+        println("[DB] Connected to ${metaData.databaseProductName} ${metaData.databaseProductVersion}")
+    }
 }
 
 enum class DbTables(val table: String) {

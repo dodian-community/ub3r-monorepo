@@ -110,9 +110,10 @@ public class ClientLoginHandler {
             //System.out.println("Client session key: " + clientSessionKey + ", Server session key: " + serverSessionKey); -> Old Debug
             String customClientVersion = readString(loginBuffer);
             client.officialClient = customClientVersion.equals(getGameClientCustomVersion());
-            if(!client.officialClient)
+            if(!client.officialClient) {
                 client.returnCode = 6;
-            client.disconnected = true;
+                client.disconnected = true;
+            }
             //client.UUID = readString(loginBuffer).split("-"); //TODO: Fix Better check on computer
             client.setPlayerName(readString(loginBuffer));
             if (client.getPlayerName() == null || client.getPlayerName().isEmpty()) {
