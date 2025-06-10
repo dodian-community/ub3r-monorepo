@@ -312,11 +312,12 @@ public class ClientLoginHandler {
         if(client.playerRights > 0) client.premium = true;
 
 
-        if (loadGameResult == 0 && client.returnCode != RETURN_CODE_INVALID_CLIENT_VERSION) { // Assuming 6 is invalid client version
+        if (loadGameResult == 0 && client.returnCode != RETURN_CODE_INVALID_CLIENT_VERSION) {
             client.validLogin = true;
             if (client.getPosition().getX() > 0 && client.getPosition().getY() > 0) {
 
-                // Check if player has valid coords TODO
+                client.transport(new Position(client.getPosition().getX(),
+                        client.getPosition().getY(), client.getPosition().getZ()));
 
             }
         } else { // loadgame failed or other issue
@@ -365,8 +366,10 @@ public class ClientLoginHandler {
         client.packetType = -1;
         client.readPtr = 0;
         client.writePtr = 0;
-        //client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);//i don't think its needed?
-        client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+        client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);//i don't think its needed?
+
+        //moved to stage 5 can delete this if delay in loading region is fixed
+        //client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
 
 
     }
@@ -420,6 +423,7 @@ public class ClientLoginHandler {
             // Stage 5: Send Login Response to Client
             // This is sent regardless of success or specific failure codes set by previous stages.
             sendLoginResponseToClient();
+            client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
 
             // Stage 6: Check for final success and transition to active game session
             if (client.getSlot() == -1 || client.returnCode != LOGIN_SUCCESS_CODE) {
