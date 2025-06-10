@@ -464,22 +464,25 @@ public class Client extends Player implements Runnable {
 
     private ByteBuffer inputBuffer;
     private ByteBuffer outputBuffer;
+    private static final int INPUT_BUFFER_SIZE = 8 * 1024;    // 8KB for incoming data
+    private static final int OUTPUT_BUFFER_SIZE = 32 * 1024;  // 32KB for outgoing data
+
 
 
     public Client(SocketChannel socketChannel, int _playerId) throws IOException {
         super(_playerId);
         mySocketHandler = new SocketHandler(this, socketChannel);
 
-        /* Items enabled! */
-        outputBuffer = ByteBuffer.allocate(1_000_000);
-        inputBuffer = ByteBuffer.allocate(1_000_000);
+        // Use heap buffers instead of direct buffers
+        outputBuffer = ByteBuffer.allocate(OUTPUT_BUFFER_SIZE);
+        inputBuffer = ByteBuffer.allocate(INPUT_BUFFER_SIZE);
 
         outputStream = new Stream(outputBuffer.array());
         outputStream.currentOffset = 0;
         inputStream = new Stream(inputBuffer.array());
         inputStream.currentOffset = 0;
         readPtr = writePtr = 0;
-        this.loginHandler = new ClientLoginHandler(this, socketChannel);//moved the login stuff
+        this.loginHandler = new ClientLoginHandler(this, socketChannel);
     }
 
     @Override
