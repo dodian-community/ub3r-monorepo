@@ -319,6 +319,9 @@ public class ClientLoginHandler {
                 client.transport(new Position(client.getPosition().getX(),
                         client.getPosition().getY(), client.getPosition().getZ()));
 
+                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);//i don't think its needed?
+                System.out.println("login successful for " + client.getPlayerName());
+               
             }
         } else { // loadgame failed or other issue
             if (client.returnCode != RETURN_CODE_INVALID_CLIENT_VERSION && client.returnCode != RETURN_CODE_BANNED_OR_NO_MEMBERSHIP) {
