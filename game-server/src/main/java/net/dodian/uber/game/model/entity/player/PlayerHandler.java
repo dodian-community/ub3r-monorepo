@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 public class PlayerHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PlayerHandler.class);
-    static final Object SLOT_LOCK = new Object();
+    public static final Object SLOT_LOCK = new Object();
 
-    static final BitSet usedSlots = new BitSet(Constants.maxPlayers + 1);
+    public static final BitSet usedSlots = new BitSet(Constants.maxPlayers + 1);
 
     public static ConcurrentHashMap<Long, Client> playersOnline = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<Long, Integer> allOnline = new ConcurrentHashMap<>();

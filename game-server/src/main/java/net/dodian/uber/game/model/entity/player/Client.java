@@ -45,6 +45,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.BufferedWriter;
+import io.netty.channel.Channel;
 import java.io.File;
 import java.io.FileWriter;
 /* Kotlin imports */
@@ -57,6 +58,7 @@ import static net.dodian.utilities.DotEnvKt.*;
 
 
 public class Client extends Player implements Runnable {
+    public Channel channel;
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
     public Fletching fletching = new Fletching();
@@ -457,7 +459,7 @@ public class Client extends Player implements Runnable {
     public Stream inputStream, outputStream;
     public byte[] buffer;
     public int readPtr, writePtr;
-    public Cryption inStreamDecryption = null, outStreamDecryption = null;
+    public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
     SocketHandler mySocketHandler;
     public int timeOutCounter = 0; // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
@@ -482,33 +484,46 @@ public class Client extends Player implements Runnable {
         inputStream = new Stream(inputBuffer.array());
         inputStream.currentOffset = 0;
         readPtr = writePtr = 0;
-        this.loginHandler = new ClientLoginHandler(this, socketChannel);
+                this.loginHandler = new ClientLoginHandler(this, socketChannel);
+    }
+
+    public Client(Channel channel, int _playerId) {
+        super(_playerId);
+        this.channel = channel;
+        this.outputStream = new Stream(new byte[OUTPUT_BUFFER_SIZE]);
+        this.outputStream.currentOffset = 0;
+        this.inputStream = new Stream(new byte[INPUT_BUFFER_SIZE]);
+        this.inputStream.currentOffset = 0;
+        this.loginHandler = null;
+        this.mySocketHandler = null;
     }
 
     @Override
     public void destruct() {
-        if (mySocketHandler == null) {
-            return;
-        }
-
         try {
-            if (!isLoggingOut) { //call if not logging out/xlog
-                mySocketHandler.logout();
+            // Transport-specific shutdown
+            if (channel != null) {
+                channel.close();
+            }
+            if (mySocketHandler != null) {
+                if (!isLoggingOut) {
+                    mySocketHandler.logout();
+                }
+                mySocketHandler.awaitCleanup();
             }
 
-            mySocketHandler.awaitCleanup();
-
-            // Remove from online players and log the removal
+            // Remove from online maps
             PlayerHandler.playersOnline.remove(longName);
             println("Thread removed from Server");
-
             isLoggingOut = false;
 
             if (saveNeeded && !tradeSuccessful) {
                 saveStats(true, true);
             }
 
+            // Release references
             mySocketHandler = null;
+            channel = null;
             inputStream = null;
             outputStream = null;
             inputBuffer = null;
@@ -519,8 +534,8 @@ public class Client extends Player implements Runnable {
             System.gc();
             super.destruct();
         } catch (InterruptedException e) {
-            println("ERROR: Interrupted during SocketHandler cleanup: " + e.getMessage());
-            Thread.currentThread().interrupt(); // Preserve interrupt status
+            println("ERROR: Interrupted during cleanup: " + e.getMessage());
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -532,19 +547,47 @@ public class Client extends Player implements Runnable {
         return this.outputStream;
     }
 
+    // --- Added helpers for Netty migration ---
+    public io.netty.channel.Channel getChannel() {
+        return this.channel;
+    }
+
+    public ISAACCipher getOutStreamDecryption() {
+        return this.outStreamDecryption;
+    }
+
+    public SocketHandler getSocketHandler() {
+        return this.mySocketHandler;
+    }
+
     public void send(OutgoingPacket packet) {
+        if (this.disconnected || this.outputStream == null) {
+            return; // Client is shutting down or not ready; skip sending packet
+        }
         packet.send(this);
     }
 
-    // writes any data in outStream to the relaying buffer
+    // writes any data in outStream to the network – SocketHandler for legacy, Netty Channel otherwise
     public void flushOutStream() {
         if (disconnected || getOutputStream().currentOffset == 0) {
             return;
         }
 
         int length = getOutputStream().currentOffset;
-        mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
-        getOutputStream().currentOffset = 0;
+
+        try {
+            if (channel != null) { // Netty path
+                io.netty.buffer.ByteBuf buf = channel.alloc().buffer(length);
+                buf.writeBytes(getOutputStream().buffer, 0, length);
+                channel.writeAndFlush(buf);
+            } else if (mySocketHandler != null) { // Legacy NIO path
+                mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
+            }
+        } catch (Exception ex) {
+            System.err.println("flushOutStream error: " + ex.getMessage());
+        } finally {
+            getOutputStream().currentOffset = 0;
+        }
     }
 
 
@@ -563,6 +606,10 @@ public class Client extends Player implements Runnable {
             return false;
         }
 
+        // For Netty-based clients, incoming packets are handled by GamePacketHandler; skip legacy processing
+        if (mySocketHandler == null) {
+            return false;
+        }
         Queue<PacketData> packets = mySocketHandler.getPackets();
         if (packets.isEmpty()) {
             return false;
@@ -614,6 +661,9 @@ public class Client extends Player implements Runnable {
 
 
     public void logout() {
+        send(new SendMessage("Please wait... logging out may take time"));
+        send(new SendString("     Please wait...", 2458));
+
         if (isLoggingOut) {
 
             return;
@@ -627,8 +677,6 @@ public class Client extends Player implements Runnable {
             return;
         }
         isLoggingOut = true;
-        send(new SendMessage("Please wait... logging out may take time"));
-        send(new SendString("     Please wait...", 2458));
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
@@ -639,14 +687,14 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        getOutputStream().createFrame(109);
-        flushOutStream();
-        mySocketHandler.logout();
-
+        // Save player data before disconnecting
+        saveStats(true, true);
+        // Use unified outgoing packet
+        send(new Logout());
     }
 
     public void saveStats(boolean logout, boolean updateProgress) {
-        if (loginDelay > 0) {
+        if (loginDelay > 0 && !logout) {
             println("Incomplete login, aborting save");
             return;
         }
@@ -5193,7 +5241,6 @@ public class Client extends Player implements Runnable {
     public void setInterfaceWalkable(int ID) {
         getOutputStream().createFrame(208);
         getOutputStream().writeWordBigEndian_dup(ID);
-        //flushOutStream();
     }
 
     public void RefreshDuelRules() {

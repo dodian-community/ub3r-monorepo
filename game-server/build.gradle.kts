@@ -1,5 +1,7 @@
 plugins {
     kotlin("jvm") version "1.6.21"
+    id("application")
+    `java-library`
 }
 
 application {
@@ -46,6 +48,9 @@ dependencies {
     implementation("org.mybatis:mybatis:3.5.10")
 
     implementation("com.google.code.gson:gson:2.7")
+
+    implementation("io.netty:netty-all:4.1.108.Final")
+    implementation("com.google.guava:guava:33.1.0-jre")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

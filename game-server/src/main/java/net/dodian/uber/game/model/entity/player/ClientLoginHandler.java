@@ -4,14 +4,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.ServerConnectionHandler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 
-import net.dodian.uber.game.model.YellSystem;
-import net.dodian.utilities.Cryption;
+import net.dodian.utilities.ISAACCipher;
 
 import net.dodian.utilities.Utils;
 
@@ -210,11 +207,11 @@ public class ClientLoginHandler {
         sessionKeySetup[1] = (int) outSessionKeys[0];
         sessionKeySetup[2] = (int) (outSessionKeys[1] >> 32); // serverSessionKeyFromPayload
         sessionKeySetup[3] = (int) outSessionKeys[1];
-        client.inStreamDecryption = new Cryption(sessionKeySetup);
+        client.inStreamDecryption = new ISAACCipher(sessionKeySetup);
         for (int i = 0; i < 4; i++) {
             sessionKeySetup[i] += 50;
         }
-        client.outStreamDecryption = new Cryption(sessionKeySetup);
+        client.outStreamDecryption = new ISAACCipher(sessionKeySetup);
         client.getOutputStream().packetEncryption = client.outStreamDecryption;
         client.getOutputStream().packetEncryption = client.outStreamDecryption;
         return true;
