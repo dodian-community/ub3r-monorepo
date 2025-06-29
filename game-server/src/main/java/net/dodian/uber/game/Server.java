@@ -29,7 +29,8 @@ import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+
+import net.dodian.uber.game.networking.NettyGameServer;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
@@ -70,7 +71,8 @@ public class Server {
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
 
-    private static ServerConnectionHandler connectionHandler;
+
+    private static NettyGameServer nettyServer;
 
     public static void main(String[] args) throws Exception {
         logger.info("Info log!");
@@ -93,7 +95,7 @@ public class Server {
 
         npcManager = new NpcManager();
         npcManager.loadSpawns();
-        System.out.println("[NpcManager] DONE LOADING NPC CONFIGURATION");
+        logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         loginManager = new LoginManager();
@@ -112,14 +114,10 @@ public class Server {
         new DoorHandler();
         new Thread(EventManager.getInstance()).start();
 
-        try {
-            connectionHandler = new ServerConnectionHandler(DotEnvKt.getServerPort(), playerHandler);
-            new Thread(connectionHandler).start();
-            System.out.println("Server connection handler started on port " + DotEnvKt.getServerPort());
-        } catch (IOException e) {
-            System.out.println("Failed to start server connection handler: " + e.getMessage());
-            System.exit(1);
-        }
+        nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
+        new Thread(nettyServer).start();
+        logger.info("Netty game server started on port {}", DotEnvKt.getServerPort());
+
 
         new Thread(login).start();
         /* Processor for various stuff */
@@ -132,7 +130,7 @@ public class Server {
         entryObject = new PyramidPlunder();
         System.gc();
         Login.banUid();
-        System.out.println("Server is now running on world " + getGameWorldId() + "!");
+       logger.info("Server is now running on world " + getGameWorldId() + "!");
     }
 
     public static Thread createNewConnection(SocketHandler socketHandler) {
@@ -172,8 +170,8 @@ public class Server {
     }
 
     public static void shutdown() {
-        if (connectionHandler != null) {
-            connectionHandler.shutdown();
+        if (nettyServer != null) {
+            nettyServer.shutdown();
         }
         // Add any other shutdown logic here
     }

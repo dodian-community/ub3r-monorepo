@@ -9,8 +9,6 @@ public class PacketHandler {
 
     static {
         packets[25] = new ItemOnGroundItem();
-        packets[87] = new DropItem();
-        packets[236] = new PickUpGroundItem();
         packets[41] = new WearItem();
         packets[214] = new MoveItems();
 
@@ -26,23 +24,21 @@ public class PacketHandler {
         packets[237] = new MagicOnItems();
         packets[35] = new MagicOnObject();
 
-        packets[4] = new Chat();
+
         packets[40] = new Dialogue();
         packets[95] = new UpdateChat();
         packets[103] = new Commands();
 
         packets[126] = new SendPrivateMessage();
-        packets[188] = new AddFriend();
-        packets[215] = new RemoveFriend();
+
+
         packets[133] = new AddIgnore();
         packets[74] = new RemoveIgnore();
 
-        packets[248] = new Walking();
-        packets[164] = new Walking();
-        packets[98] = new Walking();
+
         packets[39] = new FollowPlayer();
-        packets[121] = new ChangeRegion();
-        packets[210] = new ChangeRegion();
+
+
 
         packets[132] = new ClickObject();
         packets[252] = new ClickObject2();

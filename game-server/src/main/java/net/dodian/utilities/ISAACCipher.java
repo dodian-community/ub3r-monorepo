@@ -1,8 +1,8 @@
 package net.dodian.utilities;
 
-public class Cryption {
+public class ISAACCipher {
 
-    public Cryption(int ai[]) {
+    public ISAACCipher(int ai[]) {
         cryptArray = new int[256];
         keySetArray = new int[256];
         for (int i = 0; i < ai.length; i++)
