@@ -473,18 +473,17 @@ public class Client extends Player implements Runnable {
 
     public Client(SocketChannel socketChannel, int _playerId) throws IOException {
         super(_playerId);
-        mySocketHandler = new SocketHandler(this, socketChannel);
+        this.mySocketHandler = new SocketHandler(this, socketChannel);
 
         // Use heap buffers instead of direct buffers
-        outputBuffer = ByteBuffer.allocate(OUTPUT_BUFFER_SIZE);
-        inputBuffer = ByteBuffer.allocate(INPUT_BUFFER_SIZE);
+        this.outputBuffer = ByteBuffer.allocate(OUTPUT_BUFFER_SIZE);
+        this.inputBuffer = ByteBuffer.allocate(INPUT_BUFFER_SIZE);
 
-        outputStream = new Stream(outputBuffer.array());
-        outputStream.currentOffset = 0;
-        inputStream = new Stream(inputBuffer.array());
-        inputStream.currentOffset = 0;
-        readPtr = writePtr = 0;
-                this.loginHandler = new ClientLoginHandler(this, socketChannel);
+        this.outputStream = new Stream(outputBuffer.array());
+        this.outputStream.currentOffset = 0;
+        this.inputStream = new Stream(inputBuffer.array());
+        this.inputStream.currentOffset = 0;
+        this.readPtr = this.writePtr = 0;
     }
 
     public Client(Channel channel, int _playerId) {
@@ -494,7 +493,6 @@ public class Client extends Player implements Runnable {
         this.outputStream.currentOffset = 0;
         this.inputStream = new Stream(new byte[INPUT_BUFFER_SIZE]);
         this.inputStream.currentOffset = 0;
-        this.loginHandler = null;
         this.mySocketHandler = null;
     }
 
@@ -638,12 +636,11 @@ public class Client extends Player implements Runnable {
         PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
     }
 
-    //moved to its own class, will probably be useful if we end up switching to Netty
-    private ClientLoginHandler loginHandler;
-
     @Override
     public void run() {
-        loginHandler.handleLogin();
+        // Login is now handled by Netty's LoginProcessorHandler
+        // This method is kept for backward compatibility but does nothing for Netty connections
+        // For legacy connections, the SocketHandler will handle the login process
     }
 
     public void setSidebarInterface(int menuId, int form) {
