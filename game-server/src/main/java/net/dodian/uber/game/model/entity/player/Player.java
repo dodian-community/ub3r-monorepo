@@ -681,6 +681,43 @@ public abstract class Player extends Entity {
         str.writeBits(5, z); // x coordinate relative to thisPlayer
     }
 
+    // --- Cached player update block (for efficient multi-viewer reuse) ---
+    private byte[] cachedUpdateBlock = null;
+    private int cachedUpdateBlockLength = 0;
+    private boolean cachedUpdateBlockValid = false;
+
+    /**
+     * Returns true if the cached update block can be reused this cycle.
+     */
+    public boolean isCachedUpdateBlockValid() {
+        return cachedUpdateBlockValid && cachedUpdateBlock != null;
+    }
+
+    /**
+     * Writes the cached block into the supplied stream. Caller must ensure it
+     * is valid first.
+     */
+    public void writeCachedUpdateBlock(Stream dst) {
+        dst.writeBytes(cachedUpdateBlock, cachedUpdateBlockLength, 0);
+    }
+
+    /**
+     * Stores a freshly-built update block for re-use next time.
+     */
+    public void cacheUpdateBlock(byte[] src, int length) {
+        this.cachedUpdateBlock = src;
+        this.cachedUpdateBlockLength = length;
+        this.cachedUpdateBlockValid = true;
+    }
+
+    /**
+     * Invalidates the cached block (called whenever an update flag is set or
+     * at the end of the tick).
+     */
+    public void invalidateCachedUpdateBlock() {
+        this.cachedUpdateBlockValid = false;
+    }
+
     private final byte[] chatText = new byte[4096];
     private byte chatTextSize = 0;
     private int chatTextEffects = 0, chatTextColor = 0;
@@ -719,6 +756,8 @@ public abstract class Player extends Entity {
         if(isActive && !disconnected)
             ((Client) this).flushOutStream(); //Not sure if we need or if this causes issues!
         getUpdateFlags().clear();
+        // Any change this tick means our cached block is no longer valid.
+        invalidateCachedUpdateBlock();
     }
 
     public void faceTarget(int index) {
@@ -743,7 +782,7 @@ public abstract class Player extends Entity {
     }
     public abstract void process(); //Send every 600 ms
 
-    public abstract boolean packetProcess(); //Send every 600 ms
+
 
     public void postProcessing() {
         if (walkingBlock) {

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.Constants;
+
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -16,6 +16,8 @@ import net.dodian.utilities.Utils;
  * @author Dashboard
  */
 public class PlayerUpdating extends EntityUpdating<Player> {
+
+    private static final boolean DEBUG_REGION_UPDATES = false;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
 
@@ -57,14 +59,14 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 }
             }
 
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                if (PlayerHandler.players[i] == null || !PlayerHandler.players[i].isActive || PlayerHandler.players[i] == player || !player.loaded)
+            // Use region-based player discovery instead of scanning all 2k slots.
+            for (Player other : PlayerHandler.getLocalPlayers(player)) {
+                if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other)))
                     continue;
-                if (!player.withinDistance(PlayerHandler.players[i]) || (!player.didTeleport() && player.playersUpdating.contains(PlayerHandler.players[i])))
+                if (other.invis && !player.invis)
                     continue;
-                if ((PlayerHandler.players[i].invis && !player.invis)) //Instance check!
-                    continue;
-                player.addNewPlayer(PlayerHandler.players[i], stream, updateBlock);
+                player.addNewPlayer(other, stream, updateBlock);
+                if (player.playerListSize >= 255) break; // protocol hard-limit
             }
         } else {
             stream.writeBits(8, 0);
@@ -79,6 +81,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.finishBitAccess();
         }
         stream.endFrameVarSizeWord();
+
+        if (DEBUG_REGION_UPDATES) {
+            int rx = player.getPosition().getX() >> 6;
+            int ry = player.getPosition().getY() >> 6;
+            System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
+        }
     }
 
 
@@ -126,6 +134,15 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendBlockUpdate(Player player, Stream stream) {
+        /*
+         * Fast-path: if this player's cached update block is valid, just copy it
+         * straight into the output stream and return. This avoids recomputing
+         * masks and appearance data for every viewer each cycle.
+         */
+        if (player != null && player.isCachedUpdateBlockValid()) {
+            player.writeCachedUpdateBlock(stream);
+            return;
+        }
         if (!player.getUpdateFlags().isUpdateRequired() && !player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
             return; // nothing required
 
@@ -135,6 +152,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 updateMask |= flag.getMask(player.getType());
             }
         }
+
+        int cacheStartOffset = stream.currentOffset; // mark beginning for cache copy
 
         if (updateMask >= 0x100) {
             updateMask |= 0x40;
@@ -163,6 +182,14 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             appendPrimaryHit(player, stream);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2))
             appendPrimaryHit2(player, stream);
+
+        // ---- Cache the freshly built update block for reuse ----
+        int length = stream.currentOffset - cacheStartOffset;
+        if (length > 0) {
+            byte[] copy = new byte[length];
+            System.arraycopy(stream.buffer, cacheStartOffset, copy, 0, length);
+            player.cacheUpdateBlock(copy, length);
+        }
     }
 
     public void appendGraphic(Player player, Stream stream) {

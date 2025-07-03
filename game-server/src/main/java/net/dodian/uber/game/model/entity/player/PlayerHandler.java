@@ -127,6 +127,22 @@ public class PlayerHandler {
         return sb.append("]").toString();
     }
 
+    // Returns nearby players within the 3x3 region neighbourhood (64-tile regions).
+    public static java.util.List<Player> getLocalPlayers(Player p) {
+        int mx = p.getPosition().getX() >> 6;
+        int my = p.getPosition().getY() >> 6;
+        java.util.List<Player> list = new java.util.ArrayList<>(256);
+        for (Player other : players) {
+            if (other == null || !other.isActive || other == p) continue;
+            int ox = other.getPosition().getX() >> 6;
+            int oy = other.getPosition().getY() >> 6;
+            if (Math.abs(mx - ox) <= 1 && Math.abs(my - oy) <= 1) {
+                list.add(other);
+            }
+        }
+        return list;
+    }
+
     public static int getPlayerCount() {
         return (int) playersOnline.size();
     }
