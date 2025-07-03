@@ -8,7 +8,7 @@ import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-import net.dodian.uber.comm.SocketHandler;
+
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
@@ -133,9 +133,6 @@ public class Server {
        logger.info("Server is now running on world " + getGameWorldId() + "!");
     }
 
-    public static Thread createNewConnection(SocketHandler socketHandler) {
-        return new Thread(socketHandler);
-    }
 
     public static void logError(String message) {
         Utils.println(message);

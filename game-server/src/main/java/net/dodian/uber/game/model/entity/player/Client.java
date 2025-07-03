@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.PacketData;
-import net.dodian.uber.comm.SocketHandler;
+
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
@@ -46,6 +46,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.BufferedWriter;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import java.io.File;
 import java.io.FileWriter;
 /* Kotlin imports */
@@ -460,7 +461,7 @@ public class Client extends Player implements Runnable {
     public byte[] buffer;
     public int readPtr, writePtr;
     public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
-    SocketHandler mySocketHandler;
+
     public int timeOutCounter = 0; // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
 
@@ -473,7 +474,7 @@ public class Client extends Player implements Runnable {
 
     public Client(SocketChannel socketChannel, int _playerId) throws IOException {
         super(_playerId);
-        this.mySocketHandler = new SocketHandler(this, socketChannel);
+
 
         // Use heap buffers instead of direct buffers
         this.outputBuffer = ByteBuffer.allocate(OUTPUT_BUFFER_SIZE);
@@ -493,48 +494,34 @@ public class Client extends Player implements Runnable {
         this.outputStream.currentOffset = 0;
         this.inputStream = new Stream(new byte[INPUT_BUFFER_SIZE]);
         this.inputStream.currentOffset = 0;
-        this.mySocketHandler = null;
+
     }
 
     @Override
     public void destruct() {
-        try {
-            // Transport-specific shutdown
-            if (channel != null) {
-                channel.close();
-            }
-            if (mySocketHandler != null) {
-                if (!isLoggingOut) {
-                    mySocketHandler.logout();
-                }
-                mySocketHandler.awaitCleanup();
-            }
-
-            // Remove from online maps
-            PlayerHandler.playersOnline.remove(longName);
-            println("Thread removed from Server");
-            isLoggingOut = false;
-
-            if (saveNeeded && !tradeSuccessful) {
-                saveStats(true, true);
-            }
-
-            // Release references
-            mySocketHandler = null;
-            channel = null;
-            inputStream = null;
-            outputStream = null;
-            inputBuffer = null;
-            outputBuffer = null;
-            inStreamDecryption = null;
-            outStreamDecryption = null;
-
-            System.gc();
-            super.destruct();
-        } catch (InterruptedException e) {
-            println("ERROR: Interrupted during cleanup: " + e.getMessage());
-            Thread.currentThread().interrupt();
+        // Transport-specific shutdown
+        if (channel != null) {
+            channel.close();
         }
+        println("Thread removed from Server");
+        isLoggingOut = false;
+
+        if (saveNeeded && !tradeSuccessful) {
+            saveStats(true, true);
+        }
+
+        // Release references
+        
+        channel = null;
+        inputStream = null;
+        outputStream = null;
+        inputBuffer = null;
+        outputBuffer = null;
+        inStreamDecryption = null;
+        outStreamDecryption = null;
+
+        System.gc();
+        super.destruct();
     }
 
     public Stream getInputStream() {
@@ -554,9 +541,7 @@ public class Client extends Player implements Runnable {
         return this.outStreamDecryption;
     }
 
-    public SocketHandler getSocketHandler() {
-        return this.mySocketHandler;
-    }
+
 
     public void send(OutgoingPacket packet) {
         if (this.disconnected || this.outputStream == null) {
@@ -565,7 +550,31 @@ public class Client extends Player implements Runnable {
         packet.send(this);
     }
 
-    // writes any data in outStream to the network – SocketHandler for legacy, Netty Channel otherwise
+    // writes any data in outStream to the network via Netty Channel
+    public void flushOutStreamAndClose() {
+        if (disconnected || getOutputStream().currentOffset == 0) {
+            if (channel != null && channel.isActive()) {
+                channel.close();
+            }
+            return;
+        }
+        int length = getOutputStream().currentOffset;
+        try {
+            if (channel != null && channel.isActive()) {
+                io.netty.buffer.ByteBuf buf = channel.alloc().buffer(length);
+                buf.writeBytes(getOutputStream().buffer, 0, length);
+                channel.writeAndFlush(buf).addListener(ChannelFutureListener.CLOSE);
+            }
+        } catch (Exception ex) {
+            System.err.println("flushOutStreamAndClose error: " + ex.getMessage());
+            if (channel != null && channel.isActive()) {
+                channel.close();
+            }
+        } finally {
+            getOutputStream().currentOffset = 0;
+        }
+    }
+
     public void flushOutStream() {
         if (disconnected || getOutputStream().currentOffset == 0) {
             return;
@@ -578,8 +587,7 @@ public class Client extends Player implements Runnable {
                 io.netty.buffer.ByteBuf buf = channel.alloc().buffer(length);
                 buf.writeBytes(getOutputStream().buffer, 0, length);
                 channel.writeAndFlush(buf);
-            } else if (mySocketHandler != null) { // Legacy NIO path
-                mySocketHandler.queueOutput(getOutputStream().buffer, 0, length);
+            
             }
         } catch (Exception ex) {
             System.err.println("flushOutStream error: " + ex.getMessage());
@@ -595,39 +603,7 @@ public class Client extends Player implements Runnable {
         currentPacket = pData;
     }
 
-    public boolean packetProcess() {
-        if (disconnected) {
-            return false;
-        }
-        if (isLoggingOut) {
 
-            return false;
-        }
-
-        // For Netty-based clients, incoming packets are handled by GamePacketHandler; skip legacy processing
-        if (mySocketHandler == null) {
-            return false;
-        }
-        Queue<PacketData> packets = mySocketHandler.getPackets();
-        if (packets.isEmpty()) {
-            return false;
-        }
-
-        try {
-            PacketData packet;
-            while ((packet = packets.poll()) != null && mySocketHandler != null) {
-                fillInStream(packet);
-                currentPacket = packet;
-                parseIncomingPackets();
-            }
-        } catch (IOException e) {
-            System.err.println("Packet process error: " + e.getMessage());
-            disconnected = true;
-            return false;
-        }
-
-        return true;
-    }
 
 
     public PacketData currentPacket;
@@ -640,7 +616,7 @@ public class Client extends Player implements Runnable {
     public void run() {
         // Login is now handled by Netty's LoginProcessorHandler
         // This method is kept for backward compatibility but does nothing for Netty connections
-        // For legacy connections, the SocketHandler will handle the login process
+
     }
 
     public void setSidebarInterface(int menuId, int form) {
@@ -2001,6 +1977,9 @@ public class Client extends Player implements Runnable {
     public boolean canAttack = true;
 
     public void process() {// is being called regularily every 600 ms
+        if (disconnected || isLoggingOut) {
+            return;
+        }
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));

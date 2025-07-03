@@ -267,7 +267,7 @@ public class EntityProcessor implements Job {
             player.initialized = true;
         }
         player.process();
-        while (player.packetProcess()) ;
+
         player.postProcessing();
         player.getNextPlayerMovement();
     }
