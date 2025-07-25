@@ -7,7 +7,10 @@ import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.utilities.Misc;
-import net.dodian.utilities.Stream;
+import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.utilities.Utils;
 
 /**
@@ -26,23 +29,41 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     @Override
-    public void update(Player player, Stream stream) {
-        Stream updateBlock = new Stream(new byte[8192]);//10k seems to be best here for w.e reason!
+    public void update(Player player, ByteMessage stream) {
+        ByteMessage updateBlock = ByteMessage.raw(8192); // replaced legacy Stream buffer
+        boolean localPlayerUpdateRequired = false; // Track if local player movement indicated update required
 
         if (Server.updateRunning) {
-            stream.createFrame(114);
+            // Send server update packet (114) as separate message
+            ByteMessage updateMsg = ByteMessage.message(114, MessageType.FIXED);
             int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
-            stream.writeWordBigEndian(seconds * 50 / 30);
+            updateMsg.putShort(seconds * 50 / 30, ByteOrder.BIG);
+            ((Client) player).send(updateMsg);
         }
 
-
+        localPlayerUpdateRequired = player.getUpdateFlags().isUpdateRequired();
         updateLocalPlayerMovement(player, stream);
+        
+        // Handle teleportation - clear player list but continue to local player discovery
+        if (player.didTeleport()) {
+            // Clear existing player list when teleporting (similar to Hyperion's approach)
+            player.playerListSize = 0;
+            player.playersUpdating.clear();
+            // Don't return early - allow local player discovery to happen
+        }
+        
+        // Rebuild the local player's block fresh (don't reuse cached block) to avoid
+        // sending CHAT back to themselves after another viewer cached it.
+        player.invalidateCachedUpdateBlock();
         boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
         player.getUpdateFlags().setRequired(UpdateFlag.CHAT, false);
         appendBlockUpdate(player, updateBlock);
         player.getUpdateFlags().setRequired(UpdateFlag.CHAT, saveChatTextUpdate);
+        
+        // The block we just cached (with CHAT suppressed) should not be reused by others.
+        player.invalidateCachedUpdateBlock();
         if (player.loaded) {
-            stream.writeBits(8, player.playerListSize);
+            stream.putBits(8, player.playerListSize);
             int size = player.playerListSize;
             player.playersUpdating.clear();
             player.playerListSize = 0;
@@ -54,8 +75,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                     player.playerList[player.playerListSize++] = player.playerList[i];
                     player.playersUpdating.add(player.playerList[i]);
                 } else {
-                    stream.writeBits(1, 1);
-                    stream.writeBits(2, 3);
+                    stream.putBits(1, 1);
+                    stream.putBits(2, 3);
                 }
             }
 
@@ -69,18 +90,26 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 if (player.playerListSize >= 255) break; // protocol hard-limit
             }
         } else {
-            stream.writeBits(8, 0);
-
+            stream.putBits(8, 0);
         }
 
-        if (updateBlock.currentOffset > 0) {
-            stream.writeBits(11, 2047);
-            stream.finishBitAccess();
-            stream.writeBytes(updateBlock.buffer, updateBlock.currentOffset, 0);
+        // Always write the magic termination value (2047) - required by protocol
+        stream.putBits(11, 2047);
+        stream.endBitAccess();
+        
+        if (updateBlock.getBuffer().writerIndex() > 0) {
+            // Only copy the written bytes, not the entire buffer capacity
+            byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
+            updateBlock.getBuffer().getBytes(0, updateData);
+            stream.putBytes(updateData);
         } else {
-            stream.finishBitAccess();
+            // Check if movement indicated update was required but we have no data
+            // This can happen when CHAT flag was suppressed for local player
+            if (localPlayerUpdateRequired) {
+                stream.put(0); // Empty update mask - no flags set
+            }
         }
-        stream.endFrameVarSizeWord();
+        // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
         if (DEBUG_REGION_UPDATES) {
             int rx = player.getPosition().getX() >> 6;
@@ -90,62 +119,68 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
 
-    public void updateLocalPlayerMovement(Player player, Stream stream) {
+    public void updateLocalPlayerMovement(Player player, ByteMessage stream) {
         /* Noob! */
         if(player.didMapRegionChange()) {
-            stream.createFrame(73);
-            stream.writeWordA(player.mapRegionX + 6);
-            stream.writeWord(player.mapRegionY + 6);
+            // Send map region change as separate packet (73)
+            ByteMessage mapMsg = ByteMessage.message(73, MessageType.FIXED);
+            mapMsg.putShort(player.mapRegionX + 6, ByteOrder.BIG, ValueType.ADD); // writeWordA
+            mapMsg.putShort(player.mapRegionY + 6, ByteOrder.BIG); // writeWord
+            ((Client) player).send(mapMsg);
             ((Client) player).updateGroundItems();
         }
-        stream.createFrameVarSizeWord(81);
-        stream.initBitAccess();
+        // This should match the original: createFrameVarSizeWord(81) + initBitAccess()
+        // But we're doing this in the packet wrapper instead
+        stream.startBitAccess();
         if (player.didTeleport()) {
-            stream.writeBits(1, 1);
-            stream.writeBits(2, 3); // updateType
-            stream.writeBits(2, player.getPosition().getZ());
-            stream.writeBits(1, player.didTeleport() ? 1 : 0);
-            stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
-            stream.writeBits(7, player.getCurrentY());
-            stream.writeBits(7, player.getCurrentX());
+            stream.putBits(1, 1);
+            stream.putBits(2, 3); // updateType
+            stream.putBits(2, player.getPosition().getZ());
+            stream.putBits(1, player.didTeleport() ? 1 : 0);
+            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(7, player.getCurrentY());
+            stream.putBits(7, player.getCurrentX());
             return;
         }
         if (player.getPrimaryDirection() == -1) {
             if (player.getUpdateFlags().isUpdateRequired()) {
-                stream.writeBits(1, 1);
-                stream.writeBits(2, 0);
-            } else
-                stream.writeBits(1, 0);
+                stream.putBits(1, 1);
+                stream.putBits(2, 0);
+            } else {
+                stream.putBits(1, 0);
+            }
         } else
         if (player.getSecondaryDirection() == -1) {
-            stream.writeBits(1, 1);
-            stream.writeBits(2, 1);
-            stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
-            stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(1, 1);
+            stream.putBits(2, 1);
+            stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
+            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
         } else {
-            stream.writeBits(1, 1);
-            stream.writeBits(2, 2);
-            stream.writeBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
-            stream.writeBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
-            stream.writeBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(1, 1);
+            stream.putBits(2, 2);
+            stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
+            stream.putBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
+            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
         }
     }
 
 
     @Override
-    public void appendBlockUpdate(Player player, Stream stream) {
+    public void appendBlockUpdate(Player player, ByteMessage buf) {
+
         /*
          * Fast-path: if this player's cached update block is valid, just copy it
          * straight into the output stream and return. This avoids recomputing
          * masks and appearance data for every viewer each cycle.
          */
         if (player != null && player.isCachedUpdateBlockValid()) {
-            player.writeCachedUpdateBlock(stream);
+            player.writeCachedUpdateBlock(buf);
             return;
         }
         if (!player.getUpdateFlags().isUpdateRequired() && !player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
             return; // nothing required
 
+        // Build update mask using the UpdateFlag system (reverted from hardcoded values)
         int updateMask = 0;
         for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
             if (player.getUpdateFlags().isRequired(flag)) {
@@ -153,209 +188,223 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
         }
 
-        int cacheStartOffset = stream.currentOffset; // mark beginning for cache copy
+        int cacheStartOffset = buf.getBuffer().writerIndex(); // mark beginning for cache copy
 
+        // Hyperion-style mask overflow handling with proper flag indication
         if (updateMask >= 0x100) {
-            updateMask |= 0x40;
-            stream.writeByte(updateMask & 0xFF);
-            stream.writeByte(updateMask >> 8);
-        } else
-            stream.writeByte(updateMask);
+            updateMask |= 0x40;  // Set overflow flag
+            buf.put(updateMask & 0xFF);      // Low byte
+            buf.put(updateMask >> 8);        // High byte
+        } else {
+            buf.put(updateMask);             // Single byte
+        }
 
+        // Process update blocks in Hyperion's proven order for client compatibility
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGraphic(player, stream);
+            appendGraphic(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(player, stream);
+            appendAnimationRequest(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendForcedChatText(player, stream);
+            appendForcedChatText(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
-            appendPlayerChatText(player, stream);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(stream);
+            appendPlayerChatText(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(player, stream);
+            appendFaceCharacter(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
-            appendPlayerAppearance(player, stream);
+            appendPlayerAppearance(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(player, stream);
+            appendFaceCoordinates(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(player, stream);
+            appendPrimaryHit(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(player, stream);
+            appendPrimaryHit2(player, buf);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
+            player.appendMask400Update(buf);
 
         // ---- Cache the freshly built update block for reuse ----
-        int length = stream.currentOffset - cacheStartOffset;
+        int length = buf.getBuffer().writerIndex() - cacheStartOffset;
         if (length > 0) {
             byte[] copy = new byte[length];
-            System.arraycopy(stream.buffer, cacheStartOffset, copy, 0, length);
+            buf.getBuffer().getBytes(cacheStartOffset, copy, 0, length);
             player.cacheUpdateBlock(copy, length);
         }
     }
 
-    public void appendGraphic(Player player, Stream stream) {
-        stream.writeWordBigEndian(player.getGraphicId());
-        stream.writeDWord(player.getGraphicHeight());
+    public void appendGraphic(Player player, ByteMessage buf) {
+        buf.putShort(player.getGraphicId(), ByteOrder.LITTLE); // writeWordBigEndian  
+        buf.putInt(player.getGraphicHeight()); // writeDWord
     }
 
     @Override
-    public void appendAnimationRequest(Player player, Stream stream) {
-        stream.writeWordBigEndian(player.getAnimationId());
-        stream.writeByteC(player.getAnimationDelay());
+    public void appendAnimationRequest(Player player, ByteMessage buf) {
+        buf.putShort(player.getAnimationId(), ByteOrder.LITTLE); // writeWordBigEndian is actually little-endian!
+        buf.put(player.getAnimationDelay(), ValueType.NEGATE); // writeByteC = -value, not 128-value
     }
 
-    public static void appendForcedChatText(Player player, Stream stream) {
-        stream.writeString(player.getForcedChat());
+    public static void appendForcedChatText(Player player, ByteMessage buf) {
+        buf.putString(player.getForcedChat());
     }
 
-    public static void appendPlayerChatText(Player player, Stream stream) {
-        stream.writeWordBigEndian(((player.getChatTextColor() & 0xFF) << 8) + (player.getChatTextEffects() & 0xFF));
-        stream.writeByte(player.playerRights);
-        stream.writeByteC(player.getChatTextSize());
-        stream.writeBytes_reverse(player.getChatText(), player.getChatTextSize(), 0);
+    public static void appendPlayerChatText(Player player, ByteMessage buf) {
+        buf.putShort(((player.getChatTextColor() & 0xFF) << 8) + (player.getChatTextEffects() & 0xFF), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.put(player.playerRights);
+        
+        // Clamp chat text size to byte range (0-255) to prevent T2 packet size mismatch
+        int chatSize = Math.max(0, Math.min(player.getChatTextSize(), 255));
+        buf.put(chatSize, ValueType.NEGATE); // writeByteC = -value
+        
+        // Only write the used portion of chat text in reverse order
+        byte[] chatData = new byte[chatSize];
+        System.arraycopy(player.getChatText(), 0, chatData, 0, chatSize);
+        buf.putBytesReverse(chatData);
     }
 
     @Override
-    public void appendFaceCharacter(Player player, Stream stream) {
-        stream.writeWordBigEndian(player.getFaceTarget());
+    public void appendFaceCharacter(Player player, ByteMessage buf) {
+        buf.putShort(player.getFaceTarget(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
-    public static void appendPlayerAppearance(Player player, Stream str) {
-        Stream playerProps = new Stream(new byte[128]);
-        playerProps.currentOffset = 0;
-        playerProps.writeByte(player.getGender());
-        playerProps.writeByte((byte) player.headIcon); // Head icon aka prayer over head
-        playerProps.writeByte((byte) player.skullIcon); // Skull icon
+    public static void appendPlayerAppearance(Player player, ByteMessage buf) {
+        ByteMessage playerProps = ByteMessage.raw(128);
+        
+        playerProps.put(player.getGender());
+        playerProps.put((byte) player.headIcon); // Head icon aka prayer over head
+        playerProps.put((byte) player.skullIcon); // Skull icon
         if (!player.isNpc) {
             if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.CAPE.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.CAPE.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CAPE.getId()]);
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.NECK.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.NECK.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.NECK.getId()]);
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.WEAPON.getId()] > 1 && !player.UsingAgility) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.WEAPON.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.WEAPON.getId()]);
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.CHEST.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.CHEST.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CHEST.getId()]);
             } else {
-                playerProps.writeWord(0x100 + player.getTorso());
+                playerProps.putShort(0x100 + player.getTorso());
             }
             if (player.getEquipment()[Equipment.Slot.SHIELD.getId()] > 1 && !player.UsingAgility) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.SHIELD.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.SHIELD.getId()]);
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (!Server.itemManager.isFullBody(player.getEquipment()[Equipment.Slot.CHEST.getId()])) {
-                playerProps.writeWord(0x100 + player.getArms());
+                playerProps.putShort(0x100 + player.getArms());
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.LEGS.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.LEGS.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.LEGS.getId()]);
             } else {
-                playerProps.writeWord(0x100 + player.getLegs());
+                playerProps.putShort(0x100 + player.getLegs());
             }
             if (!Server.itemManager.isFullHelm(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && !Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()])) {
-                playerProps.writeWord(0x100 + player.getHead()); // head
+                playerProps.putShort(0x100 + player.getHead()); // head
             } else {
-                playerProps.writeByte(0);
+                playerProps.put(0);
             }
             if (player.getEquipment()[Equipment.Slot.HANDS.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.HANDS.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HANDS.getId()]);
             } else {
-                playerProps.writeWord(0x100 + player.getHands());
+                playerProps.putShort(0x100 + player.getHands());
             }
             if (player.getEquipment()[Equipment.Slot.FEET.getId()] > 1) {
-                playerProps.writeWord(0x200 + player.getEquipment()[Equipment.Slot.FEET.getId()]);
+                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.FEET.getId()]);
             } else {
-                playerProps.writeWord(0x100 + player.getFeet());
+                playerProps.putShort(0x100 + player.getFeet());
             }
             if (!Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && (player.playerLooks[0] != 1)) {
-                playerProps.writeWord(0x100 + player.getBeard());
+                playerProps.putShort(0x100 + player.getBeard());
             } else {
-                playerProps.writeByte(0); // 0 = nothing on and girl don't have beard
+                playerProps.put(0); // 0 = nothing on and girl don't have beard
                 // so send 0. -bakatool
             }
         } else {
-            playerProps.writeWord(-1);
-            playerProps.writeWord(player.getPlayerNpc());
+            playerProps.putShort(-1);
+            playerProps.putShort(player.getPlayerNpc());
         }
         // array of 5 bytes defining the colors
-        playerProps.writeByte(player.playerLooks[8]); // hair color
-        playerProps.writeByte(player.playerLooks[9]); // torso color.
-        playerProps.writeByte(player.playerLooks[10]); // leg color
-        playerProps.writeByte(player.playerLooks[11]); // feet color
-        playerProps.writeByte(player.playerLooks[12]); // skin color (0-6)
-        playerProps.writeWord(player.getStandAnim()); // standAnimIndex
-        playerProps.writeWord(player.getWalkAnim()); // standTurnAnimIndex, 823 default
-        playerProps.writeWord(player.getWalkAnim()); // walkAnimIndex
-        playerProps.writeWord(player.getWalkAnim()); // turn180AnimIndex, 820 default
-        playerProps.writeWord(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
-        playerProps.writeWord(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
-        playerProps.writeWord(player.getRunAnim()); // runAnimIndex
+        playerProps.put(player.playerLooks[8]); // hair color
+        playerProps.put(player.playerLooks[9]); // torso color.
+        playerProps.put(player.playerLooks[10]); // leg color
+        playerProps.put(player.playerLooks[11]); // feet color
+        playerProps.put(player.playerLooks[12]); // skin color (0-6)
+        playerProps.putShort(player.getStandAnim()); // standAnimIndex
+        playerProps.putShort(player.getWalkAnim()); // standTurnAnimIndex, 823 default
+        playerProps.putShort(player.getWalkAnim()); // walkAnimIndex
+        playerProps.putShort(player.getWalkAnim()); // turn180AnimIndex, 820 default
+        playerProps.putShort(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
+        playerProps.putShort(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
+        playerProps.putShort(player.getRunAnim()); // runAnimIndex
 
-        playerProps.writeQWord(Utils.playerNameToInt64(player.getPlayerName()));
-        playerProps.writeByte(player.determineCombatLevel()); // combat level
-        playerProps.writeWord(0); // incase != 0, writes skill-%d
-        str.writeByteC(playerProps.currentOffset);
-        str.writeBytes(playerProps.buffer, playerProps.currentOffset, 0);
+        playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
+        playerProps.put(player.determineCombatLevel()); // combat level
+        playerProps.putShort(0); // incase != 0, writes skill-%d
+        
+        buf.put(playerProps.getBuffer().writerIndex(), ValueType.NEGATE); // writeByteC = -value
+        // Only write the used portion of the appearance buffer
+        byte[] appearanceData = new byte[playerProps.getBuffer().writerIndex()];
+        playerProps.getBuffer().getBytes(0, appearanceData);
+        buf.putBytes(appearanceData);
     }
 
     @Override
-    public void appendFaceCoordinates(Player player, Stream stream) {
-        stream.writeWordBigEndianA(player.getFacePosition().getX());
-        stream.writeWordBigEndian(player.getFacePosition().getY());
+    public void appendFaceCoordinates(Player player, ByteMessage buf) {
+        buf.putShort(player.getFacePosition().getX(), ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
+        buf.putShort(player.getFacePosition().getY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override
-    public void appendPrimaryHit(Player player, Stream stream) {
-        synchronized(this) {
-            stream.writeByte(Math.min(player.getDamageDealt(), 255)); // What the perseon got 'hit' for
+    public void appendPrimaryHit(Player player, ByteMessage buf) {
+        synchronized (this) {
+            buf.put(Math.min(player.getDamageDealt(), 255));
             if (player.getDamageDealt() == 0)
-                stream.writeByteA(0);
+                buf.put(0, ValueType.ADD); // writeByteA
             else if (player.getHitType() == Entity.hitType.BURN)
-                stream.writeByteA(4);
+                buf.put(4, ValueType.ADD);
             else if (player.getHitType() == Entity.hitType.CRIT)
-                stream.writeByteA(3);
+                buf.put(3, ValueType.ADD);
             else if (player.getHitType() == Entity.hitType.POISON)
-                stream.writeByteA(2);
+                buf.put(2, ValueType.ADD);
             else
-                stream.writeByteA(1);
+                buf.put(1, ValueType.ADD);
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-            stream.writeByteC(value);
-            stream.writeByte(100);
+            buf.put(value, ValueType.NEGATE); // writeByteC = -value 
+            buf.put(100);
         }
     }
 
-    public void appendPrimaryHit2(Player player, Stream stream) {
+    public void appendPrimaryHit2(Player player, ByteMessage buf) {
         synchronized(this) {
-            stream.writeByte(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
+            buf.put(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
             if (player.getDamageDealt2() == 0)
-                stream.writeByteS(0);
+                buf.put(0, ValueType.SUBTRACT); // writeByteS
             else if (player.getHitType2() == Entity.hitType.BURN)
-                stream.writeByteS(4);
+                buf.put(4, ValueType.SUBTRACT);
             else if (player.getHitType2() == Entity.hitType.CRIT)
-                stream.writeByteS(3);
+                buf.put(3, ValueType.SUBTRACT);
             else if (player.getHitType2() == Entity.hitType.POISON)
-                stream.writeByteS(2);
+                buf.put(2, ValueType.SUBTRACT);
             else
-                stream.writeByteS(1);
+                buf.put(1, ValueType.SUBTRACT);
             double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
             int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-            stream.writeByte(value);
-            stream.writeByteC(100);
+            buf.put(value);
+            buf.put(100, ValueType.NEGATE); // writeByteC = -value
         }
     }
 

@@ -173,7 +173,5 @@ public class ISAACCipher {
     public int cryptVar3 = 0;
 
     // Method to initialize the Cryption with a given Stream
-    public void init(Stream stream) {
-        stream.packetEncryption = this;
-    }
+
 }

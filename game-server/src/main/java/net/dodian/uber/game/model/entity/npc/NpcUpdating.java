@@ -8,7 +8,9 @@ import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.utilities.Misc;
-import net.dodian.utilities.Stream;
+import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.utilities.Utils;
 
 import java.util.Iterator;
@@ -25,13 +27,13 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     @Override
-    public void update(Player player, Stream stream) {
-        Stream updateBlock = new Stream(new byte[16384]);
+    public void update(Player player, ByteMessage stream) {
+        ByteMessage updateBlock = ByteMessage.raw(16384);
+        ByteMessage buf = stream;
 
-        stream.createFrameVarSizeWord(65);
-        stream.initBitAccess();
+        stream.startBitAccess();
 
-        stream.writeBits(8, player.getLocalNpcs().size());
+        stream.putBits(8, player.getLocalNpcs().size());
         for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
             Npc npc = i.next();
             boolean exceptions = removeNpc(player, npc);
@@ -39,8 +41,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 updateNPCMovement(npc, stream);
                 appendBlockUpdate(npc, updateBlock);
             } else {
-                stream.writeBits(1, 1);
-                stream.writeBits(2, 3); // tells client to remove this npc from list
+                buf.putBits(1, 1);
+                stream.putBits(2, 3); // tells client to remove this npc from list
                 i.remove();
             }
         }
@@ -55,14 +57,17 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 appendBlockUpdate(npc, updateBlock);
             }
         }
-        if (updateBlock.currentOffset > 0) {
-            stream.writeBits(14, 16383);
-            stream.finishBitAccess();
-            stream.writeBytes(updateBlock.buffer, updateBlock.currentOffset, 0);
+        if (updateBlock.getBuffer().writerIndex() > 0) {
+            stream.putBits(14, 16383);
+            stream.endBitAccess();
+            // Only copy the written bytes, not the entire buffer capacity
+            byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
+            updateBlock.getBuffer().getBytes(0, updateData);
+            stream.putBytes(updateData);
         } else {
-            stream.finishBitAccess();
+            stream.endBitAccess();
         }
-        stream.endFrameVarSizeWord();
+        // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
     }
 
     public static boolean removeNpc(Player player, Npc npc) {
@@ -75,26 +80,28 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
 
-    public void addNpc(Player player, Npc npc, Stream stream) {
-        stream.writeBits(14, npc.getSlot());
+    public void addNpc(Player player, Npc npc, ByteMessage buf) {
+
+        buf.putBits(14, npc.getSlot());
         /* Position */
         Position npcPos = npc.getPosition(), plrPos = player.getPosition();
         int z = npcPos.getY() - plrPos.getY();
         if(z < 0)
             z += 32;
-        stream.writeBits(5, z); // y coordinate relative to thisPlayer
+        buf.putBits(5, z); // y coordinate relative to thisPlayer
         z = npcPos.getX() - plrPos.getX();
         if(z < 0)
             z += 32;
-        stream.writeBits(5, z); // y coordinate relative to thisPlayer
+        buf.putBits(5, z); // y coordinate relative to thisPlayer
 
-        stream.writeBits(1, 0); // something??
-        stream.writeBits(14, npc.getId());
-        stream.writeBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+        buf.putBits(1, 0); // something??
+        buf.putBits(14, npc.getId());
+        buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
     }
 
     @Override
-    public void appendBlockUpdate(Npc npc, Stream stream) {
+    public void appendBlockUpdate(Npc npc, ByteMessage buf) {
+
         if(!npc.getUpdateFlags().isUpdateRequired())
             return;
         int updateMask = 0;
@@ -103,108 +110,108 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 updateMask |= flag.getMask(npc.getType());
             }
         }
-        stream.writeByte(updateMask);
+        buf.put(updateMask);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(npc, stream);
+            appendAnimationRequest(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(npc, stream);
+            appendPrimaryHit2(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGfxUpdate(npc, stream);
+            appendGfxUpdate(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendTextUpdate(npc, stream);
+            appendTextUpdate(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(npc, stream);
+            appendPrimaryHit(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(npc, stream);
+            appendFaceCharacter(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(npc, stream);
+            appendFaceCoordinates(npc, buf);
     }
 
-    public void appendTextUpdate(Npc npc, Stream stream) {
-        stream.writeString(npc.getText());
+    public void appendTextUpdate(Npc npc, ByteMessage buf) {
+        buf.putString(npc.getText());
     }
 
-    public void appendGfxUpdate(Npc npc, Stream stream) {
-        stream.writeWord(npc.getGfxId());
-        stream.writeDWord(npc.getGfxHeight() << 16);
-    }
-
-    @Override
-    public void appendAnimationRequest(Npc npc, Stream stream) {
-        stream.writeWordBigEndian(npc.getAnimationId());
-        stream.writeByte(npc.getAnimationDelay());
+    public void appendGfxUpdate(Npc npc, ByteMessage buf) {
+        buf.putShort(npc.getGfxId());
+        buf.putInt(npc.getGfxHeight() << 16);
     }
 
     @Override
-    public void appendPrimaryHit(Npc npc, Stream stream) {
-        stream.writeByteC(Math.min(npc.getDamageDealt(), 255));
+    public void appendAnimationRequest(Npc npc, ByteMessage buf) {
+        buf.putShort(npc.getAnimationId(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.put(npc.getAnimationDelay());
+    }
+
+    @Override
+    public void appendPrimaryHit(Npc npc, ByteMessage buf) {
+        buf.put(Math.min(npc.getDamageDealt(), 255), ValueType.NEGATE); // writeByteC = -value
         if (npc.getDamageDealt() == 0)
-            stream.writeByteS(0);
+            buf.put(0, ValueType.SUBTRACT); // writeByteS = 128-value
         else if (npc.getHitType() == Entity.hitType.BURN)
-            stream.writeByteS(4);
+            buf.put(4, ValueType.SUBTRACT);
         else if (npc.getHitType() == Entity.hitType.CRIT)
-            stream.writeByteS(3);
+            buf.put(3, ValueType.SUBTRACT);
         else if (npc.getHitType() == Entity.hitType.POISON)
-            stream.writeByteS(2);
+            buf.put(2, ValueType.SUBTRACT);
         else
-            stream.writeByteS(1);
+            buf.put(1, ValueType.SUBTRACT);
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-        stream.writeByteS(value);
-        stream.writeByteC(100);
+        buf.put(value, ValueType.SUBTRACT); // writeByteS = 128-value
+        buf.put(100, ValueType.NEGATE); // writeByteC = -value
     }
 
-    public void appendPrimaryHit2(Npc npc, Stream stream) {
-        stream.writeByteA(Math.min(npc.getDamageDealt2(), 255));
+    public void appendPrimaryHit2(Npc npc, ByteMessage buf) {
+        buf.put(Math.min(npc.getDamageDealt2(), 255), ValueType.ADD); // writeByteA = value+128
         if (npc.getDamageDealt2() == 0)
-            stream.writeByte(0);
+            buf.put(0); // writeByte (normal)
         else if (npc.getHitType2() == Entity.hitType.BURN)
-            stream.writeByte(-4);
+            buf.put(-4); // writeByte (normal, already negative)
         else if (npc.getHitType2() == Entity.hitType.CRIT)
-            stream.writeByte(-3);
+            buf.put(-3); // writeByte (normal, already negative)
         else if (npc.getHitType2() == Entity.hitType.POISON)
-            stream.writeByte(-2);
+            buf.put(-2); // writeByte (normal, already negative)
         else
-            stream.writeByte(-1);
+            buf.put(-1); // writeByte (normal, already negative)
         double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
         int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-        stream.writeByteS(value);
-        stream.writeByteC(100);
+        buf.put(value, ValueType.SUBTRACT); // writeByteS = 128-value
+        buf.put(100, ValueType.NEGATE); // writeByteC = -value
     }
     @Override
-    public void appendFaceCoordinates(Npc npc, Stream stream) {
-        stream.writeWordBigEndian(npc.getFacePosition().getX());
-        stream.writeWordBigEndian(npc.getFacePosition().getY());
+    public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
+        buf.putShort(npc.getFacePosition().getX(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFacePosition().getY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override
-    public void appendFaceCharacter(Npc npc, Stream stream) {
-        stream.writeWordBigEndian(npc.getViewX());
-        stream.writeWordBigEndian(npc.getViewY());
+    public void appendFaceCharacter(Npc npc, ByteMessage buf) {
+        buf.putShort(npc.getViewX(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getViewY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
-    public void updateNPCMovement(Npc npc, Stream stream) {
+    public void updateNPCMovement(Npc npc, ByteMessage buf) {
         if (!npc.isWalking() && npc.getDirection() == -1) {
             if (npc.getUpdateFlags().isUpdateRequired()) {
-                stream.writeBits(1, 1);
-                stream.writeBits(2, 0);
+                buf.putBits(1, 1);
+                buf.putBits(2, 0);
             } else {
-                stream.writeBits(1, 0);
+                buf.putBits(1, 0);
             }
         } else {
             npc.setDirection(npc.getNextWalkingDirection());
             if (npc.getDirection() == -1) {
-                stream.writeBits(1, 1);
-                stream.writeBits(2, 0);
+                buf.putBits(1, 1);
+                buf.putBits(2, 0);
                 return;
             }
-            stream.writeBits(1, 1);
-            stream.writeBits(2, 1);
-            stream.writeBits(3, Utils.xlateDirectionToClient[npc.getDirection()]);
+            buf.putBits(1, 1);
+            buf.putBits(2, 1);
+            buf.putBits(3, Utils.xlateDirectionToClient[npc.getDirection()]);
             if (npc.getUpdateFlags().isUpdateRequired()) {
-                stream.writeBits(1, 1);
+                buf.putBits(1, 1);
             } else {
-                stream.writeBits(1, 0);
+                buf.putBits(1, 0);
             }
         }
     }

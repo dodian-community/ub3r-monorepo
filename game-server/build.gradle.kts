@@ -63,3 +63,110 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// Custom task to run our validation test
+tasks.register<JavaExec>("runValidationTest") {
+    group = "verification"
+    description = "Run PlayerUpdateMessageHelper validation test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdateMessageHelperTest")
+}
+
+// Custom task to run movement migration test
+tasks.register<JavaExec>("runMovementMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating movement migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerMovementMigrationTest")
+}
+
+// Custom task to run main update method migration test
+tasks.register<JavaExec>("runUpdateNettyMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating main update method migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdateNettyMigrationTest")
+}
+
+// Custom task to run appendBlockUpdate migration test
+tasks.register<JavaExec>("runUpdateBlockMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating appendBlockUpdate migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdateBlockMigrationTest")
+}
+
+// Custom task to run player appearance migration test
+tasks.register<JavaExec>("runAppearanceMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating appearance migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerAppearanceMigrationTest")
+}
+
+// Custom task to run main update method migration test
+tasks.register<JavaExec>("runMainUpdateMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating main update method migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerMainUpdateMigrationTest")
+}
+
+// Custom task to run coordinate and combat migration test
+tasks.register<JavaExec>("runCoordinateCombatMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating coordinate and combat migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerCoordinateCombatMigrationTest")
+}
+
+// Custom task to run method signature migration test
+tasks.register<JavaExec>("runMethodSignatureMigrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating method signature migration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerMethodSignatureMigrationTest")
+}
+
+// Custom task to run PacketBuffer cleanup test
+tasks.register<JavaExec>("runPacketBufferCleanupTest") {
+    group = "verification"
+    description = "Run PlayerUpdating PacketBuffer cleanup test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerPacketBufferCleanupTest")
+}
+
+// Custom task to run comprehensive validation test
+tasks.register<JavaExec>("runComprehensiveTest") {
+    group = "verification"
+    description = "Run comprehensive PlayerUpdating validation test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingComprehensiveTest")
+}
+
+// Custom task to run performance benchmark
+tasks.register<JavaExec>("runPerformanceBenchmark") {
+    group = "verification"
+    description = "Run PlayerUpdating performance benchmark"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingPerformanceBenchmark")
+}
+
+// Custom task to run integration test
+tasks.register<JavaExec>("runIntegrationTest") {
+    group = "verification"
+    description = "Run PlayerUpdating integration test"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingIntegrationTest")
+}
+
+// Custom task to run all migration tests
+tasks.register<JavaExec>("runAllMigrationTests") {
+    group = "verification"
+    description = "Run all PlayerUpdating migration tests"
+    classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
+    
+    doFirst {
+        println("Running all PlayerUpdating migration tests...")
+    }
+}

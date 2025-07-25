@@ -1,9 +1,10 @@
 package net.dodian.uber.game.model.player.casino;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.player.packets.outgoing.RemoveInterfaces;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable;
+import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -70,7 +71,7 @@ public class SlotMachine {
             c.NpcDialogueSend = true;
             c.convoId = -1;
             c.send(new RemoveInterfaces());
-            c.setInterfaceWalkable(-1);
+                        c.send(new SetInterfaceWalkable(-1));
             if (amt > 50000000)
                 c.send(new SendMessage("You can't bet more than 50M"));
             if (amt < 100000)
@@ -120,7 +121,7 @@ public class SlotMachine {
         }
         // c.showInterface(6675);
         c.checkItemUpdate();
-        c.setInterfaceWalkable(6675);
+                c.send(new SetInterfaceWalkable(6675));
     }
 
     public int CoinsBillion_Win, CoinsBillion_Lose = 0;
@@ -130,8 +131,9 @@ public class SlotMachine {
         if (getGameWorldId() == 5) {
             return;
         }
-        try {
-            ResultSet results = getDbStatement().executeQuery("SELECT * FROM " + DbTables.GAME_PETE_CO);
+        try (Connection conn = getDbConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet results = stmt.executeQuery("SELECT * FROM " + DbTables.GAME_PETE_CO)) {
             if (results.next()) {
                 if (results.getInt("Tracker_ID") == 1) {
                     CoinsBillion_Win = results.getInt("CoinsBillion");
@@ -142,7 +144,6 @@ public class SlotMachine {
                     Coins_Lose = results.getInt("Coins");
                 }
             }
-            results.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -154,9 +155,8 @@ public class SlotMachine {
         if (getGameWorldId() == 5) {
             return;
         }
-        try {
-            Connection conn = getDbConnection();
-            Statement statement = conn.createStatement();
+        try (Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             if (id == 1) {
                 Coins_Win = Coins_Win + amt;
                 if (Coins_Win > 1000000000) {
@@ -175,7 +175,6 @@ public class SlotMachine {
                 statement.executeUpdate("INSERT " + DbTables.GAME_PETE_CO + " SET CoinsBillion = " + CoinsBillion_Lose + ", Coins = " + Coins_Lose
                         + " where Tracker_ID=2");
             }
-            statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -32,12 +32,11 @@ public class CommandLog extends LogEntry {
         if (getGameWorldId() > 1 || player.playerGroup == 10) { //Do not record developerment!
             return;
         }
-        try {
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             command = command.replaceAll("'", "`");
-            Statement statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_LOGS_STAFF_COMMANDS + "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + command + "')";
             statement.executeUpdate(query);
-            statement.close();
         } catch (Exception e) {
             logger.severe("Unable to record chat!");
             e.printStackTrace();

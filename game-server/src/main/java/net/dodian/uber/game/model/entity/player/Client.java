@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.comm.PacketData;
+
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
@@ -9,18 +9,14 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
-import net.dodian.uber.game.model.entity.npc.NpcUpdating;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
-import net.dodian.uber.game.model.player.packets.OutgoingPacket;
-import net.dodian.uber.game.model.player.packets.PacketHandler;
-import net.dodian.uber.game.model.player.packets.outgoing.*;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
@@ -30,14 +26,15 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.NumberFormat;
@@ -46,7 +43,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.BufferedWriter;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
+
 import java.io.File;
 import java.io.FileWriter;
 /* Kotlin imports */
@@ -76,6 +73,11 @@ public class Client extends Player implements Runnable {
     public boolean pLoaded = false;
     public int maxQuests = QuestSend.values().length;
     public int[] quests = new int[maxQuests];
+    public int[] playerBonus = new int[12];
+    /**
+     * Tracks if the client window currently has focus.
+     */
+    private boolean windowFocused = true;
     public String failer = "";
     public Date now = new Date();
     public Date today = checkCalendarDate(now, 0);
@@ -178,20 +180,20 @@ public class Client extends Player implements Runnable {
     public int actionButtonId = 0;
     public boolean validLogin = false;
 
-    public void ReplaceObject2(Position pos, int NewObjectID, int Face, int ObjectType) {
-        if (!withinDistance(new int[]{pos.getX(), pos.getY(), 60}) || getPosition().getZ() != pos.getZ())
+    /**
+     * Replaces an object in the game world.
+     * @param pos The position of the object
+     * @param newObjectId The new object ID to place (-1 to remove)
+     * @param face The object's face/direction
+     * @param objectType The type of the object
+     */
+    public void ReplaceObject2(Position pos, int newObjectId, int face, int objectType) {
+        if (!withinDistance(new int[]{pos.getX(), pos.getY(), 60}) || getPosition().getZ() != pos.getZ()) {
             return;
-        send(new SetMap(pos));
-        getOutputStream().createFrame(101);
-        getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
-        getOutputStream().writeByte(0);
-        /* CREATE OBJECT */
-        if (NewObjectID != -1) {
-            getOutputStream().createFrame(151);
-            getOutputStream().writeByteS(0);
-            getOutputStream().writeWordBigEndian(NewObjectID);
-            getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
         }
+       // System.out.println("ReplaceObject2: " + pos + ", " + newObjectId + ", " + face + ", " + objectType);
+        send(new SetMap(pos));
+        send(new ReplaceObject2(newObjectId, face, objectType));
     }
 
     /**
@@ -205,17 +207,25 @@ public class Client extends Player implements Runnable {
 
     public boolean wearing = false;
 
+    /**
+     * Refreshes a skill's level and experience on the client.
+     * @param skill The skill to refresh
+     */
     public void refreshSkill(Skill skill) {
-        int out = Skills.getLevelForExperience(getExperience(skill));
-        if (skill == Skill.HITPOINTS) out = getCurrentHealth();
-        else if (skill == Skill.PRAYER) out = getCurrentPrayer();
-        else if (boostedLevel[skill.getId()] != 0) out += boostedLevel[skill.getId()];
-        setSkillLevel(skill, out, getExperience(skill));
-        setLevel(out, skill);
-        getOutputStream().createFrame(134);
-        getOutputStream().writeByte(skill.getId());
-        getOutputStream().writeDWord_v1(getExperience(skill));
-        getOutputStream().writeByte(out);
+        int level = Skills.getLevelForExperience(getExperience(skill));
+        if (skill == Skill.HITPOINTS) {
+            level = getCurrentHealth();
+        } else if (skill == Skill.PRAYER) {
+            level = getCurrentPrayer();
+        } else if (boostedLevel[skill.getId()] != 0) {
+            level += boostedLevel[skill.getId()];
+        }
+        
+        setSkillLevel(skill, level, getExperience(skill));
+        setLevel(level, skill);
+        
+        // Send the skill update packet
+        send(new RefreshSkill(skill, level, getExperience(skill)));
     }
 
     public int getbattleTimer(int weapon) {
@@ -276,11 +286,8 @@ public class Client extends Player implements Runnable {
 
     public void animation2(int id, Position pos) {
         send(new SetMap(pos));
-        getOutputStream().createFrame(4);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWord(id);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWord(0);
+        send(new Animation2(id));
+        System.out.println("Animation: " + id);
     }
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
@@ -304,39 +311,42 @@ public class Client extends Player implements Runnable {
         stillgfx(id, pos, height, false);
     }
 
+    /**
+     * Displays a still graphic at the specified position.
+     * 
+     * @param id The graphic ID to display
+     * @param pos The position where to display the graphic
+     * @param height The height offset of the graphic
+     * @param time The time before the graphic is cast (in game ticks)
+     */
     public void stillgfx2(int id, Position pos, int height, int time) {
-        send(new SetMap(pos));
-        getOutputStream().createFrame(4);
-        getOutputStream().writeByte(0); // Tiles away (X >> 4 + Y & 7)
-        getOutputStream().writeWord(id); // Graphic id
-        getOutputStream().writeByte(height); // height of the spell above it's basic
-        // place, i think it's written in pixels
-        // 100 pixels higher
-        getOutputStream().writeWord(time); // Time before casting the graphic
+        send(new StillGraphic(id, pos, height, time, false));
     }
 
+    /**
+     * Creates a projectile in the game world.
+     *
+     * @param casterY The Y coordinate of the caster
+     * @param casterX The X coordinate of the caster
+     * @param offsetY The Y offset from the caster's position
+     * @param offsetX The X offset from the caster's position
+     * @param angle The starting angle of the projectile
+     * @param speed The speed of the projectile
+     * @param gfxMoving The graphic ID of the projectile
+     * @param startHeight The starting height of the projectile
+     * @param endHeight The ending height of the projectile
+     * @param targetIndex The index of the target (NPC or player)
+     * @param begin The tick when the projectile is created
+     * @param slope The initial slope of the projectile
+     * @param initDistance The initial distance from the source
+     */
     public void createProjectile(int casterY, int casterX, int offsetY,
-                                 int offsetX, int angle, int speed, int gfxMoving, int startHeight,
-                                 int endHeight, int MageAttackIndex, int begin, int slope, int initDistance) {
+                               int offsetX, int angle, int speed, int gfxMoving, int startHeight,
+                               int endHeight, int targetIndex, int begin, int slope, int initDistance) {
         try {
-            send(new SetMap(new Position(casterX - 3, casterY - 2)));
-            getOutputStream().createFrame(117);
-            getOutputStream().writeByte(angle); // Starting place of the projectile
-            getOutputStream().writeByte(offsetY); // Distance between caster and enemy
-            // Y
-            getOutputStream().writeByte(offsetX); // Distance between caster and enemy
-            // X
-            getOutputStream().writeWord(MageAttackIndex); // The NPC the missle is
-            // locked on to
-            getOutputStream().writeWord(gfxMoving); // The moving graphic ID
-            getOutputStream().writeByte(startHeight); // The starting height
-            getOutputStream().writeByte(endHeight); // Destination height
-            getOutputStream().writeWord(begin); // Time the missle is created
-            getOutputStream().writeWord(speed); // Speed minus the distance making it
-            // set
-            getOutputStream().writeByte(slope); // Initial slope
-            getOutputStream().writeByte(initDistance); // Initial distance from source (in the
-            // direction of the missile) //64
+            Position casterPosition = new Position(casterX, casterY);
+            send(new Projectile(casterPosition, offsetY, offsetX, angle, speed, gfxMoving,
+                    startHeight, endHeight, targetIndex, begin, slope, initDistance));
         } catch (Exception e) {
             Server.logError(e.getMessage());
         }
@@ -391,27 +401,19 @@ public class Client extends Player implements Runnable {
     }
 
     public void sendFrame200(int MainFrame, int SubFrame) {
-        getOutputStream().createFrame(200);
-        getOutputStream().writeWord(MainFrame);
-        getOutputStream().writeWord(SubFrame);
+        send(new SendFrame200(MainFrame, SubFrame));
     }
 
     public void sendFrame164(int Frame) {
-        getOutputStream().createFrame(164);
-        getOutputStream().writeWordBigEndian_dup(Frame);
+        send(new SendFrame164(Frame));
     }
 
     public void sendFrame246(int MainFrame, int SubFrame, int SubFrame2) {
-        getOutputStream().createFrame(246);
-        getOutputStream().writeWordBigEndian(MainFrame);
-        getOutputStream().writeWord(SubFrame);
-        getOutputStream().writeWord(SubFrame2);
+        send(new SendFrame246(MainFrame, SubFrame, SubFrame2));
     }
 
     public void sendQuestSomething(int id) {
-        getOutputStream().createFrame(79);
-        getOutputStream().writeWordBigEndian(id);
-        getOutputStream().writeWordA(0);
+        send(new SendQuestSomething(id));
     }
 
     public void clearQuestInterface() {
@@ -421,8 +423,8 @@ public class Client extends Player implements Runnable {
 
     public void showInterface(int interfaceid) {
         resetAction();
-        getOutputStream().createFrame(97);
-        getOutputStream().writeWord(interfaceid);
+        // Delegates to the new packet implementation while preserving the old method signature.
+        send(new ShowInterface(interfaceid));
     }
 
     public int ancients = 1;
@@ -457,43 +459,18 @@ public class Client extends Player implements Runnable {
     public int WanneThieve = 0;
 
 
-    public Stream inputStream, outputStream;
-    public byte[] buffer;
-    public int readPtr, writePtr;
-    public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
+    // Legacy Stream fields removed - using pure Netty now
+   // public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
 
     public int timeOutCounter = 0; // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
 
-    private ByteBuffer inputBuffer;
-    private ByteBuffer outputBuffer;
-    private static final int INPUT_BUFFER_SIZE = 8 * 1024;    // 8KB for incoming data
-    private static final int OUTPUT_BUFFER_SIZE = 32 * 1024;  // 32KB for outgoing data
 
 
-
-    public Client(SocketChannel socketChannel, int _playerId) throws IOException {
-        super(_playerId);
-
-
-        // Use heap buffers instead of direct buffers
-        this.outputBuffer = ByteBuffer.allocate(OUTPUT_BUFFER_SIZE);
-        this.inputBuffer = ByteBuffer.allocate(INPUT_BUFFER_SIZE);
-
-        this.outputStream = new Stream(outputBuffer.array());
-        this.outputStream.currentOffset = 0;
-        this.inputStream = new Stream(inputBuffer.array());
-        this.inputStream.currentOffset = 0;
-        this.readPtr = this.writePtr = 0;
-    }
 
     public Client(Channel channel, int _playerId) {
         super(_playerId);
         this.channel = channel;
-        this.outputStream = new Stream(new byte[OUTPUT_BUFFER_SIZE]);
-        this.outputStream.currentOffset = 0;
-        this.inputStream = new Stream(new byte[INPUT_BUFFER_SIZE]);
-        this.inputStream.currentOffset = 0;
 
     }
 
@@ -513,103 +490,35 @@ public class Client extends Player implements Runnable {
         // Release references
         
         channel = null;
-        inputStream = null;
-        outputStream = null;
-        inputBuffer = null;
-        outputBuffer = null;
-        inStreamDecryption = null;
-        outStreamDecryption = null;
+        // Legacy Stream cleanup removed - using pure Netty now
+       // inStreamDecryption = null;
+       // outStreamDecryption = null;
 
-        System.gc();
+
         super.destruct();
     }
 
-    public Stream getInputStream() {
-        return this.inputStream;
-    }
 
-    public Stream getOutputStream() {
-        return this.outputStream;
-    }
-
-    // --- Added helpers for Netty migration ---
     public io.netty.channel.Channel getChannel() {
         return this.channel;
     }
 
-    public ISAACCipher getOutStreamDecryption() {
-        return this.outStreamDecryption;
+
+    public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
+        if (disconnected || channel == null || !channel.isActive()) {
+            message.release();
+            return;
+        }
+        
+        // Pure Netty - send directly through the pipeline
+        channel.writeAndFlush(message);
     }
 
-
-
     public void send(OutgoingPacket packet) {
-        if (this.disconnected || this.outputStream == null) {
+        if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
         packet.send(this);
-    }
-
-    // writes any data in outStream to the network via Netty Channel
-    public void flushOutStreamAndClose() {
-        if (disconnected || getOutputStream().currentOffset == 0) {
-            if (channel != null && channel.isActive()) {
-                channel.close();
-            }
-            return;
-        }
-        int length = getOutputStream().currentOffset;
-        try {
-            if (channel != null && channel.isActive()) {
-                io.netty.buffer.ByteBuf buf = channel.alloc().buffer(length);
-                buf.writeBytes(getOutputStream().buffer, 0, length);
-                channel.writeAndFlush(buf).addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (Exception ex) {
-            System.err.println("flushOutStreamAndClose error: " + ex.getMessage());
-            if (channel != null && channel.isActive()) {
-                channel.close();
-            }
-        } finally {
-            getOutputStream().currentOffset = 0;
-        }
-    }
-
-    public void flushOutStream() {
-        if (disconnected || getOutputStream().currentOffset == 0) {
-            return;
-        }
-
-        int length = getOutputStream().currentOffset;
-
-        try {
-            if (channel != null) { // Netty path
-                io.netty.buffer.ByteBuf buf = channel.alloc().buffer(length);
-                buf.writeBytes(getOutputStream().buffer, 0, length);
-                channel.writeAndFlush(buf);
-            
-            }
-        } catch (Exception ex) {
-            System.err.println("flushOutStream error: " + ex.getMessage());
-        } finally {
-            getOutputStream().currentOffset = 0;
-        }
-    }
-
-
-    private void fillInStream(PacketData pData) throws IOException {
-        getInputStream().currentOffset = 0;
-        getInputStream().buffer = pData.getData();
-        currentPacket = pData;
-    }
-
-
-
-
-    public PacketData currentPacket;
-
-    public void parseIncomingPackets() {
-        PacketHandler.process(this, currentPacket.getId(), currentPacket.getLength());
     }
 
     @Override
@@ -620,9 +529,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void setSidebarInterface(int menuId, int form) {
-        getOutputStream().createFrame(71);
-        getOutputStream().writeWord(form);
-        getOutputStream().writeByteA(menuId);
+        send(new SetSidebarInterface(menuId, form));
     }
 
     public void setSkillLevel(Skill skill, int currentLevel, int XP) {
@@ -631,22 +538,17 @@ public class Client extends Player implements Runnable {
     }
 
 
-
-
     public void logout() {
         send(new SendMessage("Please wait... logging out may take time"));
         send(new SendString("     Please wait...", 2458));
 
         if (isLoggingOut) {
-
             return;
         }
         long currentTime = System.currentTimeMillis();
 
-
         if (currentTime - lastDropTime < 600) {
             send(new SendMessage("You cannot log out so soon after dropping an item."));
-
             return;
         }
         isLoggingOut = true;
@@ -654,16 +556,27 @@ public class Client extends Player implements Runnable {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
             }
-
             isLoggingOut = false;
-
             return;
         }
 
         // Save player data before disconnecting
         saveStats(true, true);
-        // Use unified outgoing packet
+
+        // Send the logout packet
         send(new Logout());
+
+        // Wait a short time to ensure the packet is processed by the client
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // Now close the connection
+        if (getChannel() != null && getChannel().isActive()) {
+            getChannel().close();
+        }
     }
 
     public void saveStats(boolean logout, boolean updateProgress) {
@@ -688,13 +601,13 @@ public class Client extends Player implements Runnable {
             PlayerHandler.playersOnline.remove(longName);
             PlayerHandler.allOnline.remove(longName);
             println_debug(getPlayerName() + " has logged out correctly!");
-      /*for (Player p : PlayerHandler.players) {
-        if (p != null && !p.disconnected && p.dbId > 0) {
-          if (p.getDamage().containsKey(getSlot())) {
-            p.getDamage().put(getSlot(), 0);
-          }
-        }
-      }*/ //TODO: Fix this pvp shiet
+        /*for (Player p : PlayerHandler.players) {
+            if (p != null && !p.disconnected && p.dbId > 0) {
+                if (p.getDamage().containsKey(getSlot())) {
+                    p.getDamage().put(getSlot(), 0);
+                }
+            }
+        }*/ //TODO: Fix this pvp shiet
             if (getGameWorldId() < 2) {
                 long elapsed = System.currentTimeMillis() - start;
                 int minutes = (int) (elapsed / 60000);
@@ -715,8 +628,8 @@ public class Client extends Player implements Runnable {
         }
         // TODO: Look into improving this, and potentially a system to configure player saving per world id...
         if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob"))
-            try {
-                Statement statement = getDbConnection().createStatement();
+            try (java.sql.Connection conn = getDbConnection();
+                 Statement statement = conn.createStatement()) { // This is the try-with-resources block
 
                 long allXp = Skill.enabledSkills()
                         .mapToInt(this::getExperience)
@@ -804,12 +717,10 @@ public class Client extends Player implements Runnable {
                         + boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
                         ", prayer='" + prayer + "', boosted='" + boosted + "'" + last
                         + " WHERE id = " + dbId);
-                statement.close();
             } catch (Exception e) {
                 println_debug("Save Exception: " + getSlot() + ", " + getPlayerName() + ", msg: " + e);
             }
     }
-
     public void saveStats(boolean logout) {
         saveStats(logout, false);
     }
@@ -1230,197 +1141,41 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetItems(int WriteFrame) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(WriteFrame);
-        getOutputStream().writeWord(playerItems.length);
-        for (int i = 0; i < playerItems.length; i++) {
-            if (playerItemsN[i] > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(playerItemsN[i]); // and then the real value with writeDWord_v2
-            } else {
-                getOutputStream().writeByte(playerItemsN[i]);
-            }
-            if (playerItems[i] < 0) {
-                playerItems[i] = -1;
-            }
-            getOutputStream().writeWordBigEndianA(playerItems[i]); // item id
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ResetItems(WriteFrame));
     }
 
     public void sendInventory(int interfaceId, ArrayList<GameItem> inv) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(interfaceId); // bank
-        getOutputStream().writeWord(inv.size()); // number of items
-        for (GameItem item : inv) {
-            int amt = item.getAmount();
-            int id = item.getId();
-            if (amt > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(amt);
-            } else {
-                getOutputStream().writeByte(amt); // amount
-            }
-            getOutputStream().writeWordBigEndianA(id + 1); // itemID
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new SendInventory(interfaceId, inv));
     }
 
-    public void SetSmithing(int WriteFrame) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(WriteFrame);
-        getOutputStream().writeWord(Constants.SmithingItems.length);
-        for (int i = 0; i < Constants.SmithingItems.length; i++) {
-            Constants.SmithingItems[i][0] += 1;
-            if (Constants.SmithingItems[i][1] > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(Constants.SmithingItems[i][1]); // and then the real value with writeDWord_v2
-            } else {
-                getOutputStream().writeByte(Constants.SmithingItems[i][1]);
-            }
-            if (Constants.SmithingItems[i][0] < 0) {
-                playerItems[i] = 7500;
-            }
-            getOutputStream().writeWordBigEndianA(Constants.SmithingItems[i][0]); // item
-            // id
-        }
-        getOutputStream().endFrameVarSizeWord();
-    }
+
 
     public void resetOTItems(int WriteFrame) {
         Client other = getClient(trade_reqId);
         if (!validClient(trade_reqId)) {
             return;
         }
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(WriteFrame);
-        int len = other.offeredItems.toArray().length;
-        int current = 0;
-        getOutputStream().writeWord(len);
-        for (GameItem item : other.offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254, write byte 255
-                getOutputStream().writeDWord_v2(item.getAmount()); // and then the real value with writeDWord_v2
-            } else {
-                getOutputStream().writeByte(item.getAmount());
-            }
-            getOutputStream().writeWordBigEndianA(item.getId() + 1); // item id
-            current++;
-        }
-        if (current < 27) {
-            for (int i = current; i < 28; i++) {
-                getOutputStream().writeByte(1);
-                getOutputStream().writeWordBigEndianA(-1);
-            }
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new TradeItemsUpdate(WriteFrame, other.offeredItems));
     }
 
     public void resetTItems(int WriteFrame) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(WriteFrame);
-        int len = offeredItems.toArray().length;
-        int current = 0;
-        getOutputStream().writeWord(len);
-        for (GameItem item : offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(item.getAmount()); // and then the real value with writeDWord_v2
-                // writeDWord_v2
-            } else {
-                getOutputStream().writeByte(item.getAmount());
-            }
-            getOutputStream().writeWordBigEndianA(item.getId() + 1); // item id
-            current++;
-        }
-        if (current < 27) {
-            for (int i = current; i < 28; i++) {
-                getOutputStream().writeByte(1);
-                getOutputStream().writeWordBigEndianA(-1);
-            }
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new TradeItemsUpdate(WriteFrame, offeredItems));
     }
 
-    public void resetShop(int ShopID) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(3900);
-        getOutputStream().writeWord(ShopHandler.MaxShopItems);
-
-        for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
-            if (ShopHandler.ShopItems[ShopID][i] > 0) {
-                if (ShopHandler.ShopItemsN[ShopID][i] > 254) {
-                    getOutputStream().writeByte(255); // item's stack count. if over
-                    getOutputStream().writeDWord_v2(ShopHandler.ShopItemsN[ShopID][i]); // and
-                } else {
-                    getOutputStream().writeByte(ShopHandler.ShopItemsN[ShopID][i]);
-                }
-                getOutputStream().writeWordBigEndianA(ShopHandler.ShopItems[ShopID][i]); // item
-            } else { //If nothing to buy!
-                getOutputStream().writeByte(0);
-                getOutputStream().writeWordBigEndianA(0);
-            }
-        }
-        getOutputStream().endFrameVarSizeWord();
+    public void resetShop(int shopId) {
+        send(new ResetShop(shopId));
     }
 
     public void resetBank() {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(5382); // bank
-        getOutputStream().writeWord(bankSize()); // number of items
-        for (int i = 0; i < bankSize(); i++) {
-            if (bankItemsN[i] > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(bankItemsN[i]);
-            } else {
-                getOutputStream().writeByte(bankItemsN[i]); // amount
-            }
-            if (bankItemsN[i] < 1) {
-                bankItems[i] = 0;
-            }
-            if (bankItems[i] < 0) {
-                bankItems[i] = 7500;
-            }
-            getOutputStream().writeWordBigEndianA(bankItems[i]); // itemID
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ResetBank());
     }
 
     public void sendBank(ArrayList<Integer> id, ArrayList<Integer> amt) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(5382); // bank
-        getOutputStream().writeWord(id.size()); // number of items
-        for (int i = 0; i < id.size(); i++) {
-            if (amt.get(i) > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(amt.get(i));
-            } else {
-                getOutputStream().writeByte(amt.get(i)); // amount
-            }
-            getOutputStream().writeWordBigEndianA(id.get(i) + 1); // itemID
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new SendBankItems(id, amt));
     }
 
     public void sendBank(int interfaceId, ArrayList<GameItem> bank) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(interfaceId); // bank
-        getOutputStream().writeWord(bank.size()); // number of items
-        for (GameItem item : bank) {
-            int amt = item.getAmount();
-            int id = item.getId();
-            if (amt > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(amt);
-            } else {
-                getOutputStream().writeByte(amt); // amount
-            }
-            getOutputStream().writeWordBigEndianA(id + 1); // itemID
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ViewOtherPlayerBank(interfaceId, bank));
     }
 
     public void moveItems(int from, int to, int moveWindow) {
@@ -1719,23 +1474,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void setEquipment(int wearID, int amount, int targetSlot) {
-        getOutputStream().createFrameVarSizeWord(34);
-        getOutputStream().writeWord(1688);
-        getOutputStream().writeByte(targetSlot);
-        getOutputStream().writeWord(wearID > 0 ? wearID + 1 : 0);
-        if (amount > 254) {
-            getOutputStream().writeByte(255);
-            getOutputStream().writeDWord(amount);
-        } else
-            getOutputStream().writeByte(amount); // amount
-        getOutputStream().endFrameVarSizeWord();
-        if (targetSlot == Equipment.Slot.WEAPON.getId()) {
-            CheckGear();
-            CombatStyleHandler.setWeaponHandler(this); //Sets the interface properly!
-            requestWeaponAnims();
-        }
-        GetBonus(true);
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        send(new SetEquipment(wearID, amount, targetSlot));
     }
 
     public void wear(int wearID, int slot, int interFace) {
@@ -1954,11 +1693,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void setChatOptions(int publicChat, int privateChat, int tradeBlock) {
-        getOutputStream().createFrame(206);
-        getOutputStream().writeByte(publicChat); // On = 0, Friends = 1, Off = 2,
-        // Hide = 3
-        getOutputStream().writeByte(privateChat); // On = 0, Friends = 1, Off = 2
-        getOutputStream().writeByte(tradeBlock); // On = 0, Friends = 1, Off = 2
+        send(new SetChatOptions(publicChat, privateChat, tradeBlock));
     }
 
 
@@ -1967,13 +1702,12 @@ public class Client extends Player implements Runnable {
     }
 
     public void update() { //Update player before npc for some reason!
-        PlayerUpdating.getInstance().update(this, outputStream);
-        flushOutStream();
-        NpcUpdating.getInstance().update(this, outputStream);
-        flushOutStream();
+        // Use proper outgoing packet structure instead of direct buffer manipulation
+        new PlayerUpdatePacket(this).send(this);
+        new NpcUpdatePacket(this).send(this);
     }
 
-    public int packetSize = 0, packetType = -1;
+
     public boolean canAttack = true;
 
     public void process() {// is being called regularily every 600 ms
@@ -2079,65 +1813,25 @@ public class Client extends Player implements Runnable {
         } else
             setWildLevel(getWildLevel());
         if (duelFight || inWildy()) {
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(3);
-            getOutputStream().writeByteA(1);
-            getOutputStream().writeString("Attack");
-            getOutputStream().endFrameVarSize();
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(2);
-            getOutputStream().writeByteA(0);
-            getOutputStream().writeString("null");
-            getOutputStream().endFrameVarSize();
+            send(new PlayerContextMenu(3, true, "Attack"));
+            send(new PlayerContextMenu(2, false, "null"));
             if (!inWildy()) {
-                getOutputStream().createFrameVarSize(104);
-                getOutputStream().writeByteC(4); // command slot
-                getOutputStream().writeByteA(0); // 0 or 1; 1 if command should be placed
-                getOutputStream().writeString("null");
-                getOutputStream().endFrameVarSize();
+                send(new PlayerContextMenu(4, false, "null"));
             } else {
-                getOutputStream().createFrameVarSize(104);
-                getOutputStream().writeByteC(4);
-                getOutputStream().writeByteA(0);
-                getOutputStream().writeString("Trade with");
-                getOutputStream().endFrameVarSize();
+                send(new PlayerContextMenu(4, false, "Trade with"));
             }
         } else {
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(3);
-            getOutputStream().writeByteA(1);
-            getOutputStream().writeString("null");
-            getOutputStream().endFrameVarSize();
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(4);
-            getOutputStream().writeByteA(0);
-            getOutputStream().writeString("Trade with");
-            getOutputStream().endFrameVarSize();
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(2);
-            getOutputStream().writeByteA(0);
-            getOutputStream().writeString("Duel");
-            getOutputStream().endFrameVarSize();
+            send(new PlayerContextMenu(3, true, "null"));
+            send(new PlayerContextMenu(4, false, "Trade with"));
+            send(new PlayerContextMenu(2, false, "Duel"));
             if (playerRights > 0) {
-                getOutputStream().createFrameVarSize(104);
-                getOutputStream().writeByteC(5);
-                getOutputStream().writeByteA(0);
-                getOutputStream().writeString("Mod Action Lookup");
-                getOutputStream().endFrameVarSize();
+                send(new PlayerContextMenu(5, false, "Mod Action Lookup"));
             }
         }
         if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(1);
-            getOutputStream().writeByteA(1);
-            getOutputStream().writeString("Whack");
-            getOutputStream().endFrameVarSize();
+            send(new PlayerContextMenu(1, true, "Whack"));
         } else {
-            getOutputStream().createFrameVarSize(104);
-            getOutputStream().writeByteC(1);
-            getOutputStream().writeByteA(0);
-            getOutputStream().writeString("null");
-            getOutputStream().endFrameVarSize();
+            send(new PlayerContextMenu(1, false, "null"));
         }
         if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
             pickUpItem(attemptGround.x, attemptGround.y);
@@ -2353,52 +2047,67 @@ public class Client extends Player implements Runnable {
     }
 
 
+    /**
+     * Shows or hides an interface
+     * @param inter The interface ID to show/hide
+     * @param show Whether to show (true) or hide (false) the interface
+     */
     public void changeInterfaceStatus(int inter, boolean show) {
-        getOutputStream().createFrame(171);
-        getOutputStream().writeByte((byte) (!show ? 1 : 0));
-        getOutputStream().writeWord(inter);
+        send(new InterfaceStatus(inter, show));
     }
 
     public void setMenuItems(int[] items) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(8847);
-        getOutputStream().writeWord(items.length);
-        for (int item : items) {
-            getOutputStream().writeByte((byte) 1);
-            getOutputStream().writeWordBigEndianA(item + 1);
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new SetMenuItems(items));
     }
 
     public void setMenuItems(int[] items, int[] amount) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(8847);
-        getOutputStream().writeWord(items.length);
-
-        for (int i = 0; i < items.length; i++) {
-            getOutputStream().writeByte((byte) amount[i]);
-            getOutputStream().writeWordBigEndianA(items[i] + 1);
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ShowMenuItems2(items, amount));
     }
 
     public int currentSkill = -1;
 
+    private void clearSkillGuideInterface() {
+        // Clear the skill name
+        send(new SendString("", 8716));
+        
+        // Clear all potential tab name slots (8720-8799)
+        for (int i = 8720; i < 8800; i++) {
+            send(new SendString("", i));
+        }
+        
+        // Clear any other related components
+        send(new SendString("", 8846)); // Main tab title
+        send(new SendString("", 8823)); // First sub-tab
+        send(new SendString("", 8824)); // Second sub-tab
+        send(new SendString("", 8827)); // Third sub-tab
+    }
+    
     public void showSkillMenu(int skillID, int child) {
-        if (currentSkill != skillID)
+        if (currentSkill != skillID) {
             send(new RemoveInterfaces());
+        }
         if (isBusy()) {
-            send(new SendMessage("You are currently busy to be opening skill menu!"));
+            send(new SendMessage("You are currently too busy to open the skill menu!"));
             return;
         }
-        int slot = 8720;
+        
+        // Clear all tab slots first
         for (int i = 0; i < 80; i++) {
-            send(new SendString("", slot));
-            slot++;
+            send(new SendString("", 8720 + i));
         }
-        String skillName = Objects.requireNonNull(getSkill(skillID)).getName();
+
+        // Clear the interface first
+        clearSkillGuideInterface();
+
+        // Set the skill name
+        Skill skill = getSkill(skillID);
+        if (skill == null) {
+            return;
+        }
+        String skillName = skill.getName();
         skillName = skillName.substring(0, 1).toUpperCase() + skillName.substring(1);
         send(new SendString(skillName, 8716));
+        int slot = 8720;
         if (skillID < 23) {
             changeInterfaceStatus(15307, false);
             changeInterfaceStatus(15304, false);
@@ -3028,9 +2737,17 @@ public class Client extends Player implements Runnable {
             else if (child == 6)
                 setMenuItems(new int[]{9810});
         }
+        
+        // Send the quest something packet (configures scrollbar)
         sendQuestSomething(8717);
-        if (currentSkill != skillID)
-            showInterface(8714);
+        
+        // Only show the interface if we're switching skills
+        if (currentSkill != skillID) {
+            // Show the main interface (packet 97)
+            send(new ShowInterface(8714));
+        }
+        
+        // Update current skill
         currentSkill = skillID;
     }
 
@@ -3261,8 +2978,7 @@ public class Client extends Player implements Runnable {
 
     public void pmstatus(int status) { // status: loading = 0 connecting = 1
         // fine = 2
-        getOutputStream().createFrame(221);
-        getOutputStream().writeByte(status);
+        send(new PrivateMessageStatus(status));
     }
 
     public boolean playerHasItem(int itemID) {
@@ -3325,61 +3041,44 @@ public class Client extends Player implements Runnable {
     }
 
     public void sendpm(long name, int rights, byte[] chatmessage, int messagesize) {
-        getOutputStream().createFrameVarSize(196);
-        getOutputStream().writeQWord(name);
-        getOutputStream().writeDWord(handler.lastchatid++); // must be different for
-        // each message
-        getOutputStream().writeByte(rights);
-        getOutputStream().writeBytes(chatmessage, messagesize, 0);
-        getOutputStream().endFrameVarSize();
+        // Preserve old signature but route through new outgoing packet implementation.
+        send(new PrivateMessage(name, rights, chatmessage, messagesize, handler.lastchatid++));
     }
 
     public void loadpm(long name, int world) {
-        /*
-         * if(world != 0) { world += 9; } else if(world == 0){ world += 1; }
-         */
-        if (world != 0) {
-            world += 9;
-        }
-        getOutputStream().createFrame(50);
-        getOutputStream().writeQWord(name);
-        getOutputStream().writeByte(world);
+        send(new LoadPrivateMessage(name, world));
     }
 
     public int[] staffs = {1391, 1393, 1395, 1397, 1399, 2415, 2416, 2417, 4675, 6526, 6914, 4710};
 
+    /**
+     * Decrements the arrow count and updates the client.
+     * 
+     * @return true if an arrow was deleted, false if no arrows were left
+     */
     public boolean DeleteArrow() {
-        if (getEquipmentN()[Equipment.Slot.ARROWS.getId()] > 0) {
-            getEquipmentN()[Equipment.Slot.ARROWS.getId()] -= 1;
-            int amount = getEquipmentN()[Equipment.Slot.ARROWS.getId()];
-            getOutputStream().createFrameVarSizeWord(34);
-            getOutputStream().writeWord(1688);
-            getOutputStream().writeByte(Equipment.Slot.ARROWS.getId());
-            if (amount < 1) getEquipment()[Equipment.Slot.ARROWS.getId()] = -1;
-            getOutputStream().writeWord(getEquipment()[Equipment.Slot.ARROWS.getId()] + 1);
-            if (amount > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord(amount);
-            } else
-                getOutputStream().writeByte(amount); // amount
-            getOutputStream().endFrameVarSizeWord();
+        int arrowSlot = Equipment.Slot.ARROWS.getId();
+        if (getEquipmentN()[arrowSlot] > 0) {
+            // Decrement arrow count
+            getEquipmentN()[arrowSlot] -= 1;
+            int remainingAmount = getEquipmentN()[arrowSlot];
+            
+            // Get the current arrow item ID (or -1 if no arrows left)
+            int arrowId = getEquipment()[arrowSlot];
+            if (remainingAmount < 1) {
+                getEquipment()[arrowSlot] = -1;
+            }
+            
+            // Send the update packet
+            send(new DeleteArrow(arrowId, arrowSlot, remainingAmount));
             return true;
         }
         return false;
     }
 
-    public void ReplaceObject(int objectX, int objectY, int NewObjectID, int Face, int ObjectType) {
+    public void ReplaceObject(int objectX, int objectY, int newObjectID, int face, int objectType) {
         send(new SetMap(new Position(objectX, objectY)));
-        getOutputStream().createFrame(101);
-        getOutputStream().writeByteC((ObjectType << 2) + (Face & 3));
-        getOutputStream().writeByte(0);
-
-        if (NewObjectID != -1) {
-            getOutputStream().createFrame(151);
-            getOutputStream().writeByteS(0);
-            getOutputStream().writeWordBigEndian(NewObjectID);
-            getOutputStream().writeByteS((ObjectType << 2) + (Face & 3));
-        }
+        send(new ReplaceObject(newObjectID, face, objectType));
     }
 
     public int GetNPCID(int coordX, int coordY) {
@@ -3687,7 +3386,7 @@ public class Client extends Player implements Runnable {
         // hand
         // sword
         Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][18][1];
-        SetSmithing(1119);
+        send(new SetSmithing(1119));
         Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][1][0]; // Axe
         Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][1][1];
         Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][2][0]; // Mace
@@ -3699,7 +3398,7 @@ public class Client extends Player implements Runnable {
         Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][14][1];
         Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][17][0]; // Claws
         Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][17][1];
-        SetSmithing(1120);
+        send(new SetSmithing(1120));
         Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][15][0]; // Chain
         // body
         Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][15][1];
@@ -3724,7 +3423,7 @@ public class Client extends Player implements Runnable {
             Constants.SmithingItems[4][0] = -1; // Second stuff for smithing!
             Constants.SmithingItems[4][1] = 0;
         }
-        SetSmithing(1121);
+        send(new SetSmithing(1121));
         Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][3][0]; // Medium
         Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][3][1];
         Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][10][0]; // Full
@@ -3736,7 +3435,7 @@ public class Client extends Player implements Runnable {
         Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][16][1];
         Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][6][0]; // Nails
         Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][6][1];
-        SetSmithing(1122);
+        send(new SetSmithing(1122));
         Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][5][0]; // Dart
         // Tips
         Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][5][1];
@@ -3756,7 +3455,7 @@ public class Client extends Player implements Runnable {
         }
         Constants.SmithingItems[4][0] = -1; // Studs
         Constants.SmithingItems[4][1] = 0;
-        SetSmithing(1123);
+        send(new SetSmithing(1123));
         showInterface(994);
         smithing[2] = Type;
     }
@@ -4661,9 +4360,17 @@ public class Client extends Player implements Runnable {
                 NpcDialogueSend = true;
                 break;
             case 16:
-                SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
-                showPlayerOption(new String[]{"Reset count for " + checkTask.getTextRepresentation(), "Yes", "No"});
-                NpcDialogueSend = true; //Do we need?!
+                if (getSlayerData().size() > 1) {
+                    SlayerTask.slayerTasks checkTask = SlayerTask.slayerTasks.getTask(getSlayerData().get(1));
+                    if (checkTask != null) {
+                        showPlayerOption(new String[]{"Reset count for " + checkTask.getTextRepresentation(), "Yes", "No"});
+                    } else {
+                        showPlayerOption(new String[]{"Reset count", "Yes", "No"});
+                    }
+                } else {
+                    showPlayerOption(new String[]{"Reset count", "Yes", "No"});
+                }
+                NpcDialogueSend = true;
                 break;
             case 21:
                 showNPCChat(getGender() == 0 ? 1306 : 1307, 588, new String[]{
@@ -4686,7 +4393,7 @@ public class Client extends Player implements Runnable {
                 break;
             case 25:
                 //showInterface(3559);
-                sendFrame248(3559, 3213);
+                                send(new SetTabInterface(3559, 3213));
                 NpcDialogue = 0;
                 NpcDialogueSend = false;
                 break;
@@ -4951,13 +4658,14 @@ public class Client extends Player implements Runnable {
             base = 4893;
         if (text.length == 4)
             base = 4900;
-        send(new NpcDialogueHead(npcId, base + 1));
+        // Send all interface data first, then packet 164 last
         sendFrame200(base + 1, emote);
         send(new SendString(GetNpcName(npcId), base + 2));
         for (int i = 0; i < text.length; i++)
             send(new SendString(text[i], base + 3 + i));
         send(new SendString("Click here to continue", base + 3 + text.length));
-        sendFrame164(base);
+        send(new NpcDialogueHead(npcId, base + 1));
+        sendFrame164(base);  // Send packet 164 LAST after interface is populated
     }
 
     public void showPlayerChat(String[] text, int emote) {
@@ -5214,10 +4922,7 @@ public class Client extends Player implements Runnable {
         return 1;
     }
 
-    public void setInterfaceWalkable(int ID) {
-        getOutputStream().createFrame(208);
-        getOutputStream().writeWordBigEndian_dup(ID);
-    }
+
 
     public void RefreshDuelRules() {
         /*
@@ -5286,22 +4991,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void itemsToVScreen_old() {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6822);
-        getOutputStream().writeWord(otherOfferedItems.toArray().length);
-        for (GameItem item : otherOfferedItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(item.getAmount()); // and then the real
-                // value with
-                // writeDWord_v2
-            } else {
-                getOutputStream().writeByte(item.getAmount());
-            }
-            getOutputStream().writeWordBigEndianA(item.getId() + 1); // item id
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ItemsToVScreen(otherOfferedItems));
     }
 
     public void refreshDuelScreen() {
@@ -5309,54 +4999,12 @@ public class Client extends Player implements Runnable {
         if (!validClient(duel_with)) {
             return;
         }
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6669);
-        getOutputStream().writeWord(offeredItems.toArray().length);
-        int current = 0;
-        for (GameItem item : offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(item.getAmount()); // and then the real
-                // value with
-                // writeDWord_v2
-            } else {
-                getOutputStream().writeByte(item.getAmount());
-            }
-            getOutputStream().writeWordBigEndianA(item.getId() + 1); // item id
-            current++;
-        }
-        if (current < 27) {
-            for (int i = current; i < 28; i++) {
-                getOutputStream().writeByte(1);
-                getOutputStream().writeWordBigEndianA(-1);
-            }
-        }
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6670);
-        getOutputStream().writeWord(other.offeredItems.toArray().length);
-        current = 0;
-        for (GameItem item : other.offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255); // item's stack count. if over 254,
-                // write byte 255
-                getOutputStream().writeDWord_v2(item.getAmount()); // and then the real
-                // value with
-                // writeDWord_v2
-            } else {
-                getOutputStream().writeByte(item.getAmount());
-            }
-            getOutputStream().writeWordBigEndianA(item.getId() + 1); // item id
-            current++;
-        }
-        if (current < 27) {
-            for (int i = current; i < 28; i++) {
-                getOutputStream().writeByte(1);
-                getOutputStream().writeWordBigEndianA(-1);
-            }
-        }
-        getOutputStream().endFrameVarSizeWord();
+        
+        // Send our offered items to interface 6669
+        send(new DuelItemsUpdate(6669, offeredItems, true));
+        
+        // Send other player's offered items to interface 6670  
+        send(new DuelItemsUpdate(6670, other.offeredItems, true));
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
@@ -6696,22 +6344,8 @@ public class Client extends Player implements Runnable {
         send(new InventoryInterface(3443, 3321)); // trade confirm
         Client other = getClient(trade_reqId);
         /* Reset item containers! */
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(3538);
-        getOutputStream().writeWord(28);
-        for (int i = 0; i < 28; i++) {
-            getOutputStream().writeByte(0);
-            getOutputStream().writeWordBigEndianA(0);
-        }
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(3539);
-        getOutputStream().writeWord(28);
-        for (int i = 0; i < 28; i++) {
-            getOutputStream().writeByte(0);
-            getOutputStream().writeWordBigEndianA(0);
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new ClearItemContainer(3538, 28));
+        send(new ClearItemContainer(3539, 28));
         /* Set text if 16 or below items! */
         StringBuilder offerItems = new StringBuilder();
         if (offeredItems.size() <= 16) {
@@ -6757,30 +6391,10 @@ public class Client extends Player implements Runnable {
         }
         /* Sending trading items! */
         if (offeredItems.size() > 16) {
-            getOutputStream().createFrameVarSizeWord(53);
-            getOutputStream().writeWord(3538);
-            getOutputStream().writeWord(offeredItems.size());
-            for (GameItem item : offeredItems) {
-                if (item.getAmount() > 254) {
-                    getOutputStream().writeByte(255);
-                    getOutputStream().writeDWord_v2(item.getAmount());
-                } else getOutputStream().writeByte(item.getAmount());
-                getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
-            }
-            getOutputStream().endFrameVarSizeWord();
+            send(new TradeItemsUpdate(3538, offeredItems));
         }
         if (other.offeredItems.size() > 16) {
-            getOutputStream().createFrameVarSizeWord(53);
-            getOutputStream().writeWord(3539);
-            getOutputStream().writeWord(other.offeredItems.size());
-            for (GameItem item : other.offeredItems) {
-                if (item.getAmount() > 254) {
-                    getOutputStream().writeByte(255);
-                    getOutputStream().writeDWord_v2(item.getAmount());
-                } else getOutputStream().writeByte(item.getAmount());
-                getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
-            }
-            getOutputStream().endFrameVarSizeWord();
+            send(new TradeItemsUpdate(3539, other.offeredItems));
         }
 
         send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : offerItems.toString(), 3557));
@@ -6933,54 +6547,15 @@ public class Client extends Player implements Runnable {
         if (!validClient(duel_with)) {
             declineDuel();
         }
-        /* Sending duel item reset! */
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6509);
-        getOutputStream().writeWord(1);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWordBigEndianA(0);
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6507);
-        getOutputStream().writeWord(1);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWordBigEndianA(0);
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6502);
-        getOutputStream().writeWord(1);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWordBigEndianA(0);
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(6508);
-        getOutputStream().writeWord(1);
-        getOutputStream().writeByte(0);
-        getOutputStream().writeWordBigEndianA(0);
-        getOutputStream().endFrameVarSizeWord();
-        /* Sending duel items! */
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(other.offeredItems.size() >= 14 ? 6509 : 6507);
-        getOutputStream().writeWord(offeredItems.size());
-        for (GameItem item : offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(item.getAmount());
-            } else getOutputStream().writeByte(item.getAmount());
-            getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
-        }
-        getOutputStream().endFrameVarSizeWord();
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(other.offeredItems.size() >= 14 ? 6508 : 6502);
-        getOutputStream().writeWord(other.offeredItems.size());
-        for (GameItem item : other.offeredItems) {
-            if (item.getAmount() > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord_v2(item.getAmount());
-            } else getOutputStream().writeByte(item.getAmount());
-            getOutputStream().writeWordBigEndianA(item.getId() < 0 ? -1 : item.getId() + 1);
-        }
-        getOutputStream().endFrameVarSizeWord();
+        /* Reset duel item containers! */
+        send(new ClearItemContainer(6509, 1));
+        send(new ClearItemContainer(6507, 1));
+        send(new ClearItemContainer(6502, 1));
+        send(new ClearItemContainer(6508, 1));
+        
+        /* Send duel items! */
+        send(DuelConfirmItems.forOwnItems(offeredItems, other.offeredItems));
+        send(DuelConfirmItems.forOtherItems(offeredItems, other.offeredItems));
         send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6516));
         send(new SendString(other.offeredItems.isEmpty() ? "Absolutely nothing!" : "", 6517));
 
@@ -7049,18 +6624,8 @@ public class Client extends Player implements Runnable {
     }
 
     public void varbit(int id, int value) {
-        if (value == -1) {
-            return;
-        } //Do we need this?!
-        if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-            getOutputStream().createFrame(87);
-            getOutputStream().writeWordBigEndian(id);
-            getOutputStream().writeDWord_v1(value);
-        } else {
-            getOutputStream().createFrame(36);
-            getOutputStream().writeWordBigEndian(id);
-            getOutputStream().writeByte(value);
-        }
+        // Preserve old signature but delegate to the new Netty-based packet implementation.
+        send(new SetVarbit(id, value));
     }
 
     public boolean duelButton(int button) {
@@ -7276,9 +6841,8 @@ public class Client extends Player implements Runnable {
                 NpcDialogue = -1;
                 NpcDialogueSend = false; //Need this just incase!
                 if (button == 1) {
-                    try {
-                        java.sql.Connection conn = getDbConnection();
-                        Statement statement = conn.createStatement();
+                    try (java.sql.Connection conn = getDbConnection();
+                         Statement statement = conn.createStatement()) {
                         String sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.getPosition().getX() + "' && y='" + tempNpc.getPosition().getY() + "' && height='" + tempNpc.getPosition().getZ() + "'";
                         if (statement.executeUpdate(sql) < 1)
                             send(new SendMessage("This npc has already been removed!"));
@@ -7293,8 +6857,6 @@ public class Client extends Player implements Runnable {
                             });
                             send(new SendMessage("You removed this npc spawn!"));
                         }
-                        statement.executeUpdate(sql);
-                        statement.close();
                     } catch (Exception e) {
                         send(new SendMessage("Something went wrong in removing this npc!"));
                     }
@@ -7422,7 +6984,7 @@ public class Client extends Player implements Runnable {
         }
         /*
          * if (convoId == 1001) { if (button == 1) { //send(new RemoveInterfaces());
-         * getOutputStream().createFrame(27); } else { send(new RemoveInterfaces());
+         * getPacketBuffer().createFrame(27); } else { send(new RemoveInterfaces());
          * } }
          */
         if (NpcDialogue == 163) {
@@ -7666,7 +7228,7 @@ public class Client extends Player implements Runnable {
             if (button == 1) {
                 send(new RemoveInterfaces());
                 XinterfaceID = 3838;
-                getOutputStream().createFrame(27);
+                send(new SendFrame27());
             } else
                 send(new RemoveInterfaces());
         } else if (NpcDialogue == 1177) {
@@ -7970,13 +7532,13 @@ public class Client extends Player implements Runnable {
 		m4006 = speed[0];
 		m4007 = speed[2];
 		 */
-		/*getOutputStream().writeByteA(startPos.getX());
-		getOutputStream().writeByteA(startPos.getY());
-		getOutputStream().writeByteA(startPos.getX() + endX);
-		getOutputStream().writeByteA(startPos.getY() + endY);
-		getOutputStream().writeWordBigEndianA(speed[0]);
-		getOutputStream().writeWordA(speed[1]);
-		getOutputStream().writeByteA(speed[2]);*/
+		/*getPacketBuffer().writeByteA(startPos.getX());
+		getPacketBuffer().writeByteA(startPos.getY());
+		getPacketBuffer().writeByteA(startPos.getX() + endX);
+		getPacketBuffer().writeByteA(startPos.getY() + endY);
+		getPacketBuffer().writeWordBigEndianA(speed[0]);
+		getPacketBuffer().writeWordA(speed[1]);
+		getPacketBuffer().writeByteA(speed[2]);*/
     }
 
     public void AddToWalkCords(int X, int Y, long time) {
@@ -8030,16 +7592,14 @@ public class Client extends Player implements Runnable {
 
     public void setWildLevel(int level) {
         wildyLevel = level;
-        getOutputStream().createFrame(208);
-        getOutputStream().writeWordBigEndian_dup(197);
-        send(new SendString("Level: " + wildyLevel, 199));
+        send(new SetWildernessLevel(level));
     }
 
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
         send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
         send(new SendString("", 6664));
-        setInterfaceWalkable(6673);
+        send(new SetInterfaceWalkable(6673));
     }
 
     public void playerKilled(Client other) {
@@ -8186,20 +7746,14 @@ public class Client extends Player implements Runnable {
     /**
      * Shows armour in the duel screen slots! (hopefully lol)
      */
+    /**
+     * Sends the player's equipment to the duel interface.
+     * 
+     * @param c The client to send the equipment to
+     */
     public void sendDuelArmour(Client c) {
-        for (int e = 0; e < c.getEquipment().length; e++) {
-            getOutputStream().createFrameVarSizeWord(34);
-            getOutputStream().writeWord(13824);
-            getOutputStream().writeByte(e);
-            getOutputStream().writeWord(c.getEquipment()[e] < 1 ? 0 : c.getEquipment()[e] + 1);
-            if (c.getEquipmentN()[e] > 254) {
-                getOutputStream().writeByte(255);
-                getOutputStream().writeDWord(c.getEquipmentN()[e]);
-            } else {
-                getOutputStream().writeByte(c.getEquipmentN()[e]); // amount
-            }
-            getOutputStream().endFrameVarSizeWord();
-        }
+        // Create and send a new DuelArmourUpdate packet with the current equipment
+        c.send(new DuelArmourUpdate(getEquipment(), getEquipmentN()));
     }
 
     public boolean hasTradeSpace() {
@@ -8547,15 +8101,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void setGoldItems(int slot, int[] items) {
-        getOutputStream().createFrameVarSizeWord(53);
-        getOutputStream().writeWord(slot);
-        getOutputStream().writeWord(items.length);
-
-        for (int item : items) {
-            getOutputStream().writeByte((byte) 1);
-            getOutputStream().writeWordBigEndianA(item + 1);
-        }
-        getOutputStream().endFrameVarSizeWord();
+        send(new SetGoldItems(slot, items));
     }
 
     public int goldIndex = -1, goldSlot = -1;
@@ -8681,9 +8227,8 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("User " + player + "'s inventory is now being shown."));
             checkInv = true;
         } else {
-            try {
-                java.sql.Connection conn = getDbConnection();
-                Statement statement = conn.createStatement();
+            try (java.sql.Connection conn = getDbConnection();
+                 Statement statement = conn.createStatement()) {
                 String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
                 ResultSet results = statement.executeQuery(query);
                 int id = -1;
@@ -8712,8 +8257,6 @@ public class Client extends Player implements Runnable {
                         send(new SendMessage("username '" + player + "' have yet to login!"));
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
-                statement.close();
-                results.close();
             } catch (Exception e) {
                 System.out.println("issue: " + e.getMessage());
             }
@@ -8739,9 +8282,8 @@ public class Client extends Player implements Runnable {
             IsBanking = false;
             checkBankInterface = true;
         } else {
-            try {
-                java.sql.Connection conn = getDbConnection();
-                Statement statement = conn.createStatement();
+            try (java.sql.Connection conn = getDbConnection();
+                 Statement statement = conn.createStatement()) {
                 String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
                 ResultSet results = statement.executeQuery(query);
                 int id = -1;
@@ -8772,7 +8314,6 @@ public class Client extends Player implements Runnable {
                         send(new SendMessage("username '" + player + "' have yet to login!"));
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
-                statement.close();
             } catch (Exception e) {
                 System.out.println("issue: " + e.getMessage());
             }
@@ -8806,11 +8347,7 @@ public class Client extends Player implements Runnable {
             }
     }
 
-    public void sendFrame248(int MainFrame, int SubFrame) {
-        getOutputStream().createFrame(248);
-        getOutputStream().writeWordA(MainFrame);
-        getOutputStream().writeWord(SubFrame);
-    }
+
 
     public void removeExperienceFromPlayer(String user, int id, int xp) {
         String skillName = Objects.requireNonNull(getSkill(id)).getName();
@@ -8823,11 +8360,10 @@ public class Client extends Player implements Runnable {
             other.refreshSkill(Skill.getSkill(id));
             send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
         } else {
-            try {
+            try (java.sql.Connection conn = getDbConnection();
+                 Statement statement = conn.createStatement()) {
                 boolean found = true;
                 int currentXp = 0, totalXp = 0, totalLevel = 0;
-                java.sql.Connection conn = getDbConnection();
-                Statement statement = conn.createStatement();
                 String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
                 ResultSet results = statement.executeQuery(query);
                 int userid = -1;
@@ -8844,7 +8380,6 @@ public class Client extends Player implements Runnable {
                 } else
                     found = false;
                 if (found) {
-                    statement = getDbConnection().createStatement();
                     xp = Math.min(currentXp, xp);
                     int newXp = currentXp - xp;
                     totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
@@ -8853,7 +8388,6 @@ public class Client extends Player implements Runnable {
                     send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
                 } else
                     send(new SendMessage("username '" + user + "' have yet to login!"));
-                statement.close();
             } catch (Exception e) {
                 System.out.println("issue: " + e.getMessage());
             }
@@ -8903,10 +8437,9 @@ public class Client extends Player implements Runnable {
             } else
                 send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
         } else { //Database check!
-            try {
+            try (java.sql.Connection conn = getDbConnection();
+                 Statement statement = conn.createStatement()) {
                 boolean found = true;
-                java.sql.Connection conn = getDbConnection();
-                Statement statement = conn.createStatement();
                 String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
                 ResultSet results = statement.executeQuery(query);
                 int userid = -1;
@@ -8970,7 +8503,6 @@ public class Client extends Player implements Runnable {
                     } else
                         found = false;
                     if (found) {
-                        statement = getDbConnection().createStatement();
                         statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
                         if (totalItemRemoved > 0)
                             send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
@@ -8978,7 +8510,6 @@ public class Client extends Player implements Runnable {
                             send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
                     } else
                         send(new SendMessage("username '" + user + "' have yet to login!"));
-                    statement.close();
                 }
             } catch (Exception e) {
                 System.out.println("issue: " + e.getMessage());
@@ -9080,14 +8611,13 @@ public class Client extends Player implements Runnable {
 
     public void setRefundList() {
         rewardList.clear();
-        try {
+        try (Connection conn = getDbConnection();
+             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
             ResultSet result = stm.executeQuery(query);
             while (result.next()) {
                 rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
             }
-            stm.close();
         } catch (Exception e) {
             System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
         }
@@ -9113,9 +8643,9 @@ public class Client extends Player implements Runnable {
 
     public void reclaim(int position) {
         int slot = refundSlot + position;
-        try {
+        try (Connection conn = getDbConnection();
+             Statement stm = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
             String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
             ResultSet result = stm.executeQuery(query);
             String date = "";
             RewardItem item = rewardList.get(slot - 1);
@@ -9125,7 +8655,6 @@ public class Client extends Player implements Runnable {
                 }
             }
             stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET claimed='" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "' where date='" + date + "'");
-            stm.close();
             /* Set back options! */
             setRefundList();
             if (!rewardList.isEmpty()) {
@@ -9166,6 +8695,23 @@ public class Client extends Player implements Runnable {
 
     public boolean doingTeleport() {
         return tStage > 0;
+    }
+
+    public boolean isWindowFocused() {
+        return windowFocused;
+    }
+    
+    /**
+     * Sets whether the client window currently has focus.
+     * 
+     * @param focused true if the window has focus, false otherwise
+     */
+    public void setWindowFocused(boolean focused) {
+        this.windowFocused = focused;
+
+        if (getServerDebugMode()) {
+           // println_debug("Window focus changed to: " + focused);
+        }
     }
 
     public boolean isBusy() {

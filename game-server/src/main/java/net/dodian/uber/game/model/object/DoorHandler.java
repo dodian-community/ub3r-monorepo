@@ -21,9 +21,10 @@ public class DoorHandler {
     public static Connection conn;
 
     public DoorHandler() {
-        try {
-            mysql_connect();
-            ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_DOOR_DEFINITIONS);
+        try (java.sql.Connection conn = getDbConnection();
+             Statement localStatement = conn.createStatement();
+             ResultSet results = localStatement.executeQuery("SELECT * FROM " + DbTables.GAME_DOOR_DEFINITIONS)) {
+            
             int i = 0;
             while (results.next()) {
                 doorX[i] = results.getInt("doorX");
@@ -37,21 +38,10 @@ public class DoorHandler {
                 i++;
             }
             System.out.println("Loaded " + i + " doors...");
-            results.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static boolean mysql_connect() {
-        try {
-            conn = getDbConnection();
-            statement = conn.createStatement();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
 }

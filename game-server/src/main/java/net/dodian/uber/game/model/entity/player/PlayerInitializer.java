@@ -1,8 +1,10 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.event.EventManager;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.netty.listener.out.SendString;
+import net.dodian.uber.game.netty.listener.out.PlayerDetails;
+import net.dodian.uber.game.netty.listener.out.CameraReset;
+import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
@@ -17,10 +19,8 @@ public class PlayerInitializer {
 
     public void initializePlayer(Client client) {
         /* Login write settings */
-        client.getOutputStream().createFrame(249);
-        client.getOutputStream().writeByteA(client.playerIsMember); // 1 = member, 0 = f2p
-        client.getOutputStream().writeWordBigEndianA(client.getSlot());
-        client.getOutputStream().createFrame(107); // resets something in the client
+        client.send(new PlayerDetails(client.playerIsMember, client.getSlot()));
+        client.send(new CameraReset()); // Resets the camera position
         client.setChatOptions(0, 0, 0);
         client.varbit(287, 1); // SPLIT PRIVATE CHAT ON/OFF
         
@@ -31,6 +31,11 @@ public class PlayerInitializer {
         client.pmstatus(2);
         client.setConfigIds();
         client.resetTabs(); // Set tabs!
+
+        // Now that interface structure is set up, refresh all skills including HP
+        Skill.enabledSkills().forEach(skill -> {
+            client.refreshSkill(skill);
+        });
 
         if (client.lookNeeded) {
             client.showInterface(3559);
@@ -55,7 +60,8 @@ public class PlayerInitializer {
 
         
         client.loaded = true;
-
+        //TODO everyone is premium for now
+        client.premium = true;
         /* Initialize save timers */
         client.lastSave = System.currentTimeMillis();
         client.lastProgressSave = client.lastSave;
@@ -64,17 +70,7 @@ public class PlayerInitializer {
         PlayerHandler.playersOnline.put(client.longName, client);
         sendWelcomeMessages(client);
         checkRefundedItems(client);
-        // Delay welcome messages to ensure client is ready
-//        EventManager.getInstance().registerEvent(new net.dodian.uber.game.event.Event(600) {
-//            @Override
-//            public void execute() {
-//                if (!client.disconnected) {
-//                    sendWelcomeMessages(client);
-//                    checkRefundedItems(client);
-//                }
-//                this.stop();
-//            }
-//        });
+
     }
     
     /**
@@ -99,16 +95,18 @@ public class PlayerInitializer {
      * Checks for any  refunded items the player needs to claim.
      */
     private void checkRefundedItems(Client client) {
-        try {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + client.dbId +
-                          "' AND message='0' AND claimed IS NULL ORDER BY date ASC";
-            Statement stm = getDbConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-            boolean gotResult = stm.executeQuery(query).next();
+        String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + client.dbId +
+                      "' AND message='0' AND claimed IS NULL ORDER BY date ASC";
+        
+        try (java.sql.Connection conn = getDbConnection();
+             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = stm.executeQuery(query)) {
+            
+            boolean gotResult = rs.next();
             if (gotResult) {
                 client.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
                 stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
             }
-            stm.close();
         } catch (Exception e) {
             System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
         }

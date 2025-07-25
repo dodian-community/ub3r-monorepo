@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.lang.reflect.Field;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,20 @@ public class Memory {
                 PlayerHandler.playersOnline.size(),
                 ANSI_RESET);
         logger.info(stats);
+
+        // Netty EventLoopGroup thread statistics
+        Map<String, Long> nioGroups = Thread.getAllStackTraces().keySet().stream()
+                .filter(t -> t.getName().startsWith("nioEventLoopGroup"))
+                .collect(Collectors.groupingBy(t -> {
+                    String name = t.getName();
+                    int lastDash = name.lastIndexOf('-');
+                    return lastDash > 0 ? name.substring(0, lastDash) : name;
+                }, Collectors.counting()));
+
+        if (!nioGroups.isEmpty()) {
+            logger.info("Netty Thread Groups:");
+            nioGroups.forEach((g, c) -> logger.info("  {} threads: {}", g, c));
+        }
 
         if (!clientNames.isEmpty()) {
             StringBuilder sb = new StringBuilder();

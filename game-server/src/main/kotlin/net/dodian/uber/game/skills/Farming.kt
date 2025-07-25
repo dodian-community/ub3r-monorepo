@@ -4,10 +4,9 @@ import com.google.gson.JsonPrimitive
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
+import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.FarmingData.patches
-import kotlin.math.absoluteValue
 
 class Farming () {
     val farmData = FarmingData()
@@ -112,10 +111,20 @@ class Farming () {
                     return true
                 }
                 if(!FarmingData.compostState.EMPTY.toString().equals(farmCompost.get(1).asString) && !(FarmingData.compostState.FILLED.toString().equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt < 15)) { //If not empty, or filled to the brim...
-                        send(SendMessage(if(FarmingData.compostState.CLOSED.toString().equals(farmCompost.get(1).asString)) "The bin is currently in the process of rotting the containment."
-                        else if (FarmingData.compostState.FILLED.toString().equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt == 15) "The bin is currently full!"
-                        else if (FarmingData.compostState.OPEN.toString().equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt > 0) "Empty the bin before you try and fill it!"
-                        else "The bin is done rotting the containment; Perhaps you should open it?"))
+                        send(
+                            SendMessage(
+                                if (FarmingData.compostState.CLOSED.toString()
+                                        .equals(farmCompost.get(1).asString)
+                                ) "The bin is currently in the process of rotting the containment."
+                                else if (FarmingData.compostState.FILLED.toString()
+                                        .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt == 15
+                                ) "The bin is currently full!"
+                                else if (FarmingData.compostState.OPEN.toString()
+                                        .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt > 0
+                                ) "Empty the bin before you try and fill it!"
+                                else "The bin is done rotting the containment; Perhaps you should open it?"
+                            )
+                        )
                     return false
                 }
                 if(farmCompost != null && (farmData.regularCompostItems.indexOf(itemId) >= 0 || farmData.superCompostItems.indexOf(itemId) >= 0)) {
@@ -128,7 +137,11 @@ class Farming () {
                         checkItemUpdate()
                         updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
                         return true
-                    } else if (farmCompost.get(2).asInt == 15) send(SendMessage("The bin is currently full!"))
+                    } else if (farmCompost.get(2).asInt == 15) send(
+                        SendMessage(
+                            "The bin is currently full!"
+                        )
+                    )
                 } else send(SendMessage("This item has no use to be put into the bin."))
             }
         }
@@ -167,11 +180,23 @@ class Farming () {
         for(compost in FarmingData.compostBin.values()) {
             if (compost.updatePos.x == pos.x && compost.updatePos.y == pos.y) {
                 val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
-                send(SendMessage(if(FarmingData.compostState.CLOSED.toString().equals(farmCompost.get(1).asString)) "The bin is currently in the process of rotting the containment."
-                else if(FarmingData.compostState.DONE.toString().equals(farmCompost.get(1).asString)) "The bin is done rotting the containment; Perhaps you should open it?"
-                else if(FarmingData.compostState.EMPTY.toString().equals(farmCompost.get(1).asString)) "The bin is currently empty."
-                else if (FarmingData.compostState.OPEN.toString().equals(farmCompost.get(1).asString)) "There is currently " + farmCompost.get(2).asString + "/15 of " + farmCompost.get(0).asString.lowercase() + " compost remaining."
-                else "There is currently " + farmCompost.get(2).asString + "/15 of " + farmCompost.get(0).asString.lowercase() + " compost filled."))
+                send(
+                    SendMessage(
+                        if (FarmingData.compostState.CLOSED.toString()
+                                .equals(farmCompost.get(1).asString)
+                        ) "The bin is currently in the process of rotting the containment."
+                        else if (FarmingData.compostState.DONE.toString()
+                                .equals(farmCompost.get(1).asString)
+                        ) "The bin is done rotting the containment; Perhaps you should open it?"
+                        else if (FarmingData.compostState.EMPTY.toString()
+                                .equals(farmCompost.get(1).asString)
+                        ) "The bin is currently empty."
+                        else if (FarmingData.compostState.OPEN.toString()
+                                .equals(farmCompost.get(1).asString)
+                        ) "There is currently " + farmCompost.get(2).asString + "/15 of " + farmCompost.get(0).asString.lowercase() + " compost remaining."
+                        else "There is currently " + farmCompost.get(2).asString + "/15 of " + farmCompost.get(0).asString.lowercase() + " compost filled."
+                    )
+                )
             }
         }
     }
@@ -264,7 +289,13 @@ class Farming () {
                     return;
                 }
                 if(getSkillLevel(Skill.FARMING) < sapling.farmLevel) {
-                    send(SendMessage("You need level "+sapling.farmLevel+" farming to plant the "+GetItemName(sapling.treeSeed).lowercase()+"."))
+                    send(
+                        SendMessage(
+                            "You need level " + sapling.farmLevel + " farming to plant the " + GetItemName(
+                                sapling.treeSeed
+                            ).lowercase() + "."
+                        )
+                    )
                     return;
                 }
                 deleteItem(itemOne, if(itemOne == 5356) itemOneSlot else itemTwoSlot,  1)

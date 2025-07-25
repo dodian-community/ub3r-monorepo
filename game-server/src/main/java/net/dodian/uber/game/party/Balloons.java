@@ -1,6 +1,7 @@
 package net.dodian.uber.game.party;
 
 import net.dodian.uber.game.Server;
+
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -9,8 +10,9 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.netty.listener.out.InventoryInterface;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.netty.listener.out.PartyItemsDisplay;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -218,33 +220,11 @@ public class Balloons {
     }
 
     public static void displayItems(Client c) {
-        c.getOutputStream().createFrameVarSizeWord(53);
-        c.getOutputStream().writeWord(2273);
-        c.getOutputStream().writeWord(partyItems.size());
-        for (int i = 0; i < partyItems.size(); i++) {
-            if (partyItems.get(i).getId() > 254) {
-                c.getOutputStream().writeByte(255);
-                c.getOutputStream().writeDWord_v2(partyItems.get(i).getAmount());
-            } else
-                c.getOutputStream().writeByte(partyItems.get(i).getAmount());
-            c.getOutputStream().writeWordBigEndianA(partyItems.get(i).getId() + 1); // item id
-        }
-        c.getOutputStream().endFrameVarSizeWord();
+        c.send(new PartyItemsDisplay(2273, partyItems));
     }
 
     public static void displayOfferItems(Client c) {
-        c.getOutputStream().createFrameVarSizeWord(53);
-        c.getOutputStream().writeWord(2274);
-        c.getOutputStream().writeWord(c.offeredPartyItems.size());
-        for (int i = 0; i < c.offeredPartyItems.size(); i++) {
-            if (c.offeredPartyItems.get(i).getId() > 254) {
-                c.getOutputStream().writeByte(255);
-                c.getOutputStream().writeDWord_v2(c.offeredPartyItems.get(i).getAmount());
-            } else
-                c.getOutputStream().writeByte(c.offeredPartyItems.get(i).getAmount());
-            c.getOutputStream().writeWordBigEndianA(c.offeredPartyItems.get(i).getId() + 1); // item id
-        }
-        c.getOutputStream().endFrameVarSizeWord();
+        c.send(new PartyItemsDisplay(2274, c.offeredPartyItems));
     }
 
     public static void offerItems(Client c, int id, int amount, int slot) {

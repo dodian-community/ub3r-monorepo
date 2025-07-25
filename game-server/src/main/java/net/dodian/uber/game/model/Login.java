@@ -10,8 +10,9 @@ import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class Login extends Thread {
     public synchronized void sendSession(int dbId, int clientPid, int elapsed, String connectedFrom, long start, long end) {
-        try {
-            getDbStatement().executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
+        try (java.sql.Connection conn = net.dodian.utilities.DatabaseKt.getDbConnection();
+             java.sql.Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("INSERT INTO " + DbTables.GAME_PLAYER_SESSIONS + " SET dbid='" + dbId + "', client='" + clientPid + "', duration='" + elapsed
                     + "', hostname='" + connectedFrom + "',start='" + start + "',end='" + end + "',world='" + net.dodian.utilities.DotEnvKt.getGameWorldId() + "'");
         } catch (Exception e) {
             System.out.println(e.getMessage());

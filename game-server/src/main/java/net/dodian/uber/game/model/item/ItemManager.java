@@ -2,19 +2,23 @@ package net.dodian.uber.game.model.item;
 
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.utilities.DbTables;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class ItemManager {
     public Map<Integer, Item> items = new HashMap<>();
     final int defaultStandAnim = 808, defaultWalkAnim = 819, defaultRunAnim = 824, defaultAttackAnim = 806;
+
+    private static final Logger logger = LoggerFactory.getLogger(ItemManager.class);
 
     public ItemManager() {
         loadGlobalItems();
@@ -85,22 +89,28 @@ public class ItemManager {
     }
 
     public void loadItems() {
-        Statement s;
-        try {
-            try {
-                s = getDbConnection().createStatement();
-                ResultSet row = s.executeQuery("SELECT * FROM " + DbTables.GAME_ITEM_DEFINITIONS + " ORDER BY id ASC");
-                while (row.next()) {
-                    items.put(row.getInt("id"), new Item(row));
-                }
-                System.out.println("Loaded " + items.size() + " item definitions...");
-                s.close();
-            } catch (Exception e) {
-                System.out.println("item load wrong 1.." + e);
+        // The query is defined once for clarity.
+        String query = "SELECT * FROM " + DbTables.GAME_ITEM_DEFINITIONS + " ORDER BY id ASC";
+
+        // try-with-resources ensures the Statement and ResultSet are always closed.
+        try (java.sql.Connection conn = getDbConnection();
+             Statement s = conn.createStatement();
+             ResultSet row = s.executeQuery(query)) {
+
+            while (row.next()) {
+                // Assuming the Item constructor can take a ResultSet object.
+                items.put(row.getInt("id"), new Item(row));
             }
+
+            // Log the successful outcome at the INFO level.
+            // Using a parameterized message is more efficient than string concatenation.
+            logger.info("Loaded {} item definitions.", items.size());
+
         } catch (Exception e) {
-            System.out.println("item load wrong 2.." + e);
+            // Log the failure at the ERROR level, including the stack trace.
+            logger.error("Failed to load item definitions from the database.", e);
         }
+        // No 'finally' block is needed. Resources are closed automatically.
     }
 
     public boolean isNote(int id) {
