@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import net.dodian.uber.game.networking.NettyGameServer;
+import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
@@ -115,8 +115,15 @@ public class Server {
         new Thread(EventManager.getInstance()).start();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
-        new Thread(nettyServer).start();
-        logger.info("Netty game server started on port {}", DotEnvKt.getServerPort());
+        logger.info("Starting Netty game server...");
+        nettyServer.start();
+
+        // Add a shutdown hook to gracefully close Netty resources.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutdown hook triggered. Shutting down Netty server...");
+            nettyServer.shutdown();
+            logger.info("Netty server shut down.");
+        }));
 
 
         new Thread(login).start();
@@ -154,16 +161,19 @@ public class Server {
 
 
     public static void loadObjects() {
-        try {
-            Statement statement = getDbConnection().createStatement();
-            ResultSet results = statement.executeQuery("SELECT * from " + DbTables.GAME_OBJECT_DEFINITIONS);
+        String sql = "SELECT id, x, y, type FROM " + DbTables.GAME_OBJECT_DEFINITIONS;
+
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement();
+             ResultSet results = statement.executeQuery(sql)) {
+
             while (results.next()) {
                 objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
             }
-            statement.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public static void shutdown() {

@@ -41,58 +41,58 @@ public class PlayerHandler {
         }
     }
 
-    public void newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
-        int slot;
-        synchronized (SLOT_LOCK) {
-            slot = findFreeSlot();
-            if (slot == -1 || slot > Constants.maxPlayers) {
-                logger.warn("No free slots available for a new player connection.");
-                closeSocketChannel(socketChannel);
-                return;
-            }
-        }
-
-        logger.info("Attempting to create new client in slot: " + slot);
-
-        Client newClient = null;
-
-        try {
-            socketChannel.configureBlocking(false);
-
-            newClient = new Client(socketChannel, slot);
-            newClient.handler = this;
-            newClient.connectedFrom = connectedFrom;
-            newClient.ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
-
-            try {
-                newClient.run(); //TODO thread pool would be better
-                // Only add client players array if login was successful
-                if (newClient.isActive) {
-                    players[slot] = newClient;
-                    Player.localId = slot;
-                    playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
-                } else {
-                    logger.warn("Login failed - Client not active for slot {}", slot);
-                    synchronized (SLOT_LOCK) {
-                        usedSlots.clear(slot);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error during client initialization: {}", e.getMessage(), e);
-                logger.error("Player array state during error: {}", getPlayerArrayState());
-                throw e; // Re-throw to be handled by the outer try-catch
-            }
-
-            Memory.getSingleton().process(); // Print memory usage after adding player
-        } catch (Exception e) {
-            logger.error("Error processing new client connection: {}", e.getMessage(), e);
-            e.printStackTrace();  // This will give us more detailed error information
-            closeSocketChannel(socketChannel);
-            synchronized (SLOT_LOCK) {
-                usedSlots.clear(slot);  // Free the slot if an exception occurred
-            }
-        }
-    }
+//    public void newPlayerClient(SocketChannel socketChannel, String connectedFrom) {
+//        int slot;
+//        synchronized (SLOT_LOCK) {
+//            slot = findFreeSlot();
+//            if (slot == -1 || slot > Constants.maxPlayers) {
+//                logger.warn("No free slots available for a new player connection.");
+//                closeSocketChannel(socketChannel);
+//                return;
+//            }
+//        }
+//
+//        logger.info("Attempting to create new client in slot: " + slot);
+//
+//        Client newClient = null;
+//
+//        try {
+//            socketChannel.configureBlocking(false);
+//
+//            newClient = new Client(socketChannel, slot);
+//            newClient.handler = this;
+//            newClient.connectedFrom = connectedFrom;
+//            newClient.ip = ((InetSocketAddress) socketChannel.getRemoteAddress()).getAddress().hashCode();
+//
+//            try {
+//                newClient.run(); //TODO thread pool would be better
+//                // Only add client players array if login was successful
+//                if (newClient.isActive) {
+//                    players[slot] = newClient;
+//                    Player.localId = slot;
+//                    playersOnline.put(Utils.playerNameToLong(newClient.getPlayerName()), newClient);
+//                } else {
+//                    logger.warn("Login failed - Client not active for slot {}", slot);
+//                    synchronized (SLOT_LOCK) {
+//                        usedSlots.clear(slot);
+//                    }
+//                }
+//            } catch (Exception e) {
+//                logger.error("Error during client initialization: {}", e.getMessage(), e);
+//                logger.error("Player array state during error: {}", getPlayerArrayState());
+//                throw e; // Re-throw to be handled by the outer try-catch
+//            }
+//
+//            Memory.getSingleton().process(); // Print memory usage after adding player
+//        } catch (Exception e) {
+//            logger.error("Error processing new client connection: {}", e.getMessage(), e);
+//            e.printStackTrace();  // This will give us more detailed error information
+//            closeSocketChannel(socketChannel);
+//            synchronized (SLOT_LOCK) {
+//                usedSlots.clear(slot);  // Free the slot if an exception occurred
+//            }
+//        }
+//    }
 
     private int findFreeSlot() {
         synchronized (SLOT_LOCK) {
@@ -106,26 +106,26 @@ public class PlayerHandler {
         return -1;
     }
 
-    private void closeSocketChannel(SocketChannel socketChannel) {
-        try {
-            socketChannel.close();
-        } catch (IOException closeError) {
-            logger.warn("Error closing socket channel: {}", closeError.getMessage(), closeError);
-        }
-    }
+//    private void closeSocketChannel(SocketChannel socketChannel) {
+//        try {
+//            socketChannel.close();
+//        } catch (IOException closeError) {
+//            logger.warn("Error closing socket channel: {}", closeError.getMessage(), closeError);
+//        }
+//    }
     
 
-    private String getPlayerArrayState() {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < players.length; i++) {
-            if (players[i] != null) {
-                if (sb.length() > 1) sb.append(", ");
-                sb.append(i).append(":").append(players[i].getPlayerName());
-                if (!players[i].isActive) sb.append(" (inactive)");
-            }
-        }
-        return sb.append("]").toString();
-    }
+//    private String getPlayerArrayState() {
+//        StringBuilder sb = new StringBuilder("[");
+//        for (int i = 0; i < players.length; i++) {
+//            if (players[i] != null) {
+//                if (sb.length() > 1) sb.append(", ");
+//                sb.append(i).append(":").append(players[i].getPlayerName());
+//                if (!players[i].isActive) sb.append(" (inactive)");
+//            }
+//        }
+//        return sb.append("]").toString();
+//    }
 
     // Returns nearby players within the 3x3 region neighbourhood (64-tile regions).
     public static java.util.List<Player> getLocalPlayers(Player p) {

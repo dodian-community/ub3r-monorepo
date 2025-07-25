@@ -38,12 +38,14 @@ public class TradeLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
+        Statement statement = null;
+        ResultSet inserted = null;
         try {
             int type = trade ? 0 : 1;
-            Statement statement = getDbConnection().createStatement();
+            statement = getDbConnection().createStatement();
             String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_TRADES + " SET p1=" + p1 + ", p2=" + p2 + ", type='"+type+"', date='" + getTimeStamp() + "'";
             statement.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-            ResultSet inserted = statement.getGeneratedKeys();
+            inserted = statement.getGeneratedKeys();
             inserted.next();
             int id = inserted.getInt(1);
             for (GameItem item : items) {
@@ -54,11 +56,17 @@ public class TradeLog extends LogEntry {
                 statement.executeUpdate("INSERT INTO " + DbTables.GAME_LOGS_PLAYER + " SET id = " + id + ", pid=" + p2 + ", item="
                         + item.getId() + ", amount=" + item.getAmount());
             }
-            inserted.close();
         } catch (Exception e) {
             logger.severe("Unable to record trade!");
             e.printStackTrace();
             YellSystem.alertStaff("Unable to record trade, please contact an admin.");
+        } finally {
+            try {
+                if (inserted != null) inserted.close();
+                if (statement != null) statement.close();
+            } catch (Exception e) {
+                System.out.println("Error closing resources in recordTrade: " + e);
+            }
         }
     }
 }

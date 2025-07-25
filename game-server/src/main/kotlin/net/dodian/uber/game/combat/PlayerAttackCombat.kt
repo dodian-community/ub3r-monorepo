@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage
+import net.dodian.uber.game.netty.listener.out.SendMessage
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
     if(npcId == 6610 && getAttackStyle() != 2) {

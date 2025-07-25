@@ -35,13 +35,12 @@ public class DuelLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
-        try {
-            Statement statement = getDbConnection().createStatement();
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             String query = "INSERT INTO " + DbTables.GAME_LOGS_PLAYER_DUELS + "(player, opponent, playerstake, opponentstake, winner, timestamp) VALUES ('"
                     + player + "', '" + opponent + "', '" + playerStake + "', '" + opponentStake + "', '" + winner + "', '"
                     + getTimeStamp() + "')";
             statement.executeUpdate(query);
-            statement.close();
         } catch (Exception e) {
             logger.severe("Unable to record duel!");
             e.printStackTrace();

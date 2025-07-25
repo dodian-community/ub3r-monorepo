@@ -2,6 +2,9 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
@@ -16,10 +19,10 @@ import net.dodian.uber.game.model.music.RegionSong;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.model.player.content.Skillcape;
-import net.dodian.uber.game.model.player.packets.outgoing.InventoryInterface;
-import net.dodian.uber.game.model.player.packets.outgoing.SendMessage;
-import net.dodian.uber.game.model.player.packets.outgoing.SendSideTab;
-import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.netty.listener.out.InventoryInterface;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.netty.listener.out.SendSideTab;
+import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
@@ -28,7 +31,6 @@ import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.utilities.Misc;
-import net.dodian.utilities.Stream;
 import net.dodian.utilities.Utils;
 
 import java.util.*;
@@ -497,22 +499,34 @@ public abstract class Player extends Entity {
         int dir;
         do {
             dir = Utils.direction(currentX, currentY, walkingQueueX[wQueueReadPtr], walkingQueueY[wQueueReadPtr]);
-            if (dir == -1)
+            if (dir == -1) {
                 wQueueReadPtr = (wQueueReadPtr + 1) % WALKING_QUEUE_SIZE;
-            else if ((dir & 1) != 0) {
-                println_debug("Invalid waypoint in walking queue!");
-                resetWalkingQueue();
-                return -1;
+            } else {
+                // Convert the 16-direction value to 8-direction by dividing by 2
+                dir = dir / 2;
+                // Ensure the direction is within 0-7 range
+                if (dir < 0 || dir > 7) {
+                    println_debug("Invalid direction calculated: " + dir);
+                    resetWalkingQueue();
+                    return -1;
+                }
             }
         } while (dir == -1 && wQueueReadPtr != wQueueWritePtr);
-        if (dir == -1)
+        
+        if (dir == -1) {
             return -1;
-        dir >>= 1;
+        }
+        
+        // Update position using the 8-direction deltas
         Position newPos = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
-        currentX += Utils.directionDeltaX[dir];
-        currentY += Utils.directionDeltaY[dir];
-        newPos.move(Utils.directionDeltaX[dir], Utils.directionDeltaY[dir]);
-        getPosition().moveTo(newPos.getX(),newPos.getY());
+        int deltaX = Utils.directionDeltaX[dir];
+        int deltaY = Utils.directionDeltaY[dir];
+        
+        currentX += deltaX;
+        currentY += deltaY;
+        newPos.move(deltaX, deltaY);
+        getPosition().moveTo(newPos.getX(), newPos.getY());
+        
         return dir;
     }
 
@@ -631,54 +645,54 @@ public abstract class Player extends Entity {
     // handles anything related to character position basically walking, running
     // and standing
     // applies to only to "non-thisPlayer" charracters
-    public void updatePlayerMovement(Stream str) {
+    public void updatePlayerMovement(ByteMessage str) {
         if (primaryDirection == -1) {
             // don't have to update the character position, because the char is
             // just standing
             if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
                 // tell client there's an update block appended at the end
-                str.writeBits(1, 1);
-                str.writeBits(2, 0);
+                str.putBits(1, 1);
+                str.putBits(2, 0);
             } else
-                str.writeBits(1, 0);
+                str.putBits(1, 0);
         } else if (secondaryDirection == -1) {
             // send "walking packet"
-            str.writeBits(1, 1);
-            str.writeBits(2, 1);
-            str.writeBits(3, Utils.xlateDirectionToClient[primaryDirection]);
-            str.writeBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            str.putBits(1, 1);
+            str.putBits(2, 1);
+            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
+            str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         } else {
             // send "running packet"
-            str.writeBits(1, 1);
-            str.writeBits(2, 2);
-            str.writeBits(3, Utils.xlateDirectionToClient[primaryDirection]);
-            str.writeBits(3, Utils.xlateDirectionToClient[secondaryDirection]);
-            str.writeBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            str.putBits(1, 1);
+            str.putBits(2, 2);
+            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
+            str.putBits(3, Utils.xlateDirectionToClient[secondaryDirection]);
+            str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         }
 
     }
 
-    public void addNewPlayer(Player plr, Stream str, Stream updateBlock) {
+    public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
         int id = plr.getSlot();
         playerList[playerListSize++] = plr;
         playersUpdating.add(plr);
-        str.writeBits(11, id);
-        str.writeBits(1, 1);// Requires update?
+        str.putBits(11, id);
+        str.putBits(1, 1);// Requires update?
         boolean savedFlag = plr.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE);
         plr.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         PlayerUpdating.getInstance().appendBlockUpdate(plr, updateBlock);
         plr.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, savedFlag);
-        str.writeBits(1, 1); // set to true, if we want to discard the
+        str.putBits(1, 1); // set to true, if we want to discard the
         // (clientside) walking queue
         // no idea what this might be useful for yet
         int z = plr.getPosition().getY() - getPosition().getY();
         if (z < 0)
             z += 32;
-        str.writeBits(5, z); // y coordinate relative to thisPlayer
+        str.putBits(5, z); // y coordinate relative to thisPlayer
         z = plr.getPosition().getX() - getPosition().getX();
         if (z < 0)
             z += 32;
-        str.writeBits(5, z); // x coordinate relative to thisPlayer
+        str.putBits(5, z); // x coordinate relative to thisPlayer
     }
 
     // --- Cached player update block (for efficient multi-viewer reuse) ---
@@ -697,8 +711,11 @@ public abstract class Player extends Entity {
      * Writes the cached block into the supplied stream. Caller must ensure it
      * is valid first.
      */
-    public void writeCachedUpdateBlock(Stream dst) {
-        dst.writeBytes(cachedUpdateBlock, cachedUpdateBlockLength, 0);
+    public void writeCachedUpdateBlock(ByteMessage dst) {
+        // Write only the valid portion of the cached block
+        byte[] dataToWrite = new byte[cachedUpdateBlockLength];
+        System.arraycopy(cachedUpdateBlock, 0, dataToWrite, 0, cachedUpdateBlockLength);
+        dst.putBytes(dataToWrite);
     }
 
     /**
@@ -719,18 +736,18 @@ public abstract class Player extends Entity {
     }
 
     private final byte[] chatText = new byte[4096];
-    private byte chatTextSize = 0;
+    private int chatTextSize = 0;  // Changed from byte to int to handle chat text > 127 chars
     private int chatTextEffects = 0, chatTextColor = 0;
 
     public byte[] getChatText() {
         return this.chatText;
     }
 
-    public byte getChatTextSize() {
+    public int getChatTextSize() {
         return this.chatTextSize;
     }
 
-    public void setChatTextSize(byte chatTextSize) {
+    public void setChatTextSize(int chatTextSize) {
         this.chatTextSize = chatTextSize;
     }
 
@@ -753,9 +770,17 @@ public abstract class Player extends Entity {
     public void clearUpdateFlags() {
         IsStair = false; //What is this?!
         faceTarget(-1);
-        if(isActive && !disconnected)
-            ((Client) this).flushOutStream(); //Not sure if we need or if this causes issues!
+        if(isActive && !disconnected) {
+            // ((Client) this).flushOutStream(); // No longer needed with pure Netty
+        }
         getUpdateFlags().clear();
+        
+        // Reset chat-related fields when clearing flags to prevent T2 packet size mismatches
+        chatTextSize = 0;
+        chatTextColor = 0;
+        chatTextEffects = 0;
+        // Note: chatText buffer doesn't need to be cleared as chatTextSize controls usage
+        
         // Any change this tick means our cached block is no longer valid.
         invalidateCachedUpdateBlock();
     }
@@ -865,21 +890,14 @@ public abstract class Player extends Entity {
     public int deathStage = 0;
     public long deathTimer = 0;
 
-    public void appendMask400Update(Stream str) { //Forcemovement mask!
-        /*str.writeByteA(m4001);
-        str.writeByteA(m4002);
-        str.writeByteA(m4003);
-        str.writeByteA(m4004);
-        str.writeWordA(m4005);
-        str.writeWordBigEndianA(m4006);
-        str.writeByteA(m4007);*/
-        str.writeByteS(m4001);
-        str.writeByteS(m4002);
-        str.writeByteS(m4003);
-        str.writeByteS(m4004);
-        str.writeWordBigEndianA(m4006);
-        str.writeWordA(m4005);
-        str.writeByteS(m4007);
+    public void appendMask400Update(ByteMessage buf) { // Forcemovement mask!
+        buf.put(m4001, ValueType.SUBTRACT); // writeByteS
+        buf.put(m4002, ValueType.SUBTRACT);
+        buf.put(m4003, ValueType.SUBTRACT);
+        buf.put(m4004, ValueType.SUBTRACT);
+        buf.putShort(m4006, ByteOrder.BIG, ValueType.ADD); // writeWordBigEndianA
+        buf.putShort(m4005, ValueType.ADD); // writeWordA
+        buf.put(m4007, ValueType.SUBTRACT);
     }
 
     // PM Stuff

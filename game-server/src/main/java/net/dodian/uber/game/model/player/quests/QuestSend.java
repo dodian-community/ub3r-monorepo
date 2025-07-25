@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.player.quests;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.player.packets.outgoing.SendString;
+import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import java.text.DecimalFormat;
 

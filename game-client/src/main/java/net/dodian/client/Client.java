@@ -32,31 +32,55 @@ public class Client extends RSApplet {
     }
 
     private void updateGameArea() {
-        Texture.method365(clientSize == 0 ? REGULAR_WIDTH : clientWidth, clientSize == 0 ? REGULAR_HEIGHT : clientHeight);
-        fullScreenTextureArray = Texture.anIntArray1472;
-        Texture.method365(clientSize == 0 ? 516 : clientWidth, clientSize == 0 ? 165 : clientHeight);
-        anIntArray1180 = Texture.anIntArray1472;
-        Texture.method365(clientSize == 0 ? (aRSImageProducer_1163 != null ? aRSImageProducer_1163.anInt316 : 250) : clientWidth, clientSize == 0 ? (aRSImageProducer_1163 != null ? aRSImageProducer_1163.anInt317 : 335) : clientHeight);
-        anIntArray1181 = Texture.anIntArray1472;
-        Texture.method365(clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight);
-        anIntArray1182 = Texture.anIntArray1472;
-
-        int ai[] = new int[9];
-        for (int i8 = 0; i8 < 9; i8++) {
-            int k8 = 128 + i8 * 32 + 15;
-            int l8 = 600 + k8 * 3;
-            int i9 = Texture.anIntArray1470[k8];
-            ai[i8] = l8 * i9 >> 16;
+        // Skip UI updates in headless mode
+        if (aBoolean1149) {
+            return;
         }
+        
+        try {
+            Texture.method365(clientSize == 0 ? REGULAR_WIDTH : clientWidth, clientSize == 0 ? REGULAR_HEIGHT : clientHeight);
+            fullScreenTextureArray = Texture.anIntArray1472;
+            Texture.method365(clientSize == 0 ? 516 : clientWidth, clientSize == 0 ? 165 : clientHeight);
+            anIntArray1180 = Texture.anIntArray1472;
+            
+            // Only proceed with texture updates if we're not in headless mode
+            if (!aBoolean1149) {
+                Texture.method365(clientSize == 0 ? (aRSImageProducer_1163 != null ? aRSImageProducer_1163.anInt316 : 250) : clientWidth, 
+                               clientSize == 0 ? (aRSImageProducer_1163 != null ? aRSImageProducer_1163.anInt317 : 335) : clientHeight);
+                anIntArray1181 = Texture.anIntArray1472;
+                Texture.method365(clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight);
+                anIntArray1182 = Texture.anIntArray1472;
 
-        WorldController.method310(500, 800, clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight, ai);
+                int ai[] = new int[9];
+                if (Texture.anIntArray1470 != null) {
+                    for (int i8 = 0; i8 < 9; i8++) {
+                        int k8 = 128 + i8 * 32 + 15;
+                        // Ensure k8 is within bounds of anIntArray1470
+                        if (k8 >= 0 && k8 < Texture.anIntArray1470.length) {
+                            int l8 = 600 + k8 * 3;
+                            int i9 = Texture.anIntArray1470[k8];
+                            ai[i8] = l8 * i9 >> 16;
+                        } else {
+                            ai[i8] = 0; // Default value if out of bounds
+                        }
+                    }
+                }
 
-        aRSImageProducer_1165 = new RSImageProducer(clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight, getGameComponent());
-        DrawingArea.setAllPixelsToZero();
-        resetImageProducers2();
+                WorldController.method310(500, 800, clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight, ai);
+                aRSImageProducer_1165 = new RSImageProducer(clientSize == 0 ? 512 : clientWidth, clientSize == 0 ? 334 : clientHeight, getGameComponent());
+                DrawingArea.setAllPixelsToZero();
+                resetImageProducers2();
 
-        if (!loggedIn)
-            resetAllImageProducers();
+                if (!loggedIn) {
+                    resetAllImageProducers();
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle any UI-related exceptions in headless mode
+            if (!aBoolean1149) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void toggleSize(int size) {
@@ -103,6 +127,11 @@ public class Client extends RSApplet {
     }
 
     public void toggleSizeLogin(int size, int width, int height) {
+        // Skip UI initialization in headless mode
+        if (aBoolean1149) {
+            return;
+        }
+        
         clientSize = size;
         if (size == 0) {
             log_view_dist = 9;
@@ -5417,8 +5446,22 @@ public class Client extends RSApplet {
 						}*/
                         //if (inputString.equals("::maps"))
                         //packMaps();
-                        //if (inputString.equals("::models"))
-                        //packModels();
+                        if (inputString.equals("::test")) {
+                            try {
+                                // Open the stress test GUI in the event dispatch thread
+                                java.awt.EventQueue.invokeLater(() -> {
+                                    try {
+                                        new StressTestGUI().setVisible(true);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+
                         if (inputString.equals("::data"))
                             clientData = !clientData;
                         if (inputString.equals("::noclip")) {
@@ -6632,29 +6675,50 @@ public class Client extends RSApplet {
     }
 
     private void resetImageProducers2() {
-        if (aRSImageProducer_1166 != null)
+        // Skip UI initialization in headless mode or if already initialized
+        if (aBoolean1149 || aRSImageProducer_1166 != null) {
             return;
-        nullLoader();
-        super.fullGameScreen = null;
-        aRSImageProducer_1107 = null;
-        aRSImageProducer_1108 = null;
-        aRSImageProducer_1109 = null;
-        aRSImageProducer_1110 = null;
-        aRSImageProducer_1111 = null;
-        aRSImageProducer_1112 = null;
-        aRSImageProducer_1113 = null;
-        aRSImageProducer_1114 = null;
-        aRSImageProducer_1115 = null;
-        aRSImageProducer_1166 = new RSImageProducer(516, 165, getGameComponent());//chat back
-        aRSImageProducer_1164 = new RSImageProducer(249, 168, getGameComponent());//mapback
-        DrawingArea.setAllPixelsToZero();
-        cacheSprite[24].drawSprite(0, 0);
-        aRSImageProducer_1163 = new RSImageProducer(250, 335, getGameComponent());//inventory
-        aRSImageProducer_1165 = new RSImageProducer(512, 334, getGameComponent());//gamescreen
-        DrawingArea.setAllPixelsToZero();
-        aRSImageProducer_1123 = new RSImageProducer(496, 50, getGameComponent());
-        aRSImageProducer_1124 = new RSImageProducer(269, 37, getGameComponent());
-        aRSImageProducer_1125 = new RSImageProducer(249, 45, getGameComponent());
+        }
+        
+        try {
+            nullLoader();
+            super.fullGameScreen = null;
+            aRSImageProducer_1107 = null;
+            aRSImageProducer_1108 = null;
+            aRSImageProducer_1109 = null;
+            aRSImageProducer_1110 = null;
+            aRSImageProducer_1111 = null;
+            aRSImageProducer_1112 = null;
+            aRSImageProducer_1113 = null;
+            aRSImageProducer_1114 = null;
+            aRSImageProducer_1115 = null;
+            
+            // Skip RSImageProducer creation in headless mode
+            if (!aBoolean1149) {
+                Component gameComponent = getGameComponent();
+                if (gameComponent != null) {
+                    aRSImageProducer_1166 = new RSImageProducer(516, 165, gameComponent); //chat back
+                    aRSImageProducer_1164 = new RSImageProducer(249, 168, gameComponent); //mapback
+                    DrawingArea.setAllPixelsToZero();
+                    
+                    if (cacheSprite != null && cacheSprite.length > 24 && cacheSprite[24] != null) {
+                        cacheSprite[24].drawSprite(0, 0);
+                    }
+                    
+                    aRSImageProducer_1163 = new RSImageProducer(250, 335, gameComponent); //inventory
+                    aRSImageProducer_1165 = new RSImageProducer(512, 334, gameComponent); //gamescreen
+                    DrawingArea.setAllPixelsToZero();
+                    aRSImageProducer_1123 = new RSImageProducer(496, 50, gameComponent);
+                    aRSImageProducer_1124 = new RSImageProducer(269, 37, gameComponent);
+                    aRSImageProducer_1125 = new RSImageProducer(249, 45, gameComponent);
+                }
+            }
+        } catch (Exception e) {
+            // Silently handle any exceptions during UI initialization in headless mode
+            if (!aBoolean1149) {
+                e.printStackTrace();
+            }
+        }
         welcomeScreenRaised = true;
     }
 
@@ -6920,7 +6984,7 @@ public class Client extends RSApplet {
                 stream.writeDWord(ai[2]);
                 stream.writeDWord(ai[3]);
                 stream.writeString("1543456788"); //1543456788
-                stream.writeString(getMacAddress()); //Mac address!
+               // stream.writeString(getMacAddress()); //Mac address!
                 stream.writeString(s);
                 stream.writeString(s1);
                 stream.doKeys();
@@ -9973,8 +10037,13 @@ public class Client extends RSApplet {
     public void drawHPOrb() {
         int health;
         String cHP = RSInterface.interfaceCache[24139].message;
-        int currentHP = Integer.parseInt(cHP);
         String mHP = RSInterface.interfaceCache[24140].message;
+        
+        // DEBUG: Print what we're trying to parse
+       // System.out.println("DEBUG: HP Orb - Current HP interface 24139: '" + cHP + "'");
+       // System.out.println("DEBUG: HP Orb - Max HP interface 24140: '" + mHP + "'");
+        
+        int currentHP = Integer.parseInt(cHP);
         int maxHP2 = Integer.parseInt(mHP);
         health = (int) (((double) currentHP / (double) maxHP2) * 100D);
         /* Draws empty orb */
@@ -11645,6 +11714,7 @@ public class Client extends RSApplet {
                     RSInterface.interfaceCache[j11].anInt233 = 2;
                     RSInterface.interfaceCache[j11].mediaID = j3;
                     pktType = -1;
+                    System.out.println("Interface " + j11 + " set to " + j3);
                     return true;
 
                 case 114:
@@ -11692,6 +11762,7 @@ public class Client extends RSApplet {
                     int j4 = inStream.method427();
                     int i12 = inStream.method426();
                     String s6 = inStream.readString();
+                    //System.out.println("Action " + j4 + ": " + s6);
                     if (j4 >= 1 && j4 <= 5) {
                         if (s6.equalsIgnoreCase("null"))
                             s6 = null;
@@ -12284,6 +12355,7 @@ public class Client extends RSApplet {
                 case 164:
                     int j9 = inStream.method434();
                     method60(j9);
+                    System.out.println("Open interface: " + j9);
                     if (invOverlayInterfaceID != -1) {
                         needDrawTabArea = true;
                         invOverlayInterfaceID = -1;
@@ -12607,7 +12679,7 @@ public class Client extends RSApplet {
     private int anInt843;
     private String aString844;
     private int privateChatMode;
-    private Stream aStream_847;
+    public Stream aStream_847;
     private boolean aBoolean848;
     private static int anInt849;
     private int[] anIntArray850;
@@ -12631,7 +12703,7 @@ public class Client extends RSApplet {
     private int anInt874;
     private final boolean[] aBooleanArray876;
     private int weight;
-    private MouseDetection mouseDetection;
+    public MouseDetection mouseDetection;
     private volatile boolean drawFlames;
     private String reportAbuseInput;
     private int unknownInt10;
@@ -12754,7 +12826,7 @@ public class Client extends RSApplet {
     private int anInt1026;
     private final int[] anIntArray1030;
     private boolean aBoolean1031;
-    private Sprite[] mapFunctions;
+    public Sprite[] mapFunctions;
     private int baseX;
     private int baseY;
     private int anInt1036;
@@ -12801,7 +12873,7 @@ public class Client extends RSApplet {
     private int anInt1079;
     private boolean aBoolean1080;
     private String[] friendsList;
-    private Stream inStream;
+    public Stream inStream;
     private int anInt1084;
     private int anInt1085;
     int activeInterfaceType;
@@ -12872,7 +12944,7 @@ public class Client extends RSApplet {
     private boolean aBoolean1141;
     public static int anInt1142;
     private int energy;
-    private boolean aBoolean1149;
+    public boolean aBoolean1149;
     private Sprite[] crosses;
     private boolean musicEnabled;
     private Background[] aBackgroundArray1152s;
@@ -12881,6 +12953,84 @@ public class Client extends RSApplet {
     private static int anInt1155;
     private static boolean fpsOn;
     public boolean loggedIn;
+    
+    /**
+     * Performs a login with minimal resource usage for stress testing.
+     * @param username The username to log in with
+     * @param password The password (not used in this implementation)
+     * @return true if login was successful, false otherwise
+     */
+    public boolean headlessLogin(String username, String password) {
+        try {
+            // Set headless mode and disable UI components
+            aBoolean1149 = true;
+            
+            // Initialize minimal required components with smaller buffers
+            if (inStream == null) {
+                inStream = new Stream(new byte[2048]);
+            }
+            if (aStream_847 == null) {
+                aStream_847 = new Stream(new byte[2048]);
+            }
+            if (mouseDetection == null) {
+                mouseDetection = new MouseDetection(this);
+            }
+            
+            // Perform login with minimal overhead
+            login(username, "", true);
+            
+            // If login was successful, minimize memory usage
+            if (loggedIn) {
+                minimizeMemoryUsage();
+                
+                // Reduce network traffic by increasing time between updates
+                // These values are just suggestions - adjust based on actual field names in your code
+                // anInt1019 = 5000; // Uncomment and use actual field name if available
+                // anInt1020 = 10000; // Uncomment and use actual field name if available
+            }
+            
+            return loggedIn;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Minimizes memory usage by clearing unnecessary resources.
+     * Should only be called after successful login in headless mode.
+     */
+    private void minimizeMemoryUsage() {
+        if (!aBoolean1149) return; // Only run in headless mode
+        
+        try {
+            // Clear any cached sprites or images that won't be used
+            if (cacheSprite != null) {
+                for (int i = 0; i < cacheSprite.length; i++) {
+                    cacheSprite[i] = null;
+                }
+            }
+            
+            // Clear any other large data structures that aren't needed
+            // for maintaining the connection
+            if (mapFunctions != null) {
+                for (int i = 0; i < mapFunctions.length; i++) {
+                    mapFunctions[i] = null;
+                }
+            }
+            
+            // Clear media-related caches
+            mediaStreamLoader = null;
+            
+            // Clear other caches or large objects that aren't needed
+            // for maintaining the network connection
+            
+            // Suggest garbage collection
+            System.gc();
+        } catch (Exception e) {
+            // Ignore errors during cleanup
+        }
+    }
     private boolean canMute;
     private boolean aBoolean1159;
     private boolean aBoolean1160;
