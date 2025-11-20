@@ -22,9 +22,10 @@ public class SongSetting implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(174);
-        message.putShort(songId + 10000);
-        message.put(enabled);
-        message.putShort(unlocked);
+        message.putShort(songId + 10000); // soundId (using songId + 10000)
+        message.put(enabled); // type field (reusing enabled for type)
+        message.putShort(unlocked); // delay field (reusing unlocked for delay)
+        message.putShort(enabled); // volume field (reusing enabled for volume)
         client.send(message);
     }
 

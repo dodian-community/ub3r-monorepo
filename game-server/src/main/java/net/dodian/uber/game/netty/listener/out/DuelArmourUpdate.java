@@ -37,26 +37,30 @@ public class DuelArmourUpdate implements OutgoingPacket {
         // Create a message for each equipment slot
         for (int slot = 0; slot < equipment.length; slot++) {
             ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-            
-            // Write interface ID (13824 for duel interface)
+
+            // Match mystic client's UPDATE_SPECIFIC_ITEM layout:
+            // interfaceId (uShort), slot (uByte), amount (int), id (uShort)
+
+            // Duel armour interface ID
             message.putShort(13824);
-            
-            // Write slot ID
+
+            // Equipment slot index
             message.put(slot);
-            
-            // Write item ID (add 1 to the item ID, or 0 if no item)
-            int itemId = equipment[slot];
-            message.putShort(itemId < 1 ? 0 : itemId + 1);
-            
-            // Write amount
-            int amount = equipmentN[slot];
-            if (amount > 254) {
-                message.put(255);
-                message.putInt(amount);
-            } else {
-                message.put(amount);
+
+            // Safe amount for this slot
+            int safeAmount = equipmentN != null && slot < equipmentN.length ? equipmentN[slot] : 0;
+            if (safeAmount < 0) {
+                safeAmount = 0;
             }
-            
+            message.putInt(safeAmount);
+
+            // Container item id: id + 1 when there is an item and amount, otherwise 0 to clear the slot
+            int itemId = equipment != null && slot < equipment.length ? equipment[slot] : -1;
+            int containerId = (safeAmount > 0 && itemId > 0) ? (itemId + 1) : 0;
+            message.putShort(containerId);
+            System.out.println("[DUEL ARMOUR] sending to " + client.getPlayerName() + " slot=" + slot
+                    + " amount=" + safeAmount + " containerId=" + containerId);
+
             // Send the packet
             client.send(message);
         }

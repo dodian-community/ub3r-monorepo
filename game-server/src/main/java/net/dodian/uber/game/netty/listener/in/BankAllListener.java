@@ -34,20 +34,39 @@ public class BankAllListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.getPayload();
 
+        // Mystic sends (ItemContainerOption4):
+        // short slot (writeUnsignedWordA)
+        // int   interfaceId (putInt)
+        // short nodeId (writeUnsignedWordA)
         int removeSlot = readUnsignedWordA(buf);
-        int interfaceId = buf.readUnsignedShort();
+        int interfaceId = buf.readInt();
         int removeId = readUnsignedWordA(buf);
-        boolean stack = Server.itemManager.isStackable(removeId);
+
+        // Resolve the real item id from local container for bank / inventory
+        int resolvedItemId = removeId;
+        if (interfaceId == 5064) { // inventory
+            if (removeSlot >= 0 && removeSlot < client.playerItems.length && client.playerItems[removeSlot] > 0) {
+                resolvedItemId = client.playerItems[removeSlot] - 1;
+            }
+        } else if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) { // bank tabs
+            if (removeSlot >= 0 && removeSlot < client.bankItems.length && client.bankItems[removeSlot] > 0) {
+                resolvedItemId = client.bankItems[removeSlot] - 1;
+            }
+        }
+
+        boolean stack = Server.itemManager.isStackable(resolvedItemId);
 
         if (interfaceId == 5064) { // inventory → bank / party chest
             if (client.IsBanking) {
-                client.bankItem(removeId, removeSlot, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeId));
+                int amount = stack ? client.playerItemsN[removeSlot] : client.getInvAmt(resolvedItemId);
+                client.bankItem(resolvedItemId, removeSlot, amount);
             } else if (client.isPartyInterface) {
-                Balloons.offerItems(client, removeId, stack ? client.playerItemsN[removeSlot] : client.getInvAmt(removeId), removeSlot);
+                int amount = stack ? client.playerItemsN[removeSlot] : client.getInvAmt(resolvedItemId);
+                Balloons.offerItems(client, resolvedItemId, amount, removeSlot);
             }
             client.checkItemUpdate();
-        } else if (interfaceId == 5382) { // bank → inventory (withdraw all)
-            client.fromBank(removeId, removeSlot, -2);
+        } else if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) { // bank → inventory (withdraw all, mystic tabs: 50300-50310)
+            client.fromBank(resolvedItemId, removeSlot, -2);
         } else if (interfaceId == 2274) { // party chest → inventory
             Balloons.removeOfferItems(client, removeId, !stack ? 8 : Integer.MAX_VALUE, removeSlot);
         } else if (interfaceId == 3322 && client.inTrade && client.canOffer) { // inventory → trade
@@ -60,22 +79,22 @@ public class BankAllListener implements PacketListener {
             client.fromTrade(removeId, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (interfaceId == 3823) { // sell 10 items to shop
             if (client.playerRights < 2) {
-                client.sellItem(removeId, removeSlot, 10);
+                client.sellItem(resolvedItemId, removeSlot, 10);
             } else {
                 client.send(new SendFrame27());
                 client.XinterfaceID = interfaceId;
-                client.XremoveID = removeId;
+                client.XremoveID = resolvedItemId;
                 client.XremoveSlot = removeSlot;
             }
         } else if (interfaceId == 3900) { // buy 10 items from shop
             client.send(new SendFrame27());
             client.XinterfaceID = interfaceId;
-            client.XremoveID = removeId;
+            client.XremoveID = resolvedItemId;
             client.XremoveSlot = removeSlot;
         }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("BankAll: if={} id={} slot={} stack={} from {}", interfaceId, removeId, removeSlot, stack, client.getPlayerName());
+        if (client.playerRights == 2) {
+            client.println_debug("BankAll: interfaceId=" + interfaceId + " itemId=" + resolvedItemId + " slot=" + removeSlot + " stack=" + stack);
         }
     }
 }

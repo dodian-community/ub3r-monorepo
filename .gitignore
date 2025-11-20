@@ -103,3 +103,14 @@ game-server/.DS_Store
 *.gz
 /data
 game-client/src/main/java/net/dodian/client/config/Constants.java
+game-server/src/.DS_Store
+game-server/src/main/java/.DS_Store
+game-server/src/main/.DS_Store
+game-server/src/main/java/net/.DS_Store
+game-server/src/main/java/net/dodian/.DS_Store
+game-server/src/main/java/net/dodian/uber/.DS_Store
+game-server/src/main/java/net/dodian/uber/game/.DS_Store
+game-server/src/main/java/net/dodian/uber/game/model/.DS_Store
+game-server/src/main/java/net/dodian/uber/game/model/entity/.DS_Store
+game-server/src/main/java/net/dodian/uber/game/netty/.DS_Store
+game-server/src/main/java/net/dodian/uber/game/netty/listener/.DS_Store

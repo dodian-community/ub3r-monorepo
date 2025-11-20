@@ -34,6 +34,7 @@ public class PrivateMessage implements OutgoingPacket {
         for (int i = 0; i < size; i++) {
             msg.put(message[i]);
         }
+        msg.put(10);  // String terminator - client expects readString()
         client.send(msg);
     }
 }

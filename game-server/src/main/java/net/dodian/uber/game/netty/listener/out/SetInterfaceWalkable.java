@@ -18,7 +18,7 @@ public class SetInterfaceWalkable implements OutgoingPacket {
     public void send(Client client) {
         //System.out.println("Set interface walkable: " + id);
         ByteMessage message = ByteMessage.message(208, MessageType.FIXED);
-        message.putShort(id, ByteOrder.LITTLE); // low byte first for method437
+        message.putInt(id); // matches Client.readInt() for SEND_WALKABLE_INTERFACE
         client.send(message);
     }
 }

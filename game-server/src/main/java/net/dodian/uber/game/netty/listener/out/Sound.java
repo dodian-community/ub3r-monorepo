@@ -29,8 +29,9 @@ public class Sound implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(174);
         message.putShort(soundId);
-        message.put(volume);
+        message.put(volume); // type field (reusing volume for type)
         message.putShort(delay);
+        message.putShort(volume); // actual volume field
         client.send(message);
     }
 

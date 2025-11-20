@@ -40,8 +40,6 @@ public final class WalkingListener implements PacketListener {
         int size   = packet.getSize();
         long now   = System.currentTimeMillis();
 
-        if (opcode == 248) size -= 14; // adjust like legacy
-
         if (client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient
                 || !client.pLoaded || now < client.walkBlock) {
             return;

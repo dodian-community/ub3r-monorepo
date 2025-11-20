@@ -16,7 +16,7 @@ public class SetRegionSong implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(74);
-        message.putShort(songId, ByteOrder.BIG);
+        message.putShort(songId, ByteOrder.LITTLE);
         client.send(message);
     }
 

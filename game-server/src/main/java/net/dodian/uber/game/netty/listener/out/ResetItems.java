@@ -19,28 +19,20 @@ public class ResetItems implements OutgoingPacket {
     public void send(Client client) {
         
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putShort(writeFrame); // writeWord
-        message.putShort(client.playerItems.length); // writeWord
+        message.putInt(writeFrame); // interface id as int
+        message.putShort(client.playerItems.length); // number of slots
         
         for (int i = 0; i < client.playerItems.length; i++) {
-            if (client.playerItemsN[i] > 254) {
-                message.put(255); // item's stack count. if over 254, write byte 255
-                // writeDWord_v2 - scrambled byte order [16-23][24-31][0-7][8-15]
-                int value = client.playerItemsN[i];
-                message.put((value >> 16) & 0xFF); // bits 16-23
-                message.put((value >> 24) & 0xFF); // bits 24-31
-                message.put(value & 0xFF);         // bits 0-7
-                message.put((value >> 8) & 0xFF);  // bits 8-15
-            } else {
-                message.put(client.playerItemsN[i]);
+            int amount = client.playerItemsN[i];
+            message.putInt(amount); // client.readInt()
+
+            if (amount != 0) {
+                int itemId = client.playerItems[i]; // container value (id + 1 or 0)
+                if (itemId < 0) {
+                    itemId = 0;
+                }
+                message.putShort(itemId, ByteOrder.BIG); // client.readShort()
             }
-            
-            if (client.playerItems[i] < 0) {
-                client.playerItems[i] = -1;
-            }
-            
-            // writeWordBigEndianA: little-endian with ADD transformation on first byte
-            message.putShort(client.playerItems[i], ByteOrder.LITTLE, ValueType.ADD);
         }
         
         client.send(message);

@@ -23,7 +23,7 @@ public class ObjectAnimation implements OutgoingPacket {
     public void send(Client client) {
         client.send(new SetMap(position));
         ByteMessage message = ByteMessage.message(160);
-        message.put(position.getZ(), ValueType.SUBTRACT);
+        message.put(0, ValueType.SUBTRACT); // offset byte (0 since SetMap already set exact position)
         message.put((def.getType() << 2) + (def.getFace() & 3), ValueType.SUBTRACT);
         message.putShort(animation, ValueType.ADD);
         client.send(message);

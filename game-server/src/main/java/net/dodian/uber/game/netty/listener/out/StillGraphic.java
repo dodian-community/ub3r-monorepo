@@ -38,15 +38,24 @@ public class StillGraphic implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        // First, ensure the client has the correct map region loaded
-        client.send(new SetMap(position));
-        
-        // Then send the graphic packet
+        // Calculate the base position for the region (align to 8x8 region)
+        int baseX = (position.getX() >> 3) << 3;
+        int baseY = (position.getY() >> 3) << 3;
+
+        // Ensure the client has the correct map region loaded
+        client.send(new SetMap(new Position(baseX, baseY)));
+
+        // Calculate the offset byte: (localX << 4) | localY
+        int localX = position.getX() - baseX;
+        int localY = position.getY() - baseY;
+        int offsetByte = (localX << 4) | localY;
+
+        // Send the graphic packet
         ByteMessage message = ByteMessage.message(4, MessageType.FIXED);
-        message.put(0); // Tiles away (X >> 4 + Y & 7) - 0 means at player's position
-        message.putShort(id); // Graphic ID
-        message.put(height); // Height offset
-        message.putShort(time); // Time before casting the graphic
+        message.put(offsetByte);  // Position offset from region base
+        message.putShort(id);     // Graphic ID
+        message.put(height);      // Height offset
+        message.putShort(time);   // Time before casting the graphic
         client.send(message);
     }
 }

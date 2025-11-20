@@ -14,6 +14,7 @@ public class RefreshSkill implements OutgoingPacket {
 
     private final Skill skill;
     private final int level;
+    private final int maxLevel;
     private final int experience;
 
     /**
@@ -21,11 +22,13 @@ public class RefreshSkill implements OutgoingPacket {
      * 
      * @param skill The skill to refresh
      * @param level The current level to display (including boosts)
+     * @param maxLevel The maximum level in this skill
      * @param experience The current experience in the skill
      */
-    public RefreshSkill(Skill skill, int level, int experience) {
+    public RefreshSkill(Skill skill, int level, int maxLevel, int experience) {
         this.skill = skill;
         this.level = level;
+        this.maxLevel = maxLevel;
         this.experience = experience;
     }
 
@@ -33,10 +36,10 @@ public class RefreshSkill implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage out = ByteMessage.message(134);
         out.put(skill.getId());
-        // Using ByteOrder.MIDDLE to fix the experience display issue
-        // The client expects the experience in a specific byte order
-        out.putInt(experience, ByteOrder.MIDDLE, ValueType.NORMAL);
-        out.put(level);
+        // Client expects: level, maxLevel, experience as 3 big-endian ints
+        out.putInt(level);
+        out.putInt(maxLevel);
+        out.putInt(experience);
         client.send(out);
        // System.out.println("Sending RefreshSkill packet for skill " + skill + " with level " + level + " and experience " + experience);
     }

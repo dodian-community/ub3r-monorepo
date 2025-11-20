@@ -53,20 +53,36 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                     ctx.close();
                     return;
                 }
-                size = Constants.PACKET_SIZES[opcode];
-                //logger.info("Decoding opcode {} size {}", opcode, size);
+                // Mystic client always sends an ISAAC-encrypted length byte
+                // after the opcode, so treat every packet as VARIABLE_BYTE.
+                size = VARIABLE_BYTE;
             }
 
             if (size == VARIABLE_BYTE) {
                 if (in.readableBytes() < 1) {
+                    return; // need more data for length
+                }
+                int rawLen = in.readUnsignedByte();
+                int decLen = (rawLen - cipher.getNextKey()) & 0xFF; // total packet size (opcode+len+payload)
+                if (decLen < 2) {
+                    logger.debug("[Netty] Invalid packet length {} for opcode {} from {}", decLen, opcode, ctx.channel().remoteAddress());
+                    ctx.close();
                     return;
                 }
-                size = in.readUnsignedByte();
+                size = decLen - 2; // payload size only
             } else if (size == VARIABLE_SHORT) {
+                // Not used by the mystic client, but keep for safety
                 if (in.readableBytes() < 2) {
                     return;
                 }
-                size = in.readUnsignedShort();
+                int rawLen = in.readUnsignedShort();
+                int decLen = (rawLen - cipher.getNextKey()) & 0xFFFF;
+                if (decLen < 2) {
+                    logger.debug("[Netty] Invalid short packet length {} for opcode {} from {}", decLen, opcode, ctx.channel().remoteAddress());
+                    ctx.close();
+                    return;
+                }
+                size = decLen - 2;
             }
 
             if (in.readableBytes() < size) {

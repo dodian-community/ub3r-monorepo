@@ -38,24 +38,24 @@ public class DeleteArrow implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-        
-        // Write interface ID (1688 for equipment interface)
+
+        // Match mystic client's UPDATE_SPECIFIC_ITEM layout:
+        // interfaceId (uShort), slot (uByte), amount (int), id (uShort)
+
+        // Equipment interface ID
         message.putShort(1688);
-        
-        // Write slot ID
+
+        // Equipment slot
         message.put(slot);
-        
-        // Write item ID (add 1 to the item ID, or 0 if no item)
-        message.putShort(itemId + 1);
-        
-        // Write amount
-        if (amount > 254) {
-            message.put(255);
-            message.putInt(amount);
-        } else {
-            message.put(amount);
-        }
-        
+
+        // Remaining arrow amount
+        int safeAmount = Math.max(0, amount);
+        message.putInt(safeAmount);
+
+        // Container item id: id + 1 when there are arrows left, otherwise 0 to clear the slot
+        int containerId = (safeAmount > 0 && itemId > 0) ? (itemId + 1) : 0;
+        message.putShort(containerId);
+
         client.send(message);
         System.out.println("Sending DeleteArrow packet for slot " + slot + " with item ID " + itemId + " and amount " + amount);
     }
