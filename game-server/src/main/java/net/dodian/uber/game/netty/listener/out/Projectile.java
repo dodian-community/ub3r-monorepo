@@ -61,20 +61,29 @@ public class Projectile implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
+        // Calculate the base position for the region (align to 8x8 region)
+        int baseX = (casterPosition.getX() >> 3) << 3;
+        int baseY = (casterPosition.getY() >> 3) << 3;
+
         // Ensure the client has the correct map region loaded
-        client.send(new SetMap(new Position(casterPosition.getX() - 3, casterPosition.getY() - 2)));
-        
+        client.send(new SetMap(new Position(baseX, baseY)));
+
+        // Calculate the offset byte: (localX << 4) | localY
+        int localX = casterPosition.getX() - baseX;
+        int localY = casterPosition.getY() - baseY;
+        int offsetByte = (localX << 4) | localY;
+
         // Create and send the projectile packet
         ByteMessage message = ByteMessage.message(117, MessageType.FIXED);
-        message.put(angle);             // Starting angle of the projectile
-        message.put(offsetY);           // Y offset from caster
-        message.put(offsetX);           // X offset from caster
+        message.put(offsetByte);        // Position offset from region base
+        message.put(offsetX);           // X offset to target
+        message.put(offsetY);           // Y offset to target
         message.putShort(targetIndex);  // Target index (NPC or player)
         message.putShort(gfxMoving);    // Projectile graphic ID
-        message.put(startHeight);       // Starting height
-        message.put(endHeight);         // Ending height
-        message.putShort(begin);        // Creation tick
-        message.putShort(speed);        // Speed minus distance
+        message.put(startHeight);       // Starting height (client multiplies by 4)
+        message.put(endHeight);         // Ending height (client multiplies by 4)
+        message.putShort(begin);        // Start time
+        message.putShort(speed);        // End time
         message.put(slope);             // Initial slope
         message.put(initDistance);      // Initial distance from source
         client.send(message);

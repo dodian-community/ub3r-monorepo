@@ -21,7 +21,7 @@ public class RemoveGroundItem implements OutgoingPacket {
     public void send(Client client) {
         client.send(new SetMap(position));
         ByteMessage message = ByteMessage.message(156);
-        message.put(position.getZ(), ValueType.SUBTRACT); //Cant enter height due to client bug!
+        message.put(0, ValueType.ADD); // offset byte (0 since SetMap already set exact position)
         message.putShort(item.getId());
         client.send(message);
     }

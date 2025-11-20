@@ -36,9 +36,9 @@ public class ReplaceObject2 implements OutgoingPacket {
         // Second packet (opcode 151) - Place new object if needed
         if (newObjectId != -1) {
             ByteMessage place = ByteMessage.message(151);
-            place.put(0, ValueType.SUBTRACT);              // writeByteS(0)
-            place.putShort(newObjectId, ByteOrder.LITTLE); // writeWordBigEndian (actually little-endian)
-            place.put(config, ValueType.SUBTRACT);         // writeByteS(config)
+            place.put(0, ValueType.ADD);                   // offset byte with ADD transformation
+            place.putShort(newObjectId, ByteOrder.LITTLE); // object ID (little-endian)
+            place.put(config, ValueType.SUBTRACT);         // objectTypeFace with SUBTRACT transformation
             client.send(place);
         }
     }

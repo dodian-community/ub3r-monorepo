@@ -27,7 +27,7 @@ public class SetWildernessLevel implements OutgoingPacket {
     public void send(Client client) {
         // Update the wilderness level interface
         ByteMessage message = ByteMessage.message(208, MessageType.FIXED);
-        message.putShort(197, ByteOrder.BIG);  // Interface ID for wilderness level
+        message.putInt(197);  // Interface ID for wilderness level, matches Client.readInt()
         client.send(message);
         
         // Update the wilderness level text

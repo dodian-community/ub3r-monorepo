@@ -370,41 +370,60 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void appendPrimaryHit(Player player, ByteMessage buf) {
         synchronized (this) {
-            buf.put(Math.min(player.getDamageDealt(), 255));
-            if (player.getDamageDealt() == 0)
-                buf.put(0, ValueType.ADD); // writeByteA
-            else if (player.getHitType() == Entity.hitType.BURN)
-                buf.put(4, ValueType.ADD);
-            else if (player.getHitType() == Entity.hitType.CRIT)
-                buf.put(3, ValueType.ADD);
-            else if (player.getHitType() == Entity.hitType.POISON)
-                buf.put(2, ValueType.ADD);
-            else
-                buf.put(1, ValueType.ADD);
-            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
-            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-            buf.put(value, ValueType.NEGATE); // writeByteC = -value 
-            buf.put(100);
+            // Client appendPlayerUpdateMask (mask & 0x20) expects:
+            // short damage, byte type, short currentHp, short maxHp
+            int damage = player.getDamageDealt();
+            if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
+            if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
+            buf.putShort(damage);
+
+            int type;
+            if (player.getDamageDealt() == 0) {
+                type = 0; // miss
+            } else if (player.getHitType() == Entity.hitType.BURN) {
+                type = 4;
+            } else if (player.getHitType() == Entity.hitType.CRIT) {
+                type = 3;
+            } else if (player.getHitType() == Entity.hitType.POISON) {
+                type = 2;
+            } else {
+                type = 1; // normal
+            }
+            buf.put(type);
+
+            int current = Math.max(0, player.getCurrentHealth());
+            int max = Math.max(1, player.getMaxHealth());
+            buf.putShort(current);
+            buf.putShort(max);
         }
     }
 
     public void appendPrimaryHit2(Player player, ByteMessage buf) {
         synchronized(this) {
-            buf.put(Math.min(player.getDamageDealt2(), 255)); // What the perseon got 'hit' for
-            if (player.getDamageDealt2() == 0)
-                buf.put(0, ValueType.SUBTRACT); // writeByteS
-            else if (player.getHitType2() == Entity.hitType.BURN)
-                buf.put(4, ValueType.SUBTRACT);
-            else if (player.getHitType2() == Entity.hitType.CRIT)
-                buf.put(3, ValueType.SUBTRACT);
-            else if (player.getHitType2() == Entity.hitType.POISON)
-                buf.put(2, ValueType.SUBTRACT);
-            else
-                buf.put(1, ValueType.SUBTRACT);
-            double hp = Misc.getCurrentHP(player.getCurrentHealth(), player.getMaxHealth());
-            int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-            buf.put(value);
-            buf.put(100, ValueType.NEGATE); // writeByteC = -value
+            // Client appendPlayerUpdateMask (mask & 0x200) uses same layout as primary hit
+            int damage = player.getDamageDealt2();
+            if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
+            if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
+            buf.putShort(damage);
+
+            int type;
+            if (player.getDamageDealt2() == 0) {
+                type = 0; // miss
+            } else if (player.getHitType2() == Entity.hitType.BURN) {
+                type = 4;
+            } else if (player.getHitType2() == Entity.hitType.CRIT) {
+                type = 3;
+            } else if (player.getHitType2() == Entity.hitType.POISON) {
+                type = 2;
+            } else {
+                type = 1; // normal
+            }
+            buf.put(type);
+
+            int current = Math.max(0, player.getCurrentHealth());
+            int max = Math.max(1, player.getMaxHealth());
+            buf.putShort(current);
+            buf.putShort(max);
         }
     }
 

@@ -5,6 +5,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 
 /**
  * Sent to update a player's equipment in a specific slot.
@@ -33,27 +34,21 @@ public class SetEquipment implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(34, MessageType.VAR_SHORT);
-        message.putShort(1688); // writeWord - interface ID (1688 = equipment interface)
-        message.put(targetSlot); // writeByte - equipment slot
-        
-        // writeWord - item ID (add 1 if not zero, same as original)
-        int itemId = wearId > 0 ? wearId + 1 : 0;
-        message.putShort(itemId); // Use default byte order (BIG_ENDIAN) for item ID
-        
-        // Handle large quantities
-        if (amount > 254) {
-            message.put(255); // writeByte - flag for large amount
-            message.putInt(amount, ByteOrder.BIG); // writeDWord - full 32-bit amount in big endian
-        } else {
-            message.put(amount & 0xFF); // writeByte - small amount (ensure it's a single byte)
-        }
+        message.putShort(1688);            // interface ID (equipment interface)
+        message.put(targetSlot);           // equipment slot
+
+        // Client expects: amount (int), then item id (short)
+        message.putInt(amount);            // stack size
+
+        int itemId = wearId > 0 ? wearId + 1 : 0; // container value (id+1 or 0)
+        message.putShort(itemId, ByteOrder.BIG);
         
         client.send(message);
         
         // Additional equipment-related updates
         if (targetSlot == 3) { // 3 is the weapon slot
             client.CheckGear();
-            // CombatStyleHandler.setWeaponHandler(client); // Uncomment if needed
+            CombatStyleHandler.setWeaponHandler(client);
             client.requestWeaponAnims();
         }
         

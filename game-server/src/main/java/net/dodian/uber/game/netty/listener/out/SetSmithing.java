@@ -16,22 +16,24 @@ public class SetSmithing implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putShort(writeFrame);
+
+        // Write interface ID as int (4 bytes) - matches client's incoming.readInt()
+        message.putInt(writeFrame);
+
+        // Write item count as short (2 bytes) - matches client's incoming.readShort()
         message.putShort(Constants.SmithingItems.length);
+
         for (int i = 0; i < Constants.SmithingItems.length; i++) {
             int itemId = Constants.SmithingItems[i][0] + 1;
             int amount = Constants.SmithingItems[i][1];
-            System.out.println("Sending smithing item: " + itemId + " amount: " + amount);
-            if (amount > 254) {
-                message.put(255);
-                message.putInt(amount, ByteOrder.LITTLE);
-            } else {
-                message.put(amount);
+
+            // Amount as int (4 bytes) - matches client's incoming.readInt()
+            message.putInt(amount);
+
+            // Item ID only if amount > 0 - matches client's conditional read
+            if (amount != 0) {
+                message.putShort(itemId);
             }
-            if (itemId < 0) { // Assuming this check is still needed.
-                client.playerItems[i] = 7500;
-            }
-            message.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
         }
         client.send(message);
     }

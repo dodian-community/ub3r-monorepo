@@ -31,10 +31,10 @@ public class RemoveItemListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteMessage msg = ByteMessage.wrap(packet.getPayload());
-        // three unsigned shorts, big-endian, ADD (low byte +128)
-        int interfaceID = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
-        int removeSlot = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
-        int removeID = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
+        // mystic client sends: int interfaceId, then two unsigned shorts with ADD transform
+        int interfaceID = msg.getInt();
+        int removeSlot = msg.getShort(false, ValueType.ADD);
+        int removeID = msg.getShort(false, ValueType.ADD);
 
         if (client.playerRights == 2) {
             client.println_debug("RemoveItem: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
@@ -60,7 +60,7 @@ public class RemoveItemListener implements PacketListener {
             else if (client.isPartyInterface)
                 Balloons.offerItems(client, removeID, 1, removeSlot);
             client.checkItemUpdate();
-        } else if (interfaceID == 5382) { // bank -> bag
+        } else if (interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) { // bank -> bag (mystic tabs: 50300-50310)
             client.fromBank(removeID, removeSlot, 1);
         } else if (interfaceID == 2274) { // party remove
             Balloons.removeOfferItems(client, removeID, 1, removeSlot);
