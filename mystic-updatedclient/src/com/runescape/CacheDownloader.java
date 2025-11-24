@@ -17,7 +17,7 @@ import com.runescape.util.Unzip;
 
 public class CacheDownloader {
 
-	private static final String CACHE_PATH = "http://www.osrspk.com/client/cache/";
+	private static final String CACHE_PATH = "http://www.Dodian.net/client/cache/";
 	private static final String CACHE_NAME = "cache.zip";
 
 	public static void init(boolean force) {

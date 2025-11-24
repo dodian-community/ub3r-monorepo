@@ -8976,7 +8976,7 @@ public class Client extends GameApplet {
 			if (response == 30) {
 				firstLoginMessage = "Old client usage detected.";
 				secondLoginMessage = "Please download the latest one.";
-				MiscUtils.launchURL("http://osrspk.com");
+				MiscUtils.launchURL("http://www.Dodian.net");
 				return;
 			}
 			if (response == 3) {
@@ -10087,7 +10087,7 @@ public class Client extends GameApplet {
 			g.drawString("Error - unable to load game!", 50, 50);
 			g.drawString("To play " + Configuration.CLIENT_NAME + " make sure you play from",
 					50, 100);
-			g.drawString("http://www.osrspk.com", 50, 150);
+			g.drawString("http://www.Dodian.net", 50, 150);
 		}
 		if (rsAlreadyLoaded) {
 			aBoolean831 = false;
@@ -15136,13 +15136,13 @@ public class Client extends GameApplet {
 						continue;
 					if (friendsNodeIDs[playerIndex] != world) {
 						friendsNodeIDs[playerIndex] = world;
-						/*if (world >= 2) {
+
 							sendMessage(name + " has logged in.", 5, "");
 						}
-						if (world <= 1) {
-							sendMessage(name + " has logged out.", 5, "");
-						}*/
-					}
+//						if (world <= 1) {
+//							sendMessage(name + " has logged out.", 5, "");
+//						}*/
+
 					name = null;
 
 				}

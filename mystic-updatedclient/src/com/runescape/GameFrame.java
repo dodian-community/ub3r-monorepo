@@ -24,7 +24,7 @@ public final class GameFrame extends Frame {
 
 	public GameFrame(GameApplet applet, int width, int height, boolean resizable, boolean fullscreen) {
 		this.applet = applet;
-		setTitle(Configuration.CLIENT_NAME + "    -   Version "+Configuration.CLIENT_VERSION+"   -    www.osrspk.com");
+		setTitle(Configuration.CLIENT_NAME + "    -   Version "+Configuration.CLIENT_VERSION+"   -    www.Dodian.net");
 		JButton screenshot = new JButton("screenshot");
 		JFrame.setDefaultLookAndFeelDecorated(true);
 		SwingUtilities.invokeLater(new Runnable() {
