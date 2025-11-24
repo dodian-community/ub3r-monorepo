@@ -2387,9 +2387,9 @@ public class Widget {
         addText(38149, "Who can kick on chat?", tda, 0, 0xff9040, true, true);
         addText(38150, "Only me", tda, 2, 0xffffff, true, true);
         addButton(37445, 37128, 9, 7, 508, 508, 37446, "Filter");
-        addHoveredButton_sprite_loader(37446, 509, 9, 7, 6666);
+        addHoveredButton_sprite_loader(37446, 509, 9, 7, 36667);
         addButton(37447, 37128, 9, 7, 508, 508, 37448, "Filter");
-        addHoveredButton_sprite_loader(37448, 509, 9, 7, 6666);
+        addHoveredButton_sprite_loader(37448, 509, 9, 7, 36668);
         interfaceCache[38136].actions = new String[] {
                 "Anyone",
                 "Any friends",

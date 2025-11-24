@@ -15525,20 +15525,8 @@ public class Client extends GameApplet {
 					int interfaceId = incoming.readInt();
 					int itemCount = incoming.readShort();
 
-					// DEBUG: Log duel interface updates (6669=your items, 6670=opponent items)
-					if (interfaceId == 6669 || interfaceId == 6670) {
-						System.out.println("[DUEL DEBUG] Interface: " + interfaceId + ", ItemCount: " + itemCount);
-					}
-
 					Widget widget = Widget.interfaceCache[interfaceId];
 					if(widget == null || widget.inventoryItemId == null || widget.inventoryAmounts == null) {
-						// DEBUG: Log if widget is missing
-						if (interfaceId == 6669 || interfaceId == 6670) {
-							System.out.println("[DUEL DEBUG] Widget issue for " + interfaceId +
-								": widget=" + (widget == null ? "null" : "exists") +
-								", inventoryItemId=" + (widget != null && widget.inventoryItemId != null ? "exists" : "null") +
-								", inventoryAmounts=" + (widget != null && widget.inventoryAmounts != null ? "exists" : "null"));
-						}
 						opcode = -1;
 						return true;
 					}
@@ -15561,17 +15549,6 @@ public class Client extends GameApplet {
 					for (int slot = itemCount; slot < widget.inventoryItemId.length; slot++) {
 						widget.inventoryItemId[slot] = 0;
 						widget.inventoryAmounts[slot] = 0;
-					}
-
-					// DEBUG: Log items received for duel interfaces
-					if (interfaceId == 6669 || interfaceId == 6670) {
-						StringBuilder sb = new StringBuilder("[DUEL DEBUG] Items in " + interfaceId + ": ");
-						for (int i = 0; i < Math.min(5, itemCount); i++) {
-							sb.append("(id=").append(widget.inventoryItemId[i])
-							  .append(",amt=").append(widget.inventoryAmounts[i]).append(") ");
-						}
-						if (itemCount > 5) sb.append("...");
-						System.out.println(sb.toString());
 					}
 
 				} catch(Exception e) {

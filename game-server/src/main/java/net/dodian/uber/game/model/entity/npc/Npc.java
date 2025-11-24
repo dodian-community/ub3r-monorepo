@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.npc;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -1171,6 +1172,11 @@ public class Npc extends Entity {
             } else burnDamage = new int[]{-1, -1, 4, 0, 0}; //Default
         }
         /* Stop! */
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.NPC;
     }
 
 }

@@ -2,7 +2,9 @@ package net.dodian.uber.game.model.entity.player;
 
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.chunk.ChunkPlayerComparator;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
@@ -40,6 +42,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             updateMsg.putShort(seconds * 50 / 30, ByteOrder.BIG);
             ((Client) player).send(updateMsg);
         }
+
+        // Ensure the player is registered in the chunk index before discovery.
+        player.syncChunkMembership();
 
         localPlayerUpdateRequired = player.getUpdateFlags().isUpdateRequired();
         updateLocalPlayerMovement(player, stream);
@@ -80,14 +85,34 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 }
             }
 
-            // Use region-based player discovery instead of scanning all 2k slots.
-            for (Player other : PlayerHandler.getLocalPlayers(player)) {
-                if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other)))
+            // Chunk-based player discovery with prioritization/limits.
+            java.util.Set<Player> nearbyPlayers = findNearbyPlayers(player);
+            java.util.List<Player> candidates = new java.util.ArrayList<>(nearbyPlayers);
+
+            if (candidates.size() > 50) {
+                candidates.sort(new ChunkPlayerComparator(player));
+            }
+
+            int playersAdded = 0;
+            for (Player other : candidates) {
+                if (player == other || other == null || !other.isActive) {
                     continue;
-                if (other.invis && !player.invis)
+                }
+
+                if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
                     continue;
+                }
+
+                if (other.invis && !player.invis) {
+                    continue;
+                }
+
                 player.addNewPlayer(other, stream, updateBlock);
-                if (player.playerListSize >= 255) break; // protocol hard-limit
+                playersAdded++;
+
+                if (playersAdded >= 15 || player.playerListSize >= 255) {
+                    break; // cap additions to avoid overflow
+                }
             }
         } else {
             stream.putBits(8, 0);
@@ -116,6 +141,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             int ry = player.getPosition().getY() >> 6;
             System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
         }
+    }
+
+    private java.util.Set<Player> findNearbyPlayers(Player player) {
+        if (Server.chunkManager == null) {
+            return new java.util.HashSet<>(PlayerHandler.getLocalPlayers(player));
+        }
+
+        java.util.Set<Player> nearby = Server.chunkManager.find(player.getPosition(), EntityType.PLAYER, 16);
+        nearby.remove(player); // exclude self if present
+        return nearby;
     }
 
 
@@ -248,15 +283,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public static void appendPlayerChatText(Player player, ByteMessage buf) {
         buf.putShort(((player.getChatTextColor() & 0xFF) << 8) + (player.getChatTextEffects() & 0xFF), ByteOrder.LITTLE); // writeWordBigEndian
         buf.put(player.playerRights);
-        
-        // Clamp chat text size to byte range (0-255) to prevent T2 packet size mismatch
-        int chatSize = Math.max(0, Math.min(player.getChatTextSize(), 255));
-        buf.put(chatSize, ValueType.NEGATE); // writeByteC = -value
-        
-        // Only write the used portion of chat text in reverse order
-        byte[] chatData = new byte[chatSize];
-        System.arraycopy(player.getChatText(), 0, chatData, 0, chatSize);
-        buf.putBytesReverse(chatData);
+
+        // Mystic client expects a null-terminated string for chat (not the packed 317 bytes).
+        String chatMessage = player.getChatTextMessage();
+        if (chatMessage == null) {
+            chatMessage = "";
+        }
+        buf.putString(chatMessage);
     }
 
     @Override
