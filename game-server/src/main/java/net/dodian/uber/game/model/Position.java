@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model;
 
+import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.utilities.Misc;
 
 public class Position {
@@ -156,6 +157,18 @@ public class Position {
      */
     public final int getRegionY() {
         return (y >> 3) - 6;
+    }
+
+    /**
+     * Gets the chunk that contains this position.
+     * Chunk coordinates are calculated as: (pos / 8) - 6
+     *
+     * @return The chunk containing this position
+     */
+    public Chunk getChunk() {
+        int chunkX = (x / Chunk.SIZE) - 6;
+        int chunkY = (y / Chunk.SIZE) - 6;
+        return new Chunk(chunkX, chunkY);
     }
 
     /**

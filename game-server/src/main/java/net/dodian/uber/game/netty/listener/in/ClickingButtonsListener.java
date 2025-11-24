@@ -47,17 +47,21 @@ public class ClickingButtonsListener implements PacketListener {
     static {
         // Ensure we override any bridge registration that might already exist
         PacketListenerManager.register(185, new ClickingButtonsListener());
+        // Mystic client sends most button clicks via opcode 186 (ClickButtonAction)
+        PacketListenerManager.register(186, new ClickingButtonsListener());
     }
 
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
         int packetSize = packet.getSize();
         ByteBuf payload = packet.getPayload();
-        byte[] data = new byte[packetSize];
-        payload.readBytes(data);
-        int actionButton = Utils.HexToInt(data, 0, packetSize);
-        if (getServerDebugMode()) {
-            client.println("button=" + actionButton);
+        if (packetSize < 4) {
+            logger.warn("ClickingButtons opcode 185 with unexpected size {} from {}", packetSize, client.getPlayerName());
+            return;
+        }
+        int actionButton = payload.readInt();
+        if (getServerDebugMode() || client.playerRights == 2) {
+            client.println_debug("ClickButton: " + actionButton + " (size=" + packetSize + ")");
         }
         if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) { //To prevent some shiez!
             client.lastButton = System.currentTimeMillis();
@@ -164,9 +168,36 @@ public class ClickingButtonsListener implements PacketListener {
                 client.send(new SendMessage("You disabled the boss yell messages."));
                 break;
             case 89223:
-                for (int i = 0; i < client.playerItems.length; i++) {
-                    client.bankItem(client.playerItems[i], i, client.playerItemsN[i]);
+            case 50004: // Mystic "Deposit inventory" button
+                if(!client.IsBanking) {
+                    break;
                 }
+                for (int i = 0; i < client.playerItems.length; i++) {
+                    if (client.playerItems[i] > 0) {
+                        client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
+                    }
+                }
+                client.send(new SendMessage("You deposit all your items."));
+                client.checkItemUpdate();
+                break;
+            case 50007: // Mystic "Deposit worn items" button
+                if(!client.IsBanking) {
+                    break;
+                }
+                for (int i = 0; i < client.getEquipment().length; i++) {
+                    int equipId = client.getEquipment()[i];
+                    int equipAmount = client.getEquipmentN()[i];
+                    if (equipId > 0 && equipAmount > 0) {
+                        if (client.hasSpace()) {
+                            if (client.remove(i, false)) {
+                                client.addItem(equipId, equipAmount);
+                                client.bankItem(equipId, client.GetItemSlot(equipId), equipAmount);
+                            }
+                        }
+                    }
+                }
+                client.send(new SendMessage("You deposit your worn items."));
+                client.checkItemUpdate();
                 break;
             case 3056: //Small tree
             case 3057: //Big Tree
@@ -618,7 +649,7 @@ public class ClickingButtonsListener implements PacketListener {
             case 2171: // Retribution
                 break;
 
-            case 14067: //Apperance accepted!
+            case 3651://14067: //Apperance accepted!
                 client.send(new RemoveInterfaces());
                 client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 break;
@@ -739,6 +770,7 @@ public class ClickingButtonsListener implements PacketListener {
                 }
                 break;
 
+            case 2458: // Mystic client logout button
             case 9154: // Log out
                 if(client.disconnected) break; //Cant logout if we disconnect!
                 if (System.currentTimeMillis() < client.walkBlock && !client.UsingAgility) {
@@ -833,6 +865,7 @@ public class ClickingButtonsListener implements PacketListener {
                 }
                 break;
 
+            case 2461: // Mystic client: option 1 on two-option dialogue (base 2459)
             case 9157:
                 if(client.discord) { //Yes
                     client.send(new RemoveInterfaces());
@@ -848,7 +881,7 @@ public class ClickingButtonsListener implements PacketListener {
                     client.NpcDialogue = 0;
                     client.NpcDialogueSend = false;
                     client.openUpShop(2);
-                } else if (client.NpcDialogue == 1001) { // Aubury
+                } else if (client.NpcDialogue == 1001) { // Aubury / dice
                     client.send(new SendFrame27());
                 } else if (client.NpcDialogue == 22) { // Makeover Mage
                     client.NpcDialogue = 23;
@@ -870,6 +903,7 @@ public class ClickingButtonsListener implements PacketListener {
                 }
                 break;
 
+            case 2462: // Mystic client: option 2 on two-option dialogue (base 2459)
             case 9158:
                 if(client.discord) { //No
                     client.send(new RemoveInterfaces());

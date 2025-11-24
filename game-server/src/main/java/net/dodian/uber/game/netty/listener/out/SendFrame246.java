@@ -39,7 +39,7 @@ public class SendFrame246 implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(246, MessageType.FIXED);
         
-        message.putShort(mainFrame, ByteOrder.BIG);
+        message.putShort(mainFrame, ByteOrder.LITTLE);
         message.putShort(subFrame);
         message.putShort(subFrame2);
         

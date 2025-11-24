@@ -12,6 +12,7 @@ import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -70,6 +71,7 @@ public class Server {
     public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
+    public static ChunkManager chunkManager = null;
 
 
     private static NettyGameServer nettyServer;
@@ -98,6 +100,7 @@ public class Server {
         logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
+        chunkManager = new ChunkManager();
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();

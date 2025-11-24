@@ -26,18 +26,7 @@ public class ByteMessageEncoder extends MessageToByteEncoder<ByteMessage> {
             int encOpcode = cipher == null ? opcode : (opcode + cipher.getNextKey()) & 0xFF;
 
             out.writeByte(encOpcode);
-            switch (type) {
-                case VAR:
-                    out.writeByte(length);
-                    break;
-                case VAR_SHORT:
-                    out.writeShort(length);
-                    break;
-                case FIXED:
-                case RAW:
-                default:
-                    break;
-            }
+            out.writeShort(length);
             out.writeBytes(payload, payload.readerIndex(), length);
         }
     }

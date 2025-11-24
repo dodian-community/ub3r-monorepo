@@ -273,10 +273,9 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     }
 
     private void sendLoginSuccess(ChannelHandlerContext ctx, int rights) {
-        ByteBuf resp = ctx.alloc().buffer(3);
+        ByteBuf resp = ctx.alloc().buffer(2);
         resp.writeByte(LOGIN_SUCCESS_CODE);
         resp.writeByte(rights);
-        resp.writeByte(0);
         ctx.writeAndFlush(resp);
     }
 

@@ -29,14 +29,9 @@ public class ChatListener implements PacketListener {
         PacketListenerManager.register(4, new ChatListener());
     }
 
-    private static int readUnsignedByteS(ByteBuf buf) {
-        return (128 - buf.readUnsignedByte()) & 0xFF;
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
         ByteBuf buf = packet.getPayload();
-        int size = packet.getSize();
 
         if (!client.validClient) {
             client.send(new SendMessage("Please use another client"));
@@ -51,23 +46,22 @@ public class ChatListener implements PacketListener {
             return;
         }
 
-        // Read effects and color using S transform
-        int effects = readUnsignedByteS(buf);
-        int color   = readUnsignedByteS(buf);
+        // Mystic client sends color then effect as raw bytes, followed by a null-terminated string.
+        int color = buf.readUnsignedByte();
+        int effects = buf.readUnsignedByte();
         client.setChatTextEffects(effects);
         client.setChatTextColor(color);
 
-        int textLen = size - 2;
-        client.setChatTextSize(textLen);  // Removed dangerous byte cast
-        byte[] chatBytes = new byte[textLen];
-        // readBytes_reverseA: iterate from end to start, subtract 128
-        for (int i = textLen - 1; i >= 0; i--) {
-            chatBytes[i] = (byte) (buf.readByte() - 128);
+        String chat = readTerminatedString(buf);
+        byte[] chatBytes = chat.getBytes();
+        int copyLen = Math.min(chatBytes.length, client.getChatText().length);
+        client.setChatTextSize(copyLen);
+        if (copyLen > 0) {
+            System.arraycopy(chatBytes, 0, client.getChatText(), 0, copyLen);
         }
-
-        String chat = Utils.textUnpack(chatBytes, textLen);
-        // copy to client's chatText buffer for update blocks
-        System.arraycopy(chatBytes, 0, client.getChatText(), 0, textLen);
+        client.setChatTextMessage(chat);
+        // Ensure any cached update block is rebuilt so viewers receive this chat.
+        client.invalidateCachedUpdateBlock();
         client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true);
         ChatLog.recordPublicChat(client, chat);
 
@@ -78,5 +72,17 @@ public class ChatListener implements PacketListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Chat from {}: {}", client.getPlayerName(), chat);
         }
+    }
+
+    private String readTerminatedString(ByteBuf buf) {
+        StringBuilder sb = new StringBuilder();
+        while (buf.isReadable()) {
+            byte b = buf.readByte();
+            if (b == 10 || b == 0) {
+                break;
+            }
+            sb.append((char) b);
+        }
+        return sb.toString();
     }
 }

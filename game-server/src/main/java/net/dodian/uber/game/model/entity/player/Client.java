@@ -212,7 +212,8 @@ public class Client extends Player implements Runnable {
      * @param skill The skill to refresh
      */
     public void refreshSkill(Skill skill) {
-        int level = Skills.getLevelForExperience(getExperience(skill));
+        int baseLevel = Skills.getLevelForExperience(getExperience(skill));
+        int level = baseLevel;
         if (skill == Skill.HITPOINTS) {
             level = getCurrentHealth();
         } else if (skill == Skill.PRAYER) {
@@ -220,12 +221,14 @@ public class Client extends Player implements Runnable {
         } else if (boostedLevel[skill.getId()] != 0) {
             level += boostedLevel[skill.getId()];
         }
-        
+
         setSkillLevel(skill, level, getExperience(skill));
         setLevel(level, skill);
-        
-        // Send the skill update packet
-        send(new RefreshSkill(skill, level, getExperience(skill)));
+
+        int maxLevel = baseLevel;
+
+        // Send the skill update packet (level, maxLevel, experience)
+        send(new RefreshSkill(skill, level, maxLevel, getExperience(skill)));
     }
 
     public int getbattleTimer(int weapon) {
@@ -285,9 +288,8 @@ public class Client extends Player implements Runnable {
     }
 
     public void animation2(int id, Position pos) {
-        send(new SetMap(pos));
-        send(new Animation2(id));
-        System.out.println("Animation: " + id);
+        send(new Animation2(id, pos, 0, 0));
+        System.out.println("Animation: " + id + " at " + pos);
     }
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
@@ -3129,6 +3131,8 @@ public class Client extends Player implements Runnable {
     }
 
     public void WriteEnergy() {
+        // Stub: always report 100% run energy to the client
+        send(new SendRunEnergy(100));
         send(new SendString("100%", 149));
     }
 

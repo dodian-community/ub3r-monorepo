@@ -144,39 +144,59 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendPrimaryHit(Npc npc, ByteMessage buf) {
-        buf.put(Math.min(npc.getDamageDealt(), 255), ValueType.NEGATE); // writeByteC = -value
-        if (npc.getDamageDealt() == 0)
-            buf.put(0, ValueType.SUBTRACT); // writeByteS = 128-value
-        else if (npc.getHitType() == Entity.hitType.BURN)
-            buf.put(4, ValueType.SUBTRACT);
-        else if (npc.getHitType() == Entity.hitType.CRIT)
-            buf.put(3, ValueType.SUBTRACT);
-        else if (npc.getHitType() == Entity.hitType.POISON)
-            buf.put(2, ValueType.SUBTRACT);
-        else
-            buf.put(1, ValueType.SUBTRACT);
-        double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
-        int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-        buf.put(value, ValueType.SUBTRACT); // writeByteS = 128-value
-        buf.put(100, ValueType.NEGATE); // writeByteC = -value
+
+        // Client npcUpdateMask (mask & 0x08) expects:
+        // short damage, byte type, short currentHp, short maxHp
+        int damage = npc.getDamageDealt();
+        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
+        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
+        buf.putShort(damage);
+
+        int type;
+        if (npc.getDamageDealt() == 0) {
+            type = 0; // miss
+        } else if (npc.getHitType() == Entity.hitType.BURN) {
+            type = 4;
+        } else if (npc.getHitType() == Entity.hitType.CRIT) {
+            type = 3;
+        } else if (npc.getHitType() == Entity.hitType.POISON) {
+            type = 2;
+        } else {
+            type = 1; // normal
+        }
+        buf.put(type);
+
+        int current = Math.max(0, npc.getCurrentHealth());
+        int max = Math.max(1, npc.getMaxHealth());
+        buf.putShort(current);
+        buf.putShort(max);
     }
 
     public void appendPrimaryHit2(Npc npc, ByteMessage buf) {
-        buf.put(Math.min(npc.getDamageDealt2(), 255), ValueType.ADD); // writeByteA = value+128
-        if (npc.getDamageDealt2() == 0)
-            buf.put(0); // writeByte (normal)
-        else if (npc.getHitType2() == Entity.hitType.BURN)
-            buf.put(-4); // writeByte (normal, already negative)
-        else if (npc.getHitType2() == Entity.hitType.CRIT)
-            buf.put(-3); // writeByte (normal, already negative)
-        else if (npc.getHitType2() == Entity.hitType.POISON)
-            buf.put(-2); // writeByte (normal, already negative)
-        else
-            buf.put(-1); // writeByte (normal, already negative)
-        double hp = Misc.getCurrentHP(npc.getCurrentHealth(), npc.getMaxHealth());
-        int value = hp > 4.00 ? (int) hp : hp != 0.0 ? 4 : 0;
-        buf.put(value, ValueType.SUBTRACT); // writeByteS = 128-value
-        buf.put(100, ValueType.NEGATE); // writeByteC = -value
+        // Client npcUpdateMask (mask & 0x40) uses the same layout as primary hit
+        int damage = npc.getDamageDealt2();
+        if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
+        if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
+        buf.putShort(damage);
+
+        int type;
+        if (npc.getDamageDealt2() == 0) {
+            type = 0; // miss
+        } else if (npc.getHitType2() == Entity.hitType.BURN) {
+            type = 4;
+        } else if (npc.getHitType2() == Entity.hitType.CRIT) {
+            type = 3;
+        } else if (npc.getHitType2() == Entity.hitType.POISON) {
+            type = 2;
+        } else {
+            type = 1; // normal
+        }
+        buf.put(type);
+
+        int current = Math.max(0, npc.getCurrentHealth());
+        int max = Math.max(1, npc.getMaxHealth());
+        buf.putShort(current);
+        buf.putShort(max);
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {

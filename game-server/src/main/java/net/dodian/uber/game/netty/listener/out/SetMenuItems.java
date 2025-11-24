@@ -24,8 +24,8 @@ public class SetMenuItems implements OutgoingPacket {
     public void send(Client client) {
         System.out.println("Set menu items: " + items.length);
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        msg.putShort(8847);                       // interface id
-        msg.putShort(items.length);               // number of items
+        msg.putInt(8847);                       // interface id
+        msg.putShort(items.length);             // number of items
         for (int id : items) {
             msg.put(1);                           // amount 1
             msg.putShort(id + 1, ByteOrder.LITTLE, ValueType.ADD); // item id

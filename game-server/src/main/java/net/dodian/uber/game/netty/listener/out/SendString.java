@@ -18,7 +18,7 @@ public class SendString implements OutgoingPacket {
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(126, MessageType.VAR_SHORT);
         message.putString(string);
-        message.putShort(lineId, ValueType.ADD);
+        message.putInt(lineId);
         client.send(message);
        // System.out.println("SendString: " + string + ", " + lineId);
     }

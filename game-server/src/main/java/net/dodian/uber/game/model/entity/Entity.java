@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.JobScheduler;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.UpdateFlags;
@@ -165,6 +166,13 @@ public abstract class Entity {
     public UpdateFlags getUpdateFlags() {
         return this.updateFlags;
     }
+
+    /**
+     * Gets the type of this entity.
+     *
+     * @return The entity type
+     */
+    public abstract EntityType getEntityType();
 
     public enum Type { NPC, PLAYER }
 

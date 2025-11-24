@@ -51,6 +51,9 @@ dependencies {
 
     implementation("io.netty:netty-all:4.1.108.Final")
     implementation("com.google.guava:guava:33.1.0-jre")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

@@ -41,12 +41,13 @@ public class Bank10Listener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.getPayload();
 
-        int interfaceId = readUnsignedWordBigEndian(buf);
+        // Mystic sends: int interfaceId, short nodeId (WordA), short slot (WordA)
+        int interfaceId = buf.readInt();
         int removeId = readUnsignedWordA(buf);
         int removeSlot = readUnsignedWordA(buf);
 
-        if (logger.isTraceEnabled()) {
-            logger.debug("Bank10 removeId={} interface={} slot={} player={}", removeId, interfaceId, removeSlot, client.getPlayerName());
+        if (client.playerRights == 2) {
+            client.println_debug("Bank10: interfaceId=" + interfaceId + " itemId=" + removeId + " slot=" + removeSlot);
         }
 
         final int amount = 10;
@@ -72,7 +73,7 @@ public class Bank10Listener implements PacketListener {
                 }
                 client.checkItemUpdate();
                 break;
-            case 5382: // bank → inventory
+            case 5382: // bank → inventory (legacy)
                 client.fromBank(removeId, removeSlot, amount);
                 break;
             case 2274: // party chest → inventory
@@ -84,7 +85,12 @@ public class Bank10Listener implements PacketListener {
                 }
                 break;
             default:
-                handleSpecialInterfaces(client, interfaceId, removeId, removeSlot);
+                // Mystic bank tab containers: 50300-50310
+                if (interfaceId >= 50300 && interfaceId <= 50310) {
+                    client.fromBank(removeId, removeSlot, amount);
+                } else {
+                    handleSpecialInterfaces(client, interfaceId, removeId, removeSlot);
+                }
                 break;
         }
     }

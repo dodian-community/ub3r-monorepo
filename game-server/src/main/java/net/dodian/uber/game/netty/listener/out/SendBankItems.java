@@ -40,7 +40,8 @@ public class SendBankItems implements OutgoingPacket {
      * @param amounts List of corresponding item amounts
      */
     public SendBankItems(List<Integer> itemIds, List<Integer> amounts) {
-        this(itemIds, amounts, 5382);
+        // Default to first bank tab container (50300) for mystic client's bank tabs
+        this(itemIds, amounts, 50300);
     }
 
     @Override
@@ -50,30 +51,27 @@ public class SendBankItems implements OutgoingPacket {
         }
 
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putShort(interfaceId); // writeWord - interface ID
-        message.putShort(itemIds.size()); // writeWord - number of items
+
+        // Mystic client SEND_UPDATE_ITEMS layout:
+        // int interfaceId, short itemCount,
+        // then for each slot: int amount, and if amount != 0 then short id (container value)
+
+        message.putInt(interfaceId);            // interface ID as int
+        message.putShort(itemIds.size());       // number of items
 
         for (int i = 0; i < itemIds.size(); i++) {
             int itemId = itemIds.get(i);
             int amount = amounts.get(i);
-            
-            // Handle large quantities
-            if (amount > 254) {
-                message.put(255); // writeByte - flag for large amount
-                // writeDWord_v2 - scrambled byte order [16-23][24-31][0-7][8-15]
-                message.put((amount >> 16) & 0xFF); // bits 16-23
-                message.put((amount >> 24) & 0xFF); // bits 24-31
-                message.put(amount & 0xFF);         // bits 0-7
-                message.put((amount >> 8) & 0xFF);  // bits 8-15
-            } else {
-                message.put(amount); // writeByte - small amount
+
+            // Amount as full int to match incoming.readInt()
+            message.putInt(amount);
+
+            if (amount != 0) {
+                int containerId = itemId + 1;  // container value (id + 1)
+                message.putShort(containerId, ByteOrder.BIG);
             }
-            
-            // writeWordBigEndianA: little-endian with ADD transformation on first byte
-            // Note: Original code adds 1 to item ID, preserving that behavior
-            message.putShort(itemId + 1, ByteOrder.LITTLE, ValueType.ADD);
         }
-        
+
         client.send(message);
     }
 }

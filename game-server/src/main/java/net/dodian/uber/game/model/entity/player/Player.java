@@ -7,6 +7,7 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
@@ -15,6 +16,8 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.Equipment;
+import net.dodian.uber.game.model.chunk.Chunk;
+import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.music.RegionSong;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
@@ -102,6 +105,8 @@ public abstract class Player extends Entity {
     public int playerListSize = 0;
     public ArrayList<Player> playersUpdating = new ArrayList<>();
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
+    private Chunk currentChunk;
+    private ChunkRepository chunkRepository;
     public boolean loaded = false;
     private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
     private int faceTarget = -1;
@@ -306,6 +311,7 @@ public abstract class Player extends Entity {
     }
 
     void destruct() {
+        removeFromChunk();
         getPosition().moveTo(-1, -1);
         mapRegionX = mapRegionY = -1;
         currentX = currentY = 0;
@@ -738,6 +744,7 @@ public abstract class Player extends Entity {
     private final byte[] chatText = new byte[4096];
     private int chatTextSize = 0;  // Changed from byte to int to handle chat text > 127 chars
     private int chatTextEffects = 0, chatTextColor = 0;
+    private String chatTextMessage = "";
 
     public byte[] getChatText() {
         return this.chatText;
@@ -765,6 +772,14 @@ public abstract class Player extends Entity {
 
     public void setChatTextColor(int chatTextColor) {
         this.chatTextColor = chatTextColor;
+    }
+
+    public String getChatTextMessage() {
+        return chatTextMessage;
+    }
+
+    public void setChatTextMessage(String chatTextMessage) {
+        this.chatTextMessage = chatTextMessage == null ? "" : chatTextMessage;
     }
 
     public void clearUpdateFlags() {
@@ -1872,19 +1887,19 @@ public abstract class Player extends Entity {
     public void resetTabs() {
         Client c = ((Client) this);
         c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
-        c.setSidebarInterface(1, 24126); // skills tab
-        c.setSidebarInterface(2, 638); // quest tab
+        c.setSidebarInterface(1, 10000); // skills tab (mystic custom)
+        c.setSidebarInterface(2, 638); // quest tab (original)
         c.setSidebarInterface(3, 3213); // backpack tab
         c.setSidebarInterface(4, 1644); // items wearing tab
         c.setSidebarInterface(5, 5608); // pray tab
-        c.setSidebarInterface(6, c.ancients == 1 ? 12855 : 1151);
-        c.setSidebarInterface(7, -1); //Unsure what this is!
+        c.setSidebarInterface(6, c.ancients == 1 ? 12855 : 1151); // magic spellbook
+        c.setSidebarInterface(7, 37128); // clan chat tab
         c.setSidebarInterface(8, 5065); // friend
         c.setSidebarInterface(9, 5715); // ignore
         c.setSidebarInterface(10, 2449); // logout tab
-        c.setSidebarInterface(11, 904); // wrench tab
-        c.setSidebarInterface(12, 147); // run tab
-        c.setSidebarInterface(13, 962); // harp tab
+        c.setSidebarInterface(11, 44500); // wrench tab - complete settings (fullscreen, zoom, key bindings, etc.)
+        c.setSidebarInterface(12, 147);   // run/emotes tab (mystic keeps 147 here)
+        c.setSidebarInterface(13, 32000); // PvP/info tab (replaces music tab)
     }
     public void clearTabs() {
         for (int i = 0; i <= 13; i++)
@@ -1921,6 +1936,48 @@ public abstract class Player extends Entity {
         if(text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";
         c.showPlayerOption(text);
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.PLAYER;
+    }
+
+    public Chunk getCurrentChunk() {
+        return currentChunk;
+    }
+
+    public ChunkRepository getChunkRepository() {
+        return chunkRepository;
+    }
+
+    public void syncChunkMembership() {
+        if (Server.chunkManager == null) {
+            return;
+        }
+
+        Chunk newChunk = getPosition().getChunk();
+
+        if (currentChunk != null && currentChunk.equals(newChunk) && chunkRepository != null) {
+            return;
+        }
+
+        if (chunkRepository != null) {
+            chunkRepository.remove(this);
+        }
+
+        ChunkRepository repo = Server.chunkManager.load(newChunk);
+        repo.add(this);
+        currentChunk = newChunk;
+        chunkRepository = repo;
+    }
+
+    public void removeFromChunk() {
+        if (chunkRepository != null) {
+            chunkRepository.remove(this);
+        }
+        chunkRepository = null;
+        currentChunk = null;
     }
 
 }

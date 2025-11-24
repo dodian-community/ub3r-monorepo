@@ -18,9 +18,10 @@ public class NpcDialogueHead implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(75);
-        // Try without ValueType.ADD - method436() might expect normal shorts
-        message.putShort(mainFrame, ByteOrder.BIG, ValueType.NORMAL);
-        message.putShort(subFrame, ByteOrder.BIG, ValueType.NORMAL);
+        // Client reads: readLEUShortA() for npcId, readLEUShortA() for interfaceId
+        // LEUShortA = Little-Endian Unsigned Short with ADD transform on low byte
+        message.putShort(mainFrame, ByteOrder.LITTLE, ValueType.ADD);
+        message.putShort(subFrame, ByteOrder.LITTLE, ValueType.ADD);
         client.send(message);
     }
 

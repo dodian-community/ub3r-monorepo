@@ -11,12 +11,12 @@ import java.util.List;
  * Sends an inventory (or any item container) update to the client.
  * <p>
  * Opcode: 53 (variable-short length)
- * Layout (legacy Stream equivalent):
- *   - interface id:        writeWord (big-endian)
- *   - size:                writeWord (big-endian)
- *   - for each item
- *        * amount > 254 ? 0xFF + writeDWord_v2(amount) : writeByte(amount)
- *        * item id:        writeWordBigEndianA(id + 1)
+ * Layout matching Client.java:15522-15582:
+ *   - interface id:        int (4 bytes, big-endian)
+ *   - item count:          short (2 bytes, big-endian)
+ *   - for each item:
+ *        * amount:         int (4 bytes, big-endian)
+ *        * item id:        short (2 bytes, big-endian) - only if amount != 0
  */
 public class SendInventory implements OutgoingPacket {
 
@@ -32,22 +32,20 @@ public class SendInventory implements OutgoingPacket {
     public void send(Client client) {
         System.out.println("Send inventory: " + interfaceId);
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        // interface id – standard big-endian word
-        msg.putShort(interfaceId, ByteOrder.BIG);
-        // number of items
+        // interface id as int to match client.readInt()
+        msg.putInt(interfaceId);
+        // number of items as short
         msg.putShort(items.size(), ByteOrder.BIG);
 
         for (GameItem item : items) {
             int amount = item.getAmount();
-            if (amount > 254) {
-                msg.put(255); // sentinel
-                // amount in INVERSE_MIDDLE order (see writeDWord_v2)
-                msg.putInt(amount, ByteOrder.INVERSE_MIDDLE);
-            } else {
-                msg.put(amount);
+            // Client ALWAYS reads amount as int (4 bytes)
+            msg.putInt(amount, ByteOrder.BIG);
+
+            // Client only reads item ID if amount != 0
+            if (amount != 0) {
+                msg.putShort(item.getId(), ByteOrder.BIG);
             }
-            // item id + 1 using writeWordBigEndianA semantics: low+128, then high
-            msg.putShort(item.getId() + 1, ByteOrder.LITTLE, ValueType.ADD);
         }
         client.send(msg);
     }

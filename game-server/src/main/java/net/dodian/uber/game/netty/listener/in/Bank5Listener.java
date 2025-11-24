@@ -44,12 +44,16 @@ public class Bank5Listener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.getPayload();
 
-        int interfaceId = readSignedWordBigEndianA(buf);
+        // Mystic sends (ItemContainerOption2):
+        // int interfaceId (putInt)
+        // short nodeId (writeSignedBigEndian)
+        // short slot   (writeUnsignedWordBigEndian)
+        int interfaceId = buf.readInt();
         int removeId = readSignedWordBigEndianA(buf);
-        int removeSlot = readSignedWordBigEndian(buf);
+        int removeSlot = readSignedWordBigEndian(buf) & 0xFFFF;
 
-        if (logger.isTraceEnabled()) {
-            logger.debug("Bank5 removeId={} interface={} slot={} player={}", removeId, interfaceId, removeSlot, client.getPlayerName());
+        if (client.playerRights == 2) {
+            client.println_debug("Bank5: interfaceId=" + interfaceId + " itemId=" + removeId + " slot=" + removeSlot);
         }
 
         final int amount = 5;
@@ -75,7 +79,7 @@ public class Bank5Listener implements PacketListener {
                 }
                 client.checkItemUpdate();
                 break;
-            case 5382: // bank → inventory
+            case 5382: // bank → inventory (legacy)
                 client.fromBank(removeId, removeSlot, amount);
                 break;
             case 2274: // party chest → inventory
@@ -87,8 +91,12 @@ public class Bank5Listener implements PacketListener {
                 }
                 break;
             default:
-                // crafting / shop / smithing etc use quantity 1 in Bank5 legacy logic; handled elsewhere
-                handleSpecialInterfaces(client, interfaceId, removeId, removeSlot);
+                // Mystic bank tab containers: 50300-50310
+                if (interfaceId >= 50300 && interfaceId <= 50310) {
+                    client.fromBank(removeId, removeSlot, amount);
+                } else {
+                    handleSpecialInterfaces(client, interfaceId, removeId, removeSlot);
+                }
                 break;
         }
     }
