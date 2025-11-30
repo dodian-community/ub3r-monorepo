@@ -61,19 +61,18 @@ public class ClickItemListener implements PacketListener {
         int high = buf.readUnsignedByte();
         return (high << 8) | low;
     }
-    //</editor-fold>
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.getPayload();
 
         // Faithful replication of legacy decoding order with the corrected item ID read.
-        readSignedWordBigEndianA(buf); // This value is read and discarded.
-        int itemSlot = readUnsignedWordA(buf);
-        int itemId = readLEShort(buf);
+        int interfaceId = buf.readUnsignedShort();
+        int itemId = buf.readUnsignedShort();
+        int itemSlot = buf.readUnsignedShort();
 
         // Debug line to confirm packet data is now being read correctly.
-        logger.debug("ClickItem: [slot={}, id={}] for player {}", itemSlot, itemId, client.getPlayerName());
+        logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 
         if (client.fillEssencePouch(itemId)) {
             return;
