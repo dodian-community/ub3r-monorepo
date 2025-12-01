@@ -17,7 +17,7 @@ public class PlayerDialogueHead implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(185);
-        message.putShort(mainFrame, ByteOrder.BIG, ValueType.ADD);
+        message.putShort(mainFrame, ByteOrder.LITTLE, ValueType.ADD);
         client.send(message);
     }
 
