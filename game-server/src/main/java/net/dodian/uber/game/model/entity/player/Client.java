@@ -6786,6 +6786,9 @@ public class Client extends Player implements Runnable {
         for (Friend f : friends) {
             if (f.name == name) {
                 friends.remove(f);
+                // Notify client to remove this friend from its local list (opcode 51)
+                send(new RemoveFriend(name));
+                // Refresh remaining friends' online/offline statuses
                 refreshFriends();
                 return;
             }
