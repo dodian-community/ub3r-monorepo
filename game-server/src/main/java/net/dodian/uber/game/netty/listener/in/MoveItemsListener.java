@@ -27,16 +27,16 @@ public class MoveItemsListener implements PacketListener {
         ByteMessage msg = ByteMessage.wrap(packet.getPayload());
         
         // Read values using the same byte order as the original packet
-        int interfaceId = msg.getInt();
-        msg.get(); // mode/param2 (not used server-side)
-        int itemFrom = msg.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
-        int itemTo = msg.getShort(false, ByteOrder.LITTLE);
+        int someJunk = msg.getShort(false, ByteOrder.BIG, ValueType.ADD); // First short with ADD transformation
+        msg.get(); // Skip emptySlot (always 255)
+        int itemFrom = msg.getShort(false, ByteOrder.BIG, ValueType.ADD); // Second short with ADD transformation
+        int itemTo = msg.getShort(); // Regular short read (big endian)
 
         if (client.playerRights >= 2) {
-            client.println_debug("MoveItems: iface=" + interfaceId + " from=" + itemFrom + " to=" + itemTo);
+            client.println_debug("MoveItems: junk=" + someJunk + " from=" + itemFrom + " to=" + itemTo);
         }
 
-        logger.debug("MoveItems: iface={} from={} to={}", interfaceId, itemFrom, itemTo);
-        client.moveItems(itemFrom, itemTo, interfaceId);
+        logger.debug("MoveItems: junk={} from={} to={}", someJunk, itemFrom, itemTo);
+        client.moveItems(itemFrom, itemTo, someJunk);
     }
 }
