@@ -35,9 +35,9 @@ public class ItemLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
-        Statement statement = null;
-        try {
-            statement = getDbConnection().createStatement();
+        
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             String query = "INSERT INTO " + DbTables.GAME_LOGS_ITEMS + "(receiver, type, from_id, item_id, item_amount, timestamp, x, y, z, reason) VALUES(" +
 "'" + player.dbId + "', '1', '" + userId + "', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '"+(npc ? "npc" : "player")+"')";
             statement.executeUpdate(query);
@@ -45,12 +45,6 @@ public class ItemLog extends LogEntry {
             logger.severe("Unable to record player picking up items!");
             e.printStackTrace();
             YellSystem.alertStaff("Unable to record player pickup of a item, please contact an admin.");
-        } finally {
-            try {
-                if (statement != null) statement.close();
-            } catch (Exception e) {
-                System.out.println("Error closing resources in playerPickup: " + e);
-            }
         }
     }
 
@@ -64,9 +58,9 @@ public class ItemLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
-        Statement statement = null;
-        try {
-            statement = getDbConnection().createStatement();
+        
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             String query = "INSERT INTO " + DbTables.GAME_LOGS_ITEMS + "(receiver, type, from_id, item_id, item_amount, timestamp, x, y, z, reason) VALUES(" +
                     "'" + player.dbId + "', '2', '-1', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '"+(reason.isEmpty() ? "player" : reason)+"')";
             statement.executeUpdate(query);
@@ -74,12 +68,6 @@ public class ItemLog extends LogEntry {
             logger.severe("Unable to record player dropping items!");
             e.printStackTrace();
             YellSystem.alertStaff("Unable to record player drop of a item, please contact an admin.");
-        } finally {
-            try {
-                if (statement != null) statement.close();
-            } catch (Exception e) {
-                System.out.println("Error closing resources in playerDrop: " + e);
-            }
         }
     }
     /**
@@ -92,9 +80,9 @@ public class ItemLog extends LogEntry {
         if (getGameWorldId() > 1) {
             return;
         }
-        Statement statement = null;
-        try {
-            statement = getDbConnection().createStatement();
+        
+        try (java.sql.Connection conn = getDbConnection();
+             Statement statement = conn.createStatement()) {
             String query = "INSERT INTO " + DbTables.GAME_LOGS_ITEMS + "(receiver, type, from_id, item_id, item_amount, timestamp, x, y, z, reason) VALUES(" +
                     "'" + player.dbId + "', '2', '"+npcId+"', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', 'npc')";
             statement.executeUpdate(query);
@@ -102,12 +90,6 @@ public class ItemLog extends LogEntry {
             logger.severe("Unable to record npc dropping items!");
             e.printStackTrace();
             YellSystem.alertStaff("Unable to record npc drop of a item, please contact an admin.");
-        } finally {
-            try {
-                if (statement != null) statement.close();
-            } catch (Exception e) {
-                System.out.println("Error closing resources in npcDrop: " + e);
-            }
         }
     }
 

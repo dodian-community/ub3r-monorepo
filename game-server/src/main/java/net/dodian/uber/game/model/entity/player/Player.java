@@ -1887,19 +1887,19 @@ public abstract class Player extends Entity {
     public void resetTabs() {
         Client c = ((Client) this);
         c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
-        c.setSidebarInterface(1, 10000); // skills tab (mystic custom)
+        c.setSidebarInterface(1, 3917); // skills tab (mystic custom)
         c.setSidebarInterface(2, 638); // quest tab (original)
         c.setSidebarInterface(3, 3213); // backpack tab
         c.setSidebarInterface(4, 1644); // items wearing tab
         c.setSidebarInterface(5, 5608); // pray tab
         c.setSidebarInterface(6, c.ancients == 1 ? 12855 : 1151); // magic spellbook
-        c.setSidebarInterface(7, 37128); // clan chat tab
+       // c.setSidebarInterface(7, 37128); // clan chat tab
         c.setSidebarInterface(8, 5065); // friend
         c.setSidebarInterface(9, 5715); // ignore
         c.setSidebarInterface(10, 2449); // logout tab
         c.setSidebarInterface(11, 44500); // wrench tab - complete settings (fullscreen, zoom, key bindings, etc.)
         c.setSidebarInterface(12, 147);   // run/emotes tab (mystic keeps 147 here)
-        c.setSidebarInterface(13, 32000); // PvP/info tab (replaces music tab)
+        c.setSidebarInterface(13, 962); // PvP/info 32000
     }
     public void clearTabs() {
         for (int i = 0; i <= 13; i++)
