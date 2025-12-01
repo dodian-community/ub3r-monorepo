@@ -1887,7 +1887,7 @@ public abstract class Player extends Entity {
     public void resetTabs() {
         Client c = ((Client) this);
         c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
-        c.setSidebarInterface(1, 10000); // skills tab (mystic custom)
+        c.setSidebarInterface(1, 3917); // skills tab (mystic custom)
         c.setSidebarInterface(2, 638); // quest tab (original)
         c.setSidebarInterface(3, 3213); // backpack tab
         c.setSidebarInterface(4, 1644); // items wearing tab
