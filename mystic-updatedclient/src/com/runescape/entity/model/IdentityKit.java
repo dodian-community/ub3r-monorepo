@@ -53,7 +53,7 @@ public final class IdentityKit {
 			else if (opcode >= 50 && opcode < 60)
 				replacementColors[opcode - 50] = buffer.readUShort();
 			else if (opcode >= 60 && opcode < 70)
-				headModels[opcode - 60] = buffer.readUShort();
+				headModels[opcode - 60] = buffer.readShort();
 			else
 				System.out.println("Error unrecognised config code: " + opcode);
 		} while (true);
