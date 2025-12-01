@@ -12121,27 +12121,36 @@ public class Client extends GameApplet {
 	private int bankItemDragSpriteX, bankItemDragSpriteY;
 
 	private void addIgnore(long name) {
+		//try {
 		if (name == 0L)
 			return;
-		if (ignoreCount >= 100) {
-			sendMessage("Your ignore list is full. Max of 100 hit", 0, "");
-			return;
-		}
-		String s = StringUtils.formatText(StringUtils.decodeBase37(name));
-		for (int j = 0; j < ignoreCount; j++) {
-			if (ignoreListAsLongs[j] == name) {
-				sendMessage(s + " is already on your ignore list", 0, "");
-				return;
-			}
-		}
-		for (int k = 0; k < friendsCount; k++) {
-			if (friendsListAsLongs[k] == name) {
-				sendMessage("Please remove " + s + " from your friend list first", 0, "");
-				return;
-			}
-		}
-		ignoreListAsLongs[ignoreCount++] = name;
 		sendPacket(new AddIgnore(name));
+		/*	if (ignoreCount >= 100) {
+				sendMessage("Your ignore list is full. Max of 100 hit", 0, "");
+				return;
+			}
+			String s = StringUtils.formatText(StringUtils.decodeBase37(name));
+			for (int j = 0; j < ignoreCount; j++)
+				if (ignoreListAsLongs[j] == name) {
+					sendMessage(s + " is already on your ignore list", 0, "");
+					return;
+				}
+			for (int k = 0; k < friendsCount; k++)
+				if (friendsListAsLongs[k] == name) {
+					sendMessage("Please remove " + s + " from your friend list first", 0,
+							"");
+					return;
+				}
+
+			//ignoreListAsLongs[ignoreCount++] = name;
+			//add ignore
+			sendPacket(new AddIgnore(name));
+			return;
+		} catch (RuntimeException runtimeexception) {
+			SignLink.reporterror(
+					"45688, " + name + ", " + 4 + ", " + runtimeexception.toString());
+		}
+		throw new RuntimeException();*/
 	}
 
 	private void processPlayerMovement() {
@@ -12460,17 +12469,27 @@ public class Client extends GameApplet {
 	}
 
 	private void removeIgnore(long name) {
+		//	try {
 		if (name == 0L)
 			return;
-		for (int index = 0; index < ignoreCount; index++) {
-			if (ignoreListAsLongs[index] == name) {
-				ignoreCount--;
-				System.arraycopy(ignoreListAsLongs, index + 1, ignoreListAsLongs,
-						index, ignoreCount - index);
-				break;
-			}
-		}
 		sendPacket(new DeleteIgnore(name));
+		/*for (int index = 0; index < ignoreCount; index++)
+				if (ignoreListAsLongs[index] == name) {
+					ignoreCount--;
+					System.arraycopy(ignoreListAsLongs, index + 1, ignoreListAsLongs,
+							index, ignoreCount - index);
+
+					// remove ignore
+					sendPacket(new DeleteIgnore(name));
+					return;
+				}
+
+			return;
+		} catch (RuntimeException runtimeexception) {
+			SignLink.reporterror(
+					"47229, " + 3 + ", " + name + ", " + runtimeexception.toString());
+		}
+		throw new RuntimeException();*/
 	}
 
 	public String getParameter(String s) {
