@@ -5571,7 +5571,6 @@ public class Client extends GameApplet {
 					Configuration.bountyHunterInterface = !Configuration.bountyHunterInterface;
 					savePlayerData();
 					updateSettings();
-					sendPacket(new ClickButton(button));
 					break;
 				case 53007:
 					Configuration.escapeCloseInterface = !Configuration.escapeCloseInterface;
