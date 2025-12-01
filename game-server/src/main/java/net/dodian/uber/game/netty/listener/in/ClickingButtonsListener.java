@@ -15,7 +15,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.SetTabInterface;
-import net.dodian.uber.game.netty.listener.out.ShowInterface;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -138,12 +137,6 @@ public class ClickingButtonsListener implements PacketListener {
         }
         Emotes.doEmote(actionButton, client);
         switch (actionButton) {
-            case 44511: // Mystic settings tab: "More Settings" (swap wrench tab to basic settings/fog interface)
-                client.setSidebarInterface(11, 23000);
-                break;
-            case 23020: // Mystic basic settings: Confirm (restore original wrench/settings tab interface)
-                client.setSidebarInterface(11, 44500);
-                break;
             case 58073:
                 client.send(new SendMessage("Visit the Dodian.net UserCP and click edit pin to remove your pin"));
                 break;
@@ -256,7 +249,6 @@ public class ClickingButtonsListener implements PacketListener {
             case 74212:
             case 49047: // old magic on
             case 49046: // old magic off
-            case 23024:
                 if (client.ancients == 1) {
                     client.setSidebarInterface(6, 1151); // magic tab (ancient =
                     // 12855);
