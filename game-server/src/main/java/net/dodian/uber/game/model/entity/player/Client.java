@@ -74,6 +74,13 @@ public class Client extends Player implements Runnable {
     public int maxQuests = QuestSend.values().length;
     public int[] quests = new int[maxQuests];
     public int[] playerBonus = new int[12];
+    private Map<Integer, String> uiTextCache = new HashMap<>();
+    private int lastWildLevelSent = -1;
+    private String lastTopBarText = null;
+    private int currentWalkableInterface = -1;
+    private final boolean[] lastMenuEnabled = new boolean[6];
+    private final String[] lastMenuText = new String[6];
+    private boolean menuCacheInitialized = false;
     /**
      * Tracks if the client window currently has focus.
      */
@@ -229,6 +236,40 @@ public class Client extends Player implements Runnable {
 
         // Send the skill update packet (level, maxLevel, experience)
         send(new RefreshSkill(skill, level, maxLevel, getExperience(skill)));
+    }
+
+    public void sendCachedString(String text, int lineId) {
+        String previous = uiTextCache.get(lineId);
+        if (previous != null && previous.equals(text)) {
+            return;
+        }
+        uiTextCache.put(lineId, text);
+        send(new SendString(text, lineId));
+    }
+
+    public void setWalkableInterface(int id) {
+        if (currentWalkableInterface == id) {
+            return;
+        }
+        currentWalkableInterface = id;
+        send(new SetInterfaceWalkable(id));
+    }
+
+    public void setPlayerContextMenu(int slot, boolean enabled, String text) {
+        if (slot < 0 || slot >= lastMenuEnabled.length) {
+            send(new PlayerContextMenu(slot, enabled, text));
+            return;
+        }
+        if (!menuCacheInitialized) {
+            Arrays.fill(lastMenuText, null);
+            menuCacheInitialized = true;
+        }
+        if (lastMenuEnabled[slot] == enabled && Objects.equals(lastMenuText[slot], text)) {
+            return;
+        }
+        lastMenuEnabled[slot] = enabled;
+        lastMenuText[slot] = text;
+        send(new PlayerContextMenu(slot, enabled, text));
     }
 
     public int getbattleTimer(int weapon) {
@@ -511,7 +552,7 @@ public class Client extends Player implements Runnable {
             message.release();
             return;
         }
-        
+
         // Pure Netty - send directly through the pipeline
         channel.writeAndFlush(message);
     }
@@ -520,7 +561,9 @@ public class Client extends Player implements Runnable {
         if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
+       
         packet.send(this);
+        
     }
 
     @Override
@@ -1738,14 +1781,14 @@ public class Client extends Player implements Runnable {
         //RegionMusic.handleRegionMusic(this);
         /* Other timers! */
         if (mutedTill <= rightNow) {
-            send(new SendString(invis ? "You are invisible!" : "", 6572));
+            sendCachedString(invis ? "You are invisible!" : "", 6572);
         } else {
             int mutedHours = 0;
             int mutedDays = (int) ((mutedTill - rightNow) / 86_400_000);
             if (mutedDays == 0)
                 mutedHours = (int) ((mutedTill - rightNow) / 3_600_000);
             mutedHours = Math.max(mutedHours, 1);
-            send(new SendString("Muted: " + (mutedDays > 0 ? mutedDays + " days" : mutedHours + " hours"), 6572));
+            sendCachedString("Muted: " + (mutedDays > 0 ? mutedDays + " days" : mutedHours + " hours"), 6572);
         }
         if (getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
             boolean gotIcon = getEquipment()[Equipment.Slot.NECK.getId()] == 8923 || gotSlayerHelmet(this);
@@ -1815,25 +1858,25 @@ public class Client extends Player implements Runnable {
         } else
             setWildLevel(getWildLevel());
         if (duelFight || inWildy()) {
-            send(new PlayerContextMenu(3, true, "Attack"));
-            send(new PlayerContextMenu(2, false, "null"));
+            setPlayerContextMenu(3, true, "Attack");
+            setPlayerContextMenu(2, false, "null");
             if (!inWildy()) {
-                send(new PlayerContextMenu(4, false, "null"));
+                setPlayerContextMenu(4, false, "null");
             } else {
-                send(new PlayerContextMenu(4, false, "Trade with"));
+                setPlayerContextMenu(4, false, "Trade with");
             }
         } else {
-            send(new PlayerContextMenu(3, true, "null"));
-            send(new PlayerContextMenu(4, false, "Trade with"));
-            send(new PlayerContextMenu(2, false, "Duel"));
+            setPlayerContextMenu(3, true, "null");
+            setPlayerContextMenu(4, false, "Trade with");
+            setPlayerContextMenu(2, false, "Duel");
             if (playerRights > 0) {
-                send(new PlayerContextMenu(5, false, "Mod Action Lookup"));
+                setPlayerContextMenu(5, false, "Mod Action Lookup");
             }
         }
         if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
-            send(new PlayerContextMenu(1, true, "Whack"));
+            setPlayerContextMenu(1, true, "Whack");
         } else {
-            send(new PlayerContextMenu(1, false, "null"));
+            setPlayerContextMenu(1, false, "null");
         }
         if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
             pickUpItem(attemptGround.x, attemptGround.y);
@@ -7599,14 +7642,32 @@ public class Client extends Player implements Runnable {
 
     public void setWildLevel(int level) {
         wildyLevel = level;
-        send(new SetWildernessLevel(level));
+        // When leaving wilderness (level <= 0), do not send a "Level: 0" overlay.
+        // updatePlayerDisplay() will restore the normal walkable interface instead.
+        if (level <= 0) {
+            lastWildLevelSent = level;
+            return;
+        }
+
+        if (level != lastWildLevelSent) {
+            send(new SetWildernessLevel(level));
+            lastWildLevelSent = level;
+            // The wilderness overlay uses walkable interface id 197.
+            // Keep the cached walkable-interface state in sync so that
+            // setWalkableInterface(6673) can properly restore the normal UI.
+            currentWalkableInterface = 197;
+        }
     }
 
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
-        send(new SendString(serverName + " (" + PlayerHandler.getPlayerCount() + " online)", 6570));
-        send(new SendString("", 6664));
-        send(new SetInterfaceWalkable(6673));
+        String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
+        if (!text.equals(lastTopBarText)) {
+            lastTopBarText = text;
+            send(new SendString(text, 6570));
+        }
+        sendCachedString("", 6664);
+        setWalkableInterface(6673);
     }
 
     public void playerKilled(Client other) {
