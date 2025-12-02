@@ -50,36 +50,36 @@ public enum QuestSend {
     }
 
     public static QuestSend questInterface(Client c) {
-        c.send(new SendString("Dodian Quests", 640));
-        c.send(new SendString("Premium", 663));
-        c.send(new SendString("Other Stuff", 682));
+        c.sendCachedString("Dodian Quests", 640);
+        c.sendCachedString("Premium", 663);
+        c.sendCachedString("Other Stuff", 682);
         for (QuestSend quest : values()) {
             if (c.quests[quest.getId()] == 0)
-                c.send(new SendString("@red@" + quest.getName(), quest.getConfig()));
+                c.sendCachedString("@red@" + quest.getName(), quest.getConfig());
             if (c.quests[quest.getId()] > 0 && c.quests[quest.getId()] < quest.getEnd())
-                c.send(new SendString("@yel@" + quest.getName(), quest.getConfig()));
+                c.sendCachedString("@yel@" + quest.getName(), quest.getConfig());
             if (c.quests[quest.getId()] == quest.getEnd())
-                c.send(new SendString("@gre@" + quest.getName(), quest.getConfig()));
+                c.sendCachedString("@gre@" + quest.getName(), quest.getConfig());
         }
         return null;
     }
     public static QuestSend serverInterface(Client c) {
         long uptimeMinutes = (System.currentTimeMillis() - Server.serverStartup) / 60000;
         String hourText = uptimeMinutes % 60 == 0 ? (uptimeMinutes/60) + "" : new DecimalFormat("0.000").format(uptimeMinutes/60D);
-        c.send(new SendString("Dodian Server", 640));
-        c.send(new SendString("", 682)); //7332
-        c.send(new SendString("@gre@[@whi@"+(uptimeMinutes < 60 ? uptimeMinutes + "@gre@] minutes" : hourText+"@gre@] hours")+" uptime", 663));
-        c.send(new SendString("@lre@Boss Log", 7332));
-        c.send(new SendString("@lre@Monster Log", 7333));
-        c.send(new SendString("@lre@Commands", 7334));
-        c.send(new SendString("@lre@------------@dre@Links@lre@------------", 7336));
-        c.send(new SendString("@gre@News", 7383));
-        c.send(new SendString("@gre@Guides", 7339));
-        c.send(new SendString("@gre@Account Services", 7338));
-        c.send(new SendString("@gre@Discord", 7340));
+        c.sendCachedString("Dodian Server", 640);
+        c.sendCachedString("", 682); //7332
+        c.sendCachedString("@gre@[@whi@"+(uptimeMinutes < 60 ? uptimeMinutes + "@gre@] minutes" : hourText+"@gre@] hours")+" uptime", 663);
+        c.sendCachedString("@lre@Boss Log", 7332);
+        c.sendCachedString("@lre@Monster Log", 7333);
+        c.sendCachedString("@lre@Commands", 7334);
+        c.sendCachedString("@lre@------------@dre@Links@lre@------------", 7336);
+        c.sendCachedString("@gre@News", 7383);
+        c.sendCachedString("@gre@Guides", 7339);
+        c.sendCachedString("@gre@Account Services", 7338);
+        c.sendCachedString("@gre@Discord", 7340);
         if(c.playerRights > 0) {
-            c.send(new SendString("@lre@---------@dre@Moderator@lre@---------", 7346));
-            c.send(new SendString("@gre@Game CP", 7341));
+            c.sendCachedString("@lre@---------@dre@Moderator@lre@---------", 7346);
+            c.sendCachedString("@gre@Game CP", 7341);
         }
         return null;
     }
