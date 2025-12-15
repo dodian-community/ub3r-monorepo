@@ -37,6 +37,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.dodian.uber.api.WebApiKt.launchWebApi;
 import static net.dodian.utilities.DotEnvKt.*;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
@@ -141,6 +142,8 @@ public class Server {
         System.gc();
         Login.banUid();
        logger.info("Server is now running on world " + getGameWorldId() + "!");
+
+       launchWebApi();
     }
 
 
