@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
+
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
@@ -141,9 +142,9 @@ public class Server {
         entryObject = new PyramidPlunder();
         System.gc();
         Login.banUid();
-       logger.info("Server is now running on world " + getGameWorldId() + "!");
+        logger.info("Server is now running on world " + getGameWorldId() + "!");
 
-       launchWebApi();
+        launchWebApi();
     }
 
 
@@ -162,8 +163,6 @@ public class Server {
         }
         return num;
     }
-
-
 
 
     public static void loadObjects() {
