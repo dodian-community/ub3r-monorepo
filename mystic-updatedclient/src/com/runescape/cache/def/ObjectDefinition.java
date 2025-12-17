@@ -616,9 +616,11 @@ public final class ObjectDefinition {
 	} else if (type == 82) {
 		minimapFunction = stream.readUShort();
 
-		if (minimapFunction == 0xFFFF) {
-			minimapFunction = -1;
-		}
+			if (minimapFunction >= 15 && minimapFunction <= 67) {
+				minimapFunction -= 2;
+			} else if (minimapFunction >= 68 && minimapFunction <= 84) {
+				minimapFunction -= 1;
+			}
 	
 	} else if (type == 77 || type == 92) {
 		varp = stream.readUShort();

@@ -169,7 +169,7 @@ import com.runescape.util.StringUtils;
 import java.awt.event.KeyEvent;
 
 public class Client extends GameApplet {
-	
+
 	private Sprite top508;
 	private Sprite bottom508;
 	public String autochatString = "";
@@ -186,53 +186,53 @@ public class Client extends GameApplet {
 	boolean maxOpacity = false;
 	int itemIdToSend;
 	private boolean sidebarGlow = false;
-	
+
 	public void draw508Scrollbar(int height, int pos, int y, int x, int maxScroll,
-			boolean transparent) {
-		 if (transparent) {
-	            drawTransparentScrollBar(x, y, height, maxScroll, pos);
-	        } else {
-	        	
-	        	top508.drawSprite(x, y);
-	        	bottom508.drawSprite(x, (y + height) - 16);
-	            Rasterizer2D.drawBox(x, y + 16, 16, height - 32, 0x746241);
-	            Rasterizer2D.drawBox(x, y + 16, 15, height - 32, 0x77603e);
-	            Rasterizer2D.drawBox(x, y + 16, 14, height - 32, 0x95784a);
-	            Rasterizer2D.drawBox(x, y + 16, 12, height - 32, 0x997c52);
-	            Rasterizer2D.drawBox(x, y + 16, 11, height - 32, 0x9e8155);
-	            Rasterizer2D.drawBox(x, y + 16, 10, height - 32, 0xa48558);
-	            Rasterizer2D.drawBox(x, y + 16, 8, height - 32, 0xaa8b5c);
-	            Rasterizer2D.drawBox(x, y + 16, 6, height - 32, 0xb09060);
-	            Rasterizer2D.drawBox(x, y + 16, 3, height - 32, 0x866c44);
-	            Rasterizer2D.drawBox(x, y + 16, 1, height - 32, 0x7c6945);
-	            
-	            int k1 = ((height - 32) * height) / maxScroll;
-	            if (k1 < 8) {
-	                k1 = 8;
-	            }
-	            int l1 = ((height - 32 - k1) * pos) / (maxScroll - height);
-	            int l2 = ((height - 32 - k1) * pos) / (maxScroll - height) + 6;
-	            Rasterizer2D.drawVerticalLine(x + 1, y + 16 + l1, k1, 0x5c492d);
-	            Rasterizer2D.drawVerticalLine(x + 14, y + 16 + l1, k1, 0x5c492d);
-	            Rasterizer2D.drawHorizontalLine(x + 1, y + 16 + l1, 14, 0x5c492d);
-	            Rasterizer2D.drawHorizontalLine(x + 1, y + 15 + l1 + k1, 14, 0x5c492d);
-	            Rasterizer2D.drawHorizontalLine(x + 4, y + 18 + l1, 8, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 4, y + 13 + l1 + k1, 8, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 3, y + 19 + l1, 2, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 11, y + 19 + l1, 2, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 3, y + 12 + l1 + k1, 2, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 11, y + 12 + l1 + k1, 2, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 3, y + 14 + l1 + k1, 11, 0x866c44);
-	            Rasterizer2D.drawHorizontalLine(x + 3, y + 17 + l1, 11, 0x866c44);
-	            Rasterizer2D.drawVerticalLine(x + 13, y + 12 + l2, k1 - 4, 0x866c44);
-	            Rasterizer2D.drawVerticalLine(x + 3, y + 13 + l2, k1 - 6, 0x664f2b);
-	            Rasterizer2D.drawVerticalLine(x + 12, y + 13 + l2, k1 - 6, 0x664f2b);
-	            Rasterizer2D.drawHorizontalLine(x + 2, y + 18 + l1, 2, 0x866c44);
-	            Rasterizer2D.drawHorizontalLine(x + 2, y + 13 + l1 + k1, 2, 0x866c44);
-	            Rasterizer2D.drawHorizontalLine(x + 12, y + 18 + l1, 1, 0x866c44);
-	            Rasterizer2D.drawHorizontalLine(x + 12, y + 13 + l1 + k1, 1, 0x866c44);
-	        }
-	    }
+								 boolean transparent) {
+		if (transparent) {
+			drawTransparentScrollBar(x, y, height, maxScroll, pos);
+		} else {
+
+			top508.drawSprite(x, y);
+			bottom508.drawSprite(x, (y + height) - 16);
+			Rasterizer2D.drawBox(x, y + 16, 16, height - 32, 0x746241);
+			Rasterizer2D.drawBox(x, y + 16, 15, height - 32, 0x77603e);
+			Rasterizer2D.drawBox(x, y + 16, 14, height - 32, 0x95784a);
+			Rasterizer2D.drawBox(x, y + 16, 12, height - 32, 0x997c52);
+			Rasterizer2D.drawBox(x, y + 16, 11, height - 32, 0x9e8155);
+			Rasterizer2D.drawBox(x, y + 16, 10, height - 32, 0xa48558);
+			Rasterizer2D.drawBox(x, y + 16, 8, height - 32, 0xaa8b5c);
+			Rasterizer2D.drawBox(x, y + 16, 6, height - 32, 0xb09060);
+			Rasterizer2D.drawBox(x, y + 16, 3, height - 32, 0x866c44);
+			Rasterizer2D.drawBox(x, y + 16, 1, height - 32, 0x7c6945);
+
+			int k1 = ((height - 32) * height) / maxScroll;
+			if (k1 < 8) {
+				k1 = 8;
+			}
+			int l1 = ((height - 32 - k1) * pos) / (maxScroll - height);
+			int l2 = ((height - 32 - k1) * pos) / (maxScroll - height) + 6;
+			Rasterizer2D.drawVerticalLine(x + 1, y + 16 + l1, k1, 0x5c492d);
+			Rasterizer2D.drawVerticalLine(x + 14, y + 16 + l1, k1, 0x5c492d);
+			Rasterizer2D.drawHorizontalLine(x + 1, y + 16 + l1, 14, 0x5c492d);
+			Rasterizer2D.drawHorizontalLine(x + 1, y + 15 + l1 + k1, 14, 0x5c492d);
+			Rasterizer2D.drawHorizontalLine(x + 4, y + 18 + l1, 8, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 4, y + 13 + l1 + k1, 8, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 3, y + 19 + l1, 2, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 11, y + 19 + l1, 2, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 3, y + 12 + l1 + k1, 2, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 11, y + 12 + l1 + k1, 2, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 3, y + 14 + l1 + k1, 11, 0x866c44);
+			Rasterizer2D.drawHorizontalLine(x + 3, y + 17 + l1, 11, 0x866c44);
+			Rasterizer2D.drawVerticalLine(x + 13, y + 12 + l2, k1 - 4, 0x866c44);
+			Rasterizer2D.drawVerticalLine(x + 3, y + 13 + l2, k1 - 6, 0x664f2b);
+			Rasterizer2D.drawVerticalLine(x + 12, y + 13 + l2, k1 - 6, 0x664f2b);
+			Rasterizer2D.drawHorizontalLine(x + 2, y + 18 + l1, 2, 0x866c44);
+			Rasterizer2D.drawHorizontalLine(x + 2, y + 13 + l1 + k1, 2, 0x866c44);
+			Rasterizer2D.drawHorizontalLine(x + 12, y + 18 + l1, 1, 0x866c44);
+			Rasterizer2D.drawHorizontalLine(x + 12, y + 13 + l1 + k1, 1, 0x866c44);
+		}
+	}
 
 	public void savePlayerData() {
 		try {
@@ -255,14 +255,14 @@ public class Client extends GameApplet {
 				stream.writeBoolean(Configuration.enableFog);
 				stream.writeBoolean(Configuration.bountyHunterInterface);
 				stream.writeBoolean(Configuration.escapeCloseInterface);
-				stream.writeBoolean(hideUsername); 
+				stream.writeBoolean(hideUsername);
 				stream.write(settings[166]); //Brightness
-				
+
 				for(int i = 0; i < 14; i++) {
 					stream.writeByte(TabBindings.tabBindings[i]);
 				}
-				
-				stream.close();		
+
+				stream.close();
 			}
 
 		} catch (IOException e) {
@@ -281,7 +281,7 @@ public class Client extends GameApplet {
 		DataInputStream stream = new DataInputStream(new FileInputStream(file));
 
 		try {
-			
+
 			rememberMe = stream.readBoolean();
 			myUsername = stream.readUTF();
 			skillOrbs = stream.readBoolean();
@@ -297,17 +297,17 @@ public class Client extends GameApplet {
 			Configuration.escapeCloseInterface = stream.readBoolean();
 			hideUsername = stream.readBoolean();
 			int brightnessState = stream.readByte();
-			
+
 			for(int i = 0; i < TabBindings.tabBindings.length; i++) {
 				TabBindings.tabBindings[i] = stream.readByte();
 			}
-			
+
 			if(rememberMe) {
 				if(myUsername.length() > 0) {
 					loginScreenCursorPos = 1;
 				}
 			}
-			
+
 			//Brightness
 			if (brightnessState == 1) {
 				Rasterizer3D.setBrightness(0.9);
@@ -319,15 +319,15 @@ public class Client extends GameApplet {
 				Rasterizer3D.setBrightness(0.6);
 			}
 			settings[166] = brightnessState;
-			
-			
+
+
 		} catch (IOException e) {
 			file.delete();
 		} finally {
 			stream.close();
 		}
 	}
-	
+
 	private void updateSettings() {
 		settings[809] = Configuration.alwaysLeftClickAttack ? 1 : 0;
 		settings[810] = Configuration.combatOverlayBox ? 1 : 0;
@@ -339,7 +339,7 @@ public class Client extends GameApplet {
 		settings[816] = Configuration.bountyHunterInterface ? 1 : 0;
 		settings[817] = Configuration.escapeCloseInterface ? 1 : 0;
 	}
-	
+
 	public enum ScreenMode {
 		FIXED, RESIZABLE, FULLSCREEN;
 	}
@@ -381,7 +381,7 @@ public class Client extends GameApplet {
 				sprite.drawAdvancedSprite(xDraw + 12, yDraw);
 				newSmallFont.drawBasicString(calculateInMinutes(timer.getSecondsTimer().secondsRemaining()) + "", xDraw + 40, yDraw + 13, 0xFF8C00);
 				yDraw-= 25;
-			}			
+			}
 		}
 	}
 
@@ -449,8 +449,8 @@ public class Client extends GameApplet {
 			xPos = Client.frameWidth - 382;
 			yPos = 100;
 		}
-		
-		
+
+
 
 		//Draw box ..
 		Rasterizer2D.drawTransparentBox(xPos, yPos, width, height, 000000, 70);
@@ -473,13 +473,13 @@ public class Client extends GameApplet {
 		Client.instance.newBoldFont.drawCenteredString(currentHp + "/" + maxHp, xPos+(width/2), yPos + 32, 16777215, 0);
 
 	}
-	
+
 	//Bindings
 	private void processKeyBindings() {
 		for(int i = 0; i < TabBindings.tabBindings.length; i++) {
 			int bound = TabBindings.tabBindings[i];
 			String boundName = "";
-			
+
 			if(bound == -1) {
 				boundName = "---";
 			} else if(bound >= 112 && bound <= 123) {
@@ -488,11 +488,11 @@ public class Client extends GameApplet {
 			} else {
 				boundName = "Esc";
 			}
-			
+
 			Widget.interfaceCache[53112 + i].defaultText = boundName;
 		}
 	}
-	
+
 	//Spawn
 	private String searchSyntax = "";
 	private int[] searchResults = new int[10000];
@@ -514,114 +514,114 @@ public class Client extends GameApplet {
 	public void processSpawnTab() {
 		// Draw checks..
 		if(searchString != searchSyntax) {
-		for (int i = 41003; i < 43103; i+=4) {
-			Widget w = Widget.interfaceCache[i + 3];
-			w.defaultText = "";
-		}
-		for(int i = 41003; i < 43103; i+=4) {
-			Widget.interfaceCache[(i+1)].drawingDisabled = true;
-			Widget.interfaceCache[(i+2)].drawingDisabled = true;
-			Widget.interfaceCache[(i+1)].tooltip = "";
-			Widget.interfaceCache[(i+2)].tooltip = "";
-		}
+			for (int i = 41003; i < 43103; i+=4) {
+				Widget w = Widget.interfaceCache[i + 3];
+				w.defaultText = "";
+			}
+			for(int i = 41003; i < 43103; i+=4) {
+				Widget.interfaceCache[(i+1)].drawingDisabled = true;
+				Widget.interfaceCache[(i+2)].drawingDisabled = true;
+				Widget.interfaceCache[(i+1)].tooltip = "";
+				Widget.interfaceCache[(i+2)].tooltip = "";
+			}
 
-		if (fetchSearchResults) {
-			Widget itemContainer = Widget.interfaceCache[33000];
-			for (int i = 0; i < searchResults.length; i++) {
-				searchResults[i] = -1;
+			if (fetchSearchResults) {
+				Widget itemContainer = Widget.interfaceCache[33000];
+				for (int i = 0; i < searchResults.length; i++) {
+					searchResults[i] = -1;
+				}
+				totalResults = 0;
+				if (searchSyntax.length() < 1) {
+					Widget.interfaceCache[41000].invisible = false;
+					Widget.interfaceCache[41002].invisible = true;
+					Widget.interfaceCache[41001].defaultText = "Start typing the name of an item to search for it.";
+					itemIds.clear();
+				}
+				if (searchSyntax.length() == 1 ||searchSyntax.length() == 2) {
+					Widget.interfaceCache[41000].invisible = false;
+					Widget.interfaceCache[41002].invisible = true;
+					Widget.interfaceCache[41001].defaultText = "Too many matches found. Please refine your search.";
+					itemIds.clear();
+
+				}
+				if (searchSyntax.length() >= 3) {
+					itemIds.clear();
+					try {
+						for (int itemId : ALLOWED_SPAWNS) {
+							ItemDefinition def = ItemDefinition.lookup(itemId);
+
+							if (def == null || def.name == null || def.noted_item_id != -1) {
+								continue;
+							}
+							if (def.name.toLowerCase().contains(searchSyntax)) {
+								searchResults[totalResults++] = def.id;
+							}
+						}
+					}
+
+					catch(Exception e) {
+						System.out.println(e);
+					}
+
+					for(int i = 0, id = 41006; i < totalResults; i++, id += 4) {
+						Widget.interfaceCache[id].defaultText = ItemDefinition.lookup(searchResults[i]).name;
+						Widget.interfaceCache[(id-2)].drawingDisabled = false;
+						Widget.interfaceCache[(id-1)].drawingDisabled = false;
+						Widget.interfaceCache[(id-2)].tooltip = "Select";
+						Widget.interfaceCache[(id-1)].tooltip = "Select";
+
+					}
+					for (int j22 = 0; j22 < totalResults; j22++) {
+						if(j22 == itemContainer.inventoryItemId.length) {
+							break;
+						}
+						itemContainer.inventoryItemId[j22] = (searchResults[j22]) + 1;
+						itemContainer.inventoryAmounts[j22] = 0;
+					}
+					for (int slot = totalResults; slot < itemContainer.inventoryItemId.length; slot++) {
+						itemContainer.inventoryItemId[slot] = 0;
+						itemContainer.inventoryAmounts[slot] = 0;
+					}
+				}
+
+				fetchSearchResults = false;
+
+				// Draw input
+				String textInput = "";
+				if (searchSyntax.length() > 0) {
+					textInput = searchSyntax;
+					searchString = searchSyntax;
+				}
+
+				Widget.interfaceCache[40501].defaultText = "@bla@Select an item to ask about its price: <col=000080>" + textInput + "*";
 			}
-			totalResults = 0;
-			if (searchSyntax.length() < 1) {
-				Widget.interfaceCache[41000].invisible = false;
-				Widget.interfaceCache[41002].invisible = true;
-				Widget.interfaceCache[41001].defaultText = "Start typing the name of an item to search for it.";
-				itemIds.clear();
-			}
-			if (searchSyntax.length() == 1 ||searchSyntax.length() == 2) {
+
+			if(totalResults > 300) {
 				Widget.interfaceCache[41000].invisible = false;
 				Widget.interfaceCache[41002].invisible = true;
 				Widget.interfaceCache[41001].defaultText = "Too many matches found. Please refine your search.";
 				itemIds.clear();
-				
 			}
-			if (searchSyntax.length() >= 3) {
+			if(totalResults == 0 && searchSyntax.length() >= 3) {
+				Widget.interfaceCache[41000].invisible = false;
+				Widget.interfaceCache[41002].invisible = true;
+				Widget.interfaceCache[41001].defaultText = "No matches found.";
 				itemIds.clear();
-				try {
-				for (int itemId : ALLOWED_SPAWNS) {
-					ItemDefinition def = ItemDefinition.lookup(itemId);
-
-					if (def == null || def.name == null || def.noted_item_id != -1) {
-						continue;
-					}
-					if (def.name.toLowerCase().contains(searchSyntax)) {
-						searchResults[totalResults++] = def.id;
-					}
-				}
-				}
-				
-				catch(Exception e) {
-					System.out.println(e);
-				}
-				
-				for(int i = 0, id = 41006; i < totalResults; i++, id += 4) {
-					Widget.interfaceCache[id].defaultText = ItemDefinition.lookup(searchResults[i]).name;
-					Widget.interfaceCache[(id-2)].drawingDisabled = false;
-					Widget.interfaceCache[(id-1)].drawingDisabled = false;
-					Widget.interfaceCache[(id-2)].tooltip = "Select";
-					Widget.interfaceCache[(id-1)].tooltip = "Select";
-					
-				}
-				for (int j22 = 0; j22 < totalResults; j22++) {
-					if(j22 == itemContainer.inventoryItemId.length) {
-						break;
-					}
-						itemContainer.inventoryItemId[j22] = (searchResults[j22]) + 1;
-						itemContainer.inventoryAmounts[j22] = 0;
-					}
-				for (int slot = totalResults; slot < itemContainer.inventoryItemId.length; slot++) {
-					itemContainer.inventoryItemId[slot] = 0;
-					itemContainer.inventoryAmounts[slot] = 0;
-				}
 			}
-			
-			fetchSearchResults = false;
-	
-		// Draw input
-		String textInput = "";
-		if (searchSyntax.length() > 0) {
-			textInput = searchSyntax;
-			searchString = searchSyntax;
-		}
-
-		Widget.interfaceCache[40501].defaultText = "@bla@Select an item to ask about its price: <col=000080>" + textInput + "*";
-		}
-		
-		if(totalResults > 300) {
-			Widget.interfaceCache[41000].invisible = false;
-			Widget.interfaceCache[41002].invisible = true;
-			Widget.interfaceCache[41001].defaultText = "Too many matches found. Please refine your search.";
-			itemIds.clear();
-		}
-		if(totalResults == 0 && searchSyntax.length() >= 3) {
-			Widget.interfaceCache[41000].invisible = false;
-			Widget.interfaceCache[41002].invisible = true;
-			Widget.interfaceCache[41001].defaultText = "No matches found.";
-			itemIds.clear();
-		}
-		if(totalResults > 0 && searchSyntax.length() > 2) {
-			Widget.interfaceCache[41000].invisible = true;
-			Widget.interfaceCache[41002].invisible = false;
-		}
+			if(totalResults > 0 && searchSyntax.length() > 2) {
+				Widget.interfaceCache[41000].invisible = true;
+				Widget.interfaceCache[41002].invisible = false;
+			}
 		}
 		Widget w = Widget.interfaceCache[41002];
-		
-			w.scrollMax = (totalResults / 3) * 32;
-		
+
+		w.scrollMax = (totalResults / 3) * 32;
+
 	}
 
 	public int[] getResultsArray() {
 		return searchSyntax.length() >= 2 ? searchResults :
-			searchResults;
+				searchResults;
 	}
 
 	public static ScreenMode frameMode = ScreenMode.FIXED;
@@ -725,7 +725,7 @@ public class Client extends GameApplet {
 	}
 
 	public static void rebuildFrameSize(ScreenMode screenMode, int screenWidth,
-			int screenHeight) {
+										int screenHeight) {
 		try {
 			screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : screenWidth;
 			screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : screenHeight;
@@ -764,20 +764,20 @@ public class Client extends GameApplet {
 		fullScreenTextureArray = Rasterizer3D.scanOffsets;
 		Rasterizer3D.reposition(
 				frameMode == ScreenMode.FIXED
-				? (chatboxImageProducer != null
-				? chatboxImageProducer.canvasWidth : 519)
+						? (chatboxImageProducer != null
+						? chatboxImageProducer.canvasWidth : 519)
 						: frameWidth,
-						frameMode == ScreenMode.FIXED
+				frameMode == ScreenMode.FIXED
 						? (chatboxImageProducer != null
 						? chatboxImageProducer.canvasHeight : 165)
-								: frameHeight);
+						: frameHeight);
 		anIntArray1180 = Rasterizer3D.scanOffsets;
 		Rasterizer3D.reposition(
 				frameMode == ScreenMode.FIXED
-				? (tabImageProducer != null ? tabImageProducer.canvasWidth
+						? (tabImageProducer != null ? tabImageProducer.canvasWidth
 						: 249)
 						: frameWidth,
-						frameMode == ScreenMode.FIXED ? (tabImageProducer != null
+				frameMode == ScreenMode.FIXED ? (tabImageProducer != null
 						? tabImageProducer.canvasHeight : 335) : frameHeight);
 		anIntArray1181 = Rasterizer3D.scanOffsets;
 		Rasterizer3D.reposition(screenAreaWidth, screenAreaHeight);
@@ -959,7 +959,7 @@ public class Client extends GameApplet {
 			channelButtonsX = {5, 71, 137, 203, 269, 335, 404};
 
 	private final String[] modeNames =
-		{"All", "Game", "Public", "Private", "Clan", "Trade", "Report Abuse"};
+			{"All", "Game", "Public", "Private", "Clan", "Trade", "Report Abuse"};
 
 	public void drawChannelButtons() {
 		final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 165;
@@ -967,45 +967,45 @@ public class Client extends GameApplet {
 		String text[] = { "On", "Friends", "Off", "Hide", "Autochat" };
 		int textColor[] = { 65280, 0xffff00, 0xff0000, 65535, 0x0d9ddc };
 		switch (cButtonCPos) {
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-			cacheSprite[16].drawSprite(channelButtonsX[cButtonCPos], 143 + yOffset);
-			break;
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+				cacheSprite[16].drawSprite(channelButtonsX[cButtonCPos], 143 + yOffset);
+				break;
 		}
 		if (cButtonHPos == cButtonCPos) {
 			switch (cButtonHPos) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-				cacheSprite[17].drawSprite(channelButtonsX[cButtonHPos],
-						143 + yOffset);
-				break;
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+					cacheSprite[17].drawSprite(channelButtonsX[cButtonHPos],
+							143 + yOffset);
+					break;
 			}
 		} else {
 			switch (cButtonHPos) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-				cacheSprite[15].drawSprite(channelButtonsX[cButtonHPos],
-						143 + yOffset);
-				break;
-			case 6:
-				cacheSprite[18].drawSprite(channelButtonsX[cButtonHPos],
-						143 + yOffset);
-				break;
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+					cacheSprite[15].drawSprite(channelButtonsX[cButtonHPos],
+							143 + yOffset);
+					break;
+				case 6:
+					cacheSprite[18].drawSprite(channelButtonsX[cButtonHPos],
+							143 + yOffset);
+					break;
 			}
 		}
 		int[] modes = {publicChatMode, privateChatMode, clanChatMode, tradeMode};
@@ -1065,10 +1065,10 @@ public class Client extends GameApplet {
 			newBoldFont.drawCenteredString(clickToContinueString, 259, 60 + yOffset, 0, -1);
 			newBoldFont.drawCenteredString("Click to continue", 259, 80 + yOffset, 128, -1);
 		} else if (backDialogueId == 40500) {
-			 try { 
-				 drawInterface(0, 0, Widget.interfaceCache[backDialogueId], 0 + yOffset);
-			 } catch (Exception ex) { 
-			 }
+			try {
+				drawInterface(0, 0, Widget.interfaceCache[backDialogueId], 0 + yOffset);
+			} catch (Exception ex) {
+			}
 		} else if (backDialogueId != -1 && backDialogueId != 40500) {
 			try {
 				drawInterface(0, 20, Widget.interfaceCache[backDialogueId], 20 + yOffset);
@@ -1127,7 +1127,7 @@ public class Client extends GameApplet {
 						if (chatTypeView == 5 || chatTypeView == 0) {
 							newRegularFont.drawBasicString(chatMessages[k], 11,
 									yPos + yOffset, changeChatArea ? 0xFFFFFF : 0,
-											shadow);
+									shadow);
 							j++;
 							j77++;
 						}
@@ -1137,7 +1137,7 @@ public class Client extends GameApplet {
 							|| publicChatMode == 1 || publicChatMode == 4 && isFriendOrSelf(s1) || publicChatMode == 4)) {
 						if (chatTypeView == 1 || chatTypeView == 0) {
 							int xPos = 11;
-							
+
 							if(data > 0 && data < 10) {
 								modIcons[data - 1].drawSprite(xPos + 1,
 										yPos - 12 + yOffset);
@@ -1146,7 +1146,7 @@ public class Client extends GameApplet {
 
 							newRegularFont.drawBasicString(s1 + ":", xPos,
 									yPos + yOffset, changeChatArea ? 0xFFFFFF : 0,
-											shadow);
+									shadow);
 							xPos += font.getTextWidth(s1) + 8;
 							newRegularFont.drawBasicString(chatMessages[k], xPos,
 									yPos + yOffset,
@@ -1165,15 +1165,15 @@ public class Client extends GameApplet {
 							newRegularFont.drawBasicString("From", k1, yPos + yOffset,
 									changeChatArea ? 0 : 0x000000, shadow);
 							k1 += font.getTextWidth("From ");
-							
+
 							if(data > 0 && data < 10) {
 								modIcons[data - 1].drawSprite(k1, yPos - 12 + yOffset);
 								k1 += 12;
 							}
-							
+
 							newRegularFont.drawBasicString(s1 + ":", k1,
 									yPos + yOffset, changeChatArea ? 0xFFFFFF : 0,
-											shadow);
+									shadow);
 							k1 += font.getTextWidth(s1) + 8;
 							newRegularFont.drawBasicString(chatMessages[k], k1,
 									yPos + yOffset, 0x800000, shadow);
@@ -1203,7 +1203,7 @@ public class Client extends GameApplet {
 						if (chatTypeView == 2 || chatTypeView == 0) {
 							newRegularFont.drawBasicString("To " + s1 + ":", 11,
 									yPos + yOffset, changeChatArea ? 0x000000 : 0,
-											shadow);
+									shadow);
 							newRegularFont.drawBasicString(chatMessages[k],
 									15 + font.getTextWidth("To :" + s1),
 									yPos + yOffset, 0x800000, shadow);
@@ -1376,22 +1376,22 @@ public class Client extends GameApplet {
 				int k2 = super.saveClickX;
 				int l2 = super.saveClickY;
 				switch (menuScreenArea) {
-				case 0:
-					k2 -= 4;
-					l2 -= 4;
-					break;
-				case 1:
-					k2 -= 519;
-					l2 -= 168;
-					break;
-				case 2:
-					k2 -= 5;
-					l2 -= 338;
-					break;
-				case 3:
-					k2 -= 519;
-					l2 -= 0;
-					break;
+					case 0:
+						k2 -= 4;
+						l2 -= 4;
+						break;
+					case 1:
+						k2 -= 519;
+						l2 -= 168;
+						break;
+					case 2:
+						k2 -= 5;
+						l2 -= 338;
+						break;
+					case 3:
+						k2 -= 519;
+						l2 -= 0;
+						break;
 				}
 				int i3 = -1;
 				for (int j3 = 0; j3 < menuActionRow; j3++) {
@@ -1513,21 +1513,21 @@ public class Client extends GameApplet {
 							int l7 = localRegions[j3][k4][j6];
 							if (l7 != -1) {
 								int i9 = l7 >> 24 & 3;
-						int l9 = l7 >> 1 & 3;
-				int j10 = l7 >> 14 & 0x3ff;
-			int l10 = l7 >> 3 & 0x7ff;
-		int j11 = (j10 / 8 << 8) + l10 / 8;
-		for (int l11 =
-				0; l11 < localRegionIds.length; l11++) {
-			if (localRegionIds[l11] != j11
-					|| localRegionMapData[l11] == null)
-				continue;
-			objectManager.method179(i9, l9, collisionMaps,
-					k4 * 8, (j10 & 7) * 8,
-					localRegionMapData[l11],
-					(l10 & 7) * 8, j3, j6 * 8);
-			break;
-		}
+								int l9 = l7 >> 1 & 3;
+								int j10 = l7 >> 14 & 0x3ff;
+								int l10 = l7 >> 3 & 0x7ff;
+								int j11 = (j10 / 8 << 8) + l10 / 8;
+								for (int l11 =
+									 0; l11 < localRegionIds.length; l11++) {
+									if (localRegionIds[l11] != j11
+											|| localRegionMapData[l11] == null)
+										continue;
+									objectManager.method179(i9, l9, collisionMaps,
+											k4 * 8, (j10 & 7) * 8,
+											localRegionMapData[l11],
+											(l10 & 7) * 8, j3, j6 * 8);
+									break;
+								}
 
 							}
 						}
@@ -1548,22 +1548,22 @@ public class Client extends GameApplet {
 							int i10 = localRegions[l6][j8][j9];
 							if (i10 != -1) {
 								int k10 = i10 >> 24 & 3;
-						int i11 = i10 >> 1 & 3;
-				int k11 = i10 >> 14 & 0x3ff;
-				int i12 = i10 >> 3 & 0x7ff;
-		int j12 = (k11 / 8 << 8) + i12 / 8;
-		for (int k12 =
-				0; k12 < localRegionIds.length; k12++) {
-			if (localRegionIds[k12] != j12
-					|| localRegionLandscapeData[k12] == null) {
-				continue;
-			}
-			objectManager.method183(collisionMaps, scene,
-					k10, j8 * 8, (i12 & 7) * 8, l6,
-					localRegionLandscapeData[k12],
-					(k11 & 7) * 8, i11, j9 * 8);
-			break;
-		}
+								int i11 = i10 >> 1 & 3;
+								int k11 = i10 >> 14 & 0x3ff;
+								int i12 = i10 >> 3 & 0x7ff;
+								int j12 = (k11 / 8 << 8) + i12 / 8;
+								for (int k12 =
+									 0; k12 < localRegionIds.length; k12++) {
+									if (localRegionIds[k12] != j12
+											|| localRegionLandscapeData[k12] == null) {
+										continue;
+									}
+									objectManager.method183(collisionMaps, scene,
+											k10, j8 * 8, (i12 & 7) * 8, l6,
+											localRegionLandscapeData[k12],
+											(k11 & 7) * 8, i11, j9 * 8);
+									break;
+								}
 
 							}
 						}
@@ -1675,17 +1675,17 @@ public class Client extends GameApplet {
 	}
 
 	private void renderMapScene(int plane) {
-		int pixels[] = minimapImage.myPixels;            
+		int pixels[] = minimapImage.myPixels;
 		int length = pixels.length;
 
-		for (int pixel = 0; pixel < length; pixel++) {            	
+		for (int pixel = 0; pixel < length; pixel++) {
 			pixels[pixel] = 0;
 		}
 
 
-		for (int y = 1; y < 103; y++) {            	
+		for (int y = 1; y < 103; y++) {
 			int i1 = 24628 + (103 - y) * 512 * 4;
-			for (int x = 1; x < 103; x++) {                	  
+			for (int x = 1; x < 103; x++) {
 				if ((tileFlags[plane][x][y] & 0x18) == 0)
 					scene.drawTileOnMinimapSprite(pixels, i1, plane, x, y);
 				if (plane < 3 && (tileFlags[plane + 1][x][y] & 8) != 0)
@@ -1699,8 +1699,8 @@ public class Client extends GameApplet {
 		int l1 = 0xEE0000;
 		minimapImage.init();
 
-		for (int y = 1; y < 103; y++) {            	
-			for (int x = 1; x < 103; x++) {                	  
+		for (int y = 1; y < 103; y++) {
+			for (int x = 1; x < 103; x++) {
 				if ((tileFlags[plane][x][y] & 0x18) == 0)
 					drawMapScenes(y, j1, x, l1, plane);
 				if (plane < 3 && (tileFlags[plane + 1][x][y] & 8) != 0)
@@ -1712,22 +1712,22 @@ public class Client extends GameApplet {
 		gameScreenImageProducer.initDrawingArea();
 		anInt1071 = 0;
 
-		for (int x = 0; x < 104; x++) {            	
-			for (int y = 0; y < 104; y++) {                	  
+		for (int x = 0; x < 104; x++) {
+			for (int y = 0; y < 104; y++) {
 				int id = scene.getGroundDecorationUid(plane, x, y);
 				if (id != 0) {
 					id = id >> 14 & 0x7fff;
 
-			int function = ObjectDefinition.lookup(id).minimapFunction;
+					int function = ObjectDefinition.lookup(id).minimapFunction;
 
-			if (function >= 0) {
-				int viewportX = x;                                    
-				int viewportY = y;                                    
-				minimapHint[anInt1071] = mapFunctions[function];
-				minimapHintX[anInt1071] = viewportX;
-				minimapHintY[anInt1071] = viewportY;
-				anInt1071++;
-			}
+					if (function >= 0) {
+						int viewportX = x;
+						int viewportY = y;
+						minimapHint[anInt1071] = mapFunctions[function];
+						minimapHintX[anInt1071] = viewportX;
+						minimapHintY[anInt1071] = viewportY;
+						anInt1071++;
+					}
 				}
 			}
 
@@ -1781,7 +1781,7 @@ public class Client extends GameApplet {
 		Object obj2 = null;
 		for (Item class30_sub2_sub4_sub2_1 = (Item) class19
 				.reverseGetFirst(); class30_sub2_sub4_sub2_1 != null; class30_sub2_sub4_sub2_1 =
-				(Item) class19.reverseGetNext()) {
+					 (Item) class19.reverseGetNext()) {
 			if (class30_sub2_sub4_sub2_1.ID != ((Item) (obj)).ID && obj1 == null)
 				obj1 = class30_sub2_sub4_sub2_1;
 			if (class30_sub2_sub4_sub2_1.ID != ((Item) (obj)).ID
@@ -1798,7 +1798,7 @@ public class Client extends GameApplet {
 	private boolean prioritizedNpc(Npc npc) {
 
 		//Check if it's being interacted with
-		if(localPlayer.interactingEntity != -1 && 
+		if(localPlayer.interactingEntity != -1 &&
 				localPlayer.interactingEntity < 32768) {
 			if(npc.index == localPlayer.interactingEntity) {
 				return true;
@@ -1863,18 +1863,18 @@ public class Client extends GameApplet {
 			yPos += 12;
 		}
 	}
-	
+
 	public void drawSkillHoverBox(int xPos, int yPos, String skillName, int skillId, int width, boolean right) {
 		int height = (3 * 16) - 3;
 		if(maximumLevels[skillId] <= 98) {
-		height = (3 * 16) - 3;
+			height = (3 * 16) - 3;
 		} else if (maximumLevels[skillId] > 98) {
-		height = (1 * 16) + 3;
+			height = (1 * 16) + 3;
 		}
 		int finalWidth;
 		int finalWidth2;
 		int finalWidth3;
-		
+
 		int extraWidth4 = newRegularFont.getTextWidth(StringUtils.insertCommasToNumber(Integer.toString(currentExp[skillId])));
 		int extraWidth5 =  newRegularFont.getTextWidth(StringUtils.insertCommasToNumber(Integer.toString(getXPForLevel((maximumLevels[skillId]) + 1))));
 		int extraWidth2 = newRegularFont.getTextWidth(skillName + " XP:");
@@ -1894,51 +1894,51 @@ public class Client extends GameApplet {
 		}
 		finalWidth3 = extraWidth2 + extraWidth4 +  4;
 		if(!right) {
-		if(maximumLevels[skillId] <= 98) {
-		Rasterizer2D.drawBox(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0xFFFFA0);
-		Rasterizer2D.drawBoxOutline(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0);
-		} else {
-			Rasterizer2D.drawBox(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0xFFFFA0);
-			Rasterizer2D.drawBoxOutline(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0);
-		}
-		} if(right) {
-				if(maximumLevels[skillId] <= 98) {
-			xPos = 210 - (finalWidth + finalWidth2);
-				} else {
-					xPos = 210 - (extraWidth2 + extraWidth4);
-				}
 			if(maximumLevels[skillId] <= 98) {
 				Rasterizer2D.drawBox(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0xFFFFA0);
 				Rasterizer2D.drawBoxOutline(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0);
-				} else {
-					Rasterizer2D.drawBox(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0xFFFFA0);
-					Rasterizer2D.drawBoxOutline(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0);
-				}
-		}
-		yPos += 14;
-			newRegularFont.drawBasicString(skillName + " XP:", xPos + 2, yPos, 0x000000,
-					-1);
-			if(maximumLevels[skillId] <= 98) {
-			newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(currentExp[skillId])), xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
-					-1, newRegularFont);
 			} else {
-				newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(currentExp[skillId])), xPos + 4 + extraWidth2 + extraWidth4, yPos, 0x000000,
-						-1, newRegularFont);
+				Rasterizer2D.drawBox(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0xFFFFA0);
+				Rasterizer2D.drawBoxOutline(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0);
+			}
+		} if(right) {
+			if(maximumLevels[skillId] <= 98) {
+				xPos = 210 - (finalWidth + finalWidth2);
+			} else {
+				xPos = 210 - (extraWidth2 + extraWidth4);
 			}
 			if(maximumLevels[skillId] <= 98) {
+				Rasterizer2D.drawBox(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0xFFFFA0);
+				Rasterizer2D.drawBoxOutline(xPos, yPos, finalWidth + finalWidth2 + 6, height, 0);
+			} else {
+				Rasterizer2D.drawBox(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0xFFFFA0);
+				Rasterizer2D.drawBoxOutline(xPos, yPos, extraWidth2 + extraWidth4 + 6, height, 0);
+			}
+		}
+		yPos += 14;
+		newRegularFont.drawBasicString(skillName + " XP:", xPos + 2, yPos, 0x000000,
+				-1);
+		if(maximumLevels[skillId] <= 98) {
+			newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(currentExp[skillId])), xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
+					-1, newRegularFont);
+		} else {
+			newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(currentExp[skillId])), xPos + 4 + extraWidth2 + extraWidth4, yPos, 0x000000,
+					-1, newRegularFont);
+		}
+		if(maximumLevels[skillId] <= 98) {
 			yPos += 12;
 			newRegularFont.drawBasicString("Next level at:", xPos + 2, yPos, 0x000000,
 					-1);
-				newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(getXPForLevel((maximumLevels[skillId]) + 1))),xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
-						-1, newRegularFont);
-			
+			newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(getXPForLevel((maximumLevels[skillId]) + 1))),xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
+					-1, newRegularFont);
+
 			yPos += 12;
 			newRegularFont.drawBasicString("Remaining XP:", xPos + 2, yPos, 0x000000,
 					-1);
-				newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(getXPForLevel((maximumLevels[skillId]) + 1) - (currentExp[skillId]))),xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
-						-1, newRegularFont);
-			}
-			
+			newRegularFont.drawRightString(StringUtils.insertCommasToNumber(Integer.toString(getXPForLevel((maximumLevels[skillId]) + 1) - (currentExp[skillId]))),xPos + finalWidth + finalWidth2 + 4, yPos, 0x000000,
+					-1, newRegularFont);
+		}
+
 	}
 	private void buildInterfaceMenu(int i, Widget widget, int mouseX, int l, int mouseY, int j1) {
 		if (widget == null || widget.type != 0 || widget.children == null || widget.invisible || widget.drawingDisabled)
@@ -1961,15 +1961,15 @@ public class Client extends GameApplet {
 			}
 			if (mouseX >= i2 && mouseY >= j2 && mouseX < i2 + childInterface.width
 					&& mouseY < j2 + childInterface.height && childInterface.isHovered) {
-					childInterface.enabledSprite = cacheSprite[537];
-					childInterface.disabledSprite = cacheSprite[537];
-					childInterface.drawsTransparent = true;
-					childInterface.transparency = 50;
-				}
+				childInterface.enabledSprite = cacheSprite[537];
+				childInterface.disabledSprite = cacheSprite[537];
+				childInterface.drawsTransparent = true;
+				childInterface.transparency = 50;
+			}
 			if ((childInterface.hoverType >= 0 || childInterface.defaultHoverColor != 0)
 					&& mouseX >= i2 && mouseY >= j2 && mouseX < i2 + childInterface.width
 					&& mouseY < j2 + childInterface.height)
-				
+
 				//if (childInterface.hoverType >= 0 && childInterface.contentlol == 1) {
 				//	childInterface.enabledSprite = cacheSprite[537];
 				//	childInterface.disabledSprite = cacheSprite[537];
@@ -1984,28 +1984,28 @@ public class Client extends GameApplet {
 					&& mouseX < i2 + childInterface.width && mouseY < j2 + childInterface.height) {
 				anInt1315 = childInterface.id;
 			}
-			
+
 			if (childInterface.type == Widget.TYPE_CONTAINER) {
 				buildInterfaceMenu(i2, childInterface, mouseX, j2, mouseY,
 						childInterface.scrollPosition);
 				if (childInterface.scrollMax > childInterface.height)
 					method65(i2 + childInterface.width, childInterface.height, mouseX, mouseY,
 							childInterface, j2, true, childInterface.scrollMax);
-			  } else if (childInterface.atActionType == 69) {
-				  childInterface.hovered = false;
-                  if (childInterface.dropDown.isOpen()) {
-                	  childInterface.dropDown.hover(childInterface, childInterface, mouseX, mouseY, i2, j2);
-                
-                	  
-                  }
-                  if (mouseX >= i2 && mouseY >= j2 && mouseX < i2 + childInterface.dropDown.getWidth() && mouseY < j2 + 24) {
-                	  childInterface.hovered = true;
-                      menuActionText[menuActionRow] = childInterface.dropDown.isOpen() ? "Hide other options" : "Show other options";
-                      menuActionTypes[menuActionRow] = 769;
-                      secondMenuAction[menuActionRow] = childInterface.id;
-                      firstMenuAction[menuActionRow] = childInterface.id;
-                      menuActionRow++;
-                  }
+			} else if (childInterface.atActionType == 69) {
+				childInterface.hovered = false;
+				if (childInterface.dropDown.isOpen()) {
+					childInterface.dropDown.hover(childInterface, childInterface, mouseX, mouseY, i2, j2);
+
+
+				}
+				if (mouseX >= i2 && mouseY >= j2 && mouseX < i2 + childInterface.dropDown.getWidth() && mouseY < j2 + 24) {
+					childInterface.hovered = true;
+					menuActionText[menuActionRow] = childInterface.dropDown.isOpen() ? "Hide other options" : "Show other options";
+					menuActionTypes[menuActionRow] = 769;
+					secondMenuAction[menuActionRow] = childInterface.id;
+					firstMenuAction[menuActionRow] = childInterface.id;
+					menuActionRow++;
+				}
 			} else {
 				if (childInterface.atActionType == Widget.OPTION_OK && mouseX >= i2 && mouseY >= j2
 						&& mouseX < i2 + childInterface.width
@@ -2023,7 +2023,7 @@ public class Client extends GameApplet {
 							menuActionTypes[menuActionRow] = 315;
 							secondMenuAction[menuActionRow] = childInterface.id;
 							if(childInterface.geSearchButton) {
-							itemIdToSend = childInterface.itemId;
+								itemIdToSend = childInterface.itemId;
 							}
 							menuActionRow++;
 						} else {
@@ -2031,7 +2031,7 @@ public class Client extends GameApplet {
 							menuActionTypes[menuActionRow] = 315;
 							secondMenuAction[menuActionRow] = childInterface.id;
 							if(childInterface.geSearchButton) {
-							itemIdToSend = childInterface.itemId;
+								itemIdToSend = childInterface.itemId;
 							}
 							menuActionRow++;
 						}
@@ -2128,7 +2128,7 @@ public class Client extends GameApplet {
 
 				if (mouseX >= i2 && mouseY >= j2
 						&& mouseX < i2 + (childInterface.type == 4 ? 100
-								: childInterface.width)
+						: childInterface.width)
 						&& mouseY < j2 + childInterface.height) {
 					if (childInterface.actions != null && !childInterface.invisible && !childInterface.drawingDisabled) {
 
@@ -2138,7 +2138,7 @@ public class Client extends GameApplet {
 								boolean drawOptions = true;
 
 								//HARDCODE CLICKABLE TEXT HERE
-								
+
 								if(childInterface.parent == 37128) { //Clan chat interface, dont show options for guests
 									drawOptions = showClanOptions;
 								}
@@ -2154,7 +2154,7 @@ public class Client extends GameApplet {
 												int suffix = s.indexOf(">");
 												s = s.replaceAll(s.substring(prefix + 5, suffix), "");
 												s = s.replaceAll("</img>", "");
-												s = s.replaceAll("<img=>", "");	
+												s = s.replaceAll("<img=>", "");
 											}
 											menuActionText[menuActionRow] = s;
 											menuActionTypes[menuActionRow] = 647;
@@ -2195,8 +2195,8 @@ public class Client extends GameApplet {
 												|| k2 != anInt1283) {
 											menuActionText[menuActionRow] =
 													"Use " + selectedItemName
-													+ " with @lre@"
-													+ itemDef.name;
+															+ " with @lre@"
+															+ itemDef.name;
 											menuActionTypes[menuActionRow] =
 													870;
 											selectedMenuActions[menuActionRow] =
@@ -2227,17 +2227,17 @@ public class Client extends GameApplet {
 										if (childInterface.hasActions) {
 											for (int l3 = 4; l3 >= 3; l3--)
 												if (itemDef.actions != null
-												&& itemDef.actions[l3] != null) {
+														&& itemDef.actions[l3] != null) {
 													menuActionText[menuActionRow] =
 															itemDef.actions[l3]
 																	+ " @lre@"
 																	+ itemDef.name;
 													if (l3 == 3)
 														menuActionTypes[menuActionRow] =
-														493;
+																493;
 													if (l3 == 4)
 														menuActionTypes[menuActionRow] =
-														847;
+																847;
 													selectedMenuActions[menuActionRow] =
 															itemDef.id;
 													firstMenuAction[menuActionRow] =
@@ -2282,13 +2282,13 @@ public class Client extends GameApplet {
 																	+ itemDef.name;
 													if (i4 == 0)
 														menuActionTypes[menuActionRow] =
-														74;
+																74;
 													if (i4 == 1)
 														menuActionTypes[menuActionRow] =
-														454;
+																454;
 													if (i4 == 2)
 														menuActionTypes[menuActionRow] =
-														539;
+																539;
 													selectedMenuActions[menuActionRow] =
 															itemDef.id;
 													firstMenuAction[menuActionRow] =
@@ -2303,52 +2303,52 @@ public class Client extends GameApplet {
 										//Menu actions, item options etc in interfaces n
 										//Hardcoding
 										if (childInterface.actions != null) {
-											
+
 											for (int type =
-													5; type >= 0; type--) {
-												if (childInterface.actions[type] != null && !childInterface.actions[type].equalsIgnoreCase("operate") 
+												 5; type >= 0; type--) {
+												if (childInterface.actions[type] != null && !childInterface.actions[type].equalsIgnoreCase("operate")
 														|| itemDef.equipActions[type] != null && childInterface.id == 1688 ) {
-													
+
 													if(childInterface.id == 1688) {
 														if (itemDef.equipActions[type] != null) {
-														    menuActionText[menuActionRow] = itemDef.equipActions[menuActionRow] + " @lre@" + itemDef.name;
+															menuActionText[menuActionRow] = itemDef.equipActions[menuActionRow] + " @lre@" + itemDef.name;
 														} else {
-														    if (childInterface.actions[type] != null) {
-															menuActionText[menuActionRow] = childInterface.actions[type] + " @lre@" + itemDef.name;
-														    }
+															if (childInterface.actions[type] != null) {
+																menuActionText[menuActionRow] = childInterface.actions[type] + " @lre@" + itemDef.name;
+															}
 														}
 														if (type == 0)
 															menuActionTypes[menuActionRow] = 632; // remove
 														if (type == 1)
 															menuActionTypes[menuActionRow] = 661; // operate 1
-													        if (type == 2)
-													        	menuActionTypes[menuActionRow] = 662; // operate 2
+														if (type == 2)
+															menuActionTypes[menuActionRow] = 662; // operate 2
 														if (type == 3)
 															menuActionTypes[menuActionRow] = 663; //operate 3
-													        if (type == 4)
-													        	menuActionTypes[menuActionRow] = 664; //operate 4
-													        if (type == 5)
-													        	menuActionTypes[menuActionRow] = 665; //operate 4
-													
-														
-													} else {
-													menuActionText[menuActionRow] = childInterface.actions[type] + " @lre@" + itemDef.name;
+														if (type == 4)
+															menuActionTypes[menuActionRow] = 664; //operate 4
+														if (type == 5)
+															menuActionTypes[menuActionRow] = 665; //operate 4
 
-													if (type == 0)
-														menuActionTypes[menuActionRow] =
-														632;
-													if (type == 1)
-														menuActionTypes[menuActionRow] =
-														78;
-													if (type == 2)
-														menuActionTypes[menuActionRow] =
-														867;
-													if (type == 3)
-														menuActionTypes[menuActionRow] =
-														431;
-													if (type == 4)
-														menuActionTypes[menuActionRow] =
-														53;
+
+													} else {
+														menuActionText[menuActionRow] = childInterface.actions[type] + " @lre@" + itemDef.name;
+
+														if (type == 0)
+															menuActionTypes[menuActionRow] =
+																	632;
+														if (type == 1)
+															menuActionTypes[menuActionRow] =
+																	78;
+														if (type == 2)
+															menuActionTypes[menuActionRow] =
+																	867;
+														if (type == 3)
+															menuActionTypes[menuActionRow] =
+																	431;
+														if (type == 4)
+															menuActionTypes[menuActionRow] =
+																	53;
 													}
 													selectedMenuActions[menuActionRow] =
 															itemDef.id;
@@ -2358,7 +2358,7 @@ public class Client extends GameApplet {
 															childInterface.id;
 													menuActionRow++;
 												}
-													
+
 											}
 
 										}
@@ -2368,7 +2368,7 @@ public class Client extends GameApplet {
 															+ itemDef.name
 															+ " @gre@(@whi@"
 															+ (childInterface.inventoryItemId[k2]
-																	- 1)
+															- 1)
 															+ "@gre@) int: "+childInterface.id;
 										} else {
 											menuActionText[menuActionRow] =
@@ -2411,7 +2411,7 @@ public class Client extends GameApplet {
 	}
 
 	public void drawScrollbar(int height, int pos, int y, int x, int maxScroll,
-			boolean transparent) {
+							  boolean transparent) {
 		if (transparent) {
 			drawTransparentScrollBar(x, y, height, maxScroll, pos);
 		} else {
@@ -2942,20 +2942,20 @@ public class Client extends GameApplet {
 					if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
 						newSmallFont.drawCenteredString(
 								(new StringBuilder())
-								.append(((Mob) (Mob) obj).currentHealth)
-								.append("/")
-								.append(((Mob) (Mob) obj).maxHealth)
-								.toString(),
+										.append(((Mob) (Mob) obj).currentHealth)
+										.append("/")
+										.append(((Mob) (Mob) obj).maxHealth)
+										.toString(),
 								spriteDrawX, spriteDrawY - 29 + text_over_head_offset, 0x3399ff, 100);
 					} // draws HP above head
 					else if (Configuration.hpAboveHeads
 							&& !Configuration.namesAboveHeads) {
 						newSmallFont.drawCenteredString(
 								(new StringBuilder())
-								.append(((Mob) (Mob) obj).currentHealth)
-								.append("/")
-								.append(((Mob) (Mob) obj).maxHealth)
-								.toString(),
+										.append(((Mob) (Mob) obj).currentHealth)
+										.append("/")
+										.append(((Mob) (Mob) obj).maxHealth)
+										.toString(),
 								spriteDrawX, spriteDrawY - 5 + text_over_head_offset, 0x3399ff, 100);
 					}
 					if (Configuration.namesAboveHeads) {
@@ -2980,7 +2980,7 @@ public class Client extends GameApplet {
 					}
 					if (hintIconDrawType == 1
 							&& hintIconNpcId == npcIndices[j - playerCount]
-									&& tick % 20 < 10) {
+							&& tick % 20 < 10) {
 						npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
 						if (spriteDrawX > -1)
 							headIconsHint[0].drawSprite(spriteDrawX - 12,
@@ -3028,20 +3028,20 @@ public class Client extends GameApplet {
 
 							if (hpPercent > 56) {
 								hpPercent = 56;
-							} 
-							
+							}
+
 							if (!Configuration.hpBar554) {
 								Rasterizer2D.drawBox(spriteDrawX - 15, spriteDrawY - 3, i1, 5,
 										65280);
 								Rasterizer2D.drawBox((spriteDrawX - 15) + i1, spriteDrawY - 3, 30 - i1, 5,
 										0xff0000
-										);
+								);
 							} else {
 								cacheSprite[41].drawSprite(spriteDrawX - 28, spriteDrawY - 3);
-								
+
 								cacheSprite[40] = new Sprite(hp, hpPercent, 7);
 								cacheSprite[40].drawSprite(spriteDrawX - 28,
-                                         spriteDrawY - 3);
+										spriteDrawY - 3);
 							}
 						}
 					} catch (Exception e) {
@@ -3115,23 +3115,23 @@ public class Client extends GameApplet {
 
 								smallText.drawText(0,
 										Configuration.tenXHp
-										? String.valueOf(
+												? String.valueOf(
 												((Mob) (obj)).hitDamages[j1]
 														* 10)
 												: String.valueOf(
-														((Mob) (obj)).hitDamages[j1]
-																* 1),
-												spriteDrawY + 4, spriteDrawX);
+												((Mob) (obj)).hitDamages[j1]
+														* 1),
+										spriteDrawY + 4, spriteDrawX);
 
 								smallText.drawText(0xffffff,
 										Configuration.tenXHp
-										? String.valueOf(
+												? String.valueOf(
 												((Mob) (obj)).hitDamages[j1]
 														* 10)
 												: String.valueOf(
-														((Mob) (obj)).hitDamages[j1]
-																* 1),
-												spriteDrawY + 3, spriteDrawX - 1);
+												((Mob) (obj)).hitDamages[j1]
+														* 1),
+										spriteDrawY + 3, spriteDrawX - 1);
 							}
 						}
 					}
@@ -3178,7 +3178,7 @@ public class Client extends GameApplet {
 												((Mob) (obj)).hitDamages[j2]),
 										spriteDrawY + 3,
 										(((Mob) (obj)).hitMarkTypes[j2] == 3
-										? spriteDrawX + 7
+												? spriteDrawX + 7
 												: spriteDrawX - 1));
 							}
 						}
@@ -3197,8 +3197,8 @@ public class Client extends GameApplet {
 						if (l1 + 2 > anIntArray977[l2] - anIntArray978[l2]
 								&& l1 - k2 < anIntArray977[l2] + 2
 								&& k1 - j2 < anIntArray976[l2] + anIntArray979[l2]
-										&& k1 + j2 > anIntArray976[l2] - anIntArray979[l2]
-												&& anIntArray977[l2] - anIntArray978[l2] < l1) {
+								&& k1 + j2 > anIntArray976[l2] - anIntArray979[l2]
+								&& anIntArray977[l2] - anIntArray978[l2] < l1) {
 							l1 = anIntArray977[l2] - anIntArray978[l2];
 							flag = true;
 						}
@@ -3213,78 +3213,78 @@ public class Client extends GameApplet {
 						i3 = anIntArray965[textColourEffect[defaultText]];
 					if (textColourEffect[defaultText] == 6)
 						i3 = anInt1265 % 20 >= 10 ? 0xffff00 : 0xff0000;
-						if (textColourEffect[defaultText] == 7)
-							i3 = anInt1265 % 20 >= 10 ? 65535 : 255;
-							if (textColourEffect[defaultText] == 8)
-								i3 = anInt1265 % 20 >= 10 ? 0x80ff80 : 45056;
-								if (textColourEffect[defaultText] == 9) {
-									int j3 = 150 - anIntArray982[defaultText];
-									if (j3 < 50)
-										i3 = 0xff0000 + 1280 * j3;
-									else if (j3 < 100)
-										i3 = 0xffff00 - 0x50000 * (j3 - 50);
-									else if (j3 < 150)
-										i3 = 65280 + 5 * (j3 - 100);
-								}
-								if (textColourEffect[defaultText] == 10) {
-									int k3 = 150 - anIntArray982[defaultText];
-									if (k3 < 50)
-										i3 = 0xff0000 + 5 * k3;
-									else if (k3 < 100)
-										i3 = 0xff00ff - 0x50000 * (k3 - 50);
-									else if (k3 < 150)
-										i3 = (255 + 0x50000 * (k3 - 100)) - 5 * (k3 - 100);
-								}
-								if (textColourEffect[defaultText] == 11) {
-									int l3 = 150 - anIntArray982[defaultText];
-									if (l3 < 50)
-										i3 = 0xffffff - 0x50005 * l3;
-									else if (l3 < 100)
-										i3 = 65280 + 0x50005 * (l3 - 50);
-									else if (l3 < 150)
-										i3 = 0xffffff - 0x50000 * (l3 - 100);
-								}
-								if (anIntArray981[defaultText] == 0) {
-									boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
-									boldText.drawText(i3, s, spriteDrawY, spriteDrawX);
-								}
-								if (anIntArray981[defaultText] == 1) {
-									boldText.wave(0, s, spriteDrawX, anInt1265, spriteDrawY + 1);
-									boldText.wave(i3, s, spriteDrawX, anInt1265, spriteDrawY);
-								}
-								if (anIntArray981[defaultText] == 2) {
-									boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY + 1, 0);
-									boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY, i3);
-								}
-								if (anIntArray981[defaultText] == 3) {
-									boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
-											spriteDrawY + 1, spriteDrawX, 0);
-									boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
-											spriteDrawY, spriteDrawX, i3);
-								}
-								if (anIntArray981[defaultText] == 4) {
-									int i4 = boldText.method384(s);
-									int k4 = ((150 - anIntArray982[defaultText]) * (i4 + 100))
-											/ 150;
-									Rasterizer2D.setDrawingArea(334, spriteDrawX - 50, spriteDrawX + 50,
-											0);
-									boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4);
-									boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4);
-									Rasterizer2D.defaultDrawingAreaSize();
-								}
-								if (anIntArray981[defaultText] == 5) {
-									int j4 = 150 - anIntArray982[defaultText];
-									int l4 = 0;
-									if (j4 < 25)
-										l4 = j4 - 25;
-									else if (j4 > 125)
-										l4 = j4 - 125;
-									Rasterizer2D.setDrawingArea(spriteDrawY + 5, 0, 512,
-											spriteDrawY - boldText.verticalSpace - 1);
-									boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX);
-									boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX);
-									Rasterizer2D.defaultDrawingAreaSize();
-								}
+					if (textColourEffect[defaultText] == 7)
+						i3 = anInt1265 % 20 >= 10 ? 65535 : 255;
+					if (textColourEffect[defaultText] == 8)
+						i3 = anInt1265 % 20 >= 10 ? 0x80ff80 : 45056;
+					if (textColourEffect[defaultText] == 9) {
+						int j3 = 150 - anIntArray982[defaultText];
+						if (j3 < 50)
+							i3 = 0xff0000 + 1280 * j3;
+						else if (j3 < 100)
+							i3 = 0xffff00 - 0x50000 * (j3 - 50);
+						else if (j3 < 150)
+							i3 = 65280 + 5 * (j3 - 100);
+					}
+					if (textColourEffect[defaultText] == 10) {
+						int k3 = 150 - anIntArray982[defaultText];
+						if (k3 < 50)
+							i3 = 0xff0000 + 5 * k3;
+						else if (k3 < 100)
+							i3 = 0xff00ff - 0x50000 * (k3 - 50);
+						else if (k3 < 150)
+							i3 = (255 + 0x50000 * (k3 - 100)) - 5 * (k3 - 100);
+					}
+					if (textColourEffect[defaultText] == 11) {
+						int l3 = 150 - anIntArray982[defaultText];
+						if (l3 < 50)
+							i3 = 0xffffff - 0x50005 * l3;
+						else if (l3 < 100)
+							i3 = 65280 + 0x50005 * (l3 - 50);
+						else if (l3 < 150)
+							i3 = 0xffffff - 0x50000 * (l3 - 100);
+					}
+					if (anIntArray981[defaultText] == 0) {
+						boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
+						boldText.drawText(i3, s, spriteDrawY, spriteDrawX);
+					}
+					if (anIntArray981[defaultText] == 1) {
+						boldText.wave(0, s, spriteDrawX, anInt1265, spriteDrawY + 1);
+						boldText.wave(i3, s, spriteDrawX, anInt1265, spriteDrawY);
+					}
+					if (anIntArray981[defaultText] == 2) {
+						boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY + 1, 0);
+						boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY, i3);
+					}
+					if (anIntArray981[defaultText] == 3) {
+						boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
+								spriteDrawY + 1, spriteDrawX, 0);
+						boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
+								spriteDrawY, spriteDrawX, i3);
+					}
+					if (anIntArray981[defaultText] == 4) {
+						int i4 = boldText.method384(s);
+						int k4 = ((150 - anIntArray982[defaultText]) * (i4 + 100))
+								/ 150;
+						Rasterizer2D.setDrawingArea(334, spriteDrawX - 50, spriteDrawX + 50,
+								0);
+						boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4);
+						boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4);
+						Rasterizer2D.defaultDrawingAreaSize();
+					}
+					if (anIntArray981[defaultText] == 5) {
+						int j4 = 150 - anIntArray982[defaultText];
+						int l4 = 0;
+						if (j4 < 25)
+							l4 = j4 - 25;
+						else if (j4 > 125)
+							l4 = j4 - 125;
+						Rasterizer2D.setDrawingArea(spriteDrawY + 5, 0, 512,
+								spriteDrawY - boldText.verticalSpace - 1);
+						boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX);
+						boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX);
+						Rasterizer2D.defaultDrawingAreaSize();
+					}
 				} else {
 					boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
 					boldText.drawText(0xffff00, s, spriteDrawY, spriteDrawX);
@@ -3296,10 +3296,10 @@ public class Client extends GameApplet {
 
 	// local variables will not stay in memory which will help with performance.
 	final int[] sideIconsX =
-		{17, 49, 81, 114, 146, 180, 214, 16, 49, 82, 116, 148, 184, 217},
-		sideIconsY = {9, 7, 5, 5, 2, 3, 7, 303, 306, 306, 302, 305, 303, 304, 303},
-		sideIconsId = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
-		sideIconsTab = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+			{17, 49, 81, 114, 146, 180, 214, 16, 49, 82, 116, 148, 184, 217},
+			sideIconsY = {9, 7, 5, 5, 2, 3, 7, 303, 306, 306, 302, 305, 303, 304, 303},
+			sideIconsId = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+			sideIconsTab = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
 	public void drawSideIcons() {
 
@@ -3355,7 +3355,7 @@ public class Client extends GameApplet {
 		} else if (changeTabArea && frameWidth >= 1000) {
 			int[] iconId = {0, 1, 2, 3, 4, 5, 6, -1, 8, 9, 7, 11, 12, 13};
 			int[] iconX =
-				{50, 80, 114, 143, 176, 208, 240, 242, 273, 306, 338, 370, 404, 433};
+					{50, 80, 114, 143, 176, 208, 240, 242, 273, 306, 338, 370, 404, 433};
 			int[] iconY = {30, 32, 30, 32, 34, 34, 32, 32, 29, 29, 32, 31, 32, 32, 32};
 			for (int i = 0; i < sideIconsTab.length; i++) {
 				if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
@@ -3378,9 +3378,9 @@ public class Client extends GameApplet {
 	private void drawRedStones() {
 
 		final int[] redStonesX =
-			{6, 44, 77, 110, 143, 176, 209, 6, 44, 77, 110, 143, 176, 209},
-			redStonesY = {0, 0, 0, 0, 0, 0, 0, 298, 298, 298, 298, 298, 298, 298},
-			redStonesId = {35, 39, 39, 39, 39, 39, 36, 37, 39, 39, 39, 39, 39, 38};
+				{6, 44, 77, 110, 143, 176, 209, 6, 44, 77, 110, 143, 176, 209},
+				redStonesY = {0, 0, 0, 0, 0, 0, 0, 298, 298, 298, 298, 298, 298, 298},
+				redStonesId = {35, 39, 39, 39, 39, 39, 36, 37, 39, 39, 39, 39, 39, 38};
 
 		int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 247;
 		int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
@@ -3401,43 +3401,43 @@ public class Client extends GameApplet {
 			}
 		} else if (changeTabArea && frameWidth >= 1000) {
 			int[] stoneX =
-				{417, 385, 353, 321, 289, 256, 224, 129, 193, 161, 130, 98, 65, 33};
+					{417, 385, 353, 321, 289, 256, 224, 129, 193, 161, 130, 98, 65, 33};
 			if (tabInterfaceIDs[tabId] != -1 && tabId != 10 && showTabComponents) {
 				cacheSprite[39].drawSprite(frameWidth - stoneX[tabId], frameHeight - 37);
 			}
 		}
 	}
-	
+
 	public String getNameForTab(int tab) {
 		switch(tab) {
-		case 0:
-			return "Combat";
-		case 1:
-			return "Stats";
-		case 2:
-			return "Spawn tab";
-		case 3:
-			return "Inventory";
-		case 4:
-			return "Equipment";
-		case 5:
-			return "Prayer";
-		case 6:
-			return "Magic";
-		case 7:
-			return "Clan chat";
-		case 8:
-			return "Friends";
-		case 9:
-			return "Ignores";
-		case 10:
-			return "Logout";
-		case 11:
-			return "Settings";
-		case 12:
-			return "Emotes";
-		case 13:
-			return "PvP";
+			case 0:
+				return "Combat";
+			case 1:
+				return "Stats";
+			case 2:
+				return "Spawn tab";
+			case 3:
+				return "Inventory";
+			case 4:
+				return "Equipment";
+			case 5:
+				return "Prayer";
+			case 6:
+				return "Magic";
+			case 7:
+				return "Clan chat";
+			case 8:
+				return "Friends";
+			case 9:
+				return "Ignores";
+			case 10:
+				return "Logout";
+			case 11:
+				return "Settings";
+			case 12:
+				return "Emotes";
+			case 13:
+				return "PvP";
 		}
 		return "";
 	}
@@ -3472,7 +3472,7 @@ public class Client extends GameApplet {
 						maxOpacity = false;
 					}
 				}
-			cacheSprite[602].drawTransparentSprite(0, 0, pcOpacity);	
+				cacheSprite[602].drawTransparentSprite(0, 0, pcOpacity);
 			}
 		} else if (frameMode != ScreenMode.FIXED && !changeTabArea) {
 			Rasterizer2D.drawTransparentBox(frameWidth - 217, frameHeight - 304, 195, 270, 0x3E3529,
@@ -3486,7 +3486,7 @@ public class Client extends GameApplet {
 					cacheSprite[50].drawSprite(frameWidth - 204, frameHeight - 311);
 				}
 				for (int x = frameWidth - 417, y = frameHeight - 37, index =
-						0; x <= frameWidth - 30 && index < 13; x += 32, index++) {
+					 0; x <= frameWidth - 30 && index < 13; x += 32, index++) {
 					cacheSprite[46].drawSprite(x, y);
 				}
 			} else if (frameWidth < 1000) {
@@ -3496,11 +3496,11 @@ public class Client extends GameApplet {
 					cacheSprite[50].drawSprite(frameWidth - 204, frameHeight - 348);
 				}
 				for (int x = frameWidth - 226, y = frameHeight - 73, index =
-						0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
+					 0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
 					cacheSprite[46].drawSprite(x, y);
 				}
 				for (int x = frameWidth - 226, y = frameHeight - 37, index =
-						0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
+					 0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
 					cacheSprite[46].drawSprite(x, y);
 				}
 			}
@@ -3762,7 +3762,7 @@ public class Client extends GameApplet {
 		//try {
 		if (nameHash == 0L)
 			return;
-		sendPacket(new AddFriend(nameHash)); 
+		sendPacket(new AddFriend(nameHash));
 		/*if (friendsCount >= 100 && member != 1) {
 				sendMessage("Your friendlist is full. Max of 100 for free users, and 200 for members",
 						0, "");
@@ -3793,7 +3793,7 @@ public class Client extends GameApplet {
 				friendsListAsLongs[friendsCount] = nameHash;
 				friendsNodeIDs[friendsCount] = 0;
 				friendsCount++;
-				sendPacket(new AddFriend(nameHash));                  
+				sendPacket(new AddFriend(nameHash));
 				return;
 			}
 		} catch (RuntimeException runtimeexception) {
@@ -3805,19 +3805,19 @@ public class Client extends GameApplet {
 
 	private int getCenterHeight(int z, int y, int x) {
 		int worldX = x >> 7;
-			int worldY = y >> 7;
-						if (worldX < 0 || worldY < 0 || worldX > 103 || worldY > 103)
-							return 0;
-						int plane = z;
-						if (plane < 3 && (tileFlags[1][worldX][worldY] & 2) == 2)
-							plane++;
-						int sizeX = x & 0x7f;
-						int sizeY = y & 0x7f;
-						int i2 = tileHeights[plane][worldX][worldY] * (128 - sizeX)
-								+ tileHeights[plane][worldX + 1][worldY] * sizeX >> 7;
-						int j2 = tileHeights[plane][worldX][worldY + 1] * (128 - sizeX)
-								+ tileHeights[plane][worldX + 1][worldY + 1] * sizeX >> 7;
-						return i2 * (128 - sizeY) + j2 * sizeY >> 7;
+		int worldY = y >> 7;
+		if (worldX < 0 || worldY < 0 || worldX > 103 || worldY > 103)
+			return 0;
+		int plane = z;
+		if (plane < 3 && (tileFlags[1][worldX][worldY] & 2) == 2)
+			plane++;
+		int sizeX = x & 0x7f;
+		int sizeY = y & 0x7f;
+		int i2 = tileHeights[plane][worldX][worldY] * (128 - sizeX)
+				+ tileHeights[plane][worldX + 1][worldY] * sizeX >> 7;
+		int j2 = tileHeights[plane][worldX][worldY + 1] * (128 - sizeX)
+				+ tileHeights[plane][worldX + 1][worldY + 1] * sizeX >> 7;
+		return i2 * (128 - sizeY) + j2 * sizeY >> 7;
 	}
 
 	private static String intToKOrMil(int j) {
@@ -3919,7 +3919,7 @@ public class Client extends GameApplet {
 		//Interacting includes combat, following, etc.
 		int interact = localPlayer.interactingEntity - 32768;
 		if(interact > 0) {
-			Player player = players[interact];			
+			Player player = players[interact];
 			showPlayer(player, interact << 14, false);
 		}
 	}
@@ -3949,28 +3949,28 @@ public class Client extends GameApplet {
 			destinationX = 0;
 		player.aBoolean1699 = (lowMemory && playerCount > 50 || playerCount > 200) && !flag && player.movementAnimation == player.idleAnimation;
 		int j1 = player.x >> 7;
-			int k1 = player.y >> 7;
-			if (j1 < 0 || j1 >= 104 || k1 < 0 || k1 >= 104) {
-				return false;
-			}
-			if (player.playerModel != null && tick >= player.objectModelStart && tick < player.objectModelStop) {
-				player.aBoolean1699 = false;
-				player.anInt1709 = getCenterHeight(plane, player.y, player.x);
-				scene.addToScenePlayerAsObject(plane, player.y, player, player.orientation, player.objectAnInt1722GreaterYLoc, player.x, player.anInt1709, player.objectAnInt1719LesserXLoc, player.objectAnInt1721GreaterXLoc, i1, player.objectAnInt1720LesserYLoc);
-				return false;
-			}
-			if ((player.x & 0x7f) == 64 && (player.y & 0x7f) == 64) {
-				if (anIntArrayArray929[j1][k1] == anInt1265) {
-					return false;
-				}
-				anIntArrayArray929[j1][k1] = anInt1265;
-			}
+		int k1 = player.y >> 7;
+		if (j1 < 0 || j1 >= 104 || k1 < 0 || k1 >= 104) {
+			return false;
+		}
+		if (player.playerModel != null && tick >= player.objectModelStart && tick < player.objectModelStop) {
+			player.aBoolean1699 = false;
 			player.anInt1709 = getCenterHeight(plane, player.y, player.x);
-			scene.addAnimableA(plane, player.orientation, player.anInt1709, i1, player.y, 60, player.x, player, player.animationStretches);
-			return true;
+			scene.addToScenePlayerAsObject(plane, player.y, player, player.orientation, player.objectAnInt1722GreaterYLoc, player.x, player.anInt1709, player.objectAnInt1719LesserXLoc, player.objectAnInt1721GreaterXLoc, i1, player.objectAnInt1720LesserYLoc);
+			return false;
+		}
+		if ((player.x & 0x7f) == 64 && (player.y & 0x7f) == 64) {
+			if (anIntArrayArray929[j1][k1] == anInt1265) {
+				return false;
+			}
+			anIntArrayArray929[j1][k1] = anInt1265;
+		}
+		player.anInt1709 = getCenterHeight(plane, player.y, player.x);
+		scene.addAnimableA(plane, player.orientation, player.anInt1709, i1, player.y, 60, player.x, player, player.animationStretches);
+		return true;
 	}
 
-	private boolean promptUserForInput(Widget widget) {              
+	private boolean promptUserForInput(Widget widget) {
 		int contentType = widget.contentType;
 		if (friendServerStatus == 2) {
 			if (contentType == 201) {
@@ -4074,9 +4074,9 @@ public class Client extends GameApplet {
 		return false;
 	}
 
-	private void parsePlayerSynchronizationMask(Buffer stream) {            
-		for (int count = 0; count < mobsAwaitingUpdateCount; count++) {                  
-			int index = mobsAwaitingUpdate[count];                  
+	private void parsePlayerSynchronizationMask(Buffer stream) {
+		for (int count = 0; count < mobsAwaitingUpdateCount; count++) {
+			int index = mobsAwaitingUpdate[count];
 			Player player = players[index];
 
 			int mask = stream.readUnsignedByte();
@@ -4085,7 +4085,7 @@ public class Client extends GameApplet {
 				mask += stream.readUnsignedByte() << 8;
 			}
 
-			appendPlayerUpdateMask(mask, index, stream, player);                  
+			appendPlayerUpdateMask(mask, index, stream, player);
 		}
 	}
 
@@ -4094,111 +4094,111 @@ public class Client extends GameApplet {
 		if (k1 != 0) {
 			int l1 = scene.getMask(j1, l, i, k1);
 			int k2 = l1 >> 6 & 3;
-				int i3 = l1 & 0x1f;
-				int k3 = k;
-				if (k1 > 0)
-					k3 = i1;
-				int ai[] = minimapImage.myPixels;
-				int k4 = 24624 + l * 4 + (103 - i) * 512 * 4;
-				int i5 = k1 >> 14 & 0x7fff;
-									ObjectDefinition def = ObjectDefinition.lookup(i5);                  
-									if (def.mapscene != -1) {
-										IndexedImage background_2 = mapScenes[def.mapscene];
-										if (background_2 != null) {
-											int i6 = (def.objectSizeX * 4 - background_2.width) / 2;
-											int j6 = (def.objectSizeY * 4 - background_2.height) / 2;
-											background_2.draw(48 + l * 4 + i6,
-													48 + (104 - i - def.objectSizeY) * 4 + j6);
-										}
-									} else {
-										if (i3 == 0 || i3 == 2)
-											if (k2 == 0) {
-												ai[k4] = k3;
-												ai[k4 + 512] = k3;
-												ai[k4 + 1024] = k3;
-												ai[k4 + 1536] = k3;
-											} else if (k2 == 1) {
-												ai[k4] = k3;
-												ai[k4 + 1] = k3;
-												ai[k4 + 2] = k3;
-												ai[k4 + 3] = k3;
-											} else if (k2 == 2) {
-												ai[k4 + 3] = k3;
-												ai[k4 + 3 + 512] = k3;
-												ai[k4 + 3 + 1024] = k3;
-												ai[k4 + 3 + 1536] = k3;
-											} else if (k2 == 3) {
-												ai[k4 + 1536] = k3;
-												ai[k4 + 1536 + 1] = k3;
-												ai[k4 + 1536 + 2] = k3;
-												ai[k4 + 1536 + 3] = k3;
-											}
-										if (i3 == 3)
-											if (k2 == 0)
-												ai[k4] = k3;
-											else if (k2 == 1)
-												ai[k4 + 3] = k3;
-											else if (k2 == 2)
-												ai[k4 + 3 + 1536] = k3;
-											else if (k2 == 3)
-												ai[k4 + 1536] = k3;
-										if (i3 == 2)
-											if (k2 == 3) {
-												ai[k4] = k3;
-												ai[k4 + 512] = k3;
-												ai[k4 + 1024] = k3;
-												ai[k4 + 1536] = k3;
-											} else if (k2 == 0) {
-												ai[k4] = k3;
-												ai[k4 + 1] = k3;
-												ai[k4 + 2] = k3;
-												ai[k4 + 3] = k3;
-											} else if (k2 == 1) {
-												ai[k4 + 3] = k3;
-												ai[k4 + 3 + 512] = k3;
-												ai[k4 + 3 + 1024] = k3;
-												ai[k4 + 3 + 1536] = k3;
-											} else if (k2 == 2) {
-												ai[k4 + 1536] = k3;
-												ai[k4 + 1536 + 1] = k3;
-												ai[k4 + 1536 + 2] = k3;
-												ai[k4 + 1536 + 3] = k3;
-											}
-									}
+			int i3 = l1 & 0x1f;
+			int k3 = k;
+			if (k1 > 0)
+				k3 = i1;
+			int ai[] = minimapImage.myPixels;
+			int k4 = 24624 + l * 4 + (103 - i) * 512 * 4;
+			int i5 = k1 >> 14 & 0x7fff;
+			ObjectDefinition def = ObjectDefinition.lookup(i5);
+			if (def.mapscene != -1) {
+				IndexedImage background_2 = mapScenes[def.mapscene];
+				if (background_2 != null) {
+					int i6 = (def.objectSizeX * 4 - background_2.width) / 2;
+					int j6 = (def.objectSizeY * 4 - background_2.height) / 2;
+					background_2.draw(48 + l * 4 + i6,
+							48 + (104 - i - def.objectSizeY) * 4 + j6);
+				}
+			} else {
+				if (i3 == 0 || i3 == 2)
+					if (k2 == 0) {
+						ai[k4] = k3;
+						ai[k4 + 512] = k3;
+						ai[k4 + 1024] = k3;
+						ai[k4 + 1536] = k3;
+					} else if (k2 == 1) {
+						ai[k4] = k3;
+						ai[k4 + 1] = k3;
+						ai[k4 + 2] = k3;
+						ai[k4 + 3] = k3;
+					} else if (k2 == 2) {
+						ai[k4 + 3] = k3;
+						ai[k4 + 3 + 512] = k3;
+						ai[k4 + 3 + 1024] = k3;
+						ai[k4 + 3 + 1536] = k3;
+					} else if (k2 == 3) {
+						ai[k4 + 1536] = k3;
+						ai[k4 + 1536 + 1] = k3;
+						ai[k4 + 1536 + 2] = k3;
+						ai[k4 + 1536 + 3] = k3;
+					}
+				if (i3 == 3)
+					if (k2 == 0)
+						ai[k4] = k3;
+					else if (k2 == 1)
+						ai[k4 + 3] = k3;
+					else if (k2 == 2)
+						ai[k4 + 3 + 1536] = k3;
+					else if (k2 == 3)
+						ai[k4 + 1536] = k3;
+				if (i3 == 2)
+					if (k2 == 3) {
+						ai[k4] = k3;
+						ai[k4 + 512] = k3;
+						ai[k4 + 1024] = k3;
+						ai[k4 + 1536] = k3;
+					} else if (k2 == 0) {
+						ai[k4] = k3;
+						ai[k4 + 1] = k3;
+						ai[k4 + 2] = k3;
+						ai[k4 + 3] = k3;
+					} else if (k2 == 1) {
+						ai[k4 + 3] = k3;
+						ai[k4 + 3 + 512] = k3;
+						ai[k4 + 3 + 1024] = k3;
+						ai[k4 + 3 + 1536] = k3;
+					} else if (k2 == 2) {
+						ai[k4 + 1536] = k3;
+						ai[k4 + 1536 + 1] = k3;
+						ai[k4 + 1536 + 2] = k3;
+						ai[k4 + 1536 + 3] = k3;
+					}
+			}
 		}
 		k1 = scene.getGameObjectUid(j1, l, i);
 		if (k1 != 0) {
 			int i2 = scene.getMask(j1, l, i, k1);
 			int l2 = i2 >> 6 & 3;
-									int j3 = i2 & 0x1f;
-									int l3 = k1 >> 14 & 0x7fff;
-									ObjectDefinition class46_1 = ObjectDefinition.lookup(l3);
-									if (class46_1.mapscene != -1) {
-										IndexedImage background_1 = mapScenes[class46_1.mapscene];
-										if (background_1 != null) {
-											int j5 = (class46_1.objectSizeX * 4 - background_1.width) / 2;
-											int k5 = (class46_1.objectSizeY * 4 - background_1.height) / 2;
-											background_1.draw(48 + l * 4 + j5,
-													48 + (104 - i - class46_1.objectSizeY) * 4 + k5);
-										}
-									} else if (j3 == 9) {
-										int l4 = 0xeeeeee;
-										if (k1 > 0)
-											l4 = 0xee0000;
-										int ai1[] = minimapImage.myPixels;
-										int l5 = 24624 + l * 4 + (103 - i) * 512 * 4;
-										if (l2 == 0 || l2 == 2) {
-											ai1[l5 + 1536] = l4;
-											ai1[l5 + 1024 + 1] = l4;
-											ai1[l5 + 512 + 2] = l4;
-											ai1[l5 + 3] = l4;
-										} else {
-											ai1[l5] = l4;
-											ai1[l5 + 512 + 1] = l4;
-											ai1[l5 + 1024 + 2] = l4;
-											ai1[l5 + 1536 + 3] = l4;
-										}
-									}
+			int j3 = i2 & 0x1f;
+			int l3 = k1 >> 14 & 0x7fff;
+			ObjectDefinition class46_1 = ObjectDefinition.lookup(l3);
+			if (class46_1.mapscene != -1) {
+				IndexedImage background_1 = mapScenes[class46_1.mapscene];
+				if (background_1 != null) {
+					int j5 = (class46_1.objectSizeX * 4 - background_1.width) / 2;
+					int k5 = (class46_1.objectSizeY * 4 - background_1.height) / 2;
+					background_1.draw(48 + l * 4 + j5,
+							48 + (104 - i - class46_1.objectSizeY) * 4 + k5);
+				}
+			} else if (j3 == 9) {
+				int l4 = 0xeeeeee;
+				if (k1 > 0)
+					l4 = 0xee0000;
+				int ai1[] = minimapImage.myPixels;
+				int l5 = 24624 + l * 4 + (103 - i) * 512 * 4;
+				if (l2 == 0 || l2 == 2) {
+					ai1[l5 + 1536] = l4;
+					ai1[l5 + 1024 + 1] = l4;
+					ai1[l5 + 512 + 2] = l4;
+					ai1[l5 + 3] = l4;
+				} else {
+					ai1[l5] = l4;
+					ai1[l5 + 512 + 1] = l4;
+					ai1[l5 + 1024 + 2] = l4;
+					ai1[l5 + 1536 + 3] = l4;
+				}
+			}
 		}
 		k1 = scene.getGroundDecorationUid(j1, l, i);
 		if (k1 != 0) {
@@ -4399,9 +4399,9 @@ public class Client extends GameApplet {
 	private void createProjectiles() {
 		for (Projectile class30_sub2_sub4_sub4 = (Projectile) projectiles
 				.reverseGetFirst(); class30_sub2_sub4_sub4 != null; class30_sub2_sub4_sub4 =
-				(Projectile) projectiles.reverseGetNext())
+					 (Projectile) projectiles.reverseGetNext())
 			if (class30_sub2_sub4_sub4.projectileZ != plane
-			|| tick > class30_sub2_sub4_sub4.stopCycle)
+					|| tick > class30_sub2_sub4_sub4.stopCycle)
 				class30_sub2_sub4_sub4.unlink();
 			else if (tick >= class30_sub2_sub4_sub4.startCycle) {
 				if (class30_sub2_sub4_sub4.target > 0) {
@@ -4411,7 +4411,7 @@ public class Client extends GameApplet {
 						class30_sub2_sub4_sub4.calculateIncrements(tick, npc.y,
 								getCenterHeight(class30_sub2_sub4_sub4.projectileZ, npc.y,
 										npc.x)
-								- class30_sub2_sub4_sub4.endHeight,
+										- class30_sub2_sub4_sub4.endHeight,
 								npc.x);
 				}
 				if (class30_sub2_sub4_sub4.target < 0) {
@@ -4426,7 +4426,7 @@ public class Client extends GameApplet {
 						class30_sub2_sub4_sub4.calculateIncrements(tick, player.y,
 								getCenterHeight(class30_sub2_sub4_sub4.projectileZ, player.y,
 										player.x)
-								- class30_sub2_sub4_sub4.endHeight,
+										- class30_sub2_sub4_sub4.endHeight,
 								player.x);
 				}
 				class30_sub2_sub4_sub4.progressCycles(tickDelta);
@@ -4447,7 +4447,7 @@ public class Client extends GameApplet {
 	}
 
 	private void drawLogo() {
-			byte sprites[] = titleArchive.readFile("title.dat");
+		byte sprites[] = titleArchive.readFile("title.dat");
 		Sprite sprite = new Sprite(sprites, this);
 		flameLeftBackground.initDrawingArea();
 		sprite.method346(0, 0);
@@ -4580,7 +4580,7 @@ public class Client extends GameApplet {
 				int k3 = i3 + (j2 << 7);
 				int i4 = anIntArray829[k3 + 128]
 						- anIntArray1190[k3 + anInt1275 & anIntArray1190.length - 1]
-								/ 5;
+						/ 5;
 				if (i4 < 0)
 					i4 = 0;
 				anIntArray828[k3] = i4;
@@ -4775,12 +4775,12 @@ public class Client extends GameApplet {
 		timeoutCounter++;
 		if (timeoutCounter > 150)
 			dropClient();
-		processPlayerMovement();            
-		processNpcMovement();            
+		processPlayerMovement();
+		processNpcMovement();
 		processTrackUpdates();
-		processMobChatText();            
-		
-		tickDelta++;            
+		processMobChatText();
+
+		tickDelta++;
 		if (crossType != 0) {
 			crossIndex += 20;
 			if (crossIndex >= 400)
@@ -4846,7 +4846,7 @@ public class Client extends GameApplet {
 							}
 
 							sendPacket(new SwitchItemSlot(anInt1084, j1, anInt1085, mouseInvInterfaceIndex));
-						}		
+						}
 					}
 				} else if ((anInt1253 == 1 || menuHasAddFriend(menuActionRow - 1))
 						&& menuActionRow > 2)
@@ -4916,8 +4916,8 @@ public class Client extends GameApplet {
 		for(int i = 10061, j = 10091, id = 0; id <= 22; i++, j++, id++) {
 			Widget.interfaceCache[i].defaultText = Integer.toString(maximumLevels[skillIdsOrder[id]]);
 			Widget.interfaceCache[j].defaultText = Integer.toString(maximumLevels[skillIdsOrder[id]]);
-			
-			
+
+
 		}
 		totalLevel = IntStream.of(maximumLevels).sum();
 		Widget.interfaceCache[10121].defaultText = Integer.toString(totalLevel);
@@ -4977,7 +4977,7 @@ public class Client extends GameApplet {
 		}
 		welcomeScreenRaised = true;
 	}
-	
+
 	public void drawLoadingText(int i, String s) {
 		anInt1079 = i;
 		aString1049 = s;
@@ -5016,7 +5016,7 @@ public class Client extends GameApplet {
 	}
 
 	private void method65(int i, int j, int k, int l, Widget class9, int i1, boolean flag,
-			int j1) {
+						  int j1) {
 		int anInt992;
 		if (aBoolean972)
 			anInt992 = 32;
@@ -5047,36 +5047,36 @@ public class Client extends GameApplet {
 
 	private boolean clickObject(int i, int j, int k) {
 		int i1 = i >> 14 & 0x7fff;
-			int j1 = scene.getMask(plane, k, j, i);
-			if (j1 == -1)
-				return false;
-			int k1 = j1 & 0x1f;
-			int l1 = j1 >> 6 & 3;
-			if (k1 == 10 || k1 == 11 || k1 == 22) {
-				ObjectDefinition class46 = ObjectDefinition.lookup(i1);
-				int i2;
-				int j2;
-				if (l1 == 0 || l1 == 2) {
-					i2 = class46.objectSizeX;
-					j2 = class46.objectSizeY;
-				} else {
-					i2 = class46.objectSizeY;
-					j2 = class46.objectSizeX;
-				}
-				int k2 = class46.surroundings;
-				if (l1 != 0)
-					k2 = (k2 << l1 & 0xf) + (k2 >> 4 - l1);
-				doWalkTo(2, 0, j2, 0, localPlayer.pathY[0], i2, k2, j, localPlayer.pathX[0],
-						false, k);
+		int j1 = scene.getMask(plane, k, j, i);
+		if (j1 == -1)
+			return false;
+		int k1 = j1 & 0x1f;
+		int l1 = j1 >> 6 & 3;
+		if (k1 == 10 || k1 == 11 || k1 == 22) {
+			ObjectDefinition class46 = ObjectDefinition.lookup(i1);
+			int i2;
+			int j2;
+			if (l1 == 0 || l1 == 2) {
+				i2 = class46.objectSizeX;
+				j2 = class46.objectSizeY;
 			} else {
-				doWalkTo(2, l1, 0, k1 + 1, localPlayer.pathY[0], 0, 0, j, localPlayer.pathX[0],
-						false, k);
+				i2 = class46.objectSizeY;
+				j2 = class46.objectSizeX;
 			}
-			crossX = super.saveClickX;
-			crossY = super.saveClickY;
-			crossType = 2;
-			crossIndex = 0;
-			return true;
+			int k2 = class46.surroundings;
+			if (l1 != 0)
+				k2 = (k2 << l1 & 0xf) + (k2 >> 4 - l1);
+			doWalkTo(2, 0, j2, 0, localPlayer.pathY[0], i2, k2, j, localPlayer.pathX[0],
+					false, k);
+		} else {
+			doWalkTo(2, l1, 0, k1 + 1, localPlayer.pathY[0], 0, 0, j, localPlayer.pathX[0],
+					false, k);
+		}
+		crossX = super.saveClickX;
+		crossY = super.saveClickY;
+		crossType = 2;
+		crossIndex = 0;
+		return true;
 	}
 
 	public void playSong(int id) {
@@ -5165,7 +5165,7 @@ public class Client extends GameApplet {
 
 
 	private FileArchive createArchive(int file, String displayedName, String name,
-			int expectedCRC, int x) {
+									  int expectedCRC, int x) {
 		byte buffer[] = null;
 
 		try {
@@ -5287,10 +5287,10 @@ public class Client extends GameApplet {
 		}
 
 		int first = firstMenuAction[id];
-		int button = secondMenuAction[id];            
+		int button = secondMenuAction[id];
 		int action = menuActionTypes[id];
 		int clicked = selectedMenuActions[id];
-		
+
 
 		if (action >= 2000) {
 			action -= 2000;
@@ -5300,7 +5300,7 @@ public class Client extends GameApplet {
 			sendPacket(new ClickButton(155));
 			return;
 		}
-		
+
 		if (action == 661) { //Spec orb
 			int slot = 1;
 			sendPacket(new OperateItem(slot, clicked));
@@ -5321,7 +5321,7 @@ public class Client extends GameApplet {
 			sendPacket(new OperateItem(slot, clicked));
 			return;
 		}
-		
+
 		if (action == 665) { //Spec orb
 			int slot = 5;
 			sendPacket(new OperateItem(slot, clicked));
@@ -5345,30 +5345,30 @@ public class Client extends GameApplet {
 		if (action == 696) {
 			setNorth();
 		}
-		 if (action == 769) {
-	            Widget d = Widget.interfaceCache[button];
-	            Widget p = Widget.interfaceCache[localPlayerIndex];
-	            if (!d.dropDown.isOpen()) {
-	                if (p.dropDownOpen != null) {
-	                    p.dropDownOpen.dropDown.setOpen(false);
-	                }
-	                p.dropDownOpen = d;
-	            } else {
-	                p.dropDownOpen = null;
-	            }
-	            d.dropDown.setOpen(!d.dropDown.isOpen());
-	        }
-	        if (action == 770) {
-	        	Widget d = Widget.interfaceCache[button];
-	        	Widget p = Widget.interfaceCache[localPlayerIndex];
-	            if (first >= d.dropDown.getOptions().length)
-	                return;
+		if (action == 769) {
+			Widget d = Widget.interfaceCache[button];
+			Widget p = Widget.interfaceCache[localPlayerIndex];
+			if (!d.dropDown.isOpen()) {
+				if (p.dropDownOpen != null) {
+					p.dropDownOpen.dropDown.setOpen(false);
+				}
+				p.dropDownOpen = d;
+			} else {
+				p.dropDownOpen = null;
+			}
+			d.dropDown.setOpen(!d.dropDown.isOpen());
+		}
+		if (action == 770) {
+			Widget d = Widget.interfaceCache[button];
+			Widget p = Widget.interfaceCache[localPlayerIndex];
+			if (first >= d.dropDown.getOptions().length)
+				return;
 
-	            d.dropDown.setSelected(d.dropDown.getOptions()[first]);
-	            d.dropDown.setOpen(false);
-	            d.dropDown.getDrop().selectOption(first, this, d);
-	            p.dropDownOpen = null;
-	        }
+			d.dropDown.setSelected(d.dropDown.getOptions()[first]);
+			d.dropDown.setOpen(false);
+			d.dropDown.getDrop().selectOption(first, this, d);
+			p.dropDownOpen = null;
+		}
 
 		// custom
 		if (action == 1506 && Configuration.enableOrbs) { // Select quick
@@ -5389,21 +5389,21 @@ public class Client extends GameApplet {
 		// button clicks
 		switch (action) {
 
-		case 1315:
-		case 1316:
-		case 1317:
-		case 1318:
-		case 1319:
-		case 1320:
-		case 1321:
-		case 879:
-		case 850:
-		case 475:
-		case 476:
-		case 1050:
-			// button click
-			sendPacket(new ClickButton(action));
-			break;
+			case 1315:
+			case 1316:
+			case 1317:
+			case 1318:
+			case 1319:
+			case 1320:
+			case 1321:
+			case 879:
+			case 850:
+			case 475:
+			case 476:
+			case 1050:
+				// button click
+				sendPacket(new ClickButton(action));
+				break;
 		}
 
 		// custom
@@ -5465,7 +5465,7 @@ public class Client extends GameApplet {
 			crossY = super.saveClickY;
 			crossType = 2;
 			crossIndex = 0;
-			// pickup ground item                  
+			// pickup ground item
 			sendPacket(new PickupItem(button + regionBaseY, clicked, first + regionBaseX));
 		}
 
@@ -5490,7 +5490,7 @@ public class Client extends GameApplet {
 		}
 
 		// item option 1
-		if (action == 74) {     
+		if (action == 74) {
 			sendPacket(new UseItem(button, clicked, first));
 			atInventoryLoopCycle = 0;
 			atInventoryInterface = button;
@@ -5514,129 +5514,129 @@ public class Client extends GameApplet {
 
 				switch (button) {
 
-				case 19144:
-					inventoryOverlay(15106, 3213);
-					resetAnimation(15106);
-					updateChatbox = true;
-					break;
+					case 19144:
+						inventoryOverlay(15106, 3213);
+						resetAnimation(15106);
+						updateChatbox = true;
+						break;
 
-				case 42501:
-					frameMode(ScreenMode.FIXED);
-					break;
+					case 42501:
+						frameMode(ScreenMode.FIXED);
+						break;
 
-				case 42504:
-					frameMode(ScreenMode.RESIZABLE);
-					break;
+					case 42504:
+						frameMode(ScreenMode.RESIZABLE);
+						break;
 
-				case 40500:
-				case 40501:
-					searchingSpawnTab = true;
-					break;
-				case 23003:
-					Configuration.alwaysLeftClickAttack = !Configuration.alwaysLeftClickAttack;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23005:
-					Configuration.combatOverlayBox = !Configuration.combatOverlayBox;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23007:
-					Configuration.hitmarks554 = !Configuration.hitmarks554;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23009:
-					Configuration.hpBar554 = !Configuration.hpBar554;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23011:
-					Configuration.enableTweening = !Configuration.enableTweening;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23013:
-					Configuration.enableRoofs = !Configuration.enableRoofs;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23015:
-					Configuration.enableFog = !Configuration.enableFog;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 23024:
-					Configuration.bountyHunterInterface = !Configuration.bountyHunterInterface;
-					savePlayerData();
-					updateSettings();
-					sendPacket(new ClickButton(button));
-					break;
-				case 53007:
-					Configuration.escapeCloseInterface = !Configuration.escapeCloseInterface;
-					savePlayerData();
-					updateSettings();
-					break;
-				case 53002:
-					TabBindings.restoreDefault();
-					savePlayerData();
-					break;
-					
-				/** Faster spec bars toggle **/
-				case 29138:
-				case 29038:
-				case 29063:
-				case 29113:
-				case 29163:
-				case 29188:
-				case 29213:
-				case 29238:
-				case 30007:
-				case 48023:
-				case 33033:
-				case 30108:
-				case 7473:
-				case 7562:
-				case 7487:
-				case 7788:
-				case 8481:
-				case 7612:
-				case 7587:
-				case 7662:
-				case 7462:
-				case 7548:
-				case 7687:
-				case 7537:
-				case 7623:
-				case 12322:
-				case 7637:
-				case 12311:
-				case 155:
+					case 40500:
+					case 40501:
+						searchingSpawnTab = true;
+						break;
+					case 23003:
+						Configuration.alwaysLeftClickAttack = !Configuration.alwaysLeftClickAttack;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23005:
+						Configuration.combatOverlayBox = !Configuration.combatOverlayBox;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23007:
+						Configuration.hitmarks554 = !Configuration.hitmarks554;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23009:
+						Configuration.hpBar554 = !Configuration.hpBar554;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23011:
+						Configuration.enableTweening = !Configuration.enableTweening;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23013:
+						Configuration.enableRoofs = !Configuration.enableRoofs;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23015:
+						Configuration.enableFog = !Configuration.enableFog;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 23024:
+						Configuration.bountyHunterInterface = !Configuration.bountyHunterInterface;
+						savePlayerData();
+						updateSettings();
+						sendPacket(new ClickButton(button));
+						break;
+					case 53007:
+						Configuration.escapeCloseInterface = !Configuration.escapeCloseInterface;
+						savePlayerData();
+						updateSettings();
+						break;
+					case 53002:
+						TabBindings.restoreDefault();
+						savePlayerData();
+						break;
 
-					/** Just update the color of the bar before sending packet, to make it look smoother **/
-					WeaponInterface wepInterface = WeaponInterface.get(tabInterfaceIDs[0]);
-					if(wepInterface != null && wepInterface.getSpecialMeter() > 0) {
-						boolean active = Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.contains("@yel@");
-						if(active) {
-							Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText = 
-									Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.replaceAll("@yel@", "@bla@");
-						} else {
-							Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText = Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.replaceAll("@bla@", "@yel@");
+					/** Faster spec bars toggle **/
+					case 29138:
+					case 29038:
+					case 29063:
+					case 29113:
+					case 29163:
+					case 29188:
+					case 29213:
+					case 29238:
+					case 30007:
+					case 48023:
+					case 33033:
+					case 30108:
+					case 7473:
+					case 7562:
+					case 7487:
+					case 7788:
+					case 8481:
+					case 7612:
+					case 7587:
+					case 7662:
+					case 7462:
+					case 7548:
+					case 7687:
+					case 7537:
+					case 7623:
+					case 12322:
+					case 7637:
+					case 12311:
+					case 155:
+
+						/** Just update the color of the bar before sending packet, to make it look smoother **/
+						WeaponInterface wepInterface = WeaponInterface.get(tabInterfaceIDs[0]);
+						if(wepInterface != null && wepInterface.getSpecialMeter() > 0) {
+							boolean active = Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.contains("@yel@");
+							if(active) {
+								Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText =
+										Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.replaceAll("@yel@", "@bla@");
+							} else {
+								Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText = Widget.interfaceCache[wepInterface.getSpecialMeter()].defaultText.replaceAll("@bla@", "@yel@");
+							}
 						}
-					}
 
-					sendPacket(new SpecialAttack(button));
-					break;
+						sendPacket(new SpecialAttack(button));
+						break;
 
-				default:
-					if(backDialogueId == 40500 && widget.geSearchButton) {
-						sendPacket(new SendButtonAndId(button, searchResults[itemIdToSend]));
-						backDialogueId = -1;
-						searchSyntax = "";
-					}
-					sendPacket(new ClickButton(button));
-					break;
+					default:
+						if(backDialogueId == 40500 && widget.geSearchButton) {
+							sendPacket(new SendButtonAndId(button, searchResults[itemIdToSend]));
+							backDialogueId = -1;
+							searchSyntax = "";
+						}
+						sendPacket(new ClickButton(button));
+						break;
 				}
 			}
 		}
@@ -5663,7 +5663,7 @@ public class Client extends GameApplet {
 
 		// npc option 1
 		if (action == 20) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						npc.pathY[0], localPlayer.pathX[0],
@@ -5679,7 +5679,7 @@ public class Client extends GameApplet {
 
 		// player option 2
 		if (action == 779) {
-			Player player = players[clicked];                  
+			Player player = players[clicked];
 			if (player != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						player.pathY[0], localPlayer.pathX[0],
@@ -5738,7 +5738,7 @@ public class Client extends GameApplet {
 				}
 				return;
 			}
-			
+
 			//Key bindings?
 			if(openInterfaceId == 53000) {
 				for(int i = 0; i < 14; i++) {
@@ -5772,11 +5772,11 @@ public class Client extends GameApplet {
 		}
 
 
-		if (action == 337 || action == 42 || action == 792 || action == 322) {            	
+		if (action == 337 || action == 42 || action == 792 || action == 322) {
 			String string = menuActionText[id];
-			int indexOf = string.indexOf("@whi@");                  
+			int indexOf = string.indexOf("@whi@");
 			if (indexOf != -1) {
-				long usernameHash = StringUtils.encodeBase37(string.substring(indexOf + 5).trim());                        
+				long usernameHash = StringUtils.encodeBase37(string.substring(indexOf + 5).trim());
 				if (action == 337) {
 					addFriend(usernameHash);
 				}
@@ -5822,14 +5822,14 @@ public class Client extends GameApplet {
 			}
 		}
 		if (action == 484 || action == 6) {
-			String string = menuActionText[id];                  
-			int indexOf = string.indexOf("@whi@");                  
+			String string = menuActionText[id];
+			int indexOf = string.indexOf("@whi@");
 			if (indexOf != -1) {
 				string = string.substring(indexOf + 5).trim();
 				String username = StringUtils.formatText(StringUtils.decodeBase37(StringUtils.encodeBase37(string)));
 				boolean flag9 = false;
-				for (int count = 0; count < playerCount; count++) {                        	
-					Player player = players[playerList[count]];                              
+				for (int count = 0; count < playerCount; count++) {
+					Player player = players[playerList[count]];
 					if (player == null || player.name == null || !player.name.equalsIgnoreCase(username)) {
 						continue;
 					}
@@ -5878,7 +5878,7 @@ public class Client extends GameApplet {
 				atInventoryInterfaceType = 3;
 		}
 
-		// Using the drop option of an item            
+		// Using the drop option of an item
 		if (action == 847) {
 			// drop item
 			sendPacket(new DropItem(clicked, button, first));
@@ -5936,7 +5936,7 @@ public class Client extends GameApplet {
 
 		// player option 2
 		if (action == 27) {
-			Player player = players[clicked];                  
+			Player player = players[clicked];
 			if (player != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						player.pathY[0], localPlayer.pathX[0],
@@ -6022,16 +6022,16 @@ public class Client extends GameApplet {
 			chatTypeView = 5;
 			updateChatbox = true;
 		}
-		
+
 		if (action == 912) {
 			if(!sendingAutochat) {
-			publicChatMode = 4;
-			updateChatbox = true;
-			messagePromptRaised = true;
-			aString1121 = "Send autochat: @dre@[off]";
-			promptInput = "";
-			sendingAutochat = true;
-			updateChatbox = true;
+				publicChatMode = 4;
+				updateChatbox = true;
+				messagePromptRaised = true;
+				aString1121 = "Send autochat: @dre@[off]";
+				promptInput = "";
+				sendingAutochat = true;
+				updateChatbox = true;
 			} else {
 				autochatString = "";
 				publicChatMode = 0;
@@ -6047,7 +6047,7 @@ public class Client extends GameApplet {
 		if (action == 997) {
 			publicChatMode = 3;
 			updateChatbox = true;
-			sendingAutochat = false; 
+			sendingAutochat = false;
 			sendPacket(new ChatSettings(publicChatMode, privateChatMode, tradeMode));
 		}
 
@@ -6055,7 +6055,7 @@ public class Client extends GameApplet {
 		if (action == 996) {
 			publicChatMode = 2;
 			updateChatbox = true;
-			sendingAutochat = false; 
+			sendingAutochat = false;
 			sendPacket(new ChatSettings(publicChatMode, privateChatMode, tradeMode));
 		}
 
@@ -6063,7 +6063,7 @@ public class Client extends GameApplet {
 		if (action == 995) {
 			publicChatMode = 1;
 			updateChatbox = true;
-			sendingAutochat = false; 
+			sendingAutochat = false;
 			sendPacket(new ChatSettings(publicChatMode, privateChatMode, tradeMode));
 		}
 
@@ -6071,7 +6071,7 @@ public class Client extends GameApplet {
 		if (action == 994) {
 			publicChatMode = 0;
 			updateChatbox = true;
-			sendingAutochat = false; 
+			sendingAutochat = false;
 			sendPacket(new ChatSettings(publicChatMode, privateChatMode, tradeMode));
 		}
 
@@ -6200,37 +6200,37 @@ public class Client extends GameApplet {
 			// button click
 
 			switch(button) {
-			case 930:
-				Client.cameraZoom = 1200;
-				break;
-			case 931:
-				Client.cameraZoom = 800;
-				break;
-			case 932:
-				Client.cameraZoom = 400;
-				break;
-			case 933:
-				Client.cameraZoom = 200;
-				break;
-			case 934:
-				Client.cameraZoom = 0;
-				break;
-			case 32506:
-				bankTabShow = BankTabShow.FIRST_ITEM_IN_TAB;
-				break;
-			case 32507:
-				bankTabShow = BankTabShow.DIGIT;
-				break;
-			case 32508:
-				bankTabShow = BankTabShow.ROMAN_NUMERAL;
-				break;
+				case 930:
+					Client.cameraZoom = 1200;
+					break;
+				case 931:
+					Client.cameraZoom = 800;
+					break;
+				case 932:
+					Client.cameraZoom = 400;
+					break;
+				case 933:
+					Client.cameraZoom = 200;
+					break;
+				case 934:
+					Client.cameraZoom = 0;
+					break;
+				case 32506:
+					bankTabShow = BankTabShow.FIRST_ITEM_IN_TAB;
+					break;
+				case 32507:
+					bankTabShow = BankTabShow.DIGIT;
+					break;
+				case 32508:
+					bankTabShow = BankTabShow.ROMAN_NUMERAL;
+					break;
 
-			default:
-				sendPacket(new ClickButton(button));
-				break;
+				default:
+					sendPacket(new ClickButton(button));
+					break;
 			}
 
-			Widget widget = Widget.interfaceCache[button];                  
+			Widget widget = Widget.interfaceCache[button];
 			if (widget.valueIndexArray != null && widget.valueIndexArray[0][0] == 5) {
 				int i2 = widget.valueIndexArray[0][1];
 				if (settings[i2] != widget.requiredValues[0]) {
@@ -6242,7 +6242,7 @@ public class Client extends GameApplet {
 
 		// Using the 2nd option of an npc
 		if (action == 225) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						npc.pathY[0], localPlayer.pathX[0],
@@ -6265,7 +6265,7 @@ public class Client extends GameApplet {
 
 		// Using the 3rd option of an npc
 		if (action == 965) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						npc.pathY[0], localPlayer.pathX[0],
@@ -6308,7 +6308,7 @@ public class Client extends GameApplet {
 
 		// Clicking "Examine" option on an npc
 		if (action == 1025 || action == 1025) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				NpcDefinition entityDef = npc.desc;
 				if (entityDef.childrenIDs != null)
@@ -6327,7 +6327,7 @@ public class Client extends GameApplet {
 
 		// Using the "Attack" option on a npc
 		if (action == 412) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						npc.pathY[0], localPlayer.pathX[0],
@@ -6357,7 +6357,7 @@ public class Client extends GameApplet {
 
 		// Using the 3rd option of a player
 		if (action == 729) {
-			Player player = players[clicked];                  
+			Player player = players[clicked];
 			if (player != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						player.pathY[0], localPlayer.pathX[0],
@@ -6372,7 +6372,7 @@ public class Client extends GameApplet {
 
 		// Using the 4th option of a player
 		if (action == 577) {
-			Player player = players[clicked];                  
+			Player player = players[clicked];
 			if (player != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						player.pathY[0], localPlayer.pathX[0],
@@ -6404,7 +6404,7 @@ public class Client extends GameApplet {
 			crossType = 2;
 			crossIndex = 0;
 			//anti-cheat)
-			
+
 			/*outgoing.writeOpcode(23);
 			outgoing.writeLEShort(button + regionBaseY);
 			outgoing.writeLEShort(clicked);
@@ -6493,14 +6493,14 @@ public class Client extends GameApplet {
 
 		// reply to private message
 		if (action == 639) {
-			String text = menuActionText[id]; 
+			String text = menuActionText[id];
 
 			int indexOf = text.indexOf("@whi@");
 
 			if (indexOf != -1) {
-				long usernameHash = StringUtils.encodeBase37(text.substring(indexOf + 5).trim());                        
+				long usernameHash = StringUtils.encodeBase37(text.substring(indexOf + 5).trim());
 				int resultIndex = -1;
-				for (int friendIndex = 0; friendIndex < friendsCount; friendIndex++) {                        	
+				for (int friendIndex = 0; friendIndex < friendsCount; friendIndex++) {
 					if (friendsListAsLongs[friendIndex] != usernameHash) {
 						continue;
 					}
@@ -6508,7 +6508,7 @@ public class Client extends GameApplet {
 					break;
 				}
 
-				if (resultIndex != -1 && friendsNodeIDs[resultIndex] > 0) {                        	
+				if (resultIndex != -1 && friendsNodeIDs[resultIndex] > 0) {
 					updateChatbox = true;
 					inputDialogState = 0;
 					messagePromptRaised = true;
@@ -6536,7 +6536,7 @@ public class Client extends GameApplet {
 
 		// Npc option 4
 		if (action == 478) {
-			Npc npc = npcs[clicked];                  
+			Npc npc = npcs[clicked];
 			if (npc != null) {
 				doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
 						npc.pathY[0], localPlayer.pathX[0],
@@ -6608,9 +6608,9 @@ public class Client extends GameApplet {
 		}
 
 		if (action == 1226) {
-			int objectId = clicked >> 14 & 0x7fff;            
-			ObjectDefinition definition = ObjectDefinition.lookup(objectId);                  
-			String message;                  
+			int objectId = clicked >> 14 & 0x7fff;
+			ObjectDefinition definition = ObjectDefinition.lookup(objectId);
+			String message;
 			if (definition.description != null)
 				message = new String(definition.description);
 			else
@@ -6638,7 +6638,7 @@ public class Client extends GameApplet {
 
 
 		if (action == 1448 || action == 1125) {
-			ItemDefinition definition = ItemDefinition.lookup(clicked);                  
+			ItemDefinition definition = ItemDefinition.lookup(clicked);
 			if(definition != null) {
 				sendPacket(new ExamineItem(clicked));
 			}
@@ -6674,202 +6674,202 @@ public class Client extends GameApplet {
 			int l = Model.anIntArray1688[k];
 			int i1 = l & 0x7f;
 			int j1 = l >> 7 & 0x7f;
-		int k1 = l >> 29 & 3;
-		int l1 = l >> 14 & 0x7fff;
-		if (l == j)
-			continue;
-		j = l;
-		if (k1 == 2 && scene.getMask(plane, i1, j1, l) >= 0) {
-			ObjectDefinition objectDef = ObjectDefinition.lookup(l1);
-			if (objectDef.childrenIDs != null)
-				objectDef = objectDef.method580();
-			if (objectDef == null)
+			int k1 = l >> 29 & 3;
+			int l1 = l >> 14 & 0x7fff;
+			if (l == j)
 				continue;
-			if (itemSelected == 1) {
-				menuActionText[menuActionRow] = "Use " + selectedItemName
-						+ " with @cya@" + objectDef.name;
-				menuActionTypes[menuActionRow] = 62;
-				selectedMenuActions[menuActionRow] = l;
-				firstMenuAction[menuActionRow] = i1;
-				secondMenuAction[menuActionRow] = j1;
-				menuActionRow++;
-			} else if (spellSelected == 1) {
-				if ((spellUsableOn & 4) == 4) {
-					menuActionText[menuActionRow] =
-							spellTooltip + " @cya@" + objectDef.name;
-					menuActionTypes[menuActionRow] = 956;
+			j = l;
+			if (k1 == 2 && scene.getMask(plane, i1, j1, l) >= 0) {
+				ObjectDefinition objectDef = ObjectDefinition.lookup(l1);
+				if (objectDef.childrenIDs != null)
+					objectDef = objectDef.method580();
+				if (objectDef == null)
+					continue;
+				if (itemSelected == 1) {
+					menuActionText[menuActionRow] = "Use " + selectedItemName
+							+ " with @cya@" + objectDef.name;
+					menuActionTypes[menuActionRow] = 62;
 					selectedMenuActions[menuActionRow] = l;
 					firstMenuAction[menuActionRow] = i1;
 					secondMenuAction[menuActionRow] = j1;
 					menuActionRow++;
-				}
-			} else {
-				if (objectDef.interactions != null) {
-					for (int type = 4; type >= 0; type--)
-						if (objectDef.interactions[type] != null) {
-							menuActionText[menuActionRow] =
-									objectDef.interactions[type] + " @cya@"
-											+ objectDef.name;
-							if (type == 0)
-								menuActionTypes[menuActionRow] = 502;
-							if (type == 1)
-								menuActionTypes[menuActionRow] = 900;
-							if (type == 2)
-								menuActionTypes[menuActionRow] = 113;
-							if (type == 3)
-								menuActionTypes[menuActionRow] = 872;
-							if (type == 4)
-								menuActionTypes[menuActionRow] = 1062;
-							selectedMenuActions[menuActionRow] = l;
-							firstMenuAction[menuActionRow] = i1;
-							secondMenuAction[menuActionRow] = j1;
-							menuActionRow++;
-						}
-
-				}
-				if ((myPrivilege >= 2 && myPrivilege <= 4)) {
-					menuActionText[menuActionRow] = "Examine @cya@" + objectDef.name
-							+ " @gre@(@whi@" + l1 + "@gre@) (@whi@"
-							+ (i1 + regionBaseX) + "," + (j1 + regionBaseY)
-							+ "@gre@)";
-				} else {
-					menuActionText[menuActionRow] =
-							"Examine @cya@" + objectDef.name;
-				}
-				menuActionTypes[menuActionRow] = 1226;
-				selectedMenuActions[menuActionRow] = objectDef.type << 14;
-				firstMenuAction[menuActionRow] = i1;
-				secondMenuAction[menuActionRow] = j1;
-				menuActionRow++;
-			}
-		}
-		if (k1 == 1) {
-			Npc npc = npcs[l1];
-			try {
-				if (npc.desc.size == 1 && (npc.x & 0x7f) == 64
-						&& (npc.y & 0x7f) == 64) {
-					for (int j2 = 0; j2 < npcCount; j2++) {
-						Npc npc2 = npcs[npcIndices[j2]];
-						if (npc2 != null && npc2 != npc && npc2.desc.size == 1
-								&& npc2.x == npc.x && npc2.y == npc.y) {
-							if(npc2.showActions()) {
-								buildAtNPCMenu(npc2.desc, npcIndices[j2], j1, i1);
-							}
-						}
-					}
-					for (int l2 = 0; l2 < playerCount; l2++) {
-						Player player = players[playerList[l2]];
-						if (player != null && player.x == npc.x
-								&& player.y == npc.y)
-							buildAtPlayerMenu(i1, playerList[l2], player,
-									j1);
-					}
-				}
-				if(npc.showActions()) {
-					buildAtNPCMenu(npc.desc, l1, j1, i1);
-				}
-			} catch (Exception e) {
-			}
-		}
-		if (k1 == 0) {
-			Player player = players[l1];
-			if ((player.x & 0x7f) == 64 && (player.y & 0x7f) == 64) {
-				for (int k2 = 0; k2 < npcCount; k2++) {
-					Npc class30_sub2_sub4_sub1_sub1_2 = npcs[npcIndices[k2]];
-					if (class30_sub2_sub4_sub1_sub1_2 != null
-							&& class30_sub2_sub4_sub1_sub1_2.desc.size == 1
-							&& class30_sub2_sub4_sub1_sub1_2.x == player.x
-							&& class30_sub2_sub4_sub1_sub1_2.y == player.y)
-						buildAtNPCMenu(class30_sub2_sub4_sub1_sub1_2.desc,
-								npcIndices[k2], j1, i1);
-				}
-
-				for (int i3 = 0; i3 < playerCount; i3++) {
-					Player class30_sub2_sub4_sub1_sub2_2 =
-							players[playerList[i3]];
-					if (class30_sub2_sub4_sub1_sub2_2 != null
-							&& class30_sub2_sub4_sub1_sub2_2 != player
-							&& class30_sub2_sub4_sub1_sub2_2.x == player.x
-							&& class30_sub2_sub4_sub1_sub2_2.y == player.y)
-						buildAtPlayerMenu(i1, playerList[i3],
-								class30_sub2_sub4_sub1_sub2_2, j1);
-				}
-
-			}
-			buildAtPlayerMenu(i1, l1, player, j1);
-		}
-		if (k1 == 3) {
-			Deque class19 = groundItems[plane][i1][j1];
-			if (class19 != null) {
-				for (Item item = (Item) class19.getFirst(); item != null; item =
-						(Item) class19.getNext()) {
-					ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
-					if (itemSelected == 1) {
-						menuActionText[menuActionRow] = "Use " + selectedItemName
-								+ " with @lre@" + itemDef.name;
-						menuActionTypes[menuActionRow] = 511;
-						selectedMenuActions[menuActionRow] = item.ID;
+				} else if (spellSelected == 1) {
+					if ((spellUsableOn & 4) == 4) {
+						menuActionText[menuActionRow] =
+								spellTooltip + " @cya@" + objectDef.name;
+						menuActionTypes[menuActionRow] = 956;
+						selectedMenuActions[menuActionRow] = l;
 						firstMenuAction[menuActionRow] = i1;
 						secondMenuAction[menuActionRow] = j1;
 						menuActionRow++;
-					} else if (spellSelected == 1) {
-						if ((spellUsableOn & 1) == 1) {
-							menuActionText[menuActionRow] =
-									spellTooltip + " @lre@" + itemDef.name;
-							menuActionTypes[menuActionRow] = 94;
-							selectedMenuActions[menuActionRow] = item.ID;
-							firstMenuAction[menuActionRow] = i1;
-							secondMenuAction[menuActionRow] = j1;
-							menuActionRow++;
-						}
-					} else {
-						for (int j3 = 4; j3 >= 0; j3--)
-							if (itemDef.groundActions != null
-							&& itemDef.groundActions[j3] != null) {
+					}
+				} else {
+					if (objectDef.interactions != null) {
+						for (int type = 4; type >= 0; type--)
+							if (objectDef.interactions[type] != null) {
 								menuActionText[menuActionRow] =
-										itemDef.groundActions[j3]
-												+ " @lre@"
-												+ itemDef.name;
-								if (j3 == 0)
-									menuActionTypes[menuActionRow] = 652;
-								if (j3 == 1)
-									menuActionTypes[menuActionRow] = 567;
-								if (j3 == 2)
-									menuActionTypes[menuActionRow] = 234;
-								if (j3 == 3)
-									menuActionTypes[menuActionRow] = 244;
-								if (j3 == 4)
-									menuActionTypes[menuActionRow] = 213;
-								selectedMenuActions[menuActionRow] = item.ID;
-								firstMenuAction[menuActionRow] = i1;
-								secondMenuAction[menuActionRow] = j1;
-								menuActionRow++;
-							} else if (j3 == 2) {
-								menuActionText[menuActionRow] =
-										"Take @lre@" + itemDef.name;
-								menuActionTypes[menuActionRow] = 234;
-								selectedMenuActions[menuActionRow] = item.ID;
+										objectDef.interactions[type] + " @cya@"
+												+ objectDef.name;
+								if (type == 0)
+									menuActionTypes[menuActionRow] = 502;
+								if (type == 1)
+									menuActionTypes[menuActionRow] = 900;
+								if (type == 2)
+									menuActionTypes[menuActionRow] = 113;
+								if (type == 3)
+									menuActionTypes[menuActionRow] = 872;
+								if (type == 4)
+									menuActionTypes[menuActionRow] = 1062;
+								selectedMenuActions[menuActionRow] = l;
 								firstMenuAction[menuActionRow] = i1;
 								secondMenuAction[menuActionRow] = j1;
 								menuActionRow++;
 							}
+
 					}
 					if ((myPrivilege >= 2 && myPrivilege <= 4)) {
-						menuActionText[menuActionRow] = "Examine @lre@"
-								+ itemDef.name + " @gre@ (@whi@" + item.ID
+						menuActionText[menuActionRow] = "Examine @cya@" + objectDef.name
+								+ " @gre@(@whi@" + l1 + "@gre@) (@whi@"
+								+ (i1 + regionBaseX) + "," + (j1 + regionBaseY)
 								+ "@gre@)";
 					} else {
 						menuActionText[menuActionRow] =
-								"Examine @lre@" + itemDef.name;
+								"Examine @cya@" + objectDef.name;
 					}
-					menuActionTypes[menuActionRow] = 1448;
-					selectedMenuActions[menuActionRow] = item.ID;
+					menuActionTypes[menuActionRow] = 1226;
+					selectedMenuActions[menuActionRow] = objectDef.type << 14;
 					firstMenuAction[menuActionRow] = i1;
 					secondMenuAction[menuActionRow] = j1;
 					menuActionRow++;
 				}
 			}
-		}
+			if (k1 == 1) {
+				Npc npc = npcs[l1];
+				try {
+					if (npc.desc.size == 1 && (npc.x & 0x7f) == 64
+							&& (npc.y & 0x7f) == 64) {
+						for (int j2 = 0; j2 < npcCount; j2++) {
+							Npc npc2 = npcs[npcIndices[j2]];
+							if (npc2 != null && npc2 != npc && npc2.desc.size == 1
+									&& npc2.x == npc.x && npc2.y == npc.y) {
+								if(npc2.showActions()) {
+									buildAtNPCMenu(npc2.desc, npcIndices[j2], j1, i1);
+								}
+							}
+						}
+						for (int l2 = 0; l2 < playerCount; l2++) {
+							Player player = players[playerList[l2]];
+							if (player != null && player.x == npc.x
+									&& player.y == npc.y)
+								buildAtPlayerMenu(i1, playerList[l2], player,
+										j1);
+						}
+					}
+					if(npc.showActions()) {
+						buildAtNPCMenu(npc.desc, l1, j1, i1);
+					}
+				} catch (Exception e) {
+				}
+			}
+			if (k1 == 0) {
+				Player player = players[l1];
+				if ((player.x & 0x7f) == 64 && (player.y & 0x7f) == 64) {
+					for (int k2 = 0; k2 < npcCount; k2++) {
+						Npc class30_sub2_sub4_sub1_sub1_2 = npcs[npcIndices[k2]];
+						if (class30_sub2_sub4_sub1_sub1_2 != null
+								&& class30_sub2_sub4_sub1_sub1_2.desc.size == 1
+								&& class30_sub2_sub4_sub1_sub1_2.x == player.x
+								&& class30_sub2_sub4_sub1_sub1_2.y == player.y)
+							buildAtNPCMenu(class30_sub2_sub4_sub1_sub1_2.desc,
+									npcIndices[k2], j1, i1);
+					}
+
+					for (int i3 = 0; i3 < playerCount; i3++) {
+						Player class30_sub2_sub4_sub1_sub2_2 =
+								players[playerList[i3]];
+						if (class30_sub2_sub4_sub1_sub2_2 != null
+								&& class30_sub2_sub4_sub1_sub2_2 != player
+								&& class30_sub2_sub4_sub1_sub2_2.x == player.x
+								&& class30_sub2_sub4_sub1_sub2_2.y == player.y)
+							buildAtPlayerMenu(i1, playerList[i3],
+									class30_sub2_sub4_sub1_sub2_2, j1);
+					}
+
+				}
+				buildAtPlayerMenu(i1, l1, player, j1);
+			}
+			if (k1 == 3) {
+				Deque class19 = groundItems[plane][i1][j1];
+				if (class19 != null) {
+					for (Item item = (Item) class19.getFirst(); item != null; item =
+							(Item) class19.getNext()) {
+						ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
+						if (itemSelected == 1) {
+							menuActionText[menuActionRow] = "Use " + selectedItemName
+									+ " with @lre@" + itemDef.name;
+							menuActionTypes[menuActionRow] = 511;
+							selectedMenuActions[menuActionRow] = item.ID;
+							firstMenuAction[menuActionRow] = i1;
+							secondMenuAction[menuActionRow] = j1;
+							menuActionRow++;
+						} else if (spellSelected == 1) {
+							if ((spellUsableOn & 1) == 1) {
+								menuActionText[menuActionRow] =
+										spellTooltip + " @lre@" + itemDef.name;
+								menuActionTypes[menuActionRow] = 94;
+								selectedMenuActions[menuActionRow] = item.ID;
+								firstMenuAction[menuActionRow] = i1;
+								secondMenuAction[menuActionRow] = j1;
+								menuActionRow++;
+							}
+						} else {
+							for (int j3 = 4; j3 >= 0; j3--)
+								if (itemDef.groundActions != null
+										&& itemDef.groundActions[j3] != null) {
+									menuActionText[menuActionRow] =
+											itemDef.groundActions[j3]
+													+ " @lre@"
+													+ itemDef.name;
+									if (j3 == 0)
+										menuActionTypes[menuActionRow] = 652;
+									if (j3 == 1)
+										menuActionTypes[menuActionRow] = 567;
+									if (j3 == 2)
+										menuActionTypes[menuActionRow] = 234;
+									if (j3 == 3)
+										menuActionTypes[menuActionRow] = 244;
+									if (j3 == 4)
+										menuActionTypes[menuActionRow] = 213;
+									selectedMenuActions[menuActionRow] = item.ID;
+									firstMenuAction[menuActionRow] = i1;
+									secondMenuAction[menuActionRow] = j1;
+									menuActionRow++;
+								} else if (j3 == 2) {
+									menuActionText[menuActionRow] =
+											"Take @lre@" + itemDef.name;
+									menuActionTypes[menuActionRow] = 234;
+									selectedMenuActions[menuActionRow] = item.ID;
+									firstMenuAction[menuActionRow] = i1;
+									secondMenuAction[menuActionRow] = j1;
+									menuActionRow++;
+								}
+						}
+						if ((myPrivilege >= 2 && myPrivilege <= 4)) {
+							menuActionText[menuActionRow] = "Examine @lre@"
+									+ itemDef.name + " @gre@ (@whi@" + item.ID
+									+ "@gre@)";
+						} else {
+							menuActionText[menuActionRow] =
+									"Examine @lre@" + itemDef.name;
+						}
+						menuActionTypes[menuActionRow] = 1448;
+						selectedMenuActions[menuActionRow] = item.ID;
+						firstMenuAction[menuActionRow] = i1;
+						secondMenuAction[menuActionRow] = j1;
+						menuActionRow++;
+					}
+				}
+			}
 		}
 	}
 
@@ -7047,7 +7047,7 @@ public class Client extends GameApplet {
 				if(key == 32 && backDialogueId == 4893) {
 					sendPacket(new NextDialogue(4899));
 					continuedDialogue = true;
-				} 
+				}
 
 				//3 Options
 				if(backDialogueId == 2469) {
@@ -7101,7 +7101,7 @@ public class Client extends GameApplet {
 						ChatMessageCodec.encode(promptInput, outgoing);
 						outgoing.writeBytes(outgoing.currentPosition - k);
 						promptInput = ChatMessageCodec.processText(promptInput);*/
-						
+
 						promptInput = promptInput.substring(0, 1).toUpperCase() + promptInput.substring(1);
 						sendPacket(new PrivateMessage(aLong953, promptInput));
 						// promptInput = Censor.doCensor(promptInput);
@@ -7203,14 +7203,14 @@ public class Client extends GameApplet {
 					}
 					tabToReplyPm();
 				}
-				
+
 				//Remove the ability for players to do crowns..
 				if(inputString.contains("@cr")) {
 					inputString = inputString.replaceAll("@cr", "");
 				} else if(inputString.contains("<img=")) {
 					inputString = inputString.replaceAll("<img=", "");
 				}
-				
+
 				if ((key == 13 || key == 10) && inputString.length() > 0) {
 
 					if (inputString.startsWith("/")) {
@@ -7223,20 +7223,20 @@ public class Client extends GameApplet {
 							w2.inventoryItemId[i] = rewards[i];
 							w2.inventoryAmounts[i] = 1;
 							if(w2.inventoryItemId[i] == 996) {
-									w2.inventoryAmounts[i] = 50000000;
+								w2.inventoryAmounts[i] = 50000000;
 							}
-							
+
 						}
 						for(int j22 = 0; j22 < 300; j22++) {
-						if(j22 == w.inventoryItemId.length) {
-							break;
-						}
+							if(j22 == w.inventoryItemId.length) {
+								break;
+							}
 							w.inventoryItemId[j22] = rewards[MiscUtils.random(rewards.length - 1)];
 							w.inventoryAmounts[j22] = 1;
 							if(w.inventoryItemId[j22] == 996) {
 								w.inventoryAmounts[j22] = 50000000;
-						}
-							
+							}
+
 						}
 					}
 					if (inputString.startsWith("::datadump")) {
@@ -7252,12 +7252,12 @@ public class Client extends GameApplet {
 						sendPacket(new Command(inputString.substring(2)));
 					} else {
 						String text = inputString.toLowerCase();
-						int colorCode = 0;                                    
+						int colorCode = 0;
 						if (text.startsWith("yellow:")) {
 							colorCode = 0;
 							inputString = inputString.substring(7);
 						} else if (text.startsWith("red:")) {
-							colorCode = 1;                                          
+							colorCode = 1;
 							inputString = inputString.substring(4);
 						} else if (text.startsWith("green:")) {
 							colorCode = 2;
@@ -7286,11 +7286,11 @@ public class Client extends GameApplet {
 						} else if (text.startsWith("glow2:")) {
 							colorCode = 10;
 							inputString = inputString.substring(6);
-						} else if (text.startsWith("glow3:")) {                                    	
+						} else if (text.startsWith("glow3:")) {
 							colorCode = 11;
 							inputString = inputString.substring(6);
 						}
-						text = inputString.toLowerCase();                                    
+						text = inputString.toLowerCase();
 						int effectCode = 0;
 						if (text.startsWith("wave:")) {
 							effectCode = 1;
@@ -7311,7 +7311,7 @@ public class Client extends GameApplet {
 						// chat
 						/*outgoing.writeOpcode(4);
 						outgoing.writeByte(0);
-						int bufPos = outgoing.currentPosition;                                    
+						int bufPos = outgoing.currentPosition;
 						outgoing.writeByteS(effectCode);
 						outgoing.writeByteS(colorCode);
 						chatBuffer.currentPosition = 0;
@@ -7327,14 +7327,14 @@ public class Client extends GameApplet {
 						localPlayer.textColour = colorCode;
 						localPlayer.textEffect = effectCode;
 						localPlayer.textCycle = 150;
-						
+
 						if (myPrivilege > 0 && myPrivilege < 10) {
 							sendMessage(localPlayer.spokenText, 2,
 									"@cr"+myPrivilege+"@" + localPlayer.name);
 						} else  {
 							sendMessage(localPlayer.spokenText, 2, localPlayer.name);
 						}
-						
+
 						if (publicChatMode == 2) {
 							publicChatMode = 3;
 							// privacy option
@@ -7362,7 +7362,7 @@ public class Client extends GameApplet {
 
 			int privacyOptionType = chatTypes[message];
 
-			String crownName = chatNames[message];                  
+			String crownName = chatNames[message];
 
 			int k1 = (70 - l * 14 + 42) + anInt1089 + 4 + 5;
 
@@ -7401,7 +7401,7 @@ public class Client extends GameApplet {
 				crownName = crownName.substring(6);
 				data = 10;
 			}
-			
+
 
 			if ((privacyOptionType == 1 || privacyOptionType == 2) && (privacyOptionType == 1 || publicChatMode == 0
 					|| publicChatMode == 1 && isFriendOrSelf(crownName))) {
@@ -7823,7 +7823,7 @@ public class Client extends GameApplet {
 					int k2 = anIntArray1065[j2];
 					if (k2 >= 0)
 						aclass30_sub2_sub4_sub6s[i2++] =
-						IdentityKit.kits[k2].bodyModel();
+								IdentityKit.kits[k2].bodyModel();
 				}
 
 				Model model = new Model(i2, aclass30_sub2_sub4_sub6s);
@@ -7952,7 +7952,7 @@ public class Client extends GameApplet {
 			if (daysSinceRecovChange == 201) {
 				if (membersInt == 1)
 					widget.defaultText =
-					"@yel@This is a non-members world: @whi@Since you are a member we";
+							"@yel@This is a non-members world: @whi@Since you are a member we";
 				else
 					widget.defaultText = "";
 			} else if (daysSinceRecovChange == 200) {
@@ -7972,15 +7972,15 @@ public class Client extends GameApplet {
 			if (daysSinceRecovChange == 201) {
 				if (membersInt == 1)
 					widget.defaultText =
-					"@whi@recommend you use a members world instead. You may use";
+							"@whi@recommend you use a members world instead. You may use";
 				else
 					widget.defaultText = "";
 			} else if (daysSinceRecovChange == 200)
 				widget.defaultText =
-				"We strongly recommend you do so now to secure your account.";
+						"We strongly recommend you do so now to secure your account.";
 			else
 				widget.defaultText =
-				"If you do not remember making this change then cancel it immediately";
+						"If you do not remember making this change then cancel it immediately";
 		if (index == 654) {
 			if (daysSinceRecovChange == 201)
 				if (membersInt == 1) {
@@ -8007,9 +8007,9 @@ public class Client extends GameApplet {
 		}
 		GameFont textDrawingArea = regularText;
 		int i = 0;
-		 if (AnnouncementBool) { 
-			  i = 1; 
-		 }
+		if (AnnouncementBool) {
+			i = 1;
+		}
 		if (systemUpdateTime != 0) {
 			i = 1;
 		}
@@ -8107,7 +8107,7 @@ public class Client extends GameApplet {
 			updateChatbox = true;
 		}
 
-		for (int index = 499; index > 0; index--) {            	
+		for (int index = 499; index > 0; index--) {
 			chatTypes[index] = chatTypes[index - 1];
 			chatNames[index] = chatNames[index - 1];
 			chatMessages[index] = chatMessages[index - 1];
@@ -8127,24 +8127,24 @@ public class Client extends GameApplet {
 
 	private final void minimapHovers() {
 		final boolean fixed = frameMode == ScreenMode.FIXED;
-		
-		hpHover = fixed ? hpHover = super.mouseX >= 516 && super.mouseX <= 571 && super.mouseY >= 47 && super.mouseY < 72 : 
-			super.mouseX >= frameWidth - 220 && super.mouseX <= frameWidth - 160 && super.mouseY >= 42 && super.mouseY < 74;
-		
-		prayHover = fixed ? prayHover = super.mouseX >= 518 && super.mouseX <= 572 && super.mouseY >= 85 && super.mouseY < 117 : 
-			super.mouseX >= frameWidth - 220 && super.mouseX <= frameWidth - 160 && super.mouseY >= 85 && super.mouseY < 117;
-		
-		
-		runHover = fixed ? runHover = super.mouseX >= 540 && super.mouseX <= 593 && super.mouseY >= 123 && super.mouseY < 154 : 
-			super.mouseX >= frameWidth - 193 && super.mouseX <= frameWidth - 137 && super.mouseY >= 123 && super.mouseY < 153;
-	
+
+		hpHover = fixed ? hpHover = super.mouseX >= 516 && super.mouseX <= 571 && super.mouseY >= 47 && super.mouseY < 72 :
+				super.mouseX >= frameWidth - 220 && super.mouseX <= frameWidth - 160 && super.mouseY >= 42 && super.mouseY < 74;
+
+		prayHover = fixed ? prayHover = super.mouseX >= 518 && super.mouseX <= 572 && super.mouseY >= 85 && super.mouseY < 117 :
+				super.mouseX >= frameWidth - 220 && super.mouseX <= frameWidth - 160 && super.mouseY >= 85 && super.mouseY < 117;
+
+
+		runHover = fixed ? runHover = super.mouseX >= 540 && super.mouseX <= 593 && super.mouseY >= 123 && super.mouseY < 154 :
+				super.mouseX >= frameWidth - 193 && super.mouseX <= frameWidth - 137 && super.mouseY >= 123 && super.mouseY < 153;
+
 		worldHover = fixed ? super.mouseX >= 710 && super.mouseX <= 738 && super.mouseY >= 130 && super.mouseY <= 154 :
-			super.mouseX >= frameWidth - 35 && super.mouseX <= frameWidth - 10 && super.mouseY >= 133 && super.mouseY <= 160;
-		
-		//specialHover = fixed ? super.mouseX >= 686 && super.mouseX <= 742 && super.mouseY >= 124 && super.mouseY <= 156 : 
+				super.mouseX >= frameWidth - 35 && super.mouseX <= frameWidth - 10 && super.mouseY >= 133 && super.mouseY <= 160;
+
+		//specialHover = fixed ? super.mouseX >= 686 && super.mouseX <= 742 && super.mouseY >= 124 && super.mouseY <= 156 :
 		//	super.mouseX >= frameWidth - 58 && super.mouseX <= frameWidth && super.mouseY >= 151 && super.mouseY <= 179;
-		
-			expCounterHover = frameMode == ScreenMode.FIXED ? super.mouseX >= 515 && super.mouseX <= 540 && super.mouseY >= 20 && super.mouseY <= 45 : super.mouseX >= frameWidth - 215 && super.mouseX <= frameWidth - 190 && super.mouseY >= 20 && super.mouseY <= 45;
+
+		expCounterHover = frameMode == ScreenMode.FIXED ? super.mouseX >= 515 && super.mouseX <= 540 && super.mouseY >= 20 && super.mouseY <= 45 : super.mouseX >= frameWidth - 215 && super.mouseX <= frameWidth - 190 && super.mouseY >= 20 && super.mouseY <= 45;
 	}
 
 	private final int[] tabClickX = {38, 33, 33, 33, 33, 33, 38, 38, 33, 33, 33, 33, 33, 38},
@@ -8152,7 +8152,7 @@ public class Client extends GameApplet {
 					724},
 			tabClickY = {169, 169, 169, 169, 169, 169, 169, 466, 466, 466, 466, 466, 466,
 					466};
-	
+
 
 	private void processTabClick() {
 		if (super.clickMode3 == 1) {
@@ -8163,10 +8163,10 @@ public class Client extends GameApplet {
 				for (int i = 0; i < tabClickX.length; i++) {
 					if (super.mouseX >= tabClickStart[i] + xOffset
 							&& super.mouseX <= tabClickStart[i] + tabClickX[i]
-									+ xOffset
-									&& super.mouseY >= tabClickY[i] + yOffset
-									&& super.mouseY < tabClickY[i] + 37 + yOffset
-									&& tabInterfaceIDs[i] != -1) {
+							+ xOffset
+							&& super.mouseY >= tabClickY[i] + yOffset
+							&& super.mouseY < tabClickY[i] + 37 + yOffset
+							&& tabInterfaceIDs[i] != -1) {
 						tabId = i;
 						tabAreaAltered = true;
 
@@ -8553,9 +8553,9 @@ public class Client extends GameApplet {
 			} else if (super.mouseX >= 137 && super.mouseX <= 193) {
 				if(!sendingAutochat) {
 					menuActionText[1] = "@aut@Setup your autochat";
-					} else {
-						menuActionText[1] = "@aut@Stop autochat";
-					}
+				} else {
+					menuActionText[1] = "@aut@Stop autochat";
+				}
 				menuActionTypes[1] = 912;
 				menuActionText[2] = "Hide public";
 				menuActionTypes[2] = 997;
@@ -8618,7 +8618,7 @@ public class Client extends GameApplet {
 		}
 		anInt886 = 0;
 		anInt1315 = 0;
-		if (frameMode == ScreenMode.FIXED ) {			
+		if (frameMode == ScreenMode.FIXED ) {
 			if (super.mouseX > 4 && super.mouseY > 4 && super.mouseX < 516 && super.mouseY < 338) {
 				if (openInterfaceId != -1) {
 					buildInterfaceMenu(4, Widget.interfaceCache[openInterfaceId], super.mouseX, 4, super.mouseY, 0);
@@ -8686,23 +8686,23 @@ public class Client extends GameApplet {
 		anInt886 = 0;
 		anInt1315 = 0;
 		if (backDialogueId == 40500) {
-		if (super.mouseX > 0
-				&& super.mouseY > (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165)
-				&& super.mouseX < 513
-				&& super.mouseY < (frameMode == ScreenMode.FIXED ? 470 : frameHeight - 40)
-				&& showChatComponents) {
-			if (backDialogueId == 40500) {
-				buildInterfaceMenu(0, Widget.interfaceCache[backDialogueId], super.mouseX, (frameMode == ScreenMode.FIXED ? 340 : frameHeight - 165), super.mouseY, 0);
-			}
-			else if (backDialogueId != -1 && backDialogueId != 40500) {
-				buildInterfaceMenu(20, Widget.interfaceCache[backDialogueId], super.mouseX, (frameMode == ScreenMode.FIXED ? 358 : frameHeight - 145), super.mouseY, 0);
+			if (super.mouseX > 0
+					&& super.mouseY > (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165)
+					&& super.mouseX < 513
+					&& super.mouseY < (frameMode == ScreenMode.FIXED ? 470 : frameHeight - 40)
+					&& showChatComponents) {
+				if (backDialogueId == 40500) {
+					buildInterfaceMenu(0, Widget.interfaceCache[backDialogueId], super.mouseX, (frameMode == ScreenMode.FIXED ? 340 : frameHeight - 165), super.mouseY, 0);
+				}
+				else if (backDialogueId != -1 && backDialogueId != 40500) {
+					buildInterfaceMenu(20, Widget.interfaceCache[backDialogueId], super.mouseX, (frameMode == ScreenMode.FIXED ? 358 : frameHeight - 145), super.mouseY, 0);
 
-			} else if (super.mouseY < (frameMode == ScreenMode.FIXED ? 463 : frameHeight - 40)
-					&& super.mouseX < 490) {
-				buildChatAreaMenu(super.mouseY
-						- (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165));
+				} else if (super.mouseY < (frameMode == ScreenMode.FIXED ? 463 : frameHeight - 40)
+						&& super.mouseX < 490) {
+					buildChatAreaMenu(super.mouseY
+							- (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165));
+				}
 			}
-		}
 		}
 		if (backDialogueId != 40500) {
 			if (super.mouseX > 0
@@ -8770,7 +8770,7 @@ public class Client extends GameApplet {
 
 	/**
 	 * The login method for the 317 protocol.
-	 * 
+	 *
 	 * @param name The name of the user trying to login.
 	 * @param password The password of the user trying to login.
 	 * @param reconnecting The flag for the user indicating to attempt to reconnect.
@@ -8819,11 +8819,11 @@ public class Client extends GameApplet {
 
 			if (response == 0) {
 				serverSeed = incoming.readLong(); // aka server session key
-				
+
 				// Generate 64-bit client session key
-				long clientSessionKey = ((long) (Math.random() * 99999999D) << 32) 
+				long clientSessionKey = ((long) (Math.random() * 99999999D) << 32)
 						| (long) (Math.random() * 99999999D);
-				
+
 				// Build RSA block (plaintext, no actual RSA encryption per protocol)
 				outgoing.resetPosition();
 				outgoing.putByte(10); // RSA Packet ID
@@ -8849,7 +8849,7 @@ public class Client extends GameApplet {
 				}
 				login.writeByte(rsaBlockSize); // RSA block size
 				login.writeBytes(outgoing.getBuffer(), rsaBlockSize, 0); // RSA block (plaintext)
-				
+
 				// Setup ISAAC ciphers per protocol spec
 				int seed[] = new int[4];
 				seed[0] = (int) (clientSessionKey >>> 32);
@@ -9134,7 +9134,7 @@ public class Client extends GameApplet {
 	}
 
 	private boolean doWalkTo(int type, int j, int k, int i1, int j1, int k1, int l1, int i2, int j2,
-			boolean flag, int k2) {
+							 boolean flag, int k2) {
 		try {
 			byte byte0 = 104;
 			byte byte1 = 104;
@@ -9340,13 +9340,13 @@ public class Client extends GameApplet {
 							i__4--;
 							buf.putByte(bigX[i__4] - k6);
 							buf.putByte(bigY[i__4] - i7);
-							
-							
+
+
 						}
 						buf.writeUnsignedWordBigEndian(i7 + regionBaseY);
 						buf.method424(keyArr);
-						
-						
+
+
 					}
 				};
 				sendPacket(movementPacket);
@@ -9393,19 +9393,19 @@ public class Client extends GameApplet {
 				npc.graphic = stream.readUShort();
 				int k1 = stream.readInt();
 				npc.graphicHeight = k1 >> 16;
-						npc.graphicDelay = tick + (k1 & 0xffff);
-						npc.currentAnimation = 0;
-						npc.anInt1522 = 0;
-						if (npc.graphicDelay > tick)
-							npc.currentAnimation = -1;
-						if (npc.graphic == 65535)
-							npc.graphic = -1;
+				npc.graphicDelay = tick + (k1 & 0xffff);
+				npc.currentAnimation = 0;
+				npc.anInt1522 = 0;
+				if (npc.graphicDelay > tick)
+					npc.currentAnimation = -1;
+				if (npc.graphic == 65535)
+					npc.graphic = -1;
 			}
 			if ((mask & 8) != 0) {
 				int damage = stream.readShort();
 				int type = stream.readUnsignedByte();
 				int hp = stream.readShort();
-				int maxHp = stream.readShort();                   
+				int maxHp = stream.readShort();
 				npc.updateHitData(type, damage, tick);
 				npc.loopCycleStatus = tick + 300;
 				npc.currentHealth = hp;
@@ -9420,7 +9420,7 @@ public class Client extends GameApplet {
 				npc.spokenText = stream.readString();
 				npc.textCycle = 100;
 			}
-			if ((mask & 0x40) != 0) {                	  
+			if ((mask & 0x40) != 0) {
 				int damage = stream.readShort();
 				int type = stream.readUnsignedByte();
 				int hp = stream.readShort();
@@ -9468,7 +9468,7 @@ public class Client extends GameApplet {
 
 		if (entityDef.combatLevel != 0)
 			s = s + combatDiffColor(localPlayer.combatLevel, entityDef.combatLevel)
-			+ " (level-" + entityDef.combatLevel + ")";
+					+ " (level-" + entityDef.combatLevel + ")";
 		if (itemSelected == 1) {
 			menuActionText[menuActionRow] = "Use " + selectedItemName + " with @yel@" + s;
 			menuActionTypes[menuActionRow] = 582;
@@ -9491,7 +9491,7 @@ public class Client extends GameApplet {
 			if (entityDef.actions != null) {
 				for (int l = 4; l >= 0; l--)
 					if (entityDef.actions[l] != null
-					&& !entityDef.actions[l].equalsIgnoreCase("attack")) {
+							&& !entityDef.actions[l].equalsIgnoreCase("attack")) {
 						menuActionText[menuActionRow] =
 								entityDef.actions[l] + " @yel@" + s;
 						if (l == 0)
@@ -9514,7 +9514,7 @@ public class Client extends GameApplet {
 			if (entityDef.actions != null) {
 				for (int i1 = 4; i1 >= 0; i1--)
 					if (entityDef.actions[i1] != null
-					&& entityDef.actions[i1].equalsIgnoreCase("attack")) {
+							&& entityDef.actions[i1].equalsIgnoreCase("attack")) {
 						char c = '\0';
 						if(!Configuration.alwaysLeftClickAttack) {
 							if (entityDef.combatLevel > localPlayer.combatLevel)
@@ -9564,7 +9564,7 @@ public class Client extends GameApplet {
 		String s;
 		if (player.skill == 0)
 			s = player.name + combatDiffColor(localPlayer.combatLevel, player.combatLevel)
-			+ " (level-" + player.combatLevel + ")";
+					+ " (level-" + player.combatLevel + ")";
 		else
 			s = player.name + " (skill-" + player.skill + ")";
 		if (itemSelected == 1) {
@@ -9584,17 +9584,17 @@ public class Client extends GameApplet {
 				menuActionRow++;
 			}
 		} else {
-			for (int type = 4; type >= 0; type--)  {               	  
+			for (int type = 4; type >= 0; type--)  {
 				if (playerOptions[type] != null) {
 					menuActionText[menuActionRow] = playerOptions[type] + " @whi@" + s;
 					char c = '\0';
 					if (playerOptions[type].equalsIgnoreCase("attack")) {
-						
+
 						if(!Configuration.alwaysLeftClickAttack) {
 							if (player.combatLevel > localPlayer.combatLevel)
 								c = '\u07D0';
 						}
-						
+
 						if (localPlayer.team != 0 && player.team != 0)
 							if (localPlayer.team == player.team) {
 								c = '\u07D0';
@@ -9625,7 +9625,7 @@ public class Client extends GameApplet {
 				}
 			}
 		}
-		for (int row = 0; row < menuActionRow; row++) {            	
+		for (int row = 0; row < menuActionRow; row++) {
 			if (menuActionTypes[row] == 519) {
 				menuActionText[row] = "Walk here @whi@" + s;
 				return;
@@ -9652,8 +9652,8 @@ public class Client extends GameApplet {
 		if (i != 0) {
 			int i1 = scene.getMask(class30_sub1.plane, class30_sub1.x, class30_sub1.y, i);
 			j = i >> 14 & 0x7fff;
-		k = i1 & 0x1f;
-		l = i1 >> 6;
+			k = i1 & 0x1f;
+			l = i1 >> 6;
 		}
 		class30_sub1.getPreviousId = j;
 		class30_sub1.previousType = k;
@@ -9671,10 +9671,10 @@ public class Client extends GameApplet {
 			if (Configuration.JAGCACHED_ENABLED) {
 				JagGrab.onStart();
 			} else {
-			//	CacheDownloader.init(false);
+				//	CacheDownloader.init(false);
 			}
 
-			titleArchive = createArchive(JagGrab.TITLE_CRC, "title screen", "title", JagGrab.CRCs[JagGrab.TITLE_CRC], 25);        
+			titleArchive = createArchive(JagGrab.TITLE_CRC, "title screen", "title", JagGrab.CRCs[JagGrab.TITLE_CRC], 25);
 			smallText = new GameFont(false, "p11_full", titleArchive);
 			regularText = new GameFont(false, "p12_full", titleArchive);
 			boldText = new GameFont(false, "b12_full", titleArchive);
@@ -9683,15 +9683,15 @@ public class Client extends GameApplet {
 			newBoldFont = new RSFont(false, "b12_full", titleArchive);
 			newFancyFont = new RSFont(true, "q8_full", titleArchive);
 			newFancyFont2 = new RSFont(true, "q8_large", titleArchive);
-			gameFont = new GameFont(true, "q8_full", titleArchive);			
+			gameFont = new GameFont(true, "q8_full", titleArchive);
 
 			drawLogo();
 			loadTitleScreen();
-			FileArchive configArchive = createArchive(JagGrab.CONFIG_CRC, "config", "config", JagGrab.CRCs[JagGrab.CONFIG_CRC], 30);                  
-			FileArchive interfaceArchive = createArchive(JagGrab.INTERFACE_CRC, "interface", "interface", JagGrab.CRCs[JagGrab.INTERFACE_CRC], 35);                  
+			FileArchive configArchive = createArchive(JagGrab.CONFIG_CRC, "config", "config", JagGrab.CRCs[JagGrab.CONFIG_CRC], 30);
+			FileArchive interfaceArchive = createArchive(JagGrab.INTERFACE_CRC, "interface", "interface", JagGrab.CRCs[JagGrab.INTERFACE_CRC], 35);
 			FileArchive mediaArchive = createArchive(JagGrab.MEDIA_CRC, "2d graphics", "media", JagGrab.CRCs[JagGrab.MEDIA_CRC], 40);
 			FileArchive streamLoader_6 = createArchive(JagGrab.UPDATE_CRC, "update list", "versionlist", JagGrab.CRCs[JagGrab.UPDATE_CRC], 60);
-			this.mediaStreamLoader = mediaArchive; 
+			this.mediaStreamLoader = mediaArchive;
 			FileArchive textureArchive = createArchive(JagGrab.TEXTURES_CRC, "textures", "textures", JagGrab.CRCs[JagGrab.TEXTURES_CRC], 45);
 			FileArchive wordencArchive = createArchive(JagGrab.CHAT_CRC, "chat system", "wordenc", JagGrab.CRCs[JagGrab.CHAT_CRC], 50);
 
@@ -9704,9 +9704,9 @@ public class Client extends GameApplet {
 			for (int j = 0; j < 4; j++)
 				collisionMaps[j] = new CollisionMap();
 
-			minimapImage = new Sprite(512, 512);			
+			minimapImage = new Sprite(512, 512);
 			drawLoadingText(60, "Connecting to update server");
-			
+
 			Frame.animationlist = new Frame[3000][0];
 			resourceProvider = new ResourceProvider();
 			resourceProvider.initialize(streamLoader_6, this);
@@ -9754,7 +9754,7 @@ public class Client extends GameApplet {
 			if(gameFrame != null) {
 				gameFrame.setIcon(Sprite.create(SpriteLoader.getData(454)));
 			}
-			
+
 			SkillOrbs.init();
 			this.hp = cacheSprite[40];
 
@@ -9889,7 +9889,7 @@ public class Client extends GameApplet {
 				}
 				minimapLeft[l6 - 1] = j7 - 24;
 				minimapLineWidth[l6 - 1] = l7 - j7;
-			} 
+			}
 			setBounds();
 			MessageCensor.load(wordencArchive);
 			mouseDetection = new MouseDetection(this);
@@ -9899,7 +9899,7 @@ public class Client extends GameApplet {
 			NpcDefinition.clientInstance = this;
 
 			if(Configuration.JAGCACHED_ENABLED) {
-			//	new Thread(new BackgroundRequester()).start();
+				//	new Thread(new BackgroundRequester()).start();
 			}
 
 			loadPlayerData();
@@ -9916,7 +9916,7 @@ public class Client extends GameApplet {
 
 	private void updatePlayerList(Buffer stream, int packetSize) {
 		while (stream.bitPosition + 10 < packetSize * 8) {
-			int index = stream.readBits(11);                  
+			int index = stream.readBits(11);
 			if (index == 2047) {
 				break;
 			}
@@ -9948,7 +9948,7 @@ public class Client extends GameApplet {
 			if (x > 15) {
 				x -= 32;
 			}
-			
+
 			player.setPos(localPlayer.pathX[0] + x, localPlayer.pathY[0] + y, discardWalkingQueue == 1);
 		}
 		stream.disableBitAccess();
@@ -9984,15 +9984,15 @@ public class Client extends GameApplet {
 				int i1 = Rasterizer3D.anIntArray1470[k];
 				int j1 = Rasterizer3D.COSINE[k];
 				i1 = i1 * (minimapZoom + 256) >> 8;
-		j1 = j1 * (minimapZoom + 256) >> 8;
-			int k1 = j * i1 + i * j1 >> 11;
-			int l1 = j * j1 - i * i1 >> 11;
+				j1 = j1 * (minimapZoom + 256) >> 8;
+				int k1 = j * i1 + i * j1 >> 11;
+				int l1 = j * j1 - i * i1 >> 11;
 				int i2 = localPlayer.x + k1 >> 7;
 				int j2 = localPlayer.y - l1 >> 7;
 				boolean flag1 = doWalkTo(1, 0, 0, 0, localPlayer.pathY[0], 0, 0, j2,
 						localPlayer.pathX[0], true, i2);
-				
-				
+
+
 				if (flag1) {
 
 					/*outgoing.writeByte(i);
@@ -10014,7 +10014,7 @@ public class Client extends GameApplet {
 				// anti-cheat
 				/*outgoing.writeOpcode(246);
 				outgoing.writeByte(0);
-				int bufPos = outgoing.currentPosition;                        
+				int bufPos = outgoing.currentPosition;
 
 				if ((int) (Math.random() * 2D) == 0) {
 					outgoing.writeByte(101);
@@ -10126,7 +10126,7 @@ public class Client extends GameApplet {
 		}
 	}
 
-	private void processMovement(Mob mob) {            
+	private void processMovement(Mob mob) {
 		if (mob.x < 128 || mob.y < 128 || mob.x >= 13184 || mob.y >= 13184) {
 			mob.emoteAnimation = -1;
 			mob.graphic = -1;
@@ -10147,14 +10147,14 @@ public class Client extends GameApplet {
 			mob.resetPath();
 		}
 		if (mob.startForceMovement > tick) {
-			mob.nextPreForcedStep();                  
+			mob.nextPreForcedStep();
 		} else if (mob.endForceMovement >= tick) {
-			mob.nextForcedMovementStep();                  
+			mob.nextForcedMovementStep();
 		} else {
-			mob.nextStep();                  
+			mob.nextStep();
 		}
 		appendFocusDestination(mob);
-		mob.updateAnimation();            
+		mob.updateAnimation();
 	}
 
 	private void appendFocusDestination(Mob entity) {
@@ -10167,7 +10167,7 @@ public class Client extends GameApplet {
 				int k1 = entity.y - npc.y;
 				if (i1 != 0 || k1 != 0)
 					entity.nextStepOrientation =
-					(int) (Math.atan2(i1, k1) * 325.94900000000001D) & 0x7ff;
+							(int) (Math.atan2(i1, k1) * 325.94900000000001D) & 0x7ff;
 			}
 		}
 		if (entity.interactingEntity >= 32768) {
@@ -10190,7 +10190,7 @@ public class Client extends GameApplet {
 			int j1 = entity.y - (entity.faceY - regionBaseY - regionBaseY) * 64;
 			if (k != 0 || j1 != 0)
 				entity.nextStepOrientation =
-				(int) (Math.atan2(k, j1) * 325.94900000000001D) & 0x7ff;
+						(int) (Math.atan2(k, j1) * 325.94900000000001D) & 0x7ff;
 			entity.faceX = 0;
 			entity.faceY = 0;
 		}
@@ -10286,7 +10286,7 @@ public class Client extends GameApplet {
 				if (frameMode == ScreenMode.FIXED) {
 					gameScreenImageProducer.drawGraphics(
 							frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics,
-									frameMode == ScreenMode.FIXED ? 4 : 0);
+							frameMode == ScreenMode.FIXED ? 4 : 0);
 					minimapImageProducer.drawGraphics(0, super.graphics, 516);
 				}
 			}
@@ -10303,7 +10303,7 @@ public class Client extends GameApplet {
 			aClass9_1059.scrollPosition = anInt1211 - anInt1089 - 110;
 			if (super.mouseX >= 496 && super.mouseX <= 511
 					&& super.mouseY > (frameMode == ScreenMode.FIXED ? 345
-							: frameHeight - 158))
+					: frameHeight - 158))
 				method65(494, 110, super.mouseX,
 						super.mouseY - (frameMode == ScreenMode.FIXED ? 345
 								: frameHeight - 158),
@@ -10404,7 +10404,7 @@ public class Client extends GameApplet {
 		for (; class30_sub2_sub4_sub3 != null; class30_sub2_sub4_sub3 =
 				(AnimableObject) incompleteAnimables.reverseGetNext())
 			if (class30_sub2_sub4_sub3.anInt1560 != plane
-			|| class30_sub2_sub4_sub3.aBoolean1567)
+					|| class30_sub2_sub4_sub3.aBoolean1567)
 				class30_sub2_sub4_sub3.unlink();
 			else if (tick >= class30_sub2_sub4_sub3.anInt1564) {
 				class30_sub2_sub4_sub3.method454(tickDelta);
@@ -10430,7 +10430,7 @@ public class Client extends GameApplet {
 		Rasterizer2D.drawBox(xPos, yPos - 1, 175, 1, 0x2E2B23);
 		Rasterizer2D.drawBox(xPos, yPos + 69, 175, 1, 0x2E2B23);
 		Rasterizer2D.drawTransparentBox(xPos, yPos, 174, 68, 0, 220);
-	}      
+	}
 
 	final static int[] IDs = {1196, 1199, 1206, 1215, 1224, 1231, 1240, 1249, 1258, 1267, 1274,
 			1283, 1573, 1290, 1299, 1308, 1315, 1324, 1333, 1340, 1349, 1358,
@@ -10474,9 +10474,9 @@ public class Client extends GameApplet {
 			}
 		}
 		if(rsInterface.id == 36100) {
-			Rasterizer2D.drawTransparentBox(-100, 0, Rasterizer2D.width + 100, Rasterizer2D.height, 0x3e2f1d, 130); 
+			Rasterizer2D.drawTransparentBox(-100, 0, Rasterizer2D.width + 100, Rasterizer2D.height, 0x3e2f1d, 130);
 		}
-		
+
 		int clipLeft = Rasterizer2D.leftX;
 		int clipTop = Rasterizer2D.topY;
 		int clipRight = Rasterizer2D.bottomX;
@@ -10502,8 +10502,8 @@ public class Client extends GameApplet {
 			}
 		}
 		if(backDialogueId == 40500) {
-			    	 processSpawnTab();
-			searchingSpawnTab = true; 
+			processSpawnTab();
+			searchingSpawnTab = true;
 		} else if(rsInterface.id == 53000) {
 			processKeyBindings();
 		}
@@ -10511,7 +10511,7 @@ public class Client extends GameApplet {
 		for (int childId = 0; childId < childCount; childId++) {
 			int _x = rsInterface.childX[childId] + x;
 			int currentY = (rsInterface.childY[childId] + y) - scroll_y;
-			Widget childInterface = Widget.interfaceCache[rsInterface.children[childId]]; 
+			Widget childInterface = Widget.interfaceCache[rsInterface.children[childId]];
 			if(childInterface == null) {
 				continue;
 			}
@@ -10519,17 +10519,17 @@ public class Client extends GameApplet {
 			if(childInterface.drawingDisabled) {
 				continue;
 			}
-		if(openInterfaceId == 26000 && childInterface.id == 3322) {
-			childInterface.actions[0] = "Offer";
-			childInterface.actions[1] = null;
-			childInterface.actions[2] = null;
-			childInterface.actions[3] = null;
-			childInterface.actions[4] = null;
-			childInterface.actions[5] = null;
-			sidebarGlow = true;
-		} else if(openInterfaceId != 26000 && childInterface.id != 3322 && !childInterface.glowing) {
-			sidebarGlow = false;
-		}
+			if(openInterfaceId == 26000 && childInterface.id == 3322) {
+				childInterface.actions[0] = "Offer";
+				childInterface.actions[1] = null;
+				childInterface.actions[2] = null;
+				childInterface.actions[3] = null;
+				childInterface.actions[4] = null;
+				childInterface.actions[5] = null;
+				sidebarGlow = true;
+			} else if(openInterfaceId != 26000 && childInterface.id != 3322 && !childInterface.glowing) {
+				sidebarGlow = false;
+			}
 			if(childInterface.glowing) {
 				if(pcOpacity < 0) {
 					pcOpacity = 0;
@@ -10551,7 +10551,7 @@ public class Client extends GameApplet {
 						maxOpacity = false;
 					}
 				}
-						childInterface.transparency = pcOpacity;
+				childInterface.transparency = pcOpacity;
 			}
 
 			_x += childInterface.horizontalOffset;
@@ -10574,7 +10574,7 @@ public class Client extends GameApplet {
 				if (childInterface.scrollPosition > childInterface.scrollMax
 						- childInterface.height)
 					childInterface.scrollPosition =
-					childInterface.scrollMax - childInterface.height;
+							childInterface.scrollMax - childInterface.height;
 				if (childInterface.scrollPosition < 0)
 					childInterface.scrollPosition = 0;
 				drawInterface(childInterface.scrollPosition, _x, childInterface, currentY);
@@ -10583,11 +10583,11 @@ public class Client extends GameApplet {
 						draw508Scrollbar(childInterface.height, childInterface.scrollPosition,
 								currentY, _x + childInterface.width, childInterface.scrollMax,
 								false);
-						} else {
-							drawScrollbar(childInterface.height, childInterface.scrollPosition,
-									currentY, _x + childInterface.width, childInterface.scrollMax,
-									false);
-						}
+					} else {
+						drawScrollbar(childInterface.height, childInterface.scrollPosition,
+								currentY, _x + childInterface.width, childInterface.scrollMax,
+								false);
+					}
 				}
 			} else if (childInterface.type != 1)
 				if (childInterface.type == Widget.TYPE_INVENTORY) {
@@ -10657,8 +10657,8 @@ public class Client extends GameApplet {
 													&& rsInterface.scrollPosition > 0) {
 												int i10 = (tickDelta
 														* (Rasterizer2D.topY
-																- tileY
-																- differenceY))
+														- tileY
+														- differenceY))
 														/ 3;
 												if (i10 > tickDelta * 10)
 													i10 = tickDelta * 10;
@@ -10674,8 +10674,8 @@ public class Client extends GameApplet {
 													- rsInterface.height) {
 												int j10 = (tickDelta
 														* ((tileY + differenceY
-																+ 32)
-																- Rasterizer2D.bottomY))
+														+ 32)
+														- Rasterizer2D.bottomY))
 														/ 3;
 												if (j10 > tickDelta * 10)
 													j10 = tickDelta * 10;
@@ -10683,8 +10683,8 @@ public class Client extends GameApplet {
 														- rsInterface.height
 														- rsInterface.scrollPosition)
 													j10 = rsInterface.scrollMax
-													- rsInterface.height
-													- rsInterface.scrollPosition;
+															- rsInterface.height
+															- rsInterface.scrollPosition;
 												rsInterface.scrollPosition +=
 														j10;
 												anInt1088 -= j10;
@@ -10712,25 +10712,25 @@ public class Client extends GameApplet {
 													if(childInterface.drawNumber) {
 														cacheSprite[507].drawSprite(tileX, tileY);
 													} else {
-													smallText.render(0,
-															intToKOrMil(k10),
-															tileY + 10 + differenceY,
-															tileX + 1 + differenceX);
-													if (k10 >= 1)
-														smallText.render(0xFFFF00,
+														smallText.render(0,
 																intToKOrMil(k10),
-																tileY + 9 + differenceY,
-																tileX + differenceX);
-													if (k10 >= 100000)
-														smallText.render(0xFFFFFF,
-																intToKOrMil(k10),
-																tileY + 9 + differenceY,
-																tileX + differenceX);
-													if (k10 >= 10000000)
-														smallText.render(0x00FF80,
-																intToKOrMil(k10),
-																tileY + 9 + differenceY,
-																tileX + differenceX);
+																tileY + 10 + differenceY,
+																tileX + 1 + differenceX);
+														if (k10 >= 1)
+															smallText.render(0xFFFF00,
+																	intToKOrMil(k10),
+																	tileY + 9 + differenceY,
+																	tileX + differenceX);
+														if (k10 >= 100000)
+															smallText.render(0xFFFFFF,
+																	intToKOrMil(k10),
+																	tileY + 9 + differenceY,
+																	tileX + differenceX);
+														if (k10 >= 10000000)
+															smallText.render(0x00FF80,
+																	intToKOrMil(k10),
+																	tileY + 9 + differenceY,
+																	tileX + differenceX);
 													}
 												}
 											}
@@ -10764,7 +10764,7 @@ public class Client extends GameApplet {
 					if (childInterface.opacity == 0) {
 						if (childInterface.filled)
 							Rasterizer2D.drawBox(_x, currentY, childInterface.width, childInterface.height, colour
-									);
+							);
 						else
 							Rasterizer2D.drawBoxOutline(_x, currentY, childInterface.width,
 									childInterface.height, colour);
@@ -10774,14 +10774,14 @@ public class Client extends GameApplet {
 					else
 						Rasterizer2D.drawTransparentBoxOutline(_x, currentY, childInterface.width, childInterface.height,
 								colour, 256 - (childInterface.opacity & 0xff)
-								);
+						);
 				} else if (childInterface.type == Widget.TYPE_TEXT) {
 					GameFont textDrawingArea = childInterface.textDrawingAreas;
 					String text = childInterface.defaultText;
 					if(text == null) {
 						continue;
 					}
-					
+
 					boolean flag1 = false;
 					if (anInt1039 == childInterface.id || anInt1048 == childInterface.id
 							|| anInt1026 == childInterface.id)
@@ -10826,13 +10826,13 @@ public class Client extends GameApplet {
 					if ((childInterface.parent == 1151)
 							|| (childInterface.parent == 12855)) {
 						switch (colour) {
-						case 16773120:
-							colour = 0xFE981F;
-							break;
-						case 7040819:
-							colour = 0xAF6A1A;
-							break;                                                
-						}                                    
+							case 16773120:
+								colour = 0xFE981F;
+								break;
+							case 7040819:
+								colour = 0xAF6A1A;
+								break;
+						}
 					}
 
 					int image = -1;
@@ -10844,8 +10844,8 @@ public class Client extends GameApplet {
 							image = Integer.parseInt(text.substring(prefix + 5, suffix));
 							text = text.replaceAll(text.substring(prefix + 5, suffix), "");
 							text = text.replaceAll("</img>", "");
-							text = text.replaceAll("<img=>", "");							
-						} catch (NumberFormatException nfe) { 
+							text = text.replaceAll("<img=>", "");
+						} catch (NumberFormatException nfe) {
 							//System.out.println("Unable to draw player crown on interface. Unable to read rights.");
 							text = INITIAL_MESSAGE;
 						} catch (IllegalStateException ise) {
@@ -10872,7 +10872,7 @@ public class Client extends GameApplet {
 							}
 						}
 
-						if (text.indexOf("%") != -1) {                                  
+						if (text.indexOf("%") != -1) {
 							do {
 								int index = text.indexOf("%1");
 								if (index == -1)
@@ -10884,23 +10884,23 @@ public class Client extends GameApplet {
 										&& childInterface.id != 12172) {
 									text = text.substring(0, index)
 											+ formatCoins(executeScript(
-													childInterface, 0))
+											childInterface, 0))
 											+ text.substring(index + 2);
 
 								} else {
 									text = text.substring(0, index) + interfaceIntToString(executeScript(childInterface, 0))
-									+ text.substring(index + 2);
+											+ text.substring(index + 2);
 
 								}
 							} while (true);
 							do {
-								int index = text.indexOf("%2");                                                
+								int index = text.indexOf("%2");
 								if (index == -1) {
 									break;
 								}
 								text = text.substring(0, index)
 										+ interfaceIntToString(executeScript(
-												childInterface, 1))
+										childInterface, 1))
 										+ text.substring(index + 2);
 							} while (true);
 							do {
@@ -10912,18 +10912,18 @@ public class Client extends GameApplet {
 
 								text = text.substring(0, index)
 										+ interfaceIntToString(executeScript(
-												childInterface, 2))
+										childInterface, 2))
 										+ text.substring(index + 2);
 							} while (true);
 							do {
-								int index = text.indexOf("%4");  
+								int index = text.indexOf("%4");
 
 								if (index == -1) {
 									break;
 								}
 								text = text.substring(0, index)
 										+ interfaceIntToString(executeScript(
-												childInterface, 3))
+										childInterface, 3))
 										+ text.substring(index + 2);
 							} while (true);
 							do {
@@ -10935,7 +10935,7 @@ public class Client extends GameApplet {
 
 								text = text.substring(0, index)
 										+ interfaceIntToString(executeScript(
-												childInterface, 4))
+										childInterface, 4))
 										+ text.substring(index + 2);
 							} while (true);
 						}
@@ -10963,29 +10963,29 @@ public class Client extends GameApplet {
 						} else if (textDrawingArea == fancyFont) {
 							font = newFancyFont2;
 						}
-							if (childInterface.centerText) {
-								if(childInterface.fancy) {
-									newFancyFont2.drawCenteredString(drawn, _x + childInterface.width / 2,
-											drawY, colour,
-											childInterface.textShadow ? 0 : -1);
-								}
-								if(!childInterface.fancy) {
+						if (childInterface.centerText) {
+							if(childInterface.fancy) {
+								newFancyFont2.drawCenteredString(drawn, _x + childInterface.width / 2,
+										drawY, colour,
+										childInterface.textShadow ? 0 : -1);
+							}
+							if(!childInterface.fancy) {
 								font.drawCenteredString(drawn, _x + childInterface.width / 2,
 										drawY, colour,
 										childInterface.textShadow ? 0 : -1);
-								}
-							} else if (childInterface.rightText) {
-								font.drawBasicString(drawn, _x - font.getTextWidth(drawn),
-										drawY, colour,
-										childInterface.textShadow ? 0 : -1);
-							} else {
-								font.drawBasicString(drawn, _x, drawY, colour,
-										childInterface.textShadow ? 0 : -1);
 							}
+						} else if (childInterface.rightText) {
+							font.drawBasicString(drawn, _x - font.getTextWidth(drawn),
+									drawY, colour,
+									childInterface.textShadow ? 0 : -1);
+						} else {
+							font.drawBasicString(drawn, _x, drawY, colour,
+									childInterface.textShadow ? 0 : -1);
 						}
-				 } else if (childInterface.type == 69) {
-					 childInterface.dropDown.drawDropdown(childInterface, _x, currentY);
-				 
+					}
+				} else if (childInterface.type == 69) {
+					childInterface.dropDown.drawDropdown(childInterface, _x, currentY);
+
 				} else if (childInterface.type == Widget.TYPE_SPRITE) {
 
 					Sprite sprite;
@@ -11034,29 +11034,29 @@ public class Client extends GameApplet {
 					Rasterizer3D.originViewY = currentY + childInterface.height / 2;
 					int sine = Rasterizer3D.anIntArray1470[childInterface.modelRotation1]
 							* childInterface.modelZoom >> 16;
-							int cosine = Rasterizer3D.COSINE[childInterface.modelRotation1]
-									* childInterface.modelZoom >> 16;
-									boolean selected = interfaceIsSelected(childInterface);
-									int emoteAnimation;
-									if (selected)
-										emoteAnimation = childInterface.secondaryAnimationId;
-									else
-										emoteAnimation = childInterface.defaultAnimationId;
-									Model model;
-									if (emoteAnimation == -1) {
-										model = childInterface.method209(-1, -1, selected);
-									} else {
-										Animation animation = Animation.animations[emoteAnimation];
-										model = childInterface.method209(
-												animation.secondaryFrames[childInterface.currentFrame],
-												animation.primaryFrames[childInterface.currentFrame],
-												selected);
-									}
-									if (model != null)
-										model.method482(childInterface.modelRotation2, 0,
-												childInterface.modelRotation1, 0, sine, cosine);
-									Rasterizer3D.originViewX = centreX;
-									Rasterizer3D.originViewY = centreY;
+					int cosine = Rasterizer3D.COSINE[childInterface.modelRotation1]
+							* childInterface.modelZoom >> 16;
+					boolean selected = interfaceIsSelected(childInterface);
+					int emoteAnimation;
+					if (selected)
+						emoteAnimation = childInterface.secondaryAnimationId;
+					else
+						emoteAnimation = childInterface.defaultAnimationId;
+					Model model;
+					if (emoteAnimation == -1) {
+						model = childInterface.method209(-1, -1, selected);
+					} else {
+						Animation animation = Animation.animations[emoteAnimation];
+						model = childInterface.method209(
+								animation.secondaryFrames[childInterface.currentFrame],
+								animation.primaryFrames[childInterface.currentFrame],
+								selected);
+					}
+					if (model != null)
+						model.method482(childInterface.modelRotation2, 0,
+								childInterface.modelRotation1, 0, sine, cosine);
+					Rasterizer3D.originViewX = centreX;
+					Rasterizer3D.originViewY = centreY;
 				} else if (childInterface.type == Widget.TYPE_ITEM_LIST) {
 					GameFont font = childInterface.textDrawingAreas;
 					int slot = 0;
@@ -11088,7 +11088,7 @@ public class Client extends GameApplet {
 							}
 							slot++;
 						}
-					}	
+					}
 				} else if (childInterface.type == 8
 						&& (anInt1500 == childInterface.id
 						|| anInt1044 == childInterface.id
@@ -11097,7 +11097,7 @@ public class Client extends GameApplet {
 
 					/**
 					 * Skill tab hovers
-					 * Remove "next level at" and "remaining" 
+					 * Remove "next level at" and "remaining"
 					 * for xp if we're level 99.
 					 */
 					if(childInterface.parent == 10141) {
@@ -11155,7 +11155,7 @@ public class Client extends GameApplet {
 										break;
 									text = text.substring(0, index)
 											+ interfaceIntToString(executeScript(
-													childInterface, 0))
+											childInterface, 0))
 											+ text.substring(index + 2);
 								} while (true);
 								do {
@@ -11164,7 +11164,7 @@ public class Client extends GameApplet {
 										break;
 									text = text.substring(0, index)
 											+ interfaceIntToString(executeScript(
-													childInterface, 1))
+											childInterface, 1))
 											+ text.substring(index + 2);
 								} while (true);
 								do {
@@ -11173,7 +11173,7 @@ public class Client extends GameApplet {
 										break;
 									text = text.substring(0, index)
 											+ interfaceIntToString(executeScript(
-													childInterface, 2))
+											childInterface, 2))
 											+ text.substring(index + 2);
 								} while (true);
 								do {
@@ -11182,7 +11182,7 @@ public class Client extends GameApplet {
 										break;
 									text = text.substring(0, index)
 											+ interfaceIntToString(executeScript(
-													childInterface, 3))
+											childInterface, 3))
 											+ text.substring(index + 2);
 								} while (true);
 								do {
@@ -11191,7 +11191,7 @@ public class Client extends GameApplet {
 										break;
 									text = text.substring(0, index)
 											+ interfaceIntToString(executeScript(
-													childInterface, 4))
+											childInterface, 4))
 											+ text.substring(index + 2);
 								} while (true);
 							}
@@ -11243,7 +11243,7 @@ public class Client extends GameApplet {
 										break;
 									s2 = s2.substring(0, k7)
 											+ interfaceIntToString(executeScript(
-													childInterface, 0))
+											childInterface, 0))
 											+ s2.substring(k7 + 2);
 								} while (true);
 
@@ -11253,7 +11253,7 @@ public class Client extends GameApplet {
 										break;
 									s2 = s2.substring(0, l7)
 											+ interfaceIntToString(executeScript(
-													childInterface, 1))
+											childInterface, 1))
 											+ s2.substring(l7 + 2);
 								} while (true);
 								do {
@@ -11262,7 +11262,7 @@ public class Client extends GameApplet {
 										break;
 									s2 = s2.substring(0, i8)
 											+ interfaceIntToString(executeScript(
-													childInterface, 2))
+											childInterface, 2))
 											+ s2.substring(i8 + 2);
 								} while (true);
 								do {
@@ -11271,7 +11271,7 @@ public class Client extends GameApplet {
 										break;
 									s2 = s2.substring(0, j8)
 											+ interfaceIntToString(executeScript(
-													childInterface, 3))
+											childInterface, 3))
 											+ s2.substring(j8 + 2);
 								} while (true);
 								do {
@@ -11280,7 +11280,7 @@ public class Client extends GameApplet {
 										break;
 									s2 = s2.substring(0, k8)
 											+ interfaceIntToString(executeScript(
-													childInterface, 4))
+											childInterface, 4))
 											+ s2.substring(k8 + 2);
 								} while (true);
 							}
@@ -11316,8 +11316,8 @@ public class Client extends GameApplet {
 		}
 		Rasterizer2D.setDrawingArea(clipBottom, clipLeft, clipRight, clipTop);
 	}
-	
-	
+
+
 
 
 	public enum BankTabShow {
@@ -11332,7 +11332,7 @@ public class Client extends GameApplet {
 	 */
 
 	public static final int MAX_BANK_TABS = 11;
-	private String staffMessage = ""; 
+	private String staffMessage = "";
 	private boolean InWorldSelect = false;
 
 	private BankTabShow bankTabShow = BankTabShow.FIRST_ITEM_IN_TAB;
@@ -11385,15 +11385,15 @@ public class Client extends GameApplet {
 					Sprite sprite = null;
 
 					switch(bankTabShow) {
-					case DIGIT:
-						sprite = cacheSprite[219 + tab];
-						break;
-					case FIRST_ITEM_IN_TAB:
-						sprite = ItemDefinition.getSprite(first_item, item_amount, 0);
-						break;
-					case ROMAN_NUMERAL:
-						sprite = cacheSprite[210 + tab];
-						break;					
+						case DIGIT:
+							sprite = cacheSprite[219 + tab];
+							break;
+						case FIRST_ITEM_IN_TAB:
+							sprite = ItemDefinition.getSprite(first_item, item_amount, 0);
+							break;
+						case ROMAN_NUMERAL:
+							sprite = cacheSprite[210 + tab];
+							break;
 					}
 
 					if(sprite != null) {
@@ -11615,24 +11615,24 @@ public class Client extends GameApplet {
 			player.graphic = buffer.readLEUShort();
 			int info = buffer.readInt();
 			player.graphicHeight = info >> 16;
-						player.graphicDelay = tick + (info & 0xffff);
-						player.currentAnimation = 0;
-						player.anInt1522 = 0;
-						if (player.graphicDelay > tick)
-							player.currentAnimation = -1;
-						if (player.graphic == 65535)
-							player.graphic = -1;
+			player.graphicDelay = tick + (info & 0xffff);
+			player.currentAnimation = 0;
+			player.anInt1522 = 0;
+			if (player.graphicDelay > tick)
+				player.currentAnimation = -1;
+			if (player.graphic == 65535)
+				player.graphic = -1;
 
-						//Load the gfx...
-						try {
+			//Load the gfx...
+			try {
 
-							if (Frame.animationlist[Graphic.cache[player.graphic].animationSequence.primaryFrames[0] >> 16].length == 0) {
-								resourceProvider.provide(1, Graphic.cache[player.graphic].animationSequence.primaryFrames[0] >> 16);
-							}
+				if (Frame.animationlist[Graphic.cache[player.graphic].animationSequence.primaryFrames[0] >> 16].length == 0) {
+					resourceProvider.provide(1, Graphic.cache[player.graphic].animationSequence.primaryFrames[0] >> 16);
+				}
 
-						} catch (Exception e) {
-							//	e.printStackTrace();
-						}
+			} catch (Exception e) {
+				//	e.printStackTrace();
+			}
 
 		}
 		if ((mask & 8) != 0) {
@@ -11699,16 +11699,16 @@ public class Client extends GameApplet {
 						// s = Censor.doCensor(s);
 						player.spokenText = text;
 						player.textColour = textInfo >> 8;
-					player.rights = privilege;
-					player.textEffect = textInfo & 0xff;
-					player.textCycle = 150;
-					
-					if(privilege > 0 && privilege < 10) {
-						sendMessage(text, 1, "@cr"+privilege+"@" + player.name);
-					} else {
-						sendMessage(text, 2, player.name);
-					}
-					
+						player.rights = privilege;
+						player.textEffect = textInfo & 0xff;
+						player.textCycle = 150;
+
+						if(privilege > 0 && privilege < 10) {
+							sendMessage(text, 1, "@cr"+privilege+"@" + player.name);
+						} else {
+							sendMessage(text, 2, player.name);
+						}
+
 					} catch (Exception exception) {
 						SignLink.reporterror("cde2");
 					}
@@ -11787,29 +11787,29 @@ public class Client extends GameApplet {
 			if (anInt1184 > 383)
 				anInt1184 = 383;
 			int l = anInt1014 >> 7;
-		int i1 = anInt1015 >> 7;
-				int j1 = getCenterHeight(plane, anInt1015, anInt1014);
-				int k1 = 0;
-				if (l > 3 && i1 > 3 && l < 100 && i1 < 100) {
-					for (int l1 = l - 4; l1 <= l + 4; l1++) {
-						for (int k2 = i1 - 4; k2 <= i1 + 4; k2++) {
-							int l2 = plane;
-							if (l2 < 3 && (tileFlags[1][l1][k2] & 2) == 2)
-								l2++;
-							int i3 = j1 - tileHeights[l2][l1][k2];
-							if (i3 > k1)
-								k1 = i3;
-						}
-
+			int i1 = anInt1015 >> 7;
+			int j1 = getCenterHeight(plane, anInt1015, anInt1014);
+			int k1 = 0;
+			if (l > 3 && i1 > 3 && l < 100 && i1 < 100) {
+				for (int l1 = l - 4; l1 <= l + 4; l1++) {
+					for (int k2 = i1 - 4; k2 <= i1 + 4; k2++) {
+						int l2 = plane;
+						if (l2 < 3 && (tileFlags[1][l1][k2] & 2) == 2)
+							l2++;
+						int i3 = j1 - tileHeights[l2][l1][k2];
+						if (i3 > k1)
+							k1 = i3;
 					}
 
 				}
-				anInt1005++;
-				if (anInt1005 > 1512) {
-					anInt1005 = 0;
-					//unknown (anti-cheat) or maybe cutscene-related
+
+			}
+			anInt1005++;
+			if (anInt1005 > 1512) {
+				anInt1005 = 0;
+				//unknown (anti-cheat) or maybe cutscene-related
 					/*	outgoing.writeOpcode(77);
-					outgoing.writeByte(0);                        
+					outgoing.writeByte(0);
 					int bufPos = outgoing.currentPosition;
 					outgoing.writeByte((int) (Math.random() * 256D));
 					outgoing.writeByte(101);
@@ -11826,19 +11826,19 @@ public class Client extends GameApplet {
 					outgoing.writeShort((int) (Math.random() * 65536D));
 					outgoing.writeShort((int) (Math.random() * 65536D));
 					outgoing.writeBytes(outgoing.currentPosition - bufPos);*/
-				}
-				int j2 = k1 * 192;
-				if (j2 > 0x17f00)
-					j2 = 0x17f00;
-				if (j2 < 32768)
-					j2 = 32768;
-				if (j2 > anInt984) {
-					anInt984 += (j2 - anInt984) / 24;
-					return;
-				}
-				if (j2 < anInt984) {
-					anInt984 += (j2 - anInt984) / 80;
-				}
+			}
+			int j2 = k1 * 192;
+			if (j2 > 0x17f00)
+				j2 = 0x17f00;
+			if (j2 < 32768)
+				j2 = 32768;
+			if (j2 > anInt984) {
+				anInt984 += (j2 - anInt984) / 24;
+				return;
+			}
+			if (j2 < anInt984) {
+				anInt984 += (j2 - anInt984) / 80;
+			}
 		} catch (Exception _ex) {
 			SignLink.reporterror("glfc_ex " + localPlayer.x + "," + localPlayer.y + ","
 					+ anInt1014 + "," + anInt1015 + "," + this.regionX + "," + this.regionY
@@ -11853,11 +11853,11 @@ public class Client extends GameApplet {
 			return;
 		}
 		if (!loggedIn)
-			if(!InWorldSelect) { 
-				 drawLoginScreen(false);
-			 } else { 
-				 drawWorldSelect();
-			 }
+			if(!InWorldSelect) {
+				drawLoginScreen(false);
+			} else {
+				drawWorldSelect();
+			}
 		else
 			drawGameScreen();
 		anInt1213 = 0;
@@ -11920,7 +11920,7 @@ public class Client extends GameApplet {
 			crosses[4 + crossIndex / 100].drawSprite(crossX - 8 - offSet,
 					crossY - 8 - offSet);
 		}
-		if (openWalkableInterface != -1) { 
+		if (openWalkableInterface != -1) {
 			try {
 				processWidgetAnimations(tickDelta, openWalkableInterface);
 				Widget rsinterface = Widget.interfaceCache[openWalkableInterface];
@@ -11933,7 +11933,7 @@ public class Client extends GameApplet {
 					int min_y = Integer.MAX_VALUE;
 					for(int i =0; i < r.children.length; i++) {
 						min_y = Math.min(min_y, r.childY[i]);
-					}   
+					}
 					drawInterface(0, x,  Widget.interfaceCache[openWalkableInterface], 0 - min_y + 10);
 				}
 			} catch (Exception ex) {
@@ -12020,13 +12020,13 @@ public class Client extends GameApplet {
 			//regularText.render(0xffff00, "" + StringUtils.formatText(staffMessage), 329 + yOffset, 4);
 			newRegularFont.drawBasicString(StringUtils.formatText(staffMessage), 4, 329 + yOffset, 0xffff00,
 					1);
-			
+
 			secondsPassed++;
 			if(secondsPassed > 10000) {
 				AnnouncementBool = false;
 				secondsPassed = 0;
 			}
-			
+
 		}
 		if (systemUpdateTime != 0) {
 			int seconds = systemUpdateTime / 50;
@@ -12146,20 +12146,20 @@ public class Client extends GameApplet {
 	}
 
 	private void processPlayerMovement() {
-		for (int index = -1; index < playerCount; index++) { 
+		for (int index = -1; index < playerCount; index++) {
 
-			int playerIndex;  
+			int playerIndex;
 
 			if (index == -1) {
 				playerIndex = internalLocalPlayerIndex;
 			} else {
-				playerIndex = playerList[index];                        
+				playerIndex = playerList[index];
 			}
 
 			Player player = players[playerIndex];
 
 			if (player != null) {
-				processMovement(player);                        
+				processMovement(player);
 			}
 		}
 
@@ -12169,13 +12169,13 @@ public class Client extends GameApplet {
 		if (loadingStage == 2) {
 			for (SpawnedObject spawnedObject = (SpawnedObject) spawns
 					.reverseGetFirst(); spawnedObject != null; spawnedObject =
-					(SpawnedObject) spawns.reverseGetNext()) {
+						 (SpawnedObject) spawns.reverseGetNext()) {
 				if (spawnedObject.getLongetivity > 0)
 					spawnedObject.getLongetivity--;
 				if (spawnedObject.getLongetivity == 0) {
 					if (spawnedObject.getPreviousId < 0
 							|| MapRegion.modelReady(spawnedObject.getPreviousId,
-									spawnedObject.previousType)) {
+							spawnedObject.previousType)) {
 						removeObject(spawnedObject.y, spawnedObject.plane,
 								spawnedObject.previousOrientation,
 								spawnedObject.previousType, spawnedObject.x,
@@ -12189,7 +12189,7 @@ public class Client extends GameApplet {
 							&& spawnedObject.y >= 1 && spawnedObject.x <= 102
 							&& spawnedObject.y <= 102
 							&& (spawnedObject.id < 0 || MapRegion.modelReady(
-									spawnedObject.id, spawnedObject.type))) {
+							spawnedObject.id, spawnedObject.type))) {
 						removeObject(spawnedObject.y, spawnedObject.plane,
 								spawnedObject.orientation, spawnedObject.type,
 								spawnedObject.x, spawnedObject.group,
@@ -12337,20 +12337,20 @@ public class Client extends GameApplet {
 			return false;
 		}
 
-		for (int element : widget.children) {                  
+		for (int element : widget.children) {
 			if (element == -1) {
 				break;
 			}
 
-			Widget child = Widget.interfaceCache[element];  
+			Widget child = Widget.interfaceCache[element];
 
 			if (child.type == Widget.TYPE_MODEL_LIST) {
 				redrawRequired |= processWidgetAnimations(tick, child.id);
 			}
-			
+
 
 			if (child.type == 6 && (child.defaultAnimationId != -1 || child.secondaryAnimationId != -1)) {
-				boolean updated = interfaceIsSelected(child); 
+				boolean updated = interfaceIsSelected(child);
 
 				int animationId = updated ? child.secondaryAnimationId : child.defaultAnimationId;
 
@@ -12381,64 +12381,64 @@ public class Client extends GameApplet {
 		int j = 3;
 		if (yCameraCurve < 310) {
 			int k = xCameraPos >> 7;
-		int l = yCameraPos >> 7;
-		int i1 = localPlayer.x >> 7;
-		int j1 = localPlayer.y >> 7;
-		if ((tileFlags[plane][k][l] & 4) != 0)
-			j = plane;
-		int k1;
-		if (i1 > k)
-			k1 = i1 - k;
-		else
-			k1 = k - i1;
-		int l1;
-		if (j1 > l)
-			l1 = j1 - l;
-		else
-			l1 = l - j1;
-		if (k1 > l1) {
-			int i2 = (l1 * 0x10000) / k1;
-			int k2 = 32768;
-			while (k != i1) {
-				if (k < i1)
-					k++;
-				else if (k > i1)
-					k--;
-				if ((tileFlags[plane][k][l] & 4) != 0)
-					j = plane;
-				k2 += i2;
-				if (k2 >= 0x10000) {
-					k2 -= 0x10000;
-					if (l < j1)
-						l++;
-					else if (l > j1)
-						l--;
-					if ((tileFlags[plane][k][l] & 4) != 0)
-						j = plane;
-				}
-			}
-		} else {
-			int j2 = (k1 * 0x10000) / l1;
-			int l2 = 32768;
-			while (l != j1) {
-				if (l < j1)
-					l++;
-				else if (l > j1)
-					l--;
-				if ((tileFlags[plane][k][l] & 4) != 0)
-					j = plane;
-				l2 += j2;
-				if (l2 >= 0x10000) {
-					l2 -= 0x10000;
+			int l = yCameraPos >> 7;
+			int i1 = localPlayer.x >> 7;
+			int j1 = localPlayer.y >> 7;
+			if ((tileFlags[plane][k][l] & 4) != 0)
+				j = plane;
+			int k1;
+			if (i1 > k)
+				k1 = i1 - k;
+			else
+				k1 = k - i1;
+			int l1;
+			if (j1 > l)
+				l1 = j1 - l;
+			else
+				l1 = l - j1;
+			if (k1 > l1) {
+				int i2 = (l1 * 0x10000) / k1;
+				int k2 = 32768;
+				while (k != i1) {
 					if (k < i1)
 						k++;
 					else if (k > i1)
 						k--;
 					if ((tileFlags[plane][k][l] & 4) != 0)
 						j = plane;
+					k2 += i2;
+					if (k2 >= 0x10000) {
+						k2 -= 0x10000;
+						if (l < j1)
+							l++;
+						else if (l > j1)
+							l--;
+						if ((tileFlags[plane][k][l] & 4) != 0)
+							j = plane;
+					}
+				}
+			} else {
+				int j2 = (k1 * 0x10000) / l1;
+				int l2 = 32768;
+				while (l != j1) {
+					if (l < j1)
+						l++;
+					else if (l > j1)
+						l--;
+					if ((tileFlags[plane][k][l] & 4) != 0)
+						j = plane;
+					l2 += j2;
+					if (l2 >= 0x10000) {
+						l2 -= 0x10000;
+						if (k < i1)
+							k++;
+						else if (k > i1)
+							k--;
+						if ((tileFlags[plane][k][l] & 4) != 0)
+							j = plane;
+					}
 				}
 			}
-		}
 		}
 		if ((tileFlags[plane][localPlayer.x >> 7][localPlayer.y >> 7] & 4) != 0)
 			j = plane;
@@ -12515,7 +12515,7 @@ public class Client extends GameApplet {
 					int item = script[counter++];
 					if (item >= 0 && item < ItemDefinition.item_count
 							&& (!ItemDefinition.lookup(item).is_members_only
-									|| isMembers)) {
+							|| isMembers)) {
 						for (int slot = 0; slot < other.inventoryItemId.length; slot++)
 							if (other.inventoryItemId[slot] == item + 1)
 								value += other.inventoryAmounts[slot];
@@ -12549,7 +12549,7 @@ public class Client extends GameApplet {
 					int item = script[counter++] + 1;
 					if (item >= 0 && item < ItemDefinition.item_count && isMembers) {
 						for (int stored =
-								0; stored < other.inventoryItemId.length; stored++) {
+							 0; stored < other.inventoryItemId.length; stored++) {
 							if (other.inventoryItemId[stored] != item)
 								continue;
 							value = 0x3b9ac9ff;
@@ -12670,7 +12670,7 @@ public class Client extends GameApplet {
 		} else {
 			sprite.drawSprite(
 					((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
-					+ (frameWidth - 167),
+							+ (frameWidth - 167),
 					85 - spriteOffsetY - sprite.maxHeight / 2);
 		}
 	}
@@ -12686,7 +12686,7 @@ public class Client extends GameApplet {
 				cacheSprite[44].drawSprite(frameWidth - 181, 0);
 				cacheSprite[45].drawSprite(frameWidth - 158, 7);
 			}
-			
+
 			if (frameMode != ScreenMode.FIXED && changeTabArea) {
 				if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
 						&& super.mouseY >= 2 && super.mouseY <= 24 || tabId == 15) {
@@ -12742,7 +12742,7 @@ public class Client extends GameApplet {
 				}
 			}
 		}
-		for (int p = 0; p < playerCount; p++) {            	
+		for (int p = 0; p < playerCount; p++) {
 			Player player = players[playerList[p]];
 			if (player != null && player.isVisible()) {
 				int mapX = player.x / 32 - localPlayer.x / 32;
@@ -12820,7 +12820,7 @@ public class Client extends GameApplet {
 		compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
 				(frameMode == ScreenMode.FIXED ? 25 : 24), 4,
 				(frameMode == ScreenMode.FIXED ? 29 : frameWidth - 176), 33, 25);
-		
+
 		if (frameMode != ScreenMode.FIXED && changeTabArea) {
 			if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
 					&& super.mouseY >= 2 && super.mouseY <= 24 || tabId == 10) {
@@ -12941,7 +12941,7 @@ public class Client extends GameApplet {
 		sword.drawSprite((isFixed ? 179 : 168) + xOffset, isFixed ? 131 : 156);
 		smallText.method382(getOrbTextColor((int) (percent * 100)),
 				(isFixed ? 212 : 202) + xOffset, specialAttack + "", isFixed ? 148 : 173,
-						true);
+				true);
 	}
 
 	private void npcScreenPos(Mob entity, int i) {
@@ -12966,7 +12966,7 @@ public class Client extends GameApplet {
 		l = l * i2 - i * l1 >> 16;
 		i = j2;
 		j2 = i1 * k1 - l * j1 >> 16;
-				l = i1 * j1 + l * k1 >> 16;
+		l = i1 * j1 + l * k1 >> 16;
 		i1 = j2;
 		if (l >= 50) {
 			spriteDrawX = Rasterizer3D.originViewX + (i << SceneGraph.viewDistance) / l;
@@ -12976,14 +12976,14 @@ public class Client extends GameApplet {
 			spriteDrawY = -1;
 		}
 	}
-	
+
 	private void buildSplitPrivateChatMenu() {
 		if (splitPrivateChat == 0)
 			return;
 		int message = 0;
-		 if(AnnouncementBool) { 
-			 message = 1; 
-		 }
+		if(AnnouncementBool) {
+			message = 1;
+		}
 		if (systemUpdateTime != 0)
 			message = 1;
 		for (int index = 0; index < 100; index++)
@@ -13060,7 +13060,7 @@ public class Client extends GameApplet {
 	}
 
 	private void requestSpawnObject(int longetivity, int id, int orientation, int group, int y, int type,
-			int plane, int x, int delay) {
+									int plane, int x, int delay) {
 		SpawnedObject object = null;
 		for (SpawnedObject node = (SpawnedObject) spawns.reverseGetFirst(); node != null; node =
 				(SpawnedObject) spawns.reverseGetNext()) {
@@ -13156,7 +13156,7 @@ public class Client extends GameApplet {
 					int l4 = flameLeftBackground.canvasRaster[j1];
 					flameLeftBackground.canvasRaster[j1++] =
 							((j3 & 0xff00ff) * l3 + (l4 & 0xff00ff) * j4 & 0xff00ff00)
-							+ ((j3 & 0xff00) * l3 + (l4 & 0xff00) * j4
+									+ ((j3 & 0xff00) * l3 + (l4 & 0xff00) * j4
 									& 0xff0000) >> 8;
 				} else {
 					j1++;
@@ -13185,7 +13185,7 @@ public class Client extends GameApplet {
 					int k5 = flameRightBackground.canvasRaster[j1];
 					flameRightBackground.canvasRaster[j1++] =
 							((k4 & 0xff00ff) * i5 + (k5 & 0xff00ff) * j5 & 0xff00ff00)
-							+ ((k4 & 0xff00) * i5 + (k5 & 0xff00) * j5
+									+ ((k4 & 0xff00) * i5 + (k5 & 0xff00) * j5
 									& 0xff0000) >> 8;
 				} else {
 					j1++;
@@ -13203,7 +13203,7 @@ public class Client extends GameApplet {
 		int count = stream.readBits(8);
 
 		if (count < playerCount) {
-			for (int index = count; index < playerCount; index++) {                        
+			for (int index = count; index < playerCount; index++) {
 				removedMobs[removedMobCount++] = playerList[index];
 			}
 		}
@@ -13212,8 +13212,8 @@ public class Client extends GameApplet {
 			throw new RuntimeException("eek");
 		}
 		playerCount = 0;
-		for (int globalIndex = 0; globalIndex < count; globalIndex++) {                   
-			int index = playerList[globalIndex];                  
+		for (int globalIndex = 0; globalIndex < count; globalIndex++) {
+			int index = playerList[globalIndex];
 			Player player = players[index];
 			player.index = index;
 			int updateRequired = stream.readBits(1);
@@ -13221,7 +13221,7 @@ public class Client extends GameApplet {
 			if (updateRequired == 0) {
 				playerList[playerCount++] = index;
 				player.time = tick;
-			} else {                        
+			} else {
 				int movementType = stream.readBits(2);
 				if (movementType == 0) {
 					playerList[playerCount++] = index;
@@ -13279,8 +13279,8 @@ public class Client extends GameApplet {
 			Configuration.server_port = 43594;
 		}
 
-		if (loginScreenState == 4) { 
-		
+		if (loginScreenState == 4) {
+
 		}
 		loginMusicImageProducer.drawGraphics(265, super.graphics, 562);
 		loginMusicImageProducer.initDrawingArea();
@@ -13298,20 +13298,20 @@ public class Client extends GameApplet {
 		int musicState = 0;
 		bottomRightImageProducer.initDrawingArea();
 		switch (musicState) {
-		case 0:
-			cacheSprite[58].drawSprite(158, 196);
-			break;
+			case 0:
+				cacheSprite[58].drawSprite(158, 196);
+				break;
 
-		case 1:
-			cacheSprite[59].drawSprite(158, 196);
-			break;
+			case 1:
+				cacheSprite[59].drawSprite(158, 196);
+				break;
 		}
 	}
 
 	private boolean registeringAccount;
-	  private boolean usernameInputHover, passwordInputHover, rememberMeHover, loginHover, hideUserHover;
+	private boolean usernameInputHover, passwordInputHover, rememberMeHover, loginHover, hideUserHover;
 	private boolean rememberMe = true;
-	private boolean hideUsername = false; 
+	private boolean hideUsername = false;
 	private String worldText = "World 1";
 	private int autochatTimer = 0;
 	public static int optionSize = 0;
@@ -13463,7 +13463,7 @@ public class Client extends GameApplet {
 			loginScreenState = 0;
 			// MiscUtils.launchURL(Configuration.REGISTER_ACCOUNT);
 		}
-		
+
 		loginBoxImageProducer.drawGraphics(171, super.graphics, 202);
 		if (welcomeScreenRaised) {
 			welcomeScreenRaised = false;
@@ -13475,7 +13475,7 @@ public class Client extends GameApplet {
 			aRSImageProducer_1115.drawGraphics(171, super.graphics, 562);
 		}
 		loginScreenAccessories();
-		
+
 	}
 
 	private void drawFlames() {
@@ -13524,7 +13524,7 @@ public class Client extends GameApplet {
 				if (groundItemsDeque != null) {
 					for (Item groundItem = (Item) groundItemsDeque
 							.reverseGetFirst(); groundItem != null; groundItem =
-							(Item) groundItemsDeque.reverseGetNext()) {
+								 (Item) groundItemsDeque.reverseGetNext()) {
 						if (groundItem.ID != (itemId & 0x7fff)
 								|| groundItem.itemCount != oldItemCount)
 							continue;
@@ -13544,16 +13544,16 @@ public class Client extends GameApplet {
 			int i9 = stream.readUShort();
 			int l11 = stream.readUnsignedByte();
 			int i14 = l11 >> 4 & 0xf;
-						int i16 = l11 & 7;
-						if (localPlayer.pathX[0] >= k3 - i14 && localPlayer.pathX[0] <= k3 + i14
-								&& localPlayer.pathY[0] >= j6 - i14
-								&& localPlayer.pathY[0] <= j6 + i14 && aBoolean848 && !lowMemory
-								&& trackCount < 50) {
-							tracks[trackCount] = i9;
-							trackLoops[trackCount] = i16;
-							soundDelay[trackCount] = Track.delays[i9];
-							trackCount++;
-						}
+			int i16 = l11 & 7;
+			if (localPlayer.pathX[0] >= k3 - i14 && localPlayer.pathX[0] <= k3 + i14
+					&& localPlayer.pathY[0] >= j6 - i14
+					&& localPlayer.pathY[0] <= j6 + i14 && aBoolean848 && !lowMemory
+					&& trackCount < 50) {
+				tracks[trackCount] = i9;
+				trackLoops[trackCount] = i16;
+				soundDelay[trackCount] = Track.delays[i9];
+				trackCount++;
+			}
 		}
 		if (packetType == 215) {
 			int i1 = stream.readUShortA();
@@ -13582,8 +13582,8 @@ public class Client extends GameApplet {
 				Deque groundItemsDeque = groundItems[plane][xLoc][yLoc];
 				if (groundItemsDeque != null) {
 					for (Item item =
-							(Item) groundItemsDeque.reverseGetFirst(); item != null; item =
-							(Item) groundItemsDeque.reverseGetNext()) {
+						 (Item) groundItemsDeque.reverseGetFirst(); item != null; item =
+								 (Item) groundItemsDeque.reverseGetNext()) {
 						if (item.ID != (itemId & 0x7fff))
 							continue;
 						item.unlink();
@@ -13615,12 +13615,12 @@ public class Client extends GameApplet {
 					WallObject wallObjectObject = scene.getWallObject(plane, xLoc, yLoc);
 					if (wallObjectObject != null) {
 						int objectId = wallObjectObject.uid >> 14 & 0x7fff;
-			if (objectType == 2) {
-				wallObjectObject.renderable1 = new SceneObject(objectId, 4 + objectFace, 2, heightB, heightC, heightA, heightD, animId, false);
-				wallObjectObject.renderable2 = new SceneObject(objectId, objectFace + 1 & 3, 2, heightB, heightC, heightA, heightD, animId, false);
-			} else {
-				wallObjectObject.renderable1 = new SceneObject(objectId, objectFace, objectType, heightB, heightC, heightA, heightD, animId, false);
-			}
+						if (objectType == 2) {
+							wallObjectObject.renderable1 = new SceneObject(objectId, 4 + objectFace, 2, heightB, heightC, heightA, heightD, animId, false);
+							wallObjectObject.renderable2 = new SceneObject(objectId, objectFace + 1 & 3, 2, heightB, heightC, heightA, heightD, animId, false);
+						} else {
+							wallObjectObject.renderable1 = new SceneObject(objectId, objectFace, objectType, heightB, heightC, heightA, heightD, animId, false);
+						}
 					}
 				}
 				if (objectGenre == 1) { //WallDecoration
@@ -13706,12 +13706,12 @@ public class Client extends GameApplet {
 			int offset = stream.readUByteA();
 			int x = localX + (offset >> 4 & 7);
 			int y = localY + (offset & 7);
-			int id = stream.readLEUShort();                  
+			int id = stream.readLEUShort();
 			int objectTypeFace = stream.readUByteS();
 			int type = objectTypeFace >> 2;
-			int orientation = objectTypeFace & 3;                  
-			int group = objectGroups[type];                  
-			if (x >= 0 && y >= 0 && x < 104 && y < 104) {              	  
+			int orientation = objectTypeFace & 3;
+			int group = objectGroups[type];
+			if (x >= 0 && y >= 0 && x < 104 && y < 104) {
 				requestSpawnObject(-1, id, orientation, group, y, type, plane, x, 0);
 			}
 			return;
@@ -13753,7 +13753,7 @@ public class Client extends GameApplet {
 			int objectTypeFace = stream.readNegUByte();
 			int type = objectTypeFace >> 2;
 			int orientation = objectTypeFace & 3;
-			int group = objectGroups[type];                  
+			int group = objectGroups[type];
 			int offset = stream.readUnsignedByte();
 			int x = localX + (offset >> 4 & 7);
 			int y = localY + (offset & 7);
@@ -13876,7 +13876,7 @@ public class Client extends GameApplet {
 				welcomeScreenRaised = true;
 				aBoolean831 = false;
 
-				
+
 			}
 		}
 
@@ -13918,7 +13918,7 @@ public class Client extends GameApplet {
 				//Configuration.worldSwitch = !Configuration.worldSwitch;
 				InWorldSelect = true;
 				drawWorldSelect();
-				
+
 			}
 			int j = super.myHeight / 2 - 40;
 			j += 30;
@@ -14022,9 +14022,9 @@ public class Client extends GameApplet {
 		WorldSelector.drawGraphics(0, super.graphics, 0);
 		setupGameplayScreen();
 
-		
+
 	}
-	
+
 	/*
 	 * WorldType = color of world (f2p/mem/pvp/deadman) check sprites
 	 * WorldLoc = location of world (aus, uk, usa) check sprites
@@ -14035,7 +14035,7 @@ public class Client extends GameApplet {
 		cacheSprite[worldType].drawSprite(x, y);
 		cacheSprite[WorldLoc].drawSprite(x + 25, y + 1);
 		if(worldType == 528) {
-		newBoldFont.drawBasicString(world, x + 12, y + 15, 0xffffff);
+			newBoldFont.drawBasicString(world, x + 12, y + 15, 0xffffff);
 		} else {
 			newBoldFont.drawBasicString(world, x + 12, y + 15, 0x000000);
 		}
@@ -14058,35 +14058,35 @@ public class Client extends GameApplet {
 			if (key != 0) {
 				int config = scene.getMask(z, x, y, key);
 				int id = key >> 14 & 0x7fff;
-		int objectType = config & 0x1f;
-		int orientation = config >> 6;
+				int objectType = config & 0x1f;
+				int orientation = config >> 6;
 
-		if (group == 0) {
-			scene.removeWallObject(x, z, y);
-			ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-			if (objectDef.solid)
-				collisionMaps[z].removeObject(orientation, objectType,
-						objectDef.impenetrable, x, y);
-		}
-		if (group == 1)
-			scene.removeWallDecoration(y, z, x);
-		if (group == 2) {
-			scene.removeTiledObject(z, x, y);
-			ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-			if (x + objectDef.objectSizeX > 103 || y + objectDef.objectSizeX > 103
-					|| x + objectDef.objectSizeY > 103
-					|| y + objectDef.objectSizeY > 103)
-				return;
-			if (objectDef.solid)
-				collisionMaps[z].removeObject(orientation, objectDef.objectSizeX, x,
-						y, objectDef.objectSizeY, objectDef.impenetrable);
-		}
-		if (group == 3) {
-			scene.removeGroundDecoration(z, y, x);
-			ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-			if (objectDef.solid && objectDef.isInteractive)
-				collisionMaps[z].removeFloorDecoration(y, x);
-		}
+				if (group == 0) {
+					scene.removeWallObject(x, z, y);
+					ObjectDefinition objectDef = ObjectDefinition.lookup(id);
+					if (objectDef.solid)
+						collisionMaps[z].removeObject(orientation, objectType,
+								objectDef.impenetrable, x, y);
+				}
+				if (group == 1)
+					scene.removeWallDecoration(y, z, x);
+				if (group == 2) {
+					scene.removeTiledObject(z, x, y);
+					ObjectDefinition objectDef = ObjectDefinition.lookup(id);
+					if (x + objectDef.objectSizeX > 103 || y + objectDef.objectSizeX > 103
+							|| x + objectDef.objectSizeY > 103
+							|| y + objectDef.objectSizeY > 103)
+						return;
+					if (objectDef.solid)
+						collisionMaps[z].removeObject(orientation, objectDef.objectSizeX, x,
+								y, objectDef.objectSizeY, objectDef.impenetrable);
+				}
+				if (group == 3) {
+					scene.removeGroundDecoration(z, y, x);
+					ObjectDefinition objectDef = ObjectDefinition.lookup(id);
+					if (objectDef.solid && objectDef.isInteractive)
+						collisionMaps[z].removeFloorDecoration(y, x);
+				}
 			}
 			if (previousId >= 0) {
 				int plane = z;
@@ -14098,15 +14098,15 @@ public class Client extends GameApplet {
 		}
 	}
 
-	private void updatePlayers(int packetSize, Buffer stream) {             
-		removedMobCount = 0;            
+	private void updatePlayers(int packetSize, Buffer stream) {
+		removedMobCount = 0;
 		mobsAwaitingUpdateCount = 0;
-		updateLocalPlayerMovement(stream);            
-		updateOtherPlayerMovement(stream);            
+		updateLocalPlayerMovement(stream);
+		updateOtherPlayerMovement(stream);
 		updatePlayerList(stream, packetSize);
 		parsePlayerSynchronizationMask(stream);
-		for (int count = 0; count < removedMobCount; count++) {                  
-			int index = removedMobs[count];  
+		for (int count = 0; count < removedMobCount; count++) {
+			int index = removedMobs[count];
 
 			if (players[index].time != tick) {
 				players[index] = null;
@@ -14118,7 +14118,7 @@ public class Client extends GameApplet {
 					+ stream.currentPosition + " psize:" + packetSize);
 			throw new RuntimeException("eek");
 		}
-		for (int count = 0; count < playerCount; count++) {                  
+		for (int count = 0; count < playerCount; count++) {
 			if (players[playerList[count]] == null) {
 				SignLink.reporterror(myUsername + " null entry in pl list - pos:" + count
 						+ " size:" + playerCount);
@@ -14138,8 +14138,8 @@ public class Client extends GameApplet {
 			int i3 = Model.SINE[l1];
 			int k3 = Model.COSINE[l1];
 			int i4 = k2 * k3 - l2 * i3 >> 16;
-		l2 = k2 * i3 + l2 * k3 >> 16;
-				k2 = i4;
+			l2 = k2 * i3 + l2 * k3 >> 16;
+			k2 = i4;
 		}
 		if (i2 != 0) {
 			int j3 = Model.SINE[i2];
@@ -14160,42 +14160,42 @@ public class Client extends GameApplet {
 	 */
 	public void updateStrings(String message, int index) {
 		switch (index) {
-		case 1675:
-			sendString(message, 17508);
-			break;// Stab
-		case 1676:
-			sendString(message, 17509);
-			break;// Slash
-		case 1677:
-			sendString(message, 17510);
-			break;// Crush
-		case 1678:
-			sendString(message, 17511);
-			break;// Magic
-		case 1679:
-			sendString(message, 17512);
-			break;// Range
-		case 1680:
-			sendString(message, 17513);
-			break;// Stab
-		case 1681:
-			sendString(message, 17514);
-			break;// Slash
-		case 1682:
-			sendString(message, 17515);
-			break;// Crush
-		case 1683:
-			sendString(message, 17516);
-			break;// Magic
-		case 1684:
-			sendString(message, 17517);
-			break;// Range
-		case 1686:
-			sendString(message, 17518);
-			break;// Strength
-		case 1687:
-			sendString(message, 17519);
-			break;// Prayer
+			case 1675:
+				sendString(message, 17508);
+				break;// Stab
+			case 1676:
+				sendString(message, 17509);
+				break;// Slash
+			case 1677:
+				sendString(message, 17510);
+				break;// Crush
+			case 1678:
+				sendString(message, 17511);
+				break;// Magic
+			case 1679:
+				sendString(message, 17512);
+				break;// Range
+			case 1680:
+				sendString(message, 17513);
+				break;// Stab
+			case 1681:
+				sendString(message, 17514);
+				break;// Slash
+			case 1682:
+				sendString(message, 17515);
+				break;// Crush
+			case 1683:
+				sendString(message, 17516);
+				break;// Magic
+			case 1684:
+				sendString(message, 17517);
+				break;// Range
+			case 1686:
+				sendString(message, 17518);
+				break;// Strength
+			case 1687:
+				sendString(message, 17519);
+				break;// Prayer
 		}
 	}
 
@@ -14214,42 +14214,42 @@ public class Client extends GameApplet {
 	public void sendButtonClick(int button, int toggle, int type) {
 		Widget widget = Widget.interfaceCache[button];
 		switch (type) {
-		case 135:
-			boolean flag8 = true;
+			case 135:
+				boolean flag8 = true;
 
-			if (widget.contentType > 0) {
-				flag8 = promptUserForInput(widget);
-			}
+				if (widget.contentType > 0) {
+					flag8 = promptUserForInput(widget);
+				}
 
-			if (flag8) {
-				sendPacket(new ClickButton(button));
-			}
-			break;
+				if (flag8) {
+					sendPacket(new ClickButton(button));
+				}
+				break;
 
 			// case reset setting widget
-		case 646:
-			sendPacket(new ClickButton(button));
+			case 646:
+				sendPacket(new ClickButton(button));
 
-			if (widget.valueIndexArray != null && widget.valueIndexArray[0][0] == 5) {
-				if (settings[toggle] != widget.requiredValues[0]) {
-					settings[toggle] = widget.requiredValues[0];
+				if (widget.valueIndexArray != null && widget.valueIndexArray[0][0] == 5) {
+					if (settings[toggle] != widget.requiredValues[0]) {
+						settings[toggle] = widget.requiredValues[0];
+						updateVarp(toggle);
+					}
+				}
+				break;
+
+			case 169:
+				sendPacket(new ClickButton(button));
+				if (widget.valueIndexArray != null && widget.valueIndexArray[0][0] == 5) {
+					settings[toggle] = 1 - settings[toggle];
 					updateVarp(toggle);
 				}
-			}
-			break;
+				break;
 
-		case 169:
-			sendPacket(new ClickButton(button));
-			if (widget.valueIndexArray != null && widget.valueIndexArray[0][0] == 5) {
-				settings[toggle] = 1 - settings[toggle];
-				updateVarp(toggle);
-			}
-			break;
-
-		default:
-			System.out.println("button: " + button + " - toggle: " + toggle
-					+ " - type: " + type);
-			break;
+			default:
+				System.out.println("button: " + button + " - toggle: " + toggle
+						+ " - type: " + type);
+				break;
 		}
 	}
 
@@ -14334,7 +14334,7 @@ public class Client extends GameApplet {
 		ping_packet_counter = 0;
 	}
 
-	private boolean readPacket() {  
+	private boolean readPacket() {
 
 		if (socketStream == null) {
 			return false;
@@ -14383,11 +14383,11 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 			if(opcode == 158) {
 				int id = incoming.readInt();
 				int length = incoming.readShort();
-				
+
 				Widget w = Widget.interfaceCache[id];
 				w.width = length;
 				if(length == w.totalWidth) {
@@ -14404,14 +14404,14 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
-			 if (opcode == 157) { 
-				 AnnouncementBool = incoming.readUnsignedByte() == 1; 
-				 staffMessage = incoming.readString();
-				 opcode = -1;
-				 return true;
-			 }
-			
+
+			if (opcode == 157) {
+				AnnouncementBool = incoming.readUnsignedByte() == 1;
+				staffMessage = incoming.readString();
+				opcode = -1;
+				return true;
+			}
+
 			if(opcode == PacketConstants.SET_SCROLLBAR_HEIGHT) {
 				int interface_ = incoming.readInt();
 				int scrollMax = incoming.readShort();
@@ -14422,7 +14422,7 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 			if(opcode == 173) {
 				optionsToSend.clear();
 				optionSize = 0;
@@ -14495,7 +14495,7 @@ public class Client extends GameApplet {
 					reportAbuseInput = "";
 					canMute = false;
 					for (int interfaceId =
-							0; interfaceId < Widget.interfaceCache.length; interfaceId++) {
+						 0; interfaceId < Widget.interfaceCache.length; interfaceId++) {
 						if (Widget.interfaceCache[interfaceId] == null
 								|| Widget.interfaceCache[interfaceId].contentType != character)
 							continue;
@@ -14519,9 +14519,9 @@ public class Client extends GameApplet {
 				}
 				for (SpawnedObject object = (SpawnedObject) spawns
 						.reverseGetFirst(); object != null; object =
-						(SpawnedObject) spawns.reverseGetNext())
+							 (SpawnedObject) spawns.reverseGetNext())
 					if (object.x >= localX && object.x < localX + 8 && object.y >= localY
-					&& object.y < localY + 8 && object.plane == plane)
+							&& object.y < localY + 8 && object.plane == plane)
 						object.getLongetivity = 0;
 				opcode = -1;
 				return true;
@@ -14532,15 +14532,15 @@ public class Client extends GameApplet {
 				Widget.interfaceCache[playerHeadModelId].defaultMediaType = 3;
 				if (localPlayer.npcDefinition == null)
 					Widget.interfaceCache[playerHeadModelId].defaultMedia =
-					(localPlayer.appearanceColors[0] << 25)
-					+ (localPlayer.appearanceColors[4] << 20)
-					+ (localPlayer.equipment[0] << 15)
-					+ (localPlayer.equipment[8] << 10)
-					+ (localPlayer.equipment[11] << 5)
-					+ localPlayer.equipment[1];
+							(localPlayer.appearanceColors[0] << 25)
+									+ (localPlayer.appearanceColors[4] << 20)
+									+ (localPlayer.equipment[0] << 15)
+									+ (localPlayer.equipment[8] << 10)
+									+ (localPlayer.equipment[11] << 5)
+									+ localPlayer.equipment[1];
 				else
 					Widget.interfaceCache[playerHeadModelId].defaultMedia =
-					(int) (0x12345678L + localPlayer.npcDefinition.interfaceType);
+							(int) (0x12345678L + localPlayer.npcDefinition.interfaceType);
 				opcode = -1;
 				return true;
 			}
@@ -14701,7 +14701,7 @@ public class Client extends GameApplet {
 
 			if (opcode == PacketConstants.SEND_MAP_REGION
 					|| opcode == PacketConstants.SEND_REGION_MAP_REGION) {
-				int regionX = this.regionX;                        
+				int regionX = this.regionX;
 				int regionY = this.regionY;
 				if (opcode == 73) {
 					regionX = incoming.readUShortA();
@@ -14710,13 +14710,13 @@ public class Client extends GameApplet {
 				} else if (opcode == 241) {
 					regionY = incoming.readUShortA();
 					incoming.initBitAccess();
-					for (int z = 0; z < 4; z++) {                                    
-						for (int x = 0; x < 13; x++) {                                          
-							for (int y = 0; y < 13; y++) {  
+					for (int z = 0; z < 4; z++) {
+						for (int x = 0; x < 13; x++) {
+							for (int y = 0; y < 13; y++) {
 
 								int visible = incoming.readBits(1);
 
-								if (visible == 1) {                                                      
+								if (visible == 1) {
 									localRegions[z][x][y] = incoming.readBits(26);
 								} else {
 									localRegions[z][x][y] = -1;
@@ -14740,26 +14740,26 @@ public class Client extends GameApplet {
 						&& this.regionY / 8 == 48;
 				if (this.regionX / 8 == 48 && this.regionY / 8 == 148)
 					inPlayerOwnedHouse = true;
-				loadingStage = 1;                       
+				loadingStage = 1;
 				loadingStartTime = System.currentTimeMillis();
 				gameScreenImageProducer.initDrawingArea();
 				drawLoadingMessages(1, "Loading - please wait.", null);
 				gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0,
 						super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
 				if (opcode == 73) {
-					int regionCount = 0;                                
+					int regionCount = 0;
 					for (int x = (this.regionX - 6) / 8; x <= (this.regionX + 6)
 							/ 8; x++) {
 						for (int y = (this.regionY - 6) / 8; y <= (this.regionY + 6)
 								/ 8; y++)
 							regionCount++;
 					}
-					localRegionMapData = new byte[regionCount][];                              
-					localRegionLandscapeData = new byte[regionCount][];                              
-					localRegionIds = new int[regionCount];                              
-					localRegionMapIds = new int[regionCount];                              
-					localRegionLandscapeIds = new int[regionCount];                              
-					regionCount = 0;                              
+					localRegionMapData = new byte[regionCount][];
+					localRegionLandscapeData = new byte[regionCount][];
+					localRegionIds = new int[regionCount];
+					localRegionMapIds = new int[regionCount];
+					localRegionLandscapeIds = new int[regionCount];
+					regionCount = 0;
 
 					for (int x = (this.regionX - 6) / 8; x <= (this.regionX + 6)
 							/ 8; x++) {
@@ -14771,8 +14771,8 @@ public class Client extends GameApplet {
 									|| x == 49 && y == 47)) {
 								localRegionMapIds[regionCount] = -1;
 								localRegionLandscapeIds[regionCount] = -1;
-								regionCount++;                                                
-							} else {                                                
+								regionCount++;
+							} else {
 								int map = localRegionMapIds[regionCount] =
 										resourceProvider.resolve(0, y, x);
 								if (map != -1) {
@@ -14794,26 +14794,26 @@ public class Client extends GameApplet {
 
 					int regionIds[] = new int[676];
 
-					for (int z = 0; z < 4; z++) {                                    
-						for (int x = 0; x < 13; x++) {                                          
-							for (int y = 0; y < 13; y++) { 
+					for (int z = 0; z < 4; z++) {
+						for (int x = 0; x < 13; x++) {
+							for (int y = 0; y < 13; y++) {
 
 								int data = localRegions[z][x][y];
 
-								if (data != -1) {                                                       
+								if (data != -1) {
 									int constructedRegionX = data >> 14 & 0x3ff;
-							int constructedRegionY = data >> 3 & 0x7ff;
-					int region = (constructedRegionX / 8 << 8) + constructedRegionY / 8;
-					for (int index = 0; index < regionCount; index++) {
-						if (regionIds[index] != region) {
-							continue;
-						}
-						region = -1;
-						break;
-					}
-					if (region != -1) {
-						regionIds[regionCount++] = region;
-					}
+									int constructedRegionY = data >> 3 & 0x7ff;
+									int region = (constructedRegionX / 8 << 8) + constructedRegionY / 8;
+									for (int index = 0; index < regionCount; index++) {
+										if (regionIds[index] != region) {
+											continue;
+										}
+										region = -1;
+										break;
+									}
+									if (region != -1) {
+										regionIds[regionCount++] = region;
+									}
 								}
 							}
 						}
@@ -14823,32 +14823,32 @@ public class Client extends GameApplet {
 					localRegionIds = new int[regionCount];
 					localRegionMapIds = new int[regionCount];
 					localRegionLandscapeIds = new int[regionCount];
-					for (int index = 0; index < regionCount; index++) {                                    
-						int id = localRegionIds[index] = regionIds[index];                                    
-						int constructedRegionX = id >> 8 & 0xff;                                
-					int constructedRegionY = id & 0xff;                                    
-					int map = localRegionMapIds[index] = resourceProvider.resolve(0, constructedRegionY, constructedRegionX);
+					for (int index = 0; index < regionCount; index++) {
+						int id = localRegionIds[index] = regionIds[index];
+						int constructedRegionX = id >> 8 & 0xff;
+						int constructedRegionY = id & 0xff;
+						int map = localRegionMapIds[index] = resourceProvider.resolve(0, constructedRegionY, constructedRegionX);
 
-					if (map != -1) {
-						resourceProvider.provide(3, map);
-					}                                    
+						if (map != -1) {
+							resourceProvider.provide(3, map);
+						}
 
-					int landscape = localRegionLandscapeIds[index] = resourceProvider.resolve(1, constructedRegionY, constructedRegionX);
+						int landscape = localRegionLandscapeIds[index] = resourceProvider.resolve(1, constructedRegionY, constructedRegionX);
 
-					if (landscape != -1) {
-						resourceProvider.provide(3, landscape);
-					}
+						if (landscape != -1) {
+							resourceProvider.provide(3, landscape);
+						}
 
 					}
 				}
-				int dx = regionBaseX - previousAbsoluteX;                         
-				int dy = regionBaseY - previousAbsoluteY;                         
+				int dx = regionBaseX - previousAbsoluteX;
+				int dy = regionBaseY - previousAbsoluteY;
 				previousAbsoluteX = regionBaseX;
 				previousAbsoluteY = regionBaseY;
-				for (int index = 0; index < 16384; index++) {                              
+				for (int index = 0; index < 16384; index++) {
 					Npc npc = npcs[index];
 					if (npc != null) {
-						for (int point = 0; point < 10; point++) {                                          
+						for (int point = 0; point < 10; point++) {
 							npc.pathX[point] -= dx;
 							npc.pathY[point] -= dy;
 						}
@@ -14856,10 +14856,10 @@ public class Client extends GameApplet {
 						npc.y -= dy * 128;
 					}
 				}
-				for (int index = 0; index < maxPlayers; index++) {                              
+				for (int index = 0; index < maxPlayers; index++) {
 					Player player = players[index];
 					if (player != null) {
-						for (int point = 0; point < 10; point++) {                                          
+						for (int point = 0; point < 10; point++) {
 							player.pathX[point] -= dx;
 							player.pathY[point] -= dy;
 						}
@@ -14868,38 +14868,38 @@ public class Client extends GameApplet {
 					}
 				}
 				validLocalMap = true;
-				byte startX = 0;                        
-				byte endX = 104;                        
-				byte stepX = 1;                        
+				byte startX = 0;
+				byte endX = 104;
+				byte stepX = 1;
 				if (dx < 0) {
 					startX = 103;
 					endX = -1;
 					stepX = -1;
 				}
-				byte startY = 0;                        
-				byte endY = 104;                        
-				byte stepY = 1;  
+				byte startY = 0;
+				byte endY = 104;
+				byte stepY = 1;
 
 				if (dy < 0) {
 					startY = 103;
 					endY = -1;
 					stepY = -1;
 				}
-				for (int x = startX; x != endX; x += stepX) {                              
-					for (int y = startY; y != endY; y += stepY) {                                    
-						int shiftedX = x + dx;                                    
-						int shiftedY = y + dy;                                    
-						for (int plane = 0; plane < 4; plane++)                                          
+				for (int x = startX; x != endX; x += stepX) {
+					for (int y = startY; y != endY; y += stepY) {
+						int shiftedX = x + dx;
+						int shiftedY = y + dy;
+						for (int plane = 0; plane < 4; plane++)
 							if (shiftedX >= 0 && shiftedY >= 0 && shiftedX < 104 && shiftedY < 104) {
 								groundItems[plane][x][y] = groundItems[plane][shiftedX][shiftedY];
 							} else {
 								groundItems[plane][x][y] = null;
 							}
 					}
-				}                        
+				}
 				for (SpawnedObject object = (SpawnedObject) spawns
 						.reverseGetFirst(); object != null; object =
-						(SpawnedObject) spawns.reverseGetNext()) {
+							 (SpawnedObject) spawns.reverseGetNext()) {
 					object.x -= dx;
 					object.y -= dy;
 					if (object.x < 0 || object.y < 0
@@ -15016,11 +15016,11 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 			if(opcode == PacketConstants.ENABLE_NOCLIP) {
 				for (int plane = 0; plane < 4; plane++) {
-					for (int x = 1; x < 103; x++) {                                                  	
-						for (int y = 1; y < 103; y++) {                                                    	  
+					for (int x = 1; x < 103; x++) {
+						for (int y = 1; y < 103; y++) {
 							collisionMaps[plane].adjacencies[x][y] =
 									0;
 						}
@@ -15029,7 +15029,7 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 			if(opcode == PacketConstants.SEND_URL) {
 				String url = incoming.readString();
 				MiscUtils.launchURL(url);
@@ -15119,8 +15119,8 @@ public class Client extends GameApplet {
 					if (friendsNodeIDs[playerIndex] != world) {
 						friendsNodeIDs[playerIndex] = world;
 
-							sendMessage(name + " has logged in.", 5, "");
-						}
+						sendMessage(name + " has logged in.", 5, "");
+					}
 //						if (world <= 1) {
 //							sendMessage(name + " has logged out.", 5, "");
 //						}*/
@@ -15216,7 +15216,7 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 
 			if (opcode == PacketConstants.SEND_EXIT) {
 				System.exit(1);
@@ -15336,12 +15336,12 @@ public class Client extends GameApplet {
 						if(rights > 0 && rights < 10) {
 							sendMessage(message, 7, "@cr"+rights+"@"
 									+ StringUtils.formatText(StringUtils
-											.decodeBase37(encodedName)));
+									.decodeBase37(encodedName)));
 						} else {
 							sendMessage(message, 3, StringUtils.formatText(
 									StringUtils.decodeBase37(encodedName)));
 						}
-						
+
 					} catch (Exception ex) {
 						SignLink.reporterror("cde1");
 					}
@@ -15388,7 +15388,7 @@ public class Client extends GameApplet {
 					return true;
 				}
 			}
-			
+
 			if (opcode == PacketConstants.SEND_ITEM_POSITION) {
 				int widget = incoming.readLEUShort();
 				int scale = incoming.readUShort();
@@ -15493,7 +15493,7 @@ public class Client extends GameApplet {
 				int id = incoming.readLEUShortA();
 				int color = incoming.readLEUShortA();
 				int red = color >> 10 & 0x1f;
-					int green = color >> 5 & 0x1f;
+				int green = color >> 5 & 0x1f;
 				int blue = color & 0x1f;
 				Widget.interfaceCache[id].textColor =
 						(red << 19) + (green << 11) + (blue << 3);
@@ -15513,7 +15513,7 @@ public class Client extends GameApplet {
 						return true;
 					}
 
-					for (int j22 = 0; j22 < itemCount; j22++) { 
+					for (int j22 = 0; j22 < itemCount; j22++) {
 						if(j22 == widget.inventoryItemId.length) {
 							break;
 						}
@@ -15541,7 +15541,7 @@ public class Client extends GameApplet {
 			}
 
 			if(opcode == PacketConstants.SEND_CURRENT_BANK_TAB) {
-				currentBankTab = incoming.readUnsignedByte();				
+				currentBankTab = incoming.readUnsignedByte();
 				opcode = -1;
 				return true;
 			}
@@ -15757,7 +15757,7 @@ public class Client extends GameApplet {
 					return true;
 				}
 
-				if (slot >= 0 && slot < widget.inventoryItemId.length) {					
+				if (slot >= 0 && slot < widget.inventoryItemId.length) {
 					widget.inventoryItemId[slot] = id;
 					widget.inventoryAmounts[slot] = amount;
 				}
@@ -15795,7 +15795,7 @@ public class Client extends GameApplet {
 				opcode = -1;
 				return true;
 			}
-			
+
 			if (opcode == PacketConstants.SEND_DUO_CHATBOX_INTERFACE) {
 				int id = incoming.readLEUShort();
 
@@ -15830,18 +15830,18 @@ public class Client extends GameApplet {
 	/*
 	 * FIXME fix autochat, for some reason it stops packets from being sent
 	 */
-	
-	private void moveCameraWithPlayer() { 
+
+	private void moveCameraWithPlayer() {
 		anInt1265++;
 		if(sendingAutochat && autochatString != null && autochatString.length() > 0) {
 			if(autochatTimer > 100) {
 				sendPacket(new Chat(0, 0, StringUtils.formatText(autochatString)));
 				localPlayer.spokenText = StringUtils.formatText(autochatString);
 				if (myPrivilege > 0 && myPrivilege < 10) {
-											sendMessage(StringUtils.capitalize(autochatString), 2, "@cr" + myPrivilege + "@" + localPlayer.name);
-										} else {
-											sendMessage(StringUtils.capitalize(autochatString), 2, localPlayer.name);
-										}
+					sendMessage(StringUtils.capitalize(autochatString), 2, "@cr" + myPrivilege + "@" + localPlayer.name);
+				} else {
+					sendMessage(StringUtils.capitalize(autochatString), 2, localPlayer.name);
+				}
 				updateChatbox = true;
 				autochatTimer = 0;
 			}
@@ -15866,7 +15866,7 @@ public class Client extends GameApplet {
 			setCameraPos(
 					cameraZoom + i * ((SceneGraph.viewDistance == 9)
 							&& (frameMode == ScreenMode.RESIZABLE) ? 2
-									: SceneGraph.viewDistance == 10 ? 5 : 3),
+							: SceneGraph.viewDistance == 10 ? 5 : 3),
 					i, anInt1014, getCenterHeight(plane, localPlayer.y, localPlayer.x) - 50, k,
 					anInt1015);
 		}
@@ -15954,7 +15954,7 @@ public class Client extends GameApplet {
 		yCameraCurve = k1;
 		xCameraCurve = l1;
 	}
-	
+
 	private void startSpinner() {
 		Widget w = Widget.interfaceCache[13101];
 		Widget w2 = Widget.interfaceCache[13200];
@@ -15967,7 +15967,7 @@ public class Client extends GameApplet {
 		if(w.horizontalOffset >= -1912 && w.horizontalOffset <= -1001) {
 			w.horizontalOffset -= (25 / spinSpeed);
 			w2.horizontalOffset -= (25 / spinSpeed);
-		spinSpeed = spinSpeed + 0.07f;
+			spinSpeed = spinSpeed + 0.07f;
 		}
 		if(w.horizontalOffset >= -2000 && w.horizontalOffset < -1913) {
 			w.horizontalOffset -= (25 / spinSpeed);
@@ -15982,7 +15982,7 @@ public class Client extends GameApplet {
 			rewards.inventoryItemId[0] = w2.inventoryItemId[51];
 			rewards.inventoryAmounts[0] = w2.inventoryAmounts[51];
 			startSpin = false;
-			
+
 		}
 	}
 
@@ -16016,7 +16016,7 @@ public class Client extends GameApplet {
 		long nameAsLong = MiscUtils.longForName(name.trim());
 
 		if (nameAsLong != -1) {
-			
+
 			updateChatbox = true;
 			inputDialogState = 0;
 			messagePromptRaised = true;
@@ -16119,7 +16119,7 @@ public class Client extends GameApplet {
 			if(currentLevel != 99) {
 				try {
 					int initExp = getXPForLevel(currentLevel);
-					int newExp = getXPForLevel(currentLevel + 1);					
+					int newExp = getXPForLevel(currentLevel + 1);
 					int gained = currentExp[currentSkill] - initExp;
 					int remainder = newExp - initExp;
 					percent = (int) (((double) gained / (double) remainder) * (width - 11));
@@ -16161,7 +16161,7 @@ public class Client extends GameApplet {
 		if(percent <= 90) {
 			return 0x007f00;
 		}
-		return 31744;	
+		return 31744;
 	}
 
 	/**
@@ -16173,10 +16173,10 @@ public class Client extends GameApplet {
 	 * The player's total exp
 	 */
 	private long totalExp;
-	
+
 	public static String insertCommas(long i) {
-        return String.format("%,d", i);
-    }
+		return String.format("%,d", i);
+	}
 
 	/**
 	 * Drawing of exp counter drops
@@ -16262,7 +16262,7 @@ public class Client extends GameApplet {
 			orbIconX = {33, 30, 58}, orbIconY = {51, 92, 130};
 
 	private boolean runHover, prayHover, hpHover, prayClicked,
-	specialHover, expCounterHover, worldHover, autocast;
+			specialHover, expCounterHover, worldHover, autocast;
 
 	public int getOrbTextColor(int statusInt) {
 		if (statusInt >= 75 && statusInt <= Integer.MAX_VALUE)
@@ -16669,10 +16669,10 @@ public class Client extends GameApplet {
 	private int varCinematicCamRotationSpeedPromille;
 	private IsaacCipher encryption;
 	private Sprite multiOverlay;
-	public static final int[][] PLAYER_BODY_RECOLOURS = {                  
+	public static final int[][] PLAYER_BODY_RECOLOURS = {
 			{6798, 107, 10283, 16, 4797, 7744, 5799, 4634, 33697, 22433, 2983, 54193},
 			{8741, 12, 64030, 43162, 7735, 8404, 1701, 38430, 24094, 10153, 56621, 4783, 1341,
-				16578, 35003, 25239},
+					16578, 35003, 25239},
 			{25238, 8742, 12, 64030, 43162, 7735, 8404, 1701, 38430, 24094, 10153, 56621,
 					4783, 1341, 16578, 35003},
 			{4626, 11146, 6439, 12, 4758, 10270},
@@ -16731,8 +16731,8 @@ public class Client extends GameApplet {
 	private int mouseInvInterfaceIndex;
 	private int lastActiveInvInterface;
 	public ResourceProvider resourceProvider;
-	public int regionX;      
-	public int regionY;      
+	public int regionX;
+	public int regionY;
 	private int anInt1071;
 	private int[] minimapHintX;
 	private int[] minimapHintY;
@@ -16778,8 +16778,8 @@ public class Client extends GameApplet {
 	private ProducingGraphicsBuffer bottomLeft0BackgroundTile;
 	private ProducingGraphicsBuffer bottomRightImageProducer;
 	private ProducingGraphicsBuffer loginMusicImageProducer;
-    private ProducingGraphicsBuffer WorldSelector; 
-    private static ProducingGraphicsBuffer WorldSelect;
+	private ProducingGraphicsBuffer WorldSelector;
+	private static ProducingGraphicsBuffer WorldSelect;
 	private ProducingGraphicsBuffer middleLeft1BackgroundTile;
 	private ProducingGraphicsBuffer aRSImageProducer_1115;
 	private static int anInt1117;
@@ -16792,7 +16792,7 @@ public class Client extends GameApplet {
 	private final boolean[] playerOptionsHighPriority;
 	private final int[][][] localRegions;
 	public static final int[] tabInterfaceIDs =
-		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+			{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 	private int cameraY;
 	public int anInt1132;
 	public int menuActionRow;
@@ -16815,7 +16815,7 @@ public class Client extends GameApplet {
 	private boolean canMute;
 	private boolean constructedViewport;
 	private boolean oriented;
-	public static int tick;      
+	public static int tick;
 	private static final String validUserPassChars =
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"\243$%^&*()-_=+[{]};:'@#~,<.>/?\\| ";
 	private static ProducingGraphicsBuffer tabImageProducer;
@@ -16833,7 +16833,7 @@ public class Client extends GameApplet {
 	private static int anInt1175;
 	private boolean genericLoadingError;
 	private final int[] objectGroups =
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3};
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3};
 	private int reportAbuseInterfaceID;
 	private Deque spawns;
 	private static int[] anIntArray1180;
@@ -17034,62 +17034,62 @@ public class Client extends GameApplet {
 		}
 		String[] split = inputString.split(" ");
 		switch(cmd) {
-		case "childids":
-			for(int i = 0; i < 50000; i++) {
-				sendString(""+i, i);
-			}
-			break;
-		case "finterface":
-			try {
-				String[] args = inputString.split(" ");
-				int id1 = Integer.parseInt(args[1]);
-				int id2 = Integer.parseInt(args[2]);
-				fullscreenInterfaceID = id1;
-				openInterfaceId = id2;
-				sendMessage("Opened Interface", 0, "");
-			} catch (Exception e) {
-				sendMessage("Interface Failed to load", 0, "");
-			}
-			break;
-		case "music":
-			Configuration.enableMusic = !Configuration.enableMusic;
-			break;
-		case "rint":
-			GameFont gameFont = new GameFont(true, "q8_full",
-					titleArchive);
-			GameFont fonts[] =
-				{smallText, regularText, boldText, gameFont, fancyFont};
-			FileArchive interfaces = createArchive(3, "interface",
-					"interface", JagGrab.CRCs[JagGrab.INTERFACE_CRC], 35);
-			FileArchive graphics = createArchive(4, "2d graphics",
-					"media", JagGrab.CRCs[JagGrab.MEDIA_CRC], 40);
-			Widget.load(interfaces, fonts, graphics);
-			break;
-		case "dumpsprites":
-			final boolean old = SpriteLoader.DUMP_SPRITES;
-			SpriteLoader.DUMP_SPRITES = true;
-			SpriteLoader.loadSprites();
-			SpriteLoader.DUMP_SPRITES = old;
-			break;
-		case "fixed":
-			frameMode(ScreenMode.FIXED);
-			break;
-		case "resize":
-			frameMode(ScreenMode.RESIZABLE);
-			break;
-		case "full":
-			frameMode(ScreenMode.FULLSCREEN);
-			break;
-		case "chat":
-			if (frameMode != ScreenMode.FIXED) {
-				changeChatArea = !changeChatArea;
-			}
-			break;
-		case "optab":
-			if (frameMode != ScreenMode.FIXED) {
-				transparentTabArea = !transparentTabArea;
-			}
-			break;
+			case "childids":
+				for(int i = 0; i < 50000; i++) {
+					sendString(""+i, i);
+				}
+				break;
+			case "finterface":
+				try {
+					String[] args = inputString.split(" ");
+					int id1 = Integer.parseInt(args[1]);
+					int id2 = Integer.parseInt(args[2]);
+					fullscreenInterfaceID = id1;
+					openInterfaceId = id2;
+					sendMessage("Opened Interface", 0, "");
+				} catch (Exception e) {
+					sendMessage("Interface Failed to load", 0, "");
+				}
+				break;
+			case "music":
+				Configuration.enableMusic = !Configuration.enableMusic;
+				break;
+			case "rint":
+				GameFont gameFont = new GameFont(true, "q8_full",
+						titleArchive);
+				GameFont fonts[] =
+						{smallText, regularText, boldText, gameFont, fancyFont};
+				FileArchive interfaces = createArchive(3, "interface",
+						"interface", JagGrab.CRCs[JagGrab.INTERFACE_CRC], 35);
+				FileArchive graphics = createArchive(4, "2d graphics",
+						"media", JagGrab.CRCs[JagGrab.MEDIA_CRC], 40);
+				Widget.load(interfaces, fonts, graphics);
+				break;
+			case "dumpsprites":
+				final boolean old = SpriteLoader.DUMP_SPRITES;
+				SpriteLoader.DUMP_SPRITES = true;
+				SpriteLoader.loadSprites();
+				SpriteLoader.DUMP_SPRITES = old;
+				break;
+			case "fixed":
+				frameMode(ScreenMode.FIXED);
+				break;
+			case "resize":
+				frameMode(ScreenMode.RESIZABLE);
+				break;
+			case "full":
+				frameMode(ScreenMode.FULLSCREEN);
+				break;
+			case "chat":
+				if (frameMode != ScreenMode.FIXED) {
+					changeChatArea = !changeChatArea;
+				}
+				break;
+			case "optab":
+				if (frameMode != ScreenMode.FIXED) {
+					transparentTabArea = !transparentTabArea;
+				}
+				break;
 		}
 		/** Add Commands Here **/
 		if (loggedIn) {
@@ -17111,12 +17111,12 @@ public class Client extends GameApplet {
 	}
 
 
-	public static long findSize(String path) { 
+	public static long findSize(String path) {
 		long totalSize = 0;
 		ArrayList<String> directory = new ArrayList<String>();
 		File file = new File(path);
 
-		if(file.isDirectory()) { 
+		if(file.isDirectory()) {
 			directory.add(file.getAbsolutePath());
 			while (directory.size() > 0) {
 				String folderPath = directory.get(0);
@@ -17125,18 +17125,18 @@ public class Client extends GameApplet {
 				File[] filesInFolder = folder.listFiles();
 				int noOfFiles = filesInFolder.length;
 
-				for(int i = 0 ; i < noOfFiles ; i++) { 
+				for(int i = 0 ; i < noOfFiles ; i++) {
 					File f = filesInFolder[i];
-					if(f.isDirectory()) { 
+					if(f.isDirectory()) {
 						directory.add(f.getAbsolutePath());
-					} else { 
+					} else {
 						totalSize+=f.length();
-					} 
-				} 
-			} 
-		} else { 
+					}
+				}
+			}
+		} else {
 			totalSize = file.length();
-		} 
+		}
 		return totalSize;
 	}
 

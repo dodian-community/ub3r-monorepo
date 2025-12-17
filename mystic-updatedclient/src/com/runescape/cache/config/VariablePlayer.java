@@ -9,11 +9,11 @@ import com.runescape.io.Buffer;
  */
 public final class VariablePlayer {
 
-	public static VariablePlayer[] variables;	
+	public static VariablePlayer[] variables;
 
 	private static int currentIndex;
-	private static int[] configIds;	
-	public int actionId;	
+	private static int[] configIds;
+	public int actionId;
 	public boolean aBoolean713;
 	public static int customSize = 10000;
 
@@ -29,7 +29,7 @@ public final class VariablePlayer {
 		final int actualSize = buffer.readUShort();
 
 		/**
-		 * Cache size is 725. 
+		 * Cache size is 725.
 		 * But instead of setting array sizes to 725, we set it to 1200.
 		 * This leaves space for custom configs.
 		 */
@@ -58,7 +58,7 @@ public final class VariablePlayer {
 
 	}
 
-	private void decode(Buffer buffer, int index) {			
+	private void decode(Buffer buffer, int index) {
 		do {
 			int opcode = buffer.readUnsignedByte();
 
@@ -71,7 +71,7 @@ public final class VariablePlayer {
 			} else if (opcode == 2) {
 				buffer.readUnsignedByte();
 			} else if (opcode == 3) {
-				configIds[currentIndex++] = index;					
+				configIds[currentIndex++] = index;
 			} else if (opcode == 4) {
 			} else if (opcode == 5) {
 				actionId = buffer.readUShort();
@@ -111,6 +111,6 @@ public final class VariablePlayer {
 
 	public boolean isaBoolean713() {
 		return aBoolean713;
-	}	
+	}
 
 }
