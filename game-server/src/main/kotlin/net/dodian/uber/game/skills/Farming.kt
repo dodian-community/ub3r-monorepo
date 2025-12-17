@@ -53,15 +53,23 @@ class Farming () {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0..patch.objectId.size-1).forEach { slot ->
                     val objectId = patch.objectId[slot]
+                    val checkPos = slot * farmingJson.PATCHAMOUNT
+                    val growing = findPatch(objectId, 1) == FarmingData.patchState.GROWING.toString() || findPatch(objectId, 1) == FarmingData.patchState.WATER.toString()
                     /* Weed generation */
                     if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() > 0) {
-                        val checkPos = slot * farmingJson.PATCHAMOUNT
                         farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
                         if(farmPatches.get(checkPos + 4).asInt == 3) {
                             farmPatches.set(checkPos + 4, JsonPrimitive(0))
                             farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
                             updateFarmPatch()
                             //System.out.println("I will regenerate weed!")
+                        }
+                    } else if(findPatch(objectId, 0) != "NONE" && growing && findPatch(objectId, 3).toInt() < 3) { //Growing of plant!
+                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
+                        if(farmPatches.get(checkPos + 4).asInt == 333) { //333 should be something else!
+                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
+                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
+                            updateFarmPatch()
                         }
                     }
                 }
@@ -98,7 +106,7 @@ class Farming () {
             if(objectId == compost.objectId) {
                 val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
                 if (itemId == farmData.BUCKET && farmCompost.get(2).asInt > 0 && FarmingData.compostState.OPEN.toString().equals(farmCompost.get(1).asString)) {
-                    deleteItem(itemId, 1)
+                    /*deleteItem(itemId, 1)
                     addItem(if(farmCompost.get(0).asString.equals(FarmingData.compost.SUPER.toString())) 6034 else 6032, 1)
                     farmCompost.set(2, JsonPrimitive(farmCompost.get(2).asInt - 1))
                     if(farmCompost.get(2).asInt == 0) {
@@ -107,24 +115,25 @@ class Farming () {
                         farmCompost.set(3, JsonPrimitive(0))
                     }
                     checkItemUpdate()
-                    updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                    updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)*/
+                    interactBin(objectId, 1)
                     return true
                 }
                 if(!FarmingData.compostState.EMPTY.toString().equals(farmCompost.get(1).asString) && !(FarmingData.compostState.FILLED.toString().equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt < 15)) { //If not empty, or filled to the brim...
-                        send(
-                            SendMessage(
-                                if (FarmingData.compostState.CLOSED.toString()
-                                        .equals(farmCompost.get(1).asString)
-                                ) "The bin is currently in the process of rotting the containment."
-                                else if (FarmingData.compostState.FILLED.toString()
-                                        .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt == 15
-                                ) "The bin is currently full!"
-                                else if (FarmingData.compostState.OPEN.toString()
-                                        .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt > 0
-                                ) "Empty the bin before you try and fill it!"
-                                else "The bin is done rotting the containment; Perhaps you should open it?"
-                            )
+                    send(
+                        SendMessage(
+                            if (FarmingData.compostState.CLOSED.toString()
+                                    .equals(farmCompost.get(1).asString)
+                            ) "The bin is currently in the process of rotting the containment."
+                            else if (FarmingData.compostState.FILLED.toString()
+                                    .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt == 15
+                            ) "The bin is currently full!"
+                            else if (FarmingData.compostState.OPEN.toString()
+                                    .equals(farmCompost.get(1).asString) && farmCompost.get(2).asInt > 0
+                            ) "Empty the bin before you try and fill it!"
+                            else "The bin is done rotting the containment; Perhaps you should open it?"
                         )
+                    )
                     return false
                 }
                 if(farmCompost != null && (farmData.regularCompostItems.indexOf(itemId) >= 0 || farmData.superCompostItems.indexOf(itemId) >= 0)) {
@@ -143,6 +152,24 @@ class Farming () {
                         )
                     )
                 } else send(SendMessage("This item has no use to be put into the bin."))
+            }
+        }
+        /* Item on object for patches */
+        for(patch in patches.values()) {
+            if (farmingJson.getPatchData().get(patch.name) != null) {
+                val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
+                (0..patch.objectId.size - 1).forEach { slot ->
+                    val checkPos = slot * farmingJson.PATCHAMOUNT
+                    if (patch.objectId[slot] == objectId) { //We got the correct objectId!
+                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() < 3) {
+                            if(itemId == farmData.RAKE) clickPatch(objectId)
+                            else send(SendMessage("You need to use a rake in order to clear the weed."))
+                            return true
+                        } else if (FarmingData.allotmentPatch.equals(findPatch(objectId, 0))) { //Can I water it?
+                            clickPatch(objectId)
+                        }
+                    }
+                }
             }
         }
         return false
@@ -202,32 +229,55 @@ class Farming () {
     }
 
     fun Client.clickPatch(objectId : Int) : Boolean {
-        for(patch in FarmingData.patches.values()) { /* Patches default values */
+        for(patch in patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
                 val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
                 (0..patch.objectId.size - 1).forEach { slot ->
                     val checkPos = slot * farmingJson.PATCHAMOUNT
                     if (patch.objectId[slot] == objectId) { //We got the correct objectId!
-                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 4).toInt() < 3) {
-                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                            send(SendMessage("Test raking..."))
-                            updateFarmPatch()
-                            return true
+                        if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() < 3) {
+                            if(playerHasItem(farmData.RAKE)) {
+                                farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
+                                sendAnimation(farmData.RAKE_ANIM) //<- Confirm if the stuff works!
+                                if(hasSpace()) {
+                                    addItem(farmData.regularCompostItems[0], 1)
+                                    checkItemUpdate()
+                                }
+                                updateFarmPatch()
+                            } else send(SendMessage("You need a rake in order to clear the weed."))
+                        } else if (FarmingData.allotmentPatch.equals(findPatch(objectId, 0))) { //Can I water it?
+                            System.out.println("I can water the..." + findPatch(objectId, 0))
                         }
                     }
                 }
             }
         }
-            return false
+        return false
     }
     fun Client.inspectPatch(objectId : Int) {
         val findData = findPatch(objectId, 0)
+        var stage = 0
+        var endStage = 0
+        var growing = false
+        var compost = "NONE"
+        /* Patch check */
+        for (patch in patches.values()) {
+            val slot = patch.objectId.indexOf(objectId)
+            if(slot != -1) {
+                val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
+                stage = farmPatch.get((slot * farmingJson.PATCHAMOUNT) + 3).asInt
+                endStage = 0
+                growing = farmPatch.get((slot * farmingJson.PATCHAMOUNT) + 1).asString.equals(FarmingData.patchState.GROWING.toString())
+                compost = farmPatch.get((slot * farmingJson.PATCHAMOUNT) + 2).asString
+                //return farmPatch.get((slot * farmingJson.PATCHAMOUNT) + value).asString
+            }
+        }
+
         if(!findData.isEmpty()) { //Value to check for a patch!
             val messageOne = "This is a " + GameObjectData.forId(objectId).name.lowercase() +"."
-            val messageTwo = "The soil has not been treated."
-            val messageThree = "The patch needs weeding."
+            val messageTwo = if(compost == "NONE") "The soil has not been treated." else "The soil has been treated."
+            val messageThree = if(stage < 3 && !growing) "The patch needs weeding." else if(growing) "Currently (" + stage + "/(" + endStage + ")" else "The patch is empty."
             send(SendMessage(messageOne + " " + messageTwo + " " + messageThree))
-            updateFarmPatch()
         }
     }
     fun Client.findPatch(objectId : Int, value : Int) : String {
@@ -244,18 +294,18 @@ class Farming () {
     fun Client.updateFarmPatch(patch : FarmingData.patches) {
         if (farmingJson.getPatchData().get(patch.name) != null && patch.objectId.size > 1) { //4 patches in one!
             var value = 0
-            (0..patch.objectId.size - 2).forEach { slot ->
+            (0..patch.objectId.size - 1).forEach { slot ->
                 val checkPos = slot * farmingJson.PATCHAMOUNT
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
-                val enumText = farmPatch.get(checkPos).toString()
-                val startConfig = if(FarmingData.compost.NONE.toString() == enumText) 0 else 5
+                val enumText = farmPatch.get(checkPos).asString
+                val startConfig = if(enumText == "NONE") 0 else 5
                 val change = if(farmPatch.get(checkPos + 1).asString == "WATER") 1 else if (farmPatch.get(checkPos + 1).asString == "DISEASE") 2
                 else if (farmPatch.get(checkPos + 1).asString == "DEAD") 3 else 0
                 val stage = farmPatch.get(checkPos + 3).asInt
                 val newValue = ((startConfig + stage).or(change shl 6)) shl (slot shl(3))
                 value = value.or(newValue)
             }
-            //varbit(529, value)
+            varbit(529, value)
         } else if (farmingJson.getPatchData().get(patch.name) != null) {
             val value = 0
             val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray

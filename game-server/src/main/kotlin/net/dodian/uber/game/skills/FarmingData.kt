@@ -103,10 +103,26 @@ class FarmingData() {
     enum class compostState {
         EMPTY, FILLED, CLOSED, DONE, OPEN
     }
+
     val regularCompostItems = listOf(6055, 6010, 6014, 1793, 5986, 5504, 1955, 1963, 2108, 5970,
         1957, 1942, 1965, 1951, 2126, 753, 1779, 401, 249, 199, 251, 201, 253, 203, 255, 205, 257, 207)
     val superCompostItems = listOf(2114, 5982, 5972, 5974, 5978, 5976, 231, 247, 239, 6018, 2998, 3049,
         261, 211, 263, 213, 3000, 3051, 265, 215, 2481, 2485, 267, 217, 269, 219, 259, 209)
     val BUCKET = 1925
+    val SPADE = 952
+    val RAKE = 5341
+    val SEED_DIBBER = 5343
+    val SECATEURS = 5329
+    val MAGIC_SECATEURS = 7409
+    val PLANT_CURE = 6036
+
+    val RAKE_ANIM = 2273
+    val SPADE_ANIM = 830
+    val WATERCAN_ANIM = 2293
+    val PLANTSEED_ANIM = 2291
+    val HARVEST_ANIM = 2282
+    val COMPOST_PATCH_ANIM = 2283
+    val CURING_ANIM = 2288
+    val FILL_PLANTPOT_ANIM = 2287
 
 }

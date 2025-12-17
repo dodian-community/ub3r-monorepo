@@ -38,9 +38,9 @@ class FarmingJson() {
             for (patch in FarmingData.patches.values()) { /* Patches default values */
                 val farmPatch = JsonArray()
                 (0..patch.farmData.size-1).forEach { slot ->
-                    farmPatch.add(FarmingData.compost.NONE.toString())
+                    farmPatch.add("NONE")
                     farmPatch.add(FarmingData.patchState.WEED.toString())
-                    farmPatch.add("false") //Protected
+                    farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
                     farmPatch.add(0) //stages
                     farmPatch.add(0) //timer
                     farmPatch.add(-1) //planted at date
@@ -67,9 +67,9 @@ class FarmingJson() {
                 if (farmingPatchValues.get(patch.name) == null) {
                     val farmPatch = JsonArray()
                     (0..farmPatch.size()-1).forEach { slot ->
-                        farmPatch.add(FarmingData.compost.NONE.toString())
+                        farmPatch.add("NONE")
                         farmPatch.add(FarmingData.patchState.WEED.toString())
-                        farmPatch.add("false") //Protected
+                        farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
                         farmPatch.add(0) //stages
                         farmPatch.add(0) //timer
                         farmPatch.add(-1) //planted at date

@@ -15,6 +15,7 @@ public final class VariablePlayer {
 	private static int[] configIds;	
 	public int actionId;	
 	public boolean aBoolean713;
+	public static int customSize = 10000;
 
 	private VariablePlayer() {
 		aBoolean713 = false;
@@ -32,7 +33,6 @@ public final class VariablePlayer {
 		 * But instead of setting array sizes to 725, we set it to 1200.
 		 * This leaves space for custom configs.
 		 */
-		int customSize = 1200;
 
 		if (variables == null) {
 			variables = new VariablePlayer[customSize];

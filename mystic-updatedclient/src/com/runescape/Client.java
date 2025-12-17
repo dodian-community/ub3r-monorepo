@@ -16426,7 +16426,7 @@ public class Client extends GameApplet {
 		anIntArray968 = new int[33];
 		anIntArray969 = new int[256];
 		indices = new FileStore[5];
-		settings = new int[2000];
+		settings = new int[VariablePlayer.customSize]; //Varbits?
 		aBoolean972 = false;
 		anInt975 = 50;
 		anIntArray976 = new int[anInt975];
@@ -16450,7 +16450,7 @@ public class Client extends GameApplet {
 		mapFunctions = new Sprite[100];
 		dialogueId = -1;
 		maximumLevels = new int[SkillConstants.SKILL_COUNT];
-		anIntArray1045 = new int[2000];
+		anIntArray1045 = new int[VariablePlayer.customSize]; //Varbits?
 		maleCharacter = true;
 		minimapLeft = new int[152];
 		minimapLineWidth = new int[152];
