@@ -785,9 +785,6 @@ public abstract class Player extends Entity {
     public void clearUpdateFlags() {
         IsStair = false; //What is this?!
         faceTarget(-1);
-        if(isActive && !disconnected) {
-            // ((Client) this).flushOutStream(); // No longer needed with pure Netty
-        }
         getUpdateFlags().clear();
         
         // Reset chat-related fields when clearing flags to prevent T2 packet size mismatches
@@ -1072,27 +1069,27 @@ public abstract class Player extends Entity {
         return ((Client) this).GetItemName(getEquipment(slot));
     }
     public boolean armourSet(String armourName) {
-        switch(armourName) {
-            case "ahrim":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Ahrim") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Ahrim");
-            case "karil":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Karil") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Karil");
-            case "verac":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Verac") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Verac");
-            case "dharok":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Dharok") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Dharok");
-            case "torag":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Torag") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Torag");
-            case "guthan":
-                return getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Guthan") &&
-                        getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Guthan");
-            default: return false;
-        }
+        return switch (armourName) {
+            case "ahrim" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Ahrim") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Ahrim") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Ahrim");
+            case "karil" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Karil") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Karil") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Karil");
+            case "verac" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Verac") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Verac") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Verac");
+            case "dharok" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Dharok") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Dharok") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Dharok");
+            case "torag" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Torag") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Torag") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Torag");
+            case "guthan" ->
+                    getEquipName(Equipment.Slot.HEAD.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.CHEST.getId()).startsWith("Guthan") &&
+                            getEquipName(Equipment.Slot.LEGS.getId()).startsWith("Guthan") && getEquipName(Equipment.Slot.WEAPON.getId()).startsWith("Guthan");
+            default -> false;
+        };
     }
     public boolean checkObsidianBonus(int id) {
         int[] acceptedItems = {
@@ -1795,7 +1792,7 @@ public abstract class Player extends Entity {
         Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
         client.farming.updateCompost(client); //Need to update the closest compostBin!
-        client.farming.updateFarmPatch(client); //Need to update the closest farmingPatch!
+        client.farming.updateFarmPatch(client, true); //Need to update the closest farmingPatch!
         if(client.getPosition().getZ() == 0) {
             /* NMZ object removal!*/
             for (int x = 0; x <= 9; x++)
@@ -1887,7 +1884,7 @@ public abstract class Player extends Entity {
     public void resetTabs() {
         Client c = ((Client) this);
         c.setEquipment(c.getEquipment()[Equipment.Slot.WEAPON.getId()], c.getEquipmentN()[Equipment.Slot.WEAPON.getId()], Equipment.Slot.WEAPON.getId());
-        c.setSidebarInterface(1, 3917); // skills tab (mystic custom)
+        c.setSidebarInterface(1, 3917); // skills tab
         c.setSidebarInterface(2, 638); // quest tab (original)
         c.setSidebarInterface(3, 3213); // backpack tab
         c.setSidebarInterface(4, 1644); // items wearing tab

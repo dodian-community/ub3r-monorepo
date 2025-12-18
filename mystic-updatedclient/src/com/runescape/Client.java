@@ -36,6 +36,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
+import com.runescape.io.packets.outgoing.impl.*;
 import org.seven.cache.graphics.RSFont;
 import org.seven.scene.graphic.Fog;
 import org.seven.util.CacheUtils;
@@ -76,69 +77,6 @@ import com.runescape.io.Buffer;
 import com.runescape.io.ByteBuffer;
 import com.runescape.io.jaggrab.JagGrab;
 import com.runescape.io.packets.outgoing.OutgoingPacket;
-import com.runescape.io.packets.outgoing.impl.AddFriend;
-import com.runescape.io.packets.outgoing.impl.AddIgnore;
-import com.runescape.io.packets.outgoing.impl.AttackNpc;
-import com.runescape.io.packets.outgoing.impl.BankTabCreation;
-import com.runescape.io.packets.outgoing.impl.BasicPing;
-import com.runescape.io.packets.outgoing.impl.ChangeAppearance;
-import com.runescape.io.packets.outgoing.impl.Chat;
-import com.runescape.io.packets.outgoing.impl.ChatSettings;
-import com.runescape.io.packets.outgoing.impl.ChatboxDuel;
-import com.runescape.io.packets.outgoing.impl.ClickButton;
-import com.runescape.io.packets.outgoing.impl.ClickButtonAction;
-import com.runescape.io.packets.outgoing.impl.CloseInterface;
-import com.runescape.io.packets.outgoing.impl.Command;
-import com.runescape.io.packets.outgoing.impl.DeleteFriend;
-import com.runescape.io.packets.outgoing.impl.DeleteIgnore;
-import com.runescape.io.packets.outgoing.impl.DropItem;
-import com.runescape.io.packets.outgoing.impl.EnterAmount;
-import com.runescape.io.packets.outgoing.impl.EquipItem;
-import com.runescape.io.packets.outgoing.impl.ExamineItem;
-import com.runescape.io.packets.outgoing.impl.ExamineNpc;
-import com.runescape.io.packets.outgoing.impl.FinalizedRegionChange;
-import com.runescape.io.packets.outgoing.impl.FollowPlayer;
-import com.runescape.io.packets.outgoing.impl.ItemContainerOption1;
-import com.runescape.io.packets.outgoing.impl.ItemContainerOption2;
-import com.runescape.io.packets.outgoing.impl.ItemContainerOption3;
-import com.runescape.io.packets.outgoing.impl.ItemContainerOption4;
-import com.runescape.io.packets.outgoing.impl.ItemContainerOption5;
-import com.runescape.io.packets.outgoing.impl.ItemOnGroundItem;
-import com.runescape.io.packets.outgoing.impl.ItemOnItem;
-import com.runescape.io.packets.outgoing.impl.ItemOnNpc;
-import com.runescape.io.packets.outgoing.impl.ItemOnObject;
-import com.runescape.io.packets.outgoing.impl.ItemOnPlayer;
-import com.runescape.io.packets.outgoing.impl.ItemOption2;
-import com.runescape.io.packets.outgoing.impl.ItemOption3;
-import com.runescape.io.packets.outgoing.impl.MagicOnGroundItem;
-import com.runescape.io.packets.outgoing.impl.MagicOnItem;
-import com.runescape.io.packets.outgoing.impl.MagicOnNpc;
-import com.runescape.io.packets.outgoing.impl.MagicOnPlayer;
-import com.runescape.io.packets.outgoing.impl.NextDialogue;
-import com.runescape.io.packets.outgoing.impl.NpcOption1;
-import com.runescape.io.packets.outgoing.impl.NpcOption2;
-import com.runescape.io.packets.outgoing.impl.NpcOption3;
-import com.runescape.io.packets.outgoing.impl.NpcOption4;
-import com.runescape.io.packets.outgoing.impl.ObjectOption1;
-import com.runescape.io.packets.outgoing.impl.ObjectOption2;
-import com.runescape.io.packets.outgoing.impl.ObjectOption3;
-import com.runescape.io.packets.outgoing.impl.ObjectOption4;
-import com.runescape.io.packets.outgoing.impl.ObjectOption5;
-import com.runescape.io.packets.outgoing.impl.OperateItem;
-import com.runescape.io.packets.outgoing.impl.PickupItem;
-import com.runescape.io.packets.outgoing.impl.PlayerAttackOption;
-import com.runescape.io.packets.outgoing.impl.PlayerInactive;
-import com.runescape.io.packets.outgoing.impl.PlayerOption1;
-import com.runescape.io.packets.outgoing.impl.PrivateMessage;
-import com.runescape.io.packets.outgoing.impl.RegionChange;
-import com.runescape.io.packets.outgoing.impl.SendButtonAndId;
-import com.runescape.io.packets.outgoing.impl.SendSyntax;
-import com.runescape.io.packets.outgoing.impl.SpawnTabClick;
-import com.runescape.io.packets.outgoing.impl.SpecialAttack;
-import com.runescape.io.packets.outgoing.impl.SwitchItemSlot;
-import com.runescape.io.packets.outgoing.impl.TradePlayer;
-import com.runescape.io.packets.outgoing.impl.UpdatePlane;
-import com.runescape.io.packets.outgoing.impl.UseItem;
 import com.runescape.model.EffectTimer;
 import com.runescape.model.WeaponInterface;
 import com.runescape.model.content.TabBindings;
@@ -6314,7 +6252,8 @@ public class Client extends GameApplet {
 				if (entityDef.childrenIDs != null)
 					entityDef = entityDef.morph();
 				if (entityDef != null) {
-					sendPacket(new ExamineNpc(entityDef.id));
+					sendPacket(new ExamineStuff(1, entityDef.id, npc.x, npc.y));
+					//sendPacket(new ExamineNpc(entityDef.id));
 				}
 			}
 		}
@@ -6609,13 +6548,14 @@ public class Client extends GameApplet {
 
 		if (action == 1226) {
 			int objectId = clicked >> 14 & 0x7fff;
-			ObjectDefinition definition = ObjectDefinition.lookup(objectId);
+			/*ObjectDefinition definition = ObjectDefinition.lookup(objectId);
 			String message;
 			if (definition.description != null)
 				message = new String(definition.description);
 			else
 				message = "It's a " + definition.name + ".";
-			sendMessage(message, 0, "");
+			sendMessage(message, 0, "");*/
+			sendPacket(new ExamineStuff(2, objectId, objectClickCoord[0], objectClickCoord[1]));
 		}
 
 		// Click First Option Ground Item
@@ -6640,7 +6580,8 @@ public class Client extends GameApplet {
 		if (action == 1448 || action == 1125) {
 			ItemDefinition definition = ItemDefinition.lookup(clicked);
 			if(definition != null) {
-				sendPacket(new ExamineItem(clicked));
+				int amount = Widget.interfaceCache[lastActiveInvInterface].inventoryAmounts[mouseInvInterfaceIndex];
+				sendPacket(new ExamineStuff(0, clicked, amount, mouseInvInterfaceIndex));
 			}
 		}
 
@@ -6681,6 +6622,11 @@ public class Client extends GameApplet {
 			j = l;
 			if (k1 == 2 && scene.getMask(plane, i1, j1, l) >= 0) {
 				ObjectDefinition objectDef = ObjectDefinition.lookup(l1);
+				int x = (i1 + regionBaseX);
+				int y = (j1 + regionBaseY);
+				objectClickCoord[0] = x;
+				objectClickCoord[1] = y;
+				objectClickCoord[2] = plane;
 				if (objectDef.childrenIDs != null)
 					objectDef = objectDef.method580();
 				if (objectDef == null)
@@ -16862,6 +16808,7 @@ public class Client extends GameApplet {
 	private final int[] tracks;
 	private int minimapRotation;
 	public int anInt1210;
+	private int[] objectClickCoord = new int[3];
 	static int anInt1211;
 	private String promptInput;
 	private int anInt1213;

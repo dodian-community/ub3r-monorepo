@@ -1065,26 +1065,6 @@ public class CommandsListener implements PacketListener {
                     client.send(new SendMessage("You are currently muted!"));
                 }
             }
-            if (cmd[0].equalsIgnoreCase("examine")) {
-                int definition = Integer.parseInt(cmd[1]);
-                int id = Integer.parseInt(cmd[2]);
-                switch(definition) {
-                    case 1025: //Npc examine!
-                        client.examineNpc(client, id);
-                        break;
-                    case 1448: //Ground item examine!
-                    case 1125: //Item examine!
-                        int amount = cmd.length < 4 ? 1 : Integer.parseInt(cmd[3]);
-                        client.examineItem(client, id, amount);
-                        break;
-                    case 1226: //Object examine!
-                        int x = Integer.parseInt(cmd[3]);
-                        int y = Integer.parseInt(cmd[4]);
-                        int z = Integer.parseInt(cmd[5]);
-                        client.examineObject(client, id, new Position(x, y, z));
-                        break;
-                }
-            }
             if (command.equalsIgnoreCase("players")) {
                 client.send(new SendMessage("There are currently <col=006600>" + PlayerHandler.getPlayerCount() + "<col=0> players online!"));
                 client.send(new SendString("@dre@                    Uber 3.0", 8144));

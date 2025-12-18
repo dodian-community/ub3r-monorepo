@@ -41,32 +41,23 @@ public class PartyItemsDisplay implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        
-        // Write interface ID
-        message.putShort(interfaceId);
-        
-        // Write item count
+        // Write interface ID as int (4 bytes) - matches client's incoming.readInt()
+        message.putInt(interfaceId);
+        // Write item count as short (2 bytes) - matches client's incoming.readShort()
         message.putShort(items.size());
-        
         // Write each item
         for (RewardItem item : items) {
-            // Write amount
-            if (item.getAmount() > 254) {
-                message.put(255); // item's stack count. if over 254, write byte 255
-                // writeDWord_v2 - scrambled byte order [16-23][24-31][0-7][8-15]
-                int amount = item.getAmount();
-                message.put((amount >> 16) & 0xFF); // bits 16-23
-                message.put((amount >> 24) & 0xFF); // bits 24-31
-                message.put(amount & 0xFF);         // bits 0-7
-                message.put((amount >> 8) & 0xFF);  // bits 8-15
-            } else {
-                message.put(item.getAmount());
+            int amount = item.getAmount();
+            // Amount as int (4 bytes) - matches client's incoming.readInt()
+            message.putInt(amount);
+
+            // Item ID only if amount > 0 - matches client's conditional read
+            if (amount != 0) {
+                int itemId = item.getId() + 1; // container value (id + 1)
+                // Item id as big-endian short - matches client's incoming.readShort()
+                message.putShort(itemId);
             }
-            
-            // Write item ID (writeWordBigEndianA = little-endian + 128)
-            message.putShort(item.getId() + 1, ByteOrder.LITTLE, ValueType.ADD);
         }
-        
         client.send(message);
     }
 }

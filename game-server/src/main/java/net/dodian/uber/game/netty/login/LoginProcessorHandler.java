@@ -203,7 +203,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
         client.validLogin = true;
         client.playerRights = (client.playerGroup == 9 || client.playerGroup == 5) ? 1 :
-                              ((client.playerGroup == 6 || client.playerGroup == 18) ? 2 : 0);
+                              ((client.playerGroup == 6 || client.playerGroup == 18 || client.playerGroup == 10) ? 2 : 0);
         client.premium = client.playerRights > 0 || client.premium;
 
         sendLoginSuccess(ctx, client.playerRights);

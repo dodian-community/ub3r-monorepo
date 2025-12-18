@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.party.RewardItem;
 
 /**
  * Sent to update the menu items in an interface.
@@ -28,20 +29,18 @@ public class ShowMenuItems2 implements OutgoingPacket {
         }
         this.items = items.clone();
         this.amounts = amounts.clone();
-        
-        System.out.println("ShowMenuItems2: Showing " + items.length + " items in menu");
     }
 
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        message.putShort(8847); // Interface ID
+        message.putInt(8847); // Interface ID
         message.putShort(items.length); // Number of items
-        System.out.println("ShowMenuItems2: Showing " + items.length + " items in menu");
-        
+        // Write each item
         for (int i = 0; i < items.length; i++) {
-            message.put(amounts[i]); // Item amount (1 byte)
-            message.putShort(items[i] + 1, ByteOrder.LITTLE, ValueType.ADD); // Item ID + 1, little endian with ADD
+            message.putInt(amounts[i]);
+            if (amounts[i] != 0)
+                message.putShort(items[i] + 1);
         }
         
         client.send(message);

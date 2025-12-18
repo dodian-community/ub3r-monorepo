@@ -61,7 +61,7 @@ class Farming () {
                         if(farmPatches.get(checkPos + 4).asInt == 3) {
                             farmPatches.set(checkPos + 4, JsonPrimitive(0))
                             farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
-                            updateFarmPatch()
+                            updateFarmPatch(false)
                             //System.out.println("I will regenerate weed!")
                         }
                     } else if(findPatch(objectId, 0) != "NONE" && growing && findPatch(objectId, 3).toInt() < 3) { //Growing of plant!
@@ -69,7 +69,7 @@ class Farming () {
                         if(farmPatches.get(checkPos + 4).asInt == 333) { //333 should be something else!
                             farmPatches.set(checkPos + 4, JsonPrimitive(0))
                             farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
-                            updateFarmPatch()
+                            updateFarmPatch(false)
                         }
                     }
                 }
@@ -82,22 +82,23 @@ class Farming () {
     }
     fun Client.updateCompost(compost : String, status: String, amount : Int) {
         if(FarmingData.compostState.CLOSED.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 32 else 65)
+            varbit(farmData.compostBinConfig, if(FarmingData.compost.REGULAR.toString().equals(compost)) 32 else 65)
         else if(FarmingData.compostState.DONE.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 31 else 64)
+            varbit(farmData.compostBinConfig, if(FarmingData.compost.REGULAR.toString().equals(compost)) 31 else 64)
         else if(FarmingData.compostState.OPEN.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 15 + amount else 47 + amount)
+            varbit(farmData.compostBinConfig, if(FarmingData.compost.REGULAR.toString().equals(compost)) 15 + amount else 47 + amount)
         else if(FarmingData.compostState.FILLED.toString().equals(status))
-            varbit(1057, if(FarmingData.compost.REGULAR.toString().equals(compost)) 0 + amount else 32 + amount)
-        else varbit(1057, 0)
+            varbit(farmData.compostBinConfig, if(FarmingData.compost.REGULAR.toString().equals(compost)) 0 + amount else 32 + amount)
+        else varbit(farmData.compostBinConfig, 0)
     }
     fun Client.updateCompost() {
-        varbit(1057, 0)
         for(compost in FarmingData.compostBin.values()) { /* Compost default values */
             if (farmingJson.getCompostData().get(compost.name) != null) {
                 val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
-                if(distanceToPoint(compost.updatePos, position) <= 32)
+                if(distanceToPoint(compost.updatePos, position) <= 32) {
+                    varbit(farmData.compostBinConfig, 0)
                     updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                }
             }
         }
     }
@@ -243,7 +244,7 @@ class Farming () {
                                     addItem(farmData.regularCompostItems[0], 1)
                                     checkItemUpdate()
                                 }
-                                updateFarmPatch()
+                                updateFarmPatch(false)
                             } else send(SendMessage("You need a rake in order to clear the weed."))
                         } else if (FarmingData.allotmentPatch.equals(findPatch(objectId, 0))) { //Can I water it?
                             System.out.println("I can water the..." + findPatch(objectId, 0))
@@ -292,33 +293,27 @@ class Farming () {
         return ""
     }
     fun Client.updateFarmPatch(patch : FarmingData.patches) {
-        if (farmingJson.getPatchData().get(patch.name) != null && patch.objectId.size > 1) { //4 patches in one!
-            var value = 0
-            (0..patch.objectId.size - 1).forEach { slot ->
+        if (farmingJson.getPatchData().get(patch.name) != null) {
+            (0 until patch.objectId.size).forEach { slot ->
                 val checkPos = slot * farmingJson.PATCHAMOUNT
                 val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
                 val enumText = farmPatch.get(checkPos).asString
                 val startConfig = if(enumText == "NONE") 0 else 5
-                val change = if(farmPatch.get(checkPos + 1).asString == "WATER") 1 else if (farmPatch.get(checkPos + 1).asString == "DISEASE") 2
-                else if (farmPatch.get(checkPos + 1).asString == "DEAD") 3 else 0
+                //TODO: Fix this -> val change = if(farmPatch.get(checkPos + 1).asString == "WATER") 1 else if (farmPatch.get(checkPos + 1).asString == "DISEASE") 2
+                //else if (farmPatch.get(checkPos + 1).asString == "DEAD") 3 else 0
                 val stage = farmPatch.get(checkPos + 3).asInt
-                val newValue = ((startConfig + stage).or(change shl 6)) shl (slot shl(3))
-                value = value.or(newValue)
+                varbit(farmData.farmPatchConfig + slot, startConfig + stage)
             }
-            varbit(529, value)
-        } else if (farmingJson.getPatchData().get(patch.name) != null) {
-            val value = 0
-            val farmPatch = farmingJson.getPatchData().get(patch.name).asJsonArray
-            val enumText = farmPatch.get(0).toString()
-            //varbit(529, value)
         }
     }
-    fun Client.updateFarmPatch() {
-        varbit(529, 0)
+    fun Client.updateFarmPatch(refresh : Boolean) {
         for(patch in FarmingData.patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
-                if(distanceToPoint(patch.updatePos, position) <= 32)
+                if(distanceToPoint(patch.updatePos, position) <= 32) {
+                    for(i in 0..3)
+                        if(refresh) varbit(farmData.farmPatchConfig + i, 0)
                     updateFarmPatch(patch)
+                }
             }
         }
     }

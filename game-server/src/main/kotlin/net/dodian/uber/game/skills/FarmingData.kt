@@ -125,4 +125,7 @@ class FarmingData() {
     val CURING_ANIM = 2288
     val FILL_PLANTPOT_ANIM = 2287
 
+    val farmPatchConfig = 4771
+    val compostBinConfig = 4775
+
 }

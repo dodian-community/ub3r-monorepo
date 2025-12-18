@@ -71,8 +71,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.FocusChangeListener"); // opcode 3
             Class.forName("net.dodian.uber.game.netty.listener.in.CommandsListener"); // opcode 103
             // Load examine listeners for Mystic client compatibility
-            Class.forName("net.dodian.uber.game.netty.listener.in.ExamineItemListener"); // opcode 2
-            Class.forName("net.dodian.uber.game.netty.listener.in.ExamineNpcListener");  // opcode 6
+            Class.forName("net.dodian.uber.game.netty.listener.in.ExamineListener"); // opcode 2
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickingButtonsListener"); // opcode 185
             Class.forName("net.dodian.uber.game.netty.listener.in.AddFriendListener"); // opcode 188
             Class.forName("net.dodian.uber.game.netty.listener.in.AddIgnoreListener"); // opcode 133

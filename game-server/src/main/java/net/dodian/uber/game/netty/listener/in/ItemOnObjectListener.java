@@ -61,22 +61,22 @@ public class ItemOnObjectListener implements PacketListener {
 
         // Decoding based on the explicit format: SHORT, LESHORT, LESHORTA, LESHORT, LESHORTA, SHORT
         // This mapping aligns the new format with the variable names from the legacy file.
-        buf.readShort(); // Field 1: SHORT (Unused, likely interface ID)
-        int objectId = readLEShort(buf);      // Field 2: LESHORT
-        int objectY = readLEShortA(buf);     // Field 3: LESHORTA
-        int itemSlot = readLEShort(buf);      // Field 4: LESHORT
+        int interfaceId = buf.readShort(); // Field 1: SHORT (interface ID)
+        int objectId = buf.readShort();      // Field 2: LESHORT
+        int objectY = readLEShortA(buf);     // Field 3: LESHORTA (writeSignedBigEndian)
+        int itemSlot = readLEShort(buf);      // Field 4: LESHORT (writeUnsignedWordBigEndian)
         int objectX = readLEShortA(buf);     // Field 5: LESHORTA
         int itemId = buf.readShort();         // Field 6: SHORT
 
         if (getGameWorldId() > 1) {
-            logger.debug("ItemOnObject: objId={}, objX={}, objY={}, itemSlot={}, itemId={}", objectId, objectX, objectY, itemSlot, itemId);
+            logger.debug("ItemOnObject: objId={}, objX={}, objY={}, itemSlot={}, itemId={}, interId={}", objectId, objectX, objectY, itemSlot, itemId, interfaceId);
         }
 
         if (client.randomed) {
             return;
         }
 
-        if (itemSlot < 0 || itemSlot >= client.playerItems.length) {
+        if (itemSlot < 0 || itemSlot >= client.playerItems.length || interfaceId != 3214) {
             return;
         }
 

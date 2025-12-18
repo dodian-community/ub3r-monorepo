@@ -390,6 +390,9 @@ public class Mob extends Renderable {
 				animationStretches = false;
 				if (movementAnimation != -1) {
 					Animation animation = Animation.animations[movementAnimation];
+					if(animation == null) { //Incase some null npc have null animation!
+						return;
+					}
 					anInt1519++;
 					if (displayedMovementFrames < animation.frameCount && anInt1519 > animation.duration(displayedMovementFrames)) {
 						anInt1519 = 1;
