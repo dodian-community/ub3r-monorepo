@@ -181,56 +181,54 @@ public class CommandsListener implements PacketListener {
                         int config = 0;
                         switch(value) {
                             case 0: //Reset default value
-                                client.varbit(529, config); //Patches
-                                client.varbit(905, config); //Gout tuber patch!
-                                client.varbit(1057, config); //Compost bin
+                                for(int i = 0; i <= 3; i++)
+                                    client.varbit(4771 + i, config); //Patches
+                                client.varbit(4775, config); //Compost bin
+                                client.varbit(4776, config); //Gout tuber patch? (old: 905)
                                 break;
-                            case 1: //Empty test for Trollheim
-                                client.varbit(529, (3 + 2 + 295) | 2 << 6); //Herb patch for trollheim!
-                                //client.varbit(529, (102 + 193) | 2 << 6); //Herb patch for trollheim!
-                                //client.varbit(905, 3 + 2 + (1 << 6 | 1 << 7));
-                                //client.varbit(905, 0); <- Gout tuber patch!
-                                break;
-                            case 2: //Compost bin
-                                //client.varbit(1057, 30);
-                                client.varbit(529,  (51 + 1 | 0 << 6 << 0 << 3) | (51 + 1 | 0 << 6 << 1 << 3)); //Allotment 1, Allotment 2, Flower, Herb
-                                break;
-                            case 3:
+                            case 1: //Old test for patches
                                 /* Herb + Flower + Allotment South  + Allotment North  */
-                                int[] startConfig = {5, 5, 0, 0}; //Allotment, Allotment, flower, herb
-                                int[] stage = {1, 1, 1, 1};
-                                int[] patch = {1, 1, 0, 0};
+                                int[] startConfig = {5, 5, 7, 5}; //Allotment, Allotment, flower, herb
+                                int[] stage = {1, 2, 2, 1};
+                                int[] patch = {1, 2, 3, 0};
                                 for(int i = 0; i < startConfig.length; i++) {
                                     int check = patch[i] << 6;
-                                    if (i == 3) check = 0 << 6;
+                                    //if (i == 3) check = 0 << 6;
                                     /*if(i == 3 && stage[i] > 1 && stage[i] < 5 && (patch[i] == 1 || patch[i] == 2)) {
                                         //stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
                                         //check = 2 << 6;
                                     } else if (i == 3) check = 0 << 6;*/
                                     //System.out.println("farm shiez test..." + config);
-                                    config |= ((startConfig[i] + stage[i]) | check) << (i << 3);
+                                    client.varbit(4771 + i,  (startConfig[i] + stage[i]) | check);
                                 }
-                                client.varbit(529,  config);
-                                //System.out.println("farm shiez..." + config);
                                 break;
-                            case 4: //Farm patch in tree gnome!
+                            case 2: //Empty test
+                                client.varbit(4774,  170 + Misc.random(2));
+                                //Dead herbs[Clear,Inspect,Guide] 170-172
+                                //Dead goutweed[Clear,Inspect,Guide] 201-203
+                                break;
+                            case 3: //Empty test
+                                int configValue = 14; //Starts at 0!
+                                int herbValue = 17;
+                                int stageValue = 2;
+                                int test = (herbValue + stageValue) | 0 << 6;
+                                client.varbit(4774,  test); //For diseased it is value - (herbValue + stageValue) + (original * 2)?
+                                System.out.println("wtf..." + (test - (5 + (4 * configValue))) + ", " + test);
+                                //69, 74, 81
+                                //Tarromin land on 145, Marrentill land on 138 and guam land on 133; suppose to land on 134, 131, 128
+                                break;
+                            case 4: //Farm patch test values!
                                 config = 0;
                                 while(config < 2000) {
                                     try {
                                         client.send(new SendMessage("config = " + config));
-                                        client.varbit(529,  config);
+                                        client.varbit(4771,  config);
                                         config++;
-                                        Thread.sleep(500);
+                                        Thread.sleep(600);
                                     } catch(Exception e) {
                                         System.out.println("msg: " + e.getMessage());
                                     }
                                 }
-                                break;
-                            case 5: //TODO test
-                                System.out.println("value..." + (((3 + 2 + 293) | 2 << 6) << (3 << 3)));
-                                client.varbit(529,  ((10 + 2 + 283) | 2 << 6) << (3 << 3)); //295 = x | 2 << 6
-                                break;
-                            case 6: //TODO test2
                                 break;
                             default: gotValue = false;
                         }

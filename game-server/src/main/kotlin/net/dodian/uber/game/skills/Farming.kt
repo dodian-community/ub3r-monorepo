@@ -61,7 +61,7 @@ class Farming () {
                         if(farmPatches.get(checkPos + 4).asInt == 3) {
                             farmPatches.set(checkPos + 4, JsonPrimitive(0))
                             farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
-                            updateFarmPatch(false)
+                            updateFarmPatch()
                             //System.out.println("I will regenerate weed!")
                         }
                     } else if(findPatch(objectId, 0) != "NONE" && growing && findPatch(objectId, 3).toInt() < 3) { //Growing of plant!
@@ -69,7 +69,7 @@ class Farming () {
                         if(farmPatches.get(checkPos + 4).asInt == 333) { //333 should be something else!
                             farmPatches.set(checkPos + 4, JsonPrimitive(0))
                             farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
-                            updateFarmPatch(false)
+                            updateFarmPatch()
                         }
                     }
                 }
@@ -244,7 +244,7 @@ class Farming () {
                                     addItem(farmData.regularCompostItems[0], 1)
                                     checkItemUpdate()
                                 }
-                                updateFarmPatch(false)
+                                updateFarmPatch()
                             } else send(SendMessage("You need a rake in order to clear the weed."))
                         } else if (FarmingData.allotmentPatch.equals(findPatch(objectId, 0))) { //Can I water it?
                             System.out.println("I can water the..." + findPatch(objectId, 0))
@@ -306,14 +306,11 @@ class Farming () {
             }
         }
     }
-    fun Client.updateFarmPatch(refresh : Boolean) {
+    fun Client.updateFarmPatch() {
         for(patch in FarmingData.patches.values()) {
             if (farmingJson.getPatchData().get(patch.name) != null) {
-                if(distanceToPoint(patch.updatePos, position) <= 32) {
-                    for(i in 0..3)
-                        if(refresh) varbit(farmData.farmPatchConfig + i, 0)
+                if(distanceToPoint(patch.updatePos, position) <= 16)
                     updateFarmPatch(patch)
-                }
             }
         }
     }
@@ -329,8 +326,8 @@ class Farming () {
     fun Client.saplingMaking(itemOne : Int, itemOneSlot : Int, itemTwo : Int, itemTwoSlot : Int) {
         for (sapling in FarmingData.sapling.values()) {
             if((itemOne == sapling.treeSeed || itemTwo == sapling.treeSeed) && (itemOne == 5356 || itemTwo == 5356)) {
-                if(!playerHasItem(5325)) {
-                    send(SendMessage("You are missing your gardening trowel."))
+                if(!playerHasItem(farmData.TROWEL)) {
+                    send(SendMessage("You are missing your "+GetItemName(farmData.TROWEL).lowercase()+"."))
                     return;
                 }
                 if(getSkillLevel(Skill.FARMING) < sapling.farmLevel) {
@@ -343,9 +340,9 @@ class Farming () {
                     )
                     return;
                 }
-                deleteItem(itemOne, if(itemOne == 5356) itemOneSlot else itemTwoSlot,  1)
-                deleteItem(itemTwo, if(itemOne == 5356) itemTwoSlot else itemOneSlot, 1)
-                addItemSlot(sapling.plantedId, 1, if(itemOne == 5356) itemOneSlot else itemTwoSlot)
+                deleteItem(itemOne, if(itemOne == farmData.PLANT_POT) itemOneSlot else itemTwoSlot,  1)
+                deleteItem(itemTwo, if(itemOne == farmData.PLANT_POT) itemTwoSlot else itemOneSlot, 1)
+                addItemSlot(sapling.plantedId, 1, if(itemOne == farmData.PLANT_POT) itemOneSlot else itemTwoSlot)
             } else if ((itemOne == sapling.plantedId || itemTwo == sapling.plantedId) && (GetItemName(itemOne).startsWith("Watering can(") || GetItemName(itemTwo).startsWith("Watering can("))) {
                 deleteItem(if(itemOne == sapling.plantedId) itemTwo else itemOne, if(itemOne == sapling.plantedId) itemTwoSlot else itemOneSlot,1)
                 if((itemOne == sapling.plantedId && !GetItemName(itemTwo).endsWith("1)")) || (itemTwo == sapling.plantedId && !GetItemName(itemOne).endsWith("1)")))

@@ -36,7 +36,7 @@ public final class AnimableObject extends Renderable {
 		}
 		int j = graphic.animationSequence.primaryFrames[anInt1569];
 		Model model_1 = new Model(true, Frame.noAnimationInProgress(j), false, model);
-		System.out.println(Configuration.enableTweening);
+		//System.out.println(Configuration.enableTweening);
 		if(!aBoolean1567) {
 
 			model_1.skin();

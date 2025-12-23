@@ -112,6 +112,8 @@ class FarmingData() {
     val SPADE = 952
     val RAKE = 5341
     val SEED_DIBBER = 5343
+    val TROWEL = 5325
+    val PLANT_POT = 5356
     val SECATEURS = 5329
     val MAGIC_SECATEURS = 7409
     val PLANT_CURE = 6036

@@ -1791,8 +1791,8 @@ public abstract class Player extends Entity {
         client.replaceDoors();
         Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
-        client.farming.updateCompost(client); //Need to update the closest compostBin!
-        client.farming.updateFarmPatch(client, true); //Need to update the closest farmingPatch!
+        for(int i = 0; i <= 4; i++) //Refresh farming varbits!
+            client.varbit(client.farming.getFarmData().getFarmPatchConfig() + i, 0);
         if(client.getPosition().getZ() == 0) {
             /* NMZ object removal!*/
             for (int x = 0; x <= 9; x++)

@@ -54,6 +54,8 @@ public final class WalkingListener implements PacketListener {
         if (client.genie) client.genie = false;
         if (client.antique) client.antique = false;
         client.playerPotato.clear();
+        client.farming.updateCompost(client); //Need to update the closest compostBin!
+        client.farming.updateFarmPatch(client); //Need to update the closest farmingPatch!
 
         if ((client.getStunTimer() > 0 || client.getSnareTimer() > 0) && opcode != 98) {
             client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
