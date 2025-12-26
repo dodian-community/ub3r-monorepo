@@ -56,7 +56,7 @@ public class CommandsListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         String command = decodeCommand(packet);
 
-        if (command == null || command.isEmpty()) {
+        if (command.isEmpty()) {
             return;
         }
 
@@ -198,24 +198,26 @@ public class CommandsListener implements PacketListener {
                                         //stage[i] = patch[i] == 2 ? stage[i] + 293 - (startConfig[i] - 3) : stage[i] + 290 - (startConfig[i] - 3);
                                         //check = 2 << 6;
                                     } else if (i == 3) check = 0 << 6;*/
-                                    //System.out.println("farm shiez test..." + config);
+                                    int valueTest = (startConfig[i] + stage[i]) | check;
+                                    System.out.println("farm shiez test..." + valueTest);
                                     client.varbit(4771 + i,  (startConfig[i] + stage[i]) | check);
                                 }
                                 break;
                             case 2: //Empty test
-                                client.varbit(4774,  170 + Misc.random(2));
+                                client.varbit(4774,  3 + 1);
+                                //client.varbit(4771,  5 + 2 | 2 << 6);
                                 //Dead herbs[Clear,Inspect,Guide] 170-172
                                 //Dead goutweed[Clear,Inspect,Guide] 201-203
                                 break;
                             case 3: //Empty test
-                                int configValue = 14; //Starts at 0!
-                                int herbValue = 17;
+                                int[] values = {3, 10, 17, 24, 31, 38, 45, 52, 67, 74, 81, 88, 95, 102};
+                                int configSlot = values.length - 1; //Starts at 0!
                                 int stageValue = 2;
-                                int test = (herbValue + stageValue) | 0 << 6;
-                                client.varbit(4774,  test); //For diseased it is value - (herbValue + stageValue) + (original * 2)?
-                                System.out.println("wtf..." + (test - (5 + (4 * configValue))) + ", " + test);
-                                //69, 74, 81
-                                //Tarromin land on 145, Marrentill land on 138 and guam land on 133; suppose to land on 134, 131, 128
+                                int addExtra = configSlot > 7 ? 8 : 0;
+                                int disease = 1; //1 = dead, 2 = disease, 0 = alive!
+                                int test = values[configSlot] + stageValue | disease << 6; //2 = disease and 3 = dead?
+                                client.varbit(4774,  disease == 1 ? 168 + stageValue : disease == 2 ? test - (5 + configSlot*4 + addExtra) : test);
+                                //Dead = 170 - 172! or 168 + stage!
                                 break;
                             case 4: //Farm patch test values!
                                 config = 0;

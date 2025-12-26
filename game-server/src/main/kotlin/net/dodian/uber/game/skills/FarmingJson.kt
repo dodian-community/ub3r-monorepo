@@ -11,8 +11,8 @@ class FarmingJson() {
 
     fun farmingSave() : String {
         var jsonString = "[" + farmingCompostValues.toString() + ",\n" + farmingPatchValues.toString() + "]"
-        //return jsonString
-        return "[]"
+        return jsonString
+        //return "[]"
     }
     fun farmingShow() : String {
         var jsonString = ""
@@ -38,7 +38,7 @@ class FarmingJson() {
             for (patch in FarmingData.patches.values()) { /* Patches default values */
                 val farmPatch = JsonArray()
                 (0..patch.farmData.size-1).forEach { slot ->
-                    farmPatch.add("NONE")
+                    farmPatch.add(-1) //ItemId of planted seed :D
                     farmPatch.add(FarmingData.patchState.WEED.toString())
                     farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
                     farmPatch.add(0) //stages
@@ -67,7 +67,7 @@ class FarmingJson() {
                 if (farmingPatchValues.get(patch.name) == null) {
                     val farmPatch = JsonArray()
                     (0..farmPatch.size()-1).forEach { slot ->
-                        farmPatch.add("NONE")
+                        farmPatch.add(-1)
                         farmPatch.add(FarmingData.patchState.WEED.toString())
                         farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
                         farmPatch.add(0) //stages
