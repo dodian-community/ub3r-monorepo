@@ -15035,7 +15035,11 @@ public class Client extends GameApplet {
 						sendMessage(msg, 8, name);
 					}
 				} else {
-					sendMessage(message, 0, "");
+					int messageLine = 87;
+					if(messageLine - message.length() < 0) {
+						sendMessage(message.substring(0, messageLine), 0, "");
+						sendMessage(message.substring(messageLine), 0, "");
+					} else sendMessage(message, 0, "");
 				}
 				opcode = -1;
 				return true;

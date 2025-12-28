@@ -32,6 +32,13 @@ public class GameObjectData {
      * @param def The definition.
      */
     public static void addDefinition(GameObjectData def) {
+        /* Fixes for now with names being null..Obs! */
+        if(def.id == 7577 || def.id == 7578 || def.id == 7580)
+            def.name = "Bush patch";
+        if(def.id == 7962 || def.id == 7963 || def.id == 7965)
+            def.name = "Fruit tree patch";
+        if(def.id == 8388 || def.id == 8389 || def.id == 19147)
+            def.name = "Tree patch";
         definitions[def.getId()] = def;
     }
 

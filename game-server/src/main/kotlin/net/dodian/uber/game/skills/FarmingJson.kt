@@ -26,6 +26,7 @@ class FarmingJson() {
 
     fun farmingLoad(farmString : String) {
         val new = farmString.isEmpty()
+        val farmPatch = JsonArray()
         if(new) {
             for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 val farmCompost = JsonArray()
@@ -36,11 +37,10 @@ class FarmingJson() {
                 farmingCompostValues.add(compost.name, farmCompost)
             }
             for (patch in FarmingData.patches.values()) { /* Patches default values */
-                val farmPatch = JsonArray()
-                (0..patch.farmData.size-1).forEach { slot ->
+                repeat((0 until patch.objectId.size).count()) {
                     farmPatch.add(-1) //ItemId of planted seed :D
-                    farmPatch.add(FarmingData.patchState.WEED.toString())
-                    farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
+                    farmPatch.add(FarmingData.patchState.WEED.toString()) //Protection is here aswell!
+                    farmPatch.add(FarmingData.compost.NONE.toString()) //Compost
                     farmPatch.add(0) //stages
                     farmPatch.add(0) //timer
                     farmPatch.add(-1) //planted at date
@@ -65,11 +65,10 @@ class FarmingJson() {
             farmingPatchValues = farmJsonShiet.asJsonArray.get(1) as JsonObject
             for (patch in FarmingData.patches.values()) { /* Patches default values */
                 if (farmingPatchValues.get(patch.name) == null) {
-                    val farmPatch = JsonArray()
-                    (0..farmPatch.size()-1).forEach { slot ->
+                    repeat((0 until patch.objectId.size).count()) {
                         farmPatch.add(-1)
-                        farmPatch.add(FarmingData.patchState.WEED.toString())
-                        farmPatch.add(FarmingData.compost.NONE.toString()) //Protection or compost!
+                        farmPatch.add(FarmingData.patchState.WEED.toString()) //Protection is here!
+                        farmPatch.add(FarmingData.compost.NONE.toString()) //Compost
                         farmPatch.add(0) //stages
                         farmPatch.add(0) //timer
                         farmPatch.add(-1) //planted at date
