@@ -101,7 +101,19 @@ public class UseItemOnNpcListener implements PacketListener {
             }
             return;
         }
-
+        /* Farming note item! */
+            if(npcId == 0) {
+                if(client.farming.getFarmData().canNote(itemId, client.GetItemName(itemId).toLowerCase())) {
+                    client.showNPCChat(npcId, 594, new String[]{client.GetNotedItem(itemId) < 1 ? "I can not note that item!" : "Here is your noted item."});
+                    if(client.GetNotedItem(itemId) > 0) { //Note the crop :D
+                        int amount = client.getInvAmt(itemId);
+                        for(int i = 0; i < amount; i++) client.deleteItem(itemId, 1); //Delete all items!
+                        client.addItem(client.GetNotedItem(itemId), amount);
+                        client.checkItemUpdate();
+                    }
+                } else client.showNPCChat(npcId, 596, new String[]{"I can not note that type of item.", "Try use a valid farming crop."});
+                return;
+            }
         /* Skillcape hood handing */
         Skillcape skillcape = Skillcape.getSkillCape(itemId);
         if (skillcape != null && npcId == 6059) {

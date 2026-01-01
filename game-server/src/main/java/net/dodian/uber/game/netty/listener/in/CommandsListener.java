@@ -204,7 +204,7 @@ public class CommandsListener implements PacketListener {
                                 }
                                 break;
                             case 2: //Empty test
-                                client.varbit(4774,  3 + 1);
+                                client.varbit(4771,  4 + 246);
                                 //client.varbit(4771,  5 + 2 | 2 << 6);
                                 //Dead herbs[Clear,Inspect,Guide] 170-172
                                 //Dead goutweed[Clear,Inspect,Guide] 201-203
@@ -537,7 +537,7 @@ public class CommandsListener implements PacketListener {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("d_drop")) {
-                    if (client.getPlayerNpc() < 1) {
+                    if (client.getPlayerNpc() < 0) {
                         client.send(new SendMessage("please try to do ::pnpc id"));
                         return;
                     }
@@ -558,7 +558,7 @@ public class CommandsListener implements PacketListener {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("npc_data")) {
-                    if (client.getPlayerNpc() < 1) {
+                    if (client.getPlayerNpc() < 0) {
                         client.send(new SendMessage("please try to do ::pnpc id"));
                         return;
                     }
@@ -571,7 +571,7 @@ public class CommandsListener implements PacketListener {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("a_drop")) {
-                    if (client.getPlayerNpc() < 1) {
+                    if (client.getPlayerNpc() < 0) {
                         client.send(new SendMessage("please try to do ::pnpc id"));
                         return;
                     }
@@ -608,7 +608,7 @@ public class CommandsListener implements PacketListener {
                     client.openUpBank();
                 }
                 if (cmd[0].equalsIgnoreCase("droptable")) {
-                    if (client.getPlayerNpc() < 1) {
+                    if (client.getPlayerNpc() < 0) {
                         client.send(new SendMessage("please try to do ::pnpc id"));
                         return;
                     }
@@ -643,7 +643,7 @@ public class CommandsListener implements PacketListener {
                 }
                 if (cmd[0].equalsIgnoreCase("addnpc")) {
                     try {
-                        if (client.getPlayerNpc() < 1) {
+                        if (client.getPlayerNpc() < 0) {
                             client.send(new SendMessage("please try to do ::pnpc id"));
                             return;
                         }

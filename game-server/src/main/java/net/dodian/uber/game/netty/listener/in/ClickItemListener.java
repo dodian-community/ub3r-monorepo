@@ -121,7 +121,7 @@ public class ClickItemListener implements PacketListener {
             return;
         }
         try {
-            if (client.getPlayerNpc() < 1) {
+            if (client.getPlayerNpc() < 0) {
                 client.send(new SendMessage("Please select an NPC first using ::pnpc id"));
                 return;
             }

@@ -2732,21 +2732,21 @@ public class Client extends Player implements Runnable {
             String[] s = new String[0];
             String[] s1 = new String[0];
             if (child == 0) {
-                s = new String[]{"Potatoes \\nPayment: 3 compost", "Onions \\nPayment: 1 sack of potato", "Tomatoes \\nPayment: 1 sack of onion",
+                s = new String[]{"Potatoes \\nPayment: 3 compost", "Onions \\nPayment: 1 sack of potato", "Cabbage \\nPayment: 1 sack of onion", "Tomatoes \\nPayment: 1 sack of cabbage",
                         "Sweetcorn \\nPayment: 2 basket of tomato", "Strawberries " + prem + "\\nPayment: 12 sweetcorn",
                         "Watermelons " + prem + "\\nPayment: 3 basket of strawberries", "Snape grass " + prem + "\\nPayment: 15 watermelon"};
-                s1 = new String[]{"1", "9", "16", "25", "31", "47", "59"};
+                s1 = new String[]{"1", "5", "9", "16", "25", "31", "47", "59"};
             } else if (child == 1) {
                 s = new String[]{"Marigold \\nPayment: 2 compost", "Rosemary \\nPayment: 2 Marigold", "Nasturtium \\nPayment: 2 Rosemary",
                         "Woad \\nPayment: 2 Nasturtium", "Limpwurt plants \\nPayment: 2 Woad leaf"};
-                s1 = new String[]{"3", "12", "18", "24", "32"};
+                s1 = new String[]{"3", "13", "22", "26", "34"};
             } else if (child == 2) {
-                s = new String[]{"Grape bushes " + prem + "\\nPayment: 5 super compost", "Dwellberry bushes " + prem + "\\nPayment: 8 grapes", "Jangerberry bushes " + prem + "\\nPayment: 8 dwellberries",
-                        "White berry bushes " + prem + "\\nPayment: 8 jangerberries", "Redberry bushes " + prem + "\\nPayment: 8 jangerberries & 8 grapes"};
+                s = new String[]{"Redberry bushes " + prem + "\\nPayment: 5 super compost", "Dwellberry bushes " + prem + "\\nPayment: 8 redberries", "Jangerberry bushes " + prem + "\\nPayment: 8 dwellberries",
+                        "White berry bushes " + prem + "\\nPayment: 8 jangerberries", "Grape bushes" + prem + "\\nPayment: 8 jangerberries & 8 redberries"};
                 s1 = new String[]{"22", "36", "48", "59", "68"};
             } else if (child == 3) {
-                s = new String[]{"Guam", "Tarromin", "Ranarr", "Irit " + prem, "Kwuarm " + prem, "Snapdragon " + prem, "Cadantine " + prem, "Dwarf weed " + prem, "Torstol " + prem};
-                s1 = new String[]{"8", "19", "34", "44", "56", "63", "70", "79", "85"};
+                s = new String[]{"Guam", "Marrentill", "Tarromin", "Ranarr", "Irit " + prem, "Kwuarm " + prem, "Snapdragon " + prem, "Cadantine " + prem, "Dwarf weed " + prem, "Torstol " + prem};
+                s1 = new String[]{"8", "12", "19", "34", "44", "56", "63", "70", "79", "85"};
             } else if (child == 4) {
                 s = new String[]{"Acorn trees \\nPayment: 1 basket of Tomatoes & 1 basket of Strawberries", "Willow trees " + prem + "\\nPayment: 3 oak roots", "Maple trees " + prem + "\\nPayment: 3 willow roots",
                         "Yew trees " + prem + "\\nPayment: 3 maple roots", "Magic trees " + prem + "\\nPayment: 3 yew roots"};
@@ -2768,17 +2768,17 @@ public class Client extends Player implements Runnable {
                 send(new SendString(string, slot++));
             }
             if (child == 0)
-                setMenuItems(new int[]{1942, 1957, 1982, 5986, 5504, 5982, 231}); //5318, 5319, 5322, 5320, 5323, 5321, 5324 = seeds!
+                setMenuItems(new int[]{1942, 1957, 1965, 1982, 5986, 5504, 5982, 231});
             else if (child == 1)
-                setMenuItems(new int[]{6010, 6014, 6012, 1793, 225}); //5100 = limpwurt seed!
+                setMenuItems(new int[]{6010, 6014, 6012, 1793, 225});
             else if (child == 2)
-                setMenuItems(new int[]{1987, 2126, 247, 239, 1951}); //5101, 5105 = seeds!
+                setMenuItems(new int[]{1951, 2126, 247, 239, 1987});
             else if (child == 3)
-                setMenuItems(new int[]{199, 203, 207, 209, 213, 3051, 215, 217, 219});
+                setMenuItems(new int[]{199, 201, 203, 207, 209, 213, 3051, 215, 217, 219});
             else if (child == 4)
                 setMenuItems(new int[]{1521, 1519, 1517, 1515, 1513});
             else if (child == 5)
-                setMenuItems(new int[]{1955, 1963, 2108, 5970, 2114, 5972, 5974}); //5496, 5497, 5499, 5500, 5501, 5502 = saplings
+                setMenuItems(new int[]{1955, 1963, 2108, 5970, 2114, 5972, 5974});
             else if (child == 6)
                 setMenuItems(new int[]{9810});
         }

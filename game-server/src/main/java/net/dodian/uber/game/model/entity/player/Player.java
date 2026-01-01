@@ -1793,6 +1793,7 @@ public abstract class Player extends Entity {
         GlobalObject.updateObject(client);
         for(int i = 0; i <= 4; i++) //Refresh farming varbits!
             client.varbit(client.farming.getFarmData().getFarmPatchConfig() + i, 0);
+        client.farming.updateCompost(client);
         client.farming.updateFarmPatch(client);
         if(client.getPosition().getZ() == 0) {
             /* NMZ object removal!*/

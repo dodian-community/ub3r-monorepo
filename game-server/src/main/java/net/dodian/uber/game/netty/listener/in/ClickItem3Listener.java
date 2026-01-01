@@ -78,6 +78,13 @@ public class ClickItem3Listener implements PacketListener {
                 client.checkItemUpdate();
                 client.send(new SendMessage("you disassemble the " + client.GetItemName(itemId).toLowerCase() + "."));
             }
+        } else if (itemId == 11784) { //Uncharge black mask :O
+            int amountReturn = (int)(2_000_000D * 0.7);
+            if(client.addItem(995, amountReturn)) {
+                client.deleteItem(itemId, itemSlot, 1);
+                client.addItemSlot(8921, 1, itemSlot);
+                client.checkItemUpdate();
+            } else client.send(new SendMessage("You either need one free space or coins to not go beyond 2147million!"));
         }
         if (itemId == 1921 || itemId == 4456) {
             client.deleteItem(itemId, itemSlot, 1);

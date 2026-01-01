@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DatabaseKt.getDbStatement;
 
 public class NpcManager {
     Map<Integer, Npc> npcs = new HashMap<>();
@@ -73,9 +72,9 @@ public class NpcManager {
 
         /* Daganoth kings */
         dagaRex = nextIndex;
-        createNpc(2267, new Position(3329, 3359, 0), 2);
+        createNpc(2267, new Position(3248, 2794, 0), 2);
         dagaSupreme = nextIndex;
-        createNpc(2265, new Position(3333, 3359, 0), 2);
+        createNpc(2265, new Position(3251, 2794, 0), 2);
         extraSpawns += 2;
 
         System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
