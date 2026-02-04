@@ -26,6 +26,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendFrame27;
 import net.dodian.uber.game.party.Balloons;
+import net.dodian.uber.game.content.buttons.ButtonClickDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -137,6 +138,9 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
         Emotes.doEmote(actionButton, client);
+        if (ButtonClickDispatcher.tryHandle(client, actionButton)) {
+            return;
+        }
         switch (actionButton) {
             case 44511: // Mystic settings tab: "More Settings" (swap wrench tab to basic settings/fog interface)
                 client.setSidebarInterface(11, 23000);
