@@ -5451,7 +5451,7 @@ public class Client extends RSApplet {
                                 // Open the stress test GUI in the event dispatch thread
                                 java.awt.EventQueue.invokeLater(() -> {
                                     try {
-                                        new StressTestGUI().setVisible(true);
+                                       // new StressTestGUI().setVisible(true);
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }

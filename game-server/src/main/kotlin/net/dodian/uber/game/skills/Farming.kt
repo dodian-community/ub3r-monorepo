@@ -497,7 +497,7 @@ class Farming {
         return false
     }
     fun Client.inspectPatch(objectId : Int) {
-        val findData = findPatch(objectId, 0).toInt()
+        val findData = findPatch(objectId, 0).toIntOrNull() ?: return
         var stage: Int
         var endStage: Int
         var weeding: Boolean
