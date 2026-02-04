@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.objects.mining.CoalRock7489
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -18,6 +19,7 @@ object ObjectContentRegistry {
             return
         }
         register(FurnaceObject)
+        register(CoalRock7489)
     }
 
     fun register(content: ObjectContent) {
