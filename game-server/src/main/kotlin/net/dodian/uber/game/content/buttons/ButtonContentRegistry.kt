@@ -17,6 +17,7 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
+        register(SpellbookTeleportButtons)
     }
 
     fun register(content: ButtonContent) {
@@ -44,4 +45,3 @@ object ButtonContentRegistry {
         }
     }
 }
-

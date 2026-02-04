@@ -4,9 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
-/**
- * Java-friendly entrypoint for routing object clicks to Kotlin content.
- */
+
 object ObjectClickDispatcher {
     @JvmStatic
     fun tryHandle(
