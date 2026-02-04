@@ -15,6 +15,7 @@ object NpcAttackContentRegistry {
             return
         }
         register(Guard388AttackNpc)
+        register(Farmer3086AttackNpc)
     }
 
     fun register(content: NpcAttackContent) {
@@ -36,4 +37,3 @@ object NpcAttackContentRegistry {
         return byNpcId[npcId]
     }
 }
-
