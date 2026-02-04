@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.utilities.Utils
 
-object FurnaceObject : ObjectContent {
+object Furnaces : ObjectContent {
     override val objectIds: IntArray = intArrayOf(3994, 11666, 16469, 29662)
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
@@ -23,4 +23,3 @@ object FurnaceObject : ObjectContent {
         return true
     }
 }
-

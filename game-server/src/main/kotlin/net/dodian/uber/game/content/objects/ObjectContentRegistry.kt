@@ -12,8 +12,8 @@ object ObjectContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
-        register(net.dodian.uber.game.content.objects.mining.CoalRock7489)
-        register(net.dodian.uber.game.content.objects.smelting.FurnaceObject)
+        register(net.dodian.uber.game.content.objects.mining.CoalRocks)
+        register(net.dodian.uber.game.content.objects.smelting.Furnaces)
     }
 
     fun register(content: ObjectContent) {
@@ -35,4 +35,3 @@ object ObjectContentRegistry {
         return byObjectId[objectId]
     }
 }
-

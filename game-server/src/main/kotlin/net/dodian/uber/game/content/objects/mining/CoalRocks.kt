@@ -9,8 +9,11 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Utils
 
-object CoalRock7489 : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(7489)
+object CoalRocks : ObjectContent {
+    override val objectIds: IntArray = intArrayOf(
+        7456,
+        7489,
+    )
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         val rockId = Utils.rocks.indexOf(objectId)
@@ -49,4 +52,3 @@ object CoalRock7489 : ObjectContent {
         return true
     }
 }
-
