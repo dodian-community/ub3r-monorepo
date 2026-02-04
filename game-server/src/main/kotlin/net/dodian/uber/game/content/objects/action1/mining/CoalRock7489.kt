@@ -1,7 +1,7 @@
-package net.dodian.uber.game.content.objects.mining
+package net.dodian.uber.game.content.objects.action1.mining
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.objects.action1.ObjectAction1Content
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -9,14 +9,12 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Utils
 
-object CoalRock7489 : ObjectContent {
+object CoalRock7489 : ObjectAction1Content {
     override val objectIds: IntArray = intArrayOf(7489)
 
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onClick1(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         val rockId = Utils.rocks.indexOf(objectId)
-        if (rockId == -1) {
-            return false
-        }
+        if (rockId == -1) return false
 
         if (client.fletchings || client.isFiremaking || client.shafting) {
             client.resetAction()
@@ -46,3 +44,4 @@ object CoalRock7489 : ObjectContent {
         return true
     }
 }
+
