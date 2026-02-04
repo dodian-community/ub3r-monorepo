@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.buttons
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.buttons.teleports.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,7 +18,15 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
-        register(SpellbookTeleportButtons)
+        register(YanilleHomeTeleportButton)
+        register(SeersTeleportButton)
+        register(ArdougneTeleportButton)
+        register(CatherbyTeleportButton)
+        register(LegendsGuildTeleportButton)
+        register(TaverlyTeleportButton)
+        register(FishingGuildTeleportButton)
+        register(GnomeVillageTeleportButton)
+        register(EdgevilleTeleportButton)
     }
 
     fun register(content: ButtonContent) {
