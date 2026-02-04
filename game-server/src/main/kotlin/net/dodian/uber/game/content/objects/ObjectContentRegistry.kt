@@ -1,28 +1,27 @@
-package net.dodian.uber.game.content.objects.action2
+package net.dodian.uber.game.content.objects
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-object ObjectAction2Registry {
-    private val logger = LoggerFactory.getLogger(ObjectAction2Registry::class.java)
+object ObjectContentRegistry {
+    private val logger = LoggerFactory.getLogger(ObjectContentRegistry::class.java)
 
     private val loaded = AtomicBoolean(false)
-    private val byObjectId = ConcurrentHashMap<Int, ObjectAction2Content>()
+    private val byObjectId = ConcurrentHashMap<Int, ObjectContent>()
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
-        // registrations added below
-        register(net.dodian.uber.game.content.objects.action2.mining.CoalRock7489Prospect)
-        register(net.dodian.uber.game.content.objects.action2.smelting.FurnaceGoldClick)
+        register(net.dodian.uber.game.content.objects.mining.CoalRock7489)
+        register(net.dodian.uber.game.content.objects.smelting.FurnaceObject)
     }
 
-    fun register(content: ObjectAction2Content) {
+    fun register(content: ObjectContent) {
         for (objectId in content.objectIds) {
             val existing = byObjectId.putIfAbsent(objectId, content)
             if (existing != null) {
                 logger.error(
-                    "Duplicate ObjectAction2Content for objectId={} (existing={}, new={})",
+                    "Duplicate ObjectContent for objectId={} (existing={}, new={})",
                     objectId,
                     existing::class.java.name,
                     content::class.java.name
@@ -31,7 +30,7 @@ object ObjectAction2Registry {
         }
     }
 
-    fun get(objectId: Int): ObjectAction2Content? {
+    fun get(objectId: Int): ObjectContent? {
         ensureLoaded()
         return byObjectId[objectId]
     }

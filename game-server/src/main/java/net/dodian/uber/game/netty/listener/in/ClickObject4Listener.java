@@ -15,6 +15,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +116,10 @@ public class ClickObject4Listener implements PacketListener {
     public void handleObjectClick(Client client, int objectID, Position position, GameObjectData obj) {
         client.setFocus(position.getX(), position.getY());
         String objectName = obj == null ? "" : obj.getName().toLowerCase();
+
+        if (ObjectDispatcher.tryHandle(client, 4, objectID, position, obj)) {
+            return;
+        }
 
         if(objectID >= 8550 && objectID <= 8557 || (objectID == 27114 || objectID == 27113)) { //Allotment guide
             client.showSkillMenu(FARMING.getId(), 0);

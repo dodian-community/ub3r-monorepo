@@ -1,7 +1,7 @@
-package net.dodian.uber.game.content.objects.action1.mining
+package net.dodian.uber.game.content.objects.mining
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.objects.action1.ObjectAction1Content
+import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -9,10 +9,10 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Utils
 
-object CoalRock7489 : ObjectAction1Content {
+object CoalRock7489 : ObjectContent {
     override val objectIds: IntArray = intArrayOf(7489)
 
-    override fun onClick1(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         val rockId = Utils.rocks.indexOf(objectId)
         if (rockId == -1) return false
 
@@ -41,6 +41,11 @@ object CoalRock7489 : ObjectAction1Content {
         client.mining = true
         client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0)
         client.send(SendMessage("You swing your pick at the rock..."))
+        return true
+    }
+
+    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        client.send(SendMessage("This rock contains coal."))
         return true
     }
 }

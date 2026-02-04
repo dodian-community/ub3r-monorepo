@@ -18,6 +18,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +101,10 @@ public class ClickObject3Listener implements PacketListener {
     private void clickObject3(Client client, int objectID, Position position, GameObjectData obj) {
         client.setFocus(position.getX(), position.getY());
         String objectName = obj == null ? "" : obj.getName().toLowerCase();
+
+        if (ObjectDispatcher.tryHandle(client, 3, objectID, position, obj)) {
+            return;
+        }
 
         if (objectID == 1739) {
             client.moveTo(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ() - 1);

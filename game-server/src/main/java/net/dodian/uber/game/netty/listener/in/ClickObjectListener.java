@@ -27,7 +27,7 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.security.ItemLog;
-import net.dodian.uber.game.content.objects.action1.ObjectAction1Dispatcher;
+import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -179,7 +179,7 @@ public class ClickObjectListener implements PacketListener {
         }
         client.farming.interactBin(client, objectID, 1);
         client.farming.clickPatch(client, objectID);
-        if (ObjectAction1Dispatcher.tryHandle(client, objectID, objectPosition, obj)) {
+        if (ObjectDispatcher.tryHandle(client, 1, objectID, objectPosition, obj)) {
             return;
         }
         if (objectID == 26193) {
