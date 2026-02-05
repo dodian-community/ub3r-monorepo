@@ -12,6 +12,7 @@ object ObjectContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
+        register(net.dodian.uber.game.content.objects.banking.Banks)
         register(net.dodian.uber.game.content.objects.mining.CoalRocks)
         register(net.dodian.uber.game.content.objects.smelting.Furnaces)
     }
