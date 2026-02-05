@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.buttons
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.buttons.teleports.*
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -21,6 +22,8 @@ object ButtonContentRegistry {
         register(net.dodian.uber.game.content.buttons.banking.BankDepositButtons)
         register(net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons)
         register(net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons)
+        register(net.dodian.uber.game.content.buttons.settings.BossYellButtons)
+        register(net.dodian.uber.game.content.buttons.travel.TravelMenuButtons)
         register(YanilleHomeTeleportButton)
         register(SeersTeleportButton)
         register(ArdougneTeleportButton)
@@ -49,6 +52,11 @@ object ButtonContentRegistry {
     fun tryHandle(client: Client, buttonId: Int): Boolean {
         ensureLoaded()
         val content = byButtonId[buttonId] ?: return false
+        val requiredInterfaceId = content.requiredInterfaceId
+        if (requiredInterfaceId != -1 && client.activeInterfaceId != requiredInterfaceId) {
+            client.send(RemoveInterfaces())
+            return true
+        }
         return try {
             content.onClick(client, buttonId)
         } catch (e: Exception) {

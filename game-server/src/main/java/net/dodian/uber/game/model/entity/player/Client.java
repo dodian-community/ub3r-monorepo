@@ -489,6 +489,13 @@ public class Client extends Player implements Runnable {
     public int XinterfaceID = 0;
     public int XremoveID = 0;
 
+    /**
+     * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
+     * Used as a fail-safe for interface-owned button handlers (anti-spoof / anti-dupe).
+     * Tab interfaces (sidebar) should not rely on this.
+     */
+    public int activeInterfaceId = -1;
+
     public int stairs = 0;
     public int stairDistance = 1;
     public int stairDistanceAdd = 0;
@@ -561,7 +568,17 @@ public class Client extends Player implements Runnable {
         if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
-       
+        if (packet instanceof ShowInterface) {
+            activeInterfaceId = ((ShowInterface) packet).getInterfaceId();
+            // Debug helper: show which interface is being opened.
+            // Comment out/remove once you don't need it anymore.
+            if (DotEnvKt.getServerDebugMode() || playerRights > 1) {
+                send(new SendMessage("ShowInterface: " + activeInterfaceId));
+            }
+        } else if (packet instanceof RemoveInterfaces) {
+            activeInterfaceId = -1;
+        }
+
         packet.send(this);
         
     }

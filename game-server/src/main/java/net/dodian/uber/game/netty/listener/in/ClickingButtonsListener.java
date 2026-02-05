@@ -142,15 +142,6 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
         switch (actionButton) {
-            case 44511: // Mystic settings tab: "More Settings" (swap wrench tab to basic settings/fog interface)
-                client.setSidebarInterface(11, 23000);
-                break;
-            case 23020: // Mystic basic settings: Confirm (restore original wrench/settings tab interface)
-                client.setSidebarInterface(11, 44500);
-                break;
-            case 58073:
-                client.send(new SendMessage("Visit the Dodian.net UserCP and click edit pin to remove your pin"));
-                break;
             case 151:
                 client.NpcDialogue = 27;
                 client.NpcDialogueSend = false;
@@ -164,61 +155,6 @@ public class ClickingButtonsListener implements PacketListener {
                 break;
             case 83093:
                                 client.send(new SetTabInterface(21172, 3213));
-                break;
-            case 24136:
-                client.yellOn = true;
-                client.send(new SendMessage("You enabled the boss yell messages."));
-                break;
-            case 24137:
-                client.yellOn = false;
-                client.send(new SendMessage("You disabled the boss yell messages."));
-                break;
-            case 3056: //Small tree
-            case 3057: //Big Tree
-            case 3058: //Mountain
-            case 3059: //Castle
-            case 3060: //Tent
-            case 48054: //totem!
-                int pos = client.skillX == 2772 && client.skillY == 3235 ? 5:
-                        client.skillX == 2864 && client.skillY == 2971 ? 4:
-                                client.skillX == 3511 && client.skillY == 3505 ? 2: 0;
-                client.travelTrigger(pos);
-                break;
-            case 75010:
-            case 84237: //Home teleport aka Yanille
-                client.triggerTele(2604 + Misc.random(6), 3101 + Misc.random(3), 0, false);
-                break;
-            case 4143: //Normal spellbook!
-            case 50235: //Seers
-                client.triggerTele(2722 + Misc.random(6), 3484 + Misc.random(2), 0, false);
-                break;
-            case 4146: //Normal spellbook!
-            case 50245: //Ardougne
-                client.triggerTele(2660 + Misc.random(4), 3306 + Misc.random(4), 0, false);
-                break;
-            case 4150: //Normal spellbook!
-            case 50253: // Catherby
-                client.triggerTele(2802 + Misc.random(4), 3432 + Misc.random(3), 0, false);
-                break;
-            case 6004: //Normal spellbook!
-            case 51005: //Legends guild
-                client.triggerTele(2726 + Misc.random(5), 3346 + Misc.random(2), 0, false);
-                break;
-            case 6005: //Normal spellbook!
-            case 51013: //Taverly
-                client.triggerTele(2893 + Misc.random(4), 3454 + Misc.random(3), 0, false);
-                break;
-            case 29031: //Normal spellbook!
-            case 51023: //Fishing guild
-                client.triggerTele(2596 + Misc.random(3), 3406 + Misc.random(4), 0, true);
-                break;
-            case 72038:
-            case 51031: //Gnome village
-                client.triggerTele(2472 + Misc.random(6), 3436 + Misc.random(3), 0, false);
-                break;
-            case 4140: //Normal spell book pvp teleport!
-            case 51039: //Edgeville teleport
-                client.triggerTele(3085 + Misc.random(4), 3488 + Misc.random(4), 0, false);
                 break;
             case 26076:
                 // frame36(6575, 1);
