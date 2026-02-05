@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.guards
+package net.dodian.uber.game.content.npcs.yanille.guards
 
 import net.dodian.uber.game.content.npcs.NpcContent
 import net.dodian.uber.game.content.npcs.NpcDispatcher
@@ -13,4 +13,3 @@ object Guards : NpcContent {
         return true
     }
 }
-

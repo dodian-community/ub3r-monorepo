@@ -87,7 +87,7 @@ Use whatever makes sense:
 **Skill-based**
 
 objects/mining
-npcs/thieving
+npcs/pickpocket
 objects/agility
 
 
@@ -102,6 +102,7 @@ npcs/shops
 
 objects/yanille
 objects/edgeville
+npcs/yanille
 
 One file per unit
 

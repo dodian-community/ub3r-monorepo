@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.thieving
+package net.dodian.uber.game.content.npcs.yanille.pickpocket
 
 import net.dodian.uber.game.content.npcs.NpcContent
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -21,4 +21,3 @@ object Farmers : NpcContent {
         return true
     }
 }
-

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.shops
+package net.dodian.uber.game.content.npcs.yanille.shops
 
 import net.dodian.uber.game.content.npcs.NpcContent
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -17,4 +17,3 @@ object Shopkeepers : NpcContent {
         return true
     }
 }
-
