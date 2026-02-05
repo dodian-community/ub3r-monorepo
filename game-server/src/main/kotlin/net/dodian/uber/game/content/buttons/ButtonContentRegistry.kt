@@ -18,6 +18,9 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
+        register(net.dodian.uber.game.content.buttons.banking.BankDepositButtons)
+        register(net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons)
+        register(net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons)
         register(YanilleHomeTeleportButton)
         register(SeersTeleportButton)
         register(ArdougneTeleportButton)

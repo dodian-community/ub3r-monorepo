@@ -165,11 +165,6 @@ public class ClickingButtonsListener implements PacketListener {
             case 83093:
                                 client.send(new SetTabInterface(21172, 3213));
                 break;
-            case 83051:
-            case 9118:
-            case 19022:
-                client.send(new RemoveInterfaces());
-                break;
             case 24136:
                 client.yellOn = true;
                 client.send(new SendMessage("You enabled the boss yell messages."));
@@ -177,38 +172,6 @@ public class ClickingButtonsListener implements PacketListener {
             case 24137:
                 client.yellOn = false;
                 client.send(new SendMessage("You disabled the boss yell messages."));
-                break;
-            case 89223:
-            case 50004: // Mystic "Deposit inventory" button
-                if(!client.IsBanking) {
-                    break;
-                }
-                for (int i = 0; i < client.playerItems.length; i++) {
-                    if (client.playerItems[i] > 0) {
-                        client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
-                    }
-                }
-                client.send(new SendMessage("You deposit all your items."));
-                client.checkItemUpdate();
-                break;
-            case 50007: // Mystic "Deposit worn items" button
-                if(!client.IsBanking) {
-                    break;
-                }
-                for (int i = 0; i < client.getEquipment().length; i++) {
-                    int equipId = client.getEquipment()[i];
-                    int equipAmount = client.getEquipmentN()[i];
-                    if (equipId > 0 && equipAmount > 0) {
-                        if (client.hasSpace()) {
-                            if (client.remove(i, false)) {
-                                client.addItem(equipId, equipAmount);
-                                client.bankItem(equipId, client.GetItemSlot(equipId), equipAmount);
-                            }
-                        }
-                    }
-                }
-                client.send(new SendMessage("You deposit your worn items."));
-                client.checkItemUpdate();
                 break;
             case 3056: //Small tree
             case 3057: //Big Tree
@@ -256,22 +219,6 @@ public class ClickingButtonsListener implements PacketListener {
             case 4140: //Normal spell book pvp teleport!
             case 51039: //Edgeville teleport
                 client.triggerTele(3085 + Misc.random(4), 3488 + Misc.random(4), 0, false);
-                break;
-            case 74212:
-            case 49047: // old magic on
-            case 49046: // old magic off
-            case 23024:
-                if (client.ancients == 1) {
-                    client.setSidebarInterface(6, 1151); // magic tab (ancient =
-                    // 12855);
-                    client.ancients = 0;
-                    client.send(new SendMessage("Normal magic enabled"));
-                } else {
-                    client.setSidebarInterface(6, 12855); // magic tab (ancient =
-                    // 12855);
-                    client.ancients = 1;
-                    client.send(new SendMessage("Ancient magic enabled"));
-                }
                 break;
             case 26076:
                 // frame36(6575, 1);
