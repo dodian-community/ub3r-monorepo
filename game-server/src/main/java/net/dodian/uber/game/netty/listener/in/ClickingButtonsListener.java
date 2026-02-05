@@ -2,7 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Emotes;
@@ -141,32 +140,8 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
         switch (actionButton) {
-            case 151:
-                client.NpcDialogue = 27;
-                client.NpcDialogueSend = false;
-                break;
-            case 150:
-                client.NpcDialogue = 26;
-                client.NpcDialogueSend = false;
-                break;
-            case 83093:
-                                client.send(new SetTabInterface(21172, 3213));
-                break;
             case 26076:
                 // frame36(6575, 1);
-                break;
-            case 53245:
-            case 53246:
-            case 53247:
-            case 53248:
-            case 53249:
-            case 53250:
-            case 53251:
-            case 53252:
-            case 53253:
-            case 53254:
-            case 53255:
-                client.duelButton2(client.actionButtonId - 53245);
                 break;
             case 54074:
                 Server.slots.playSlots(client, -1);
@@ -194,161 +169,6 @@ public class ClickingButtonsListener implements PacketListener {
                     client.send(new SendString("Waiting for other player...", 6571));
                     o.send(new SendString("Other player has accepted", 6571));
                 }
-                break;
-            case 15147: // bronze
-            case 15146:
-            case 10247:
-            case 9110:
-            case 15151: // iron
-            case 15150:
-            case 15149:
-            case 15148:
-            case 15155: // silver
-            case 15154:
-            case 15153:
-            case 15152:
-            case 15159: // steel
-            case 15158:
-            case 15157:
-            case 15156:
-            case 15163: // gold
-            case 15162:
-            case 15161:
-            case 15160:
-            case 29017: // mithril
-            case 29016:
-            case 24253:
-            case 16062:
-            case 29022: // addy
-            case 29020:
-            case 29019:
-            case 29018:
-            case 29026: // rune
-            case 29025:
-            case 29024:
-            case 29023:
-                client.startSmelt(client.actionButtonId);
-                break;
-            case 34185:
-            case 34184: // vamps
-            case 34183:
-            case 34182:
-            case 34189: // chaps
-            case 34188:
-            case 34187:
-            case 34186:
-            case 34193:
-            case 34192:
-            case 34191:
-            case 34190:
-                client.startHideCraft(client.actionButtonId);
-                break;
-            case 33187: // armor
-            case 33186:
-            case 33185:
-            case 33190: // gloves
-            case 33189:
-            case 33188:
-            case 33193: // boots
-            case 33192:
-            case 33191:
-            case 33196: // vamps
-            case 33195:
-            case 33194:
-            case 33199: // chaps
-            case 33198:
-            case 33197:
-            case 33202: // coif
-            case 33201:
-            case 33200:
-            case 33205:// cowl
-            case 33204:
-            case 33203:
-                client.startCraft(client.actionButtonId);
-                break;
-            case 57225:
-                client.startTan(1, 0);
-                break;
-            case 57217:
-                client.startTan(5, 0);
-                break;
-            case 57201:
-            case 57209:
-                client.startTan(27, 0);
-                break;
-            case 57229: //Hard leather!
-                client.startTan(1, 1);
-                break;
-            case 57221:
-                client.startTan(5, 1);
-                break;
-            case 57205:
-            case 57213:
-                client.startTan(27, 1);
-                break;
-            case 57227:
-                client.startTan(1, 2);
-                break;
-            case 57219:
-                client.startTan(5, 2);
-                break;
-            case 57211:
-            case 57203:
-                client.startTan(27, 2);
-                break;
-            case 57228:
-                client.startTan(1, 3);
-                break;
-            case 57220:
-                client.startTan(5, 3);
-                break;
-            case 57212:
-            case 57204:
-                client.startTan(27, 3);
-                break;
-            case 57231:
-                client.startTan(1, 4);
-                break;
-            case 57223:
-                client.startTan(5, 4);
-                break;
-            case 57215:
-            case 57207:
-                client.startTan(27, 4);
-                break;
-            case 57232:
-                client.startTan(1, 5);
-                break;
-            case 57224:
-                client.startTan(5, 5);
-                break;
-            case 57216:
-            case 57208:
-                client.startTan(27, 5);
-                break;
-            case 10239: //make stuff 1
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 1;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 10238: //make stuff 5
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 5;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 6212: //make stuff 10 (x)
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 10;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 6211: //make stuff 28 (all)
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 28;
-                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 44210: //Make one vial
             case 44209: //Make 5
@@ -401,30 +221,6 @@ public class ClickingButtonsListener implements PacketListener {
                 client.setSkill(CRAFTING.getId(), 567,  1, 1775, -1, 240, 884, 3);
                 client.skillActionCount = craftOrbAmount[actionButton - 48113];
                 client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 34170:
-                client.fletching.fletchBow(client, true, 1);
-                break;
-            case 34169:
-                client.fletching.fletchBow(client, true, 5);
-                break;
-            case 34168:
-                client.fletching.fletchBow(client, true, 10);
-                break;
-            case 34167:
-                client.fletching.fletchBow(client, true, 27);
-                break;
-            case 34174: // 1
-                client.fletching.fletchBow(client, false, 1);
-                break;
-            case 34173: // 5
-                client.fletching.fletchBow(client, false, 5);
-                break;
-            case 34172: // 10
-                client.fletching.fletchBow(client, false, 10);
-                break;
-            case 34171:
-                client.fletching.fletchBow(client, false, 27);
                 break;
             case 10252:
             case 11000:
@@ -504,45 +300,7 @@ public class ClickingButtonsListener implements PacketListener {
                 break;
             case 4130: //Autocast on normal spellbook
                 break;
-            case 1097:
-            case 1094:
-            case 1093:
-                client.autocast_spellIndex = -1; //Reset autocast!
-                client.setSidebarInterface(0, 1689);
-                break;
-            case 51133:
-            case 51185:
-            case 51091:
-            case 24018:
-            case 51159:
-            case 51211:
-            case 51111:
-            case 51069:
-            case 51146:
-            case 51198:
-            case 51102:
-            case 51058:
-            case 51172:
-            case 51224:
-            case 51122:
-            case 51080:
-                for (int index = 0; index < client.ancientButton.length && client.autocast_spellIndex == -1; index++) {
-                    if (client.actionButtonId == client.ancientButton[index])
-                        client.autocast_spellIndex = index;
-                }
-                //client.setSidebarInterface(0, 328);
-                CombatStyleHandler.setWeaponHandler(client); //We need this apperently!
-                break;
-            case 24017:
-                CombatStyleHandler.setWeaponHandler(client);
-                break;
-
             case 2171: // Retribution
-                break;
-
-            case 3651://14067: //Apperance accepted!
-                client.send(new RemoveInterfaces());
-                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 break;
 
             case 152:
