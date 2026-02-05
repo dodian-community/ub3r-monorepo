@@ -25,7 +25,6 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendFrame27;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.content.buttons.ButtonClickDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -149,9 +148,6 @@ public class ClickingButtonsListener implements PacketListener {
             case 150:
                 client.NpcDialogue = 26;
                 client.NpcDialogueSend = false;
-                break;
-            case 8198:
-                Balloons.acceptItems(client);
                 break;
             case 83093:
                                 client.send(new SetTabInterface(21172, 3213));
@@ -684,28 +680,6 @@ public class ClickingButtonsListener implements PacketListener {
                 }
                 // if(currentHealth > 0)
                 client.logout();
-                break;
-
-            case 21011:
-                if(!client.IsBanking) {
-                    break; //We do not need this function without you banking!
-                }
-                client.takeAsNote = !client.takeAsNote;
-                client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
-                client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
-                break;
-            case 21010:
-                if(!client.IsBanking) {
-                    break; //We do not need this function without you banking!
-                }
-                if (client.freeSlots() < 28) {
-                    for (int i = 0; i < 28; i++)
-                        if (client.playerItems[i] > 0)
-                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
-                    client.send(new SendMessage("You bank all your items!"));
-                    client.checkItemUpdate();
-                } else
-                    client.send(new SendMessage("You do not have anything that can be banked!"));
                 break;
 
             case 13092:

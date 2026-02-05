@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object BankDepositButtons : ButtonContent {
+    override val requiredInterfaceId: Int = 5292
+
     override val buttonIds: IntArray = intArrayOf(
         89223, // Mystic "Deposit inventory" button (alt id)
         50004, // Mystic "Deposit inventory" button
@@ -52,4 +54,3 @@ object BankDepositButtons : ButtonContent {
         }
     }
 }
-
