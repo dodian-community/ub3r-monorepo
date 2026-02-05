@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.attack
+package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.getAttackStyle
@@ -9,13 +9,30 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import org.slf4j.LoggerFactory
 
-
-object NpcAttackDispatcher {
-    private val logger = LoggerFactory.getLogger(NpcAttackDispatcher::class.java)
+object NpcDispatcher {
+    private val logger = LoggerFactory.getLogger(NpcDispatcher::class.java)
 
     @JvmStatic
-    fun handle(client: Client, npcIndex: Int) {
-        logger.debug("NpcAttackDispatcher: npcIndex {}", npcIndex)
+    fun tryHandle(client: Client, option: Int, npc: Npc, npcIndex: Int): Boolean {
+        val content = NpcContentRegistry.get(npc.id) ?: return false
+        return try {
+            when (option) {
+                1 -> content.onFirstClick(client, npc, npcIndex)
+                2 -> content.onSecondClick(client, npc, npcIndex)
+                3 -> content.onThirdClick(client, npc, npcIndex)
+                4 -> content.onFourthClick(client, npc, npcIndex)
+                5 -> content.onFifthClick(client, npc, npcIndex)
+                else -> false
+            }
+        } catch (e: Exception) {
+            logger.error("Error handling npc click (option={}, npcId={}) via {}", option, npc.id, content::class.java.name, e)
+            false
+        }
+    }
+
+    @JvmStatic
+    fun handleAttack(client: Client, npcIndex: Int) {
+        logger.debug("NpcDispatcher: attack npcIndex {}", npcIndex)
 
         if (client.magicId >= 0) client.magicId = -1
         if (client.deathStage >= 1) return
@@ -23,12 +40,12 @@ object NpcAttackDispatcher {
         val npc = Server.npcManager.getNpc(npcIndex) ?: return
         if (client.randomed || client.UsingAgility) return
 
-        val content = NpcAttackContentRegistry.get(npc.id)
+        val content = NpcContentRegistry.get(npc.id)
         if (content != null) {
             val handled = try {
                 content.onAttack(client, npc, npcIndex)
             } catch (e: Exception) {
-                logger.error("Error in onAttack for npcId={} via {}", npc.id, content::class.java.name, e)
+                logger.error("Error handling npc attack (npcId={}) via {}", npc.id, content::class.java.name, e)
                 false
             }
             if (handled) return
@@ -66,3 +83,4 @@ object NpcAttackDispatcher {
         }
     }
 }
+

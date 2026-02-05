@@ -2,7 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.content.npcs.attack.NpcAttackDispatcher;
+import net.dodian.uber.game.content.npcs.NpcDispatcher;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -32,6 +32,6 @@ public class AttackNpcListener implements PacketListener {
         int npcIndex = readUnsignedWordA(buf);
 
         logger.debug("AttackNpcListener: npcIndex {}", npcIndex);
-        NpcAttackDispatcher.handle(client, npcIndex);
+        NpcDispatcher.handleAttack(client, npcIndex);
     }
 }
