@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.buttons.dialogue
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 
-object NpcDialoguePromptButtons : ButtonContent {
+object NpcDialogueStateButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(150, 151)
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
@@ -23,4 +23,3 @@ object NpcDialoguePromptButtons : ButtonContent {
         return true
     }
 }
-

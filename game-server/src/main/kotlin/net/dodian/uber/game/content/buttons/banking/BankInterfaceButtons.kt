@@ -9,8 +9,10 @@ object BankInterfaceButtons : ButtonContent {
     override val requiredInterfaceId: Int = 5292
 
     override val buttonIds: IntArray = intArrayOf(
-        5387, // Toggle note
-        5386, // Bank all
+        21011, // Toggle note (legacy)
+        21010, // Bank all (legacy)
+        5387,  // Toggle note (mystic variant)
+        5386,  // Bank all (mystic variant)
     )
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
@@ -19,13 +21,13 @@ object BankInterfaceButtons : ButtonContent {
         }
 
         when (buttonId) {
-            21011 -> {
+            21011, 5387 -> {
                 client.takeAsNote = !client.takeAsNote
                 client.send(SendString(if (client.takeAsNote) "No Note" else "Note", 5389))
                 client.send(SendMessage(if (client.takeAsNote) "You can now note items." else "You can no longer note items."))
             }
 
-            21010 -> {
+            21010, 5386 -> {
                 if (client.freeSlots() < 28) {
                     for (i in 0 until 28) {
                         if (client.playerItems[i] > 0) {
@@ -45,4 +47,3 @@ object BankInterfaceButtons : ButtonContent {
         return true
     }
 }
-

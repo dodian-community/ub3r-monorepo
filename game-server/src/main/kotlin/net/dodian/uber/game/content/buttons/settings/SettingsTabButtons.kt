@@ -1,6 +1,7 @@
-package net.dodian.uber.game.content.buttons
+package net.dodian.uber.game.content.buttons.settings
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.buttons.ButtonContent
 
 object SettingsTabButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -9,16 +10,12 @@ object SettingsTabButtons : ButtonContent {
     )
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        // We move the print here so it executes before the branching logic.
-        // This is great for debugging which IDs are being sent from the client!
-        println("Button clicked: $buttonId")
-
         when (buttonId) {
             44511 -> client.setSidebarInterface(11, 23000)
             23020 -> client.setSidebarInterface(11, 44500)
-            else -> return false // If it's not one of our IDs, tell the handler we didn't use it
+            else -> return false
         }
 
-        return true // We handled a button, so we return true
+        return true
     }
 }

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.yanille.monks
+package net.dodian.uber.game.content.npcs.yanille
 
 import net.dodian.uber.game.content.npcs.NpcContent
 import net.dodian.uber.game.model.entity.npc.Npc

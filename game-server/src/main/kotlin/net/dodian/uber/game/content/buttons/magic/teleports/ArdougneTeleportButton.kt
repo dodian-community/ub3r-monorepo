@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.buttons.teleports
+package net.dodian.uber.game.content.buttons.magic.teleports
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client

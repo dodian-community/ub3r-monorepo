@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.buttons.teleports
+package net.dodian.uber.game.content.buttons.magic.teleports
 
 /**
  * Central place to define spellbook teleport button IDs so changing a client/widget ID

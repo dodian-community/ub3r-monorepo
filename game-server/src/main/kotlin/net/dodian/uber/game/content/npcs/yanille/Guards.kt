@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.yanille.guards
+package net.dodian.uber.game.content.npcs.yanille
 
 import net.dodian.uber.game.content.npcs.NpcContent
 import net.dodian.uber.game.content.npcs.NpcDispatcher

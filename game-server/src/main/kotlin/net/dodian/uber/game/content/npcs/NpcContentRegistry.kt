@@ -12,10 +12,10 @@ object NpcContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
-        register(net.dodian.uber.game.content.npcs.yanille.guards.Guards)
-        register(net.dodian.uber.game.content.npcs.yanille.monks.Monk)
-        register(net.dodian.uber.game.content.npcs.yanille.shops.Shopkeepers)
-        register(net.dodian.uber.game.content.npcs.yanille.pickpocket.Farmers)
+        register(net.dodian.uber.game.content.npcs.yanille.Guards)
+        register(net.dodian.uber.game.content.npcs.yanille.Monk)
+        register(net.dodian.uber.game.content.npcs.yanille.Shopkeepers)
+        register(net.dodian.uber.game.content.npcs.yanille.Farmers)
     }
 
     fun register(content: NpcContent) {

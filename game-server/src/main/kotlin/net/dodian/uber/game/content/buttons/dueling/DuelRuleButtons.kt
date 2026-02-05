@@ -1,9 +1,9 @@
-package net.dodian.uber.game.content.buttons.duel
+package net.dodian.uber.game.content.buttons.dueling
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 
-object DuelOptionButtons : ButtonContent {
+object DuelRuleButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
         53245,
         53246,
@@ -23,4 +23,3 @@ object DuelOptionButtons : ButtonContent {
         return true
     }
 }
-

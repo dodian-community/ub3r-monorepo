@@ -1,7 +1,34 @@
 package net.dodian.uber.game.content.buttons
 
+import net.dodian.uber.game.content.buttons.appearance.AppearanceConfirmButtons
+import net.dodian.uber.game.content.buttons.banking.BankDepositButtons
+import net.dodian.uber.game.content.buttons.banking.BankInterfaceButtons
+import net.dodian.uber.game.content.buttons.crafting.LeatherCraftButtons
+import net.dodian.uber.game.content.buttons.crafting.ProductionAmountButtons
+import net.dodian.uber.game.content.buttons.crafting.SmeltingButtons
+import net.dodian.uber.game.content.buttons.crafting.TanningButtons
+import net.dodian.uber.game.content.buttons.dialogue.NpcDialogueStateButtons
+import net.dodian.uber.game.content.buttons.dueling.DuelRuleButtons
+import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
+import net.dodian.uber.game.content.buttons.magic.AutocastButtons
+import net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons
+import net.dodian.uber.game.content.buttons.magic.teleports.ArdougneTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.CatherbyTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.EdgevilleTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.FishingGuildTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.GnomeVillageTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.LegendsGuildTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.SeersTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
+import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
+import net.dodian.uber.game.content.buttons.settings.BossYellButtons
+import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
+import net.dodian.uber.game.content.buttons.settings.SettingsTabButtons
+import net.dodian.uber.game.content.buttons.travel.TravelMenuButtons
+import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
+import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.buttons.teleports.*
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -19,23 +46,23 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
-        register(net.dodian.uber.game.content.buttons.dialogue.NpcDialoguePromptButtons)
-        register(net.dodian.uber.game.content.buttons.banking.BankDepositButtons)
-        register(net.dodian.uber.game.content.buttons.banking.BankInterfaceButtons)
-        register(net.dodian.uber.game.content.buttons.crafting.MakeAmountButtons)
-        register(net.dodian.uber.game.content.buttons.crafting.SmeltingButtons)
-        register(net.dodian.uber.game.content.buttons.crafting.LeatherCraftButtons)
-        register(net.dodian.uber.game.content.buttons.crafting.TanningButtons)
-        register(net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons)
-        register(net.dodian.uber.game.content.buttons.duel.DuelOptionButtons)
-        register(net.dodian.uber.game.content.buttons.appearance.AppearanceButtons)
-        register(net.dodian.uber.game.content.buttons.magic.AutocastButtons)
-        register(net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons)
-        register(net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons)
-        register(net.dodian.uber.game.content.buttons.ui.TabButtons)
-        register(net.dodian.uber.game.content.buttons.settings.BossYellButtons)
-        register(net.dodian.uber.game.content.buttons.travel.TravelMenuButtons)
-        register(net.dodian.uber.game.content.buttons.party.PartyRoomButtons)
+        register(NpcDialogueStateButtons)
+        register(BankDepositButtons)
+        register(BankInterfaceButtons)
+        register(ProductionAmountButtons)
+        register(SmeltingButtons)
+        register(LeatherCraftButtons)
+        register(TanningButtons)
+        register(BowFletchingButtons)
+        register(DuelRuleButtons)
+        register(AppearanceConfirmButtons)
+        register(AutocastButtons)
+        register(SpellbookToggleButtons)
+        register(CloseInterfaceButtons)
+        register(TabInterfaceButtons)
+        register(BossYellButtons)
+        register(TravelMenuButtons)
+        register(PartyRoomDepositButtons)
         register(YanilleHomeTeleportButton)
         register(SeersTeleportButton)
         register(ArdougneTeleportButton)
