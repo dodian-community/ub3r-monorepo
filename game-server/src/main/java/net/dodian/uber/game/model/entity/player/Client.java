@@ -568,18 +568,33 @@ public class Client extends Player implements Runnable {
         if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
+        Integer openedInterfaceId = null;
+        String openedVia = null;
+
         if (packet instanceof ShowInterface) {
-            activeInterfaceId = ((ShowInterface) packet).getInterfaceId();
-            // Debug helper: show which interface is being opened.
-            // Comment out/remove once you don't need it anymore.
-            if (DotEnvKt.getServerDebugMode() || playerRights > 1) {
-                send(new SendMessage("ShowInterface: " + activeInterfaceId));
-            }
+            openedInterfaceId = ((ShowInterface) packet).getInterfaceId();
+            openedVia = "ShowInterface";
+        } else if (packet instanceof InventoryInterface) {
+            openedInterfaceId = ((InventoryInterface) packet).getInterfaceId();
+            openedVia = "InventoryInterface";
+        } else if (packet instanceof SendFrame164) {
+            openedInterfaceId = ((SendFrame164) packet).getFrame();
+            openedVia = "Frame164";
         } else if (packet instanceof RemoveInterfaces) {
             activeInterfaceId = -1;
         }
 
+        if (openedInterfaceId != null) {
+            activeInterfaceId = openedInterfaceId;
+        }
+
         packet.send(this);
+
+        // Debug helper: show which interface is being opened.
+        // Comment out/remove once you don't need it anymore.
+        if (openedInterfaceId != null) {
+            send(new SendMessage("Open interface (" + openedVia + "): " + openedInterfaceId));
+        }
         
     }
 

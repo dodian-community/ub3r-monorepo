@@ -27,6 +27,10 @@ public class SendFrame164 implements OutgoingPacket {
         this.frame = frame;
     }
 
+    public int getFrame() {
+        return frame;
+    }
+
     @Override
     public void send(Client client) {
         // Client's method434() reads exactly 2 bytes in little-endian format
