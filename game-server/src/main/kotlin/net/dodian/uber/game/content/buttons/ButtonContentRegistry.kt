@@ -30,7 +30,28 @@ import net.dodian.uber.game.content.buttons.rewards.RewardLampButtons
 import net.dodian.uber.game.content.buttons.settings.BossYellButtons
 import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
 import net.dodian.uber.game.content.buttons.settings.SettingsTabButtons
-import net.dodian.uber.game.content.buttons.skills.SkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.AgilitySkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.AttackSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.CookingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.CraftingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.DefenceSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FarmingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FiremakingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FishingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FletchingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.HerbloreSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.HitpointsSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.MagicSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.MiningSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.PrayerSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.RangedSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.RunecraftingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.SkillGuideSubTabButtons
+import net.dodian.uber.game.content.buttons.skillguide.SlayerSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.SmithingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.StrengthSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.ThievingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.WoodcuttingSkillGuideButtons
 import net.dodian.uber.game.content.buttons.trade.TradeConfirmButtons
 import net.dodian.uber.game.content.buttons.travel.TravelMenuButtons
 import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
@@ -86,7 +107,28 @@ object ButtonContentRegistry {
         register(DialogueOptionButtons)
         register(RewardLampButtons)
         register(TradeConfirmButtons)
-        register(SkillGuideButtons)
+        register(AttackSkillGuideButtons)
+        register(HitpointsSkillGuideButtons)
+        register(MiningSkillGuideButtons)
+        register(StrengthSkillGuideButtons)
+        register(AgilitySkillGuideButtons)
+        register(DefenceSkillGuideButtons)
+        register(RangedSkillGuideButtons)
+        register(PrayerSkillGuideButtons)
+        register(ThievingSkillGuideButtons)
+        register(HerbloreSkillGuideButtons)
+        register(CraftingSkillGuideButtons)
+        register(SmithingSkillGuideButtons)
+        register(WoodcuttingSkillGuideButtons)
+        register(MagicSkillGuideButtons)
+        register(FiremakingSkillGuideButtons)
+        register(CookingSkillGuideButtons)
+        register(RunecraftingSkillGuideButtons)
+        register(FletchingSkillGuideButtons)
+        register(FishingSkillGuideButtons)
+        register(SlayerSkillGuideButtons)
+        register(FarmingSkillGuideButtons)
+        register(SkillGuideSubTabButtons)
         register(SpecialEmoteButtons)
         register(MorphButtons)
         register(SlotsButtons)

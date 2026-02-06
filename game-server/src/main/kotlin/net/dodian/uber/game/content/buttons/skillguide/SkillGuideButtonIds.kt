@@ -1,0 +1,25 @@
+package net.dodian.uber.game.content.buttons.skillguide
+
+object SkillGuideButtonIds {
+    val ATTACK: IntArray = intArrayOf(8654, 33206, 94167)
+    val HITPOINTS: IntArray = intArrayOf(8655, 33207, 94168)
+    val MINING: IntArray = intArrayOf(8656, 33208, 94169)
+    val STRENGTH: IntArray = intArrayOf(8657, 33209, 94170)
+    val AGILITY: IntArray = intArrayOf(8658, 33210, 94171)
+    val SMITHING: IntArray = intArrayOf(8659, 33211, 94172)
+    val DEFENCE: IntArray = intArrayOf(8660, 33212, 94173)
+    val HERBLORE: IntArray = intArrayOf(8661, 33213, 94174)
+    val FLETCHING: IntArray = intArrayOf(8662, 33214, 94183)
+    val RANGED: IntArray = intArrayOf(8663, 33215, 94176)
+    val THIEVING: IntArray = intArrayOf(8664, 33216, 94177)
+    val FISHING: IntArray = intArrayOf(8665, 33217, 94175)
+    val PRAYER: IntArray = intArrayOf(8666, 94179)
+    val CRAFTING: IntArray = intArrayOf(8667, 33219, 94180)
+    val WOODCUTTING: IntArray = intArrayOf(8668, 33220, 94184)
+    val MAGIC: IntArray = intArrayOf(8669, 33221, 94182)
+    val FIREMAKING: IntArray = intArrayOf(8670, 33222, 94181)
+    val COOKING: IntArray = intArrayOf(8671, 33223, 94178)
+    val RUNECRAFTING: IntArray = intArrayOf(8672, 33224, 95053)
+    val SLAYER: IntArray = intArrayOf(12162, 47130, 95061)
+    val FARMING: IntArray = intArrayOf(95068)
+}
