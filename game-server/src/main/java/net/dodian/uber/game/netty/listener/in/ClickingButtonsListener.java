@@ -10,6 +10,8 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
+import net.dodian.uber.game.netty.listener.out.SendFrame27;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,64 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
         if (QuestSend.questMenu(client, actionButton)) {
+            return;
+        }
+        if (client.refundSlot != -1) {
+            int size = client.rewardList.size();
+            int checkSlot = 1;
+            int position = size - client.refundSlot;
+            if (actionButton == 9158 || actionButton == 9168 || actionButton == 9179 || actionButton == 9191) {
+                checkSlot = 2;
+            } else if (actionButton == 9169 || actionButton == 9180 || actionButton == 9192) {
+                checkSlot = 3;
+            } else if (actionButton == 9181 || actionButton == 9193) {
+                checkSlot = 4;
+            } else if (actionButton == 9194) {
+                checkSlot = 5;
+            }
+            if (client.refundSlot == 0 && ((size > 3 && checkSlot == 5) || (size == 3 && checkSlot == 4) || (size == 1 && checkSlot == 2) || (size == 2 && checkSlot == 3))) {
+                client.refundSlot = -1;
+                client.send(new RemoveInterfaces());
+            } else if ((position > 3) && checkSlot == 4) {
+                client.refundSlot += 3;
+            } else if (client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5))) {
+                client.refundSlot -= 3;
+            } else {
+                client.reclaim(checkSlot);
+            }
+            if (!client.rewardList.isEmpty()) {
+                client.setRefundOptions();
+            }
+            return;
+        }
+        if (client.herbMaking != -1) {
+            int size = client.herbOptions.size();
+            int checkSlot = 1;
+            int position = size - client.herbMaking;
+            if (actionButton == 9158 || actionButton == 9168 || actionButton == 9179 || actionButton == 9191) {
+                checkSlot = 2;
+            } else if (actionButton == 9169 || actionButton == 9180 || actionButton == 9192) {
+                checkSlot = 3;
+            } else if (actionButton == 9181 || actionButton == 9193) {
+                checkSlot = 4;
+            } else if (actionButton == 9194) {
+                checkSlot = 5;
+            }
+            if (client.herbMaking == 0 && ((size > 3 && checkSlot == 5) || (size == 3 && checkSlot == 4) || (size == 1 && checkSlot == 2) || (size == 2 && checkSlot == 3))) {
+                client.herbMaking = -1;
+                client.send(new RemoveInterfaces());
+            } else if ((position > 3) && checkSlot == 4) {
+                client.herbMaking += 3;
+            } else if (client.refundSlot != 0 && ((position <= 3 && checkSlot == position + 1) || (position > 3 && checkSlot == 5))) {
+                client.herbMaking -= 3;
+            } else if (client.herbMaking + checkSlot <= size) {
+                client.send(new RemoveInterfaces());
+                client.XinterfaceID = 4753;
+                client.XremoveSlot = client.herbMaking + checkSlot;
+                client.herbMaking = -1;
+                client.send(new SendFrame27());
+            }
+            client.setHerbOptions();
             return;
         }
 

@@ -37,6 +37,7 @@ import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
 import net.dodian.uber.game.content.buttons.ui.IgnoredButtons
 import net.dodian.uber.game.content.buttons.ui.LogoutButtons
 import net.dodian.uber.game.content.buttons.ui.MorphButtons
+import net.dodian.uber.game.content.buttons.ui.QuestTabButtons
 import net.dodian.uber.game.content.buttons.ui.RunButtons
 import net.dodian.uber.game.content.buttons.ui.SidebarButtons
 import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
@@ -80,6 +81,7 @@ object ButtonContentRegistry {
         register(RunButtons)
         register(LogoutButtons)
         register(SidebarButtons)
+        register(QuestTabButtons)
         register(BossYellButtons)
         register(DialogueOptionButtons)
         register(RewardLampButtons)
