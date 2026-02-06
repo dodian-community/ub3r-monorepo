@@ -17,9 +17,14 @@ object ItemContentRegistry {
         register(net.dodian.uber.game.content.items.slayer.SlayerGemItems)
         register(net.dodian.uber.game.content.items.slayer.SlayerMaskItems)
         register(net.dodian.uber.game.content.items.consumables.DrinkItems)
+        register(net.dodian.uber.game.content.items.consumables.FoodItems)
+        register(net.dodian.uber.game.content.items.herblore.GrimyHerbItems)
+        register(net.dodian.uber.game.content.items.herblore.HerbloreSuppliesItems)
+        register(net.dodian.uber.game.content.items.utility.GuideBookItems)
         register(net.dodian.uber.game.content.items.cosmetics.ToyItems)
         register(net.dodian.uber.game.content.items.equipment.RepairHintItems)
         register(net.dodian.uber.game.content.items.events.EventInfoItems)
+        register(net.dodian.uber.game.content.items.events.EventPackageItems)
     }
 
     fun register(content: ItemContent) {
@@ -41,4 +46,3 @@ object ItemContentRegistry {
         return byItemId[itemId]
     }
 }
-
