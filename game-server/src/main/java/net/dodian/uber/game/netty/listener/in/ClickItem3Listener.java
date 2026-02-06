@@ -1,9 +1,8 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.content.items.ItemDispatcher;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -45,7 +44,7 @@ public class ClickItem3Listener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.getPayload();
 
-        /* interfaceId */ readSignedWord(buf);
+        int interfaceId = readSignedWord(buf);
         int itemSlot = readUnsignedWordBigEndian(buf);
         int itemId = readSignedWordA(buf);
 
@@ -60,52 +59,8 @@ public class ClickItem3Listener implements PacketListener {
         }
         if (client.randomed || client.UsingAgility) return;
 
-        if (itemId == 11864 || itemId == 11865) {
-            int needed = 8 - client.freeSlots();
-            if (needed > 0) {
-                client.send(new SendMessage("you need " + needed + " empty inventory slots to disassemble the " + client.GetItemName(itemId).toLowerCase() + "."));
-            } else {
-                client.deleteItem(itemId, 1);
-                client.addItem(itemId == 11865 ? 11784 : 8921, 1);
-                client.addItem(4155, 1);
-                client.addItem(4156, 1);
-                client.addItem(4164, 1);
-                client.addItem(4166, 1);
-                client.addItem(4168, 1);
-                client.addItem(4551, 1);
-                client.addItem(6720, 1);
-                client.addItem(8923, 1);
-                client.checkItemUpdate();
-                client.send(new SendMessage("you disassemble the " + client.GetItemName(itemId).toLowerCase() + "."));
-            }
-        } else if (itemId == 11784) { //Uncharge black mask :O
-            int amountReturn = (int)(2_000_000D * 0.7);
-            if(client.addItem(995, amountReturn)) {
-                client.deleteItem(itemId, itemSlot, 1);
-                client.addItemSlot(8921, 1, itemSlot);
-                client.checkItemUpdate();
-            } else client.send(new SendMessage("You either need one free space or coins to not go beyond 2147million!"));
+        if (ItemDispatcher.tryHandle(client, 3, itemId, itemSlot, interfaceId)) {
+            return;
         }
-        if (itemId == 1921 || itemId == 4456) {
-            client.deleteItem(itemId, itemSlot, 1);
-            client.addItemSlot(1923, 1, itemSlot);
-            client.checkItemUpdate();
-        }
-        if (itemId >= 4458 && itemId <= 4482) {
-            client.deleteItem(itemId, itemSlot, 1);
-            client.addItemSlot(1980, 1, itemSlot);
-            client.checkItemUpdate();
-        }
-        if (itemId == 1783 || itemId == 1927 || itemId == 1929 || itemId == 4286 || itemId == 4687) {
-            client.deleteItem(itemId, itemSlot, 1);
-            client.addItemSlot(1925, 1, itemSlot);
-            client.checkItemUpdate();
-            if (itemId == 1927) {
-                client.requestAnim(0x33D, 0);
-                client.send(new SendMessage("You drank the milk and gained 15% magic penetration!"));
-            }
-        }
-        if (itemId == 4155) QuestSend.showMonsterLog(client);
-
     }
 }

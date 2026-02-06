@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.items.ItemDispatcher;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -40,7 +41,6 @@ public class ClickItemListener implements PacketListener {
         PacketListenerManager.register(122, new ClickItemListener());
     }
 
-    //<editor-fold desc="Packet Decoding Helpers">
     private int readSignedWordBigEndianA(ByteBuf buf) {
         int high = buf.readByte();
         int low = (buf.readByte() - 128) & 0xFF;
@@ -90,6 +90,10 @@ public class ClickItemListener implements PacketListener {
         if (client.playerItems[itemSlot] - 1 != itemId) {
             logger.warn("ClickItem Mismatch: Player {} tried to use item {} from slot {}, but found {}",
                     client.getPlayerName(), itemId, itemSlot, client.playerItems[itemSlot] - 1);
+            return;
+        }
+
+        if (ItemDispatcher.tryHandle(client, 1, itemId, itemSlot, interfaceId)) {
             return;
         }
 
