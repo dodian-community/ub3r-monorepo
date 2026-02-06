@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.buttons.player
+package net.dodian.uber.game.content.buttons.ui
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
@@ -13,4 +13,3 @@ object MorphButtons : ButtonContent {
         return true
     }
 }
-

@@ -1,9 +1,9 @@
-package net.dodian.uber.game.content.buttons.misc
+package net.dodian.uber.game.content.buttons.ui
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 
-object NoOpButtons : ButtonContent {
+object IgnoredButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
         26076,
         4130,
@@ -14,4 +14,3 @@ object NoOpButtons : ButtonContent {
 
     override fun onClick(client: Client, buttonId: Int): Boolean = true
 }
-

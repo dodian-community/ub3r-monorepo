@@ -14,7 +14,6 @@ import net.dodian.uber.game.content.buttons.dueling.DuelConfirmButtons
 import net.dodian.uber.game.content.buttons.emotes.SpecialEmoteButtons
 import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
 import net.dodian.uber.game.content.buttons.minigames.SlotsButtons
-import net.dodian.uber.game.content.buttons.misc.NoOpButtons
 import net.dodian.uber.game.content.buttons.magic.AutocastButtons
 import net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons
 import net.dodian.uber.game.content.buttons.magic.teleports.ArdougneTeleportButton
@@ -27,7 +26,6 @@ import net.dodian.uber.game.content.buttons.magic.teleports.SeersTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
 import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
-import net.dodian.uber.game.content.buttons.player.MorphButtons
 import net.dodian.uber.game.content.buttons.rewards.RewardLampButtons
 import net.dodian.uber.game.content.buttons.settings.BossYellButtons
 import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
@@ -36,7 +34,9 @@ import net.dodian.uber.game.content.buttons.skills.SkillGuideButtons
 import net.dodian.uber.game.content.buttons.trade.TradeConfirmButtons
 import net.dodian.uber.game.content.buttons.travel.TravelMenuButtons
 import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
+import net.dodian.uber.game.content.buttons.ui.IgnoredButtons
 import net.dodian.uber.game.content.buttons.ui.LogoutButtons
+import net.dodian.uber.game.content.buttons.ui.MorphButtons
 import net.dodian.uber.game.content.buttons.ui.RunButtons
 import net.dodian.uber.game.content.buttons.ui.SidebarButtons
 import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
@@ -88,7 +88,7 @@ object ButtonContentRegistry {
         register(SpecialEmoteButtons)
         register(MorphButtons)
         register(SlotsButtons)
-        register(NoOpButtons)
+        register(IgnoredButtons)
         register(TravelMenuButtons)
         register(PartyRoomDepositButtons)
         register(YanilleHomeTeleportButton)
