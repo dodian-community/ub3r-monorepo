@@ -4,12 +4,17 @@ import net.dodian.uber.game.content.buttons.appearance.AppearanceConfirmButtons
 import net.dodian.uber.game.content.buttons.banking.BankDepositButtons
 import net.dodian.uber.game.content.buttons.banking.BankInterfaceButtons
 import net.dodian.uber.game.content.buttons.crafting.LeatherCraftButtons
+import net.dodian.uber.game.content.buttons.crafting.GlassCraftButtons
 import net.dodian.uber.game.content.buttons.crafting.ProductionAmountButtons
 import net.dodian.uber.game.content.buttons.crafting.SmeltingButtons
 import net.dodian.uber.game.content.buttons.crafting.TanningButtons
 import net.dodian.uber.game.content.buttons.dialogue.NpcDialogueStateButtons
 import net.dodian.uber.game.content.buttons.dueling.DuelRuleButtons
+import net.dodian.uber.game.content.buttons.dueling.DuelConfirmButtons
+import net.dodian.uber.game.content.buttons.emotes.SpecialEmoteButtons
 import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
+import net.dodian.uber.game.content.buttons.minigames.SlotsButtons
+import net.dodian.uber.game.content.buttons.misc.NoOpButtons
 import net.dodian.uber.game.content.buttons.magic.AutocastButtons
 import net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons
 import net.dodian.uber.game.content.buttons.magic.teleports.ArdougneTeleportButton
@@ -22,12 +27,21 @@ import net.dodian.uber.game.content.buttons.magic.teleports.SeersTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
 import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
+import net.dodian.uber.game.content.buttons.player.MorphButtons
+import net.dodian.uber.game.content.buttons.rewards.RewardLampButtons
 import net.dodian.uber.game.content.buttons.settings.BossYellButtons
 import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
 import net.dodian.uber.game.content.buttons.settings.SettingsTabButtons
+import net.dodian.uber.game.content.buttons.skills.SkillGuideButtons
+import net.dodian.uber.game.content.buttons.trade.TradeConfirmButtons
 import net.dodian.uber.game.content.buttons.travel.TravelMenuButtons
 import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
+import net.dodian.uber.game.content.buttons.ui.LogoutButtons
+import net.dodian.uber.game.content.buttons.ui.RunButtons
+import net.dodian.uber.game.content.buttons.ui.SidebarButtons
 import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
+import net.dodian.uber.game.content.buttons.combat.CombatStyleButtons
+import net.dodian.uber.game.content.buttons.dialogue.DialogueOptionButtons
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import org.slf4j.LoggerFactory
@@ -50,17 +64,31 @@ object ButtonContentRegistry {
         register(BankDepositButtons)
         register(BankInterfaceButtons)
         register(ProductionAmountButtons)
+        register(GlassCraftButtons)
         register(SmeltingButtons)
         register(LeatherCraftButtons)
         register(TanningButtons)
         register(BowFletchingButtons)
         register(DuelRuleButtons)
+        register(DuelConfirmButtons)
         register(AppearanceConfirmButtons)
         register(AutocastButtons)
         register(SpellbookToggleButtons)
+        register(CombatStyleButtons)
         register(CloseInterfaceButtons)
         register(TabInterfaceButtons)
+        register(RunButtons)
+        register(LogoutButtons)
+        register(SidebarButtons)
         register(BossYellButtons)
+        register(DialogueOptionButtons)
+        register(RewardLampButtons)
+        register(TradeConfirmButtons)
+        register(SkillGuideButtons)
+        register(SpecialEmoteButtons)
+        register(MorphButtons)
+        register(SlotsButtons)
+        register(NoOpButtons)
         register(TravelMenuButtons)
         register(PartyRoomDepositButtons)
         register(YanilleHomeTeleportButton)
