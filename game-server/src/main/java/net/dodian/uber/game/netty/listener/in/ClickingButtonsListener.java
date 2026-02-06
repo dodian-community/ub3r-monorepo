@@ -2,7 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Emotes;
@@ -25,7 +24,6 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendFrame27;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.content.buttons.ButtonClickDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -142,152 +140,8 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
         switch (actionButton) {
-            case 44511: // Mystic settings tab: "More Settings" (swap wrench tab to basic settings/fog interface)
-                client.setSidebarInterface(11, 23000);
-                break;
-            case 23020: // Mystic basic settings: Confirm (restore original wrench/settings tab interface)
-                client.setSidebarInterface(11, 44500);
-                break;
-            case 58073:
-                client.send(new SendMessage("Visit the Dodian.net UserCP and click edit pin to remove your pin"));
-                break;
-            case 151:
-                client.NpcDialogue = 27;
-                client.NpcDialogueSend = false;
-                break;
-            case 150:
-                client.NpcDialogue = 26;
-                client.NpcDialogueSend = false;
-                break;
-            case 8198:
-                Balloons.acceptItems(client);
-                break;
-            case 83093:
-                                client.send(new SetTabInterface(21172, 3213));
-                break;
-            case 83051:
-            case 9118:
-            case 19022:
-                client.send(new RemoveInterfaces());
-                break;
-            case 24136:
-                client.yellOn = true;
-                client.send(new SendMessage("You enabled the boss yell messages."));
-                break;
-            case 24137:
-                client.yellOn = false;
-                client.send(new SendMessage("You disabled the boss yell messages."));
-                break;
-            case 89223:
-            case 50004: // Mystic "Deposit inventory" button
-                if(!client.IsBanking) {
-                    break;
-                }
-                for (int i = 0; i < client.playerItems.length; i++) {
-                    if (client.playerItems[i] > 0) {
-                        client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
-                    }
-                }
-                client.send(new SendMessage("You deposit all your items."));
-                client.checkItemUpdate();
-                break;
-            case 50007: // Mystic "Deposit worn items" button
-                if(!client.IsBanking) {
-                    break;
-                }
-                for (int i = 0; i < client.getEquipment().length; i++) {
-                    int equipId = client.getEquipment()[i];
-                    int equipAmount = client.getEquipmentN()[i];
-                    if (equipId > 0 && equipAmount > 0) {
-                        if (client.hasSpace()) {
-                            if (client.remove(i, false)) {
-                                client.addItem(equipId, equipAmount);
-                                client.bankItem(equipId, client.GetItemSlot(equipId), equipAmount);
-                            }
-                        }
-                    }
-                }
-                client.send(new SendMessage("You deposit your worn items."));
-                client.checkItemUpdate();
-                break;
-            case 3056: //Small tree
-            case 3057: //Big Tree
-            case 3058: //Mountain
-            case 3059: //Castle
-            case 3060: //Tent
-            case 48054: //totem!
-                int pos = client.skillX == 2772 && client.skillY == 3235 ? 5:
-                        client.skillX == 2864 && client.skillY == 2971 ? 4:
-                                client.skillX == 3511 && client.skillY == 3505 ? 2: 0;
-                client.travelTrigger(pos);
-                break;
-            case 75010:
-            case 84237: //Home teleport aka Yanille
-                client.triggerTele(2604 + Misc.random(6), 3101 + Misc.random(3), 0, false);
-                break;
-            case 4143: //Normal spellbook!
-            case 50235: //Seers
-                client.triggerTele(2722 + Misc.random(6), 3484 + Misc.random(2), 0, false);
-                break;
-            case 4146: //Normal spellbook!
-            case 50245: //Ardougne
-                client.triggerTele(2660 + Misc.random(4), 3306 + Misc.random(4), 0, false);
-                break;
-            case 4150: //Normal spellbook!
-            case 50253: // Catherby
-                client.triggerTele(2802 + Misc.random(4), 3432 + Misc.random(3), 0, false);
-                break;
-            case 6004: //Normal spellbook!
-            case 51005: //Legends guild
-                client.triggerTele(2726 + Misc.random(5), 3346 + Misc.random(2), 0, false);
-                break;
-            case 6005: //Normal spellbook!
-            case 51013: //Taverly
-                client.triggerTele(2893 + Misc.random(4), 3454 + Misc.random(3), 0, false);
-                break;
-            case 29031: //Normal spellbook!
-            case 51023: //Fishing guild
-                client.triggerTele(2596 + Misc.random(3), 3406 + Misc.random(4), 0, true);
-                break;
-            case 72038:
-            case 51031: //Gnome village
-                client.triggerTele(2472 + Misc.random(6), 3436 + Misc.random(3), 0, false);
-                break;
-            case 4140: //Normal spell book pvp teleport!
-            case 51039: //Edgeville teleport
-                client.triggerTele(3085 + Misc.random(4), 3488 + Misc.random(4), 0, false);
-                break;
-            case 74212:
-            case 49047: // old magic on
-            case 49046: // old magic off
-            case 23024:
-                if (client.ancients == 1) {
-                    client.setSidebarInterface(6, 1151); // magic tab (ancient =
-                    // 12855);
-                    client.ancients = 0;
-                    client.send(new SendMessage("Normal magic enabled"));
-                } else {
-                    client.setSidebarInterface(6, 12855); // magic tab (ancient =
-                    // 12855);
-                    client.ancients = 1;
-                    client.send(new SendMessage("Ancient magic enabled"));
-                }
-                break;
             case 26076:
                 // frame36(6575, 1);
-                break;
-            case 53245:
-            case 53246:
-            case 53247:
-            case 53248:
-            case 53249:
-            case 53250:
-            case 53251:
-            case 53252:
-            case 53253:
-            case 53254:
-            case 53255:
-                client.duelButton2(client.actionButtonId - 53245);
                 break;
             case 54074:
                 Server.slots.playSlots(client, -1);
@@ -315,161 +169,6 @@ public class ClickingButtonsListener implements PacketListener {
                     client.send(new SendString("Waiting for other player...", 6571));
                     o.send(new SendString("Other player has accepted", 6571));
                 }
-                break;
-            case 15147: // bronze
-            case 15146:
-            case 10247:
-            case 9110:
-            case 15151: // iron
-            case 15150:
-            case 15149:
-            case 15148:
-            case 15155: // silver
-            case 15154:
-            case 15153:
-            case 15152:
-            case 15159: // steel
-            case 15158:
-            case 15157:
-            case 15156:
-            case 15163: // gold
-            case 15162:
-            case 15161:
-            case 15160:
-            case 29017: // mithril
-            case 29016:
-            case 24253:
-            case 16062:
-            case 29022: // addy
-            case 29020:
-            case 29019:
-            case 29018:
-            case 29026: // rune
-            case 29025:
-            case 29024:
-            case 29023:
-                client.startSmelt(client.actionButtonId);
-                break;
-            case 34185:
-            case 34184: // vamps
-            case 34183:
-            case 34182:
-            case 34189: // chaps
-            case 34188:
-            case 34187:
-            case 34186:
-            case 34193:
-            case 34192:
-            case 34191:
-            case 34190:
-                client.startHideCraft(client.actionButtonId);
-                break;
-            case 33187: // armor
-            case 33186:
-            case 33185:
-            case 33190: // gloves
-            case 33189:
-            case 33188:
-            case 33193: // boots
-            case 33192:
-            case 33191:
-            case 33196: // vamps
-            case 33195:
-            case 33194:
-            case 33199: // chaps
-            case 33198:
-            case 33197:
-            case 33202: // coif
-            case 33201:
-            case 33200:
-            case 33205:// cowl
-            case 33204:
-            case 33203:
-                client.startCraft(client.actionButtonId);
-                break;
-            case 57225:
-                client.startTan(1, 0);
-                break;
-            case 57217:
-                client.startTan(5, 0);
-                break;
-            case 57201:
-            case 57209:
-                client.startTan(27, 0);
-                break;
-            case 57229: //Hard leather!
-                client.startTan(1, 1);
-                break;
-            case 57221:
-                client.startTan(5, 1);
-                break;
-            case 57205:
-            case 57213:
-                client.startTan(27, 1);
-                break;
-            case 57227:
-                client.startTan(1, 2);
-                break;
-            case 57219:
-                client.startTan(5, 2);
-                break;
-            case 57211:
-            case 57203:
-                client.startTan(27, 2);
-                break;
-            case 57228:
-                client.startTan(1, 3);
-                break;
-            case 57220:
-                client.startTan(5, 3);
-                break;
-            case 57212:
-            case 57204:
-                client.startTan(27, 3);
-                break;
-            case 57231:
-                client.startTan(1, 4);
-                break;
-            case 57223:
-                client.startTan(5, 4);
-                break;
-            case 57215:
-            case 57207:
-                client.startTan(27, 4);
-                break;
-            case 57232:
-                client.startTan(1, 5);
-                break;
-            case 57224:
-                client.startTan(5, 5);
-                break;
-            case 57216:
-            case 57208:
-                client.startTan(27, 5);
-                break;
-            case 10239: //make stuff 1
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 1;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 10238: //make stuff 5
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 5;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 6212: //make stuff 10 (x)
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 10;
-                client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 6211: //make stuff 28 (all)
-                if(client.playerSkillAction.isEmpty()) break;
-                client.send(new RemoveInterfaces());
-                client.skillActionCount = 28;
-                client.skillActionTimer = client.playerSkillAction.get(7);
                 break;
             case 44210: //Make one vial
             case 44209: //Make 5
@@ -522,30 +221,6 @@ public class ClickingButtonsListener implements PacketListener {
                 client.setSkill(CRAFTING.getId(), 567,  1, 1775, -1, 240, 884, 3);
                 client.skillActionCount = craftOrbAmount[actionButton - 48113];
                 client.skillActionTimer = client.playerSkillAction.get(7);
-                break;
-            case 34170:
-                client.fletching.fletchBow(client, true, 1);
-                break;
-            case 34169:
-                client.fletching.fletchBow(client, true, 5);
-                break;
-            case 34168:
-                client.fletching.fletchBow(client, true, 10);
-                break;
-            case 34167:
-                client.fletching.fletchBow(client, true, 27);
-                break;
-            case 34174: // 1
-                client.fletching.fletchBow(client, false, 1);
-                break;
-            case 34173: // 5
-                client.fletching.fletchBow(client, false, 5);
-                break;
-            case 34172: // 10
-                client.fletching.fletchBow(client, false, 10);
-                break;
-            case 34171:
-                client.fletching.fletchBow(client, false, 27);
                 break;
             case 10252:
             case 11000:
@@ -625,45 +300,7 @@ public class ClickingButtonsListener implements PacketListener {
                 break;
             case 4130: //Autocast on normal spellbook
                 break;
-            case 1097:
-            case 1094:
-            case 1093:
-                client.autocast_spellIndex = -1; //Reset autocast!
-                client.setSidebarInterface(0, 1689);
-                break;
-            case 51133:
-            case 51185:
-            case 51091:
-            case 24018:
-            case 51159:
-            case 51211:
-            case 51111:
-            case 51069:
-            case 51146:
-            case 51198:
-            case 51102:
-            case 51058:
-            case 51172:
-            case 51224:
-            case 51122:
-            case 51080:
-                for (int index = 0; index < client.ancientButton.length && client.autocast_spellIndex == -1; index++) {
-                    if (client.actionButtonId == client.ancientButton[index])
-                        client.autocast_spellIndex = index;
-                }
-                //client.setSidebarInterface(0, 328);
-                CombatStyleHandler.setWeaponHandler(client); //We need this apperently!
-                break;
-            case 24017:
-                CombatStyleHandler.setWeaponHandler(client);
-                break;
-
             case 2171: // Retribution
-                break;
-
-            case 3651://14067: //Apperance accepted!
-                client.send(new RemoveInterfaces());
-                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 break;
 
             case 152:
@@ -801,28 +438,6 @@ public class ClickingButtonsListener implements PacketListener {
                 }
                 // if(currentHealth > 0)
                 client.logout();
-                break;
-
-            case 21011:
-                if(!client.IsBanking) {
-                    break; //We do not need this function without you banking!
-                }
-                client.takeAsNote = !client.takeAsNote;
-                client.send(new SendString(client.takeAsNote ? "No Note" : "Note", 5389));
-                client.send(new SendMessage(client.takeAsNote ? "You can now note items." : "You can no longer note items."));
-                break;
-            case 21010:
-                if(!client.IsBanking) {
-                    break; //We do not need this function without you banking!
-                }
-                if (client.freeSlots() < 28) {
-                    for (int i = 0; i < 28; i++)
-                        if (client.playerItems[i] > 0)
-                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i]);
-                    client.send(new SendMessage("You bank all your items!"));
-                    client.checkItemUpdate();
-                } else
-                    client.send(new SendMessage("You do not have anything that can be banked!"));
                 break;
 
             case 13092:

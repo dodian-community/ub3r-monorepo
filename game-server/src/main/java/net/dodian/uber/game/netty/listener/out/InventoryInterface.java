@@ -14,6 +14,14 @@ public class InventoryInterface implements OutgoingPacket {
         this.inventoryId = inventoryId;
     }
 
+    public int getInterfaceId() {
+        return interfaceId;
+    }
+
+    public int getInventoryId() {
+        return inventoryId;
+    }
+
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(248);

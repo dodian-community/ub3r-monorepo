@@ -7,7 +7,7 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.content.npcs.action2.NpcAction2Dispatcher;
+import net.dodian.uber.game.content.npcs.NpcDispatcher;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -83,7 +83,7 @@ public class ClickNpc2Listener implements PacketListener {
         client.setSkillY(tempNpc.getPosition().getY());
         client.startFishing(npcId, 2);
 
-        if (NpcAction2Dispatcher.tryHandle(client, tempNpc, tempNpc.getSlot())) {
+        if (NpcDispatcher.tryHandle(client, 2, tempNpc, tempNpc.getSlot())) {
             return;
         }
 

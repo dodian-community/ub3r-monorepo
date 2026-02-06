@@ -17,6 +17,10 @@ public class ShowInterface implements OutgoingPacket {
         this.interfaceId = interfaceId;
     }
 
+    public int getInterfaceId() {
+        return interfaceId;
+    }
+
     @Override
     public void send(Client client) {
         //System.out.println("Show interface: " + interfaceId);
