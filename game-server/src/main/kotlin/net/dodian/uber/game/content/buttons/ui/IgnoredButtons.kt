@@ -7,7 +7,6 @@ object IgnoredButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
         26076,
         4130,
-        2171,
         130,
         3014, 3016, 3017,
     )
