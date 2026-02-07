@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.items.ItemDispatcher;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -14,7 +15,6 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.utilities.DbTables;
-import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,6 @@ public class ClickItemListener implements PacketListener {
         PacketListenerManager.register(122, new ClickItemListener());
     }
 
-    //<editor-fold desc="Packet Decoding Helpers">
     private int readSignedWordBigEndianA(ByteBuf buf) {
         int high = buf.readByte();
         int low = (buf.readByte() - 128) & 0xFF;
@@ -108,9 +107,9 @@ public class ClickItemListener implements PacketListener {
 
         boolean isHerb = (itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051;
         if (isHerb) {
-            processItemClick(client, itemId, itemSlot);
+            processItemClick(client, itemId, itemSlot, interfaceId);
         } else if (System.currentTimeMillis() - client.lastAction > 100) {
-            processItemClick(client, itemId, itemSlot);
+            processItemClick(client, itemId, itemSlot, interfaceId);
             client.lastAction = System.currentTimeMillis();
         }
     }
@@ -153,7 +152,7 @@ public class ClickItemListener implements PacketListener {
         }
     }
 
-    public void processItemClick(Client client, int id, int slot) {
+    public void processItemClick(Client client, int id, int slot, int interfaceId) {
         int item = client.playerItems[slot] - 1;
         if (item != id) {
             return; // might prevent stuff
@@ -173,87 +172,12 @@ public class ClickItemListener implements PacketListener {
         if (Prayer.buryBones(client, item, slot)) {
             return;
         }
+        if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
+            client.checkItemUpdate();
+            return;
+        }
         if (client.playerHasItem(item)) {
             switch (item) {
-                case 1856:
-                    used = false;
-                    client.guideBook();
-                    break;
-                case 199:
-                case 203:
-                case 207:
-                case 209:
-                case 213:
-                case 215:
-                case 217:
-                case 219:
-                case 3049: //Toadflax
-                case 3051: //Snapdragon
-                    for (int i = 0; i < Utils.grimy_herbs.length && used; i++) {
-                        if(Utils.grimy_herbs[i] == item) {
-                            used = false;
-                            if (Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE)) < Utils.grimy_herbs_lvl[i]) {
-                                client.send(new SendMessage("You need level " + Utils.grimy_herbs_lvl[i] + " herblore to clean this herb."));
-                            } else {
-                                client.giveExperience(Utils.grimy_herbs_xp[i], Skill.HERBLORE);
-                                client.deleteItem(item, slot, 1);
-                                client.addItemSlot(item == 3051 || item == 3049 ? item - 51 : item + 50, 1, slot);
-                                client.send(new SendMessage("You clean the "+client.GetItemName(item)+"."));
-                            }
-                        }
-                    }
-                    break;
-                case 315: //Shrimp
-                case 2140: //Chicken
-                case 2142: //Meat
-                    client.eat(3, item, slot);
-                    used = false;
-                    break;
-                case 2309: //Bread
-                    client.eat(5, item, slot);
-                    used = false;
-                    break;
-                case 3369: //Thin Snail
-                    client.eat(7, item, slot);
-                    used = false;
-                    break;
-                case 333: //Trout
-                    client.eat(8, item, slot);
-                    used = false;
-                    break;
-                case 329: //Salmon
-                    client.eat(10, item, slot);
-                    used = false;
-                    break;
-                case 379: //Lobster
-                    client.eat(12, item, slot);
-                    used = false;
-                    break;
-                case 373: //Swordfish
-                    client.eat(14, item, slot);
-                    used = false;
-                    break;
-                case 7946: //Monkfish
-                    client.eat(16, item, slot);
-                    used = false;
-                    break;
-                case 385: //Shark
-                    client.eat(20, item, slot);
-                    used = false;
-                    break;
-                case 397: //Sea turtle
-                    client.eat(22, item, slot);
-                    used = false;
-                    break;
-                case 391: //Manta ray
-                    client.eat(24, item, slot);
-                    used = false;
-                    break;
-                case 1959: //Pumpkin
-                case 1961: //Easter egg
-                    client.eat(2, item, slot);
-                    used = false;
-                    break;
                 case 121: // regular attack potion
                 case 123:
                 case 125:
@@ -463,86 +387,6 @@ public class ClickItemListener implements PacketListener {
                     client.NpcDialogueSend = false;
                     client.nextDiag = -1;
                     used = false;
-                    break;
-                case 11877:
-                    client.deleteItem(11877, slot, 1);
-                    if(!client.playerHasItem(230))
-                        client.addItemSlot(230,100, slot);
-                    else
-                        client.addItem(230, 100);
-                    used = false;
-                    break;
-                case 11879:
-                    client.deleteItem(11879, slot, 1);
-                    if(!client.playerHasItem(228))
-                        client.addItemSlot(228,100, slot);
-                    else
-                        client.addItem(228, 100);
-                    used = false;
-                    break;
-                case 12859:
-                    client.deleteItem(12859, slot,1);
-                    if(!client.playerHasItem(222))
-                        client.addItemSlot(222,100, slot);
-                    else
-                        client.addItem(222, 100);
-                    used = false;
-                    break;
-                case 6199:
-                    int[] idss = {6856, 6857, 6859, 6861, 6860, 6858};
-                    int rs = Utils.random(idss.length - 1);
-                    client.deleteItem(6199, 1);
-                    client.addItem(idss[rs], 1);
-                    client.send(new SendMessage("Thank you for waiting patiently on us, take this as a token of gratitude!"));
-                    used = false;
-                    break;
-                case 12854:
-                    used = false;
-                    int[] xPresents = {6542, 11996, 13345, 13346};
-                    int slotNeeded = 0;
-                    for (int xPresent : xPresents)
-                        if (!client.playerHasItem(xPresent))
-                            slotNeeded++;
-                    if (client.freeSlots() < slotNeeded) {
-                        client.send(new SendMessage("You need atleast " + slotNeeded + " free slot to open this!"));
-                        break;
-                    }
-                    client.deleteItem(item, 1);
-                    for (int xPresent : xPresents)
-                        client.addItem(xPresent, 3 + Misc.random(6));
-                    break;
-                case 6542:
-                case 11996:
-                case 13345:
-                case 13346:
-                    used = false;
-                    if (client.freeSlots() < 1) {
-                        client.send(new SendMessage("You need atleast one free slot to open this!"));
-                        break;
-                    }
-                    int[] randomEventItem = {12887, 12888, 12889, 12890, 12891, 13343, 13344, 13203};
-                    client.deleteItem(item, 1);
-                    client.addItem(11997, 55 + Misc.random(500));
-                    int chance = Misc.chance(1000);
-                    if (chance == 1) {
-                        int eventItemId = randomEventItem[Misc.random(randomEventItem.length - 1)];
-                        client.addItem(eventItemId, 1);
-                        client.send(new SendMessage("You found something of interest!"));
-                        client.yell(client.getPlayerName() + " just found " + client.GetItemName(eventItemId).toLowerCase() + " in a " + client.GetItemName(item).toLowerCase() + "!");
-                    }
-                    break;
-                case 11918:
-                    used = false;
-                    if (client.freeSlots() < 1) {
-                        client.send(new SendMessage("You need atleast one free slot to open this!"));
-                        break;
-                    }
-                    int[] halloweenMasks = {1053, 1055, 1057};
-                    client.deleteItem(item, 1);
-                    int maskId = halloweenMasks[Misc.random(halloweenMasks.length - 1)];
-                    client.addItem(maskId, 1);
-                    client.send(new SendMessage("You found a " + client.GetItemName(maskId).toLowerCase() + "!"));
-                    client.yell(client.getPlayerName() + " just found " + client.GetItemName(maskId).toLowerCase() + " in a " + client.GetItemName(item).toLowerCase() + "!");
                     break;
                 default:
                     used = false;

@@ -3,12 +3,19 @@ package net.dodian.uber.game.content.buttons
 import net.dodian.uber.game.content.buttons.appearance.AppearanceConfirmButtons
 import net.dodian.uber.game.content.buttons.banking.BankDepositButtons
 import net.dodian.uber.game.content.buttons.banking.BankInterfaceButtons
+import net.dodian.uber.game.content.buttons.combat.CombatStyleButtons
+import net.dodian.uber.game.content.buttons.crafting.GlassCraftButtons
 import net.dodian.uber.game.content.buttons.crafting.LeatherCraftButtons
 import net.dodian.uber.game.content.buttons.crafting.ProductionAmountButtons
 import net.dodian.uber.game.content.buttons.crafting.SmeltingButtons
 import net.dodian.uber.game.content.buttons.crafting.TanningButtons
+import net.dodian.uber.game.content.buttons.dialogue.DialogueOptionButtons
 import net.dodian.uber.game.content.buttons.dialogue.NpcDialogueStateButtons
+import net.dodian.uber.game.content.buttons.dueling.DuelConfirmButtons
+import net.dodian.uber.game.content.buttons.dueling.DuelOfferRuleButtons
 import net.dodian.uber.game.content.buttons.dueling.DuelRuleButtons
+import net.dodian.uber.game.content.buttons.emotes.BasicEmoteButtons
+import net.dodian.uber.game.content.buttons.emotes.SpecialEmoteButtons
 import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
 import net.dodian.uber.game.content.buttons.magic.AutocastButtons
 import net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons
@@ -21,12 +28,45 @@ import net.dodian.uber.game.content.buttons.magic.teleports.LegendsGuildTeleport
 import net.dodian.uber.game.content.buttons.magic.teleports.SeersTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButton
 import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
+import net.dodian.uber.game.content.buttons.minigames.SlotsButtons
 import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
+import net.dodian.uber.game.content.buttons.prayer.PrayerButtons
+import net.dodian.uber.game.content.buttons.quests.QuestMenuButtons
+import net.dodian.uber.game.content.buttons.rewards.RewardLampButtons
 import net.dodian.uber.game.content.buttons.settings.BossYellButtons
 import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
 import net.dodian.uber.game.content.buttons.settings.SettingsTabButtons
+import net.dodian.uber.game.content.buttons.skillguide.AgilitySkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.AttackSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.CookingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.CraftingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.DefenceSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FarmingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FiremakingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FishingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.FletchingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.HerbloreSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.HitpointsSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.MagicSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.MiningSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.PrayerSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.RangedSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.RunecraftingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.SkillGuideSubTabButtons
+import net.dodian.uber.game.content.buttons.skillguide.SlayerSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.SmithingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.StrengthSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.ThievingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.skillguide.WoodcuttingSkillGuideButtons
+import net.dodian.uber.game.content.buttons.trade.TradeConfirmButtons
 import net.dodian.uber.game.content.buttons.travel.TravelMenuButtons
 import net.dodian.uber.game.content.buttons.ui.CloseInterfaceButtons
+import net.dodian.uber.game.content.buttons.ui.IgnoredButtons
+import net.dodian.uber.game.content.buttons.ui.LogoutButtons
+import net.dodian.uber.game.content.buttons.ui.MorphButtons
+import net.dodian.uber.game.content.buttons.ui.QuestTabButtons
+import net.dodian.uber.game.content.buttons.ui.RunButtons
+import net.dodian.uber.game.content.buttons.ui.SidebarButtons
 import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -46,21 +86,61 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
+        register(QuestMenuButtons)
+        register(PrayerButtons)
         register(NpcDialogueStateButtons)
         register(BankDepositButtons)
         register(BankInterfaceButtons)
         register(ProductionAmountButtons)
+        register(GlassCraftButtons)
         register(SmeltingButtons)
         register(LeatherCraftButtons)
         register(TanningButtons)
         register(BowFletchingButtons)
+        register(DuelOfferRuleButtons)
         register(DuelRuleButtons)
+        register(DuelConfirmButtons)
         register(AppearanceConfirmButtons)
         register(AutocastButtons)
         register(SpellbookToggleButtons)
+        register(CombatStyleButtons)
         register(CloseInterfaceButtons)
         register(TabInterfaceButtons)
+        register(RunButtons)
+        register(LogoutButtons)
+        register(SidebarButtons)
+        register(QuestTabButtons)
         register(BossYellButtons)
+        register(DialogueOptionButtons)
+        register(RewardLampButtons)
+        register(TradeConfirmButtons)
+        register(AttackSkillGuideButtons)
+        register(HitpointsSkillGuideButtons)
+        register(MiningSkillGuideButtons)
+        register(StrengthSkillGuideButtons)
+        register(AgilitySkillGuideButtons)
+        register(DefenceSkillGuideButtons)
+        register(RangedSkillGuideButtons)
+        register(PrayerSkillGuideButtons)
+        register(ThievingSkillGuideButtons)
+        register(HerbloreSkillGuideButtons)
+        register(CraftingSkillGuideButtons)
+        register(SmithingSkillGuideButtons)
+        register(WoodcuttingSkillGuideButtons)
+        register(MagicSkillGuideButtons)
+        register(FiremakingSkillGuideButtons)
+        register(CookingSkillGuideButtons)
+        register(RunecraftingSkillGuideButtons)
+        register(FletchingSkillGuideButtons)
+        register(FishingSkillGuideButtons)
+        register(SlayerSkillGuideButtons)
+        register(FarmingSkillGuideButtons)
+        register(SkillGuideSubTabButtons)
+        register(BasicEmoteButtons)
+        register(SpecialEmoteButtons)
+        register(MorphButtons)
+        register(SlotsButtons)
+        register(IgnoredButtons)
         register(TravelMenuButtons)
         register(PartyRoomDepositButtons)
         register(YanilleHomeTeleportButton)
