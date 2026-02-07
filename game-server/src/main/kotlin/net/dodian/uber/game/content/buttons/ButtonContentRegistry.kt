@@ -12,7 +12,9 @@ import net.dodian.uber.game.content.buttons.crafting.TanningButtons
 import net.dodian.uber.game.content.buttons.dialogue.DialogueOptionButtons
 import net.dodian.uber.game.content.buttons.dialogue.NpcDialogueStateButtons
 import net.dodian.uber.game.content.buttons.dueling.DuelConfirmButtons
+import net.dodian.uber.game.content.buttons.dueling.DuelOfferRuleButtons
 import net.dodian.uber.game.content.buttons.dueling.DuelRuleButtons
+import net.dodian.uber.game.content.buttons.emotes.BasicEmoteButtons
 import net.dodian.uber.game.content.buttons.emotes.SpecialEmoteButtons
 import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
 import net.dodian.uber.game.content.buttons.magic.AutocastButtons
@@ -28,6 +30,8 @@ import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButto
 import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
 import net.dodian.uber.game.content.buttons.minigames.SlotsButtons
 import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
+import net.dodian.uber.game.content.buttons.prayer.PrayerButtons
+import net.dodian.uber.game.content.buttons.quests.QuestMenuButtons
 import net.dodian.uber.game.content.buttons.rewards.RewardLampButtons
 import net.dodian.uber.game.content.buttons.settings.BossYellButtons
 import net.dodian.uber.game.content.buttons.settings.PinHelpButtons
@@ -82,6 +86,8 @@ object ButtonContentRegistry {
         }
         register(PinHelpButtons)
         register(SettingsTabButtons)
+        register(QuestMenuButtons)
+        register(PrayerButtons)
         register(NpcDialogueStateButtons)
         register(BankDepositButtons)
         register(BankInterfaceButtons)
@@ -91,6 +97,7 @@ object ButtonContentRegistry {
         register(LeatherCraftButtons)
         register(TanningButtons)
         register(BowFletchingButtons)
+        register(DuelOfferRuleButtons)
         register(DuelRuleButtons)
         register(DuelConfirmButtons)
         register(AppearanceConfirmButtons)
@@ -129,6 +136,7 @@ object ButtonContentRegistry {
         register(SlayerSkillGuideButtons)
         register(FarmingSkillGuideButtons)
         register(SkillGuideSubTabButtons)
+        register(BasicEmoteButtons)
         register(SpecialEmoteButtons)
         register(MorphButtons)
         register(SlotsButtons)
