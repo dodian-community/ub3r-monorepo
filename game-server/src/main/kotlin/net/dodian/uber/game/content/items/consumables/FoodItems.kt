@@ -5,7 +5,21 @@ import net.dodian.uber.game.model.entity.player.Client
 
 object FoodItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(
-        315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391, 1959, 1961,
+        315,  // Shrimps
+        2140, // Cooked chicken
+        2142, // Cooked meat
+        2309, // Bread
+        3369, // Thin snail meat
+        333,  // Trout
+        329,  // Salmon
+        379,  // Lobster
+        373,  // Swordfish
+        7946, // Monkfish
+        385,  // Shark
+        397,  // Sea turtle
+        391,  // Manta ray
+        1959, // Pumpkin
+        1961, // Easter egg
     )
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
