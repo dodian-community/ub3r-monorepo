@@ -12,6 +12,11 @@ object NpcContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
+        register(net.dodian.uber.game.content.npcs.yanille.Rat)
+        register(net.dodian.uber.game.content.npcs.yanille.Cow)
+        register(net.dodian.uber.game.content.npcs.yanille.BattleMage)
+        register(net.dodian.uber.game.content.npcs.yanille.AbyssalGuardian)
+        register(net.dodian.uber.game.content.npcs.yanille.MakeoverMage)
         register(net.dodian.uber.game.content.npcs.yanille.Guards)
         register(net.dodian.uber.game.content.npcs.yanille.Monk)
         register(net.dodian.uber.game.content.npcs.yanille.Shopkeepers)
