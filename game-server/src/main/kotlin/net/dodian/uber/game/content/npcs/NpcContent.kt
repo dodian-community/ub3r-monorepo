@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 
 interface NpcContent {
     val npcIds: IntArray
+    fun spawns(): List<NpcSpawnDef> = emptyList()
 
     fun onFirstClick(client: Client, npc: Npc, npcIndex: Int): Boolean = false
     fun onSecondClick(client: Client, npc: Npc, npcIndex: Int): Boolean = false
@@ -14,4 +15,3 @@ interface NpcContent {
 
     fun onAttack(client: Client, npc: Npc, npcIndex: Int): Boolean = false
 }
-

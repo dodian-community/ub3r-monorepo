@@ -722,6 +722,32 @@ public class Npc extends Entity {
         return combat;
     }
 
+    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic) {
+        if (respawnTicks > 0) {
+            respawn = respawnTicks;
+        }
+        if (defence >= 0) {
+            level[0] = defence;
+        }
+        if (attack >= 0) {
+            level[1] = attack;
+        }
+        if (strength >= 0) {
+            level[2] = strength;
+        }
+        if (ranged >= 0) {
+            level[4] = ranged;
+        }
+        if (magic >= 0) {
+            level[6] = magic;
+        }
+        if (hitpoints > 0) {
+            maxHealth = hitpoints;
+            currentHealth = hitpoints;
+        }
+        CalculateMaxHit(true);
+    }
+
     public void setLastAttack(int lastAttack) {
         this.lastAttack = lastAttack;
     }

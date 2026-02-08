@@ -3,6 +3,8 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
+import net.dodian.uber.game.content.npcs.NpcContentRegistry;
+import net.dodian.uber.game.content.npcs.NpcSpawnDef;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -77,7 +79,51 @@ public class NpcManager {
         createNpc(2265, new Position(3251, 2794, 0), 2);
         extraSpawns += 2;
 
+        int contentSpawns = loadContentSpawns();
+        extraSpawns += contentSpawns;
+
         System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
+    }
+
+    private int loadContentSpawns() {
+        int loaded = 0;
+        try {
+            for (NpcSpawnDef spawn : NpcContentRegistry.getSpawnDefinitions()) {
+                Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
+                if (hasSpawnAt(spawn.getNpcId(), position)) {
+                    continue;
+                }
+                Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
+                if (npc == null) {
+                    continue;
+                }
+                npc.applySpawnOverrides(
+                        spawn.getRespawnTicks(),
+                        spawn.getAttack(),
+                        spawn.getDefence(),
+                        spawn.getStrength(),
+                        spawn.getHitpoints(),
+                        spawn.getRanged(),
+                        spawn.getMagic()
+                );
+                loaded++;
+            }
+        } catch (Exception e) {
+            System.out.println("Something went wrong while loading content NPC spawns: " + e);
+            e.printStackTrace();
+        }
+        return loaded;
+    }
+
+    private boolean hasSpawnAt(int npcId, Position position) {
+        for (Npc npc : npcs.values()) {
+            if (npc.getId() != npcId) continue;
+            Position npcPosition = npc.getPosition();
+            if (npcPosition.getX() == position.getX() && npcPosition.getY() == position.getY() && npcPosition.getZ() == position.getZ()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void reloadDrops(Client c, int id) {
@@ -227,9 +273,11 @@ public class NpcManager {
             e.printStackTrace(); // Print stack trace for better debugging
         }
     }
-    public void createNpc(int id, Position position, int face) {
-        npcs.put(nextIndex, new Npc(nextIndex, id, position, face));
+    public Npc createNpc(int id, Position position, int face) {
+        Npc npc = new Npc(nextIndex, id, position, face);
+        npcs.put(nextIndex, npc);
         nextIndex++;
+        return npc;
     }
 
     public Npc getNpc(int index) {

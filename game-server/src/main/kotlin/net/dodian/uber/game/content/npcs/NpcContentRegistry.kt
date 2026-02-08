@@ -9,6 +9,7 @@ object NpcContentRegistry {
 
     private val loaded = AtomicBoolean(false)
     private val byNpcId = ConcurrentHashMap<Int, NpcContent>()
+    private val contents = mutableListOf<NpcContent>()
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
@@ -17,13 +18,14 @@ object NpcContentRegistry {
         register(net.dodian.uber.game.content.npcs.yanille.BattleMage)
         register(net.dodian.uber.game.content.npcs.yanille.AbyssalGuardian)
         register(net.dodian.uber.game.content.npcs.yanille.MakeoverMage)
-        register(net.dodian.uber.game.content.npcs.yanille.Guards)
+        register(net.dodian.uber.game.content.npcs.yanille.GuardNpc)
         register(net.dodian.uber.game.content.npcs.yanille.Monk)
         register(net.dodian.uber.game.content.npcs.yanille.Shopkeepers)
         register(net.dodian.uber.game.content.npcs.yanille.Farmers)
     }
 
     fun register(content: NpcContent) {
+        contents.add(content)
         for (npcId in content.npcIds) {
             val existing = byNpcId.putIfAbsent(npcId, content)
             if (existing != null) {
@@ -40,5 +42,11 @@ object NpcContentRegistry {
     fun get(npcId: Int): NpcContent? {
         ensureLoaded()
         return byNpcId[npcId]
+    }
+
+    @JvmStatic
+    fun getSpawnDefinitions(): List<NpcSpawnDef> {
+        ensureLoaded()
+        return contents.flatMap { it.spawns() }
     }
 }
