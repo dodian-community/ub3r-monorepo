@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import java.text.DecimalFormat;
 
 public enum QuestSend {
-    PLAGUE_DOCKS(0, 7332, 28164,5,  "Mysterium of the Docks"), EMPTY_1(1, 7333, -1, 5, ""), EMPTY_2(2, 7334, -1, 10,
+    PLAGUE_DOCKS(0, 7332, 7332,5,  "Mysterium of the Docks"), EMPTY_1(1, 7333, -1, 5, ""), EMPTY_2(2, 7334, -1, 10,
             ""), EMPTY_3(3, 7336, -1, 10, ""), EMPTY_4(4, 7383, -1, 10, ""), EMPTY_5(5, 7339, -1, 10, ""), EMPTY_6(6, 7338, -1, 10,
             ""), EMPTY_7(7, 7340, -1, 10, ""), EMPTY_8(8, 7346, -1, 10, ""), EMPTY_9(9, 7341, -1, 10, ""), EMPTY_10(10, 7342, -1, 10,
             ""), EMPTY_11(11, 7337, -1, 10, ""), EMPTY_12(12, 7343, -1, 10, ""), EMPTY_13(13, 7335, -1, 10, ""), EMPTY_14(14,
@@ -109,7 +109,7 @@ public enum QuestSend {
              }
          } else {
              switch(button) {
-                 case 28164: //Boss log
+                 case 7332: //Boss log
                      c.send(new SendString("@dre@Uber Server 3.0 - Boss Log", 8144));
                      c.clearQuestInterface();
                      int line = 8145;
@@ -127,7 +127,7 @@ public enum QuestSend {
                      c.sendQuestSomething(8143);
                      c.showInterface(8134);
                  return true;
-                 case 28165: //Monster Log
+                 case 7333: //Monster Log
                      c.send(new SendString("@dre@Uber Server 3.0 - Monster Log", 8144));
                      c.clearQuestInterface();
                      line = 8145;
@@ -144,13 +144,13 @@ public enum QuestSend {
                      c.sendQuestSomething(8143);
                      c.showInterface(8134);
                      return true;
-                 case 28215: //News
+                 case 7383: //News
                      Player.openPage(c, "https://dodian.net/showthread.php?t="+c.latestNews);
                      return true;
-                 case 28171: //Guides
+                 case 7339: //Guides
                      Player.openPage(c, "https://dodian.net/forumdisplay.php?f=22");
                      return true;
-                 case 28166: //Commands
+                 case 7334: //Commands
                      c.send(new SendString("@dre@Uber Server 3.0 - Commands", 8144));
                      c.clearQuestInterface();
                      line = 8145;
@@ -191,14 +191,14 @@ public enum QuestSend {
                      c.sendQuestSomething(8143);
                      c.showInterface(8134);
                      return true;
-                 case 28170: //Account service
+                 case 7338: //Account service
                      c.openPage(c, "https://dodian.net/forumdisplay.php?f=83");
                      return true;
-                 case 28172: //Discord
+                 case 7340: //Discord
                      c.discord = true;
                      c.showPlayerOption(new String[]{"Are you sure you wish to open discord invite?", "Yes", "No"});
                  return true;
-                 case 28173:
+                 case 7341:
                      Player.openPage(c, "https://dodian.net/index.php?pageid=modcp");
                  return true;
              }
@@ -210,9 +210,9 @@ public enum QuestSend {
         boolean wasPage = c.questPage == 0;
         if(wasPage) {
             c.questPage = 1;
-            QuestSend.questMenu(c, 28165);
+            QuestSend.questMenu(c, 7333);
             if(wasPage) c.questPage = 0;
-        } else QuestSend.questMenu(c, 28165);
+        } else QuestSend.questMenu(c, 7333);
     }
 
     public static void clearQuestName(Client c) {
