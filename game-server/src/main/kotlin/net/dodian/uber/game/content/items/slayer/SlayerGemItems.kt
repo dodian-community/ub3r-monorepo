@@ -7,6 +7,16 @@ import net.dodian.uber.game.model.player.quests.QuestSend
 object SlayerGemItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(4155)
 
+    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
+        if (client.inTrade || client.inDuel) {
+            return true
+        }
+        client.NpcDialogue = 15
+        client.NpcDialogueSend = false
+        client.nextDiag = -1
+        return true
+    }
+
     override fun onSecondClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         client.NpcDialogue = 16
         client.NpcDialogueSend = false
@@ -19,4 +29,3 @@ object SlayerGemItems : ItemContent {
         return true
     }
 }
-
