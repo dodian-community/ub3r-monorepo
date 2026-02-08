@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 
 interface NpcContent {
     val npcIds: IntArray
+    fun npcDataPresets(): List<NpcDataPreset> = emptyList()
     fun spawns(): List<NpcSpawnDef> = emptyList()
 
     fun onFirstClick(client: Client, npc: Npc, npcIndex: Int): Boolean = false

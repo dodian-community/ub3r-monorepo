@@ -197,8 +197,8 @@ public class Npc extends Entity {
         CalculateMaxHit(true);
         String[] commando = {
                 "id - " + this.getId(),
-                "name - " + data.getName(),
-                "combat - " + data.getCombat(),
+                "name - " + npcName(),
+                "combat - " + getCombatLevel(),
                 "attackEmote - " + data.getAttackEmote(),
                 "deathEmote - " + data.getDeathEmote(),
                 "hitpoints - " + data.getHP(),
