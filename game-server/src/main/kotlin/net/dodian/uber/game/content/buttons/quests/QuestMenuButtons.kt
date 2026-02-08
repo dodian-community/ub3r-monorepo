@@ -9,7 +9,7 @@ object QuestMenuButtons : ButtonContent {
         QuestSend.values()
             .map { it.clickId }
             .filter { it != -1 } +
-            listOf(28165, 28215, 28171, 28166, 28170, 28172, 28173)
+            listOf(7333, 7383, 7339, 7334, 7338, 7340, 7341)
         ).distinct().toIntArray()
 
     override fun onClick(client: Client, buttonId: Int): Boolean {

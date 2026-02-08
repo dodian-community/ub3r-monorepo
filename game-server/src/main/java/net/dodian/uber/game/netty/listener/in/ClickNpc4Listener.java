@@ -7,6 +7,7 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.content.npcs.NpcDispatcher;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -65,6 +66,9 @@ public class ClickNpc4Listener implements PacketListener {
         int npcId = tempNpc.getId();
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
+        if (NpcDispatcher.tryHandle(client, 4, tempNpc, tempNpc.getSlot())) {
+            return;
+        }
         if (npcId == 4753) {
             client.NpcWanneTalk = 4757;
         }
