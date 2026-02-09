@@ -2,7 +2,6 @@ package net.dodian.uber.game.content.npcs
 
 data class NpcSpawnDef(
     val npcId: Int,
-    val npcDataSlot: Int = -1,
     val x: Int,
     val y: Int,
     val z: Int = 0,
