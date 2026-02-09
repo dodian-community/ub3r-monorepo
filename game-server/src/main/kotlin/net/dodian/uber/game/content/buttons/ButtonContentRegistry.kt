@@ -19,15 +19,8 @@ import net.dodian.uber.game.content.buttons.emotes.SpecialEmoteButtons
 import net.dodian.uber.game.content.buttons.fletching.BowFletchingButtons
 import net.dodian.uber.game.content.buttons.magic.AutocastButtons
 import net.dodian.uber.game.content.buttons.magic.SpellbookToggleButtons
-import net.dodian.uber.game.content.buttons.magic.teleports.ArdougneTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.CatherbyTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.EdgevilleTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.FishingGuildTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.GnomeVillageTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.LegendsGuildTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.SeersTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.TaverlyTeleportButton
-import net.dodian.uber.game.content.buttons.magic.teleports.YanilleHomeTeleportButton
+import net.dodian.uber.game.content.buttons.magic.teleports.AncientTeleportButtons
+import net.dodian.uber.game.content.buttons.magic.teleports.NormalTeleportButtons
 import net.dodian.uber.game.content.buttons.minigames.SlotsButtons
 import net.dodian.uber.game.content.buttons.partyroom.PartyRoomDepositButtons
 import net.dodian.uber.game.content.buttons.prayer.PrayerButtons
@@ -143,15 +136,8 @@ object ButtonContentRegistry {
         register(IgnoredButtons)
         register(TravelMenuButtons)
         register(PartyRoomDepositButtons)
-        register(YanilleHomeTeleportButton)
-        register(SeersTeleportButton)
-        register(ArdougneTeleportButton)
-        register(CatherbyTeleportButton)
-        register(LegendsGuildTeleportButton)
-        register(TaverlyTeleportButton)
-        register(FishingGuildTeleportButton)
-        register(GnomeVillageTeleportButton)
-        register(EdgevilleTeleportButton)
+        register(AncientTeleportButtons)
+        register(NormalTeleportButtons)
     }
 
     fun register(content: ButtonContent) {

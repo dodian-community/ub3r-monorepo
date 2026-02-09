@@ -197,8 +197,8 @@ public class Npc extends Entity {
         CalculateMaxHit(true);
         String[] commando = {
                 "id - " + this.getId(),
-                "name - " + data.getName(),
-                "combat - " + data.getCombat(),
+                "name - " + npcName(),
+                "combat - " + getCombatLevel(),
                 "attackEmote - " + data.getAttackEmote(),
                 "deathEmote - " + data.getDeathEmote(),
                 "hitpoints - " + data.getHP(),
@@ -720,6 +720,32 @@ public class Npc extends Entity {
      */
     public int getCombatLevel() {
         return combat;
+    }
+
+    public void applySpawnOverrides(int respawnTicks, int attack, int defence, int strength, int hitpoints, int ranged, int magic) {
+        if (respawnTicks > 0) {
+            respawn = respawnTicks;
+        }
+        if (defence >= 0) {
+            level[0] = defence;
+        }
+        if (attack >= 0) {
+            level[1] = attack;
+        }
+        if (strength >= 0) {
+            level[2] = strength;
+        }
+        if (ranged >= 0) {
+            level[4] = ranged;
+        }
+        if (magic >= 0) {
+            level[6] = magic;
+        }
+        if (hitpoints > 0) {
+            maxHealth = hitpoints;
+            currentHealth = hitpoints;
+        }
+        CalculateMaxHit(true);
     }
 
     public void setLastAttack(int lastAttack) {
