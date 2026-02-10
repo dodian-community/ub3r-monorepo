@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.entity.npc;
 
+import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
@@ -44,6 +45,12 @@ public class Npc extends Entity {
     public NpcData data;
     private boolean fighting = false;
     private final int[] level = new int[7];
+    private int spawnWalkRadius = 0;
+    private int spawnAttackRange = 6;
+    private boolean spawnAlwaysActive = false;
+    private Function1<Client, Boolean> spawnCondition = defaultSpawnCondition();
+    private int pendingWalkingDirection = -1;
+    private boolean walking = false;
 
     public Npc(int slot, int id, Position position, int face) {
         super(position.copy(), slot, Entity.Type.NPC);
@@ -165,6 +172,8 @@ public class Npc extends Entity {
 
     public void clearUpdateFlags() {
         direction = -1;
+        pendingWalkingDirection = -1;
+        walking = false;
         getUpdateFlags().clear();
     }
 
@@ -185,7 +194,7 @@ public class Npc extends Entity {
     }
 
     public boolean isWalking() {
-        return false;
+        return walking;
     }
 
     private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
@@ -344,7 +353,7 @@ public class Npc extends Entity {
                 type = chance == 6 ? Misc.chance(2) : type;
                 for (Entity e : getDamage().keySet()) {
                     if (e instanceof Player) {
-                        if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
+                        if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
                             continue;
                         if(((Client) e).attackingNpc) {
                             enemy = Server.playerHandler.getClient(e.getSlot());
@@ -590,6 +599,8 @@ public class Npc extends Entity {
         getPosition().moveTo(getOriginalPosition().getX(), getOriginalPosition().getY());
         setAlive(true);
         visible = true;
+        pendingWalkingDirection = -1;
+        walking = false;
         currentHealth = maxHealth;
         hadFrenzy = false;
         inFrenzy = -1;
@@ -611,7 +622,7 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1))
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
@@ -629,7 +640,7 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), 6) || ((Player) e).getCurrentHealth() < 1 || first == e))
+                if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || first == e))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
@@ -642,16 +653,10 @@ public class Npc extends Entity {
     }
 
     public int getNextWalkingDirection() {
-        int dir;
-        int moveY = 0;
-        int moveX = 0;
-        dir = Utils.direction(getPosition().getX(), getPosition().getY(), (getPosition().getX() + moveX),
-                (getPosition().getY() + moveY));
-        if (dir == -1) {
-            return -1;
-        }
-        dir >>= 1;
-        return dir;
+        int direction = pendingWalkingDirection;
+        pendingWalkingDirection = -1;
+        walking = false;
+        return direction;
     }
 
     /**
@@ -746,6 +751,55 @@ public class Npc extends Entity {
             currentHealth = hitpoints;
         }
         CalculateMaxHit(true);
+    }
+
+    public void applySpawnBehaviorOverrides(int walkRadius, int attackRange, boolean alwaysActive, Function1<? super Client, Boolean> condition) {
+        spawnWalkRadius = Math.max(walkRadius, 0);
+        spawnAttackRange = attackRange > 0 ? attackRange : 6;
+        spawnAlwaysActive = alwaysActive;
+        if (condition == null) {
+            spawnCondition = defaultSpawnCondition();
+        } else {
+            spawnCondition = client -> Boolean.TRUE.equals(condition.invoke(client));
+        }
+    }
+
+    public boolean canBeSeenBy(Client client) {
+        if (client == null) {
+            return false;
+        }
+        try {
+            return Boolean.TRUE.equals(spawnCondition.invoke(client));
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public int getEffectiveAttackRange() {
+        return spawnAttackRange > 0 ? spawnAttackRange : 6;
+    }
+
+    public int getWalkRadius() {
+        return Math.max(spawnWalkRadius, 0);
+    }
+
+    public boolean isSpawnAlwaysActive() {
+        return spawnAlwaysActive;
+    }
+
+    private static Function1<Client, Boolean> defaultSpawnCondition() {
+        return client -> true;
+    }
+
+    public void markWalkStep(int fromX, int fromY, int toX, int toY) {
+        int dir = Utils.direction(fromX, fromY, toX, toY);
+        if (dir == -1) {
+            pendingWalkingDirection = -1;
+            walking = false;
+            return;
+        }
+        pendingWalkingDirection = dir >> 1;
+        walking = true;
     }
 
     public void setLastAttack(int lastAttack) {

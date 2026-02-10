@@ -2,6 +2,8 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -13,14 +15,18 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class EntityProcessor implements Job {
 
     public void execute(JobExecutionContext context) throws JobExecutionException {
         long now = System.currentTimeMillis();
+        Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
 
         // Process NPCs
         for (Npc npc : Server.npcManager.getNpcs()) {
-            processNpc(now, npc);
+            processNpc(now, npc, activeNpcChunks);
         }
 
         // End server when update finished
@@ -63,7 +69,11 @@ public class EntityProcessor implements Job {
         }
     }
 
-    private void processNpc(long now, Npc npc) {
+    private void processNpc(long now, Npc npc, Set<Chunk> activeNpcChunks) {
+        if (!shouldProcessNpc(npc, activeNpcChunks)) {
+            return;
+        }
+
         if (!npc.isFighting() && npc.isAlive()) {
             npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
         }
@@ -89,8 +99,87 @@ public class EntityProcessor implements Job {
             handleNpcSpecialCases(npc);
         }
 
+        handleNpcRoaming(npc);
         npc.effectChange();
         handleNpcRandomActions(npc);
+    }
+
+    private boolean shouldProcessNpc(Npc npc, Set<Chunk> activeNpcChunks) {
+        if (npc == null) {
+            return false;
+        }
+        if (npc.isSpawnAlwaysActive()) {
+            return true;
+        }
+        return activeNpcChunks.contains(npc.getPosition().getChunk());
+    }
+
+    static boolean withinWalkRadius(Position origin, int targetX, int targetY, int walkRadius) {
+        if (walkRadius <= 0) {
+            return true;
+        }
+        return Math.abs(targetX - origin.getX()) <= walkRadius && Math.abs(targetY - origin.getY()) <= walkRadius;
+    }
+
+    private void handleNpcRoaming(Npc npc) {
+        if (!npc.isAlive() || !npc.isVisible() || npc.isFighting()) {
+            return;
+        }
+
+        int walkRadius = npc.getWalkRadius();
+        if (walkRadius <= 0) {
+            return;
+        }
+
+        // Keep idle roaming sparse to avoid jittery movement.
+        if (Misc.chance(10) != 1) {
+            return;
+        }
+
+        final int[][] deltas = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1},  {1, 0},  {1, 1}
+        };
+
+        for (int attempt = 0; attempt < deltas.length; attempt++) {
+            int[] delta = deltas[Utils.random(deltas.length - 1)];
+            int dx = delta[0];
+            int dy = delta[1];
+
+            int fromX = npc.getPosition().getX();
+            int fromY = npc.getPosition().getY();
+            int toX = fromX + dx;
+            int toY = fromY + dy;
+
+            if (!withinWalkRadius(npc.getOriginalPosition(), toX, toY, walkRadius)) {
+                continue;
+            }
+            if (!npc.canMove(dx, dy)) {
+                continue;
+            }
+
+            npc.moveTo(toX, toY, npc.getPosition().getZ());
+            npc.markWalkStep(fromX, fromY, toX, toY);
+            return;
+        }
+    }
+
+    static Set<Chunk> buildActiveNpcChunks() {
+        Set<Chunk> activeChunks = new HashSet<>();
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || player.disconnected || !player.isActive) {
+                continue;
+            }
+            Chunk center = player.getPosition().getChunk();
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    activeChunks.add(center.translate(dx, dy));
+                }
+            }
+        }
+        return activeChunks;
     }
 
     private void handleNpcDeath(Npc npc) {

@@ -9,7 +9,6 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.content.npcs.NpcDispatcher;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -118,10 +117,6 @@ public class ClickNpcListener implements PacketListener {
 
         /* Fishing spots */
         client.startFishing(npcId, 1);
-
-        if (NpcDispatcher.tryHandle(client, 1, tempNpc, tempNpc.getSlot())) {
-            return;
-        }
 
         // The remainder of the gigantic switch/if-else chain from the legacy handler is preserved below.
         // It has been copied verbatim with minimal adjustments for readability.

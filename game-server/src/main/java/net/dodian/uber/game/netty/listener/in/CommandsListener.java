@@ -287,17 +287,19 @@ public class CommandsListener implements PacketListener {
                         if(n == null)
                             client.send(new SendMessage("Could not find a npc on this spot!"));
                         else {
-                            int x = n.getPosition().getX(), y = n.getPosition().getY(), z = n.getPosition().getZ();
                             int faceCheck = n.getFace();
-                            if(faceCheck != face) { //Update face on the sql aswell as ingame!
-                                try (java.sql.Connection conn = getDbConnection();
-                                     Statement stm = conn.createStatement()) {
-                                    n.setFace(face);
-                                    client.send(new SendMessage("You set the face of the npc from " + faceCheck + " to " + face + "!"));
-                                    stm.executeUpdate("UPDATE uber3_spawn SET face='"+face+"' where x="+x+" && y="+y+" && height="+z);
-                                } catch (Exception e) {
-                                    System.out.println("msg for face: " + e.getMessage());
-                                }
+                            if(faceCheck != face) {
+                                n.setFace(face);
+                                client.send(new SendMessage("You set the face of the npc from " + faceCheck + " to " + face + "!"));
+                                client.send(new SendMessage("Spawn DB persistence is disabled; update Kotlin spawn files for permanent changes."));
+                                // TODO(npc-hard-cutover): legacy SQL persistence kept here for rollback.
+//                                int x = n.getPosition().getX(), y = n.getPosition().getY(), z = n.getPosition().getZ();
+//                                try (java.sql.Connection conn = getDbConnection();
+//                                     Statement stm = conn.createStatement()) {
+//                                    stm.executeUpdate("UPDATE uber3_spawn SET face='"+face+"' where x="+x+" && y="+y+" && height="+z);
+//                                } catch (Exception e) {
+//                                    System.out.println("msg for face: " + e.getMessage());
+//                                }
                             } else
                                 client.send(new SendMessage("'"+n.npcName()+"' is already facing the way you want it!"));
                         }
@@ -642,29 +644,32 @@ public class CommandsListener implements PacketListener {
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("addnpc")) {
-                    try {
-                        if (client.getPlayerNpc() < 0) {
-                            client.send(new SendMessage("please try to do ::pnpc id"));
-                            return;
-                        }
-                        if (Server.npcManager.getData(client.getPlayerNpc()) == null) {
-                            client.send(new SendMessage("Does not exist in the database!"));
-                            return;
-                        }
-                        try (Connection conn = getDbConnection();
-                             Statement statement = conn.createStatement()) {
-                            int health = Server.npcManager.getData(client.getPlayerNpc()).getHP();
-                            statement
-                                    .executeUpdate("INSERT INTO " + DbTables.GAME_NPC_SPAWNS + " SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
-                                            + ", y=" + client.getPosition().getY() + ", height=" + client.getPosition().getZ() + ", hitpoints="
-                                            + health + ", live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0");
-                        }
-                        Server.npcManager.createNpc(client.getPlayerNpc(), new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()), 0);
-                        client.send(new SendMessage("Npc added = " + client.getPlayerNpc() + ", at x = " + client.getPosition().getX()
-                                + " y = " + client.getPosition().getY()));
-                    } catch (Exception e) {
-                        System.out.println("something wrong with adding npc: " + e.getMessage());
-                    }
+                    client.send(new SendMessage("This command is disabled after the NPC spawn hard cutover."));
+                    client.send(new SendMessage("Add NPC spawns in Kotlin content files under content/npcs for permanent changes."));
+                    // TODO(npc-hard-cutover): legacy SQL-based addnpc command kept for rollback.
+//                    try {
+//                        if (client.getPlayerNpc() < 0) {
+//                            client.send(new SendMessage("please try to do ::pnpc id"));
+//                            return;
+//                        }
+//                        if (Server.npcManager.getData(client.getPlayerNpc()) == null) {
+//                            client.send(new SendMessage("Does not exist in the database!"));
+//                            return;
+//                        }
+//                        try (Connection conn = getDbConnection();
+//                             Statement statement = conn.createStatement()) {
+//                            int health = Server.npcManager.getData(client.getPlayerNpc()).getHP();
+//                            statement
+//                                    .executeUpdate("INSERT INTO " + DbTables.GAME_NPC_SPAWNS + " SET id = " + client.getPlayerNpc() + ", x=" + client.getPosition().getX()
+//                                            + ", y=" + client.getPosition().getY() + ", height=" + client.getPosition().getZ() + ", hitpoints="
+//                                            + health + ", live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0");
+//                        }
+//                        Server.npcManager.createNpc(client.getPlayerNpc(), new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()), 0);
+//                        client.send(new SendMessage("Npc added = " + client.getPlayerNpc() + ", at x = " + client.getPosition().getX()
+//                                + " y = " + client.getPosition().getY()));
+//                    } catch (Exception e) {
+//                        System.out.println("something wrong with adding npc: " + e.getMessage());
+//                    }
                 }
                 if (cmd[0].equalsIgnoreCase("reloaditems")) {
                     Server.itemManager.reloadItems();

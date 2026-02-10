@@ -73,6 +73,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public static boolean removeNpc(Player player, Npc npc) {
         Client c = ((Client) player);
         if(c == null || npc == null) return false;
+        if (!npc.canBeSeenBy(c)) {
+            return true;
+        }
         boolean check = c.quests[0] > 0 && npc.getId() == 555 && npc.getPosition().getX() == 2604 && npc.getPosition().getY() == 3092;
         if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
             check = true;

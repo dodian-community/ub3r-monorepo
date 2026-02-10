@@ -14,9 +14,7 @@ import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.security.ItemLog
-import net.dodian.utilities.DbTables
 import net.dodian.utilities.Utils
-import net.dodian.utilities.dbConnection
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -33,30 +31,33 @@ object NpcDialogueOptionService {
                 c.NpcDialogueSend = false
 
                 if (button == 1) {
-                    try {
-                        val connection = dbConnection
-                        val statement = connection.createStatement()
-                        try {
-                            val sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.position.x + "' && y='" + tempNpc.position.y + "' && height='" + tempNpc.position.z + "'"
-                            if (statement.executeUpdate(sql) < 1) {
-                                c.send(SendMessage("This npc has already been removed!"))
-                            } else {
-                                tempNpc.die()
-                                EventManager.getInstance().registerEvent(object : Event(tempNpc.timeOnFloor + 600) {
-                                    override fun execute() {
-                                        Server.npcManager.npcs.remove(tempNpc)
-                                        stop()
-                                    }
-                                })
-                                c.send(SendMessage("You removed this npc spawn!"))
-                            }
-                        } finally {
-                            statement.close()
-                            connection.close()
-                        }
-                    } catch (e: Exception) {
-                        c.send(SendMessage("Something went wrong in removing this npc!"))
-                    }
+                    c.send(SendMessage("NPC spawn DB deletion is disabled after hard cutover."))
+                    c.send(SendMessage("Remove/update spawns in Kotlin NPC content files instead."))
+                    // TODO(npc-hard-cutover): legacy SQL delete flow kept for rollback.
+//                    try {
+//                        val connection = dbConnection
+//                        val statement = connection.createStatement()
+//                        try {
+//                            val sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.position.x + "' && y='" + tempNpc.position.y + "' && height='" + tempNpc.position.z + "'"
+//                            if (statement.executeUpdate(sql) < 1) {
+//                                c.send(SendMessage("This npc has already been removed!"))
+//                            } else {
+//                                tempNpc.die()
+//                                EventManager.getInstance().registerEvent(object : Event(tempNpc.timeOnFloor + 600) {
+//                                    override fun execute() {
+//                                        Server.npcManager.npcs.remove(tempNpc)
+//                                        stop()
+//                                    }
+//                                })
+//                                c.send(SendMessage("You removed this npc spawn!"))
+//                            }
+//                        } finally {
+//                            statement.close()
+//                            connection.close()
+//                        }
+//                    } catch (e: Exception) {
+//                        c.send(SendMessage("Something went wrong in removing this npc!"))
+//                    }
                 } else if (button == 2) {
                     if (tempNpc.data.drops.isNotEmpty()) {
                         var line = 8147
