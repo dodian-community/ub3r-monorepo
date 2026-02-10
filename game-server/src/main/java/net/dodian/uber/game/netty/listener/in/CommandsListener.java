@@ -269,6 +269,33 @@ public class CommandsListener implements PacketListener {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " npcid"));
                     }
                 }
+                if (cmd[0].equalsIgnoreCase("findnpc")) {
+                    try {
+                        int id = Integer.parseInt(cmd[1]);
+                        int found = 0;
+                        int shown = 0;
+                        for (Npc npc : Server.npcManager.getNpcs()) {
+                            if (npc == null || npc.getId() != id) {
+                                continue;
+                            }
+                            found++;
+                            if (shown < 20) {
+                                Position pos = npc.getPosition();
+                                client.send(new SendMessage("Npc " + id + " at (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                                shown++;
+                            }
+                        }
+                        if (found == 0) {
+                            client.send(new SendMessage("No loaded NPCs found with id " + id + "."));
+                        } else if (found > shown) {
+                            client.send(new SendMessage("Found " + found + " NPCs with id " + id + " (showing " + shown + ")."));
+                        } else {
+                            client.send(new SendMessage("Found " + found + " NPCs with id " + id + "."));
+                        }
+                    } catch (Exception e) {
+                        client.send(new SendMessage("Wrong usage.. ::findnpc npcId"));
+                    }
+                }
                 if (cmd[0].equalsIgnoreCase("immune")) {
                     client.immune = !client.immune;
                     client.send(new SendMessage("You set immune as " + client.immune));

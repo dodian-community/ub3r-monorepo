@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -85,15 +86,22 @@ public class NpcManager {
     }
 
     private int loadContentSpawns() {
+        List<NpcSpawnDef> spawns = SpawnGroups.all();
+        int total = spawns.size();
         int loaded = 0;
-        try {
-            for (NpcSpawnDef spawn : SpawnGroups.all()) {
+        int skipped = 0;
+        int failed = 0;
+
+        for (NpcSpawnDef spawn : spawns) {
+            try {
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
                 if (hasSpawnAt(spawn.getNpcId(), position)) {
+                    skipped++;
                     continue;
                 }
                 Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
                 if (npc == null) {
+                    failed++;
                     continue;
                 }
                 if (spawn.getPreset() != null) {
@@ -123,11 +131,18 @@ public class NpcManager {
                         spawn.getCondition()
                 );
                 loaded++;
+            } catch (Exception e) {
+                failed++;
+                System.out.println("Failed to create content NPC spawn (id=" + spawn.getNpcId()
+                        + ", x=" + spawn.getX()
+                        + ", y=" + spawn.getY()
+                        + ", z=" + spawn.getZ()
+                        + "): " + e);
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            System.out.println("Something went wrong while loading content NPC spawns: " + e);
-            e.printStackTrace();
         }
+
+        System.out.println("Loaded " + loaded + "/" + total + " content NPC spawns (skipped " + skipped + ", failed " + failed + ").");
         return loaded;
     }
 

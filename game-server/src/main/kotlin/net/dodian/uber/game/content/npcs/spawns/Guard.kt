@@ -4,9 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Guard {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 0, spawn = NpcSpawnDef(npcId = 3951, x = 2727, y = 3349, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 33, spawn = NpcSpawnDef(npcId = 3094, x = 2615, y = 3106, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 30, attack = 10, defence = 15, strength = 22, hitpoints = 20, ranged = 0, magic = 0), hitpoints = 15)),
-        SpawnEntry(index = 137, spawn = NpcSpawnDef(npcId = 3951, x = 2730, y = 3349, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 460, spawn = NpcSpawnDef(npcId = 32, x = 3244, y = 9915, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 22, ranged = 0, magic = 0), hitpoints = 22)),
         SpawnEntry(index = 461, spawn = NpcSpawnDef(npcId = 32, x = 3242, y = 9916, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 22, ranged = 0, magic = 0), hitpoints = 22)),
         SpawnEntry(index = 522, spawn = NpcSpawnDef(npcId = 3094, x = 2619, y = 3104, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 30, attack = 10, defence = 15, strength = 22, hitpoints = 20, ranged = 0, magic = 0), hitpoints = 15)),

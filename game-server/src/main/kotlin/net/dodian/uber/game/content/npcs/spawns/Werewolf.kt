@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Werewolf {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 973, spawn = NpcSpawnDef(npcId = 5928, x = 3542, y = 3463, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 1011, spawn = NpcSpawnDef(npcId = 2593, x = 3496, y = 3498, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 72, defence = 70, strength = 80, hitpoints = 105, ranged = 1, magic = 1), hitpoints = 105)),
         SpawnEntry(index = 1012, spawn = NpcSpawnDef(npcId = 2593, x = 3494, y = 3495, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 72, defence = 70, strength = 80, hitpoints = 105, ranged = 1, magic = 1), hitpoints = 105)),
         SpawnEntry(index = 1013, spawn = NpcSpawnDef(npcId = 2593, x = 3491, y = 3493, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 72, defence = 70, strength = 80, hitpoints = 105, ranged = 1, magic = 1), hitpoints = 105)),

@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Goat {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 1229, spawn = NpcSpawnDef(npcId = 1794, x = 3160, y = 3043, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 150, attack = 40, defence = 40, strength = 40, hitpoints = 42, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 1231, spawn = NpcSpawnDef(npcId = 1795, x = 3162, y = 3045, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 50, attack = 20, defence = 20, strength = 20, hitpoints = 23, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 1232, spawn = NpcSpawnDef(npcId = 1795, x = 3160, y = 3046, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 50, attack = 20, defence = 20, strength = 20, hitpoints = 23, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 1233, spawn = NpcSpawnDef(npcId = 1795, x = 3158, y = 3045, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 50, attack = 20, defence = 20, strength = 20, hitpoints = 23, ranged = 0, magic = 0), hitpoints = 0)),

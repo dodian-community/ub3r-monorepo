@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Farmer {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 2, spawn = NpcSpawnDef(npcId = 3257, x = 2559, y = 3102, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
         SpawnEntry(index = 29, spawn = NpcSpawnDef(npcId = 3086, x = 2590, y = 3102, z = 0, face = 4, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

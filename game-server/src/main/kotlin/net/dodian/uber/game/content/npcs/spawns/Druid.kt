@@ -12,11 +12,5 @@ internal object Druid {
         SpawnEntry(index = 80, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
         SpawnEntry(index = 81, spawn = NpcSpawnDef(npcId = 3098, x = 2884, y = 3430, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
         SpawnEntry(index = 82, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3435, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 235, spawn = NpcSpawnDef(npcId = 2878, x = 2925, y = 3479, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
-        SpawnEntry(index = 309, spawn = NpcSpawnDef(npcId = 2878, x = 2923, y = 3485, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
-        SpawnEntry(index = 310, spawn = NpcSpawnDef(npcId = 2878, x = 2922, y = 3482, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
-        SpawnEntry(index = 311, spawn = NpcSpawnDef(npcId = 2878, x = 2928, y = 3481, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
-        SpawnEntry(index = 312, spawn = NpcSpawnDef(npcId = 2878, x = 2928, y = 3485, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
-        SpawnEntry(index = 313, spawn = NpcSpawnDef(npcId = 2878, x = 2926, y = 3487, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
     )
 }
