@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.utilities.DbTables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -20,6 +22,8 @@ import java.util.Map;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class NpcManager {
+    private static final Logger logger = LoggerFactory.getLogger(NpcManager.class);
+
     Map<Integer, Npc> npcs = new HashMap<>();
     Map<Integer, NpcData> data = new HashMap<>();
     public int gnomeSpawn = -1, werewolfSpawn = -1;
@@ -56,20 +60,20 @@ public class NpcManager {
 //            System.out.println("Something went wrong with loading NPC spawns from the database: " + e);
 //            e.printStackTrace();
 //        }
-        System.out.println("Skipping database NPC spawn loading (hard cutover to Kotlin content).");
+        logger.info("Skipping database NPC spawn loading");
 
         // The rest of the logic for hardcoded/extra spawns remains the same.
-        int extraSpawns = 0;
+        int hardcodedSpawns = 0;
         gnomeSpawn = nextIndex;
         for (Position position : gnomePosition) {
             createNpc(6080, position, 0);
-            extraSpawns++;
+            hardcodedSpawns++;
         }
 
         werewolfSpawn = nextIndex;
         for (int i = 0; i < werewolfPosition.length; i++) {
             createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
-            extraSpawns++;
+            hardcodedSpawns++;
         }
 
         /* Daganoth kings */
@@ -77,12 +81,17 @@ public class NpcManager {
         createNpc(2267, new Position(3248, 2794, 0), 2);
         dagaSupreme = nextIndex;
         createNpc(2265, new Position(3251, 2794, 0), 2);
-        extraSpawns += 2;
+        hardcodedSpawns += 2;
 
         int contentSpawns = loadContentSpawns();
-        extraSpawns += contentSpawns;
+        int totalSpawns = hardcodedSpawns + contentSpawns;
 
-        System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
+        logger.info(
+                "Loaded {} content NPC spawns and {} hardcoded extra NPC spawns from NpcManager (total {}).",
+                contentSpawns,
+                hardcodedSpawns,
+                totalSpawns
+        );
     }
 
     private int loadContentSpawns() {
@@ -133,16 +142,24 @@ public class NpcManager {
                 loaded++;
             } catch (Exception e) {
                 failed++;
-                System.out.println("Failed to create content NPC spawn (id=" + spawn.getNpcId()
-                        + ", x=" + spawn.getX()
-                        + ", y=" + spawn.getY()
-                        + ", z=" + spawn.getZ()
-                        + "): " + e);
-                e.printStackTrace();
+                logger.error(
+                        "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
+                        spawn.getNpcId(),
+                        spawn.getX(),
+                        spawn.getY(),
+                        spawn.getZ(),
+                        e
+                );
             }
         }
 
-        System.out.println("Loaded " + loaded + "/" + total + " content NPC spawns (skipped " + skipped + ", failed " + failed + ").");
+        logger.info(
+                "Loaded {}/{} content NPC spawns (skipped {}, failed {}).",
+                loaded,
+                total,
+                skipped,
+                failed
+        );
         return loaded;
     }
 
