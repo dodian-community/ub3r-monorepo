@@ -4,8 +4,8 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Gerrant {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 24, spawn = NpcSpawnDef(npcId = 1027, x = 2871, y = 2968, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 189, spawn = NpcSpawnDef(npcId = 1027, x = 2835, y = 3442, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 190, spawn = NpcSpawnDef(npcId = 1027, x = 2597, y = 3401, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
+        SpawnEntry(index = 23, spawn = NpcSpawnDef(npcId = 1027, x = 2871, y = 2968, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 183, spawn = NpcSpawnDef(npcId = 1027, x = 2835, y = 3442, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 184, spawn = NpcSpawnDef(npcId = 1027, x = 2597, y = 3401, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Aubury {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 39, spawn = NpcSpawnDef(npcId = 637, x = 2594, y = 3104, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 187, spawn = NpcSpawnDef(npcId = 637, x = 3253, y = 3402, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
+        SpawnEntry(index = 34, spawn = NpcSpawnDef(npcId = 637, x = 2594, y = 3104, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 181, spawn = NpcSpawnDef(npcId = 637, x = 3253, y = 3402, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

@@ -4,8 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Pete {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 324, spawn = NpcSpawnDef(npcId = 659, x = 3334, y = 3334, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
-        SpawnEntry(index = 327, spawn = NpcSpawnDef(npcId = 2825, x = 2605, y = 3399, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
-        SpawnEntry(index = 498, spawn = NpcSpawnDef(npcId = 3805, x = 3434, y = 3434, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 319, spawn = NpcSpawnDef(npcId = 2825, x = 2605, y = 3399, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 479, spawn = NpcSpawnDef(npcId = 3805, x = 3434, y = 3434, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

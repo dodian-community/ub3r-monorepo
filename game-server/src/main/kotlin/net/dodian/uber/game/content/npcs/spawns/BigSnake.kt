@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object BigSnake {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 766, spawn = NpcSpawnDef(npcId = 2978, x = 2392, y = 9873, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 730, spawn = NpcSpawnDef(npcId = 2978, x = 2392, y = 9873, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

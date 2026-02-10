@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Tanner {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 99, spawn = NpcSpawnDef(npcId = 5809, x = 2711, y = 3478, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
+        SpawnEntry(index = 93, spawn = NpcSpawnDef(npcId = 5809, x = 2711, y = 3478, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

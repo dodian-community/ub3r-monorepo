@@ -4,7 +4,10 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Officer {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 695, spawn = NpcSpawnDef(npcId = 3648, x = 2810, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
-        SpawnEntry(index = 762, spawn = NpcSpawnDef(npcId = 3648, x = 2772, y = 3235, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 267, spawn = NpcSpawnDef(npcId = 3648, x = 3274, y = 2797, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 588, spawn = NpcSpawnDef(npcId = 3648, x = 3511, y = 3505, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 726, spawn = NpcSpawnDef(npcId = 3648, x = 2772, y = 3235, z = 0, face = 4, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 734, spawn = NpcSpawnDef(npcId = 3648, x = 2804, y = 3421, z = 0, face = 6, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 735, spawn = NpcSpawnDef(npcId = 3648, x = 2864, y = 2971, z = 0, face = 6, preset = NpcDataPreset(respawnTicks = 0, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

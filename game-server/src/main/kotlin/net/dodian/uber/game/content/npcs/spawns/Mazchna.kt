@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Mazchna {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 90, spawn = NpcSpawnDef(npcId = 402, x = 2885, y = 3450, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
+        SpawnEntry(index = 84, spawn = NpcSpawnDef(npcId = 402, x = 2885, y = 3450, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

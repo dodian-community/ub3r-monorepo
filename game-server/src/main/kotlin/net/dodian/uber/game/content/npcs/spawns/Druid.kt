@@ -4,13 +4,19 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Druid {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 81, spawn = NpcSpawnDef(npcId = 3098, x = 2897, y = 3442, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 82, spawn = NpcSpawnDef(npcId = 3098, x = 2888, y = 3440, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 83, spawn = NpcSpawnDef(npcId = 3098, x = 2893, y = 3433, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 84, spawn = NpcSpawnDef(npcId = 3098, x = 2887, y = 3429, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 85, spawn = NpcSpawnDef(npcId = 3098, x = 2891, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 86, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 87, spawn = NpcSpawnDef(npcId = 3098, x = 2884, y = 3430, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
-        SpawnEntry(index = 88, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3435, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 13, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 75, spawn = NpcSpawnDef(npcId = 3098, x = 2897, y = 3442, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 76, spawn = NpcSpawnDef(npcId = 3098, x = 2888, y = 3440, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 77, spawn = NpcSpawnDef(npcId = 3098, x = 2893, y = 3433, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 78, spawn = NpcSpawnDef(npcId = 3098, x = 2887, y = 3429, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 79, spawn = NpcSpawnDef(npcId = 3098, x = 2891, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 80, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3422, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 81, spawn = NpcSpawnDef(npcId = 3098, x = 2884, y = 3430, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 82, spawn = NpcSpawnDef(npcId = 3098, x = 2885, y = 3435, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 20, attack = 30, defence = 15, strength = 15, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 30)),
+        SpawnEntry(index = 235, spawn = NpcSpawnDef(npcId = 2878, x = 2925, y = 3479, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
+        SpawnEntry(index = 309, spawn = NpcSpawnDef(npcId = 2878, x = 2923, y = 3485, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
+        SpawnEntry(index = 310, spawn = NpcSpawnDef(npcId = 2878, x = 2922, y = 3482, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
+        SpawnEntry(index = 311, spawn = NpcSpawnDef(npcId = 2878, x = 2928, y = 3481, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
+        SpawnEntry(index = 312, spawn = NpcSpawnDef(npcId = 2878, x = 2928, y = 3485, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
+        SpawnEntry(index = 313, spawn = NpcSpawnDef(npcId = 2878, x = 2926, y = 3487, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 25, attack = 25, defence = 20, strength = 20, hitpoints = 30, ranged = 0, magic = 0), hitpoints = 29)),
     )
 }

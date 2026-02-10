@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Mahogany {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 492, spawn = NpcSpawnDef(npcId = 2534, x = 2677, y = 3585, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
-        SpawnEntry(index = 511, spawn = NpcSpawnDef(npcId = 2534, x = 2682, y = 3596, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 475, spawn = NpcSpawnDef(npcId = 2534, x = 2677, y = 3585, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 489, spawn = NpcSpawnDef(npcId = 2534, x = 2682, y = 3596, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

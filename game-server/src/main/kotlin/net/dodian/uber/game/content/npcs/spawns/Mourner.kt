@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Mourner {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 308, spawn = NpcSpawnDef(npcId = 5311, x = 2552, y = 3278, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 90, attack = 80, defence = 80, strength = 100, hitpoints = 486, ranged = 0, magic = 0), hitpoints = 486)),
-        SpawnEntry(index = 502, spawn = NpcSpawnDef(npcId = 5311, x = 1848, y = 4512, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 90, attack = 80, defence = 80, strength = 100, hitpoints = 486, ranged = 0, magic = 0), hitpoints = 486)),
+        SpawnEntry(index = 300, spawn = NpcSpawnDef(npcId = 5311, x = 2552, y = 3278, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 90, attack = 132, defence = 122, strength = 230, hitpoints = 280, ranged = 0, magic = 0), hitpoints = 295)),
     )
 }

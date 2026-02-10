@@ -4,9 +4,8 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Keeper {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 20, spawn = NpcSpawnDef(npcId = 520, x = 2824, y = 2959, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 40, spawn = NpcSpawnDef(npcId = 506, x = 2595, y = 3104, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 186, spawn = NpcSpawnDef(npcId = 506, x = 3216, y = 3416, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0))),
-        SpawnEntry(index = 768, spawn = NpcSpawnDef(npcId = 555, x = 2611, y = 3089, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 35, spawn = NpcSpawnDef(npcId = 506, x = 2595, y = 3104, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 180, spawn = NpcSpawnDef(npcId = 506, x = 3216, y = 3416, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 747, spawn = NpcSpawnDef(npcId = 555, x = 2604, y = 3092, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

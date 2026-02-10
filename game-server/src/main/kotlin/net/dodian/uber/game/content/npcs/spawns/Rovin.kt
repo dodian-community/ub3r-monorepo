@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Rovin {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 470, spawn = NpcSpawnDef(npcId = 884, x = 3243, y = 9893, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 454, spawn = NpcSpawnDef(npcId = 884, x = 3243, y = 9893, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Jad {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 506, spawn = NpcSpawnDef(npcId = 2745, x = 1835, y = 4507, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 200, defence = 200, strength = 200, hitpoints = 1120, ranged = 0, magic = 0), hitpoints = 1120)),
-        SpawnEntry(index = 676, spawn = NpcSpawnDef(npcId = 2745, x = 2480, y = 3428, z = 2, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 200, defence = 200, strength = 200, hitpoints = 1120, ranged = 0, magic = 0), hitpoints = 1120)),
+        SpawnEntry(index = 264, spawn = NpcSpawnDef(npcId = 3127, x = 2396, y = 5084, z = 0, face = 5, preset = NpcDataPreset(respawnTicks = 360, attack = 480, defence = 420, strength = 550, hitpoints = 2400, ranged = 890, magic = 620), hitpoints = 0)),
     )
 }

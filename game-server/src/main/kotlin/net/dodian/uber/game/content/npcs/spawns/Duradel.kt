@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Duradel {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 342, spawn = NpcSpawnDef(npcId = 405, x = 2606, y = 3398, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 333, spawn = NpcSpawnDef(npcId = 405, x = 2606, y = 3398, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

@@ -4,12 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Titan {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 73, spawn = NpcSpawnDef(npcId = 4067, x = 2564, y = 9507, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 842)),
-        SpawnEntry(index = 494, spawn = NpcSpawnDef(npcId = 4067, x = 1847, y = 4520, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 842)),
-        SpawnEntry(index = 603, spawn = NpcSpawnDef(npcId = 4067, x = 1805, y = 4486, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 420)),
-        SpawnEntry(index = 604, spawn = NpcSpawnDef(npcId = 4067, x = 1804, y = 4486, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 420)),
-        SpawnEntry(index = 605, spawn = NpcSpawnDef(npcId = 4067, x = 1803, y = 4486, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 420)),
-        SpawnEntry(index = 606, spawn = NpcSpawnDef(npcId = 4067, x = 1802, y = 4486, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 420)),
-        SpawnEntry(index = 607, spawn = NpcSpawnDef(npcId = 4067, x = 1801, y = 4486, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 120, defence = 110, strength = 140, hitpoints = 420, ranged = 0, magic = 0), hitpoints = 420)),
+        SpawnEntry(index = 67, spawn = NpcSpawnDef(npcId = 4067, x = 2564, y = 9507, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 110, defence = 150, strength = 160, hitpoints = 335, ranged = 0, magic = 0), hitpoints = 842)),
     )
 }

@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object PremiumStore {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 188, spawn = NpcSpawnDef(npcId = 556, x = 3205, y = 3417, z = 0, face = 0)),
+        SpawnEntry(index = 182, spawn = NpcSpawnDef(npcId = 556, x = 3205, y = 3417, z = 0, face = 0, hitpoints = 0)),
     )
 }

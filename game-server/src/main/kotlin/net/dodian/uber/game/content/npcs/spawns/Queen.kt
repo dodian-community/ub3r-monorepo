@@ -4,10 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Queen {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 170, spawn = NpcSpawnDef(npcId = 4922, x = 2865, y = 9953, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 80, defence = 80, strength = 100, hitpoints = 250, ranged = 0, magic = 0), hitpoints = 250)),
-        SpawnEntry(index = 193, spawn = NpcSpawnDef(npcId = 1158, x = 3497, y = 9498, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 267, ranged = 0, magic = 0), hitpoints = 267)),
-        SpawnEntry(index = 331, spawn = NpcSpawnDef(npcId = 1158, x = 3353, y = 3342, z = 4, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 267, ranged = 0, magic = 0), hitpoints = 267)),
-        SpawnEntry(index = 350, spawn = NpcSpawnDef(npcId = 1160, x = 3495, y = 9490, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 267, ranged = 0, magic = 0), hitpoints = 267)),
-        SpawnEntry(index = 501, spawn = NpcSpawnDef(npcId = 4922, x = 1838, y = 4518, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 80, defence = 80, strength = 100, hitpoints = 250, ranged = 0, magic = 0), hitpoints = 250)),
+        SpawnEntry(index = 164, spawn = NpcSpawnDef(npcId = 4922, x = 2865, y = 9953, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 95, defence = 115, strength = 135, hitpoints = 285, ranged = 0, magic = 1200), hitpoints = 250)),
+        SpawnEntry(index = 341, spawn = NpcSpawnDef(npcId = 4303, x = 3483, y = 9492, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 250, attack = 180, defence = 250, strength = 290, hitpoints = 900, ranged = 240, magic = 0), hitpoints = 0)),
     )
 }

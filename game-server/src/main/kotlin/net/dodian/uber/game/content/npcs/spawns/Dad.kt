@@ -4,7 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Dad {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 57, spawn = NpcSpawnDef(npcId = 4130, x = 2541, y = 3092, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 60, defence = 40, strength = 80, hitpoints = 150, ranged = 1, magic = 1), hitpoints = 150)),
-        SpawnEntry(index = 499, spawn = NpcSpawnDef(npcId = 4130, x = 1844, y = 4522, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 60, defence = 40, strength = 80, hitpoints = 150, ranged = 1, magic = 1), hitpoints = 150)),
+        SpawnEntry(index = 51, spawn = NpcSpawnDef(npcId = 4130, x = 2541, y = 3092, z = 0, face = 3, preset = NpcDataPreset(respawnTicks = 180, attack = 80, defence = 90, strength = 110, hitpoints = 120, ranged = 1, magic = 1), hitpoints = 150)),
     )
 }

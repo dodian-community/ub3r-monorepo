@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 from collections import defaultdict
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SQL_FILE = REPO_ROOT / "database" / "2_dodian_default_data.sql"
+SCRIPT_DIR = Path(__file__).resolve().parent
+NPC_DEF_FILE = SCRIPT_DIR / "npc_Def.json"
+NPC_SPAWN_FILE = SCRIPT_DIR / "npc_Spawn.json"
 OUT_DIR = REPO_ROOT / "src" / "main" / "kotlin" / "net" / "dodian" / "uber" / "game" / "content" / "npcs" / "spawns"
 LEGACY_CONTENT_OUT = REPO_ROOT / "src" / "main" / "kotlin" / "net" / "dodian" / "uber" / "game" / "content" / "npcs" / "LegacySqlNpcSpawns.kt"
 SQL_CONTENT_OUT = REPO_ROOT / "src" / "main" / "kotlin" / "net" / "dodian" / "uber" / "game" / "content" / "npcs" / "SqlNpcSpawns.kt"
-
-DEFINITION_INSERT = "INSERT IGNORE INTO uber3_npcs"
-SPAWN_INSERT = "INSERT IGNORE INTO uber3_spawn"
 
 LEADING_ADJECTIVES = {
     "baby", "blue", "black", "brown", "dark", "deadly", "dungeon", "fire", "giant", "greater", "green",
@@ -28,8 +28,7 @@ TYPE_ALIASES = {
     "salesm": "salesman",
 }
 
-# For legacy placeholder names ("no name"/null/missing), only map IDs where runtime
-# behavior clearly identifies the NPC role.
+# For placeholder/utility names, pin known gameplay-driven buckets.
 SAFE_ID_TYPE_OVERRIDES = {
     556: "premium_store",
     5792: "party_announcer",
@@ -47,71 +46,71 @@ SAFE_ID_TYPE_OVERRIDES = {
     7895: "sand_snake",
 }
 
-NPC_DEFINITION_ROW_PATTERN = re.compile(
-    r"\(\s*(\d+)\s*,\s*'([^']*)'\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)"
-)
+
+def _as_int(value: object, default: int = 0) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "":
+            return default
+        return int(stripped)
+    return int(value)
 
 
-def parse_rows(sql_text: str, insert_marker: str) -> list[str]:
-    rows: list[str] = []
-    in_block = False
-    for raw_line in sql_text.splitlines():
-        line = raw_line.strip()
-        if not in_block and line.startswith(insert_marker):
-            in_block = True
-            continue
-        if not in_block:
-            continue
-        if not line:
-            continue
-        if not line.startswith(",") and not line.startswith("("):
-            continue
-        rows.append(line.rstrip(";"))
-        if line.endswith(";"):
-            break
+def load_json_rows(path: Path) -> list[dict[str, object]]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError(f"Expected JSON array in {path}")
+    rows: list[dict[str, object]] = []
+    for row in data:
+        if isinstance(row, dict):
+            rows.append(row)
     return rows
 
 
-def parse_npc_definitions(sql_text: str) -> dict[int, dict[str, int | str]]:
+def parse_npc_definitions() -> dict[int, dict[str, int | str]]:
     definitions: dict[int, dict[str, int | str]] = {}
-    for row in parse_rows(sql_text, DEFINITION_INSERT):
-        m = NPC_DEFINITION_ROW_PATTERN.search(row)
-        if not m:
+    for row in load_json_rows(NPC_DEF_FILE):
+        try:
+            npc_id = _as_int(row.get("id"))
+        except Exception:
             continue
-        npc_id = int(m.group(1))
+        if npc_id <= 0:
+            continue
         definitions[npc_id] = {
-            "name": m.group(2),
-            "hitpoints": int(m.group(6)),
-            "respawn": int(m.group(7)),
-            "attack": int(m.group(9)),
-            "strength": int(m.group(10)),
-            "defence": int(m.group(11)),
-            "ranged": int(m.group(12)),
-            "magic": int(m.group(13)),
+            "name": str(row.get("name") or ""),
+            "hitpoints": _as_int(row.get("hitpoints"), 0),
+            "respawn": _as_int(row.get("respawn"), 60),
+            "attack": _as_int(row.get("attack"), 0),
+            "strength": _as_int(row.get("strength"), 0),
+            "defence": _as_int(row.get("defence"), 0),
+            "ranged": _as_int(row.get("ranged"), 0),
+            "magic": _as_int(row.get("magic"), 0),
         }
     return definitions
 
 
-def parse_spawn_rows(sql_text: str) -> list[dict[str, int | None]]:
-    rows = []
-    for row in parse_rows(sql_text, SPAWN_INSERT):
-        line = row
-        line = re.sub(r"^[,\s]+", "", line)
-        line = re.sub(r"[;,]\s*$", "", line)
-        if not line.startswith("("):
-            continue
-        line = line[1:-1]
-        line = line.replace("'", "")
-        parts = [p.strip() for p in line.split(",")]
-        if len(parts) < 12:
+def parse_spawn_rows() -> list[dict[str, int | None]]:
+    rows: list[dict[str, int | None]] = []
+    for row in load_json_rows(NPC_SPAWN_FILE):
+        try:
+            npc_id = _as_int(row.get("id"))
+            x = _as_int(row.get("x"))
+            y = _as_int(row.get("y"))
+            z = _as_int(row.get("height"), 0)
+            face = _as_int(row.get("face"), 0)
+        except Exception:
             continue
 
-        npc_id = int(parts[0])
-        x = int(parts[1])
-        y = int(parts[2])
-        z = int(parts[3])
-        spawn_hp = None if parts[9].lower() == "null" else int(parts[9])
-        face = int(parts[11])
+        hp_raw = row.get("hitpoints")
+        spawn_hp = None if hp_raw is None else _as_int(hp_raw, 0)
         rows.append({"npc_id": npc_id, "x": x, "y": y, "z": z, "spawn_hp": spawn_hp, "face": face})
     return rows
 
@@ -126,16 +125,22 @@ def canonical_type(name: str | None, npc_id: int) -> str:
     normalized = re.sub(r"[^a-z0-9_ ]+", "", name.lower().replace("-", "_")).replace("_", " ")
     if normalized in {"", "null", "no name"}:
         return f"npc_{npc_id}"
+    if normalized.isdigit():
+        return f"npc_{npc_id}"
 
     tokens = [t for t in normalized.split() if t and t not in GENERIC_TAIL]
     if not tokens:
         return f"npc_{npc_id}"
+    if all(t.isdigit() for t in tokens):
+        return f"npc_{npc_id}"
 
-    # Remove leading descriptors so variants collapse onto base types (e.g. blue_dragon -> dragon).
+    # Collapse color/descriptor variants to a single base type.
     while len(tokens) > 1 and tokens[0] in LEADING_ADJECTIVES:
         tokens = tokens[1:]
 
     base = tokens[-1]
+    if base.isdigit():
+        return f"npc_{npc_id}"
 
     if base == "spot" and "fishing" in tokens:
         base = "fish_spot"
@@ -203,7 +208,7 @@ def write_group_files(
 ) -> list[str]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Clear old generated files.
+    # Clear old generated files, but keep hand-maintained base types.
     keep_files = {"NpcSpawnDef.kt", "NpcDataPreset.kt"}
     for existing in OUT_DIR.glob("*.kt"):
         if existing.name in keep_files:
@@ -264,8 +269,8 @@ def write_shared_files(class_names: list[str]) -> None:
         "// AUTO-GENERATED by game-server/scripts/generate_npc_spawn_groups.py",
         "",
         "/**",
-        " * Generated spawn groups from the SQL seed.",
-        " * Aggregation preserves original SQL row order.",
+        " * Generated spawn groups from scripts/npc_Spawn.json + scripts/npc_Def.json.",
+        " * Aggregation preserves source row order.",
         " */",
         "object SpawnGroups {",
         "    private val allEntries: List<SpawnEntry> = listOf(",
@@ -289,10 +294,9 @@ def write_shared_files(class_names: list[str]) -> None:
 
 
 def main() -> None:
-    sql_text = SQL_FILE.read_text(encoding="utf-8")
-    npc_definitions = parse_npc_definitions(sql_text)
+    npc_definitions = parse_npc_definitions()
     names = {npc_id: str(definition["name"]) for npc_id, definition in npc_definitions.items()}
-    spawn_rows = parse_spawn_rows(sql_text)
+    spawn_rows = parse_spawn_rows()
 
     grouped: dict[str, list[tuple[int, dict[str, int | None]]]] = defaultdict(list)
     for idx, row in enumerate(spawn_rows):

@@ -4,6 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object PopulationAnnouncer {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 767, spawn = NpcSpawnDef(npcId = 3306, x = 3084, y = 3495, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
+        SpawnEntry(index = 265, spawn = NpcSpawnDef(npcId = 3306, x = 3086, y = 3506, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 60, attack = 0, defence = 0, strength = 0, hitpoints = 0, ranged = 0, magic = 0), hitpoints = 0)),
     )
 }

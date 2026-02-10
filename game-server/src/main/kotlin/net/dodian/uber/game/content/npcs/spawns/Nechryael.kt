@@ -4,9 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 internal object Nechryael {
     val entries: List<SpawnEntry> = listOf(
-        SpawnEntry(index = 67, spawn = NpcSpawnDef(npcId = 8, x = 2698, y = 9773, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 140, defence = 140, strength = 130, hitpoints = 500, ranged = 0, magic = 0), hitpoints = 500)),
-        SpawnEntry(index = 330, spawn = NpcSpawnDef(npcId = 8, x = 3351, y = 3346, z = 4, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 140, defence = 140, strength = 130, hitpoints = 500, ranged = 0, magic = 0), hitpoints = 500)),
-        SpawnEntry(index = 497, spawn = NpcSpawnDef(npcId = 8, x = 1840, y = 4520, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 140, defence = 140, strength = 130, hitpoints = 500, ranged = 0, magic = 0), hitpoints = 500)),
-        SpawnEntry(index = 620, spawn = NpcSpawnDef(npcId = 8, x = 1805, y = 4488, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 140, defence = 140, strength = 130, hitpoints = 500, ranged = 0, magic = 0), hitpoints = 500)),
+        SpawnEntry(index = 61, spawn = NpcSpawnDef(npcId = 8, x = 2698, y = 9773, z = 0, face = 0, preset = NpcDataPreset(respawnTicks = 180, attack = 140, defence = 140, strength = 130, hitpoints = 350, ranged = 0, magic = 0), hitpoints = 500)),
     )
 }
