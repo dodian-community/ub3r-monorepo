@@ -1,12 +1,12 @@
 package net.dodian.uber.game.content.npcs
 
+import net.dodian.uber.game.content.npcs.spawns.MYSQL_DEFAULT_STAT
 import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef
 import net.dodian.uber.game.model.entity.player.Client
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -19,14 +19,13 @@ class NpcSpawnDefTest {
         assertEquals(0, def.walkRadius)
         assertEquals(6, def.attackRange)
         assertFalse(def.alwaysActive)
-        assertNull(def.preset)
-        assertEquals(-1, def.respawnTicks)
-        assertEquals(-1, def.attack)
-        assertEquals(-1, def.defence)
-        assertEquals(-1, def.strength)
-        assertEquals(-1, def.hitpoints)
-        assertEquals(-1, def.ranged)
-        assertEquals(-1, def.magic)
+        assertEquals(MYSQL_DEFAULT_STAT, def.respawnTicks)
+        assertEquals(MYSQL_DEFAULT_STAT, def.attack)
+        assertEquals(MYSQL_DEFAULT_STAT, def.defence)
+        assertEquals(MYSQL_DEFAULT_STAT, def.strength)
+        assertEquals(MYSQL_DEFAULT_STAT, def.hitpoints)
+        assertEquals(MYSQL_DEFAULT_STAT, def.ranged)
+        assertEquals(MYSQL_DEFAULT_STAT, def.magic)
         assertNotNull(def.condition)
     }
 
@@ -48,5 +47,18 @@ class NpcSpawnDefTest {
         assertEquals(9, def.attackRange)
         assertTrue(def.alwaysActive)
         assertSame(condition, def.condition)
+    }
+
+    @Test
+    fun `withStatOverrides applies only provided values`() {
+        val def = NpcSpawnDef(npcId = 2, x = 30, y = 40).withStatOverrides(attack = 45, hitpoints = 90)
+
+        assertEquals(45, def.attack)
+        assertEquals(90, def.hitpoints)
+        assertEquals(MYSQL_DEFAULT_STAT, def.defence)
+        assertEquals(MYSQL_DEFAULT_STAT, def.strength)
+        assertEquals(MYSQL_DEFAULT_STAT, def.ranged)
+        assertEquals(MYSQL_DEFAULT_STAT, def.magic)
+        assertEquals(MYSQL_DEFAULT_STAT, def.respawnTicks)
     }
 }
