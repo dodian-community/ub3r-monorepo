@@ -3,22 +3,27 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.content.npcs.NpcContentRegistry;
-import net.dodian.uber.game.content.npcs.NpcSpawnDef;
+import net.dodian.uber.game.content.npcs.spawns.SpawnGroups;
+import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.utilities.DbTables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class NpcManager {
+    private static final Logger logger = LoggerFactory.getLogger(NpcManager.class);
+
     Map<Integer, Npc> npcs = new HashMap<>();
     Map<Integer, NpcData> data = new HashMap<>();
     public int gnomeSpawn = -1, werewolfSpawn = -1;
@@ -39,37 +44,36 @@ public class NpcManager {
     }
 
     public void loadSpawns() {
-        // The database loading part is handled first.
-        try (java.sql.Connection conn = getDbConnection();
-             Statement statement = conn.createStatement();
-             ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_SPAWNS)) {
-
-            int amount = 0;
-            while (results.next()) {
-                amount++;
-                createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
-            }
-            System.out.println("Loaded " + amount + " Npc Spawns");
-
-        } catch (Exception e) {
-            // The catch block is simpler and handles exceptions from the query or connection.
-            System.out.println("Something went wrong with loading NPC spawns from the database: " + e);
-            e.printStackTrace(); // It's often good practice to print the stack trace for debugging.
-        }
-        // No 'finally' block is needed for closing resources.
+        // TODO(npc-hard-cutover): Keep legacy SQL loading commented for rollback safety.
+//        try (java.sql.Connection conn = getDbConnection();
+//             Statement statement = conn.createStatement();
+//             ResultSet results = statement.executeQuery("SELECT * FROM " + DbTables.GAME_NPC_SPAWNS)) {
+//
+//            int amount = 0;
+//            while (results.next()) {
+//                amount++;
+//                createNpc(results.getInt("id"), new Position(results.getInt("x"), results.getInt("y"), results.getInt("height")), results.getInt("face"));
+//            }
+//            System.out.println("Loaded " + amount + " Npc Spawns");
+//
+//        } catch (Exception e) {
+//            System.out.println("Something went wrong with loading NPC spawns from the database: " + e);
+//            e.printStackTrace();
+//        }
+        logger.info("Skipping database NPC spawn loading");
 
         // The rest of the logic for hardcoded/extra spawns remains the same.
-        int extraSpawns = 0;
+        int hardcodedSpawns = 0;
         gnomeSpawn = nextIndex;
         for (Position position : gnomePosition) {
             createNpc(6080, position, 0);
-            extraSpawns++;
+            hardcodedSpawns++;
         }
 
         werewolfSpawn = nextIndex;
         for (int i = 0; i < werewolfPosition.length; i++) {
             createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
-            extraSpawns++;
+            hardcodedSpawns++;
         }
 
         /* Daganoth kings */
@@ -77,25 +81,48 @@ public class NpcManager {
         createNpc(2267, new Position(3248, 2794, 0), 2);
         dagaSupreme = nextIndex;
         createNpc(2265, new Position(3251, 2794, 0), 2);
-        extraSpawns += 2;
+        hardcodedSpawns += 2;
 
         int contentSpawns = loadContentSpawns();
-        extraSpawns += contentSpawns;
+        int totalSpawns = hardcodedSpawns + contentSpawns;
 
-        System.out.println("Loaded " + extraSpawns + " Extra Npc Spawns!");
+        logger.info(
+                "Loaded {} content NPC spawns and {} hardcoded extra NPC spawns from NpcManager (total {}).",
+                contentSpawns,
+                hardcodedSpawns,
+                totalSpawns
+        );
     }
 
     private int loadContentSpawns() {
+        List<NpcSpawnDef> spawns = SpawnGroups.all();
+        int total = spawns.size();
         int loaded = 0;
-        try {
-            for (NpcSpawnDef spawn : NpcContentRegistry.getSpawnDefinitions()) {
+        int skipped = 0;
+        int failed = 0;
+
+        for (NpcSpawnDef spawn : spawns) {
+            try {
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
                 if (hasSpawnAt(spawn.getNpcId(), position)) {
+                    skipped++;
                     continue;
                 }
                 Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
                 if (npc == null) {
+                    failed++;
                     continue;
+                }
+                if (spawn.getPreset() != null) {
+                    npc.applySpawnOverrides(
+                            spawn.getPreset().getRespawnTicks(),
+                            spawn.getPreset().getAttack(),
+                            spawn.getPreset().getDefence(),
+                            spawn.getPreset().getStrength(),
+                            spawn.getPreset().getHitpoints(),
+                            spawn.getPreset().getRanged(),
+                            spawn.getPreset().getMagic()
+                    );
                 }
                 npc.applySpawnOverrides(
                         spawn.getRespawnTicks(),
@@ -106,12 +133,33 @@ public class NpcManager {
                         spawn.getRanged(),
                         spawn.getMagic()
                 );
+                npc.applySpawnBehaviorOverrides(
+                        spawn.getWalkRadius(),
+                        spawn.getAttackRange(),
+                        spawn.getAlwaysActive(),
+                        spawn.getCondition()
+                );
                 loaded++;
+            } catch (Exception e) {
+                failed++;
+                logger.error(
+                        "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
+                        spawn.getNpcId(),
+                        spawn.getX(),
+                        spawn.getY(),
+                        spawn.getZ(),
+                        e
+                );
             }
-        } catch (Exception e) {
-            System.out.println("Something went wrong while loading content NPC spawns: " + e);
-            e.printStackTrace();
         }
+
+        logger.info(
+                "Loaded {}/{} content NPC spawns (skipped {}, failed {}).",
+                loaded,
+                total,
+                skipped,
+                failed
+        );
         return loaded;
     }
 

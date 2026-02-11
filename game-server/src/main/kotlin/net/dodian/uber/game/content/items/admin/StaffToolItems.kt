@@ -2,16 +2,10 @@ package net.dodian.uber.game.content.items.admin
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.items.ItemContent
-import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
-import org.slf4j.LoggerFactory
 
 object StaffToolItems : ItemContent {
-    private val logger = LoggerFactory.getLogger(StaffToolItems::class.java)
-
     override val itemIds: IntArray = intArrayOf(5733)
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
@@ -29,38 +23,42 @@ object StaffToolItems : ItemContent {
             return true
         }
 
-        return try {
-            val connection = dbConnection
-            val statement = connection.createStatement()
-            try {
-                val position = client.position
-                val npcId = client.playerNpc
-                val existsQuery = "SELECT 1 FROM ${DbTables.GAME_NPC_SPAWNS} WHERE id='$npcId' AND x='${position.x}' AND y='${position.y}' AND height='${position.z}'"
-                val resultSet = statement.executeQuery(existsQuery)
-                try {
-                    if (resultSet.next()) {
-                        client.send(SendMessage("An NPC spawn already exists at this position."))
-                        return true
-                    }
-                } finally {
-                    resultSet.close()
-                }
-
-                val health = Server.npcManager.getData(npcId).getHP()
-                val insertSql = "INSERT INTO ${DbTables.GAME_NPC_SPAWNS} SET id = $npcId, x=${position.x}, y=${position.y}, height=${position.z}, hitpoints=$health, live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0"
-                statement.executeUpdate(insertSql)
-
-                Server.npcManager.createNpc(npcId, Position(position.x, position.y, position.z), 0)
-                client.send(SendMessage("Npc added = $npcId, at x = ${position.x} y = ${position.y}."))
-            } finally {
-                statement.close()
-                connection.close()
-            }
-            true
-        } catch (exception: Exception) {
-            logger.error("Staff tool SQL error for {}: {}", client.playerName, exception.message, exception)
-            client.send(SendMessage("An error occurred while spawning the NPC."))
-            true
-        }
+        client.send(SendMessage("Staff spawn SQL tooling is disabled after NPC hard cutover."))
+        client.send(SendMessage("Define spawns in Kotlin NPC content files for permanent changes."))
+        // TODO(npc-hard-cutover): legacy SQL tool flow kept for rollback.
+//        return try {
+//            val connection = dbConnection
+//            val statement = connection.createStatement()
+//            try {
+//                val position = client.position
+//                val npcId = client.playerNpc
+//                val existsQuery = "SELECT 1 FROM ${DbTables.GAME_NPC_SPAWNS} WHERE id='$npcId' AND x='${position.x}' AND y='${position.y}' AND height='${position.z}'"
+//                val resultSet = statement.executeQuery(existsQuery)
+//                try {
+//                    if (resultSet.next()) {
+//                        client.send(SendMessage("An NPC spawn already exists at this position."))
+//                        return true
+//                    }
+//                } finally {
+//                    resultSet.close()
+//                }
+//
+//                val health = Server.npcManager.getData(npcId).getHP()
+//                val insertSql = "INSERT INTO ${DbTables.GAME_NPC_SPAWNS} SET id = $npcId, x=${position.x}, y=${position.y}, height=${position.z}, hitpoints=$health, live=1, face=0, rx=0,ry=0,rx2=0,ry2=0,movechance=0"
+//                statement.executeUpdate(insertSql)
+//
+//                Server.npcManager.createNpc(npcId, Position(position.x, position.y, position.z), 0)
+//                client.send(SendMessage("Npc added = $npcId, at x = ${position.x} y = ${position.y}."))
+//            } finally {
+//                statement.close()
+//                connection.close()
+//            }
+//            true
+//        } catch (exception: Exception) {
+//            logger.error("Staff tool SQL error for {}: {}", client.playerName, exception.message, exception)
+//            client.send(SendMessage("An error occurred while spawning the NPC."))
+//            true
+//        }
+        return true
     }
 }
