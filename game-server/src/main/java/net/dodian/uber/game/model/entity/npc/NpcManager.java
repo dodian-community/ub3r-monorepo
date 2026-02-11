@@ -113,17 +113,7 @@ public class NpcManager {
                     failed++;
                     continue;
                 }
-                if (spawn.getPreset() != null) {
-                    npc.applySpawnOverrides(
-                            spawn.getPreset().getRespawnTicks(),
-                            spawn.getPreset().getAttack(),
-                            spawn.getPreset().getDefence(),
-                            spawn.getPreset().getStrength(),
-                            spawn.getPreset().getHitpoints(),
-                            spawn.getPreset().getRanged(),
-                            spawn.getPreset().getMagic()
-                    );
-                }
+                // Keep base combat stats from MySQL npc definitions unless explicit spawn overrides are provided.
                 npc.applySpawnOverrides(
                         spawn.getRespawnTicks(),
                         spawn.getAttack(),
