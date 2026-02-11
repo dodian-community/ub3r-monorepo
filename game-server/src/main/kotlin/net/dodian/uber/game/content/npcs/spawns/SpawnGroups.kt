@@ -129,7 +129,7 @@ object SpawnGroups {
         MyreBlamishSnail.entries,
         Nathifa.entries,
         Nechryael.entries,
-        Npc2692.entries,
+        Chicken.entries,
         Npc2745.entries,
         Npc3089.entries,
         Npc3640.entries,
