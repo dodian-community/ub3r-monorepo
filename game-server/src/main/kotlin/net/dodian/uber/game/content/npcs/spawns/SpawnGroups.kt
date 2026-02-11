@@ -43,6 +43,7 @@ object SpawnGroups {
         ChaosDruidWarrior.entries,
         ChaosDwarf.entries,
         Chicken.entries,
+        Chicken2.entries,
         Cow.entries,
         CrawlingHand.entries,
         Crocodile.entries,
