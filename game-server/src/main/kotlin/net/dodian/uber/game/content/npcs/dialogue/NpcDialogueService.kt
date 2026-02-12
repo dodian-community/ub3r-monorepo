@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.npcs.dialogue
 
+import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
@@ -18,11 +19,11 @@ object NpcDialogueService {
 
     @JvmStatic
     fun showNpcChat(client: Client, npcId: Int, emote: Int, text: Array<String>) {
-        DialogueUi.showNpcChat(client, npcId, emote, text)
+        DialoguePagingService.showNpcChat(client, npcId, emote, text.joinToString("\n"))
     }
 
     @JvmStatic
     fun showPlayerChat(client: Client, text: Array<String>, emote: Int) {
-        DialogueUi.showPlayerChat(client, text, emote)
+        DialoguePagingService.showPlayerChat(client, emote, text.joinToString("\n"))
     }
 }

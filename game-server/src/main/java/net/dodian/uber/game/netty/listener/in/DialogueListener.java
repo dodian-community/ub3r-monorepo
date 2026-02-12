@@ -1,6 +1,7 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -21,6 +22,10 @@ public class DialogueListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
+        if (DialogueService.onContinue(client)) {
+            return;
+        }
+
         // No fields to decode; just replicate legacy behaviour
         ByteBuf buf = packet.getPayload();
         if (buf.isReadable()) {

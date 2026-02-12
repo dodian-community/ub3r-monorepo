@@ -7,6 +7,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.uber.game.content.dialogue.DialogueService;
+import net.dodian.uber.game.content.dialogue.text.DialoguePagingService;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -113,6 +115,10 @@ public final class WalkingListener implements PacketListener {
 
 
         if (client.newWalkCmdSteps > 0) {
+            // Any movement cancels active dialogue sessions and paging.
+            DialoguePagingService.clear(client);
+            DialogueService.clear(client, false);
+
             if (client.inDuel) {
                 if (opcode != 98) client.send(new SendMessage("You cannot move during this duel!"));
                 client.resetWalkingQueue();
