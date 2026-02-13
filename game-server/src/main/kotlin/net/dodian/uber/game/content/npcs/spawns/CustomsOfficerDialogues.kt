@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.dialogue.modules
+package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry

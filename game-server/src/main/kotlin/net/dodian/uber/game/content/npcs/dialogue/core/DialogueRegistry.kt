@@ -1,24 +1,24 @@
 package net.dodian.uber.game.content.npcs.dialogue.core
 
-import net.dodian.uber.game.content.npcs.dialogue.modules.AgilityDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.AppearanceDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.BattlestaffDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.BankingDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.BoatTravelDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.BrimhavenEntryDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.CarpetDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.DungeonAccessDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.GamblerDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.HerbloreDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.HolidayEventDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.MageArenaDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.MaxCapeDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.PyramidPlunderDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.RockshellDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.RuneShopDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.SettingsDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.SlayerDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.WatcherDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.AgilityDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.AppearanceDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.BattlestaffDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.BankingDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.BoatTravelDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.BrimhavenEntryDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.CarpetDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.DungeonAccessDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.GamblerDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.HerbloreDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.HolidayEventDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.MageArenaDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.MaxCapeDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.PyramidPlunderDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.RockshellDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.RuneShopDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.SettingsDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.SlayerDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.WatcherDialogueModule
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueRegistry {
