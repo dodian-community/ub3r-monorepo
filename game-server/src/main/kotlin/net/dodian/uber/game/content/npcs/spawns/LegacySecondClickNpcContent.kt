@@ -12,6 +12,20 @@ internal object LegacySecondClickNpcContent {
         506, 527, 4965, 1032, 538, 6478, 3890, 535, 6060, 1027, 5809, 6059, 4642,
     )
 
+    fun onFirstClick(client: Client, npc: Npc): Boolean {
+        return when (npc.id) {
+            1779 -> {
+                client.showNPCChat(1779, 605, arrayOf("What are you even doing in here?!", "Begone from me!"))
+                true
+            }
+            5809 -> {
+                client.openTan()
+                true
+            }
+            else -> false
+        }
+    }
+
     fun onSecondClick(client: Client, npc: Npc): Boolean {
         when (npc.id) {
             3086, 3257 -> {
