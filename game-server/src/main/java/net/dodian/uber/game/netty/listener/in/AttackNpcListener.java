@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
@@ -45,6 +46,7 @@ public class AttackNpcListener implements PacketListener {
         Npc npc = Server.npcManager.getNpc(npcIndex);
         if (npc == null) return;
         if (client.randomed || client.UsingAgility) return;
+        if (NpcContentDispatcher.tryHandleAttack(client, npc)) return;
 
         boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
         if ((rangedAttack && client.goodDistanceEntity(npc, 5)) || client.goodDistanceEntity(npc, 1)) {

@@ -10,16 +10,32 @@ import net.dodian.uber.game.model.entity.player.Client
 class DialogueFactory {
     internal val steps: MutableList<DialogueStep> = mutableListOf()
 
+    fun npcChat(npcId: Int, emote: DialogueEmote, text: String) {
+        npcChat(npcId, emote.id, text)
+    }
+
     fun npcChat(npcId: Int, emote: Int, text: String) {
         steps += DialogueStep.NpcChat(npcId = npcId, emote = emote, text = text)
+    }
+
+    fun npcChat(npcId: Int, emote: DialogueEmote, vararg lines: String) {
+        npcChat(npcId, emote.id, *lines)
     }
 
     fun npcChat(npcId: Int, emote: Int, vararg lines: String) {
         npcChat(npcId, emote, lines.joinToString("\n"))
     }
 
+    fun playerChat(emote: DialogueEmote, text: String) {
+        playerChat(emote.id, text)
+    }
+
     fun playerChat(emote: Int, text: String) {
         steps += DialogueStep.PlayerChat(emote = emote, text = text)
+    }
+
+    fun playerChat(emote: DialogueEmote, vararg lines: String) {
+        playerChat(emote.id, *lines)
     }
 
     fun playerChat(emote: Int, vararg lines: String) {
@@ -62,4 +78,3 @@ data class DialogueOption(
     val text: String,
     val build: DialogueFactory.() -> Unit,
 )
-
