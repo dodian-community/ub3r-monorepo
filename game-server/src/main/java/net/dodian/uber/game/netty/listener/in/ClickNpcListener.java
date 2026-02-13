@@ -134,18 +134,8 @@ public class ClickNpcListener implements PacketListener {
         } else if (npcId == 637) { /* Aubury */
             client.NpcWanneTalk = 3;
             client.convoId = 3;
-        } else if (npcId == 3648) {
-            client.NpcWanneTalk = 3648;
         } else if (npcId == 1307 || npcId == 1306) {
             client.NpcWanneTalk = 21;
-        } else if (npcId == 6481) {
-            client.NpcWanneTalk = npcId;
-        } else if (npcId == 2345) {
-            client.NpcWanneTalk = npcId;
-        } else if (npcId == 3837) {
-            client.NpcWanneTalk = npcId;
-        } else if (npcId == 2180) {
-            client.NpcWanneTalk = npcId;
         } else if (npcId == 555) {
             client.send(new SendMessage(client.playerRights > 1 ?
                     "Monk debug quest state (quests[0]): " + client.quests[0] :
@@ -164,8 +154,6 @@ public class ClickNpcListener implements PacketListener {
             }
         } else if (npcId == 376 && client.playerRights == 2) {
             client.triggerTele(2772, 3234, 0, false);
-        } else if (npcId == 6080 && tempNpc.getSlot() < Server.npcManager.gnomeSpawn) {
-            client.NpcWanneTalk = 162;
         } else if (npcId == 8051) {
             client.NpcWanneTalk = 8051;
         } else if (npcId == 659) {
@@ -189,20 +177,9 @@ public class ClickNpcListener implements PacketListener {
             client.WanneShop = 34; // Battlestaff shop two
         } else if (npcId == 3541) {
             client.WanneShop = 35; // Battlestaff shop three
-        } else if (npcId == 2825) {
-            client.NpcWanneTalk = 1002;
-            client.convoId = -1;
-        } else if (npcId == 402 || npcId == 403 || npcId == 405) {
-            client.NpcWanneTalk = 11;
         } else if (npcId == 520) {
             client.NpcWanneTalk = 19;
             client.convoId = 4;
-        } else if (npcId == 1174) {
-            client.NpcWanneTalk = npcId;
-        } else if (npcId == 4753) {
-            client.NpcWanneTalk = npcId;
-        } else if (npcId == 17 || npcId == 19 || npcId == 20 || npcId == 22) {
-            client.NpcWanneTalk = 17;
         } else if (npcId == 5842) { // Compensation dialogue
             boolean canClaim = new Date().before(new Date("06/1/2024")) && !client.checkItem(7927);
             if (canClaim) {
