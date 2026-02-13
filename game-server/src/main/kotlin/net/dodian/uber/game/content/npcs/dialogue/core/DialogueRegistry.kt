@@ -1,13 +1,13 @@
 package net.dodian.uber.game.content.npcs.dialogue.core
 
-import net.dodian.uber.game.content.npcs.dialogue.modules.BrimhavenEntryDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.GamblerDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.HolidayEventDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.MageArenaDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.PyramidPlunderDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.RockshellDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.SettingsDialogueModule
-import net.dodian.uber.game.content.npcs.dialogue.modules.WatcherDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.BrimhavenEntryDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.PyramidPlunderDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.RockshellDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.SettingsDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.DukeHoracio
+import net.dodian.uber.game.content.npcs.spawns.FishSpot
+import net.dodian.uber.game.content.npcs.spawns.PartyPete
+import net.dodian.uber.game.content.npcs.spawns.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueRegistry {
@@ -30,12 +30,12 @@ object DialogueRegistry {
     }
 
     private val handlers: Map<Int, DialogueRenderHandler> = Builder().apply {
-        include(GamblerDialogueModule)
+        PartyPete.registerLegacyDialogues(this)
         include(SettingsDialogueModule)
-        include(MageArenaDialogueModule)
-        include(WatcherDialogueModule)
+        FishSpot.registerLegacyDialogues(this)
+        Watcher.registerLegacyDialogues(this)
         include(BrimhavenEntryDialogueModule)
-        include(HolidayEventDialogueModule)
+        DukeHoracio.registerLegacyDialogues(this)
         include(RockshellDialogueModule)
         include(PyramidPlunderDialogueModule)
     }.build()

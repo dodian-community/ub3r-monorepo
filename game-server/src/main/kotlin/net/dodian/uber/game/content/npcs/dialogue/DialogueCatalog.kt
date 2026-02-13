@@ -10,12 +10,12 @@ data class DialogueCatalogEntry(
 
 object DialogueCatalog {
     val entries: List<DialogueCatalogEntry> = listOf(
-        DialogueCatalogEntry("MageArenaDialogueModule", DialogueIds.Legacy.MAGE_ARENA_OPTIONS, setOf(1597)),
-        DialogueCatalogEntry("WatcherDialogueModule", DialogueIds.Legacy.WATCHER_MESSAGE, setOf(804)),
-        DialogueCatalogEntry("GamblerDialogueModule", DialogueIds.Legacy.GAMBLER_GREETING, setOf(659)),
+        DialogueCatalogEntry("FishSpot", DialogueIds.Legacy.MAGE_ARENA_OPTIONS, setOf(1597)),
+        DialogueCatalogEntry("Watcher", DialogueIds.Legacy.WATCHER_MESSAGE, setOf(804)),
+        DialogueCatalogEntry("PartyPete", DialogueIds.Legacy.GAMBLER_GREETING, setOf(659)),
         DialogueCatalogEntry("SettingsDialogueModule", DialogueIds.Legacy.TOGGLE_SPECIALS, emptySet()),
         DialogueCatalogEntry("BrimhavenEntryDialogueModule", DialogueIds.Misc.BRIMHAVEN_ENTRY, emptySet()),
-        DialogueCatalogEntry("HolidayEventDialogueModule", DialogueIds.Misc.HOLIDAY_GREETING, setOf(8051)),
+        DialogueCatalogEntry("DukeHoracio", DialogueIds.Misc.HOLIDAY_GREETING, setOf(8051)),
         DialogueCatalogEntry("RockshellDialogueModule", DialogueIds.Misc.ROCKSHELL_MENU, emptySet()),
         DialogueCatalogEntry("PyramidPlunderDialogueModule", DialogueIds.Misc.PYRAMID_EXIT, emptySet())
     )
