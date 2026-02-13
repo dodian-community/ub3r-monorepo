@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.dialogue.modules
+package net.dodian.uber.game.content.dialogue.modules
 
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
@@ -7,12 +7,7 @@ import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
-/**
- * Handles rockshell smithing choice menu.
- * - Dialogue ID: 10000
- */
 object RockshellDialogueModule : DialogueRenderModule {
-
     override fun register(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Misc.ROCKSHELL_MENU) { c ->
             if (c.getLevel(Skill.SMITHING) >= 60 && c.playerHasItem(2347)) {
