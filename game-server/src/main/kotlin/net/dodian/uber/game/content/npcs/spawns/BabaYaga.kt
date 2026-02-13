@@ -3,10 +3,6 @@ package net.dodian.uber.game.content.npcs.spawns
 import net.dodian.uber.game.content.dialogue.DialogueEmote
 import net.dodian.uber.game.content.dialogue.DialogueOption
 import net.dodian.uber.game.content.dialogue.DialogueService
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRenderModule
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -58,27 +54,10 @@ internal object BabaYaga {
         }
         return true
     }
-}
 
-object BattlestaffDialogueModule : DialogueRenderModule {
-
-    override fun register(builder: DialogueRegistry.Builder) {
-        builder.handle(DialogueIds.Misc.BATTLESTAFF_GREETING) { c ->
-            val staffCounting = if (c.dailyReward.isEmpty()) 0 else Integer.parseInt(c.dailyReward[2])
-            if (staffCounting > 0) {
-                c.showNPCChat(c.NpcTalkTo, 594, arrayOf("Fancy meeting you here mysterious one.", "I have $staffCounting battlestaffs that", "you can claim for 7000 coins each."))
-                c.nextDiag = DialogueIds.Misc.BATTLESTAFF_OPTIONS
-            } else {
-                c.showNPCChat(c.NpcTalkTo, 597, arrayOf("Fancy meeting you here mysterious one.", "I have no battlestaffs that you can claim."))
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Misc.BATTLESTAFF_OPTIONS) { c ->
-            DialogueUi.showPlayerOption(c, arrayOf("Do you wish to claim your battlestaffs?", "Yes", "No"))
-            c.NpcDialogueSend = true
-            true
-        }
+    @Suppress("UNUSED_PARAMETER")
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        client.WanneShop = 33
+        return true
     }
 }

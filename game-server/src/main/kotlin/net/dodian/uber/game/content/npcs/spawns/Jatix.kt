@@ -7,7 +7,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.dialogue.DialogueEmote
 import net.dodian.uber.game.content.dialogue.DialogueOption
 import net.dodian.uber.game.content.dialogue.DialogueService
-import net.dodian.uber.game.content.npcs.dialogue.NpcDialogueService
 
 internal object Jatix {
     // Stats: 1174: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -28,12 +27,7 @@ internal object Jatix {
                     finish()
                 },
                 DialogueOption("Decant potions") {
-                    action { c ->
-                        c.NpcDialogue = 1178
-                        c.NpcDialogueSend = false
-                        c.nextDiag = -1
-                        NpcDialogueService.updateNpcChat(c)
-                    }
+                    action { c -> HerbloreNpcDialogue.openDecantDoseOptions(c, npc.id) }
                     finish(closeInterfaces = false)
                 },
                 DialogueOption("Nevermind") {
@@ -42,6 +36,12 @@ internal object Jatix {
                 },
             )
         }
+        return true
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        client.WanneShop = 19
         return true
     }
 }

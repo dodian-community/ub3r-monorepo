@@ -102,4 +102,8 @@ internal object TzhaarMejJal {
         }
         return true
     }
+
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        return onFirstClick(client, npc)
+    }
 }

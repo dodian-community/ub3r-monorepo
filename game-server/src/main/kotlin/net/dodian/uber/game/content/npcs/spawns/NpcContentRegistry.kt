@@ -30,6 +30,7 @@ object NpcContentRegistry {
                 npcIds = Banker.npcIds,
                 entries = Banker.entries,
                 onFirstClick = Banker::onFirstClick,
+                onSecondClick = Banker::onSecondClick,
             ),
         )
         register(
@@ -46,6 +47,7 @@ object NpcContentRegistry {
                 npcIds = CustomsOfficer.npcIds,
                 entries = CustomsOfficer.entries,
                 onFirstClick = CustomsOfficer::onFirstClick,
+                onSecondClick = CustomsOfficer::onSecondClick,
             ),
         )
         register(
@@ -62,6 +64,7 @@ object NpcContentRegistry {
                 npcIds = Saniboch.npcIds,
                 entries = Saniboch.entries,
                 onFirstClick = Saniboch::onFirstClick,
+                onSecondClick = Saniboch::onSecondClick,
             ),
         )
         register(
@@ -70,6 +73,7 @@ object NpcContentRegistry {
                 npcIds = BabaYaga.npcIds,
                 entries = BabaYaga.entries,
                 onFirstClick = BabaYaga::onFirstClick,
+                onSecondClick = BabaYaga::onSecondClick,
             ),
         )
         register(
@@ -78,6 +82,7 @@ object NpcContentRegistry {
                 npcIds = TzhaarMejJal.npcIds,
                 entries = TzhaarMejJal.entries,
                 onFirstClick = TzhaarMejJal::onFirstClick,
+                onSecondClick = TzhaarMejJal::onSecondClick,
             ),
         )
         register(
@@ -102,6 +107,8 @@ object NpcContentRegistry {
                 npcIds = Mazchna.npcIds,
                 entries = Mazchna.entries,
                 onFirstClick = Mazchna::onFirstClick,
+                onSecondClick = Mazchna::onSecondClick,
+                onThirdClick = Mazchna::onThirdClick,
             ),
         )
         register(
@@ -110,6 +117,8 @@ object NpcContentRegistry {
                 npcIds = Vannaka.npcIds,
                 entries = Vannaka.entries,
                 onFirstClick = Vannaka::onFirstClick,
+                onSecondClick = Vannaka::onSecondClick,
+                onThirdClick = Vannaka::onThirdClick,
             ),
         )
         register(
@@ -118,6 +127,8 @@ object NpcContentRegistry {
                 npcIds = Duradel.npcIds,
                 entries = Duradel.entries,
                 onFirstClick = Duradel::onFirstClick,
+                onSecondClick = Duradel::onSecondClick,
+                onThirdClick = Duradel::onThirdClick,
             ),
         )
         register(
@@ -126,6 +137,7 @@ object NpcContentRegistry {
                 npcIds = Jatix.npcIds,
                 entries = Jatix.entries,
                 onFirstClick = Jatix::onFirstClick,
+                onSecondClick = Jatix::onSecondClick,
             ),
         )
         register(
@@ -134,6 +146,9 @@ object NpcContentRegistry {
                 npcIds = Zahur.npcIds,
                 entries = Zahur.entries,
                 onFirstClick = Zahur::onFirstClick,
+                onSecondClick = Zahur::onSecondClick,
+                onThirdClick = Zahur::onThirdClick,
+                onFourthClick = Zahur::onFourthClick,
             ),
         )
         register(
@@ -142,6 +157,21 @@ object NpcContentRegistry {
                 npcIds = RugMerchant.npcIds,
                 entries = RugMerchant.entries,
                 onFirstClick = RugMerchant::onFirstClick,
+                onSecondClick = RugMerchant::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "LegacySecondClickNpcContent",
+                npcIds = LegacySecondClickNpcContent.npcIds,
+                onSecondClick = LegacySecondClickNpcContent::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Turael",
+                npcIds = Turael.npcIds,
+                onThirdClick = Turael::onThirdClick,
             ),
         )
         register(
@@ -151,6 +181,7 @@ object NpcContentRegistry {
                 ownsSpawnDefinitions = true,
                 entries = MakeoverMage.entries,
                 onFirstClick = MakeoverMage::onFirstClick,
+                onThirdClick = MakeoverMage::onThirdClick,
             ),
         )
     }
