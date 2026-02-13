@@ -162,8 +162,16 @@ object NpcContentRegistry {
         )
         register(
             NpcContentDefinition(
+                name = "LegacyFirstClickNpcContent",
+                npcIds = LegacyFirstClickNpcContent.npcIds,
+                onFirstClick = LegacyFirstClickNpcContent::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
                 name = "LegacySecondClickNpcContent",
                 npcIds = LegacySecondClickNpcContent.npcIds,
+                onFirstClick = LegacySecondClickNpcContent::onFirstClick,
                 onSecondClick = LegacySecondClickNpcContent::onSecondClick,
             ),
         )
