@@ -5,6 +5,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.content.npcs.spawns.SpawnGroups;
 import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -95,17 +96,26 @@ public class NpcManager {
     }
 
     private int loadContentSpawns() {
-        List<NpcSpawnDef> spawns = SpawnGroups.all();
-        int total = spawns.size();
+        List<NpcSpawnDef> functionSpawns = NpcContentRegistry.allSpawns();
+        java.util.Set<Integer> functionOwnedNpcIds = NpcContentRegistry.spawnSourceNpcIds();
+        List<NpcSpawnDef> generatedSpawns = SpawnGroups.all();
+        int total = functionSpawns.size() + generatedSpawns.size();
         int loaded = 0;
         int skipped = 0;
         int failed = 0;
 
-        for (NpcSpawnDef spawn : spawns) {
+        for (NpcSpawnDef spawn : functionSpawns) {
             try {
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
                 if (hasSpawnAt(spawn.getNpcId(), position)) {
                     skipped++;
+                    logger.info(
+                            "Skipping duplicate function-owned NPC spawn (id={}, x={}, y={}, z={}).",
+                            spawn.getNpcId(),
+                            spawn.getX(),
+                            spawn.getY(),
+                            spawn.getZ()
+                    );
                     continue;
                 }
                 Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
@@ -133,7 +143,67 @@ public class NpcManager {
             } catch (Exception e) {
                 failed++;
                 logger.error(
-                        "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
+                        "Failed to create function-owned NPC spawn (id={}, x={}, y={}, z={}).",
+                        spawn.getNpcId(),
+                        spawn.getX(),
+                        spawn.getY(),
+                        spawn.getZ(),
+                        e
+                );
+            }
+        }
+
+        for (NpcSpawnDef spawn : generatedSpawns) {
+            try {
+                if (functionOwnedNpcIds.contains(spawn.getNpcId())) {
+                    skipped++;
+                    logger.info(
+                            "Skipping generated NPC spawn because function file owns spawns (id={}, x={}, y={}, z={}).",
+                            spawn.getNpcId(),
+                            spawn.getX(),
+                            spawn.getY(),
+                            spawn.getZ()
+                    );
+                    continue;
+                }
+                Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
+                if (hasSpawnAt(spawn.getNpcId(), position)) {
+                    skipped++;
+                    logger.info(
+                            "Skipping duplicate generated NPC spawn (id={}, x={}, y={}, z={}).",
+                            spawn.getNpcId(),
+                            spawn.getX(),
+                            spawn.getY(),
+                            spawn.getZ()
+                    );
+                    continue;
+                }
+                Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
+                if (npc == null) {
+                    failed++;
+                    continue;
+                }
+                // Keep base combat stats from MySQL npc definitions unless explicit spawn overrides are provided.
+                npc.applySpawnOverrides(
+                        spawn.getRespawnTicks(),
+                        spawn.getAttack(),
+                        spawn.getDefence(),
+                        spawn.getStrength(),
+                        spawn.getHitpoints(),
+                        spawn.getRanged(),
+                        spawn.getMagic()
+                );
+                npc.applySpawnBehaviorOverrides(
+                        spawn.getWalkRadius(),
+                        spawn.getAttackRange(),
+                        spawn.getAlwaysActive(),
+                        spawn.getCondition()
+                );
+                loaded++;
+            } catch (Exception e) {
+                failed++;
+                logger.error(
+                        "Failed to create generated NPC spawn (id={}, x={}, y={}, z={}).",
                         spawn.getNpcId(),
                         spawn.getX(),
                         spawn.getY(),

@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.content.npcs.click.NpcClickDispatcher;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -119,7 +119,7 @@ public class ClickNpcListener implements PacketListener {
         /* Fishing spots */
         client.startFishing(npcId, 1);
 
-        if (NpcClickDispatcher.tryHandle(client, 1, tempNpc)) {
+        if (NpcContentDispatcher.tryHandleClick(client, 1, tempNpc)) {
             return;
         }
 
