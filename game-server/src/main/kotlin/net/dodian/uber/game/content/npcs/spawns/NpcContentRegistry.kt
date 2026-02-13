@@ -103,6 +103,287 @@ object NpcContentRegistry {
         )
         register(
             NpcContentDefinition(
+                name = "Sheep",
+                npcIds = intArrayOf(2794),
+                entries = Sheep.entries,
+                onFirstClick = Sheep::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "PartyAnnouncer",
+                npcIds = intArrayOf(5792),
+                entries = PartyAnnouncer.entries,
+                onFirstClick = PartyAnnouncer::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "PopulationAnnouncer",
+                npcIds = intArrayOf(3306),
+                entries = PopulationAnnouncer.entries,
+                onFirstClick = PopulationAnnouncer::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Zogre",
+                npcIds = intArrayOf(2053),
+                entries = Zogre.entries,
+                onFirstClick = Zogre::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "LegendsGuard",
+                npcIds = intArrayOf(3951),
+                entries = LegendsGuard.entries,
+                onFirstClick = LegendsGuard::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "BeginnerStore",
+                npcIds = intArrayOf(3640),
+                entries = BeginnerStore.entries,
+                onFirstClick = BeginnerStore::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "PremiumStore",
+                npcIds = intArrayOf(556),
+                entries = PremiumStore.entries,
+                onFirstClick = PremiumStore::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Wydin",
+                npcIds = intArrayOf(557),
+                entries = Wydin.entries,
+                onFirstClick = Wydin::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Dori",
+                npcIds = intArrayOf(4808),
+                entries = Dori.entries,
+                onFirstClick = Dori::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "AliHag",
+                npcIds = intArrayOf(3541),
+                entries = AliHag.entries,
+                onFirstClick = AliHag::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "AgilityWerewolfMaster",
+                npcIds = AgilityWerewolfMaster.npcIds,
+                onFirstClick = AgilityWerewolfMaster::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "UnknownNpc683",
+                npcIds = UnknownNpc683.npcIds,
+                onFirstClick = UnknownNpc683::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "CaptainTobias",
+                npcIds = CaptainTobias.npcIds,
+                onFirstClick = CaptainTobias::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "DukeHoracio",
+                npcIds = DukeHoracio.npcIds,
+                onFirstClick = DukeHoracio::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "PartyPete",
+                npcIds = PartyPete.npcIds,
+                onFirstClick = PartyPete::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "ShopKeeper",
+                npcIds = ShopKeeper.npcIds,
+                entries = ShopKeeper.entries,
+                onFirstClick = ShopKeeper::onFirstClick,
+                onSecondClick = ShopKeeper::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "ShopAssistant",
+                npcIds = ShopAssistant.npcIds,
+                onSecondClick = ShopAssistant::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Cow",
+                npcIds = Cow.npcIds,
+                entries = Cow.entries,
+                onFirstClick = Cow::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "SurvivalExpert",
+                npcIds = SurvivalExpert.npcIds,
+                onFirstClick = SurvivalExpert::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Farmer",
+                npcIds = Farmer.npcIds,
+                entries = Farmer.entries,
+                onSecondClick = Farmer::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "MasterFarmer",
+                npcIds = MasterFarmer.npcIds,
+                entries = MasterFarmer.entries,
+                onSecondClick = MasterFarmer::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Sedridor",
+                npcIds = Sedridor.npcIds,
+                entries = Sedridor.entries,
+                onSecondClick = Sedridor::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "WizardCromperty",
+                npcIds = WizardCromperty.npcIds,
+                onSecondClick = WizardCromperty::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "WizardDistentor",
+                npcIds = WizardDistentor.npcIds,
+                onSecondClick = WizardDistentor::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Ian",
+                npcIds = Ian.npcIds,
+                entries = Ian.entries,
+                onFirstClick = Ian::onFirstClick,
+                onSecondClick = Ian::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "ThievingSkillcapeShop",
+                npcIds = ThievingSkillcapeShop.npcIds,
+                entries = ThievingSkillcapeShop.entries,
+                onSecondClick = ThievingSkillcapeShop::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Wolfman",
+                npcIds = Wolfman.npcIds,
+                entries = Wolfman.entries,
+                onSecondClick = Wolfman::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Peksa",
+                npcIds = Peksa.npcIds,
+                onSecondClick = Peksa::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Rufu",
+                npcIds = Rufu.npcIds,
+                entries = Rufu.entries,
+                onSecondClick = Rufu::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Nathifa",
+                npcIds = Nathifa.npcIds,
+                entries = Nathifa.entries,
+                onSecondClick = Nathifa::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Horvik",
+                npcIds = Horvik.npcIds,
+                entries = Horvik.entries,
+                onSecondClick = Horvik::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "BowArrowSalesman",
+                npcIds = BowArrowSalesman.npcIds,
+                entries = BowArrowSalesman.entries,
+                onSecondClick = BowArrowSalesman::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Gerrant",
+                npcIds = Gerrant.npcIds,
+                entries = Gerrant.entries,
+                onSecondClick = Gerrant::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Tanner",
+                npcIds = Tanner.npcIds,
+                entries = Tanner.entries,
+                onFirstClick = Tanner::onFirstClick,
+                onSecondClick = Tanner::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "ArmourSalesman",
+                npcIds = ArmourSalesman.npcIds,
+                entries = ArmourSalesman.entries,
+                onSecondClick = ArmourSalesman::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Shantay",
+                npcIds = Shantay.npcIds,
+                entries = Shantay.entries,
+                onSecondClick = Shantay::onSecondClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
                 name = "Mazchna",
                 npcIds = Mazchna.npcIds,
                 entries = Mazchna.entries,
@@ -158,21 +439,6 @@ object NpcContentRegistry {
                 entries = RugMerchant.entries,
                 onFirstClick = RugMerchant::onFirstClick,
                 onSecondClick = RugMerchant::onSecondClick,
-            ),
-        )
-        register(
-            NpcContentDefinition(
-                name = "LegacyFirstClickNpcContent",
-                npcIds = LegacyFirstClickNpcContent.npcIds,
-                onFirstClick = LegacyFirstClickNpcContent::onFirstClick,
-            ),
-        )
-        register(
-            NpcContentDefinition(
-                name = "LegacySecondClickNpcContent",
-                npcIds = LegacySecondClickNpcContent.npcIds,
-                onFirstClick = LegacySecondClickNpcContent::onFirstClick,
-                onSecondClick = LegacySecondClickNpcContent::onSecondClick,
             ),
         )
         register(
