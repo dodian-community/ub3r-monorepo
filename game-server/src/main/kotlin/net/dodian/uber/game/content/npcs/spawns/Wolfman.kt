@@ -8,11 +8,10 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object Wolfman {
     // Stats: 1032: r=60 a=0 d=0 s=0 hp=100 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(1032)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 1032, x = 2805, y = 3427, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {

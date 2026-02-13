@@ -17,7 +17,7 @@ internal object CustomsOfficer {
         NpcSpawnDef(npcId = 3648, x = 2864, y = 2971, z = 0, face = 6),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

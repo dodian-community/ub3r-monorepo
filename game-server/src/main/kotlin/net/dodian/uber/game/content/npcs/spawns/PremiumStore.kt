@@ -11,6 +11,7 @@ internal object PremiumStore {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 556, x = 3205, y = 3417, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

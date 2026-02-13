@@ -13,7 +13,7 @@ internal object Saniboch {
         NpcSpawnDef(npcId = 2345, x = 2743, y = 3150, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

@@ -8,11 +8,10 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object ThievingSkillcapeShop {
     // Stats: 4965: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(4965)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 4965, x = 2447, y = 3431, z = 1, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {

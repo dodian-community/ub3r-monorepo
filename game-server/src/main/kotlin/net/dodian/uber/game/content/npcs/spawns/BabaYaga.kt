@@ -15,7 +15,7 @@ internal object BabaYaga {
         NpcSpawnDef(npcId = 3837, x = 2461, y = 3428, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         val staffCounting = if (client.dailyReward.isEmpty()) 0 else Integer.parseInt(client.dailyReward[2])

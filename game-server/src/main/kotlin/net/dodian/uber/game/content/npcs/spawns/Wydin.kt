@@ -15,6 +15,7 @@ internal object Wydin {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 557, x = 3256, y = 2780, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         npc.requestAnim(5643, 0)

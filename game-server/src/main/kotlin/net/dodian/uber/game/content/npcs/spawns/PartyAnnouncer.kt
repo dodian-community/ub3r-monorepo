@@ -12,6 +12,7 @@ internal object PartyAnnouncer {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 5792, x = 3090, y = 3492, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

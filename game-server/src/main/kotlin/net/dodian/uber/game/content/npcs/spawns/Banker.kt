@@ -7,11 +7,10 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Banker {
-    val npcIds: IntArray = intArrayOf(394, 395, 7677)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 394, x = 2727, y = 3378, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries, 395, 7677)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

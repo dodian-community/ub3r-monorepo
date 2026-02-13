@@ -12,7 +12,7 @@ internal object Mazchna {
         NpcSpawnDef(npcId = 402, x = 2885, y = 3450, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         SlayerMasterDialogue.startIntro(client, npc.id)

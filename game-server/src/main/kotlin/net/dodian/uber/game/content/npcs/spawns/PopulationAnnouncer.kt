@@ -13,6 +13,7 @@ internal object PopulationAnnouncer {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 3306, x = 3086, y = 3506, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
@@ -27,7 +28,7 @@ internal object PopulationAnnouncer {
             }
         }
         client.showNPCChat(
-            3306,
+            npc.id,
             590,
             arrayOf(
                 "There is currently $peopleInWild player${if (peopleInWild != 1) "s" else ""} in the wild!",

@@ -8,11 +8,10 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object Tanner {
     // Stats: 5809: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(5809)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 5809, x = 2711, y = 3478, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

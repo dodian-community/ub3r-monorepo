@@ -15,7 +15,7 @@ internal object TzhaarMejJal {
         NpcSpawnDef(npcId = 2180, x = 2849, y = 2991, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

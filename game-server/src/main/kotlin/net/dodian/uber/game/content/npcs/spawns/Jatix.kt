@@ -15,7 +15,7 @@ internal object Jatix {
         NpcSpawnDef(npcId = 1174, x = 2897, y = 3428, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

@@ -16,7 +16,7 @@ internal object Mac {
         NpcSpawnDef(npcId = 6481, x = 2735, y = 3370, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

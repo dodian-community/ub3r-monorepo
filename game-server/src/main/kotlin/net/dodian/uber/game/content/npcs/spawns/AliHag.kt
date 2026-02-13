@@ -11,6 +11,7 @@ internal object AliHag {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 3541, x = 3346, y = 2987, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
