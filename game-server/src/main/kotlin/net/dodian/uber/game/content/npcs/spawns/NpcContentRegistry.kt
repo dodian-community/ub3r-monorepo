@@ -42,6 +42,110 @@ object NpcContentRegistry {
         )
         register(
             NpcContentDefinition(
+                name = "CustomsOfficer",
+                npcIds = CustomsOfficer.npcIds,
+                entries = CustomsOfficer.entries,
+                onFirstClick = CustomsOfficer::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Mac",
+                npcIds = Mac.npcIds,
+                entries = Mac.entries,
+                onFirstClick = Mac::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Saniboch",
+                npcIds = Saniboch.npcIds,
+                entries = Saniboch.entries,
+                onFirstClick = Saniboch::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "BabaYaga",
+                npcIds = BabaYaga.npcIds,
+                entries = BabaYaga.entries,
+                onFirstClick = BabaYaga::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "TzhaarMejJal",
+                npcIds = TzhaarMejJal.npcIds,
+                entries = TzhaarMejJal.entries,
+                onFirstClick = TzhaarMejJal::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "GnomeTrainer",
+                npcIds = GnomeTrainer.npcIds,
+                entries = GnomeTrainer.entries,
+                onFirstClick = GnomeTrainer::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "PiratePete",
+                npcIds = PiratePete.npcIds,
+                entries = PiratePete.entries,
+                onFirstClick = PiratePete::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Mazchna",
+                npcIds = Mazchna.npcIds,
+                entries = Mazchna.entries,
+                onFirstClick = Mazchna::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Vannaka",
+                npcIds = Vannaka.npcIds,
+                entries = Vannaka.entries,
+                onFirstClick = Vannaka::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Duradel",
+                npcIds = Duradel.npcIds,
+                entries = Duradel.entries,
+                onFirstClick = Duradel::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Jatix",
+                npcIds = Jatix.npcIds,
+                entries = Jatix.entries,
+                onFirstClick = Jatix::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "Zahur",
+                npcIds = Zahur.npcIds,
+                entries = Zahur.entries,
+                onFirstClick = Zahur::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
+                name = "RugMerchant",
+                npcIds = RugMerchant.npcIds,
+                entries = RugMerchant.entries,
+                onFirstClick = RugMerchant::onFirstClick,
+            ),
+        )
+        register(
+            NpcContentDefinition(
                 name = "MakeoverMage",
                 npcIds = MakeoverMage.npcIds,
                 ownsSpawnDefinitions = true,
