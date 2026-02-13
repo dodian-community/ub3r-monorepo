@@ -3,10 +3,6 @@ package net.dodian.uber.game.content.npcs.spawns
 import net.dodian.uber.game.content.dialogue.DialogueEmote
 import net.dodian.uber.game.content.dialogue.DialogueOption
 import net.dodian.uber.game.content.dialogue.DialogueService
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRenderModule
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -40,20 +36,10 @@ internal object CustomsOfficer {
         }
         return true
     }
-}
 
-object BoatTravelDialogueModule : DialogueRenderModule {
-
-    override fun register(builder: DialogueRegistry.Builder) {
-        builder.handle(DialogueIds.Misc.BOAT_GREETING) { c ->
-            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Hello dear.", "Would you like to travel?"))
-            c.nextDiag = DialogueIds.Misc.BOAT_OPTIONS
-            true
-        }
-
-        builder.handle(DialogueIds.Misc.BOAT_OPTIONS) { c ->
-            DialogueUi.showPlayerOption(c, arrayOf("Do you wish to travel?", "Yes", "No"))
-            true
-        }
+    @Suppress("UNUSED_PARAMETER")
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        client.setTravelMenu()
+        return true
     }
 }

@@ -4,10 +4,6 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.dialogue.DialogueEmote
-import net.dodian.uber.game.content.dialogue.DialogueOption
-import net.dodian.uber.game.content.dialogue.DialogueService
-import net.dodian.uber.game.content.npcs.dialogue.NpcDialogueService
 
 internal object Mazchna {
     // Stats: 402: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -19,22 +15,18 @@ internal object Mazchna {
     val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.DEFAULT, "Need help with your slayer assignment?")
-            options(
-                title = "Select an option",
-                DialogueOption("Yes please.") {
-                    action { c ->
-                        c.NpcDialogue = 11
-                        c.NpcDialogueSend = false
-                        c.nextDiag = -1
-                        NpcDialogueService.updateNpcChat(c)
-                    }
-                    finish(closeInterfaces = false)
-                },
-                DialogueOption("No thanks.") { finish() },
-            )
-        }
+        SlayerMasterDialogue.startIntro(client, npc.id)
+        return true
+    }
+
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        SlayerMasterDialogue.assignTask(client, npc.id)
+        return true
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onThirdClick(client: Client, npc: Npc): Boolean {
+        client.WanneShop = 15
         return true
     }
 }

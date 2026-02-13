@@ -1,20 +1,14 @@
 package net.dodian.uber.game.content.npcs.spawns
 
+import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.dialogue.DialogueEmote
 import net.dodian.uber.game.content.dialogue.DialogueOption
 import net.dodian.uber.game.content.dialogue.DialogueService
-import net.dodian.uber.game.content.npcs.dialogue.NpcDialogueService
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRenderModule
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
-import net.dodian.uber.game.netty.listener.out.NpcDialogueHead
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.utilities.Misc
 
 internal object Duradel {
@@ -27,300 +21,283 @@ internal object Duradel {
     val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.DEFAULT, "Need help with your slayer assignment?")
-            options(
-                title = "Select an option",
-                DialogueOption("Yes please.") {
-                    action { c ->
-                        c.NpcDialogue = 11
-                        c.NpcDialogueSend = false
-                        c.nextDiag = -1
-                        NpcDialogueService.updateNpcChat(c)
-                    }
-                    finish(closeInterfaces = false)
-                },
-                DialogueOption("No thanks.") { finish() },
-            )
-        }
+        SlayerMasterDialogue.startIntro(client, npc.id)
+        return true
+    }
+
+    fun onSecondClick(client: Client, npc: Npc): Boolean {
+        SlayerMasterDialogue.assignTask(client, npc.id)
+        return true
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onThirdClick(client: Client, npc: Npc): Boolean {
+        client.WanneShop = 15
         return true
     }
 }
 
-object SlayerDialogueModule : DialogueRenderModule {
+internal object SlayerMasterDialogue {
 
-    override fun register(builder: DialogueRegistry.Builder) {
-        builder.handle(DialogueIds.Slayer.INTRO) { c ->
-            c.sendFrame200(4883, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4884))
-            c.send(SendString("Hi there noob, what do you want?", 4885))
-            c.send(SendString("Click here to continue", 4886))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
-            c.sendFrame164(4882)
-            c.NpcDialogueSend = true
-            c.nextDiag = DialogueIds.Slayer.OPTIONS
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.OPTIONS) { c ->
-            if (c.NpcTalkTo == 405 && (c.determineCombatLevel() < 50 || c.getLevel(Skill.SLAYER) < 50)) {
-                c.sendFrame200(4888, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4889))
-                c.send(SendString("You need 50 combat and slayer", 4890))
-                c.send(SendString("to be assign tasks from me!", 4891))
-                c.send(SendString("Click here to continue", 4892))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4888))
-                c.sendFrame164(4887)
-            } else if (c.NpcTalkTo == 403 && (!c.checkItem(989) || c.getLevel(Skill.SLAYER) < 50)) {
-                c.sendFrame200(4888, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4889))
-                c.send(SendString("You need a crystal key and 50 slayer", 4890))
-                c.send(SendString("to be assign tasks from me!", 4891))
-                c.send(SendString("Click here to continue", 4892))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4888))
-                c.sendFrame164(4887)
-            } else {
-                val gotHelmet = c.playerHasItem(11864)
-                val taskName = currentTaskName(c)
-                val slayerMaster = arrayOf(
-                    "What would you like to say?",
-                    "I'd like a task please",
-                    if (taskName.isNotEmpty()) "Cancel ${taskName.lowercase()} task" else "No task to skip",
-                    "I'd like to upgrade my ${if (gotHelmet) "slayer helmet" else "black mask"}",
-                    "Can you teleport me to west ardougne?"
-                )
-                DialogueUi.showPlayerOption(c, slayerMaster)
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.ASSIGN_TASK) { c ->
-            if (c.NpcTalkTo == 405 && (c.determineCombatLevel() < 50 || c.getLevel(Skill.SLAYER) < 50)) {
-                c.sendFrame200(4888, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4889))
-                c.send(SendString("You need 50 combat and slayer", 4890))
-                c.send(SendString("to be assign tasks from me!", 4891))
-                c.send(SendString("Click here to continue", 4892))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4888))
-                c.sendFrame164(4887)
-                c.NpcDialogueSend = true
-                return@handle true
-            }
-
-            if (c.NpcTalkTo == 403 && (!c.checkItem(989) || c.getLevel(Skill.SLAYER) < 50)) {
-                c.sendFrame200(4888, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4889))
-                c.send(SendString("You need a crystal key and 50 slayer", 4890))
-                c.send(SendString("to be assign tasks from me!", 4891))
-                c.send(SendString("Click here to continue", 4892))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4888))
-                c.sendFrame164(4887)
-                c.NpcDialogueSend = true
-                return@handle true
-            }
-
-            val tasks = when (c.NpcTalkTo) {
-                402 -> SlayerTask.mazchnaTasks(c)
-                403 -> SlayerTask.vannakaTasks(c)
-                405 -> SlayerTask.duradelTasks(c)
-                else -> {
-                    c.send(SendMessage("This npc do not wish to talk to you!"))
-                    c.NpcDialogueSend = true
-                    return@handle true
-                }
-            }
-
-            if (tasks.isEmpty()) {
-                c.send(SendMessage("You cant get any task!"))
-                c.NpcDialogueSend = true
-                return@handle true
-            }
-
-            if (c.getSlayerData()[3] > 0) {
-                c.sendFrame200(4883, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4884))
-                c.send(SendString("You already have a task!", 4885))
-                c.send(SendString("Click here to continue", 4886))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
-                c.sendFrame164(4882)
-                c.NpcDialogueSend = true
-                return@handle true
-            }
-
-            val task = tasks[Misc.random(tasks.size - 1)]
-            val amt = task.assignedAmountRange.value
-            c.sendFrame200(4901, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4902))
-            c.send(SendString("You must go out and kill $amt ${task.textRepresentation}", 4903))
-            c.send(SendString("If you want a new task that's too bad", 4904))
-            c.send(SendString("Visit Dodian.net for a slayer guide", 4905))
-            c.send(SendString("", 4906))
-            c.send(SendString("Click here to continue", 4907))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4901))
-            c.sendFrame164(4900)
-            c.getSlayerData()[0] = c.NpcTalkTo
-            c.getSlayerData()[1] = task.ordinal
-            c.getSlayerData()[2] = amt
-            c.getSlayerData()[3] = amt
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.CANCEL_INFO) { c ->
-            val taskMonster = currentTaskName(c)
-            val skipCost = when (c.getSlayerData()[0]) {
-                403 -> 250000
-                405 -> 500000
-                else -> 100000
-            }
-
-            c.sendFrame200(4888, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4889))
-            c.send(SendString(if (taskMonster.isEmpty()) "You do not have a task currently." else "I can cancel your ${taskMonster.lowercase()} task", 4890))
-            c.send(SendString(if (taskMonster.isEmpty()) "Talk to me to get one." else "task for $skipCost coins.", 4891))
-            c.send(SendString("Click here to continue", 4892))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4888))
-            c.sendFrame164(4887)
-            if (taskMonster.isNotEmpty()) {
-                c.nextDiag = DialogueIds.Slayer.CANCEL_CONFIRM
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.CANCEL_CONFIRM) { c ->
-            val currentTaskName = currentTaskName(c)
-            if (currentTaskName.isNotEmpty()) {
-                DialogueUi.showPlayerOption(c, arrayOf("Do you wish to cancel your ${currentTaskName.lowercase()} task?", "Yes", "No"))
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.CANCEL_DO) { c ->
-            val taskName = currentTaskName(c)
-            val cost = when (c.getSlayerData()[0]) {
-                403 -> 250000
-                405 -> 500000
-                else -> 100000
-            }
-
-            val coinAmount = c.getInvAmt(995)
-            if (coinAmount >= cost) {
-                c.deleteItem(995, cost)
-                c.checkItemUpdate()
-                c.getSlayerData()[3] = 0
-                c.sendFrame200(4883, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4884))
-                c.send(SendString("I have now canceled your ${taskName.lowercase()} task!", 4885))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
-                c.sendFrame164(4882)
-                c.nextDiag = DialogueIds.Slayer.OPTIONS
-            } else {
-                c.sendFrame200(4883, c.npcFace)
-                c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4884))
-                c.send(SendString("You do not have enough coins to cancel your task!", 4885))
-                c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
-                c.sendFrame164(4882)
-            }
-            c.send(SendString("Click here to continue", 4886))
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.UPGRADE_INFO) { c ->
-            val slayerHelm = c.playerHasItem(11864)
-            if (!c.playerHasItem(8921) && !slayerHelm) {
-                c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You do not have a black mask or a slayer helmet!"))
-            } else {
-                c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Would you like to upgrade your ${if (slayerHelm) "slayer helmet" else "black mask"}?", "It will cost you 2 million gold pieces."))
-                c.nextDiag = DialogueIds.Slayer.UPGRADE_CONFIRM
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.UPGRADE_CONFIRM) { c ->
-            DialogueUi.showPlayerOption(c, arrayOf("Do you wish to upgrade?", "Yes, please", "No, please"))
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.UPGRADE_PLAYER_ACK) { c ->
-            c.showPlayerChat(arrayOf("Yes, thank you."), 614)
-            c.NpcDialogueSend = true
-            c.nextDiag = DialogueIds.Slayer.UPGRADE_DO
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.UPGRADE_DO) { c ->
-            if (!c.playerHasItem(995, 2000000)) {
-                c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You do not have enough money!"))
-            } else {
-                val gotHelmet = c.playerHasItem(11864)
-                c.deleteItem(995, 2000000)
-                c.deleteItem(if (gotHelmet) 11864 else 8921, 1)
-                c.addItem(if (gotHelmet) 11865 else 11784, 1)
-                c.checkItemUpdate()
-                c.showNPCChat(c.NpcTalkTo, 592, arrayOf("Here is your imbued ${if (gotHelmet) "slayer helmet" else "black mask"}."))
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.TELEPORT) { c ->
-            c.sendFrame200(4883, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo), 4884))
-            c.send(SendString("Be careful out there!", 4885))
-            c.send(SendString("Click here to continue", 4886))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
-            c.sendFrame164(4882)
-            c.NpcDialogueSend = true
-            c.triggerTele(2542, 3306, 0, false)
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.CURRENT_TASK) { c ->
-            if (c.getSlayerData()[0] != -1) {
-                val slayerMaster = c.getSlayerData()[0]
-                val checkTask = SlayerTask.slayerTasks.getTask(c.getSlayerData()[1])
-                val lines = if (checkTask != null && c.getSlayerData()[3] > 0) {
-                    arrayOf(
-                        "You're currently assigned to ${checkTask.textRepresentation};",
-                        "you have ${c.getSlayerData()[3]} more to go.",
-                        "Your current streak is ${c.getSlayerData()[4]}."
-                    )
-                } else {
-                    arrayOf("You currently have no task.", "Speak to me again to get a new one!")
-                }
-                c.showNPCChat(slayerMaster, c.npcFace, lines)
-            } else {
-                c.send(SendMessage("You have yet to get a task. Talk to a slayer master!"))
-            }
-            c.NpcDialogueSend = true
-            true
-        }
-
-        builder.handle(DialogueIds.Slayer.RESET_COUNT) { c ->
-            if (c.getSlayerData().size > 1) {
-                val checkTask = SlayerTask.slayerTasks.getTask(c.getSlayerData()[1])
-                if (checkTask != null) {
-                    DialogueUi.showPlayerOption(c, arrayOf("Reset count for ${checkTask.textRepresentation}", "Yes", "No"))
-                } else {
-                    DialogueUi.showPlayerOption(c, arrayOf("Reset count", "Yes", "No"))
-                }
-            } else {
-                DialogueUi.showPlayerOption(c, arrayOf("Reset count", "Yes", "No"))
-            }
-            c.NpcDialogueSend = true
-            true
+    @JvmStatic
+    fun startIntro(client: Client, npcId: Int) {
+        DialogueService.start(client) {
+            npcChat(npcId, DialogueEmote.DEFAULT, "Need help with your slayer assignment?")
+            options(
+                title = "Select an option",
+                DialogueOption("Yes please.") {
+                    mainMenu(client, npcId)
+                },
+                DialogueOption("No thanks.") {
+                    finish()
+                },
+            )
         }
     }
 
-    private fun currentTaskName(c: Client): String {
-        if (c.getSlayerData()[0] == -1 || c.getSlayerData()[3] <= 0) {
+    @JvmStatic
+    fun assignTask(client: Client, npcId: Int) {
+        if (!hasRequirements(client, npcId)) {
+            return
+        }
+
+        val tasks = when (npcId) {
+            402 -> SlayerTask.mazchnaTasks(client)
+            403 -> SlayerTask.vannakaTasks(client)
+            405 -> SlayerTask.duradelTasks(client)
+            else -> emptyList()
+        }
+
+        if (tasks.isEmpty()) {
+            client.send(SendMessage("You cant get any task!"))
+            return
+        }
+
+        if (client.getSlayerData()[3] > 0) {
+            client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("You already have a task!"))
+            return
+        }
+
+        val task = tasks[Misc.random(tasks.size - 1)]
+        val amount = task.assignedAmountRange.value
+        client.getSlayerData()[0] = npcId
+        client.getSlayerData()[1] = task.ordinal
+        client.getSlayerData()[2] = amount
+        client.getSlayerData()[3] = amount
+        client.showNPCChat(
+            npcId,
+            DialogueEmote.DEFAULT.id,
+            arrayOf(
+                "You must go out and kill $amount ${task.textRepresentation}",
+                "If you want a new task that's too bad",
+                "Visit Dodian.net for a slayer guide",
+            ),
+        )
+    }
+
+    @JvmStatic
+    fun showCurrentTask(client: Client) {
+        val slayerMaster = client.getSlayerData()[0]
+        if (slayerMaster == -1) {
+            client.send(SendMessage("You have yet to get a task. Talk to a slayer master!"))
+            return
+        }
+
+        val checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])
+        val lines = if (checkTask != null && client.getSlayerData()[3] > 0) {
+            arrayOf(
+                "You're currently assigned to ${checkTask.textRepresentation};",
+                "you have ${client.getSlayerData()[3]} more to go.",
+                "Your current streak is ${client.getSlayerData()[4]}.",
+            )
+        } else {
+            arrayOf("You currently have no task.", "Speak to me again to get a new one!")
+        }
+        client.showNPCChat(slayerMaster, DialogueEmote.DEFAULT.id, lines)
+    }
+
+    @JvmStatic
+    fun showResetCountPrompt(client: Client) {
+        val checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])
+        val title = if (checkTask != null) {
+            "Reset count for ${checkTask.textRepresentation}"
+        } else {
+            "Reset count"
+        }
+
+        DialogueService.start(client) {
+            options(
+                title = title,
+                DialogueOption("Yes") {
+                    action { c -> resetCurrentTaskCount(c) }
+                    finish()
+                },
+                DialogueOption("No") {
+                    finish()
+                },
+            )
+        }
+    }
+
+    private fun net.dodian.uber.game.content.dialogue.DialogueFactory.mainMenu(client: Client, npcId: Int) {
+        if (npcId == 405 && (client.determineCombatLevel() < 50 || client.getLevel(Skill.SLAYER) < 50)) {
+            npcChat(npcId, DialogueEmote.DEFAULT, "You need 50 combat and slayer", "to be assign tasks from me!")
+            finish()
+            return
+        }
+        if (npcId == 403 && (!client.checkItem(989) || client.getLevel(Skill.SLAYER) < 50)) {
+            npcChat(npcId, DialogueEmote.DEFAULT, "You need a crystal key and 50 slayer", "to be assign tasks from me!")
+            finish()
+            return
+        }
+
+        val gotHelmet = client.playerHasItem(11864)
+        val taskName = currentTaskName(client)
+
+        options(
+            title = "What would you like to say?",
+            DialogueOption("I'd like a task please") {
+                action { c -> assignTask(c, npcId) }
+                finish(closeInterfaces = false)
+            },
+            DialogueOption(if (taskName.isNotEmpty()) "Cancel ${taskName.lowercase()} task" else "No task to skip") {
+                cancelTaskFlow(client, npcId)
+            },
+            DialogueOption("I'd like to upgrade my ${if (gotHelmet) "slayer helmet" else "black mask"}") {
+                upgradeFlow(client, npcId)
+            },
+            DialogueOption("Can you teleport me to west ardougne?") {
+                npcChat(npcId, DialogueEmote.DEFAULT, "Be careful out there!")
+                action { c -> c.triggerTele(2542, 3306, 0, false) }
+                finish(closeInterfaces = false)
+            },
+        )
+    }
+
+    private fun net.dodian.uber.game.content.dialogue.DialogueFactory.cancelTaskFlow(client: Client, npcId: Int) {
+        val taskName = currentTaskName(client)
+        val cost = cancelTaskCost(client)
+
+        if (taskName.isEmpty()) {
+            npcChat(npcId, DialogueEmote.DEFAULT, "You do not have a task currently.", "Talk to me to get one.")
+            finish()
+            return
+        }
+
+        npcChat(
+            npcId,
+            DialogueEmote.DEFAULT,
+            "I can cancel your ${taskName.lowercase()} task",
+            "task for $cost coins.",
+        )
+        options(
+            title = "Do you wish to cancel your ${taskName.lowercase()} task?",
+            DialogueOption("Yes") {
+                action { c -> cancelTask(c, npcId, taskName) }
+                finish(closeInterfaces = false)
+            },
+            DialogueOption("No") {
+                finish()
+            },
+        )
+    }
+
+    private fun net.dodian.uber.game.content.dialogue.DialogueFactory.upgradeFlow(client: Client, npcId: Int) {
+        val hasHelmet = client.playerHasItem(11864)
+        val hasMask = client.playerHasItem(8921)
+        if (!hasMask && !hasHelmet) {
+            npcChat(npcId, DialogueEmote.DISTRESSED, "You do not have a black mask or a slayer helmet!")
+            finish()
+            return
+        }
+
+        npcChat(
+            npcId,
+            DialogueEmote.DEFAULT,
+            "Would you like to upgrade your ${if (hasHelmet) "slayer helmet" else "black mask"}?",
+            "It will cost you 2 million gold pieces.",
+        )
+        options(
+            title = "Do you wish to upgrade?",
+            DialogueOption("Yes, please") {
+                playerChat(DialogueEmote.ANGRY1, "Yes, thank you.")
+                action { c -> upgradeItem(c, npcId) }
+                finish(closeInterfaces = false)
+            },
+            DialogueOption("No, please") {
+                finish()
+            },
+        )
+    }
+
+    private fun hasRequirements(client: Client, npcId: Int): Boolean {
+        if (npcId == 405 && (client.determineCombatLevel() < 50 || client.getLevel(Skill.SLAYER) < 50)) {
+            client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("You need 50 combat and slayer", "to be assign tasks from me!"))
+            return false
+        }
+        if (npcId == 403 && (!client.checkItem(989) || client.getLevel(Skill.SLAYER) < 50)) {
+            client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("You need a crystal key and 50 slayer", "to be assign tasks from me!"))
+            return false
+        }
+        return true
+    }
+
+    private fun cancelTask(client: Client, npcId: Int, taskName: String) {
+        val cost = cancelTaskCost(client)
+        if (client.getInvAmt(995) < cost) {
+            client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("You do not have enough coins to cancel your task!"))
+            return
+        }
+
+        client.deleteItem(995, cost)
+        client.checkItemUpdate()
+        client.getSlayerData()[3] = 0
+        client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("I have now canceled your ${taskName.lowercase()} task!"))
+    }
+
+    private fun upgradeItem(client: Client, npcId: Int) {
+        if (!client.playerHasItem(995, 2_000_000)) {
+            client.showNPCChat(npcId, DialogueEmote.DISTRESSED.id, arrayOf("You do not have enough money!"))
+            return
+        }
+
+        val hasHelmet = client.playerHasItem(11864)
+        client.deleteItem(995, 2_000_000)
+        client.deleteItem(if (hasHelmet) 11864 else 8921, 1)
+        client.addItem(if (hasHelmet) 11865 else 11784, 1)
+        client.checkItemUpdate()
+        client.showNPCChat(
+            npcId,
+            DialogueEmote.EVIL1.id,
+            arrayOf("Here is your imbued ${if (hasHelmet) "slayer helmet" else "black mask"}."),
+        )
+    }
+
+    private fun resetCurrentTaskCount(client: Client) {
+        val checkTask = SlayerTask.slayerTasks.getTask(client.slayerData[1]) ?: return
+        for (npcId in checkTask.npcId) {
+            val npcName = Server.npcManager.getName(npcId)
+            for (slot in 0 until client.monsterName.size) {
+                if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {
+                    client.monsterCount[slot] = 0
+                }
+            }
+        }
+        client.send(SendMessage("${checkTask.textRepresentation} have now been reseted!"))
+    }
+
+    private fun cancelTaskCost(client: Client): Int {
+        return when (client.getSlayerData()[0]) {
+            403 -> 250_000
+            405 -> 500_000
+            else -> 100_000
+        }
+    }
+
+    private fun currentTaskName(client: Client): String {
+        if (client.getSlayerData()[0] == -1 || client.getSlayerData()[3] <= 0) {
             return ""
         }
-        return SlayerTask.slayerTasks.getTask(c.getSlayerData()[1])?.textRepresentation ?: ""
+        return SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])?.textRepresentation ?: ""
     }
 }
