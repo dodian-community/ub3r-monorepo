@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.content.npcs.click.NpcClickDispatcher;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
@@ -118,6 +119,10 @@ public class ClickNpcListener implements PacketListener {
         /* Fishing spots */
         client.startFishing(npcId, 1);
 
+        if (NpcClickDispatcher.tryHandle(client, 1, tempNpc)) {
+            return;
+        }
+
         // The remainder of the gigantic switch/if-else chain from the legacy handler is preserved below.
         // It has been copied verbatim with minimal adjustments for readability.
         if (npcId == 394 || npcId == 395 || npcId == 7677) { /* Banking */
@@ -142,9 +147,8 @@ public class ClickNpcListener implements PacketListener {
         } else if (npcId == 2180) {
             client.NpcWanneTalk = npcId;
         } else if (npcId == 555) {
-            client.quests[0]++;
             client.send(new SendMessage(client.playerRights > 1 ?
-                    "Set your quest to: " + client.quests[0] :
+                    "Monk debug quest state (quests[0]): " + client.quests[0] :
                     "Suddenly the monk had an urge to dissapear!"));
         } else if (npcId == 683) { // Range stuff
             client.WanneShop = 11;

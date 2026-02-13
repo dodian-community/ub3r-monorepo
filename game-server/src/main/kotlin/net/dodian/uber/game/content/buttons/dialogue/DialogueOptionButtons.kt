@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.buttons.dialogue
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -25,6 +26,11 @@ object DialogueOptionButtons : ButtonContent {
         }
         if (client.herbMaking != -1) {
             handleHerbMenu(client, buttonId)
+            return true
+        }
+
+        val optionIndex = optionSlot(buttonId)
+        if (DialogueService.onOption(client, optionIndex)) {
             return true
         }
 
@@ -136,6 +142,7 @@ object DialogueOptionButtons : ButtonContent {
 
     private fun optionSlot(buttonId: Int): Int {
         return when (buttonId) {
+            2462 -> 2
             9158, 9168, 9179, 9191 -> 2
             9169, 9180, 9192 -> 3
             9181, 9193 -> 4
