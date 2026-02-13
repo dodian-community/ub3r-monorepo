@@ -1,11 +1,11 @@
-package net.dodian.uber.game.content.npcs.dialogue
+package net.dodian.uber.game.content.dialogue.legacy
 
 import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueRegistry
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 
-object NpcDialogueService {
+object LegacyDialogueService {
 
     @JvmStatic
     fun updateNpcChat(client: Client) {

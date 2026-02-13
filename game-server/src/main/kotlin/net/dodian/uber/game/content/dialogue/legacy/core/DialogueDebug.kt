@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.dialogue.core
+package net.dodian.uber.game.content.dialogue.legacy.core
 
 import net.dodian.uber.game.model.entity.player.Client
 import org.slf4j.LoggerFactory

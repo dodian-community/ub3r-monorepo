@@ -1,12 +1,12 @@
-package net.dodian.uber.game.content.npcs.dialogue.core
+package net.dodian.uber.game.content.dialogue.legacy.core
 
 import net.dodian.uber.game.content.dialogue.modules.BrimhavenEntryDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.PyramidPlunderDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.RockshellDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.SettingsDialogueModule
 import net.dodian.uber.game.content.npcs.spawns.DukeHoracio
-import net.dodian.uber.game.content.npcs.spawns.FishSpot
 import net.dodian.uber.game.content.npcs.spawns.PartyPete
+import net.dodian.uber.game.content.npcs.spawns.UnknownNpc1597
 import net.dodian.uber.game.content.npcs.spawns.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -32,7 +32,7 @@ object DialogueRegistry {
     private val handlers: Map<Int, DialogueRenderHandler> = Builder().apply {
         PartyPete.registerLegacyDialogues(this)
         include(SettingsDialogueModule)
-        FishSpot.registerLegacyDialogues(this)
+        UnknownNpc1597.registerLegacyDialogues(this)
         Watcher.registerLegacyDialogues(this)
         include(BrimhavenEntryDialogueModule)
         DukeHoracio.registerLegacyDialogues(this)

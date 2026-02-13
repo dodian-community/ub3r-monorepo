@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs.dialogue
+package net.dodian.uber.game.content.dialogue.legacy
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.event.Event
@@ -18,7 +18,7 @@ import net.dodian.utilities.Utils
 import kotlin.math.ceil
 import kotlin.math.min
 
-object NpcDialogueOptionService {
+object LegacyDialogueOptionService {
 
     @JvmStatic
     fun triggerChat(c: net.dodian.uber.game.model.entity.player.Client, button: Int) {

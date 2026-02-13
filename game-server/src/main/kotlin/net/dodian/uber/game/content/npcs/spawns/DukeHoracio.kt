@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.npcs.spawns
 
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueIds
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueRegistry
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueIds
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueRegistry
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueUi
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
