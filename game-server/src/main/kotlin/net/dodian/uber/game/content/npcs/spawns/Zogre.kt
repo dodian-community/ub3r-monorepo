@@ -19,6 +19,7 @@ internal object Zogre {
         NpcSpawnDef(npcId = 867, x = 2467, y = 9438, z = 0, face = 0),
         NpcSpawnDef(npcId = 2053, x = 2652, y = 3294, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIds(2053)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         if (npc.id != 2053) {

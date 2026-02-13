@@ -16,6 +16,7 @@ internal object Sheep {
         NpcSpawnDef(npcId = 2794, x = 2462, y = 3431, z = 0, face = 0),
         NpcSpawnDef(npcId = 2794, x = 2458, y = 3431, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

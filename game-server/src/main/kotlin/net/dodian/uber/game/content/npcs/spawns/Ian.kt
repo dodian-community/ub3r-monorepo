@@ -8,21 +8,20 @@ import net.dodian.uber.game.model.entity.player.Client
 internal object Ian {
     // Stats: 1779: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(1779)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 1779, x = 1934, y = 4458, z = 2, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.showNPCChat(1779, 605, arrayOf("What are you even doing in here?!", "Begone from me!"))
+        client.showNPCChat(npc.id, 605, arrayOf("What are you even doing in here?!", "Begone from me!"))
         return true
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.showNPCChat(1779, 605, arrayOf("What are you even doing in here?!", "Begone from me!"))
+        client.showNPCChat(npc.id, 605, arrayOf("What are you even doing in here?!", "Begone from me!"))
         return true
     }
 }

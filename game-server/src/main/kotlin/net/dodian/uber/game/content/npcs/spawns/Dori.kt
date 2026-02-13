@@ -11,6 +11,7 @@ internal object Dori {
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 4808, x = 3080, y = 3509, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

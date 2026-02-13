@@ -9,7 +9,7 @@ import java.util.Date
 internal object Cow {
     // Stats: 2805: r=30 a=1 d=1 s=1 hp=8 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(5842)
+    val npcIds: IntArray = npcIds(5842)
 
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 2805, x = 2604, y = 3114, z = 0, face = 0),

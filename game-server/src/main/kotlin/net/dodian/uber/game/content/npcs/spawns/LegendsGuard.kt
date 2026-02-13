@@ -12,6 +12,7 @@ internal object LegendsGuard {
         NpcSpawnDef(npcId = 3951, x = 2727, y = 3349, z = 0, face = 0),
         NpcSpawnDef(npcId = 3951, x = 2730, y = 3349, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

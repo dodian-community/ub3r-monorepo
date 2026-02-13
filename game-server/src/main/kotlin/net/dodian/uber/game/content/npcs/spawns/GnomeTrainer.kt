@@ -16,7 +16,7 @@ internal object GnomeTrainer {
         NpcSpawnDef(npcId = 6080, x = 2547, y = 3554, z = 0, face = 0),
     )
 
-    val npcIds: IntArray = entries.map { it.npcId }.distinct().toIntArray()
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         if (npc.slot >= Server.npcManager.gnomeSpawn) {

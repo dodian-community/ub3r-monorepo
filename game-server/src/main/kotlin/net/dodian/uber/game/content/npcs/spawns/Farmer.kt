@@ -9,11 +9,10 @@ import net.dodian.uber.game.model.player.skills.thieving.Thieving
 internal object Farmer {
     // Stats: 3086: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
-    val npcIds: IntArray = intArrayOf(3086)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 3086, x = 2590, y = 3102, z = 0, face = 4),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
