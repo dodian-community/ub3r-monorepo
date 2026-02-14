@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.npcs
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,7 +22,9 @@ class SpawnGroupsParityTest {
 
     @Test
     fun `generated grouped spawns match json seed coordinates and ordering`() {
+        val functionOwnedNpcIds = NpcContentRegistry.spawnSourceNpcIds()
         val sourceRows = parseJsonSpawnRows(Path.of("scripts/npc_Spawn.json"))
+            .filterNot { it.npcId in functionOwnedNpcIds }
         val generated = net.dodian.uber.game.content.npcs.spawns.SpawnGroups.all()
 
         assertEquals(sourceRows.size, generated.size, "Generated spawn count differs from JSON seed")

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.dialogue.text
 
-import net.dodian.uber.game.content.npcs.dialogue.core.DialogueUi
+import net.dodian.uber.game.content.dialogue.legacy.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import java.util.ArrayDeque
 import java.util.Collections

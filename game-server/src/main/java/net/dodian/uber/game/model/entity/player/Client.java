@@ -26,8 +26,8 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.content.npcs.dialogue.NpcDialogueService;
-import net.dodian.uber.game.content.npcs.dialogue.NpcDialogueOptionService;
+import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
+import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
@@ -4010,19 +4010,19 @@ public class Client extends Player implements Runnable {
 
     /* NPC Talking */
     public void UpdateNPCChat() {
-        NpcDialogueService.updateNpcChat(this);
+        LegacyDialogueService.updateNpcChat(this);
     }
 
     public void showPlayerOption(String[] text) {
-        NpcDialogueService.showPlayerOption(this, text);
+        LegacyDialogueService.showPlayerOption(this, text);
     }
 
     public void showNPCChat(int npcId, int emote, String[] text) {
-        NpcDialogueService.showNpcChat(this, npcId, emote, text);
+        LegacyDialogueService.showNpcChat(this, npcId, emote, text);
     }
 
     public void showPlayerChat(String[] text, int emote) {
-        NpcDialogueService.showPlayerChat(this, text, emote);
+        LegacyDialogueService.showPlayerChat(this, text, emote);
     }
 
     /* Equipment level checking */
@@ -6177,7 +6177,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void triggerChat(int button) {
-        NpcDialogueOptionService.triggerChat(this, button);
+        LegacyDialogueOptionService.triggerChat(this, button);
     }
 
     public boolean smithCheck(int id) {

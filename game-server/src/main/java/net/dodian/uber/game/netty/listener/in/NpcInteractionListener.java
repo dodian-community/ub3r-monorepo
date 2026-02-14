@@ -1,0 +1,379 @@
+package net.dodian.uber.game.netty.listener.in;
+
+import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.Server;
+import net.dodian.uber.game.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
+import net.dodian.uber.game.event.Event;
+import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.game.GamePacket;
+import net.dodian.uber.game.netty.listener.PacketHandler;
+import net.dodian.uber.game.netty.listener.PacketListener;
+import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.netty.listener.out.SendMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Consolidated Netty handler for npc interaction opcodes:
+ * 155 (click1), 17 (click2), 21 (click3), 18 (click4), 72 (attack).
+ */
+@PacketHandler(opcode = 155)
+public class NpcInteractionListener implements PacketListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(NpcInteractionListener.class);
+
+    static {
+        NpcInteractionListener listener = new NpcInteractionListener();
+        PacketListenerManager.register(155, listener);
+        PacketListenerManager.register(17, listener);
+        PacketListenerManager.register(21, listener);
+        PacketListenerManager.register(18, listener);
+        PacketListenerManager.register(72, listener);
+    }
+
+    @Override
+    public void handle(Client client, GamePacket packet) {
+        switch (packet.getOpcode()) {
+            case 155:
+                handleNpcClick1(client, packet);
+                return;
+            case 17:
+                handleNpcClick2(client, packet);
+                return;
+            case 21:
+                handleNpcClick3(client, packet);
+                return;
+            case 18:
+                handleNpcClick4(client, packet);
+                return;
+            case 72:
+                handleNpcAttack(client, packet);
+                return;
+            default:
+                logger.warn("NpcInteractionListener got unexpected opcode={} for player={}", packet.getOpcode(), client.getPlayerName());
+        }
+    }
+
+    private void handleNpcClick1(Client client, GamePacket packet) {
+        ByteMessage message = ByteMessage.wrap(packet.getPayload());
+        int npcIndex = message.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
+        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
+        if (tempNpc == null) {
+            return;
+        }
+
+        int npcId = tempNpc.getId();
+        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
+        client.setWalkToTask(task);
+
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if (!client.playerPotato.isEmpty()) {
+            client.playerPotato.clear();
+        }
+
+        EventManager.getInstance().registerEvent(new Event(600) {
+            @Override
+            public void execute() {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    stop();
+                    return;
+                }
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
+                    return;
+                }
+                performNpcClick1(client, tempNpc);
+                client.setWalkToTask(null);
+                stop();
+            }
+        });
+    }
+
+    private void performNpcClick1(Client client, Npc tempNpc) {
+        if (!tempNpc.isAlive()) {
+            client.send(new SendMessage("That monster has been killed!"));
+            return;
+        }
+
+        int npcId = tempNpc.getId();
+        client.resetAction();
+        client.faceNpc(tempNpc.getSlot());
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
+
+        client.startFishing(npcId, 1);
+
+        if (NpcContentDispatcher.tryHandleClick(client, 1, tempNpc)) {
+            return;
+        }
+        logger.debug("Unhandled NPC first-click fallback npcId={} player={}", npcId, client.getPlayerName());
+    }
+
+    private void handleNpcClick2(Client client, GamePacket packet) {
+        ByteBuf payload = packet.getPayload();
+        int npcIndex = readSignedWordBigEndianA(payload);
+        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
+        if (tempNpc == null) {
+            return;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Npc click2 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+        }
+
+        int npcId = tempNpc.getId();
+        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
+        client.setWalkToTask(task);
+
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if (!client.playerPotato.isEmpty()) {
+            client.playerPotato.clear();
+        }
+
+        EventManager.getInstance().registerEvent(new Event(600) {
+            @Override
+            public void execute() {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    stop();
+                    return;
+                }
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
+                    return;
+                }
+                performNpcClick2(client, tempNpc);
+                client.setWalkToTask(null);
+                stop();
+            }
+        });
+    }
+
+    private void performNpcClick2(Client client, Npc tempNpc) {
+        if (!tempNpc.isAlive()) {
+            client.send(new SendMessage("That monster has been killed!"));
+            return;
+        }
+
+        int npcId = tempNpc.getId();
+        client.resetAction();
+        client.faceNpc(tempNpc.getSlot());
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
+        client.startFishing(npcId, 2);
+
+        if (NpcContentDispatcher.tryHandleClick(client, 2, tempNpc)) {
+            return;
+        }
+
+        logger.debug("Unhandled NPC second-click fallback npcId={} player={}", npcId, client.getPlayerName());
+    }
+
+    private void handleNpcClick3(Client client, GamePacket packet) {
+        ByteBuf payload = packet.getPayload();
+        int npcIndex = readSignedWord(payload);
+        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
+        if (tempNpc == null) {
+            return;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Npc click3 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+        }
+
+        int npcId = tempNpc.getId();
+        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
+        client.setWalkToTask(task);
+
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if (!client.playerPotato.isEmpty()) {
+            client.playerPotato.clear();
+        }
+
+        EventManager.getInstance().registerEvent(new Event(600) {
+            @Override
+            public void execute() {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    stop();
+                    return;
+                }
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
+                    return;
+                }
+                performNpcClick3(client, tempNpc);
+                client.setWalkToTask(null);
+                stop();
+            }
+        });
+    }
+
+    private void performNpcClick3(Client client, Npc tempNpc) {
+        if (client.isBusy()) {
+            return;
+        }
+
+        int npcId = tempNpc.getId();
+        client.resetAction();
+        client.faceNpc(tempNpc.getSlot());
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
+
+        if (NpcContentDispatcher.tryHandleClick(client, 3, tempNpc)) {
+            return;
+        }
+
+        logger.debug("Unhandled NPC third-click fallback npcId={} player={}", npcId, client.getPlayerName());
+    }
+
+    private void handleNpcClick4(Client client, GamePacket packet) {
+        ByteBuf payload = packet.getPayload();
+        int npcIndex = readSignedWordBigEndian(payload);
+        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
+        if (tempNpc == null) {
+            return;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Npc click4 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+        }
+
+        int npcId = tempNpc.getId();
+        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
+        client.setWalkToTask(task);
+
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if (!client.playerPotato.isEmpty()) {
+            client.playerPotato.clear();
+        }
+
+        EventManager.getInstance().registerEvent(new Event(600) {
+            @Override
+            public void execute() {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    stop();
+                    return;
+                }
+                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
+                    return;
+                }
+                performNpcClick4(client, tempNpc);
+                client.setWalkToTask(null);
+                stop();
+            }
+        });
+    }
+
+    private void performNpcClick4(Client client, Npc tempNpc) {
+        if (client.isBusy()) {
+            return;
+        }
+
+        int npcId = tempNpc.getId();
+        client.skillX = tempNpc.getPosition().getX();
+        client.setSkillY(tempNpc.getPosition().getY());
+
+        if (NpcContentDispatcher.tryHandleClick(client, 4, tempNpc)) {
+            return;
+        }
+
+        logger.debug("Unhandled NPC fourth-click fallback npcId={} player={}", npcId, client.getPlayerName());
+    }
+
+    private void handleNpcAttack(Client client, GamePacket packet) {
+        ByteBuf payload = packet.getPayload();
+        int npcIndex = readUnsignedWordA(payload);
+
+        logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.getOpcode(), npcIndex, client.getPlayerName());
+        if (client.magicId >= 0) {
+            client.magicId = -1;
+        }
+        if (client.deathStage >= 1) {
+            return;
+        }
+
+        Npc npc = Server.npcManager.getNpc(npcIndex);
+        if (npc == null) {
+            return;
+        }
+        if (client.randomed || client.UsingAgility) {
+            return;
+        }
+        if (NpcContentDispatcher.tryHandleAttack(client, npc)) {
+            return;
+        }
+
+        boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
+        if ((rangedAttack && client.goodDistanceEntity(npc, 5)) || client.goodDistanceEntity(npc, 1)) {
+            client.resetWalkingQueue();
+            client.startAttack(npc);
+            return;
+        }
+
+        WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
+        client.setWalkToTask(task);
+        EventManager.getInstance().registerEvent(new Event(600) {
+            @Override
+            public void execute() {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    stop();
+                    return;
+                }
+                if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(npc, 5))
+                        || client.goodDistanceEntity(npc, 1)) {
+                    client.resetWalkingQueue();
+                    client.startAttack(npc);
+                    client.setWalkToTask(null);
+                    stop();
+                }
+            }
+        });
+    }
+
+    private static int readSignedWordBigEndianA(ByteBuf buf) {
+        int low = (buf.readUnsignedByte() - 128) & 0xFF;
+        int high = buf.readUnsignedByte();
+        int value = (high << 8) | low;
+        if (value > 32767) {
+            value -= 65536;
+        }
+        return value;
+    }
+
+    private static int readSignedWord(ByteBuf buf) {
+        int high = buf.readUnsignedByte();
+        int low = buf.readUnsignedByte();
+        int value = (high << 8) | low;
+        if (value > 32767) {
+            value -= 65536;
+        }
+        return value;
+    }
+
+    private static int readSignedWordBigEndian(ByteBuf buf) {
+        int low = buf.readUnsignedByte();
+        int high = buf.readUnsignedByte();
+        int value = (high << 8) | low;
+        if (value > 32767) {
+            value -= 65536;
+        }
+        return value;
+    }
+
+    private static int readUnsignedWordA(ByteBuf buf) {
+        int high = buf.readUnsignedByte();
+        int low = (buf.readUnsignedByte() - 128) & 0xFF;
+        return (high << 8) | low;
+    }
+}
