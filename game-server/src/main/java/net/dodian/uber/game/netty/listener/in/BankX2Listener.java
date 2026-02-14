@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.npcs.spawns.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -62,8 +63,8 @@ public class BankX2Listener implements PacketListener {
                         client.deleteItem(id, enteredAmount);
                         client.addItem(otherHerb, enteredAmount);
                         client.checkItemUpdate();
-                        client.showNPCChat(client.NpcTalkTo, 598, new String[]{"Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase()});
-                        if (!client.herbOptions.isEmpty()) client.nextDiag = 4756;
+                        int npcId = client.NpcTalkTo > 0 ? client.NpcTalkTo : 4753;
+                        HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
                     } else {
                         client.showNPCChat(client.NpcTalkTo, 605, new String[]{"You need 1 herb and 200 coins", "for me to grind it for you."});
                     }
@@ -85,8 +86,8 @@ public class BankX2Listener implements PacketListener {
                         client.deleteItem(otherHerb, enteredAmount);
                         client.addItem(id, enteredAmount);
                         client.checkItemUpdate();
-                        client.showNPCChat(client.NpcTalkTo, 598, new String[]{"Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase()});
-                        if (!client.herbOptions.isEmpty()) client.nextDiag = 4757;
+                        int npcId = client.NpcTalkTo > 0 ? client.NpcTalkTo : 4753;
+                        HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
                     } else {
                         client.showNPCChat(client.NpcTalkTo, 605, new String[]{"You need atleast 1 herb, 1 vial of water and 1000 coins", "for me to turn it into a unfinish potion."});
                     }

@@ -7,6 +7,11 @@ from collections import defaultdict
 from pathlib import Path
 from typing import TypedDict
 
+# DEPRECATION NOTICE:
+# This generator remains for compatibility/migration only.
+# New or updated NPC spawn work should be authored in Kotlin NPC function files
+# under src/main/kotlin/net/dodian/uber/game/content/npcs/spawns.
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = Path(__file__).resolve().parent
 NPC_DEF_FILE = SCRIPT_DIR / "npc_Def.json"
@@ -18,6 +23,7 @@ SQL_CONTENT_OUT = REPO_ROOT / "src" / "main" / "kotlin" / "net" / "dodian" / "ub
 GENERIC_TAIL = {"the", "of", "and", "a", "an"}
 
 TYPE_ALIASES = {
+    "banker": "banker_generated",
     "adventur": "adventurer",
     "officier": "officer",
     "salesm": "salesman",
@@ -47,6 +53,13 @@ SAFE_ID_TYPE_OVERRIDES = {
 
 NAME_ALIASES = {
     "whatever_the_fuck": "placeholder_npc",
+}
+
+# NPC ids that are now owned by Kotlin NPC function files.
+# Keep these out of generated SpawnGroups so we maintain one source of truth.
+FUNCTION_OWNED_NPC_IDS = {
+    1306,  # MakeoverMage
+    637,   # Aubury
 }
 
 
@@ -140,6 +153,8 @@ def parse_spawn_rows() -> list[SpawnRow]:
             raise ValueError(f"Invalid spawn row {idx} in {NPC_SPAWN_FILE}: {row!r}") from None
         if npc_id <= 0:
             raise ValueError(f"Spawn row {idx} has invalid npc id ({npc_id}) in {NPC_SPAWN_FILE}")
+        if npc_id in FUNCTION_OWNED_NPC_IDS:
+            continue
 
         rows.append({"npc_id": npc_id, "x": x, "y": y, "z": z, "face": face})
 

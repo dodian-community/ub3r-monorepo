@@ -76,10 +76,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (!npc.canBeSeenBy(c)) {
             return true;
         }
-        boolean check = c.quests[0] > 0 && npc.getId() == 555 && npc.getPosition().getX() == 2604 && npc.getPosition().getY() == 3092;
         if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
-            check = true;
-        return check;
+            return true;
+        return false;
     }
 
 
