@@ -16,17 +16,24 @@ object TeleportObjects : ObjectContent {
         410,
         1294,
         1591,
+        17122,
         2352,
+        2492,
+        2796, 2797,
+        2833,
         5960,
         9368, 9369,
         11833, 11834,
         11635,
+        12260,
         14914,
         14847,
+        16519, 16520,
         16665,
         16675, 16677,
         16680, 16681, 16683,
         17384, 17385, 17387,
+        2156, 2158,
         20877,
         5553, 6702,
         25938, 25939,
@@ -266,6 +273,59 @@ object TeleportObjects : ObjectContent {
                 } else {
                     false
                 }
+            }
+            2492 -> {
+                client.transport(Position(2591, 3087, 0))
+                true
+            }
+            2158, 2156 -> {
+                client.triggerTele(2921, 4844, 0, false)
+                true
+            }
+            16520, 16519 -> {
+                if (client.getLevel(Skill.AGILITY) < 50) {
+                    client.send(SendMessage("You need level 50 agility to use this shortcut!"))
+                    true
+                } else {
+                    if (position.x == 2575 && position.y == 3108) {
+                        client.transport(Position(2575, 3112, 0))
+                    } else if (position.x == 2575 && position.y == 3111) {
+                        client.transport(Position(2575, 3107, 0))
+                    }
+                    true
+                }
+            }
+            2833 -> {
+                if (position.x == 2544 && position.y == 3111) {
+                    client.transport(Position(2544, 3112, 1))
+                }
+                true
+            }
+            12260 -> {
+                if (position.x == 2459 && position.y == 4354) {
+                    client.transport(Position(2941, 4691, 0))
+                } else {
+                    client.transport(Position(2462, 4359, 0))
+                }
+                true
+            }
+            17122 -> {
+                if (position.x == 2544 && position.y == 3111) {
+                    client.transport(Position(2544, 3112, 0))
+                }
+                true
+            }
+            2796 -> {
+                if (position.x == 2549 && position.y == 3111) {
+                    client.transport(Position(2549, 3112, 2))
+                }
+                true
+            }
+            2797 -> {
+                if (position.x == 2549 && position.y == 3111) {
+                    client.transport(Position(2549, 3112, 1))
+                }
+                true
             }
             410 -> {
                 if (position.x == 2925 && position.y == 3483) {

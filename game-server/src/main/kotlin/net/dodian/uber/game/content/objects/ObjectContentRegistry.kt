@@ -42,11 +42,12 @@ object ObjectContentRegistry {
                 "LegacyResidualObjects" to net.dodian.uber.game.content.objects.impl.legacy.LegacyResidualObjects,
                 "MiningRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.MiningRocksObjects,
                 "PassageObjects" to net.dodian.uber.game.content.objects.impl.travel.PassageObjects,
-                "QuestSpecialObjects" to net.dodian.uber.game.content.objects.impl.quest.QuestSpecialObjects,
+                "RunecraftingObjects" to net.dodian.uber.game.content.objects.impl.runecrafting.RunecraftingObjects,
                 "SpecialMiningObjects" to net.dodian.uber.game.content.objects.impl.mining.SpecialMiningObjects,
                 "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
                 "StallObjects" to net.dodian.uber.game.content.objects.impl.thieving.StallObjects,
                 "TeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.TeleportObjects,
+                "UtilityObjects" to net.dodian.uber.game.content.objects.impl.utility.UtilityObjects,
                 "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WerewolfCourseObjects,
                 "WildernessCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WildernessCourseObjects,
             )
