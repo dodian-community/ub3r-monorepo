@@ -11,10 +11,10 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.content.objects.ObjectContentDispatcher;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +27,6 @@ import java.util.Objects;
  * Netty implementation of legacy {@code MagicOnObject} (opcode 35).
  */
 public class MagicOnObjectListener implements PacketListener {
-
-    static { PacketListenerManager.register(35, new MagicOnObjectListener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(MagicOnObjectListener.class);
 
@@ -112,14 +110,17 @@ public class MagicOnObjectListener implements PacketListener {
                     return;
                 }
 
-                atObject(client, magicID, task.getWalkToId(), task.getWalkToPosition(), object);
+                if (!ObjectContentDispatcher.tryHandleMagic(client, task.getWalkToId(), task.getWalkToPosition(), object, magicID)) {
+                    ObjectInteractionListener.logUnhandledFallback("magic", objectID, client.getPlayerName());
+                    atObject(client, magicID, task.getWalkToId(), task.getWalkToPosition(), object);
+                }
                 client.setWalkToTask(null);
                 stop();
             }
         });
     }
 
-    private void atObject(Client client, int magicID, int objectID, Position objectPosition, GameObjectData obj) {
+    public void atObject(Client client, int magicID, int objectID, Position objectPosition, GameObjectData obj) {
         // replicate legacy behavior
         client.setFocus(objectPosition.getX(), objectPosition.getY());
 

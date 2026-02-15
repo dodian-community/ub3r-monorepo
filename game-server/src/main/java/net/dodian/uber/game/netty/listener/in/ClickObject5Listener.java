@@ -14,7 +14,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
@@ -30,8 +29,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 @PacketHandler(opcode = 228)
 public class ClickObject5Listener implements PacketListener {
-
-    static { PacketListenerManager.register(228, new ClickObject5Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(ClickObject5Listener.class);
 
@@ -111,10 +108,9 @@ public class ClickObject5Listener implements PacketListener {
      * @param obj The GameObjectData for the object.
      */
     public void handleObjectClick(Client client, int objectID, Position position, GameObjectData obj) {
-        client.setFocus(position.getX(), position.getY());
         if (ObjectDispatcher.tryHandle(client, 5, objectID, position, obj)) {
             return;
         }
-        client.farming.interactBin(client, objectID, 5);
+        ObjectInteractionListener.logUnhandledFallback("click:5", objectID, client.getPlayerName());
     }
 }

@@ -14,7 +14,6 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -32,11 +31,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 @PacketHandler(opcode = 70)
 public class ClickObject3Listener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(70, new ClickObject3Listener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(ClickObject3Listener.class);
 
     @Override
@@ -98,13 +92,14 @@ public class ClickObject3Listener implements PacketListener {
         });
     }
 
-    private void clickObject3(Client client, int objectID, Position position, GameObjectData obj) {
+    public void clickObject3(Client client, int objectID, Position position, GameObjectData obj) {
         client.setFocus(position.getX(), position.getY());
         String objectName = obj == null ? "" : obj.getName().toLowerCase();
 
         if (ObjectDispatcher.tryHandle(client, 3, objectID, position, obj)) {
             return;
         }
+        ObjectInteractionListener.logUnhandledFallback("click:3", objectID, client.getPlayerName());
 
         if (objectID == 1739) {
             client.moveTo(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ() - 1);

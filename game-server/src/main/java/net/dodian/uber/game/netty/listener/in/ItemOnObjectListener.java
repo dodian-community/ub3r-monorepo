@@ -18,7 +18,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.content.objects.ObjectContentDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -32,8 +32,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 @PacketHandler(opcode = 192)
 public class ItemOnObjectListener implements PacketListener {
-
-    static { PacketListenerManager.register(192, new ItemOnObjectListener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(ItemOnObjectListener.class);
 
@@ -117,7 +115,10 @@ public class ItemOnObjectListener implements PacketListener {
                 }
 
                 if (client.playerHasItem(itemId)) {
-                    preformObject(client, objectId, itemId, itemSlot, objectPosition, objectData);
+                    if (!ObjectContentDispatcher.tryHandleUseItem(client, objectId, objectPosition, objectData, itemId, itemSlot, interfaceId)) {
+                        ObjectInteractionListener.logUnhandledFallback("useItem", objectId, client.getPlayerName());
+                        preformObject(client, objectId, itemId, itemSlot, objectPosition, objectData);
+                    }
                 }
 
                 client.setWalkToTask(null);

@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 
 
 
@@ -47,10 +46,6 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
  */
 @PacketHandler(opcode = 132)
 public class ClickObjectListener implements PacketListener {
-    static {
-        PacketListenerManager.register(132, new ClickObjectListener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(ClickObjectListener.class);
 
     /**
@@ -182,6 +177,7 @@ public class ClickObjectListener implements PacketListener {
         if (ObjectDispatcher.tryHandle(client, 1, objectID, objectPosition, obj)) {
             return;
         }
+        ObjectInteractionListener.logUnhandledFallback("click:1", objectID, client.getPlayerName());
         if (objectID == 26193) {
             Balloons.openInterface(client);
             return;
@@ -239,38 +235,6 @@ public class ClickObjectListener implements PacketListener {
         if (objectID == 17387 && objectPosition.getX() == 2892 && objectPosition.getY() == 9907) {
             client.transport(new Position(2893, 3507, 0));
         }
-        if (objectID == 20877 && objectPosition.getX() == 2743 && objectPosition.getY() == 3153) {
-            if (!client.checkUnlock(0) && client.checkUnlockPaid(0) != 1) {
-                client.showNPCChat(2345, 596, new String[]{"You have not paid yet to enter my dungeon."});
-                return;
-            }
-            client.addUnlocks(0, "0", client.checkUnlock(0) ? "1" : "0");
-            client.showNPCChat(2345, 592, new String[]{"Welcome to my dungeon."});
-            client.transport(new Position(3748, 9373 + Misc.random(1), 0));
-        }
-        if (objectID == 5553 && objectPosition.getX() == 3749 && objectPosition.getY() == 9373) {
-            client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
-            client.transport(new Position(2744 + Misc.random(1), 3153, 0));
-        }
-        if (objectID == 6702 && objectPosition.getX() == 3749 && objectPosition.getY() == 9374) {
-            client.showNPCChat(2345, 593, new String[]{"Welcome back out from my dungeon."});
-            client.transport(new Position(2744 + Misc.random(1), 3153, 0));
-        }
-        if (objectID == 14914) {
-            if (!client.checkUnlock(1) && client.checkUnlockPaid(1) != 1) {
-                client.showNPCChat(2180, 596, new String[]{"You have not paid yet to enter my cave."});
-                return;
-            }
-            client.addUnlocks(1, "0", client.checkUnlock(1) ? "1" : "0");
-            client.showNPCChat(2180, 592, new String[]{"Welcome to my cave."});
-            client.transport(new Position(2444, 5169, 0));
-            client.GetBonus(true);
-        }
-        if (objectID == 2352 && objectPosition.getX() == 2443 && objectPosition.getY() == 5169) {
-            client.showNPCChat(2180, 593, new String[]{"Welcome back out from my cave."});
-            client.transport(new Position(2848, 2991, 0));
-            client.GetBonus(true);
-        }
         if (objectID == 16466) {
             if (client.getLevel(Skill.AGILITY) < 75) {
                 client.send(new SendMessage("You need level 75 agility to use this shortcut!"));
@@ -315,10 +279,6 @@ public class ClickObjectListener implements PacketListener {
         if (objectID == 6847) {
             Thieving.attemptSteal(client, objectID, objectPosition);
         }
-        if (objectID == 133) { // new dragon teleport?
-            client.send(new SendMessage("Welcome to the dragon lair!"));
-            client.transport(new Position(3235, 9366, 0));
-        }
         if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) {
             for (int fi = 0; fi < Utils.smelt_frame.length; fi++) {
                 client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
@@ -338,10 +298,6 @@ public class ClickObjectListener implements PacketListener {
             client.ReplaceObject(2901, 3511, 2625, -3, 0);
             client.ReplaceObject(2902, 3510, -1, -1, 0);
             client.ReplaceObject(2902, 3511, -1, -3, 0);
-            return;
-        }
-        if (objectID == 11635) {
-            client.transport(new Position(3543, 3463, 0));
             return;
         }
         if ((objectID == 1524 || objectID == 1521) && (objectPosition.getX() == 2908 || objectPosition.getX() == 2907) && objectPosition.getY() == 9698) {
@@ -367,50 +323,11 @@ public class ClickObjectListener implements PacketListener {
                 client.send(new SendMessage("The crystal key is made from 2 crystal pieces"));
             }
         }
-        if (objectID == 16680 && objectPosition.getX() == 2884 && objectPosition.getY() == 3397) {
-            if (client.getLevel(Skill.SLAYER) < 50) {
-                client.send(new SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."));
-                return;
-            }
-            client.transport(new Position(2884, 9798, 0));
-        }
-        if (objectID == 17385 && objectPosition.getX() == 2884 && objectPosition.getY() == 9797) {
-            client.transport(new Position(2884, 3398, 0));
-        }
         if (objectID == 25939 && objectPosition.getX() == 2715 && objectPosition.getY() == 3470) {
             client.transport(new Position(2715, 3471, 0));
         }
         if (objectID == 25938 && objectPosition.getX() == 2715 && objectPosition.getY() == 3470) {
             client.transport(new Position(2714, 3470, 1));
-        }
-        if (objectID == 16683 && objectPosition.getX() == 2597 && objectPosition.getY() == 3107) {
-            client.transport(new Position(2597, 3106, 1));
-        }
-        if (objectID == 16681 && objectPosition.getX() == 2597 && objectPosition.getY() == 3107) {
-            client.transport(new Position(2597, 3106, 0));
-        }
-        if (objectID == 410 && objectPosition.getX() == 2925 && objectPosition.getY() == 3483) { //Guthix altar to cosmic
-            client.requestAnim(645, 0);
-            int random = Misc.random(3);
-            switch(random) {
-                case 1: //East
-                    client.transport(new Position(2162 + Misc.random(2), 4831 + Misc.random(4), 0));
-                    break;
-                case 2: //South
-                    client.transport(new Position(2140 + Misc.random(4), 4811 + Misc.random(2), 0));
-                    break;
-                case 3: //West
-                    client.transport(new Position(2120 + Misc.random(2), 4831 + Misc.random(4), 0));
-                    break;
-                default: //North
-                    client.transport(new Position(2140 + Misc.random(4), 4853 + Misc.random(2), 0));
-            }
-            return;
-        }
-        if (objectID == 14847) {
-            client.requestAnim(645, 0);
-            client.transport(new Position(2924, 3483, 0));
-            return;
         }
         if (objectID == 1725) {
             client.stairs = "legendsUp".hashCode();

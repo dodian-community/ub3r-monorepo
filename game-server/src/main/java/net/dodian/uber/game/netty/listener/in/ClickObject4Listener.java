@@ -14,7 +14,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-import static net.dodian.uber.game.model.player.skills.Skill.FARMING;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 /**
@@ -31,8 +29,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 @PacketHandler(opcode = 234)
 public class ClickObject4Listener implements PacketListener {
-
-    static { PacketListenerManager.register(234, new ClickObject4Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(ClickObject4Listener.class);
 
@@ -114,34 +110,9 @@ public class ClickObject4Listener implements PacketListener {
      * @param obj The GameObjectData for the object.
      */
     public void handleObjectClick(Client client, int objectID, Position position, GameObjectData obj) {
-        client.setFocus(position.getX(), position.getY());
-        String objectName = obj == null ? "" : obj.getName().toLowerCase();
-
         if (ObjectDispatcher.tryHandle(client, 4, objectID, position, obj)) {
             return;
         }
-
-        if(objectID >= 8550 && objectID <= 8557 || (objectID == 27114 || objectID == 27113)) { //Allotment guide
-            client.showSkillMenu(FARMING.getId(), 0);
-        }
-        if(objectID >= 7847 && objectID <= 7850 || objectID == 27111) { //Flowers guide
-            client.showSkillMenu(FARMING.getId(), 1);
-        }
-        if(objectID >= 7577 && objectID <= 7580) { //Bushes guide
-            client.showSkillMenu(FARMING.getId(), 2);
-        }
-        if(objectID >= 8150 && objectID <= 8153 || objectID == 27115) { //Herbs guide
-            client.showSkillMenu(FARMING.getId(), 3);
-        }
-        if(objectID >= 8389 && objectID <= 8391 || objectID == 19147) { //Tree guide
-            client.showSkillMenu(FARMING.getId(), 4);
-        }
-        if(objectID >= 7962 && objectID <= 7965 || objectID == 26579) { //Fruit tree guide
-            client.showSkillMenu(FARMING.getId(), 5);
-        }
-        if ((objectID == 2213) || (objectID == 2214) || (objectID == 3045) || (objectID == 5276)
-                || (objectID == 6084) || objectName.contains("bank booth")) {
-            client.send(new SendMessage("This bank options are not working currently!"));
-        }
+        ObjectInteractionListener.logUnhandledFallback("click:4", objectID, client.getPlayerName());
     }
 }

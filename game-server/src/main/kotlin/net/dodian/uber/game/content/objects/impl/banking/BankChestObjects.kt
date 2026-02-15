@@ -1,25 +1,25 @@
-package net.dodian.uber.game.content.objects.smelting
+package net.dodian.uber.game.content.objects.impl.banking
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.utilities.Utils
 
-object Furnaces : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(3994, 11666, 16469, 29662)
+object BankChestObjects : ObjectContent {
+    override val objectIds: IntArray = intArrayOf(6943, 9391)
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        for (i in Utils.smelt_frame.indices) {
-            client.sendFrame246(Utils.smelt_frame[i], 150, Utils.smelt_bars[i][0])
-        }
-        client.sendFrame164(2400)
+        client.openUpBank()
         return true
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.showItemsGold()
-        client.showInterface(4161)
+        if (objectId == 6943) {
+            client.skillX = position.x
+            client.setSkillY(position.y)
+            client.WanneBank = 1
+            client.WanneShop = -1
+        }
         return true
     }
 }

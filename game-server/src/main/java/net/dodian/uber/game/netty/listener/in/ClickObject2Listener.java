@@ -5,7 +5,6 @@ import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
@@ -19,14 +18,12 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
-import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.utilities.Misc;
 import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.Random;
 
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
@@ -36,11 +33,6 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 @PacketHandler(opcode = 252)
 public class ClickObject2Listener implements PacketListener {
-
-    static {
-        PacketListenerManager.register(252, new ClickObject2Listener());
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(ClickObject2Listener.class);
 
     @Override
@@ -131,6 +123,7 @@ public class ClickObject2Listener implements PacketListener {
         if (ObjectDispatcher.tryHandle(client, 2, objectID, position, obj)) {
             return;
         }
+        ObjectInteractionListener.logUnhandledFallback("click:2", objectID, client.getPlayerName());
 
         switch (objectID) {
             case 20873: // Cage
@@ -145,12 +138,6 @@ public class ClickObject2Listener implements PacketListener {
             case 378: // Empty chest
                 client.send(new SendMessage("This chest is empty!"));
                 break;
-            case 7962:
-                client.send(new SendMessage("You inspect the monolith, but can't make sense of the inscription."));
-                break;
-            case 20931: // Quick exit pyramid plunder
-                client.getPlunder.resetPlunder();
-                break;
         }
 
         // Handle thieving stalls by setting the WanneThieve variable
@@ -164,18 +151,6 @@ public class ClickObject2Listener implements PacketListener {
         if (objectID == 3994 || objectID == 11666 || objectID == 16469 || objectID == 29662) {
             client.showItemsGold();
             client.showInterface(4161);
-        }
-
-        // Handle spinning wheel animation
-        if (objectID == 25824 || objectID == 14889) {
-            client.spinning = true;
-            client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        }
-
-        // Handle wilderness obelisk teleport
-        if (objectID == 823) {
-            Random r = new Random();
-            client.moveTo(2602 + r.nextInt(5), 3162 + r.nextInt(5), client.getPosition().getZ());
         }
 
         // Handle banking
