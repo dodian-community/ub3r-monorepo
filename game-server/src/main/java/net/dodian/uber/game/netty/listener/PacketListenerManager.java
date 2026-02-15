@@ -44,13 +44,12 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");
             // Load ClickItemListener for opcode 122
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItemListener");
-            // Load ClickObjectListener for opcode 132
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickObjectListener");
+            // Load consolidated object interaction listener (132/252/70/234/228/192/35)
+            Class.forName("net.dodian.uber.game.netty.listener.in.ObjectInteractionListener");
             // Load NpcInteractionListener for click/attack npc opcodes (155/17/21/18/72)
             Class.forName("net.dodian.uber.game.netty.listener.in.NpcInteractionListener");
             // Load MagicOnPlayerListener for opcode 249
             Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnPlayerListener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickObject3Listener");
             // Load TradeListener for opcode 139
             Class.forName("net.dodian.uber.game.netty.listener.in.TradeListener");
             // Load TradeRequestListener for opcode 128
@@ -73,16 +72,10 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.DuelRequestListener"); // opcode 153
             Class.forName("net.dodian.uber.game.netty.listener.in.RemoveFriendListener"); // opcode 215
             Class.forName("net.dodian.uber.game.netty.listener.in.RemoveIgnoreListener"); // opcode 74
-            // Load ClickObject2Listener for opcode 252
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickObject2Listener");
             // Load ClickItem3Listener for opcode 75
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem3Listener");
             // Load DialogueListener for opcode 40
             Class.forName("net.dodian.uber.game.netty.listener.in.DialogueListener");
-            // Load ItemOnObjectListener for opcode 192
-            Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnObjectListener");
-            // Load ClickObject4Listener for opcode 234
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickObject4Listener");
             // Load ClickingStuffListener for opcode 130
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickingStuffListener");
             // Load DropItemListener for opcode 87
@@ -99,12 +92,8 @@ public final class PacketListenerManager {
             // Load MagicOnNpcListener for opcode 131
             Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnNpcListener");
             
-            // Load MagicOnObjectListener for opcode 35
-            Class.forName("net.dodian.uber.game.netty.listener.in.MagicOnObjectListener");
-            
             // Load other missing listeners
             Class.forName("net.dodian.uber.game.netty.listener.in.Bank10Listener");
-            Class.forName("net.dodian.uber.game.netty.listener.in.ClickObject5Listener");
             Class.forName("net.dodian.uber.game.netty.listener.in.MouseClicksListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.MoveItemsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.UpdateChatListener");
