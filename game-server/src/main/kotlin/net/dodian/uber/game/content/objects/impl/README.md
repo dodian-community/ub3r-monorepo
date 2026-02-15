@@ -45,7 +45,7 @@ Core object infrastructure now lives in:
   - Core stairs/ladders state-setting cluster
   - Major travel teleports and coordinate-specific passages
   - Pyramid Plunder object flow (doors/urns/chests/entry-exit + reset)
-  - Thieving chest/stall second-click clusters
+  - Thieving chest first-click loot flows + chest/stall second-click clusters
   - Obelisk second-click teleport (`823`)
 - Unported object behavior is now routed through `LegacyResidualObjects` as a lower-priority content fallback.
 

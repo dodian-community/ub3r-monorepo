@@ -23,7 +23,6 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.party.Balloons;
-import net.dodian.uber.game.security.ItemLog;
 import net.dodian.uber.game.content.objects.ObjectDispatcher;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -197,13 +196,6 @@ public class ClickObjectListener implements PacketListener {
         if (objectID == 20873) {
             Thieving.attemptSteal(client, objectID, objectPosition);
         }
-        if (objectID == 2391 || objectID == 2392) {
-            if (client.premium) {
-                client.ReplaceObject(2728, 3349, 2391, 0, 0);
-                client.ReplaceObject(2729, 3349, 2392, -2, 0);
-            }
-            return;
-        }
         if (objectID == 2097) {
             int type = -1;
             int[] possibleBars = {2349, 2351, 2353, 2359, 2361, 2363};
@@ -225,44 +217,6 @@ public class ClickObjectListener implements PacketListener {
                 client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0]);
             }
             client.sendFrame164(2400);
-        }
-        if (objectID == 2309 && objectPosition.getX() == 2998 && objectPosition.getY() == 3917) {
-            if (client.getLevel(Skill.AGILITY) < 75) {
-                client.send(new SendMessage("You need at least 75 agility to enter!"));
-                return;
-            }
-            client.ReplaceObject(2998, 3917, 2309, 2, 0);
-            return;
-        }
-        if (objectID == 2624 || objectID == 2625) { //Heroes dungeon for runite rock.
-            client.ReplaceObject(2901, 3510, 2624, -1, 0);
-            client.ReplaceObject(2901, 3511, 2625, -3, 0);
-            client.ReplaceObject(2902, 3510, -1, -1, 0);
-            client.ReplaceObject(2902, 3511, -1, -3, 0);
-            return;
-        }
-        if ((objectID == 1524 || objectID == 1521) && (objectPosition.getX() == 2908 || objectPosition.getX() == 2907) && objectPosition.getY() == 9698) {
-            if (!client.checkItem(989)) {
-                client.send(new SendMessage("You need a crystal key to open this door."));
-                return;
-            }
-            if (client.getLevel(Skill.SLAYER) < 120) {
-                client.send(new SendMessage("You need at least 120 slayer to enter!"));
-                return;
-            }
-            client.ReplaceObject(2908, 9698, -1, 0, 0);
-            client.ReplaceObject(2907, 9698, -1, 0, 0);
-            client.ReplaceObject(2908, 9697, 1516, 2, 0);
-            client.ReplaceObject(2907, 9697, 1516, 0, 0);
-            return;
-        }
-        if (objectID == 2623) {
-            if (client.checkItem(989)) {
-                client.ReplaceObject(2924, 9803, 2623, -3, 0);
-            } else {
-                client.send(new SendMessage("You need the crystal key to enter"));
-                client.send(new SendMessage("The crystal key is made from 2 crystal pieces"));
-            }
         }
         if (objectID == 25939 && objectPosition.getX() == 2715 && objectPosition.getY() == 3470) {
             client.transport(new Position(2715, 3471, 0));
@@ -376,10 +330,6 @@ public class ClickObjectListener implements PacketListener {
             client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0);
             client.send(new SendMessage("You swing your pick at the rock..."));
         }
-        if (objectID == 2634 && objectPosition.getX() == 2838 && objectPosition.getY() == 3517) { //2838, 3517
-            client.send(new SendMessage("You jump to the other side of the rubble"));
-            client.transport(new Position(2840, 3517, 0));
-        }
         /* Unsure... */
         if (objectID == 16680) {
             int[] x = {2845, 2848, 2848};
@@ -390,96 +340,6 @@ public class ClickObjectListener implements PacketListener {
                     c = x.length;
                 }
             }
-        }
-        if (objectID == 375 && objectPosition.getX() == 2593 && objectPosition.getY() == 3108 && client.getPosition().getZ() == 1) {
-            if(client.chestEventOccur) {
-                return;
-            }
-            if (client.getLevel(Skill.THIEVING) < 70) {
-                client.send(new SendMessage("You must be level 70 thieving to open this chest"));
-                return;
-            }
-            if (client.freeSlots() < 1) {
-                client.send(new SendMessage("You need atleast one free inventory slot!"));
-                return;
-            }
-            if (System.currentTimeMillis() - client.lastAction < 1200) {
-                client.lastAction = System.currentTimeMillis();
-                return;
-            }
-            final Object emptyObj = new Object(378, objectPosition.getX(), objectPosition.getY(), client.getPosition().getZ(), 10, 2, objectID);
-            if (!GlobalObject.addGlobalObject(emptyObj, 12000)) {
-                return;
-            }
-            client.lastAction = System.currentTimeMillis();
-            double roll = Math.random() * 100;
-            if (roll <= 0.3) {
-                int[] items = {2577, 2579, 2631};
-                int r = (int) (Math.random() * items.length);
-                client.send(new SendMessage("You have recieved a " + client.GetItemName(items[r]) + "!"));
-                client.addItem(items[r], 1);
-                ItemLog.playerGathering(client, items[r], 1, client.getPosition().copy(), "Thieving");
-                client.yell("[Server] - " + client.getPlayerName() + " has just received from the Yanille chest a  "
-                        + client.GetItemName(items[r]));
-            } else {
-                int coins = 300 + Utils.random(1200);
-                client.send(new SendMessage("You find " + coins + " coins inside the chest"));
-                client.addItem(995, coins);
-                ItemLog.playerGathering(client, 995, coins, client.getPosition().copy(), "Thieving");
-            }
-            if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
-                client.giveExperience(300, Skill.THIEVING);
-            client.checkItemUpdate();
-            client.chestEvent++;
-            client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
-            client.triggerRandom(900);
-        }
-        if (objectID == 375 && objectPosition.getX() == 2733 && objectPosition.getY() == 3374) {
-            if(client.chestEventOccur) {
-                return;
-            }
-            if (!client.premium) {
-                client.resetPos();
-                return;
-            }
-            if (client.getLevel(Skill.THIEVING) < 85) {
-                client.send(new SendMessage("You must be level 85 thieving to open this chest"));
-                return;
-            }
-            if (client.freeSlots() < 1) {
-                client.send(new SendMessage("You need atleast one free inventory slot!"));
-                return;
-            }
-            if (System.currentTimeMillis() - client.lastAction < 1200) {
-                client.lastAction = System.currentTimeMillis();
-                return;
-            }
-            final Object o = new Object(378, objectPosition.getX(), objectPosition.getY(), objectPosition.getZ(), 11, -1, objectID);
-            if (!GlobalObject.addGlobalObject(o, 15000)) {
-                return;
-            }
-            client.lastAction = System.currentTimeMillis();
-            double roll = Math.random() * 100;
-            if (roll <= 0.3) {
-                int[] items = {1050, 2581, 2631};
-                int r = (int) (Math.random() * items.length);
-                client.send(new SendMessage("You have recieved a " + client.GetItemName(items[r]) + "!"));
-                client.addItem(items[r], 1);
-                ItemLog.playerGathering(client, items[r], 1, client.getPosition().copy(), "Thieving");
-                client.yell("[Server] - " + client.getPlayerName() + " has just received from the Legends chest a  "
-                        + client.GetItemName(items[r]));
-            } else {
-                int coins = 500 + Utils.random(2000);
-                client.send(new SendMessage("You find " + coins + " coins inside the chest"));
-                client.addItem(995, coins);
-                ItemLog.playerGathering(client, 995, coins, client.getPosition().copy(), "Thieving");
-            }
-            if (client.getEquipment()[Equipment.Slot.HEAD.getId()] == 2631)
-                client.giveExperience(500, Skill.THIEVING);
-            client.checkItemUpdate();
-            client.chestEvent++;
-            client.stillgfx(444, objectPosition.getY(), objectPosition.getX());
-            client.triggerRandom(1500);
         }
         if (System.currentTimeMillis() - client.lastDoor > 1000) {
             client.lastDoor = System.currentTimeMillis();
