@@ -4,12 +4,10 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.Event;
 import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.item.Equipment;
@@ -20,7 +18,6 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.agility.Agility;
-import net.dodian.uber.game.model.player.skills.agility.Werewolf;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
@@ -220,62 +217,6 @@ public class ClickObjectListener implements PacketListener {
             } else if (type == -1)
                 client.send(new SendMessage("You do not have any bars to smith!"));
         }
-        if (objectID == 1294) {
-            client.transport(new Position(2485, 9912, 0));
-        }
-        if (objectID == 17384 && objectPosition.getX() == 2892 && objectPosition.getY() == 3507) {
-            client.transport(new Position(2893, 9907, 0));
-        }
-        if (objectID == 17384 && objectPosition.getX() == 2677 && objectPosition.getY() == 3405) {
-            client.transport(new Position(2677, 9806, 0));
-        }
-        if (objectID == 17385 && objectPosition.getX() == 2677 && objectPosition.getY() == 9805) {
-            client.transport(new Position(2677, 3404, 0));
-        }
-        if (objectID == 17387 && objectPosition.getX() == 2892 && objectPosition.getY() == 9907) {
-            client.transport(new Position(2893, 3507, 0));
-        }
-        if (objectID == 16466) {
-            if (client.getLevel(Skill.AGILITY) < 75) {
-                client.send(new SendMessage("You need level 75 agility to use this shortcut!"));
-                return;
-            }
-            client.transport(new Position(2863, client.getPosition().getY() == 2971 ? 2976 : 2971, 0));
-        }
-        if (objectID == 882 && objectPosition.getX() == 2899 && objectPosition.getY() == 9728) {
-            if (client.getLevel(Skill.AGILITY) < 85) {
-                client.send(new SendMessage("You need level 85 agility to use this shortcut!"));
-                return;
-            }
-            client.transport(new Position(2885, 9795, 0));
-        }
-        if (objectID == 882 && objectPosition.getX() == 2885 && objectPosition.getY() == 9794) {
-            if (client.getLevel(Skill.AGILITY) < 85) {
-                client.send(new SendMessage("You need level 85 agility to use this shortcut!"));
-                return;
-            }
-            client.transport(new Position(2899, 9729, 0));
-        }
-        if (objectID == 16509) {
-            if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
-                client.send(new SendMessage("You need a crystal key and 70 agility to use this shortcut!"));
-                return;
-            }
-            if (client.getPosition().getX() == 2886 && client.getPosition().getY() == 9799)
-                client.transport(new Position(2892, 9799, 0));
-            else if (client.getPosition().getX() == 2892 && client.getPosition().getY() == 9799)
-                client.transport(new Position(2886, 9799, 0));
-        }
-        if (objectID == 16510) {
-            if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
-                client.send(new SendMessage("You need a crystal key and 70 agility to use this shortcut!"));
-                return;
-            }
-            if (client.getPosition().getX() == 2880 && client.getPosition().getY() == 9813)
-                client.transport(new Position(2878, 9813, 0));
-            else if (client.getPosition().getX() == 2878 && client.getPosition().getY() == 9813)
-                client.transport(new Position(2880, 9813, 0));
-        }
         if (objectID == 6847) {
             Thieving.attemptSteal(client, objectID, objectPosition);
         }
@@ -356,153 +297,6 @@ public class ClickObjectListener implements PacketListener {
             client.skillX = objectPosition.getX();
             client.setSkillY(objectPosition.getY());
             client.stairDistance = 1;
-        }
-        if (objectID >= 26622 && objectID <= 26625) {
-            if(client.getLevel(Skill.THIEVING) < 21 || client.getStunTimer() > 0) {
-                client.send(new SendMessage(client.getLevel(Skill.THIEVING) < 21 ? "You need level 21 thieving to enter." : "You are stunned!"));
-                return;
-            }
-            if(Server.entryObject.getEntryDoor(objectPosition)) { //Entry to activity
-                int chance = Misc.random(255);
-                if(chance <= (int)(client.getLevel(Skill.THIEVING) * 2.5))
-                    client.transport(new Position(1934, 4450, 2));
-                else {
-                    client.dealDamage(null, Misc.random(3), Entity.hitType.STANDARD);
-                    client.setStunTimer(4);
-                }
-            } else
-                client.transport(new Position(1968, 4420, 2));
-        }
-        if (objectID >= 26618 && objectID <= 26621) { //Room entrance check...For now :D
-            if(client.getPlunder.getRoomNr() + 1 == 8) { //Max floors!
-                return;
-            }
-            if(Server.entryObject.nextRoom[client.getPlunder.getRoomNr()] + 26618 == objectID && client.getPlunder.openDoor(objectID))
-                client.getPlunder.nextRoom();
-            else if (client.getPlunder.openDoor(objectID))
-                client.send(new SendMessage("This tomb door lead nowhere."));
-            else client.getPlunder.toggleObstacles(objectID);
-        }
-        if (objectID == 20932) {
-            client.transport(client.getPlunder.end);
-        }
-        if (objectID == 20931) {
-            client.NpcDialogue = 20931;
-        }
-        if (objectID == 26616 || objectID == 26626) { //Grand gold chest + Sarcophagus
-            client.getPlunder.toggleObstacles(objectID);
-        }
-        if (objectID == 26580 || (objectID >= 26600 && objectID <= 26613)) { //Urns!
-            client.getPlunder.toggleObstacles(objectID);
-        }
-        /* Desert Objects */
-        if (objectID == 20275) { //Sophanem bank entry!
-            client.transport(new Position(2799, 5160, 0));
-            client.setFocus(2799, 5159);
-        }
-        else if (objectID == 20277) { //Sophanem bank exit!
-            client.transport(new Position(3315, 2796, 0));
-            client.setFocus(3315, 2797);
-        }
-        /* Agility */
-        Agility agility = new Agility(client);
-        if (objectID == 23145) {
-            agility.GnomeLog();
-            return;
-        } else if (objectID == 23134 && client.distanceToPoint(objectPosition.getX(), objectPosition.getY()) < 2) {
-            agility.GnomeNet1();
-            return;
-        } else if (objectID == 23559) {
-            agility.GnomeTree1();
-            return;
-        } else if (objectID == 23557) {
-            agility.GnomeRope();
-            return;
-        } else if (objectID == 23560 || objectID == 23561) {
-            agility.GnomeTreebranch2();
-            return;
-        } else if (objectID == 23135 && client.distanceToPoint(objectPosition.getX(), objectPosition.getY()) < 3) {
-            agility.GnomeNet2();
-            return;
-        } else if (objectID == 23138 && client.getPosition().getX() == 2484 && client.getPosition().getY() == 3430 && client.distanceToPoint(objectPosition.getX(), objectPosition.getY()) < 2) {
-            agility.GnomePipe();
-            return;
-        } else if (objectID == 23139 && client.getPosition().getX() == 2487 && client.getPosition().getY() == 3430 && client.distanceToPoint(objectPosition.getX(), objectPosition.getY()) < 2) {
-            agility.GnomePipe();
-            return;
-        } else if (objectID == 23137) {
-            agility.WildyPipe();
-            return;
-        } else if (objectID == 23132) {
-            agility.WildyRope();
-            return;
-        } else if (objectID == 23556) {
-            agility.WildyStones();
-            return;
-        } else if (objectID == 23542) {
-            agility.WildyLog();
-            return;
-        } else if (objectID == 23640) {
-            agility.WildyClimb();
-            return;
-        } else if (objectID == 23131) {
-            agility.BarbRope();
-            return;
-        } else if (objectID == 23144) {
-            agility.BarbLog();
-            return;
-        } else if (objectID == 20211) {
-            agility.BarbNet();
-            return;
-        } else if (objectID == 23547) {
-            agility.BarbLedge();
-            return;
-        } else if (objectID == 16682) {
-            agility.BarbStairs();
-            return;
-        } else if (objectID == 1948 && objectPosition.getX() == 2536 && objectPosition.getY() == 3553) {
-            agility.BarbFirstWall();
-            return;
-        } else if (objectID == 1948 && objectPosition.getX() == 2539 && objectPosition.getY() == 3553) {
-            agility.BarbSecondWall();
-            return;
-        } else if (objectID == 1948 && objectPosition.getX() == 2542 && objectPosition.getY() == 3553) {
-            agility.BarbFinishWall();
-            return;
-        } else if (objectID == 23567) {
-            agility.orangeBar();
-        } else if (objectID == 23548) {
-            agility.yellowLedge();
-        }
-        /* Werewolf course */
-        Werewolf werewolf = new Werewolf(client);
-        if (objectID == 11643) {
-            werewolf.StepStone(objectPosition);
-            return;
-        }
-        if (objectID == 11638) {
-            werewolf.hurdle(objectPosition);
-            return;
-        }
-        if (objectID == 11657) {
-            werewolf.pipe(objectPosition);
-            return;
-        }
-        if (objectID == 11641) {
-            werewolf.slope(objectPosition);
-            return;
-        }
-        if (objectID >= 11644 && objectID <= 11646) {
-            werewolf.zipLine(objectPosition);
-            return;
-        }
-        if (objectID == 11636) { //Werewolf entrance
-            if (client.getLevel(Skill.AGILITY) >= 60) {
-                client.ReplaceObject(objectPosition.getX(), objectPosition.getY(), 11636, 2, 10); //Do we need to showcase the trapdoor being opened?
-                client.showNPCChat(5928, 601, new String[]{"Welcome to the werewolf agility course!"});
-                client.transport(new Position(3549, 9865, 0));
-            } else client.showNPCChat(5928, 616, new String[]{"Go and train your agility!"});
-            return;
         }
         /* Something else... */
         if (objectID == 1558 || objectID == 1557 && client.distanceToPoint(2758, 3482) < 5 && client.playerRights > 0) {

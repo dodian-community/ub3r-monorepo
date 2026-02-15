@@ -11,7 +11,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 
 object UtilityObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(733, 7962, 20931, 25824, 14889)
+    override val objectIds: IntArray = intArrayOf(733, 7962, 25824, 14889)
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId != 733) {
@@ -38,10 +38,6 @@ object UtilityObjects : ObjectContent {
         return when (objectId) {
             7962 -> {
                 client.send(SendMessage("You inspect the monolith, but can't make sense of the inscription."))
-                true
-            }
-            20931 -> {
-                client.getPlunder.resetPlunder()
                 true
             }
             25824, 14889 -> {

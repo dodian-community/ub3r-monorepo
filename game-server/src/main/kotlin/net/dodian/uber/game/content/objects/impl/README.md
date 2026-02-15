@@ -13,6 +13,7 @@ Core object infrastructure now lives in:
 - `travel/PassageObjects.kt`
 - `travel/TeleportObjects.kt`
 - `agility/GnomeCourseObjects.kt`
+- `agility/BarbarianCourseObjects.kt`
 - `agility/WildernessCourseObjects.kt`
 - `agility/WerewolfCourseObjects.kt`
 - `smithing/FurnaceObjects.kt`
@@ -21,11 +22,13 @@ Core object infrastructure now lives in:
 - `mining/MiningRocksObjects.kt`
 - `mining/GemRocksObjects.kt`
 - `mining/SpecialMiningObjects.kt`
-- `quest/QuestSpecialObjects.kt`
+- `runecrafting/RunecraftingObjects.kt`
 - `thieving/ChestObjects.kt`
+- `thieving/PlunderObjects.kt`
 - `thieving/StallObjects.kt`
 - `farming/FarmingPatchGuideObjects.kt`
 - `doors/DoorToggleObjects.kt`
+- `utility/UtilityObjects.kt`
 - `legacy/LegacyResidualObjects.kt` (temporary low-priority residual fallback via content-dispatch)
 
 ## Current migration status
@@ -38,8 +41,10 @@ Core object infrastructure now lives in:
   - Furnace/anvil + item-on-object + orb charging magic in typed smithing files
   - Mining rocks cluster (`Utils.rocks`) in `MiningRocksObjects`
   - Prayer altar restore cluster
+  - Gnome/wilderness/barbarian/werewolf agility first-click course handlers
   - Core stairs/ladders state-setting cluster
   - Major travel teleports and coordinate-specific passages
+  - Pyramid Plunder object flow (doors/urns/chests/entry-exit + reset)
   - Thieving chest/stall second-click clusters
   - Obelisk second-click teleport (`823`)
 - Unported object behavior is now routed through `LegacyResidualObjects` as a lower-priority content fallback.
@@ -78,6 +83,6 @@ Core object infrastructure now lives in:
 
 ## Review focus
 
-- Domain split granularity (`travel` vs `agility` vs `quest`)
+- Domain split granularity (`travel` vs `agility` vs `runecrafting`)
 - Whether stair state logic should stay in one file or split by region
 - Any naming preferences before larger migration batches

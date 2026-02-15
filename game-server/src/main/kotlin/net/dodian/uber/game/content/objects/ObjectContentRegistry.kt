@@ -30,6 +30,7 @@ object ObjectContentRegistry {
             val pending = listOf(
                 "AltarObjects" to net.dodian.uber.game.content.objects.impl.prayer.AltarObjects,
                 "AnvilObjects" to net.dodian.uber.game.content.objects.impl.smithing.AnvilObjects,
+                "BarbarianCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.BarbarianCourseObjects,
                 "BankBoothObjects" to net.dodian.uber.game.content.objects.impl.banking.BankBoothObjects,
                 "BankChestObjects" to net.dodian.uber.game.content.objects.impl.banking.BankChestObjects,
                 "ChestObjects" to net.dodian.uber.game.content.objects.impl.thieving.ChestObjects,
@@ -42,6 +43,7 @@ object ObjectContentRegistry {
                 "LegacyResidualObjects" to net.dodian.uber.game.content.objects.impl.legacy.LegacyResidualObjects,
                 "MiningRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.MiningRocksObjects,
                 "PassageObjects" to net.dodian.uber.game.content.objects.impl.travel.PassageObjects,
+                "PlunderObjects" to net.dodian.uber.game.content.objects.impl.thieving.PlunderObjects,
                 "RunecraftingObjects" to net.dodian.uber.game.content.objects.impl.runecrafting.RunecraftingObjects,
                 "SpecialMiningObjects" to net.dodian.uber.game.content.objects.impl.mining.SpecialMiningObjects,
                 "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
