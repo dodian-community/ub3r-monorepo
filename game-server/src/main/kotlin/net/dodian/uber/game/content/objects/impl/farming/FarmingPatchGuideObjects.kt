@@ -5,9 +5,9 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object FarmingPatchGuideObjects : ObjectContent {
-    private val compostBins = intArrayOf(7837, 7838, 7839, 1003)
     private val guideObjects = intArrayOf(
         7577, 7578, 7579, 7580,
         7847, 7848, 7849, 7850,
@@ -18,7 +18,15 @@ object FarmingPatchGuideObjects : ObjectContent {
         27111,
     )
 
-    override val objectIds: IntArray = (compostBins + guideObjects).distinct().sorted().toIntArray()
+    override val objectIds: IntArray = guideObjects.distinct().sorted().toIntArray()
+
+    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        if (objectId == 7962) {
+            client.send(SendMessage("You inspect the monolith, but can't make sense of the inscription."))
+            return true
+        }
+        return false
+    }
 
     override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when {
@@ -50,11 +58,5 @@ object FarmingPatchGuideObjects : ObjectContent {
         }
     }
 
-    override fun onFifthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (compostBins.contains(objectId)) {
-            with(client.farming) { client.interactBin(objectId, 5) }
-            return true
-        }
-        return false
-    }
+    override fun onFifthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
 }

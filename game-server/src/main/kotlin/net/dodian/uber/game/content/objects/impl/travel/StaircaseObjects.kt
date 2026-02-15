@@ -14,6 +14,7 @@ object StaircaseObjects : ObjectContent {
         1723, 1725, 1726,
         16664,
         1992,
+        881,
     )
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
@@ -78,6 +79,10 @@ object StaircaseObjects : ObjectContent {
 
         if (objectId == 1992 && position.x == 2558 && position.y == 3444) {
             client.transport(Position(2717, 9820, 0))
+            return true
+        }
+        if (objectId == 881) {
+            client.position.z = client.position.z - 1
             return true
         }
 

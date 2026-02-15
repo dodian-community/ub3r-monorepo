@@ -4,6 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object AltarObjects : ObjectContent {
@@ -16,6 +17,28 @@ object AltarObjects : ObjectContent {
         } else {
             client.send(SendMessage("You are at maximum prayer points!"))
         }
+        return true
+    }
+
+    override fun onUseItem(
+        client: Client,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        itemId: Int,
+        itemSlot: Int,
+        interfaceId: Int,
+    ): Boolean {
+        if (objectId != 409) {
+            return false
+        }
+        if (!Prayer.altarBones(client, itemId)) {
+            return false
+        }
+        client.skillX = position.x
+        client.setSkillY(position.y)
+        client.boneItem = itemId
+        Prayer.altarBones(client, client.boneItem)
         return true
     }
 }

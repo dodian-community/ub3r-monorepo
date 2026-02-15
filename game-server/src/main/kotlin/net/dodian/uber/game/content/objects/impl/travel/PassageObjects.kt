@@ -8,12 +8,39 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object PassageObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(882, 1521, 1524, 2309, 23271, 2391, 2392, 2623, 2624, 2625, 2634, 16466, 16509, 16510)
+    override val objectIds: IntArray = intArrayOf(
+        882,
+        1521, 1524,
+        2309, 23140, 23271, 23564,
+        2391, 2392,
+        2623, 2624, 2625, 2634,
+        15656, 16466, 16509, 16510,
+    )
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when (objectId) {
             23271 -> {
                 client.transport(Position(position.x, position.y + if (client.position.y == 3523) -1 else 2, position.z))
+                true
+            }
+            23140 -> {
+                if (!client.checkItem(1544)) {
+                    client.send(SendMessage("You need a orange key to use this pipe!"))
+                    return true
+                }
+                when {
+                    position.x == 2576 && position.y == 9506 -> client.transport(Position(2572, 9506, 0))
+                    position.x == 2573 && position.y == 9506 -> client.transport(Position(2578, 9506, 0))
+                    else -> return false
+                }
+                true
+            }
+            23564 -> {
+                client.transport(Position(2621, 9496, 0))
+                true
+            }
+            15656 -> {
+                client.transport(Position(2614, 9505, 0))
                 true
             }
             16466 -> {

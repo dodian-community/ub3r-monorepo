@@ -37,6 +37,7 @@ object TeleportObjects : ObjectContent {
         20877,
         5553, 6702,
         25938, 25939,
+        6451, 6452,
     )
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
@@ -55,16 +56,22 @@ object TeleportObjects : ObjectContent {
                 true
             }
             16680 -> {
-                if (position.x == 2884 && position.y == 3397) {
-                    if (client.getLevel(Skill.SLAYER) < 50) {
-                        client.send(SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."))
-                    } else {
-                        client.transport(Position(2884, 9798, 0))
+                when {
+                    position.x == 2884 && position.y == 3397 -> {
+                        if (client.getLevel(Skill.SLAYER) < 50) {
+                            client.send(SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."))
+                        } else {
+                            client.transport(Position(2884, 9798, 0))
+                        }
                     }
-                    true
-                } else {
-                    false
+                    (position.x == 2845 && position.y == 3516) ||
+                        (position.x == 2848 && position.y == 3513) ||
+                        (position.x == 2848 && position.y == 3519) -> {
+                        client.transport(Position(2868, 9945, 0))
+                    }
+                    else -> return false
                 }
+                true
             }
             17384 -> {
                 when {
@@ -345,6 +352,21 @@ object TeleportObjects : ObjectContent {
                 client.requestAnim(645, 0)
                 client.transport(Position(2924, 3483, 0))
                 true
+            }
+            6451, 6452 -> {
+                if ((objectId == 6451 && client.position.y == 9375) ||
+                    (objectId == 6452 && client.position.y == 9376)
+                ) {
+                    if (client.position.x == 3305) {
+                        val agi = net.dodian.uber.game.model.player.skills.agility.Agility(client)
+                        agi.kbdEntrance()
+                    } else {
+                        client.NpcDialogue = 536
+                    }
+                    true
+                } else {
+                    false
+                }
             }
             else -> false
         }

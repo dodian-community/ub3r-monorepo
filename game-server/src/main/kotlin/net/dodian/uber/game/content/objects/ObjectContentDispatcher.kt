@@ -140,7 +140,7 @@ object ObjectContentDispatcher {
         if (last == null || now - last >= FALLBACK_LOG_WINDOW_MS) {
             lastUnhandledLogAt[key] = now
             logger.debug(
-                "Unhandled object interaction kind={} objectId={} player={} (falling back to legacy path)",
+                "Unhandled object interaction kind={} objectId={} player={}",
                 kind,
                 context.objectId,
                 context.client.playerName,

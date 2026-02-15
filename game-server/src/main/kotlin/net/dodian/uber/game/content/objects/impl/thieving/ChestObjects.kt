@@ -14,10 +14,10 @@ import net.dodian.uber.game.security.ItemLog
 import net.dodian.utilities.Utils
 
 object ChestObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(375, 378, 20873, 11729, 11730, 11731, 11732, 11733, 11734)
+    override val objectIds: IntArray = intArrayOf(375, 378, 6847, 20873, 11729, 11730, 11731, 11732, 11733, 11734)
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 20873) {
+        if (objectId == 20873 || objectId == 6847) {
             Thieving.attemptSteal(client, objectId, position)
             return true
         }

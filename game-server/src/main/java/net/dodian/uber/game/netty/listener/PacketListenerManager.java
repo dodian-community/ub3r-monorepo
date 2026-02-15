@@ -44,7 +44,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");
             // Load ClickItemListener for opcode 122
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItemListener");
-            // Load consolidated object interaction listener (132/252/70/192/35)
+            // Load consolidated object interaction listener (132/252/70/234/228/192/35)
             Class.forName("net.dodian.uber.game.netty.listener.in.ObjectInteractionListener");
             // Load NpcInteractionListener for click/attack npc opcodes (155/17/21/18/72)
             Class.forName("net.dodian.uber.game.netty.listener.in.NpcInteractionListener");

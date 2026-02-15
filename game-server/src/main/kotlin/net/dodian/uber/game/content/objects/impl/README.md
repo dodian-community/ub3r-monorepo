@@ -1,88 +1,55 @@
-# Object Content Migration Layout
+# Object Content Layout
 
-This folder is the target structure for object gameplay content.
-Core object infrastructure now lives in:
-- `/Users/alexismaneely/Desktop/ub3r-monorepo/game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/`
+Object gameplay is implemented in Kotlin content modules.
+`ObjectInteractionListener` is IO-only: packet decode, walk task scheduling, distance/pathing checks, then dispatch to content.
 
 ## Domains
 
-- `banking/BankBoothObjects.kt`
-- `banking/BankChestObjects.kt`
-- `travel/StaircaseObjects.kt`
-- `travel/LadderObjects.kt`
-- `travel/PassageObjects.kt`
-- `travel/TeleportObjects.kt`
 - `agility/GnomeCourseObjects.kt`
 - `agility/BarbarianCourseObjects.kt`
 - `agility/WildernessCourseObjects.kt`
 - `agility/WerewolfCourseObjects.kt`
-- `smithing/FurnaceObjects.kt`
-- `smithing/AnvilObjects.kt`
-- `prayer/AltarObjects.kt`
+- `banking/BankBoothObjects.kt`
+- `banking/BankChestObjects.kt`
+- `cooking/RangeObjects.kt`
+- `crafting/SpinningWheelObjects.kt`
+- `crafting/ResourceFillingObjects.kt`
+- `doors/DoorToggleObjects.kt`
+- `events/PartyRoomObjects.kt`
+- `farming/FarmingPatchObjects.kt`
+- `farming/CompostBinObjects.kt`
+- `farming/FarmingPatchGuideObjects.kt`
 - `mining/MiningRocksObjects.kt`
 - `mining/GemRocksObjects.kt`
 - `mining/SpecialMiningObjects.kt`
+- `prayer/AltarObjects.kt`
 - `runecrafting/RunecraftingObjects.kt`
+- `smithing/FurnaceObjects.kt`
+- `smithing/AnvilObjects.kt`
 - `thieving/ChestObjects.kt`
-- `thieving/PlunderObjects.kt`
 - `thieving/StallObjects.kt`
-- `farming/FarmingPatchGuideObjects.kt`
-- `doors/DoorToggleObjects.kt`
-- `utility/UtilityObjects.kt`
-- `legacy/LegacyResidualObjects.kt` (temporary low-priority residual fallback via content-dispatch)
+- `thieving/PlunderObjects.kt`
+- `travel/LadderObjects.kt`
+- `travel/StaircaseObjects.kt`
+- `travel/PassageObjects.kt`
+- `travel/TeleportObjects.kt`
+- `travel/WebObstacleObjects.kt`
+- `woodcutting/WoodcuttingTreesObjects.kt`
 
-## Current migration status
+## Object System Services
 
-- Consolidated listener routes opcodes `132`, `252`, `70`, `192`, `35` through object content first.
-- Consolidated listener now also routes `234` (click4) and `228` (click5) through the same object path.
-- Position-aware object binding resolution is in place (`objectId + optional position/range/predicate`).
-- Ported and bypassed from legacy:
-  - Banking booth/chest/refund click flows in typed banking files
-  - Furnace/anvil + item-on-object + orb charging magic in typed smithing files
-  - Mining rocks cluster (`Utils.rocks`) in `MiningRocksObjects`
-  - Prayer altar restore cluster
-  - Gnome/wilderness/barbarian/werewolf agility first-click course handlers
-  - Core stairs/ladders state-setting cluster
-  - Major travel teleports and coordinate-specific passages
-  - Pyramid Plunder object flow (doors/urns/chests/entry-exit + reset)
-  - Thieving chest first-click loot flows + chest/stall second-click clusters
-  - Obelisk second-click teleport (`823`)
-- Unported object behavior is now routed through `LegacyResidualObjects` as a lower-priority content fallback.
+Core services are in:
+- `/Users/alexismaneely/Desktop/ub3r-monorepo/game-server/src/main/kotlin/net/dodian/uber/game/content/objects/services/`
 
-## Completion checkpoint
+Provided capabilities:
+- `objectId` and `objectId + position` binding resolution
+- global object spawn/replace/revert lifecycle
+- personal per-player object lifecycle
+- clip flag apply/remove helpers
+- unified click/use-item/magic dispatch context
 
-- This branch is at a reviewable architecture/layout checkpoint.
-- Legacy listeners are no longer loaded as packet registrations for object opcodes.
-- Remaining unported behavior executes through content-dispatch fallback (`LegacyResidualObjects`) until every branch is fully type-file migrated.
+## Authoring Rules
 
-## Requirement mapping
-
-- `1) objectOnPosition`
-  - Supported by position-aware bindings in `ObjectBinding` (`objectId` + exact tile, range, or predicate).
-- `2) clip flag (noclip/clip)`
-  - Supported by `ObjectClipService` (`apply` / `remove`) using region clipping APIs.
-- `3) globalObjects lifecycle`
-  - Supported by `ObjectSpawnService` for timed world object spawn/replace/revert.
-- `4) personalObjects lifecycle`
-  - Supported by `PersonalObjectService` for per-player display and timed revert.
-- `5) pathing to interaction`
-  - Kept in Netty listener flow (`ObjectInteractionListener`) with decode + walk + distance checks.
-- `6) customObjectSpawns policy`
-  - Permanent map edits should be cache-first.
-  - Runtime services should be used for temporary or conditional overrides only.
-
-## Authoring rules
-
-- Each object content file should bind by:
-  - `objectId`, or
-  - `objectId + position` (exact/range/predicate).
-- Each file may handle any interaction type needed:
-  - click options 1-5
-  - item-on-object
-  - magic-on-object
-
-## Review focus
-
-- Domain split granularity (`travel` vs `agility` vs `runecrafting`)
-- Whether stair state logic should stay in one file or split by region
-- Any naming preferences before larger migration batches
+- Use mechanic-first files (not region-first) unless a type file becomes too large.
+- Bind handlers with explicit IDs and position-aware bindings where needed.
+- Keep gameplay in content modules; keep listener logic pathing/IO only.
