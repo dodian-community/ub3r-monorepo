@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.mining
+package net.dodian.uber.game.content.objects.impl.mining
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
@@ -9,15 +9,14 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Utils
 
-object CoalRocks : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        7456,
-        7489,
-    )
+object MiningRocksObjects : ObjectContent {
+    override val objectIds: IntArray = Utils.rocks
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         val rockId = Utils.rocks.indexOf(objectId)
-        if (rockId == -1) return false
+        if (rockId == -1) {
+            return false
+        }
 
         if (client.fletchings || client.isFiremaking || client.shafting) {
             client.resetAction()
@@ -44,11 +43,6 @@ object CoalRocks : ObjectContent {
         client.mining = true
         client.requestAnim(client.getMiningEmote(Utils.picks[minePick]), 0)
         client.send(SendMessage("You swing your pick at the rock..."))
-        return true
-    }
-
-    override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.send(SendMessage("This rock contains coal."))
         return true
     }
 }
