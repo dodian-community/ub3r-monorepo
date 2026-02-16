@@ -7,18 +7,23 @@ import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.utilities.Misc;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
-import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Dashboard
  */
 public class NpcUpdating extends EntityUpdating<Npc> {
+
+    private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
+    private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
+    private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
 
     private static final NpcUpdating instance = new NpcUpdating();
 
@@ -30,6 +35,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public void update(Player player, ByteMessage stream) {
         ByteMessage updateBlock = ByteMessage.raw(16384);
         ByteMessage buf = stream;
+        int movementWrites = 0;
 
         stream.startBitAccess();
 
@@ -39,6 +45,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             boolean exceptions = removeNpc(player, npc);
             if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
                 updateNPCMovement(npc, stream);
+                movementWrites++;
                 appendBlockUpdate(npc, updateBlock);
             } else {
                 buf.putBits(1, 1);
@@ -68,6 +75,11 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             stream.endBitAccess();
         }
         // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
+
+        if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
+            DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
+            logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
+        }
     }
 
     public static boolean removeNpc(Player player, Npc npc) {
@@ -213,7 +225,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {
-        if (!npc.isWalking() && npc.getDirection() == -1) {
+        if (npc.getDirection() == -1) {
             if (npc.getUpdateFlags().isUpdateRequired()) {
                 buf.putBits(1, 1);
                 buf.putBits(2, 0);
@@ -221,12 +233,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         } else {
-            npc.setDirection(npc.getNextWalkingDirection());
-            if (npc.getDirection() == -1) {
-                buf.putBits(1, 1);
-                buf.putBits(2, 0);
-                return;
-            }
             buf.putBits(1, 1);
             buf.putBits(2, 1);
             buf.putBits(3, Utils.xlateDirectionToClient[npc.getDirection()]);
@@ -236,6 +242,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         }
+    }
+
+    public static int consumeDebugMovementWriteCounter() {
+        return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
     }
 
 }

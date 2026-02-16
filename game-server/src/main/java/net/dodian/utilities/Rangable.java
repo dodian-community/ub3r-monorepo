@@ -57,6 +57,9 @@ public class Rangable {
     }
 
     private static void addClipping(int x, int y, int height, int shift) {
+        if (rangables == null) {
+            return;
+        }
         int regionX = x >> 3;
         int regionY = y >> 3;
         int regionId = (regionX / 8 << 8) + regionY / 8;
@@ -69,6 +72,9 @@ public class Rangable {
     }
 
     private static void removeClipping(int x, int y, int height, int shift) {
+        if (rangables == null) {
+            return;
+        }
         int regionX = x >> 3;
         int regionY = y >> 3;
         int regionId = ((regionX / 8) << 8) + (regionY / 8);
@@ -330,7 +336,14 @@ public class Rangable {
     }
 
     public static void addObject(int objectId, int x, int y, int height, int direction, int type, boolean startUp) {
-        if (objectId < 0 || GameObjectData.forId(objectId).canShootThru()) {
+        if (objectId < 0) {
+            if (!startUp) {
+                removeClippingForSolidObject(x, y, height, 0, 0, true);
+            }
+            return;
+        }
+        GameObjectData data = GameObjectData.forId(objectId);
+        if (data == null || data.canShootThru()) {
             if (!startUp) {
                 removeClippingForSolidObject(x, y, height, 0, 0, true);
             }
@@ -338,10 +351,6 @@ public class Rangable {
         }
         if (x >= 3256 && x <= 3259 && y >= 3926 && y <= 3928) {
             //System.out.println(objectId);
-        }
-        GameObjectData data = GameObjectData.forId(objectId);
-        if (data == null) {
-            return;
         }
         int xLength = data.getSizeX(direction);
         int yLength = data.getSizeY(direction);
@@ -406,6 +415,9 @@ public class Rangable {
     }
 
     public static int getClipping(int x, int y, int height) {
+        if (rangables == null) {
+            return 0;
+        }
         if (height > 3) {
             height = 0;
         }
@@ -513,7 +525,8 @@ public class Rangable {
             dis.readFully(buffer);
             dis.close();
             ByteStream in = new ByteStream(buffer);
-            int size = in.length() / 6; //stream.readUShort()
+            int entrySize = in.length() % 7 == 0 ? 7 : 6;
+            int size = in.length() / entrySize;
             rangables = new Rangable[size];
             int[] regionIds = new int[size];
             int[] mapGroundFileIds = new int[size];
@@ -522,11 +535,14 @@ public class Rangable {
                 regionIds[i] = in.getUShort();
                 mapGroundFileIds[i] = in.getUShort();
                 mapObjectsFileIds[i] = in.getUShort();
-                //in.getUByte();
+                if (entrySize == 7) {
+                    in.getUByte(); // unused
+                }
             }
             for (int i = 0; i < size; i++) {
                 rangables[i] = new Rangable(regionIds[i]);
             }
+            int failedRegions = 0;
             for (int i = 0; i < size; i++) {
                 byte[] file1 = getBuffer(new File("./data/world/map/" + mapObjectsFileIds[i] + ".gz"));
                 byte[] file2 = getBuffer(new File("./data/world/map/" + mapGroundFileIds[i] + ".gz"));
@@ -536,8 +552,14 @@ public class Rangable {
                 try {
                     loadMaps(regionIds[i], new ByteStream(file1), new ByteStream(file2));
                 } catch (Exception e) {
-                    System.out.println("Error loading map region: " + regionIds[i]);
+                    failedRegions++;
+                    if (failedRegions <= 10) {
+                        System.out.println("Error loading map region: " + regionIds[i] + " (" + e.getClass().getSimpleName() + ")");
+                    }
                 }
+            }
+            if (failedRegions > 10) {
+                System.out.println("[Rangable] Additional failed regions: " + (failedRegions - 10));
             }
             System.out.println("[Rangable] DONE LOADING REGION CONFIGURATIONS");
         } catch (Exception e) {
@@ -588,8 +610,11 @@ public class Rangable {
                 if ((someArray[1][localX][localY] & 2) == 2) {
                     height--;
                 }
-                if (height >= 0 && height <= 3 && !GameObjectData.forId(objectId).canShootThru()) { //.isRangeAble()
-                    addObject(objectId, absX + localX, absY + localY, height, direction, type, true);
+                if (height >= 0 && height <= 3) {
+                    GameObjectData def = GameObjectData.forId(objectId);
+                    if (def != null && !def.canShootThru()) {
+                        addObject(objectId, absX + localX, absY + localY, height, direction, type, true);
+                    }
                 }
             }
         }

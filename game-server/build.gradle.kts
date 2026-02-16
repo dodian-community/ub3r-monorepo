@@ -42,7 +42,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
-    implementation("org.quartz-scheduler:quartz:2.5.0")
 
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("com.zaxxer:HikariCP:6.3.0")

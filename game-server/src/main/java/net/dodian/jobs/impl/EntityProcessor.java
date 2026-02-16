@@ -7,22 +7,30 @@ import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.entity.player.PlayerUpdating;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class EntityProcessor implements Job {
+public class EntityProcessor implements Runnable {
 
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
+    private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
+    private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
+
+    @Override
+    public void run() {
         long now = System.currentTimeMillis();
         Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
+        if (DEBUG_ADDED_LOCAL_PLAYERS) {
+            PlayerUpdating.resetDebugAddedLocalCounter();
+        }
 
         // Process NPCs
         for (Npc npc : Server.npcManager.getNpcs()) {
@@ -48,6 +56,12 @@ public class EntityProcessor implements Job {
             processPlayer(player);
         }
 
+        // Keep chunk membership in-sync for all movers before visibility discovery.
+        syncActivePlayerChunksForTick();
+
+        // Consume NPC walking direction once per tick, then reuse for all viewers.
+        consumeNpcDirectionsForTick();
+
         // After processing update
         for (int i = 0; i < Constants.maxPlayers; i++) {
             Client player = (Client) PlayerHandler.players[i];
@@ -66,6 +80,13 @@ public class EntityProcessor implements Job {
             if (player != null && player.isActive) {
                 player.clearUpdateFlags();
             }
+        }
+
+        if (DEBUG_ADDED_LOCAL_PLAYERS) {
+            logger.info("addedLocalPlayers={}", PlayerUpdating.consumeDebugAddedLocalCounter());
+        }
+        if (DEBUG_NPC_MOVEMENT_WRITES) {
+            logger.info("npcMovementWrites={}", net.dodian.uber.game.model.entity.npc.NpcUpdating.consumeDebugMovementWriteCounter());
         }
     }
 
@@ -180,6 +201,25 @@ public class EntityProcessor implements Job {
             }
         }
         return activeChunks;
+    }
+
+    static void syncActivePlayerChunksForTick() {
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || player.disconnected || !player.isActive) {
+                continue;
+            }
+            player.syncChunkMembership();
+        }
+    }
+
+    private void consumeNpcDirectionsForTick() {
+        for (Npc npc : Server.npcManager.getNpcs()) {
+            if (npc == null) {
+                continue;
+            }
+            npc.setDirection(npc.getNextWalkingDirection());
+        }
     }
 
     private void handleNpcDeath(Npc npc) {

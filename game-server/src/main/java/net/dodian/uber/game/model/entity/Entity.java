@@ -1,7 +1,6 @@
 package net.dodian.uber.game.model.entity;
 
 import net.dodian.cache.region.Region;
-import net.dodian.jobs.JobScheduler;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
@@ -32,8 +31,6 @@ public abstract class Entity {
     private String text;
 
     private final Map<Entity, Integer> damage = new HashMap<>();
-
-    private final JobScheduler jobScheduler = new JobScheduler(this);
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
@@ -77,10 +74,6 @@ public abstract class Entity {
 
     public int getSlot() {
         return slot;
-    }
-
-    public JobScheduler getJobScheduler() {
-        return jobScheduler;
     }
 
     public void setFocus(int focusPointX, int focusPointY) {

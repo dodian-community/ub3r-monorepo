@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.chunk.ChunkPlayerComparator;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.utilities.Misc;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -23,8 +22,16 @@ import net.dodian.utilities.Utils;
 public class PlayerUpdating extends EntityUpdating<Player> {
 
     private static final boolean DEBUG_REGION_UPDATES = false;
+    private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
+    private static final java.util.concurrent.atomic.AtomicInteger DEBUG_ADDED_LOCAL_COUNTER = new java.util.concurrent.atomic.AtomicInteger();
+
+    enum UpdatePhase {
+        UPDATE_SELF,
+        UPDATE_LOCAL,
+        ADD_LOCAL
+    }
 
     public static PlayerUpdating getInstance() {
         return instance;
@@ -33,7 +40,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void update(Player player, ByteMessage stream) {
         ByteMessage updateBlock = ByteMessage.raw(8192); // replaced legacy Stream buffer
-        boolean localPlayerUpdateRequired = false; // Track if local player movement indicated update required
 
         if (Server.updateRunning) {
             // Send server update packet (114) as separate message
@@ -46,8 +52,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         // Ensure the player is registered in the chunk index before discovery.
         player.syncChunkMembership();
 
-        localPlayerUpdateRequired = player.getUpdateFlags().isUpdateRequired();
-        updateLocalPlayerMovement(player, stream);
+        boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
+        updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
         
         // Handle teleportation - clear player list but continue to local player discovery
         if (player.didTeleport()) {
@@ -57,16 +63,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             // Don't return early - allow local player discovery to happen
         }
         
-        // Rebuild the local player's block fresh (don't reuse cached block) to avoid
-        // sending CHAT back to themselves after another viewer cached it.
-        player.invalidateCachedUpdateBlock();
-        boolean saveChatTextUpdate = player.getUpdateFlags().isRequired(UpdateFlag.CHAT);
-        player.getUpdateFlags().setRequired(UpdateFlag.CHAT, false);
-        appendBlockUpdate(player, updateBlock);
-        player.getUpdateFlags().setRequired(UpdateFlag.CHAT, saveChatTextUpdate);
-        
-        // The block we just cached (with CHAT suppressed) should not be reused by others.
-        player.invalidateCachedUpdateBlock();
+        appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
         if (player.loaded) {
             stream.putBits(8, player.playerListSize);
             int size = player.playerListSize;
@@ -76,7 +73,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 if (player.playerList[i] != null && player.loaded && !player.playerList[i].didTeleport() && !player.didTeleport()
                         && player.withinDistance(player.playerList[i])) {
                     player.playerList[i].updatePlayerMovement(stream);
-                    appendBlockUpdate(player.playerList[i], updateBlock);
+                    appendBlockUpdate(player.playerList[i], updateBlock, UpdatePhase.UPDATE_LOCAL);
                     player.playerList[player.playerListSize++] = player.playerList[i];
                     player.playersUpdating.add(player.playerList[i]);
                 } else {
@@ -109,6 +106,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
                 player.addNewPlayer(other, stream, updateBlock);
                 playersAdded++;
+                if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                }
 
                 if (playersAdded >= 15 || player.playerListSize >= 255) {
                     break; // cap additions to avoid overflow
@@ -127,12 +127,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
             updateBlock.getBuffer().getBytes(0, updateData);
             stream.putBytes(updateData);
-        } else {
-            // Check if movement indicated update was required but we have no data
-            // This can happen when CHAT flag was suppressed for local player
-            if (localPlayerUpdateRequired) {
-                stream.put(0); // Empty update mask - no flags set
-            }
         }
         // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
@@ -154,7 +148,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
 
-    public void updateLocalPlayerMovement(Player player, ByteMessage stream) {
+    public void updateLocalPlayerMovement(Player player, ByteMessage stream, boolean localPlayerUpdateRequired) {
         /* Noob! */
         if(player.didMapRegionChange()) {
             // Send map region change as separate packet (73)
@@ -172,13 +166,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.putBits(2, 3); // updateType
             stream.putBits(2, player.getPosition().getZ());
             stream.putBits(1, player.didTeleport() ? 1 : 0);
-            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
             stream.putBits(7, player.getCurrentY());
             stream.putBits(7, player.getCurrentX());
             return;
         }
         if (player.getPrimaryDirection() == -1) {
-            if (player.getUpdateFlags().isUpdateRequired()) {
+            if (localPlayerUpdateRequired) {
                 stream.putBits(1, 1);
                 stream.putBits(2, 0);
             } else {
@@ -189,38 +183,46 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             stream.putBits(1, 1);
             stream.putBits(2, 1);
             stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
-            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
         } else {
             stream.putBits(1, 1);
             stream.putBits(2, 2);
             stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
             stream.putBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
-            stream.putBits(1, player.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+            stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
         }
     }
 
 
     @Override
     public void appendBlockUpdate(Player player, ByteMessage buf) {
+        appendBlockUpdate(player, buf, UpdatePhase.UPDATE_LOCAL);
+    }
 
-        /*
-         * Fast-path: if this player's cached update block is valid, just copy it
-         * straight into the output stream and return. This avoids recomputing
-         * masks and appearance data for every viewer each cycle.
-         */
-        if (player != null && player.isCachedUpdateBlockValid()) {
+    void appendBlockUpdate(Player player, ByteMessage buf, UpdatePhase phase) {
+        boolean cacheablePhase = phase == UpdatePhase.UPDATE_LOCAL;
+        boolean includeChat = phase != UpdatePhase.UPDATE_SELF;
+        boolean forceAppearance = phase == UpdatePhase.ADD_LOCAL;
+
+        if (cacheablePhase && player != null && player.isCachedUpdateBlockValid()) {
             player.writeCachedUpdateBlock(buf);
             return;
         }
-        if (!player.getUpdateFlags().isUpdateRequired() && !player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
-            return; // nothing required
 
-        // Build update mask using the UpdateFlag system (reverted from hardcoded values)
         int updateMask = 0;
         for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
+            if (!includeChat && flag == UpdateFlag.CHAT) {
+                continue;
+            }
             if (player.getUpdateFlags().isRequired(flag)) {
                 updateMask |= flag.getMask(player.getType());
             }
+        }
+        if (forceAppearance) {
+            updateMask |= UpdateFlag.APPEARANCE.getMask(player.getType());
+        }
+        if (updateMask == 0) {
+            return;
         }
 
         int cacheStartOffset = buf.getBuffer().writerIndex(); // mark beginning for cache copy
@@ -241,11 +243,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             appendAnimationRequest(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
             appendForcedChatText(player, buf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
+        if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
             appendPlayerChatText(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
             appendFaceCharacter(player, buf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
+        if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
             appendPlayerAppearance(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
             appendFaceCoordinates(player, buf);
@@ -258,11 +260,39 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
         // ---- Cache the freshly built update block for reuse ----
         int length = buf.getBuffer().writerIndex() - cacheStartOffset;
-        if (length > 0) {
+        if (cacheablePhase && length > 0) {
             byte[] copy = new byte[length];
             buf.getBuffer().getBytes(cacheStartOffset, copy, 0, length);
             player.cacheUpdateBlock(copy, length);
         }
+    }
+
+    public void appendAddLocalBlockUpdate(Player player, ByteMessage buf) {
+        appendBlockUpdate(player, buf, UpdatePhase.ADD_LOCAL);
+    }
+
+    private boolean hasUpdatesForPhase(Player player, UpdatePhase phase) {
+        if (phase == UpdatePhase.ADD_LOCAL) {
+            return true;
+        }
+        for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
+            if (!player.getUpdateFlags().isRequired(flag)) {
+                continue;
+            }
+            if (phase == UpdatePhase.UPDATE_SELF && flag == UpdateFlag.CHAT) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static void resetDebugAddedLocalCounter() {
+        DEBUG_ADDED_LOCAL_COUNTER.set(0);
+    }
+
+    public static int consumeDebugAddedLocalCounter() {
+        return DEBUG_ADDED_LOCAL_COUNTER.getAndSet(0);
     }
 
     public void appendGraphic(Player player, ByteMessage buf) {
