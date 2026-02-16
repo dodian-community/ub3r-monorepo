@@ -525,8 +525,23 @@ public class Rangable {
             dis.readFully(buffer);
             dis.close();
             ByteStream in = new ByteStream(buffer);
-            int entrySize = in.length() % 7 == 0 ? 7 : 6;
-            int size = in.length() / entrySize;
+            int size;
+            int entrySize;
+            if (in.length() >= 2) {
+                int declaredCount = ((buffer[0] & 0xFF) << 8) | (buffer[1] & 0xFF);
+                int remaining = in.length() - 2;
+                if (declaredCount > 0 && (remaining == declaredCount * 6 || remaining == declaredCount * 7)) {
+                    size = declaredCount;
+                    entrySize = remaining / declaredCount;
+                    in.setOffset(2);
+                } else {
+                    entrySize = in.length() % 7 == 0 ? 7 : 6;
+                    size = in.length() / entrySize;
+                }
+            } else {
+                entrySize = 6;
+                size = 0;
+            }
             rangables = new Rangable[size];
             int[] regionIds = new int[size];
             int[] mapGroundFileIds = new int[size];

@@ -165,6 +165,13 @@ tasks.register<JavaExec>("runIntegrationTest") {
     mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingIntegrationTest")
 }
 
+tasks.register<JavaExec>("exportWorldFromCache") {
+    group = "build"
+    description = "Export data/world map+object files from data/cache for server clipping/object loaders"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.cache.tools.CacheWorldExporter")
+}
+
 // Custom task to run all migration tests
 tasks.register<JavaExec>("runAllMigrationTests") {
     group = "verification"
