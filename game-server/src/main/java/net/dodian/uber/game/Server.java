@@ -8,8 +8,6 @@ import net.dodian.cache.region.Region;
 import net.dodian.jobs.GameTickScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
@@ -118,7 +116,6 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
-        new Thread(EventManager.getInstance()).start();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");
@@ -136,6 +133,8 @@ public class Server {
         /* Processor for various stuff */
         entryObject = new PyramidPlunder();
         gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
+        gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
+        gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
         gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
         gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
         gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());

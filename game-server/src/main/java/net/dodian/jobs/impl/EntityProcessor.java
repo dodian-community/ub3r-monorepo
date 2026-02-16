@@ -7,30 +7,19 @@ import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.model.entity.player.PlayerUpdating;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashSet;
 import java.util.Set;
 
 public class EntityProcessor implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
-    private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
-    private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
-
     @Override
     public void run() {
         long now = System.currentTimeMillis();
         Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
-        if (DEBUG_ADDED_LOCAL_PLAYERS) {
-            PlayerUpdating.resetDebugAddedLocalCounter();
-        }
 
         // Process NPCs
         for (Npc npc : Server.npcManager.getNpcs()) {
@@ -61,33 +50,6 @@ public class EntityProcessor implements Runnable {
 
         // Consume NPC walking direction once per tick, then reuse for all viewers.
         consumeNpcDirectionsForTick();
-
-        // After processing update
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || !player.isActive) {
-                continue;
-            }
-            updatePlayer(player, i);
-        }
-
-        // Clear all update flags
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            if (npc != null) npc.clearUpdateFlags();
-        }
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player != null && player.isActive) {
-                player.clearUpdateFlags();
-            }
-        }
-
-        if (DEBUG_ADDED_LOCAL_PLAYERS) {
-            logger.info("addedLocalPlayers={}", PlayerUpdating.consumeDebugAddedLocalCounter());
-        }
-        if (DEBUG_NPC_MOVEMENT_WRITES) {
-            logger.info("npcMovementWrites={}", net.dodian.uber.game.model.entity.npc.NpcUpdating.consumeDebugMovementWriteCounter());
-        }
     }
 
     private void processNpc(long now, Npc npc, Set<Chunk> activeNpcChunks) {
@@ -401,19 +363,4 @@ public class EntityProcessor implements Runnable {
         player.getNextPlayerMovement();
     }
 
-    private void updatePlayer(Client player, int playerIndex) {
-        if (player.timeOutCounter >= 84) {
-            player.disconnected = true;
-            player.println_debug("\nRemove non-responding " + player.getPlayerName() + " after 60 seconds of disconnect! ");
-        }
-
-        if (player.disconnected) {
-            player.println_debug("\nRemove disconnected player " + player.getPlayerName());
-            Server.playerHandler.removePlayer(player);
-            player.disconnected = false;
-            PlayerHandler.players[playerIndex] = null; // Use playerIndex directly
-        } else {
-            player.update();
-        }
-    }
 }
