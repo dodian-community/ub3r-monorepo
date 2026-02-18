@@ -36,6 +36,57 @@ function pdoFromConfig(array $config): PDO
     ]);
 }
 
+function verifyCloudflareTurnstile(array $config, string $token, string $remoteIp): bool
+{
+    $turnstile = $config['turnstile'] ?? [];
+    $secretKey = trim((string)($turnstile['secret_key'] ?? ''));
+
+    if ($secretKey === '') {
+        throw new RuntimeException('Cloudflare Turnstile is not configured. Add turnstile.secret_key in config.php.');
+    }
+
+    $payload = http_build_query([
+        'secret' => $secretKey,
+        'response' => $token,
+        'remoteip' => $remoteIp,
+    ]);
+
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    if ($ch === false) {
+        throw new RuntimeException('Failed to initialize Turnstile verification request.');
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'content-type: application/x-www-form-urlencoded',
+        ],
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_TIMEOUT => 15,
+    ]);
+
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        throw new RuntimeException('Turnstile verification failed: ' . $error);
+    }
+
+    if ($status < 200 || $status >= 300) {
+        throw new RuntimeException('Turnstile API returned HTTP ' . $status . ': ' . $response);
+    }
+
+    $decoded = json_decode($response, true);
+    if (!is_array($decoded)) {
+        throw new RuntimeException('Turnstile API returned an invalid response payload.');
+    }
+
+    return isset($decoded['success']) && $decoded['success'] === true;
+}
+
 const INACTIVE_USERGROUP_ID = 3;
 const ACTIVE_USERGROUP_ID = 40;
 const BANNED_USERGROUP_ID = 8;
@@ -137,6 +188,7 @@ $successMessage = null;
 $activationMessage = null;
 $username = '';
 $email = '';
+$turnstileSiteKey = $configMissing ? '' : trim((string)(($config['turnstile']['site_key'] ?? '')));
 
 if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_GET['token'] !== '') {
     $token = trim($_GET['token']);
@@ -197,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($_POST['email'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
     $confirmPassword = (string)($_POST['confirm_password'] ?? '');
+    $turnstileToken = trim((string)($_POST['cf-turnstile-response'] ?? ''));
 
     if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
         $errors[] = 'Username must be 3-12 characters and contain only letters, numbers, or underscore.';
@@ -212,6 +265,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($password !== $confirmPassword) {
         $errors[] = 'Passwords do not match.';
+    }
+
+    if ($turnstileToken === '') {
+        $errors[] = 'Please complete the anti-bot check.';
+    }
+
+    if (!$configMissing && $turnstileToken !== '' && empty($errors)) {
+        try {
+            $remoteIp = $_SERVER['REMOTE_ADDR'] ?? '';
+            if (!verifyCloudflareTurnstile($config, $turnstileToken, $remoteIp)) {
+                $errors[] = 'Anti-bot verification failed. Please try again.';
+            }
+        } catch (Throwable $e) {
+            $errors[] = 'Could not verify anti-bot check right now. Please try again.';
+            error_log('Turnstile verification error: ' . $e->getMessage());
+        }
     }
 
     if (!$configMissing && empty($errors)) {
@@ -335,6 +404,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #e2e8f0;
             box-sizing: border-box;
         }
+        .turnstile-wrap {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+        }
+        .turnstile-note {
+            margin-top: 12px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            text-align: center;
+        }
         button {
             margin-top: 18px;
             width: 100%;
@@ -399,8 +479,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="confirm_password">Repeat password</label>
         <input id="confirm_password" name="confirm_password" type="password" minlength="8" required>
 
+        <?php if ($turnstileSiteKey !== ''): ?>
+            <div class="turnstile-wrap">
+                <div class="cf-turnstile" data-sitekey="<?= htmlspecialchars($turnstileSiteKey, ENT_QUOTES, 'UTF-8') ?>"></div>
+            </div>
+        <?php else: ?>
+            <p class="turnstile-note">Turnstile is not configured yet. Add <code>turnstile.site_key</code> to config.php.</p>
+        <?php endif; ?>
+
         <button type="submit">Create account</button>
     </form>
 </div>
+<?php if ($turnstileSiteKey !== ''): ?>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<?php endif; ?>
 </body>
 </html>

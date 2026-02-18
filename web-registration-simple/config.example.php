@@ -19,4 +19,8 @@ return [
         'sender_email' => 'noreply@example.com',
         'sender_name' => 'Dodian',
     ],
+    'turnstile' => [
+        'site_key' => '0x4AAAAA-REPLACE_ME',
+        'secret_key' => '0x4AAAAA-REPLACE_ME',
+    ],
 ];

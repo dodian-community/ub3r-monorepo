@@ -10,6 +10,8 @@ A minimal PHP + HTML registration page compatible with the current Ub3r password
    - `app.base_url` (public URL of the registration page)
    - `brevo.api_key`
    - `brevo.sender_email`
+   - `turnstile.site_key`
+   - `turnstile.secret_key`
 4. Start locally:
 
 ```bash
@@ -37,5 +39,6 @@ This demo uses the same flow as the game server:
 ## Security notes
 
 - Use HTTPS in production.
-- Add rate limiting and CAPTCHA.
+- Cloudflare Turnstile is integrated and validated server-side for each registration.
+- Add rate limiting as a second layer.
 - Never commit `config.php` to git.
