@@ -36,6 +36,10 @@ function pdoFromConfig(array $config): PDO
     ]);
 }
 
+const INACTIVE_USERGROUP_ID = 3;
+const ACTIVE_USERGROUP_ID = 40;
+const BANNED_USERGROUP_ID = 8;
+
 function ensureActivationTable(PDO $pdo): void
 {
     $pdo->exec(
@@ -50,6 +54,24 @@ function ensureActivationTable(PDO $pdo): void
             UNIQUE KEY unique_token_hash (token_hash)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
     );
+}
+
+function banExpiredPendingAccounts(PDO $pdo): void
+{
+    $banExpired = $pdo->prepare(
+        'UPDATE user u
+         INNER JOIN user_activation_tokens t ON t.user_id = u.userid
+         SET u.usergroupid = :banned_group,
+             t.consumed_at = NOW()
+         WHERE u.usergroupid = :inactive_group
+           AND t.consumed_at IS NULL
+           AND t.expires_at < NOW()'
+    );
+
+    $banExpired->execute([
+        'banned_group' => BANNED_USERGROUP_ID,
+        'inactive_group' => INACTIVE_USERGROUP_ID,
+    ]);
 }
 
 function sendBrevoActivationEmail(array $config, string $toEmail, string $username, string $activationUrl): void
@@ -125,6 +147,7 @@ if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_G
         try {
             $pdo = pdoFromConfig($config);
             ensureActivationTable($pdo);
+            banExpiredPendingAccounts($pdo);
 
             $tokenHash = hash('sha256', $token);
             $lookup = $pdo->prepare(
@@ -143,8 +166,11 @@ if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_G
             } else {
                 $pdo->beginTransaction();
 
-                $activateUser = $pdo->prepare('UPDATE user SET usergroupid = 40 WHERE userid = :userid');
-                $activateUser->execute(['userid' => (int)$row['user_id']]);
+                $activateUser = $pdo->prepare('UPDATE user SET usergroupid = :active_group WHERE userid = :userid');
+                $activateUser->execute([
+                    'active_group' => ACTIVE_USERGROUP_ID,
+                    'userid' => (int)$row['user_id'],
+                ]);
 
                 $consumeToken = $pdo->prepare('UPDATE user_activation_tokens SET consumed_at = NOW() WHERE token_hash = :token_hash');
                 $consumeToken->execute(['token_hash' => $tokenHash]);
@@ -192,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo = pdoFromConfig($config);
             ensureActivationTable($pdo);
+            banExpiredPendingAccounts($pdo);
 
             $stmt = $pdo->prepare('SELECT 1 FROM user WHERE username = :username LIMIT 1');
             $stmt->execute(['username' => $username]);
@@ -217,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 $insert->execute([
-                    'usergroupid' => 3,
+                    'usergroupid' => INACTIVE_USERGROUP_ID,
                     'username' => $username,
                     'password' => $storedPassword,
                     'salt' => $salt,
@@ -233,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $tokenInsert = $pdo->prepare(
                     'INSERT INTO user_activation_tokens (user_id, token_hash, expires_at, created_at)
-                     VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 1 DAY), NOW())
+                     VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW())
                      ON DUPLICATE KEY UPDATE
                         token_hash = VALUES(token_hash),
                         expires_at = VALUES(expires_at),

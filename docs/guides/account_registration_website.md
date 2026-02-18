@@ -38,7 +38,7 @@ This guide explains what you need to build a simple website that lets players re
      - `email`
      - `passworddate`
      - `birthday_search`
-   - Set `usergroupid` to `3` on insert (inactive/pending activation), then set to `40` after email activation.
+   - Set `usergroupid` to `3` on insert (inactive/pending activation), set to `40` after email activation, and set to ban group `8` when activation expires.
    - Let table defaults handle the rest when possible.
    - Always use prepared statements (no SQL string concatenation).
 
@@ -47,7 +47,7 @@ This guide explains what you need to build a simple website that lets players re
      - existing username
      - weak/invalid password
      - database error
-   - Success message example: account created, check your email to activate.
+   - Success message example: account created, check your email to activate (within 2 hours).
 
 7. **Security (important)**
    - HTTPS required.
@@ -56,6 +56,8 @@ This guide explains what you need to build a simple website that lets players re
    - Input sanitization + prepared statements.
    - Enforce unique e-mail usage (one account per e-mail).
    - Send activation mails through Brevo transactional API.
+   - Activation link lifetime: 2 hours.
+   - If not activated in time, move account to banned usergroup (`usergroupid = 8`).
    - Audit logging for registrations (IP, timestamp, username).
 
 ## Important note on hashing

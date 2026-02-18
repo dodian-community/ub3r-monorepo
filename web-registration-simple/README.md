@@ -29,8 +29,9 @@ This demo uses the same flow as the game server:
 
 - Registrations start as `usergroupid = 3` (inactive).
 - An activation token is stored in `user_activation_tokens`.
-- Brevo sends an activation email with a link (`/?token=...`).
+- Brevo sends an activation email with a link (`/?token=...`) that is valid for 2 hours.
 - Clicking the link changes the account to `usergroupid = 40` (active).
+- Expired activation links auto-ban the account (`usergroupid = 8`).
 - Registration blocks duplicate usernames and duplicate email addresses.
 
 ## Security notes
