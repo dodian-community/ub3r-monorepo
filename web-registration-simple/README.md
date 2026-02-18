@@ -1,6 +1,6 @@
-# Simple PHP Registration Website
+# Simple PHP Account Website
 
-A minimal PHP + HTML registration page compatible with the current Ub3r password-hash flow.
+A minimal PHP + HTML account portal with registration, login, downloads, activation, and forgot-password flows compatible with the current Ub3r password-hash flow.
 
 ## Getting started
 
@@ -27,14 +27,16 @@ This demo uses the same flow as the game server:
 - `passM = md5(password)`
 - `stored = md5(passM + salt)`
 
-## Account activation and email uniqueness
+## Account activation, login, and password recovery
 
 - Registrations start as `usergroupid = 3` (inactive).
 - An activation token is stored in `user_activation_tokens`.
-- Brevo sends an activation email with a link (`/?token=...`) that is valid for 2 hours.
-- Clicking the link changes the account to `usergroupid = 40` (active).
+- Brevo sends an activation email with a link (`/?page=activate&token=...`) that is valid for 2 hours.
+- Clicking the link changes the account to `usergroupid = 40` (active), which is required for login.
 - Expired activation links auto-ban the account (`usergroupid = 8`).
 - Registration blocks duplicate usernames and duplicate email addresses.
+- Successful login redirects users to `?page=download`.
+- Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 
 ## Security notes
 

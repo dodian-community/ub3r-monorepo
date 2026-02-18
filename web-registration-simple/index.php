@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+session_start();
+
+const INACTIVE_USERGROUP_ID = 3;
+const ACTIVE_USERGROUP_ID = 40;
+const BANNED_USERGROUP_ID = 8;
+
 $configPath = __DIR__ . '/config.php';
 $configMissing = !file_exists($configPath);
 $config = $configMissing ? null : require $configPath;
@@ -87,10 +93,6 @@ function verifyCloudflareTurnstile(array $config, string $token, string $remoteI
     return isset($decoded['success']) && $decoded['success'] === true;
 }
 
-const INACTIVE_USERGROUP_ID = 3;
-const ACTIVE_USERGROUP_ID = 40;
-const BANNED_USERGROUP_ID = 8;
-
 function ensureActivationTable(PDO $pdo): void
 {
     $pdo->exec(
@@ -103,6 +105,22 @@ function ensureActivationTable(PDO $pdo): void
             consumed_at DATETIME NULL,
             UNIQUE KEY unique_user_id (user_id),
             UNIQUE KEY unique_token_hash (token_hash)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    );
+}
+
+function ensurePasswordResetTable(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS user_password_reset_tokens (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id INT UNSIGNED NOT NULL,
+            token_hash CHAR(64) NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME NOT NULL,
+            consumed_at DATETIME NULL,
+            UNIQUE KEY unique_token_hash (token_hash),
+            KEY idx_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
     );
 }
@@ -125,7 +143,7 @@ function banExpiredPendingAccounts(PDO $pdo): void
     ]);
 }
 
-function sendBrevoActivationEmail(array $config, string $toEmail, string $username, string $activationUrl): void
+function sendBrevoEmail(array $config, string $toEmail, string $toName, string $subject, string $htmlContent): void
 {
     $brevo = $config['brevo'] ?? [];
     $apiKey = trim((string)($brevo['api_key'] ?? ''));
@@ -143,13 +161,10 @@ function sendBrevoActivationEmail(array $config, string $toEmail, string $userna
         ],
         'to' => [[
             'email' => $toEmail,
-            'name' => $username,
+            'name' => $toName,
         ]],
-        'subject' => 'Activate your Dodian account',
-        'htmlContent' => '<p>Hi ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ',</p>'
-            . '<p>Thanks for registering. Click the link below to activate your account:</p>'
-            . '<p><a href="' . htmlspecialchars($activationUrl, ENT_QUOTES, 'UTF-8') . '">Activate account</a></p>'
-            . '<p>If you did not request this account, you can ignore this email.</p>',
+        'subject' => $subject,
+        'htmlContent' => $htmlContent,
     ];
 
     $ch = curl_init('https://api.brevo.com/v3/smtp/email');
@@ -183,19 +198,49 @@ function sendBrevoActivationEmail(array $config, string $toEmail, string $userna
     }
 }
 
+function buildAppUrl(array $config, string $pathAndQuery): string
+{
+    $baseUrl = rtrim((string)($config['app']['base_url'] ?? ''), '/');
+    if ($baseUrl === '') {
+        throw new RuntimeException('Missing app.base_url in config.php for account links.');
+    }
+
+    return $baseUrl . '/' . ltrim($pathAndQuery, '/');
+}
+
+function requireConfiguredOrFail(bool $configMissing, array &$errors): bool
+{
+    if ($configMissing) {
+        $errors[] = 'Server is not configured yet. Copy config.example.php to config.php and add database credentials.';
+        return false;
+    }
+
+    return true;
+}
+
+function redirectTo(string $url): void
+{
+    header('Location: ' . $url);
+    exit;
+}
+
 $errors = [];
 $successMessage = null;
-$activationMessage = null;
-$username = '';
-$email = '';
-$turnstileSiteKey = $configMissing ? '' : trim((string)(($config['turnstile']['site_key'] ?? '')));
+$infoMessage = null;
+$turnstileSiteKey = $configMissing ? '' : trim((string)($config['turnstile']['site_key'] ?? ''));
 
-if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_GET['token'] !== '') {
+$page = isset($_GET['page']) && is_string($_GET['page']) ? strtolower(trim($_GET['page'])) : '';
+$allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'activate'];
+if (!in_array($page, $allowedPages, true)) {
+    $page = isset($_SESSION['user_id']) ? 'download' : 'login';
+}
+
+if ($page === 'activate' && isset($_GET['token']) && is_string($_GET['token']) && $_GET['token'] !== '') {
     $token = trim($_GET['token']);
 
     if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
         $errors[] = 'Activation link is invalid.';
-    } else {
+    } elseif (requireConfiguredOrFail($configMissing, $errors)) {
         try {
             $pdo = pdoFromConfig($config);
             ensureActivationTable($pdo);
@@ -228,7 +273,8 @@ if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_G
                 $consumeToken->execute(['token_hash' => $tokenHash]);
 
                 $pdo->commit();
-                $activationMessage = 'Your account is now activated. You can log in in-game.';
+                $successMessage = 'Your account has been activated. You can now sign in.';
+                $page = 'login';
             }
         } catch (Throwable $e) {
             if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
@@ -236,141 +282,351 @@ if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_G
             }
             $errors[] = 'Could not activate account right now. Please try again later.';
             error_log('Activation error: ' . $e->getMessage());
+            $page = 'login';
         }
     }
+}
+
+if (isset($_GET['logout'])) {
+    $_SESSION = [];
+    session_destroy();
+    session_start();
+    $successMessage = 'You are now signed out.';
+    $page = 'login';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($configMissing) {
-        $errors[] = 'Server is not configured yet. Copy config.example.php to config.php and add database credentials.';
-    }
+    $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
 
-    $username = trim((string)($_POST['username'] ?? ''));
-    $email = trim((string)($_POST['email'] ?? ''));
-    $password = (string)($_POST['password'] ?? '');
-    $confirmPassword = (string)($_POST['confirm_password'] ?? '');
-    $turnstileToken = trim((string)($_POST['cf-turnstile-response'] ?? ''));
+    if ($action === 'register') {
+        $page = 'register';
+        $username = trim((string)($_POST['username'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+        $confirmPassword = (string)($_POST['confirm_password'] ?? '');
+        $turnstileToken = trim((string)($_POST['cf-turnstile-response'] ?? ''));
 
-    if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
-        $errors[] = 'Username must be 3-12 characters and contain only letters, numbers, or underscore.';
-    }
+        if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
+            $errors[] = 'Username must be 3-12 characters and contain only letters, numbers, or underscore.';
+        }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Enter a valid email address.';
-    }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Enter a valid email address.';
+        }
 
-    if (strlen($password) < 8) {
-        $errors[] = 'Password must be at least 8 characters long.';
-    }
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must be at least 8 characters long.';
+        }
 
-    if ($password !== $confirmPassword) {
-        $errors[] = 'Passwords do not match.';
-    }
+        if ($password !== $confirmPassword) {
+            $errors[] = 'Passwords do not match.';
+        }
 
-    if ($turnstileToken === '') {
-        $errors[] = 'Please complete the anti-bot check.';
-    }
+        if ($turnstileToken === '') {
+            $errors[] = 'Please complete the anti-bot check.';
+        }
 
-    if (!$configMissing && $turnstileToken !== '' && empty($errors)) {
-        try {
-            $remoteIp = $_SERVER['REMOTE_ADDR'] ?? '';
-            if (!verifyCloudflareTurnstile($config, $turnstileToken, $remoteIp)) {
-                $errors[] = 'Anti-bot verification failed. Please try again.';
+        if (requireConfiguredOrFail($configMissing, $errors) && $turnstileToken !== '' && empty($errors)) {
+            try {
+                $remoteIp = $_SERVER['REMOTE_ADDR'] ?? '';
+                if (!verifyCloudflareTurnstile($config, $turnstileToken, $remoteIp)) {
+                    $errors[] = 'Anti-bot verification failed. Please try again.';
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Could not verify anti-bot check right now. Please try again.';
+                error_log('Turnstile verification error: ' . $e->getMessage());
             }
-        } catch (Throwable $e) {
-            $errors[] = 'Could not verify anti-bot check right now. Please try again.';
-            error_log('Turnstile verification error: ' . $e->getMessage());
+        }
+
+        if (requireConfiguredOrFail($configMissing, $errors) && empty($errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+                ensureActivationTable($pdo);
+                banExpiredPendingAccounts($pdo);
+
+                $stmt = $pdo->prepare('SELECT 1 FROM user WHERE username = :username LIMIT 1');
+                $stmt->execute(['username' => $username]);
+                if ($stmt->fetch()) {
+                    $errors[] = 'This username already exists.';
+                }
+
+                $emailStmt = $pdo->prepare('SELECT 1 FROM user WHERE email = :email LIMIT 1');
+                $emailStmt->execute(['email' => $email]);
+                if ($emailStmt->fetch()) {
+                    $errors[] = 'This email address is already in use.';
+                }
+
+                if (empty($errors)) {
+                    $salt = randomSalt(30);
+                    $storedPassword = dodianPasswordHash($password, $salt);
+
+                    $pdo->beginTransaction();
+
+                    $insert = $pdo->prepare(
+                        'INSERT INTO user (usergroupid, username, password, salt, email, passworddate, birthday_search, joindate)
+                         VALUES (:usergroupid, :username, :password, :salt, :email, :passworddate, :birthday_search, :joindate)'
+                    );
+
+                    $insert->execute([
+                        'usergroupid' => INACTIVE_USERGROUP_ID,
+                        'username' => $username,
+                        'password' => $storedPassword,
+                        'salt' => $salt,
+                        'email' => $email,
+                        'passworddate' => date('Y-m-d H:i:s'),
+                        'birthday_search' => '',
+                        'joindate' => time(),
+                    ]);
+
+                    $userId = (int)$pdo->lastInsertId();
+                    $activationToken = bin2hex(random_bytes(32));
+                    $activationTokenHash = hash('sha256', $activationToken);
+
+                    $tokenInsert = $pdo->prepare(
+                        'INSERT INTO user_activation_tokens (user_id, token_hash, expires_at, created_at)
+                         VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW())
+                         ON DUPLICATE KEY UPDATE
+                            token_hash = VALUES(token_hash),
+                            expires_at = VALUES(expires_at),
+                            created_at = VALUES(created_at),
+                            consumed_at = NULL'
+                    );
+                    $tokenInsert->execute([
+                        'user_id' => $userId,
+                        'token_hash' => $activationTokenHash,
+                    ]);
+
+                    $activationUrl = buildAppUrl($config, '?page=activate&token=' . urlencode($activationToken));
+                    sendBrevoEmail(
+                        $config,
+                        $email,
+                        $username,
+                        'Activate your Dodian account',
+                        '<p>Hi ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ',</p>'
+                        . '<p>Thanks for registering. Click the link below to activate your account:</p>'
+                        . '<p><a href="' . htmlspecialchars($activationUrl, ENT_QUOTES, 'UTF-8') . '">Activate account</a></p>'
+                        . '<p>If you did not request this account, you can ignore this email.</p>'
+                    );
+
+                    $pdo->commit();
+
+                    $successMessage = 'Account created! Check your email to activate your account. This link expires in 2 hours.';
+                }
+            } catch (Throwable $e) {
+                if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Registration failed. Please verify configuration and try again.';
+                error_log('Registration error: ' . $e->getMessage());
+            }
         }
     }
 
-    if (!$configMissing && empty($errors)) {
-        try {
-            $pdo = pdoFromConfig($config);
-            ensureActivationTable($pdo);
-            banExpiredPendingAccounts($pdo);
+    if ($action === 'login') {
+        $page = 'login';
+        $username = trim((string)($_POST['username'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
 
-            $stmt = $pdo->prepare('SELECT 1 FROM user WHERE username = :username LIMIT 1');
-            $stmt->execute(['username' => $username]);
-            if ($stmt->fetch()) {
-                $errors[] = 'This username already exists.';
-            }
+        if ($username === '' || $password === '') {
+            $errors[] = 'Enter both username and password.';
+        }
 
-            $emailStmt = $pdo->prepare('SELECT 1 FROM user WHERE email = :email LIMIT 1');
-            $emailStmt->execute(['email' => $email]);
-            if ($emailStmt->fetch()) {
-                $errors[] = 'This email address is already in use.';
-            }
+        if (requireConfiguredOrFail($configMissing, $errors) && empty($errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+                ensureActivationTable($pdo);
+                banExpiredPendingAccounts($pdo);
 
-            if (empty($errors)) {
-                $salt = randomSalt(30);
-                $storedPassword = dodianPasswordHash($password, $salt);
-
-                $pdo->beginTransaction();
-
-                $insert = $pdo->prepare(
-                    'INSERT INTO user (usergroupid, username, password, salt, email, passworddate, birthday_search, joindate)
-                     VALUES (:usergroupid, :username, :password, :salt, :email, :passworddate, :birthday_search, :joindate)'
+                $stmt = $pdo->prepare(
+                    'SELECT userid, username, password, salt, usergroupid
+                     FROM user
+                     WHERE username = :username
+                     LIMIT 1'
                 );
+                $stmt->execute(['username' => $username]);
+                $user = $stmt->fetch();
 
-                $insert->execute([
-                    'usergroupid' => INACTIVE_USERGROUP_ID,
-                    'username' => $username,
-                    'password' => $storedPassword,
-                    'salt' => $salt,
+                if (!$user) {
+                    $errors[] = 'Invalid username or password.';
+                } else {
+                    $expectedPassword = dodianPasswordHash($password, (string)$user['salt']);
+                    if (!hash_equals((string)$user['password'], $expectedPassword)) {
+                        $errors[] = 'Invalid username or password.';
+                    } elseif ((int)$user['usergroupid'] === INACTIVE_USERGROUP_ID) {
+                        $errors[] = 'Your account is not activated yet. Please check your email first.';
+                    } elseif ((int)$user['usergroupid'] !== ACTIVE_USERGROUP_ID) {
+                        $errors[] = 'This account is not allowed to sign in.';
+                    } else {
+                        $_SESSION['user_id'] = (int)$user['userid'];
+                        $_SESSION['username'] = (string)$user['username'];
+                        redirectTo('?page=download');
+                    }
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Sign in failed. Please try again later.';
+                error_log('Login error: ' . $e->getMessage());
+            }
+        }
+    }
+
+    if ($action === 'forgot-password') {
+        $page = 'forgot-password';
+        $email = trim((string)($_POST['email'] ?? ''));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Enter a valid email address.';
+        }
+
+        if (requireConfiguredOrFail($configMissing, $errors) && empty($errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+                ensurePasswordResetTable($pdo);
+
+                $stmt = $pdo->prepare(
+                    'SELECT userid, username
+                     FROM user
+                     WHERE email = :email
+                       AND usergroupid = :active_group
+                     LIMIT 1'
+                );
+                $stmt->execute([
                     'email' => $email,
-                    'passworddate' => date('Y-m-d H:i:s'),
-                    'birthday_search' => '',
-                    'joindate' => time(),
+                    'active_group' => ACTIVE_USERGROUP_ID,
                 ]);
+                $user = $stmt->fetch();
 
-                $userId = (int)$pdo->lastInsertId();
-                $activationToken = bin2hex(random_bytes(32));
-                $activationTokenHash = hash('sha256', $activationToken);
+                if ($user) {
+                    $resetToken = bin2hex(random_bytes(32));
+                    $resetTokenHash = hash('sha256', $resetToken);
 
-                $tokenInsert = $pdo->prepare(
-                    'INSERT INTO user_activation_tokens (user_id, token_hash, expires_at, created_at)
-                     VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 2 HOUR), NOW())
-                     ON DUPLICATE KEY UPDATE
-                        token_hash = VALUES(token_hash),
-                        expires_at = VALUES(expires_at),
-                        created_at = VALUES(created_at),
-                        consumed_at = NULL'
-                );
-                $tokenInsert->execute([
-                    'user_id' => $userId,
-                    'token_hash' => $activationTokenHash,
-                ]);
+                    $tokenInsert = $pdo->prepare(
+                        'INSERT INTO user_password_reset_tokens (user_id, token_hash, expires_at, created_at)
+                         VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 1 HOUR), NOW())'
+                    );
+                    $tokenInsert->execute([
+                        'user_id' => (int)$user['userid'],
+                        'token_hash' => $resetTokenHash,
+                    ]);
 
-                $baseUrl = rtrim((string)($config['app']['base_url'] ?? ''), '/');
-                if ($baseUrl === '') {
-                    throw new RuntimeException('Missing app.base_url in config.php for activation links.');
+                    $resetUrl = buildAppUrl($config, '?page=reset-password&token=' . urlencode($resetToken));
+                    sendBrevoEmail(
+                        $config,
+                        $email,
+                        (string)$user['username'],
+                        'Reset your Dodian password',
+                        '<p>Hi ' . htmlspecialchars((string)$user['username'], ENT_QUOTES, 'UTF-8') . ',</p>'
+                        . '<p>We received a request to reset your password.</p>'
+                        . '<p><a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '">Reset password</a></p>'
+                        . '<p>This link is valid for 1 hour. If this was not you, you can ignore this email.</p>'
+                    );
                 }
 
-                $activationUrl = $baseUrl . '/?token=' . urlencode($activationToken);
-                sendBrevoActivationEmail($config, $email, $username, $activationUrl);
-
-                $pdo->commit();
-
-                $successMessage = 'Account created! Check your email to activate your account. This expires in 2 hours!';
-                $username = '';
-                $email = '';
+                $successMessage = 'If this email belongs to an active account, a reset link has been sent.';
+            } catch (Throwable $e) {
+                $errors[] = 'Could not send reset email right now. Please try again later.';
+                error_log('Forgot password error: ' . $e->getMessage());
             }
-        } catch (Throwable $e) {
-            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
-                $pdo->rollBack();
+        }
+    }
+
+    if ($action === 'reset-password') {
+        $page = 'reset-password';
+        $token = trim((string)($_POST['token'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+        $confirmPassword = (string)($_POST['confirm_password'] ?? '');
+
+        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+            $errors[] = 'Reset link is invalid.';
+        }
+
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must be at least 8 characters long.';
+        }
+
+        if ($password !== $confirmPassword) {
+            $errors[] = 'Passwords do not match.';
+        }
+
+        if (requireConfiguredOrFail($configMissing, $errors) && empty($errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+                ensurePasswordResetTable($pdo);
+
+                $tokenHash = hash('sha256', $token);
+                $lookup = $pdo->prepare(
+                    'SELECT t.id, t.user_id
+                     FROM user_password_reset_tokens t
+                     INNER JOIN user u ON u.userid = t.user_id
+                     WHERE t.token_hash = :token_hash
+                       AND t.consumed_at IS NULL
+                       AND t.expires_at >= NOW()
+                       AND u.usergroupid = :active_group
+                     LIMIT 1'
+                );
+                $lookup->execute([
+                    'token_hash' => $tokenHash,
+                    'active_group' => ACTIVE_USERGROUP_ID,
+                ]);
+                $row = $lookup->fetch();
+
+                if (!$row) {
+                    $errors[] = 'Reset link is invalid or expired.';
+                } else {
+                    $salt = randomSalt(30);
+                    $storedPassword = dodianPasswordHash($password, $salt);
+
+                    $pdo->beginTransaction();
+
+                    $updatePassword = $pdo->prepare(
+                        'UPDATE user
+                         SET password = :password,
+                             salt = :salt,
+                             passworddate = :passworddate
+                         WHERE userid = :userid'
+                    );
+                    $updatePassword->execute([
+                        'password' => $storedPassword,
+                        'salt' => $salt,
+                        'passworddate' => date('Y-m-d H:i:s'),
+                        'userid' => (int)$row['user_id'],
+                    ]);
+
+                    $consumeToken = $pdo->prepare(
+                        'UPDATE user_password_reset_tokens
+                         SET consumed_at = NOW()
+                         WHERE id = :id'
+                    );
+                    $consumeToken->execute(['id' => (int)$row['id']]);
+
+                    $pdo->commit();
+                    $successMessage = 'Password updated. You can now sign in.';
+                    $page = 'login';
+                }
+            } catch (Throwable $e) {
+                if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Could not reset password right now. Please try again later.';
+                error_log('Reset password error: ' . $e->getMessage());
             }
-            $errors[] = 'Registration failed. Please verify configuration and try again.';
-            error_log('Registration error: ' . $e->getMessage());
         }
     }
 }
+
+if ($page === 'download' && !isset($_SESSION['user_id'])) {
+    $infoMessage = 'Please sign in first.';
+    $page = 'login';
+}
+
+$resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim($_GET['token']) : '';
+
 ?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodian Account Registration</title>
+    <title>Dodian Account Portal</title>
     <style>
         :root { color-scheme: dark; }
         body {
@@ -415,7 +671,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 0.85rem;
             text-align: center;
         }
-        button {
+        button, .btn-link {
             margin-top: 18px;
             width: 100%;
             padding: 11px 14px;
@@ -425,8 +681,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #06220f;
             font-weight: 700;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
         }
-        .errors, .success {
+        .btn-link.secondary {
+            background: #1e293b;
+            color: #e2e8f0;
+            margin-top: 10px;
+        }
+        .errors, .success, .info {
             margin: 12px 0;
             padding: 10px 12px;
             border-radius: 8px;
@@ -434,17 +699,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .errors { background: #7f1d1d; color: #fecaca; }
         .success { background: #14532d; color: #bbf7d0; }
+        .info { background: #172554; color: #bfdbfe; }
         ul { margin: 0; padding-left: 20px; }
+        .links {
+            margin-top: 14px;
+            display: grid;
+            gap: 10px;
+        }
+        .downloads {
+            margin-top: 14px;
+            display: grid;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>Dodian registration</h1>
-    <p class="meta">Create your account to log in to the game server.</p>
+    <h1>Dodian account portal</h1>
 
     <?php if ($configMissing): ?>
         <div class="errors">
-            Config is missing: copy <code>config.example.php</code> to <code>config.php</code> before registrations can be saved.
+            Config is missing: copy <code>config.example.php</code> to <code>config.php</code> before account actions can be used.
         </div>
     <?php endif; ?>
 
@@ -458,39 +733,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     <?php endif; ?>
 
-    <?php if ($activationMessage !== null): ?>
-        <div class="success"><?= htmlspecialchars($activationMessage, ENT_QUOTES, 'UTF-8') ?></div>
+    <?php if ($infoMessage !== null): ?>
+        <div class="info"><?= htmlspecialchars($infoMessage, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
     <?php if ($successMessage !== null): ?>
         <div class="success"><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
-    <form method="post" action="">
-        <label for="username">Username</label>
-        <input id="username" name="username" maxlength="12" required value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+    <?php if ($page === 'login'): ?>
+        <p class="meta">Sign in with your active account. New here? Create an account first.</p>
+        <form method="post" action="">
+            <input type="hidden" name="action" value="login">
+            <label for="login_username">Username</label>
+            <input id="login_username" name="username" maxlength="12" required>
 
-        <label for="email">E-mail</label>
-        <input id="email" name="email" type="email" required value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>">
+            <label for="login_password">Password</label>
+            <input id="login_password" name="password" type="password" minlength="8" required>
 
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" minlength="8" required>
+            <button type="submit">Sign in</button>
+        </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=register">Create account</a>
+            <a class="btn-link secondary" href="?page=forgot-password">Forgot password</a>
+        </div>
+    <?php endif; ?>
 
-        <label for="confirm_password">Repeat password</label>
-        <input id="confirm_password" name="confirm_password" type="password" minlength="8" required>
+    <?php if ($page === 'register'): ?>
+        <p class="meta">Create your account to access downloads after activation.</p>
+        <form method="post" action="">
+            <input type="hidden" name="action" value="register">
+            <label for="register_username">Username</label>
+            <input id="register_username" name="username" maxlength="12" required value="<?= htmlspecialchars((string)($_POST['username'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
 
-        <?php if ($turnstileSiteKey !== ''): ?>
-            <div class="turnstile-wrap">
-                <div class="cf-turnstile" data-sitekey="<?= htmlspecialchars($turnstileSiteKey, ENT_QUOTES, 'UTF-8') ?>"></div>
-            </div>
-        <?php else: ?>
-            <p class="turnstile-note">Turnstile is not configured yet. Add <code>turnstile.site_key</code> to config.php.</p>
-        <?php endif; ?>
+            <label for="register_email">Email</label>
+            <input id="register_email" name="email" type="email" required value="<?= htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
 
-        <button type="submit">Create account</button>
-    </form>
+            <label for="register_password">Password</label>
+            <input id="register_password" name="password" type="password" minlength="8" required>
+
+            <label for="register_confirm_password">Repeat password</label>
+            <input id="register_confirm_password" name="confirm_password" type="password" minlength="8" required>
+
+            <?php if ($turnstileSiteKey !== ''): ?>
+                <div class="turnstile-wrap">
+                    <div class="cf-turnstile" data-sitekey="<?= htmlspecialchars($turnstileSiteKey, ENT_QUOTES, 'UTF-8') ?>"></div>
+                </div>
+            <?php else: ?>
+                <p class="turnstile-note">Turnstile is not configured yet. Add <code>turnstile.site_key</code> to config.php.</p>
+            <?php endif; ?>
+
+            <button type="submit">Create account</button>
+        </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=login">Back to sign in</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($page === 'forgot-password'): ?>
+        <p class="meta">Enter your email address and we will send a password reset link.</p>
+        <form method="post" action="">
+            <input type="hidden" name="action" value="forgot-password">
+            <label for="forgot_email">Email</label>
+            <input id="forgot_email" name="email" type="email" required value="<?= htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+            <button type="submit">Send reset link</button>
+        </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=login">Back to sign in</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($page === 'reset-password'): ?>
+        <p class="meta">Choose a new password for your account.</p>
+        <form method="post" action="">
+            <input type="hidden" name="action" value="reset-password">
+            <input type="hidden" name="token" value="<?= htmlspecialchars($resetTokenFromQuery, ENT_QUOTES, 'UTF-8') ?>">
+
+            <label for="reset_password">New password</label>
+            <input id="reset_password" name="password" type="password" minlength="8" required>
+
+            <label for="reset_confirm_password">Repeat new password</label>
+            <input id="reset_confirm_password" name="confirm_password" type="password" minlength="8" required>
+
+            <button type="submit">Update password</button>
+        </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=login">Back to sign in</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($page === 'download'): ?>
+        <p class="meta">Welcome, <?= htmlspecialchars((string)($_SESSION['username'] ?? 'Player'), ENT_QUOTES, 'UTF-8') ?>. You are signed in.</p>
+        <div class="downloads">
+            <a class="btn-link" href="#">Download Windows client</a>
+            <a class="btn-link secondary" href="#">Download Mac client</a>
+            <a class="btn-link secondary" href="#">Download Linux client</a>
+            <a class="btn-link secondary" href="?logout=1">Sign out</a>
+        </div>
+    <?php endif; ?>
 </div>
-<?php if ($turnstileSiteKey !== ''): ?>
+<?php if ($turnstileSiteKey !== '' && $page === 'register'): ?>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <?php endif; ?>
 </body>
