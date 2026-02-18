@@ -282,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $pdo->commit();
 
-                $successMessage = 'Account created! Check your email to activate your account.';
+                $successMessage = 'Account created! Check your email to activate your account. This expires in 2 hours!';
                 $username = '';
                 $email = '';
             }
