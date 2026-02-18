@@ -1,65 +1,65 @@
 # Account Registration Website Guide
 
-Deze gids beschrijft wat je nodig hebt om een simpele website te maken waarmee spelers accounts kunnen registreren voor deze Ub3r game-server.
+This guide explains what you need to build a simple website that lets players register accounts for this Ub3r game server.
 
-## Wat je al hebt in deze repo
+## What you already have in this repository
 
-- De server gebruikt een MySQL-database.
-- Login valideert tegen de `user`-tabel.
-- De login-flow gebruikt een salted MD5-hash (`MD5(MD5(password) + salt)`).
+- The server uses a MySQL database.
+- Login validation checks the `user` table.
+- The login flow uses a salted MD5 hash (`MD5(MD5(password) + salt)`).
 
-## Minimale eisen voor je registratie-website
+## Minimum requirements for your registration website
 
-1. **Web-app runtime**
-   - Kies bijvoorbeeld Node.js (Express/Nest), PHP (Laravel), Python (Django/FastAPI) of Java (Spring Boot).
+1. **Web app runtime**
+   - Use something like Node.js (Express/Nest), PHP (Laravel/plain PHP), Python (Django/FastAPI), or Java (Spring Boot).
 
-2. **Database-connectie naar dezelfde MySQL**
-   - Verbind met dezelfde DB als de game-server (host, poort, naam, user, password).
+2. **Database connection to the same MySQL instance**
+   - Connect to the same DB as the game server (host, port, name, user, password).
 
-3. **Registratieformulier**
-   - Vereiste velden: username, email, password, password confirmation.
-   - Server-side validatie:
-     - username: 3-12 tekens, alleen letters/cijfers/underscore.
-     - email: geldig formaat.
-     - password: minimale lengte (bijv. 8+).
+3. **Registration form**
+   - Required fields: username, email, password, password confirmation.
+   - Server-side validation:
+     - username: 3-12 chars, letters/numbers/underscore only.
+     - email: valid email format.
+     - password: minimum length (for example 8+).
 
-4. **Password hashing compatibel met game-server**
-   - Genereer een random `salt` (30 chars, zoals DB-schema verwacht).
-   - Maak hash als:
+4. **Password hashing compatible with the game server**
+   - Generate a random `salt` (30 chars, matching the DB schema).
+   - Build hash as:
      - `passM = MD5(plainPassword)`
      - `password = MD5(passM + salt)`
-   - Sla **beide** op: `password` en `salt`.
+   - Store **both** values: `password` and `salt`.
 
-5. **Database insert in `user`-tabel**
-   - Minimaal invullen:
+5. **Database insert into `user` table**
+   - Minimum fields to populate:
      - `username`
      - `password`
      - `salt`
      - `email`
      - `passworddate`
      - `birthday_search`
-   - Laat waar mogelijk defaults van de tabel het werk doen.
-   - Gebruik altijd prepared statements (geen string-concatenatie).
+   - Let table defaults handle the rest when possible.
+   - Always use prepared statements (no SQL string concatenation).
 
-6. **Foutafhandeling en UX**
-   - Toon duidelijke errors bij:
-     - bestaande username
-     - zwak/ongeldig wachtwoord
-     - databasefout
-   - Succesmelding: account aangemaakt, je kunt nu inloggen in-game.
+6. **Error handling and UX**
+   - Show clear errors for:
+     - existing username
+     - weak/invalid password
+     - database error
+   - Success message example: account created, you can now log in in-game.
 
-7. **Security (belangrijk)**
-   - HTTPS verplicht.
-   - Rate limiting op registratie endpoint.
-   - CAPTCHA / bot bescherming.
+7. **Security (important)**
+   - HTTPS required.
+   - Rate limiting on registration endpoint.
+   - CAPTCHA / bot protection.
    - Input sanitization + prepared statements.
-   - Audit logging op registraties (ip, timestamp, username).
+   - Audit logging for registrations (IP, timestamp, username).
 
-## Let op over hashing
+## Important note on hashing
 
-Salted MD5 is verouderd voor moderne web-security. Voor compatibiliteit met deze server moet je dit voorlopig volgen. De beste lange-termijnstap is migreren naar een sterkere hash (bijv. Argon2id of bcrypt) in zowel game-server als webregistratie-flow.
+Salted MD5 is outdated for modern web security. You need it for compatibility with this server today. The best long-term improvement is migrating to a stronger hash (for example Argon2id or bcrypt) in both the game server and registration flow.
 
-## Aanbevolen API-contract (voorbeeld)
+## Recommended API contract (example)
 
 `POST /api/register`
 
@@ -74,7 +74,7 @@ Request:
 }
 ```
 
-Response success:
+Success response:
 
 ```json
 {
@@ -83,7 +83,7 @@ Response success:
 }
 ```
 
-Response error:
+Error response:
 
 ```json
 {
@@ -92,11 +92,11 @@ Response error:
 }
 ```
 
-## Checklist om live te gaan
+## Go-live checklist
 
-- [ ] DNS + domein
-- [ ] HTTPS-certificaat
-- [ ] Productie database credentials in secrets manager
-- [ ] Dagelijkse database backups
-- [ ] Monitoring + alerting op foutpercentages
-- [ ] Basis abuse protectie (rate-limit + captcha)
+- [ ] DNS + domain
+- [ ] HTTPS certificate
+- [ ] Production DB credentials stored in a secrets manager
+- [ ] Daily database backups
+- [ ] Monitoring + alerting for error rates
+- [ ] Basic abuse protection (rate limit + CAPTCHA)

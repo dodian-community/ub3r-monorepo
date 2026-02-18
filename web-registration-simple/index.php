@@ -43,7 +43,7 @@ $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($configMissing) {
-        $errors[] = 'Server is nog niet geconfigureerd. Kopieer config.example.php naar config.php en vul DB-gegevens in.';
+        $errors[] = 'Server is not configured yet. Copy config.example.php to config.php and add database credentials.';
     }
 
     $username = trim((string)($_POST['username'] ?? ''));
@@ -52,19 +52,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmPassword = (string)($_POST['confirm_password'] ?? '');
 
     if (!preg_match('/^[A-Za-z0-9_]{3,12}$/', $username)) {
-        $errors[] = 'Username moet 3-12 tekens zijn en alleen letters, cijfers of underscore bevatten.';
+        $errors[] = 'Username must be 3-12 characters and contain only letters, numbers, or underscore.';
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Voer een geldig e-mailadres in.';
+        $errors[] = 'Enter a valid email address.';
     }
 
     if (strlen($password) < 8) {
-        $errors[] = 'Wachtwoord moet minimaal 8 tekens bevatten.';
+        $errors[] = 'Password must be at least 8 characters long.';
     }
 
     if ($password !== $confirmPassword) {
-        $errors[] = 'Wachtwoorden komen niet overeen.';
+        $errors[] = 'Passwords do not match.';
     }
 
     if (!$configMissing && empty($errors)) {
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('SELECT 1 FROM user WHERE username = :username LIMIT 1');
             $stmt->execute(['username' => $username]);
             if ($stmt->fetch()) {
-                $errors[] = 'Deze username bestaat al.';
+                $errors[] = 'This username already exists.';
             } else {
                 $salt = randomSalt(30);
                 $storedPassword = dodianPasswordHash($password, $salt);
@@ -94,23 +94,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'joindate' => time(),
                 ]);
 
-                $successMessage = 'Account aangemaakt! Je kunt nu inloggen in-game.';
+                $successMessage = 'Account created! You can now log in in-game.';
                 $username = '';
                 $email = '';
             }
         } catch (Throwable $e) {
-            $errors[] = 'Registratie mislukt door een server/database fout.';
+            $errors[] = 'Registration failed due to a server/database error.';
             error_log('Registration error: ' . $e->getMessage());
         }
     }
 }
 ?>
 <!doctype html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodian Account Registratie</title>
+    <title>Dodian Account Registration</title>
     <style>
         :root { color-scheme: dark; }
         body {
@@ -168,12 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="card">
-    <h1>Dodian registratie</h1>
-    <p class="meta">Maak je account aan om in te loggen op de game-server.</p>
+    <h1>Dodian registration</h1>
+    <p class="meta">Create your account to log in to the game server.</p>
 
     <?php if ($configMissing): ?>
         <div class="errors">
-            Config ontbreekt: kopieer <code>config.example.php</code> naar <code>config.php</code> voordat registraties worden opgeslagen.
+            Config is missing: copy <code>config.example.php</code> to <code>config.php</code> before registrations can be saved.
         </div>
     <?php endif; ?>
 
@@ -198,13 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="email">E-mail</label>
         <input id="email" name="email" type="email" required value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>">
 
-        <label for="password">Wachtwoord</label>
+        <label for="password">Password</label>
         <input id="password" name="password" type="password" minlength="8" required>
 
-        <label for="confirm_password">Herhaal wachtwoord</label>
+        <label for="confirm_password">Repeat password</label>
         <input id="confirm_password" name="confirm_password" type="password" minlength="8" required>
 
-        <button type="submit">Account aanmaken</button>
+        <button type="submit">Create account</button>
     </form>
 </div>
 </body>
