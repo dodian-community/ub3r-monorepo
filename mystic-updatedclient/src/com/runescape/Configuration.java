@@ -23,7 +23,7 @@ public final class Configuration {
 	/**
 	 * The port of the server that the client will be connecting to
 	 */
-	public static int server_port = 43594;
+	public static int server_port = 43894;
 	
 	public static final int CLIENT_VERSION = 317;
 
@@ -157,7 +157,7 @@ public final class Configuration {
 	/**
 	 * Is the combat overlay box enabled?
 	 */
-	public static boolean combatOverlayBox = true;
+	public static boolean combatOverlayBox = false;
 	
 	/**
 	 * Enables bounty hunter interface
