@@ -1,6 +1,6 @@
 # Simple PHP Account Website
 
-A minimal PHP + HTML account portal with registration, login, downloads, activation, and forgot-password flows compatible with the current Ub3r password-hash flow.
+A minimal PHP + HTML account portal with registration, login, downloads, activation, forgot-password, and in-session change-password flows compatible with the current Ub3r password-hash flow.
 
 ## Getting started
 
@@ -40,6 +40,7 @@ This demo uses the same flow as the game server:
 - Registration blocks duplicate usernames and duplicate email addresses.
 - Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and one Discord button.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
+- Signed-in users can change their password from `?page=change-password` by confirming their current password.
 
 ## Security notes
 

@@ -233,7 +233,7 @@ $javaDownloadUrl = $configMissing ? 'https://www.java.com/download/' : trim((str
 $discordUrl = $configMissing ? 'https://discord.gg/' : trim((string)($config['app']['discord_url'] ?? 'https://discord.gg/'));
 
 $page = isset($_GET['page']) && is_string($_GET['page']) ? strtolower(trim($_GET['page'])) : '';
-$allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'activate'];
+$allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'change-password', 'activate'];
 if (!in_array($page, $allowedPages, true)) {
     $page = isset($_SESSION['user_id']) ? 'download' : 'login';
 }
@@ -614,9 +614,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    if ($action === 'change-password') {
+        $page = 'change-password';
+
+        if (!isset($_SESSION['user_id'])) {
+            $errors[] = 'Please sign in first.';
+        }
+
+        $currentPassword = (string)($_POST['current_password'] ?? '');
+        $newPassword = (string)($_POST['new_password'] ?? '');
+        $confirmPassword = (string)($_POST['confirm_password'] ?? '');
+
+        if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+            $errors[] = 'Fill in all password fields.';
+        }
+
+        if (strlen($newPassword) < 8) {
+            $errors[] = 'New password must be at least 8 characters long.';
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            $errors[] = 'New passwords do not match.';
+        }
+
+        if (requireConfiguredOrFail($configMissing, $errors) && empty($errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+
+                $lookup = $pdo->prepare(
+                    'SELECT userid, password, salt, usergroupid
+                     FROM user
+                     WHERE userid = :userid
+                     LIMIT 1'
+                );
+                $lookup->execute(['userid' => (int)$_SESSION['user_id']]);
+                $user = $lookup->fetch();
+
+                if (!$user) {
+                    $errors[] = 'Account not found.';
+                } elseif ((int)$user['usergroupid'] !== ACTIVE_USERGROUP_ID) {
+                    $errors[] = 'Only active accounts can change passwords.';
+                } else {
+                    $expectedPassword = dodianPasswordHash($currentPassword, (string)$user['salt']);
+                    if (!hash_equals((string)$user['password'], $expectedPassword)) {
+                        $errors[] = 'Current password is incorrect.';
+                    }
+                }
+
+                if (empty($errors)) {
+                    $salt = randomSalt(30);
+                    $storedPassword = dodianPasswordHash($newPassword, $salt);
+
+                    $update = $pdo->prepare(
+                        'UPDATE user
+                         SET password = :password,
+                             salt = :salt,
+                             passworddate = :passworddate
+                         WHERE userid = :userid'
+                    );
+                    $update->execute([
+                        'password' => $storedPassword,
+                        'salt' => $salt,
+                        'passworddate' => date('Y-m-d H:i:s'),
+                        'userid' => (int)$user['userid'],
+                    ]);
+
+                    $successMessage = 'Password changed successfully.';
+                    $page = 'download';
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Could not change password right now. Please try again later.';
+                error_log('Change password error: ' . $e->getMessage());
+            }
+        }
+    }
+
 }
 
-if ($page === 'download' && !isset($_SESSION['user_id'])) {
+if (($page === 'download' || $page === 'change-password') && !isset($_SESSION['user_id'])) {
     $infoMessage = 'Please sign in first.';
     $page = 'login';
 }
@@ -831,7 +906,29 @@ $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim
             <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client (.jar)</a>
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
             <a class="btn-link secondary" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
+            <a class="btn-link secondary" href="?page=change-password">Change password</a>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($page === 'change-password'): ?>
+        <p class="meta">Update your account password while signed in.</p>
+        <form method="post" action="">
+            <input type="hidden" name="action" value="change-password">
+
+            <label for="current_password">Current password</label>
+            <input id="current_password" name="current_password" type="password" minlength="8" required>
+
+            <label for="new_password">New password</label>
+            <input id="new_password" name="new_password" type="password" minlength="8" required>
+
+            <label for="confirm_new_password">Repeat new password</label>
+            <input id="confirm_new_password" name="confirm_password" type="password" minlength="8" required>
+
+            <button type="submit">Change password</button>
+        </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=download">Back to downloads</a>
         </div>
     <?php endif; ?>
 </div>
