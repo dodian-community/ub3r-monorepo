@@ -10,6 +10,7 @@ A minimal PHP + HTML account portal with registration, login, downloads, activat
    - `app.base_url` (public URL of the registration page)
    - `app.client_jar_url` (direct link to your single game client `.jar`)
    - `app.java_download_url` (Java download page, defaults to java.com)
+   - `app.discord_url` (invite link for your Discord community)
    - `brevo.api_key`
    - `brevo.sender_email`
    - `turnstile.site_key`
@@ -37,7 +38,7 @@ This demo uses the same flow as the game server:
 - Clicking the link changes the account to `usergroupid = 40` (active), which is required for login.
 - Expired activation links auto-ban the account (`usergroupid = 8`).
 - Registration blocks duplicate usernames and duplicate email addresses.
-- Successful login redirects users to `?page=download` with one game client `.jar` download button and one Java download button.
+- Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and one Discord button.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 
 ## Security notes

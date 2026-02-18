@@ -230,6 +230,7 @@ $infoMessage = null;
 $turnstileSiteKey = $configMissing ? '' : trim((string)($config['turnstile']['site_key'] ?? ''));
 $clientJarUrl = $configMissing ? '#' : trim((string)($config['app']['client_jar_url'] ?? '#'));
 $javaDownloadUrl = $configMissing ? 'https://www.java.com/download/' : trim((string)($config['app']['java_download_url'] ?? 'https://www.java.com/download/'));
+$discordUrl = $configMissing ? 'https://discord.gg/' : trim((string)($config['app']['discord_url'] ?? 'https://discord.gg/'));
 
 $page = isset($_GET['page']) && is_string($_GET['page']) ? strtolower(trim($_GET['page'])) : '';
 $allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'activate'];
@@ -829,6 +830,7 @@ $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim
         <div class="downloads">
             <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client (.jar)</a>
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
+            <a class="btn-link secondary" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
         </div>
     <?php endif; ?>

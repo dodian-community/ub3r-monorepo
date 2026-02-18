@@ -15,6 +15,7 @@ return [
         'base_url' => 'http://localhost:8080',
         'client_jar_url' => 'https://example.com/downloads/dodian-client.jar',
         'java_download_url' => 'https://www.java.com/download/',
+        'discord_url' => 'https://discord.gg/your-server',
     ],
     'brevo' => [
         'api_key' => 'xkeysib-REPLACE_ME',
