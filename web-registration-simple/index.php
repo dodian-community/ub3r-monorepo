@@ -36,10 +36,131 @@ function pdoFromConfig(array $config): PDO
     ]);
 }
 
+function ensureActivationTable(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS user_activation_tokens (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id INT UNSIGNED NOT NULL,
+            token_hash CHAR(64) NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME NOT NULL,
+            consumed_at DATETIME NULL,
+            UNIQUE KEY unique_user_id (user_id),
+            UNIQUE KEY unique_token_hash (token_hash)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    );
+}
+
+function sendBrevoActivationEmail(array $config, string $toEmail, string $username, string $activationUrl): void
+{
+    $brevo = $config['brevo'] ?? [];
+    $apiKey = trim((string)($brevo['api_key'] ?? ''));
+    $senderEmail = trim((string)($brevo['sender_email'] ?? ''));
+    $senderName = trim((string)($brevo['sender_name'] ?? 'Dodian'));
+
+    if ($apiKey === '' || $senderEmail === '') {
+        throw new RuntimeException('Brevo is not configured. Add brevo.api_key and brevo.sender_email in config.php.');
+    }
+
+    $payload = [
+        'sender' => [
+            'email' => $senderEmail,
+            'name' => $senderName,
+        ],
+        'to' => [[
+            'email' => $toEmail,
+            'name' => $username,
+        ]],
+        'subject' => 'Activate your Dodian account',
+        'htmlContent' => '<p>Hi ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ',</p>'
+            . '<p>Thanks for registering. Click the link below to activate your account:</p>'
+            . '<p><a href="' . htmlspecialchars($activationUrl, ENT_QUOTES, 'UTF-8') . '">Activate account</a></p>'
+            . '<p>If you did not request this account, you can ignore this email.</p>',
+    ];
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    if ($ch === false) {
+        throw new RuntimeException('Failed to initialize Brevo request.');
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'accept: application/json',
+            'content-type: application/json',
+            'api-key: ' . $apiKey,
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload, JSON_THROW_ON_ERROR),
+        CURLOPT_TIMEOUT => 15,
+    ]);
+
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        throw new RuntimeException('Brevo request failed: ' . $error);
+    }
+
+    if ($status < 200 || $status >= 300) {
+        throw new RuntimeException('Brevo API returned HTTP ' . $status . ': ' . $response);
+    }
+}
+
 $errors = [];
 $successMessage = null;
+$activationMessage = null;
 $username = '';
 $email = '';
+
+if (!$configMissing && isset($_GET['token']) && is_string($_GET['token']) && $_GET['token'] !== '') {
+    $token = trim($_GET['token']);
+
+    if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+        $errors[] = 'Activation link is invalid.';
+    } else {
+        try {
+            $pdo = pdoFromConfig($config);
+            ensureActivationTable($pdo);
+
+            $tokenHash = hash('sha256', $token);
+            $lookup = $pdo->prepare(
+                'SELECT t.user_id
+                 FROM user_activation_tokens t
+                 WHERE t.token_hash = :token_hash
+                   AND t.consumed_at IS NULL
+                   AND t.expires_at >= NOW()
+                 LIMIT 1'
+            );
+            $lookup->execute(['token_hash' => $tokenHash]);
+            $row = $lookup->fetch();
+
+            if (!$row) {
+                $errors[] = 'Activation link is invalid or expired.';
+            } else {
+                $pdo->beginTransaction();
+
+                $activateUser = $pdo->prepare('UPDATE user SET usergroupid = 40 WHERE userid = :userid');
+                $activateUser->execute(['userid' => (int)$row['user_id']]);
+
+                $consumeToken = $pdo->prepare('UPDATE user_activation_tokens SET consumed_at = NOW() WHERE token_hash = :token_hash');
+                $consumeToken->execute(['token_hash' => $tokenHash]);
+
+                $pdo->commit();
+                $activationMessage = 'Your account is now activated. You can log in in-game.';
+            }
+        } catch (Throwable $e) {
+            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errors[] = 'Could not activate account right now. Please try again later.';
+            error_log('Activation error: ' . $e->getMessage());
+        }
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($configMissing) {
@@ -70,21 +191,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$configMissing && empty($errors)) {
         try {
             $pdo = pdoFromConfig($config);
+            ensureActivationTable($pdo);
 
             $stmt = $pdo->prepare('SELECT 1 FROM user WHERE username = :username LIMIT 1');
             $stmt->execute(['username' => $username]);
             if ($stmt->fetch()) {
                 $errors[] = 'This username already exists.';
-            } else {
+            }
+
+            $emailStmt = $pdo->prepare('SELECT 1 FROM user WHERE email = :email LIMIT 1');
+            $emailStmt->execute(['email' => $email]);
+            if ($emailStmt->fetch()) {
+                $errors[] = 'This email address is already in use.';
+            }
+
+            if (empty($errors)) {
                 $salt = randomSalt(30);
                 $storedPassword = dodianPasswordHash($password, $salt);
 
+                $pdo->beginTransaction();
+
                 $insert = $pdo->prepare(
-                    'INSERT INTO user (username, password, salt, email, passworddate, birthday_search, joindate)
-                     VALUES (:username, :password, :salt, :email, :passworddate, :birthday_search, :joindate)'
+                    'INSERT INTO user (usergroupid, username, password, salt, email, passworddate, birthday_search, joindate)
+                     VALUES (:usergroupid, :username, :password, :salt, :email, :passworddate, :birthday_search, :joindate)'
                 );
 
                 $insert->execute([
+                    'usergroupid' => 3,
                     'username' => $username,
                     'password' => $storedPassword,
                     'salt' => $salt,
@@ -94,12 +227,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'joindate' => time(),
                 ]);
 
-                $successMessage = 'Account created! You can now log in in-game.';
+                $userId = (int)$pdo->lastInsertId();
+                $activationToken = bin2hex(random_bytes(32));
+                $activationTokenHash = hash('sha256', $activationToken);
+
+                $tokenInsert = $pdo->prepare(
+                    'INSERT INTO user_activation_tokens (user_id, token_hash, expires_at, created_at)
+                     VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 1 DAY), NOW())
+                     ON DUPLICATE KEY UPDATE
+                        token_hash = VALUES(token_hash),
+                        expires_at = VALUES(expires_at),
+                        created_at = VALUES(created_at),
+                        consumed_at = NULL'
+                );
+                $tokenInsert->execute([
+                    'user_id' => $userId,
+                    'token_hash' => $activationTokenHash,
+                ]);
+
+                $baseUrl = rtrim((string)($config['app']['base_url'] ?? ''), '/');
+                if ($baseUrl === '') {
+                    throw new RuntimeException('Missing app.base_url in config.php for activation links.');
+                }
+
+                $activationUrl = $baseUrl . '/?token=' . urlencode($activationToken);
+                sendBrevoActivationEmail($config, $email, $username, $activationUrl);
+
+                $pdo->commit();
+
+                $successMessage = 'Account created! Check your email to activate your account.';
                 $username = '';
                 $email = '';
             }
         } catch (Throwable $e) {
-            $errors[] = 'Registration failed due to a server/database error.';
+            if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $errors[] = 'Registration failed. Please verify configuration and try again.';
             error_log('Registration error: ' . $e->getMessage());
         }
     }
@@ -185,6 +349,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endforeach; ?>
             </ul>
         </div>
+    <?php endif; ?>
+
+    <?php if ($activationMessage !== null): ?>
+        <div class="success"><?= htmlspecialchars($activationMessage, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
     <?php if ($successMessage !== null): ?>

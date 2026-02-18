@@ -6,13 +6,17 @@ A minimal PHP + HTML registration page compatible with the current Ub3r password
 
 1. Copy `config.example.php` to `config.php`.
 2. Fill in your database credentials.
-3. Start locally:
+3. Configure these required activation settings in `config.php`:
+   - `app.base_url` (public URL of the registration page)
+   - `brevo.api_key`
+   - `brevo.sender_email`
+4. Start locally:
 
 ```bash
 php -S 0.0.0.0:8080 -t web-registration-simple
 ```
 
-4. Open `http://localhost:8080`.
+5. Open `http://localhost:8080`.
 
 ## Compatible password hash
 
@@ -20,6 +24,14 @@ This demo uses the same flow as the game server:
 
 - `passM = md5(password)`
 - `stored = md5(passM + salt)`
+
+## Account activation and email uniqueness
+
+- Registrations start as `usergroupid = 3` (inactive).
+- An activation token is stored in `user_activation_tokens`.
+- Brevo sends an activation email with a link (`/?token=...`).
+- Clicking the link changes the account to `usergroupid = 40` (active).
+- Registration blocks duplicate usernames and duplicate email addresses.
 
 ## Security notes
 

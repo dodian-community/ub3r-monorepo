@@ -38,6 +38,7 @@ This guide explains what you need to build a simple website that lets players re
      - `email`
      - `passworddate`
      - `birthday_search`
+   - Set `usergroupid` to `3` on insert (inactive/pending activation), then set to `40` after email activation.
    - Let table defaults handle the rest when possible.
    - Always use prepared statements (no SQL string concatenation).
 
@@ -46,13 +47,15 @@ This guide explains what you need to build a simple website that lets players re
      - existing username
      - weak/invalid password
      - database error
-   - Success message example: account created, you can now log in in-game.
+   - Success message example: account created, check your email to activate.
 
 7. **Security (important)**
    - HTTPS required.
    - Rate limiting on registration endpoint.
    - CAPTCHA / bot protection.
    - Input sanitization + prepared statements.
+   - Enforce unique e-mail usage (one account per e-mail).
+   - Send activation mails through Brevo transactional API.
    - Audit logging for registrations (IP, timestamp, username).
 
 ## Important note on hashing
@@ -79,7 +82,8 @@ Success response:
 ```json
 {
   "ok": true,
-  "message": "Account created"
+  "message": "Account created, check your email to activate",
+  "activated": false
 }
 ```
 
