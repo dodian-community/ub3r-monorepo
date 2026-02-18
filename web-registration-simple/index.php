@@ -769,6 +769,11 @@ $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim
             color: #e2e8f0;
             margin-top: 10px;
         }
+        .btn-link.discord {
+            background: #5865f2;
+            color: #ffffff;
+            margin-top: 10px;
+        }
         .errors, .success, .info {
             margin: 12px 0;
             padding: 10px 12px;
@@ -903,9 +908,9 @@ $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim
     <?php if ($page === 'download'): ?>
         <p class="meta">Welcome, <?= htmlspecialchars((string)($_SESSION['username'] ?? 'Player'), ENT_QUOTES, 'UTF-8') ?>. You are signed in.</p>
         <div class="downloads">
-            <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client (.jar)</a>
+            <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client</a>
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
-            <a class="btn-link secondary" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
+            <a class="btn-link discord" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
             <a class="btn-link secondary" href="?page=change-password">Change password</a>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
         </div>
