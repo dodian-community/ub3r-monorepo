@@ -1377,12 +1377,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             try {
                 $pdo = pdoFromConfig($config);
-                $actorLookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
-                $actorLookup->execute(['userid' => (int)$_SESSION['user_id']]);
-                $actorRow = $actorLookup->fetch();
+                $actorGroupId = resolveCurrentUserGroupId($pdo, (int)$_SESSION['user_id'], isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : null);
+                if (!canAccessAdminPanel($actorGroupId)) {
+                    $fallbackGroupId = resolveUserGroupIdByUsername($pdo, isset($_SESSION['username']) ? (string)$_SESSION['username'] : null);
+                    if ($fallbackGroupId !== null) {
+                        $actorGroupId = $fallbackGroupId;
+                    }
+                }
 
-                if (!$actorRow || !canAccessAdminPanel((int)$actorRow['usergroupid'])) {
-                    $errors[] = 'You do not have access to user management. Current detected usergroup: ' . (string)($currentSessionUserGroupId ?? 'unknown') . '.';
+                if ($actorGroupId !== null) {
+                    $_SESSION['usergroupid'] = $actorGroupId;
+                    $currentSessionUserGroupId = $actorGroupId;
+                }
+
+                if (!canAccessAdminPanel($actorGroupId)) {
+                    $errors[] = 'You do not have access to user management. Current detected usergroup: ' . (string)($actorGroupId ?? 'unknown') . '.';
                 }
 
                 if (empty($errors)) {
@@ -1433,7 +1442,15 @@ if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $erro
     }
 }
 
-if ($page === 'admin-users' && !canAccessAdminPanel($currentSessionUserGroupId)) {
+$hasAdminPanelAccess = canAccessAdminPanel($currentSessionUserGroupId);
+if (!$hasAdminPanelAccess && isset($_SESSION['usergroupid'])) {
+    $hasAdminPanelAccess = canAccessAdminPanel((int)$_SESSION['usergroupid']);
+    if ($hasAdminPanelAccess) {
+        $currentSessionUserGroupId = (int)$_SESSION['usergroupid'];
+    }
+}
+
+if ($page === 'admin-users' && !$hasAdminPanelAccess) {
     if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
         try {
             $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : pdoFromConfig($config);
@@ -1453,7 +1470,8 @@ if ($page === 'admin-users' && !canAccessAdminPanel($currentSessionUserGroupId))
         }
     }
 
-    if (!canAccessAdminPanel($currentSessionUserGroupId)) {
+    $hasAdminPanelAccess = canAccessAdminPanel($currentSessionUserGroupId);
+    if (!$hasAdminPanelAccess) {
         $errors[] = 'You do not have access to user management.';
         $page = 'download';
     }
@@ -1470,7 +1488,7 @@ if (isset($_SESSION['discord_link_username'])) {
 }
 
 $adminManageableUsers = [];
-if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) && requireConfiguredOrFail($configMissing, $errors)) {
+if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($configMissing, $errors)) {
     try {
         $pdo = pdoFromConfig($config);
         $listUsers = $pdo->query(
@@ -1740,7 +1758,7 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
                 <p class="meta">Linked Discord: <?= htmlspecialchars((string)$discordLinkStatus['discord_username'], ENT_QUOTES, 'UTF-8') ?> (last sync <?= htmlspecialchars((string)$discordLinkStatus['last_synced_at'], ENT_QUOTES, 'UTF-8') ?>)</p>
             <?php endif; ?>
             <a class="btn-link secondary" href="?page=change-password">Change password</a>
-            <?php if (canAccessAdminPanel($currentSessionUserGroupId)): ?>
+            <?php if ($hasAdminPanelAccess): ?>
                 <a class="btn-link secondary" href="?page=admin-users">User management</a>
             <?php endif; ?>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
