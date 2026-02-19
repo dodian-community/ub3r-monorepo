@@ -2036,7 +2036,7 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
     <?php if ($page === 'download'): ?>
         <p class="meta">Welcome, <?= htmlspecialchars((string)($_SESSION['username'] ?? 'Player'), ENT_QUOTES, 'UTF-8') ?>. You are signed in.</p>
         <?php if (is_array($currentUserRoleDebug)): ?>
-            <p class="meta">Current role: <?= htmlspecialchars((string)$currentUserRoleDebug['role_label'], ENT_QUOTES, 'UTF-8') ?> (key: <?= htmlspecialchars((string)$currentUserRoleDebug['role_key'], ENT_QUOTES, 'UTF-8') ?>, usergroup: <?= (int)$currentUserRoleDebug['usergroupid'] ?>, source: <?= htmlspecialchars((string)$currentUserRoleDebug['source'], ENT_QUOTES, 'UTF-8') ?>)</p>
+            <p class="meta">Current role: <?= htmlspecialchars((string)$currentUserRoleDebug['role_label'], ENT_QUOTES, 'UTF-8') ?> </p>
         <?php endif; ?>
         <div class="downloads">
             <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client</a>
