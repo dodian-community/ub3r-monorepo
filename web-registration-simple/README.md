@@ -15,6 +15,11 @@ A minimal PHP + HTML account portal with registration, login, downloads, activat
    - `brevo.sender_email`
    - `turnstile.site_key`
    - `turnstile.secret_key`
+   - `discord.client_id`
+   - `discord.client_secret`
+   - `discord.redirect_uri` (set this to `.../?page=discord-link`)
+   - `discord.guild_id`
+   - `discord.bot_token`
 4. Start locally:
 
 ```bash
@@ -38,7 +43,9 @@ This demo uses the same flow as the game server:
 - Clicking the link changes the account to `usergroupid = 40` (active), which is required for login.
 - Expired activation links auto-ban the account (`usergroupid = 8`).
 - Registration blocks duplicate usernames and duplicate email addresses.
-- Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and one Discord button.
+- Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and Discord actions (join + link).
+- Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
+- After linking, the configured bot updates the member nickname in the configured guild to the website/game username and stores link metadata in `user_discord_links`.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 - Signed-in users can change their password from `?page=change-password` by confirming their current password.
 
