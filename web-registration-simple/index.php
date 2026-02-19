@@ -244,12 +244,76 @@ function syncDiscordNickname(array $config, string $discordUserId, string $gameU
 }
 
 
-function buildDiscordNicknameSyncHelpMessage(Throwable $error): string
+function describeHighestRole(array $member, array $rolesById): array
+{
+    $highest = ['name' => '@everyone', 'position' => 0];
+    $memberRoleIds = isset($member['roles']) && is_array($member['roles']) ? $member['roles'] : [];
+
+    foreach ($memberRoleIds as $roleId) {
+        if (!is_string($roleId) || !isset($rolesById[$roleId])) {
+            continue;
+        }
+
+        $role = $rolesById[$roleId];
+        $position = (int)($role['position'] ?? 0);
+        if ($position > $highest['position']) {
+            $highest = [
+                'name' => (string)($role['name'] ?? '@unknown-role'),
+                'position' => $position,
+            ];
+        }
+    }
+
+    return $highest;
+}
+
+function detectDiscordHierarchyHint(array $config, string $discordUserId): ?string
+{
+    try {
+        $discord = $config['discord'] ?? [];
+        $botToken = trim((string)($discord['bot_token'] ?? ''));
+        $guildId = trim((string)($discord['guild_id'] ?? ''));
+        if ($botToken === '' || $guildId === '') {
+            return null;
+        }
+
+        $headers = ['authorization: Bot ' . $botToken];
+        $roles = discordApiRequest('GET', '/guilds/' . rawurlencode($guildId) . '/roles', $headers);
+        $botMember = discordApiRequest('GET', '/guilds/' . rawurlencode($guildId) . '/members/@me', $headers);
+        $targetMember = discordApiRequest('GET', '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId), $headers);
+
+        $rolesById = [];
+        foreach ($roles as $role) {
+            if (!is_array($role) || !isset($role['id'])) {
+                continue;
+            }
+            $rolesById[(string)$role['id']] = $role;
+        }
+
+        $botHighest = describeHighestRole($botMember, $rolesById);
+        $targetHighest = describeHighestRole($targetMember, $rolesById);
+
+        if ($botHighest['position'] <= $targetHighest['position']) {
+            return 'Bot role hierarchy issue: bot highest role is "' . $botHighest['name'] . '" while target user highest role is "' . $targetHighest['name'] . '". Move the bot role above that role and keep Manage Nicknames enabled.';
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
+function buildDiscordNicknameSyncHelpMessage(array $config, string $discordUserId, Throwable $error): string
 {
     $message = $error->getMessage();
 
     if (str_contains($message, 'HTTP 403')) {
-        return 'Discord account linked, but nickname sync failed because the bot has insufficient permissions. Give the bot the Manage Nicknames permission and place its role above members it should rename.';
+        $hierarchyHint = detectDiscordHierarchyHint($config, $discordUserId);
+        if ($hierarchyHint !== null) {
+            return 'Discord account linked, but nickname sync failed. ' . $hierarchyHint;
+        }
+
+        return 'Discord account linked, but nickname sync failed because the bot cannot manage this member nickname. Ensure the bot has Manage Nicknames and its top role is above the member role you want to rename.';
     }
 
     if (str_contains($message, 'HTTP 404')) {
@@ -480,7 +544,7 @@ if ($page === 'discord-link') {
             try {
                 syncDiscordNickname($config, $discordUserId, $gameUsername);
             } catch (Throwable $nicknameError) {
-                $nicknameSyncWarning = buildDiscordNicknameSyncHelpMessage($nicknameError);
+                $nicknameSyncWarning = buildDiscordNicknameSyncHelpMessage($config, $discordUserId, $nicknameError);
                 error_log('Discord nickname sync error: ' . $nicknameError->getMessage());
             }
 

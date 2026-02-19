@@ -46,7 +46,7 @@ This demo uses the same flow as the game server:
 - Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and Discord actions (join + link).
 - Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
 - After linking, the configured bot updates the member nickname in the configured guild to the website/game username for that linked Discord account during the linking flow.
-- The Discord bot must have `Manage Nicknames`, and its role must be above target member roles; otherwise linking still succeeds for the current session but nickname sync will show an admin action message.
+- The Discord bot must have `Manage Nicknames`, and its highest role must be above the member's highest role (and it still cannot rename guild owners). If this is wrong, linking still succeeds for the current session but nickname sync will show a concrete hierarchy hint.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 - Signed-in users can change their password from `?page=change-password` by confirming their current password.
 
