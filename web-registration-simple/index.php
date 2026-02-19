@@ -246,7 +246,7 @@ function syncDiscordNickname(array $config, string $discordUserId, string $gameU
 
 function describeHighestRole(array $member, array $rolesById): array
 {
-    $highest = ['name' => '@everyone', 'position' => 0];
+    $highest = ['name' => '@everyone', 'position' => 0, 'managed' => false];
     $memberRoleIds = isset($member['roles']) && is_array($member['roles']) ? $member['roles'] : [];
 
     foreach ($memberRoleIds as $roleId) {
@@ -260,6 +260,7 @@ function describeHighestRole(array $member, array $rolesById): array
             $highest = [
                 'name' => (string)($role['name'] ?? '@unknown-role'),
                 'position' => $position,
+                'managed' => (bool)($role['managed'] ?? false),
             ];
         }
     }
@@ -294,7 +295,8 @@ function detectDiscordHierarchyHint(array $config, string $discordUserId): ?stri
         $targetHighest = describeHighestRole($targetMember, $rolesById);
 
         if ($botHighest['position'] <= $targetHighest['position']) {
-            return 'Bot role hierarchy issue: bot highest role is "' . $botHighest['name'] . '" while target user highest role is "' . $targetHighest['name'] . '". Move the bot role above that role and keep Manage Nicknames enabled.';
+            $targetRoleType = $targetHighest['managed'] ? ' (integration/managed role)' : '';
+            return 'Bot role hierarchy issue: bot highest role is "' . $botHighest['name'] . '" (position ' . $botHighest['position'] . ') while target user highest role is "' . $targetHighest['name'] . '"' . $targetRoleType . ' (position ' . $targetHighest['position'] . '). Even with the same permissions, nickname edits only work when the bot role position is strictly higher. Move the bot role above that role and keep Manage Nicknames enabled.';
         }
     } catch (Throwable $e) {
         return null;
@@ -313,7 +315,7 @@ function buildDiscordNicknameSyncHelpMessage(array $config, string $discordUserI
             return 'Discord account linked, but nickname sync failed. ' . $hierarchyHint;
         }
 
-        return 'Discord account linked, but nickname sync failed because the bot cannot manage this member nickname. Ensure the bot has Manage Nicknames and its top role is above the member role you want to rename.';
+        return "Discord account linked, but nickname sync failed because Discord enforces role hierarchy. Matching permissions alone are not enough: the bot top role must be strictly above the member's top role, and guild owners cannot be renamed.";
     }
 
     if (str_contains($message, 'HTTP 404')) {
