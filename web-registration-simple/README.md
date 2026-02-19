@@ -45,8 +45,8 @@ This demo uses the same flow as the game server:
 - Registration blocks duplicate usernames and duplicate email addresses.
 - Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and Discord actions (join + link).
 - Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
-- After linking, the configured bot updates the member nickname in the configured guild to the website/game username and stores link metadata in `user_discord_links`.
-- The Discord bot must have `Manage Nicknames`, and its role must be above target member roles; otherwise linking still succeeds but nickname sync will show an admin action message.
+- After linking, the configured bot updates the member nickname in the configured guild to the website/game username for that linked Discord account during the linking flow.
+- The Discord bot must have `Manage Nicknames`, and its role must be above target member roles; otherwise linking still succeeds for the current session but nickname sync will show an admin action message.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 - Signed-in users can change their password from `?page=change-password` by confirming their current password.
 

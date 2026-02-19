@@ -126,22 +126,6 @@ function ensurePasswordResetTable(PDO $pdo): void
     );
 }
 
-function ensureDiscordLinkTable(PDO $pdo): void
-{
-    $pdo->exec(
-        'CREATE TABLE IF NOT EXISTS user_discord_links (
-            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            user_id INT UNSIGNED NOT NULL,
-            discord_user_id VARCHAR(32) NOT NULL,
-            discord_username VARCHAR(64) NOT NULL,
-            linked_at DATETIME NOT NULL,
-            last_synced_at DATETIME NOT NULL,
-            UNIQUE KEY unique_user_id (user_id),
-            UNIQUE KEY unique_discord_user_id (discord_user_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
-    );
-}
-
 function buildDiscordOAuthUrl(array $config, string $state): string
 {
     $discord = $config['discord'] ?? [];
@@ -441,7 +425,6 @@ if ($page === 'activate' && isset($_GET['token']) && is_string($_GET['token']) &
 }
 
 
-$discordLinkStatus = null;
 
 if ($page === 'discord-link') {
     if (!isset($_SESSION['user_id'])) {
@@ -450,8 +433,6 @@ if ($page === 'discord-link') {
     } elseif (requireConfiguredOrFail($configMissing, $errors)) {
         try {
             $pdo = pdoFromConfig($config);
-            ensureDiscordLinkTable($pdo);
-
             $hasCode = isset($_GET['code']) && is_string($_GET['code']) && $_GET['code'] !== '';
             if (!$hasCode) {
                 $state = bin2hex(random_bytes(16));
@@ -503,19 +484,8 @@ if ($page === 'discord-link') {
                 error_log('Discord nickname sync error: ' . $nicknameError->getMessage());
             }
 
-            $saveLink = $pdo->prepare(
-                'INSERT INTO user_discord_links (user_id, discord_user_id, discord_username, linked_at, last_synced_at)
-                 VALUES (:user_id, :discord_user_id, :discord_username, NOW(), NOW())
-                 ON DUPLICATE KEY UPDATE
-                    discord_user_id = VALUES(discord_user_id),
-                    discord_username = VALUES(discord_username),
-                    last_synced_at = NOW()'
-            );
-            $saveLink->execute([
-                'user_id' => $userId,
-                'discord_user_id' => $discordUserId,
-                'discord_username' => $discordUsername,
-            ]);
+            $_SESSION['discord_link_username'] = $discordUsername;
+            $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
 
             if ($nicknameSyncWarning === null) {
                 $successMessage = 'Discord linked successfully. Your server nickname is now synced to your game username.';
@@ -940,16 +910,12 @@ if (($page === 'download' || $page === 'change-password') && !isset($_SESSION['u
 
 $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim($_GET['token']) : '';
 
-if (isset($_SESSION['user_id']) && !$configMissing) {
-    try {
-        $pdo = pdoFromConfig($config);
-        ensureDiscordLinkTable($pdo);
-        $linkLookup = $pdo->prepare('SELECT discord_username, last_synced_at FROM user_discord_links WHERE user_id = :user_id LIMIT 1');
-        $linkLookup->execute(['user_id' => (int)$_SESSION['user_id']]);
-        $discordLinkStatus = $linkLookup->fetch() ?: null;
-    } catch (Throwable $e) {
-        error_log('Discord link status error: ' . $e->getMessage());
-    }
+$discordLinkStatus = null;
+if (isset($_SESSION['discord_link_username'])) {
+    $discordLinkStatus = [
+        'discord_username' => (string)$_SESSION['discord_link_username'],
+        'last_synced_at' => (string)($_SESSION['discord_link_synced_at'] ?? ''),
+    ];
 }
 
 ?>
