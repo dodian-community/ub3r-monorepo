@@ -290,6 +290,28 @@ function canAccessAdminPanel(?int $userGroupId): bool
     return $userGroupId !== null && in_array($userGroupId, ADMIN_PANEL_ALLOWED_GROUPS, true);
 }
 
+
+function resolveCurrentUserGroupId(PDO $pdo, ?int $sessionUserId, ?int $sessionUserGroupId): ?int
+{
+    if ($sessionUserId === null) {
+        return $sessionUserGroupId;
+    }
+
+    try {
+        $lookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+        $lookup->execute(['userid' => $sessionUserId]);
+        $row = $lookup->fetch();
+
+        if ($row) {
+            return (int)$row['usergroupid'];
+        }
+    } catch (Throwable $e) {
+        error_log('Unable to resolve current usergroup: ' . $e->getMessage());
+    }
+
+    return $sessionUserGroupId;
+}
+
 function findRoleKeyByUserGroupId(int $userGroupId): ?string
 {
     foreach (getSupportedWebRoles() as $roleKey => $roleDefinition) {
@@ -1371,11 +1393,8 @@ $currentSessionUserGroupId = isset($_SESSION['usergroupid']) ? (int)$_SESSION['u
 if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
     try {
         $pdo = pdoFromConfig($config);
-        $lookupSessionUser = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
-        $lookupSessionUser->execute(['userid' => (int)$_SESSION['user_id']]);
-        $sessionUserRow = $lookupSessionUser->fetch();
-        if ($sessionUserRow) {
-            $currentSessionUserGroupId = (int)$sessionUserRow['usergroupid'];
+        $currentSessionUserGroupId = resolveCurrentUserGroupId($pdo, (int)$_SESSION['user_id'], $currentSessionUserGroupId);
+        if ($currentSessionUserGroupId !== null) {
             $_SESSION['usergroupid'] = $currentSessionUserGroupId;
         }
 
@@ -1386,8 +1405,22 @@ if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $erro
 }
 
 if ($page === 'admin-users' && !canAccessAdminPanel($currentSessionUserGroupId)) {
-    $errors[] = 'You do not have access to user management.';
-    $page = 'download';
+    if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
+        try {
+            $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : pdoFromConfig($config);
+            $currentSessionUserGroupId = resolveCurrentUserGroupId($pdo, (int)$_SESSION['user_id'], $currentSessionUserGroupId);
+            if ($currentSessionUserGroupId !== null) {
+                $_SESSION['usergroupid'] = $currentSessionUserGroupId;
+            }
+        } catch (Throwable $e) {
+            error_log('Admin access recheck error: ' . $e->getMessage());
+        }
+    }
+
+    if (!canAccessAdminPanel($currentSessionUserGroupId)) {
+        $errors[] = 'You do not have access to user management.';
+        $page = 'download';
+    }
 }
 
 $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim($_GET['token']) : '';
