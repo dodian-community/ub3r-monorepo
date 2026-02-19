@@ -346,10 +346,6 @@ function findRoleKeyByUserGroupId(int $userGroupId): ?string
 
 function resolveRoleByUserData(int $userGroupId, int $unbanTime): string
 {
-    if ($unbanTime > time()) {
-        return 'banned';
-    }
-
     return findRoleKeyByUserGroupId($userGroupId) ?? 'verified';
 }
 
@@ -357,15 +353,15 @@ function resolveRoleByUserData(int $userGroupId, int $unbanTime): string
 function isAccountCurrentlyBanned(PDO $pdo, int $userId): bool
 {
     try {
-        $lookup = $pdo->prepare('SELECT unbantime FROM game_characters WHERE id = :id LIMIT 1');
-        $lookup->execute(['id' => $userId]);
+        $lookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+        $lookup->execute(['userid' => $userId]);
         $row = $lookup->fetch();
 
         if (!$row) {
             return false;
         }
 
-        return (int)($row['unbantime'] ?? 0) > time();
+        return (int)$row['usergroupid'] === BANNED_USERGROUP_ID;
     } catch (Throwable $e) {
         error_log('Ban status lookup failed for user ' . $userId . ': ' . $e->getMessage());
         return false;
@@ -375,27 +371,12 @@ function isAccountCurrentlyBanned(PDO $pdo, int $userId): bool
 
 function resolveUserRoleContext(PDO $pdo, int $userId): array
 {
-    try {
-        $lookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
-        $lookup->execute(['userid' => $userId]);
-        $row = $lookup->fetch();
-
-        if ($row) {
-            return [
-                'usergroupid' => (int)$row['usergroupid'],
-                'unbantime' => (int)$row['unbantime'],
-            ];
-        }
-    } catch (Throwable $joinError) {
-        error_log('Role context fallback without game_characters: ' . $joinError->getMessage());
-    }
-
-    $fallbackLookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
-    $fallbackLookup->execute(['userid' => $userId]);
-    $fallbackRow = $fallbackLookup->fetch();
+    $lookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+    $lookup->execute(['userid' => $userId]);
+    $row = $lookup->fetch();
 
     return [
-        'usergroupid' => $fallbackRow ? (int)$fallbackRow['usergroupid'] : ACTIVE_USERGROUP_ID,
+        'usergroupid' => $row ? (int)$row['usergroupid'] : ACTIVE_USERGROUP_ID,
         'unbantime' => 0,
     ];
 }
@@ -513,14 +494,18 @@ function syncPendingDiscordRoles(PDO $pdo, array $config): int
 {
     ensureDiscordRoleSyncTable($pdo);
 
-    $lookup = $pdo->prepare(
-        'SELECT l.user_id, l.discord_user_id, u.usergroupid, c.unbantime
-         FROM user_discord_links l
-         INNER JOIN user u ON u.userid = l.user_id
-         INNER JOIN game_characters c ON c.id = l.user_id
-         WHERE l.roles_last_synced_at IS NULL OR l.roles_last_synced_at <= DATE_SUB(NOW(), INTERVAL :interval_seconds SECOND)
-         ORDER BY l.user_id ASC'
-    );
+    try {
+        $lookup = $pdo->prepare(
+            'SELECT l.user_id, l.discord_user_id, u.usergroupid, 0 AS unbantime
+             FROM user_discord_links l
+             INNER JOIN user u ON u.userid = l.user_id
+             WHERE l.roles_last_synced_at IS NULL OR l.roles_last_synced_at <= DATE_SUB(NOW(), INTERVAL :interval_seconds SECOND)
+             ORDER BY l.user_id ASC'
+        );
+    } catch (Throwable $joinError) {
+        error_log('Discord periodic role sync query error: ' . $joinError->getMessage());
+        throw $joinError;
+    }
     $lookup->bindValue(':interval_seconds', DISCORD_ROLE_SYNC_INTERVAL_SECONDS, PDO::PARAM_INT);
     $lookup->execute();
 
@@ -557,6 +542,7 @@ function applyWebRoleToAccount(PDO $pdo, int $userId, string $roleKey): void
         'usergroupid' => $userGroupId,
         'userid' => $userId,
     ]);
+
 }
 
 function buildDiscordRoleSyncHelpMessage(Throwable $error): string
@@ -1415,14 +1401,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     applyWebRoleToAccount($pdo, $userId, $roleKey);
 
                     try {
-                        $targetLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
-                        $targetLookup->execute(['userid' => $userId]);
-                        $targetRow = $targetLookup->fetch();
-                    } catch (Throwable $targetJoinError) {
-                        error_log('Target lookup fallback without game_characters: ' . $targetJoinError->getMessage());
                         $targetLookup = $pdo->prepare('SELECT u.usergroupid, 0 AS unbantime FROM user u WHERE u.userid = :userid LIMIT 1');
                         $targetLookup->execute(['userid' => $userId]);
                         $targetRow = $targetLookup->fetch();
+                    } catch (Throwable $targetJoinError) {
+                        error_log('Target role lookup failed: ' . $targetJoinError->getMessage());
+                        throw $targetJoinError;
                     }
                     if ($targetRow) {
                         syncDiscordRolesForUser($pdo, $config, $userId, (int)$targetRow['usergroupid'], (int)$targetRow['unbantime']);
@@ -1515,7 +1499,7 @@ $currentUserRoleDebug = null;
 if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
     try {
         $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : pdoFromConfig($config);
-        $roleLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+        $roleLookup = $pdo->prepare('SELECT u.usergroupid, 0 AS unbantime FROM user u WHERE u.userid = :userid LIMIT 1');
         $roleLookup->execute(['userid' => (int)$_SESSION['user_id']]);
         $roleRow = $roleLookup->fetch();
 
@@ -1559,20 +1543,14 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
 
         try {
             $listUsers = $pdo->query(
-                'SELECT u.userid, u.username, u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime
-                 FROM user u
-                 LEFT JOIN game_characters c ON c.id = u.userid
-                 ORDER BY u.userid DESC
-                 LIMIT 200'
-            );
-        } catch (Throwable $joinError) {
-            error_log('Admin users listing fallback without game_characters: ' . $joinError->getMessage());
-            $listUsers = $pdo->query(
                 'SELECT u.userid, u.username, u.usergroupid, 0 AS unbantime
                  FROM user u
                  ORDER BY u.userid DESC
                  LIMIT 200'
             );
+        } catch (Throwable $joinError) {
+            error_log('Admin users listing error: ' . $joinError->getMessage());
+            throw $joinError;
         }
 
         while ($row = $listUsers->fetch()) {
