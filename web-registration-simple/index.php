@@ -488,6 +488,14 @@ function syncDiscordRolesForLinkedUser(array $config, string $discordUserId, str
 
     $roleMap = getDiscordRoleMap($config);
     $managedRoleKeys = ['verified', 'premium', 'moderator', 'trial_moderator', 'administrator', 'developer', 'banned'];
+    $targetRoleId = $roleMap[$roleKey] ?? '';
+
+    if ($targetRoleId === '') {
+        throw new RuntimeException('Discord role sync is not configured for role "' . $roleKey . '". Set the matching discord.*_role_id in config.php.');
+    }
+
+    $targetRoleAssigned = false;
+    $targetRoleError = null;
 
     foreach ($managedRoleKeys as $managedRoleKey) {
         $discordRoleId = $roleMap[$managedRoleKey] ?? '';
@@ -496,11 +504,32 @@ function syncDiscordRolesForLinkedUser(array $config, string $discordUserId, str
         }
 
         $method = $managedRoleKey === $roleKey ? 'PUT' : 'DELETE';
-        discordApiRequest(
-            $method,
-            '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId) . '/roles/' . rawurlencode($discordRoleId),
-            ['authorization: Bot ' . $botToken]
-        );
+
+        try {
+            discordApiRequest(
+                $method,
+                '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId) . '/roles/' . rawurlencode($discordRoleId),
+                ['authorization: Bot ' . $botToken]
+            );
+
+            if ($managedRoleKey === $roleKey) {
+                $targetRoleAssigned = true;
+            }
+        } catch (Throwable $e) {
+            if ($managedRoleKey === $roleKey) {
+                $targetRoleError = $e;
+            } else {
+                error_log('Discord role cleanup skipped for role key ' . $managedRoleKey . ': ' . $e->getMessage());
+            }
+        }
+    }
+
+    if (!$targetRoleAssigned) {
+        if ($targetRoleError instanceof Throwable) {
+            throw $targetRoleError;
+        }
+
+        throw new RuntimeException('Discord role sync could not assign the target role.');
     }
 }
 
