@@ -1487,6 +1487,31 @@ if (isset($_SESSION['discord_link_username'])) {
     ];
 }
 
+$currentUserRoleDebug = null;
+if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
+    try {
+        $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : pdoFromConfig($config);
+        $roleLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+        $roleLookup->execute(['userid' => (int)$_SESSION['user_id']]);
+        $roleRow = $roleLookup->fetch();
+
+        if ($roleRow) {
+            $resolvedRoleKey = resolveRoleByUserData((int)$roleRow['usergroupid'], (int)$roleRow['unbantime']);
+            $supportedRoles = getSupportedWebRoles();
+            $resolvedRoleLabel = isset($supportedRoles[$resolvedRoleKey]) ? (string)$supportedRoles[$resolvedRoleKey]['label'] : ucfirst(str_replace('_', ' ', $resolvedRoleKey));
+
+            $currentUserRoleDebug = [
+                'usergroupid' => (int)$roleRow['usergroupid'],
+                'role_key' => $resolvedRoleKey,
+                'role_label' => $resolvedRoleLabel,
+                'unbantime' => (int)$roleRow['unbantime'],
+            ];
+        }
+    } catch (Throwable $e) {
+        error_log('Current role debug lookup error: ' . $e->getMessage());
+    }
+}
+
 $adminManageableUsers = [];
 if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($configMissing, $errors)) {
     try {
@@ -1749,6 +1774,9 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
 
     <?php if ($page === 'download'): ?>
         <p class="meta">Welcome, <?= htmlspecialchars((string)($_SESSION['username'] ?? 'Player'), ENT_QUOTES, 'UTF-8') ?>. You are signed in.</p>
+        <?php if (is_array($currentUserRoleDebug)): ?>
+            <p class="meta">Current role: <?= htmlspecialchars((string)$currentUserRoleDebug['role_label'], ENT_QUOTES, 'UTF-8') ?> (key: <?= htmlspecialchars((string)$currentUserRoleDebug['role_key'], ENT_QUOTES, 'UTF-8') ?>, usergroup: <?= (int)$currentUserRoleDebug['usergroupid'] ?>)</p>
+        <?php endif; ?>
         <div class="downloads">
             <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client</a>
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
