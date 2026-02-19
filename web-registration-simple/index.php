@@ -40,6 +40,72 @@ function dodianPasswordHash(string $password, string $salt): string
     return md5($passM . $salt);
 }
 
+function normalizeEmailAddress(string $email): string
+{
+    return strtolower(trim($email));
+}
+
+function isDisposableEmailAddress(string $email, array $config): bool
+{
+    $normalized = normalizeEmailAddress($email);
+    $atPos = strrpos($normalized, '@');
+    if ($atPos === false) {
+        return false;
+    }
+
+    $domain = substr($normalized, $atPos + 1);
+    if ($domain === '') {
+        return false;
+    }
+
+    $defaultBlockedDomains = [
+        'mailinator.com',
+        'guerrillamail.com',
+        '10minutemail.com',
+        'temp-mail.org',
+        'tempmail.com',
+        'throwawaymail.com',
+        'yopmail.com',
+        'sharklasers.com',
+        'dispostable.com',
+        'getnada.com',
+        'maildrop.cc',
+        'mintemail.com',
+        'trashmail.com',
+        'fakeinbox.com',
+        'emailondeck.com',
+    ];
+
+    $configuredBlockedDomains = [];
+    if (isset($config['app']['blocked_email_domains']) && is_array($config['app']['blocked_email_domains'])) {
+        $configuredBlockedDomains = $config['app']['blocked_email_domains'];
+    }
+
+    $blockedDomains = [];
+    foreach (array_merge($defaultBlockedDomains, $configuredBlockedDomains) as $blockedDomain) {
+        if (!is_string($blockedDomain)) {
+            continue;
+        }
+
+        $blocked = strtolower(trim($blockedDomain));
+        if ($blocked !== '') {
+            $blockedDomains[] = $blocked;
+        }
+    }
+
+    foreach ($blockedDomains as $blockedDomain) {
+        if ($domain === $blockedDomain) {
+            return true;
+        }
+
+        if (str_ends_with($domain, '.' . $blockedDomain)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function pdoFromConfig(array $config): PDO
 {
     $db = $config['db'];
@@ -1084,7 +1150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'register') {
         $page = 'register';
         $username = trim((string)($_POST['username'] ?? ''));
-        $email = trim((string)($_POST['email'] ?? ''));
+        $email = normalizeEmailAddress((string)($_POST['email'] ?? ''));
         $password = (string)($_POST['password'] ?? '');
         $confirmPassword = (string)($_POST['confirm_password'] ?? '');
         $turnstileToken = trim((string)($_POST['cf-turnstile-response'] ?? ''));
@@ -1095,6 +1161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Enter a valid email address.';
+        } elseif (requireConfiguredOrFail($configMissing, $errors) && isDisposableEmailAddress($email, $config)) {
+            $errors[] = 'Disposable email addresses are not allowed.';
         }
 
         if (strlen($password) < 8) {
@@ -1133,7 +1201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors[] = 'This username already exists.';
                 }
 
-                $emailStmt = $pdo->prepare('SELECT 1 FROM user WHERE email = :email LIMIT 1');
+                $emailStmt = $pdo->prepare('SELECT 1 FROM user WHERE LOWER(TRIM(email)) = :email LIMIT 1');
                 $emailStmt->execute(['email' => $email]);
                 if ($emailStmt->fetch()) {
                     $errors[] = 'This email address is already in use.';
@@ -1255,7 +1323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'forgot-password') {
         $page = 'forgot-password';
-        $email = trim((string)($_POST['email'] ?? ''));
+        $email = normalizeEmailAddress((string)($_POST['email'] ?? ''));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Enter a valid email address.';
@@ -1269,7 +1337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare(
                     'SELECT userid, username
                      FROM user
-                     WHERE email = :email
+                     WHERE LOWER(TRIM(email)) = :email
                        AND usergroupid = :active_group
                      LIMIT 1'
                 );

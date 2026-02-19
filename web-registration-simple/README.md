@@ -43,7 +43,8 @@ This demo uses the same flow as the game server:
 - Brevo sends an activation email with a link (`/?page=activate&token=...`) that is valid for 2 hours.
 - Clicking the link changes the account to `usergroupid = 40` (active), which is required for login.
 - Expired activation links auto-ban the account (`usergroupid = 8`).
-- Registration blocks duplicate usernames and duplicate email addresses.
+- Registration blocks duplicate usernames and duplicate email addresses (case-insensitive).
+- Disposable email domains are blocked by default; extend or override via `app.blocked_email_domains` in `config.php`.
 - Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and Discord actions (join + link).
 - Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
 - After linking, the configured bot updates the member nickname in the configured guild to the website/game username and assigns the configured Verified role during the linking flow.

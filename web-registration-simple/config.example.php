@@ -16,6 +16,10 @@ return [
         'client_jar_url' => 'https://example.com/downloads/dodian-client.jar',
         'java_download_url' => 'https://www.java.com/download/',
         'discord_url' => 'https://discord.gg/your-server',
+        'blocked_email_domains' => [
+            'mailinator.com',
+            '10minutemail.com',
+        ],
     ],
     'brevo' => [
         'api_key' => 'xkeysib-REPLACE_ME',
