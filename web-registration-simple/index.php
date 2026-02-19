@@ -14,7 +14,6 @@ const ADMINISTRATOR_USERGROUP_ID = 6;
 const DEVELOPER_USERGROUP_ID = 10;
 const WEB_MANAGEMENT_USERGROUP_ID = 18;
 const ADMIN_PANEL_ALLOWED_GROUPS = [ADMINISTRATOR_USERGROUP_ID, DEVELOPER_USERGROUP_ID, WEB_MANAGEMENT_USERGROUP_ID];
-const BAN_DURATION_SECONDS = 315360000;
 const DISCORD_ROLE_SYNC_INTERVAL_SECONDS = 1800;
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
 
@@ -281,7 +280,7 @@ function getSupportedWebRoles(): array
         'trial_moderator' => ['label' => 'Trial moderator', 'usergroupid' => TRIAL_MODERATOR_USERGROUP_ID, 'ban' => false],
         'administrator' => ['label' => 'Administrator', 'usergroupid' => ADMINISTRATOR_USERGROUP_ID, 'ban' => false],
         'developer' => ['label' => 'Developer', 'usergroupid' => DEVELOPER_USERGROUP_ID, 'ban' => false],
-        'banned' => ['label' => 'Banned', 'usergroupid' => ACTIVE_USERGROUP_ID, 'ban' => true],
+        'banned' => ['label' => 'Banned', 'usergroupid' => BANNED_USERGROUP_ID, 'ban' => false],
     ];
 }
 
@@ -337,7 +336,7 @@ function resolveUserGroupIdByUsername(PDO $pdo, ?string $username): ?int
 function findRoleKeyByUserGroupId(int $userGroupId): ?string
 {
     foreach (getSupportedWebRoles() as $roleKey => $roleDefinition) {
-        if ((int)$roleDefinition['usergroupid'] === $userGroupId && ($roleDefinition['ban'] ?? false) === false) {
+        if ((int)$roleDefinition['usergroupid'] === $userGroupId) {
             return $roleKey;
         }
     }
@@ -524,44 +523,12 @@ function applyWebRoleToAccount(PDO $pdo, int $userId, string $roleKey): void
 
     $roleDefinition = $roles[$roleKey];
     $userGroupId = (int)$roleDefinition['usergroupid'];
-    $isBanRole = ($roleDefinition['ban'] ?? false) === true;
 
-    $pdo->beginTransaction();
-
-    try {
-        $updateUser = $pdo->prepare('UPDATE user SET usergroupid = :usergroupid WHERE userid = :userid LIMIT 1');
-        $updateUser->execute([
-            'usergroupid' => $userGroupId,
-            'userid' => $userId,
-        ]);
-
-        $unbanTime = $isBanRole ? time() + BAN_DURATION_SECONDS : 0;
-        $isBannedValue = $isBanRole ? 1 : 0;
-
-        $updateCharacter = $pdo->prepare(
-            'UPDATE game_characters
-             SET banned = :banned,
-                 ban_level = :ban_level,
-                 ban_reason = :ban_reason,
-                 unbantime = :unbantime
-             WHERE id = :id
-             LIMIT 1'
-        );
-        $updateCharacter->execute([
-            'banned' => $isBannedValue,
-            'ban_level' => $isBannedValue,
-            'ban_reason' => $isBanRole ? 'Set via web admin panel' : '',
-            'unbantime' => $unbanTime,
-            'id' => $userId,
-        ]);
-
-        $pdo->commit();
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $e;
-    }
+    $updateUser = $pdo->prepare('UPDATE user SET usergroupid = :usergroupid WHERE userid = :userid LIMIT 1');
+    $updateUser->execute([
+        'usergroupid' => $userGroupId,
+        'userid' => $userId,
+    ]);
 }
 
 function buildDiscordRoleSyncHelpMessage(Throwable $error): string
