@@ -259,6 +259,22 @@ function syncDiscordNickname(array $config, string $discordUserId, string $gameU
     );
 }
 
+
+function buildDiscordNicknameSyncHelpMessage(Throwable $error): string
+{
+    $message = $error->getMessage();
+
+    if (str_contains($message, 'HTTP 403')) {
+        return 'Discord account linked, but nickname sync failed because the bot has insufficient permissions. Give the bot the Manage Nicknames permission and place its role above members it should rename.';
+    }
+
+    if (str_contains($message, 'HTTP 404')) {
+        return 'Discord account linked, but nickname sync failed because you are not a member of the configured Discord server yet. Join the server and run linking again.';
+    }
+
+    return 'Discord account linked, but nickname sync failed. Please ask an admin to verify bot permissions and guild configuration.';
+}
+
 function banExpiredPendingAccounts(PDO $pdo): void
 {
     $banExpired = $pdo->prepare(
@@ -479,7 +495,13 @@ if ($page === 'discord-link') {
                 $_SESSION['username'] = $gameUsername;
             }
 
-            syncDiscordNickname($config, $discordUserId, $gameUsername);
+            $nicknameSyncWarning = null;
+            try {
+                syncDiscordNickname($config, $discordUserId, $gameUsername);
+            } catch (Throwable $nicknameError) {
+                $nicknameSyncWarning = buildDiscordNicknameSyncHelpMessage($nicknameError);
+                error_log('Discord nickname sync error: ' . $nicknameError->getMessage());
+            }
 
             $saveLink = $pdo->prepare(
                 'INSERT INTO user_discord_links (user_id, discord_user_id, discord_username, linked_at, last_synced_at)
@@ -495,7 +517,12 @@ if ($page === 'discord-link') {
                 'discord_username' => $discordUsername,
             ]);
 
-            $successMessage = 'Discord linked successfully. Your server nickname is now synced to your game username.';
+            if ($nicknameSyncWarning === null) {
+                $successMessage = 'Discord linked successfully. Your server nickname is now synced to your game username.';
+            } else {
+                $infoMessage = $nicknameSyncWarning;
+                $successMessage = 'Discord account linked successfully.';
+            }
             $page = 'download';
         } catch (Throwable $e) {
             $errors[] = 'Discord linking failed: ' . $e->getMessage();
