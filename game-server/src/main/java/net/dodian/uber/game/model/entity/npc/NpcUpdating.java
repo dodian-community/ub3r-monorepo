@@ -109,7 +109,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             z += 32;
         buf.putBits(5, z); // y coordinate relative to thisPlayer
 
-        buf.putBits(1, 0); // something??
+        buf.putBits(1, 1); // discard client walking queue on add-local
         buf.putBits(14, npc.getId());
         buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
     }
@@ -129,10 +129,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         // Emit blocks in the exact order expected by Client.method86.
         if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
             appendAnimationRequest(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGfxUpdate(npc, buf);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
+            appendPrimaryHit2(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
             appendFaceCharacter(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
@@ -163,7 +163,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     @Override
     public void appendPrimaryHit(Npc npc, ByteMessage buf) {
 
-        // Client npcUpdateMask (mask & 0x08) expects:
+        // Client npcUpdateMask (mask & 0x40) expects:
         // short damage, byte type, short currentHp, short maxHp
         int damage = npc.getDamageDealt();
         if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
@@ -191,7 +191,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void appendPrimaryHit2(Npc npc, ByteMessage buf) {
-        // Client npcUpdateMask (mask & 0x40) uses the same layout as primary hit
+        // Client npcUpdateMask (mask & 0x08) uses the same layout as primary hit
         int damage = npc.getDamageDealt2();
         if (damage < Short.MIN_VALUE) damage = Short.MIN_VALUE;
         if (damage > Short.MAX_VALUE) damage = Short.MAX_VALUE;
@@ -224,13 +224,22 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendFaceCharacter(Npc npc, ByteMessage buf) {
-        // NPC 0x20 mask is an interacting entity id (unsigned short), not x/y coords.
-        buf.putShort(0xFFFF);
+        int faceTarget = npc.getFaceTarget();
+        if (faceTarget < 0 || faceTarget > 0xFFFF) {
+            faceTarget = 0xFFFF;
+        }
+        buf.putShort(faceTarget);
     }
 
     public void appendAppearanceUpdate(Npc npc, ByteMessage buf) {
-        // NPC 0x2 mask expects a transformed NPC id using little-endian + A.
-        buf.putShort(npc.getId(), ByteOrder.LITTLE, ValueType.ADD);
+        // Mystic client expects: headIcon, transformFlag, optional transformedNpcId(LEShortA).
+        buf.put(npc.getHeadIcon());
+        int transformedNpcId = npc.getTransformedNpcId();
+        boolean transform = transformedNpcId >= 0;
+        buf.put(transform ? 1 : 0);
+        if (transform) {
+            buf.putShort(transformedNpcId, ByteOrder.LITTLE, ValueType.ADD);
+        }
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {

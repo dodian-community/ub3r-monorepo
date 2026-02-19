@@ -101,4 +101,44 @@ public class PlayerUpdatingMaskOrderTest {
             updateBlock.releaseAll();
         }
     }
+
+    @Test
+    public void repeatedMixedMaskEncodingIsStable() {
+        Client player = new Client(null, 1);
+        player.playerName = "mask-test";
+        player.isNpc = true;
+        player.setPlayerNpc(1);
+
+        UpdateFlag[] flags = {
+                UpdateFlag.FORCED_MOVEMENT,
+                UpdateFlag.GRAPHICS,
+                UpdateFlag.ANIM,
+                UpdateFlag.FORCED_CHAT,
+                UpdateFlag.CHAT,
+                UpdateFlag.FACE_CHARACTER,
+                UpdateFlag.APPEARANCE,
+                UpdateFlag.FACE_COORDINATE,
+                UpdateFlag.HIT,
+                UpdateFlag.HIT2
+        };
+
+        for (int iteration = 0; iteration < 200; iteration++) {
+            player.clearUpdateFlags();
+
+            int maskSeed = iteration | 1; // guarantee at least one flag
+            for (int i = 0; i < flags.length; i++) {
+                if ((maskSeed & (1 << (i % 10))) != 0) {
+                    player.getUpdateFlags().setRequired(flags[i], true);
+                }
+            }
+
+            ByteMessage updateBlock = ByteMessage.raw(512);
+            try {
+                PlayerUpdating.getInstance().appendBlockUpdate(player, updateBlock, PlayerUpdating.UpdatePhase.UPDATE_LOCAL);
+                assertTrue(updateBlock.getBuffer().writerIndex() > 0, "Expected encoded payload for mixed player flags.");
+            } finally {
+                updateBlock.releaseAll();
+            }
+        }
+    }
 }

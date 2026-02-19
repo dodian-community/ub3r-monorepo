@@ -38,6 +38,9 @@ public class Npc extends Entity {
     public long lastBoostedStat = System.currentTimeMillis();
     private int direction = -1;
     private int defaultFace;
+    private int faceTarget = -1;
+    private int headIcon = 0;
+    private int transformedNpcId = -1;
     public int viewX;
     public int viewY;
     private int damageDealt = 0, damageDealt2 = 0;
@@ -173,6 +176,7 @@ public class Npc extends Entity {
     public void clearUpdateFlags() {
         direction = -1;
         pendingWalkingDirection = -1;
+        faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
     }
@@ -191,6 +195,41 @@ public class Npc extends Entity {
 
     public void setDirection(int direction) {
         this.direction = direction;
+    }
+
+    public int getFaceTarget() {
+        return faceTarget;
+    }
+
+    public void faceTarget(int index) {
+        this.faceTarget = index;
+        getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
+    }
+
+    public void faceNpc(int index) {
+        faceTarget(index);
+    }
+
+    public void facePlayer(int index) {
+        faceTarget(32768 + index);
+    }
+
+    public int getHeadIcon() {
+        return headIcon & 0xFF;
+    }
+
+    public void setHeadIcon(int headIcon) {
+        this.headIcon = headIcon & 0xFF;
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+    }
+
+    public int getTransformedNpcId() {
+        return transformedNpcId;
+    }
+
+    public void setTransformedNpcId(int transformedNpcId) {
+        this.transformedNpcId = transformedNpcId;
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
     public boolean isWalking() {
