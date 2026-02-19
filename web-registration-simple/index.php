@@ -381,6 +381,27 @@ function resolveUserRoleContext(PDO $pdo, int $userId): array
     ];
 }
 
+function deduplicateDiscordLinks(PDO $pdo): int
+{
+    $dedupe = $pdo->prepare(
+        'DELETE l1
+         FROM user_discord_links l1
+         INNER JOIN user_discord_links l2
+           ON l1.discord_user_id = l2.discord_user_id
+          AND l1.user_id <> l2.user_id
+          AND (
+              COALESCE(l1.updated_at, l1.created_at, "1970-01-01 00:00:00") < COALESCE(l2.updated_at, l2.created_at, "1970-01-01 00:00:00")
+              OR (
+                  COALESCE(l1.updated_at, l1.created_at, "1970-01-01 00:00:00") = COALESCE(l2.updated_at, l2.created_at, "1970-01-01 00:00:00")
+                  AND l1.user_id < l2.user_id
+              )
+          )'
+    );
+    $dedupe->execute();
+
+    return $dedupe->rowCount();
+}
+
 function ensureDiscordRoleSyncTable(PDO $pdo): void
 {
     $pdo->exec(
@@ -426,6 +447,11 @@ function ensureDiscordRoleSyncTable(PDO $pdo): void
         }
     }
 
+    $deduplicated = deduplicateDiscordLinks($pdo);
+    if ($deduplicated > 0) {
+        error_log('Deduplicated ' . $deduplicated . ' duplicate Discord link rows.');
+    }
+
     $indexLookup = $pdo->query("SHOW INDEX FROM user_discord_links WHERE Key_name = 'unique_discord_user_id'");
     if (!$indexLookup->fetch()) {
         $pdo->exec('ALTER TABLE user_discord_links ADD UNIQUE KEY unique_discord_user_id (discord_user_id)');
@@ -439,26 +465,37 @@ function upsertDiscordLink(PDO $pdo, int $userId, string $discordUserId, string 
         $expiresAt = date('Y-m-d H:i:s', time() + $expiresInSeconds);
     }
 
-    $statement = $pdo->prepare(
-        'INSERT INTO user_discord_links (user_id, discord_user_id, discord_username, access_token, refresh_token, token_expires_at, roles_last_synced_at, created_at, updated_at)
-         VALUES (:user_id, :discord_user_id, :discord_username, :access_token, :refresh_token, :token_expires_at, NULL, NOW(), NOW())
-         ON DUPLICATE KEY UPDATE
-            discord_user_id = VALUES(discord_user_id),
-            discord_username = VALUES(discord_username),
-            access_token = VALUES(access_token),
-            refresh_token = VALUES(refresh_token),
-            token_expires_at = VALUES(token_expires_at),
-            updated_at = NOW()'
-    );
+    $pdo->beginTransaction();
 
-    $statement->execute([
-        'user_id' => $userId,
-        'discord_user_id' => $discordUserId,
-        'discord_username' => $discordUsername,
-        'access_token' => $accessToken,
-        'refresh_token' => $refreshToken,
-        'token_expires_at' => $expiresAt,
-    ]);
+    try {
+        $removeExistingByUser = $pdo->prepare('DELETE FROM user_discord_links WHERE user_id = :user_id');
+        $removeExistingByUser->execute(['user_id' => $userId]);
+
+        $removeExistingByDiscord = $pdo->prepare('DELETE FROM user_discord_links WHERE discord_user_id = :discord_user_id');
+        $removeExistingByDiscord->execute(['discord_user_id' => $discordUserId]);
+
+        $insert = $pdo->prepare(
+            'INSERT INTO user_discord_links (user_id, discord_user_id, discord_username, access_token, refresh_token, token_expires_at, roles_last_synced_at, created_at, updated_at)
+             VALUES (:user_id, :discord_user_id, :discord_username, :access_token, :refresh_token, :token_expires_at, NULL, NOW(), NOW())'
+        );
+
+        $insert->execute([
+            'user_id' => $userId,
+            'discord_user_id' => $discordUserId,
+            'discord_username' => $discordUsername,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'token_expires_at' => $expiresAt,
+        ]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $e;
+    }
 }
 
 function getDiscordRoleMap(array $config): array
@@ -550,6 +587,35 @@ function syncDiscordRolesForUser(PDO $pdo, array $config, int $userId, int $user
 
     $update = $pdo->prepare('UPDATE user_discord_links SET roles_last_synced_at = NOW(), updated_at = NOW() WHERE user_id = :user_id');
     $update->execute(['user_id' => $userId]);
+}
+
+function syncAllDiscordRoles(PDO $pdo, array $config): int
+{
+    ensureDiscordRoleSyncTable($pdo);
+
+    $lookup = $pdo->query(
+        'SELECT l.user_id, l.discord_user_id, u.usergroupid, 0 AS unbantime
+         FROM user_discord_links l
+         INNER JOIN user u ON u.userid = l.user_id
+         ORDER BY l.updated_at DESC, l.created_at DESC, l.user_id DESC'
+    );
+
+    $synced = 0;
+
+    while ($row = $lookup->fetch()) {
+        try {
+            $roleKey = resolveRoleByUserData((int)$row['usergroupid'], (int)$row['unbantime']);
+            syncDiscordRolesForLinkedUser($config, (string)$row['discord_user_id'], $roleKey);
+
+            $update = $pdo->prepare('UPDATE user_discord_links SET roles_last_synced_at = NOW(), updated_at = NOW() WHERE user_id = :user_id');
+            $update->execute(['user_id' => (int)$row['user_id']]);
+            $synced++;
+        } catch (Throwable $e) {
+            error_log('Discord full role sync error for user ' . (int)$row['user_id'] . ': ' . $e->getMessage());
+        }
+    }
+
+    return $synced;
 }
 
 function syncPendingDiscordRoles(PDO $pdo, array $config): int
@@ -1415,10 +1481,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo = pdoFromConfig($config);
                 $userId = (int)$_SESSION['user_id'];
                 $roleContext = resolveUserRoleContext($pdo, $userId);
-                syncDiscordRolesForUser($pdo, $config, $userId, (int)$roleContext['usergroupid'], (int)$roleContext['unbantime']);
 
-                $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
-                $successMessage = 'Discord roles synced successfully.';
+                $actorGroupId = resolveCurrentUserGroupId($pdo, $userId, isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : null);
+                $syncedCount = 0;
+
+                if (canAccessAdminPanel($actorGroupId)) {
+                    $syncedCount = syncAllDiscordRoles($pdo, $config);
+                    $successMessage = 'Discord roles synced for linked users: ' . $syncedCount . '.';
+                } else {
+                    syncDiscordRolesForUser($pdo, $config, $userId, (int)$roleContext['usergroupid'], (int)$roleContext['unbantime']);
+                    $syncedCount = 1;
+                    $successMessage = 'Discord roles synced successfully.';
+                }
+
+                if ($syncedCount > 0) {
+                    $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
+                }
             } catch (Throwable $e) {
                 $errors[] = 'Could not sync Discord roles right now. Please try again later.';
                 error_log('Manual Discord role sync error: ' . $e->getMessage());
