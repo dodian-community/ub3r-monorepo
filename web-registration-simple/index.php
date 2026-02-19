@@ -1366,7 +1366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($errors)) {
                     applyWebRoleToAccount($pdo, $userId, $roleKey);
 
-                    $targetLookup = $pdo->prepare('SELECT u.usergroupid, c.unbantime FROM user u INNER JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+                    $targetLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
                     $targetLookup->execute(['userid' => $userId]);
                     $targetRow = $targetLookup->fetch();
                     if ($targetRow) {
@@ -1438,9 +1438,9 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
     try {
         $pdo = pdoFromConfig($config);
         $listUsers = $pdo->query(
-            'SELECT u.userid, u.username, u.usergroupid, c.unbantime
+            'SELECT u.userid, u.username, u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime
              FROM user u
-             INNER JOIN game_characters c ON c.id = u.userid
+             LEFT JOIN game_characters c ON c.id = u.userid
              ORDER BY u.userid DESC
              LIMIT 200'
         );
