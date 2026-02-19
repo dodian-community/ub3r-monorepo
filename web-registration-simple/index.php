@@ -1505,11 +1505,27 @@ if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $erro
                 'role_key' => $resolvedRoleKey,
                 'role_label' => $resolvedRoleLabel,
                 'unbantime' => (int)$roleRow['unbantime'],
+                'source' => 'database',
             ];
         }
     } catch (Throwable $e) {
         error_log('Current role debug lookup error: ' . $e->getMessage());
     }
+}
+
+if ($currentUserRoleDebug === null && isset($_SESSION['usergroupid'])) {
+    $fallbackGroupId = (int)$_SESSION['usergroupid'];
+    $fallbackRoleKey = findRoleKeyByUserGroupId($fallbackGroupId) ?? 'unknown';
+    $supportedRoles = getSupportedWebRoles();
+    $fallbackRoleLabel = isset($supportedRoles[$fallbackRoleKey]) ? (string)$supportedRoles[$fallbackRoleKey]['label'] : ucfirst(str_replace('_', ' ', $fallbackRoleKey));
+
+    $currentUserRoleDebug = [
+        'usergroupid' => $fallbackGroupId,
+        'role_key' => $fallbackRoleKey,
+        'role_label' => $fallbackRoleLabel,
+        'unbantime' => 0,
+        'source' => 'session',
+    ];
 }
 
 $adminManageableUsers = [];
@@ -1775,7 +1791,7 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
     <?php if ($page === 'download'): ?>
         <p class="meta">Welcome, <?= htmlspecialchars((string)($_SESSION['username'] ?? 'Player'), ENT_QUOTES, 'UTF-8') ?>. You are signed in.</p>
         <?php if (is_array($currentUserRoleDebug)): ?>
-            <p class="meta">Current role: <?= htmlspecialchars((string)$currentUserRoleDebug['role_label'], ENT_QUOTES, 'UTF-8') ?> (key: <?= htmlspecialchars((string)$currentUserRoleDebug['role_key'], ENT_QUOTES, 'UTF-8') ?>, usergroup: <?= (int)$currentUserRoleDebug['usergroupid'] ?>)</p>
+            <p class="meta">Current role: <?= htmlspecialchars((string)$currentUserRoleDebug['role_label'], ENT_QUOTES, 'UTF-8') ?> (key: <?= htmlspecialchars((string)$currentUserRoleDebug['role_key'], ENT_QUOTES, 'UTF-8') ?>, usergroup: <?= (int)$currentUserRoleDebug['usergroupid'] ?>, source: <?= htmlspecialchars((string)$currentUserRoleDebug['source'], ENT_QUOTES, 'UTF-8') ?>)</p>
         <?php endif; ?>
         <div class="downloads">
             <a class="btn-link" href="<?= htmlspecialchars($clientJarUrl, ENT_QUOTES, 'UTF-8') ?>">Download game client</a>
