@@ -7,6 +7,15 @@ session_start();
 const INACTIVE_USERGROUP_ID = 3;
 const ACTIVE_USERGROUP_ID = 40;
 const BANNED_USERGROUP_ID = 8;
+const PREMIUM_USERGROUP_ID = 11;
+const MODERATOR_USERGROUP_ID = 5;
+const TRIAL_MODERATOR_USERGROUP_ID = 9;
+const ADMINISTRATOR_USERGROUP_ID = 6;
+const DEVELOPER_USERGROUP_ID = 10;
+const WEB_MANAGEMENT_USERGROUP_ID = 18;
+const ADMIN_PANEL_ALLOWED_GROUPS = [ADMINISTRATOR_USERGROUP_ID, DEVELOPER_USERGROUP_ID, WEB_MANAGEMENT_USERGROUP_ID];
+const BAN_DURATION_SECONDS = 315360000;
+const DISCORD_ROLE_SYNC_INTERVAL_SECONDS = 1800;
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
 
 $configPath = __DIR__ . '/config.php';
@@ -262,19 +271,249 @@ function syncDiscordVerifiedRole(array $config, string $discordUserId): void
     );
 }
 
-function buildDiscordVerifiedRoleHelpMessage(Throwable $error): string
+
+function getSupportedWebRoles(): array
+{
+    return [
+        'verified' => ['label' => 'Verified', 'usergroupid' => ACTIVE_USERGROUP_ID, 'ban' => false],
+        'premium' => ['label' => 'Premium', 'usergroupid' => PREMIUM_USERGROUP_ID, 'ban' => false],
+        'moderator' => ['label' => 'Moderator', 'usergroupid' => MODERATOR_USERGROUP_ID, 'ban' => false],
+        'trial_moderator' => ['label' => 'Trial moderator', 'usergroupid' => TRIAL_MODERATOR_USERGROUP_ID, 'ban' => false],
+        'administrator' => ['label' => 'Administrator', 'usergroupid' => ADMINISTRATOR_USERGROUP_ID, 'ban' => false],
+        'developer' => ['label' => 'Developer', 'usergroupid' => DEVELOPER_USERGROUP_ID, 'ban' => false],
+        'banned' => ['label' => 'Banned', 'usergroupid' => ACTIVE_USERGROUP_ID, 'ban' => true],
+    ];
+}
+
+function canAccessAdminPanel(?int $userGroupId): bool
+{
+    return $userGroupId !== null && in_array($userGroupId, ADMIN_PANEL_ALLOWED_GROUPS, true);
+}
+
+function findRoleKeyByUserGroupId(int $userGroupId): ?string
+{
+    foreach (getSupportedWebRoles() as $roleKey => $roleDefinition) {
+        if ((int)$roleDefinition['usergroupid'] === $userGroupId && ($roleDefinition['ban'] ?? false) === false) {
+            return $roleKey;
+        }
+    }
+
+    return null;
+}
+
+function resolveRoleByUserData(int $userGroupId, int $unbanTime): string
+{
+    if ($unbanTime > time()) {
+        return 'banned';
+    }
+
+    return findRoleKeyByUserGroupId($userGroupId) ?? 'verified';
+}
+
+function ensureDiscordRoleSyncTable(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS user_discord_links (
+            user_id INT UNSIGNED NOT NULL PRIMARY KEY,
+            discord_user_id VARCHAR(32) NOT NULL,
+            discord_username VARCHAR(128) NOT NULL,
+            access_token TEXT NULL,
+            refresh_token TEXT NULL,
+            token_expires_at DATETIME NULL,
+            roles_last_synced_at DATETIME NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            UNIQUE KEY unique_discord_user_id (discord_user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    );
+}
+
+function upsertDiscordLink(PDO $pdo, int $userId, string $discordUserId, string $discordUsername, ?string $accessToken, ?string $refreshToken, ?int $expiresInSeconds): void
+{
+    $expiresAt = null;
+    if ($expiresInSeconds !== null && $expiresInSeconds > 0) {
+        $expiresAt = date('Y-m-d H:i:s', time() + $expiresInSeconds);
+    }
+
+    $statement = $pdo->prepare(
+        'INSERT INTO user_discord_links (user_id, discord_user_id, discord_username, access_token, refresh_token, token_expires_at, roles_last_synced_at, created_at, updated_at)
+         VALUES (:user_id, :discord_user_id, :discord_username, :access_token, :refresh_token, :token_expires_at, NULL, NOW(), NOW())
+         ON DUPLICATE KEY UPDATE
+            discord_user_id = VALUES(discord_user_id),
+            discord_username = VALUES(discord_username),
+            access_token = VALUES(access_token),
+            refresh_token = VALUES(refresh_token),
+            token_expires_at = VALUES(token_expires_at),
+            updated_at = NOW()'
+    );
+
+    $statement->execute([
+        'user_id' => $userId,
+        'discord_user_id' => $discordUserId,
+        'discord_username' => $discordUsername,
+        'access_token' => $accessToken,
+        'refresh_token' => $refreshToken,
+        'token_expires_at' => $expiresAt,
+    ]);
+}
+
+function getDiscordRoleMap(array $config): array
+{
+    $discord = $config['discord'] ?? [];
+
+    return [
+        'verified' => trim((string)($discord['verified_role_id'] ?? '')),
+        'premium' => trim((string)($discord['premium_role_id'] ?? '')),
+        'moderator' => trim((string)($discord['moderator_role_id'] ?? '')),
+        'trial_moderator' => trim((string)($discord['trial_moderator_role_id'] ?? '')),
+        'administrator' => trim((string)($discord['administrator_role_id'] ?? '')),
+        'developer' => trim((string)($discord['developer_role_id'] ?? '')),
+        'banned' => trim((string)($discord['banned_role_id'] ?? '')),
+    ];
+}
+
+function syncDiscordRolesForLinkedUser(array $config, string $discordUserId, string $roleKey): void
+{
+    $discord = $config['discord'] ?? [];
+    $botToken = trim((string)($discord['bot_token'] ?? ''));
+    $guildId = trim((string)($discord['guild_id'] ?? ''));
+
+    if ($botToken === '' || $guildId === '') {
+        throw new RuntimeException('Discord role sync is not configured. Add discord.bot_token and discord.guild_id in config.php.');
+    }
+
+    $roleMap = getDiscordRoleMap($config);
+    $managedRoleKeys = ['verified', 'premium', 'moderator', 'trial_moderator', 'administrator', 'developer', 'banned'];
+
+    foreach ($managedRoleKeys as $managedRoleKey) {
+        $discordRoleId = $roleMap[$managedRoleKey] ?? '';
+        if ($discordRoleId === '') {
+            continue;
+        }
+
+        $method = $managedRoleKey === $roleKey ? 'PUT' : 'DELETE';
+        discordApiRequest(
+            $method,
+            '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId) . '/roles/' . rawurlencode($discordRoleId),
+            ['authorization: Bot ' . $botToken]
+        );
+    }
+}
+
+function syncDiscordRolesForUser(PDO $pdo, array $config, int $userId, int $userGroupId, int $unbanTime): void
+{
+    ensureDiscordRoleSyncTable($pdo);
+
+    $lookup = $pdo->prepare('SELECT discord_user_id FROM user_discord_links WHERE user_id = :user_id LIMIT 1');
+    $lookup->execute(['user_id' => $userId]);
+    $row = $lookup->fetch();
+
+    if (!$row || !isset($row['discord_user_id'])) {
+        return;
+    }
+
+    $roleKey = resolveRoleByUserData($userGroupId, $unbanTime);
+    syncDiscordRolesForLinkedUser($config, (string)$row['discord_user_id'], $roleKey);
+
+    $update = $pdo->prepare('UPDATE user_discord_links SET roles_last_synced_at = NOW(), updated_at = NOW() WHERE user_id = :user_id');
+    $update->execute(['user_id' => $userId]);
+}
+
+function syncPendingDiscordRoles(PDO $pdo, array $config): int
+{
+    ensureDiscordRoleSyncTable($pdo);
+
+    $lookup = $pdo->prepare(
+        'SELECT l.user_id, l.discord_user_id, u.usergroupid, c.unbantime
+         FROM user_discord_links l
+         INNER JOIN user u ON u.userid = l.user_id
+         INNER JOIN game_characters c ON c.id = l.user_id
+         WHERE l.roles_last_synced_at IS NULL OR l.roles_last_synced_at <= DATE_SUB(NOW(), INTERVAL :interval_seconds SECOND)
+         ORDER BY l.user_id ASC'
+    );
+    $lookup->bindValue(':interval_seconds', DISCORD_ROLE_SYNC_INTERVAL_SECONDS, PDO::PARAM_INT);
+    $lookup->execute();
+
+    $synced = 0;
+
+    while ($row = $lookup->fetch()) {
+        try {
+            $roleKey = resolveRoleByUserData((int)$row['usergroupid'], (int)$row['unbantime']);
+            syncDiscordRolesForLinkedUser($config, (string)$row['discord_user_id'], $roleKey);
+
+            $update = $pdo->prepare('UPDATE user_discord_links SET roles_last_synced_at = NOW(), updated_at = NOW() WHERE user_id = :user_id');
+            $update->execute(['user_id' => (int)$row['user_id']]);
+            $synced++;
+        } catch (Throwable $e) {
+            error_log('Discord periodic role sync error for user ' . (int)$row['user_id'] . ': ' . $e->getMessage());
+        }
+    }
+
+    return $synced;
+}
+
+function applyWebRoleToAccount(PDO $pdo, int $userId, string $roleKey): void
+{
+    $roles = getSupportedWebRoles();
+    if (!isset($roles[$roleKey])) {
+        throw new RuntimeException('Unknown role selected.');
+    }
+
+    $roleDefinition = $roles[$roleKey];
+    $userGroupId = (int)$roleDefinition['usergroupid'];
+    $isBanRole = ($roleDefinition['ban'] ?? false) === true;
+
+    $pdo->beginTransaction();
+
+    try {
+        $updateUser = $pdo->prepare('UPDATE user SET usergroupid = :usergroupid WHERE userid = :userid LIMIT 1');
+        $updateUser->execute([
+            'usergroupid' => $userGroupId,
+            'userid' => $userId,
+        ]);
+
+        $unbanTime = $isBanRole ? time() + BAN_DURATION_SECONDS : 0;
+        $isBannedValue = $isBanRole ? 1 : 0;
+
+        $updateCharacter = $pdo->prepare(
+            'UPDATE game_characters
+             SET banned = :banned,
+                 ban_level = :ban_level,
+                 ban_reason = :ban_reason,
+                 unbantime = :unbantime
+             WHERE id = :id
+             LIMIT 1'
+        );
+        $updateCharacter->execute([
+            'banned' => $isBannedValue,
+            'ban_level' => $isBannedValue,
+            'ban_reason' => $isBanRole ? 'Set via web admin panel' : '',
+            'unbantime' => $unbanTime,
+            'id' => $userId,
+        ]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
+function buildDiscordRoleSyncHelpMessage(Throwable $error): string
 {
     $message = $error->getMessage();
 
     if (str_contains($message, 'HTTP 403')) {
-        return 'Discord account linked, but assigning the Verified role failed. Ensure the bot can Manage Roles and that the bot role is above the Verified role.';
+        return 'Discord account linked, but assigning Discord roles failed. Ensure the bot can Manage Roles and that the bot role is above all managed roles.';
     }
 
     if (str_contains($message, 'HTTP 404')) {
-        return 'Discord account linked, but assigning the Verified role failed. Verify discord.verified_role_id and confirm the linked user is in the configured guild.';
+        return 'Discord account linked, but assigning Discord roles failed. Verify configured discord role IDs and confirm the linked user is in the configured guild.';
     }
 
-    return 'Discord account linked, but assigning the Verified role failed. Ask an admin to verify role permissions and configuration.';
+    return 'Discord account linked, but assigning Discord roles failed. Ask an admin to verify role permissions and configuration.';
 }
 
 function describeHighestRole(array $member, array $rolesById): array
@@ -511,7 +750,7 @@ $javaDownloadUrl = $configMissing ? 'https://www.java.com/download/' : trim((str
 $discordUrl = $configMissing ? 'https://discord.gg/' : trim((string)($config['app']['discord_url'] ?? 'https://discord.gg/'));
 
 $page = isset($_GET['page']) && is_string($_GET['page']) ? strtolower(trim($_GET['page'])) : '';
-$allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'change-password', 'activate', 'discord-link'];
+$allowedPages = ['login', 'register', 'forgot-password', 'download', 'reset-password', 'change-password', 'activate', 'discord-link', 'admin-users'];
 if (!in_array($page, $allowedPages, true)) {
     $page = isset($_SESSION['user_id']) ? 'download' : 'login';
 }
@@ -595,6 +834,8 @@ if ($page === 'discord-link') {
 
             $tokenResponse = exchangeDiscordCode($config, $code);
             $accessToken = trim((string)($tokenResponse['access_token'] ?? ''));
+            $refreshToken = trim((string)($tokenResponse['refresh_token'] ?? ''));
+            $expiresIn = isset($tokenResponse['expires_in']) ? (int)$tokenResponse['expires_in'] : null;
             if ($accessToken === '') {
                 throw new RuntimeException('Discord OAuth did not return an access token.');
             }
@@ -620,6 +861,9 @@ if ($page === 'discord-link') {
                 $_SESSION['username'] = $gameUsername;
             }
 
+            ensureDiscordRoleSyncTable($pdo);
+            upsertDiscordLink($pdo, $userId, $discordUserId, $discordUsername, $accessToken, $refreshToken !== '' ? $refreshToken : null, $expiresIn);
+
             $syncWarnings = [];
             try {
                 syncDiscordNickname($config, $discordUserId, $gameUsername);
@@ -629,17 +873,18 @@ if ($page === 'discord-link') {
             }
 
             try {
-                syncDiscordVerifiedRole($config, $discordUserId);
+                $currentUserGroup = isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : ACTIVE_USERGROUP_ID;
+                syncDiscordRolesForUser($pdo, $config, $userId, $currentUserGroup, 0);
             } catch (Throwable $roleError) {
-                $syncWarnings[] = buildDiscordVerifiedRoleHelpMessage($roleError);
-                error_log('Discord verified role sync error: ' . $roleError->getMessage());
+                $syncWarnings[] = buildDiscordRoleSyncHelpMessage($roleError);
+                error_log('Discord role sync error: ' . $roleError->getMessage());
             }
 
             $_SESSION['discord_link_username'] = $discordUsername;
             $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
 
             if (empty($syncWarnings)) {
-                $successMessage = 'Discord linked successfully. Nickname synced and Verified role assigned.';
+                $successMessage = 'Discord linked successfully. Nickname and Discord roles were synced.';
             } else {
                 $infoMessage = implode(' ', $syncWarnings);
                 $successMessage = 'Discord account linked successfully.';
@@ -825,6 +1070,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $_SESSION['user_id'] = (int)$user['userid'];
                         $_SESSION['username'] = (string)$user['username'];
+                        $_SESSION['usergroupid'] = (int)$user['usergroupid'];
                         redirectTo('?page=download');
                     }
                 }
@@ -1052,11 +1298,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'admin-update-role') {
+        $page = 'admin-users';
+
+        if (!isset($_SESSION['user_id'])) {
+            $errors[] = 'Please sign in first.';
+            $page = 'login';
+        } elseif (requireConfiguredOrFail($configMissing, $errors)) {
+            $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+            $roleKey = isset($_POST['role_key']) ? trim((string)$_POST['role_key']) : '';
+
+            if ($userId <= 0 || $roleKey === '') {
+                $errors[] = 'Select a user and role first.';
+            }
+
+            try {
+                $pdo = pdoFromConfig($config);
+                $actorLookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+                $actorLookup->execute(['userid' => (int)$_SESSION['user_id']]);
+                $actorRow = $actorLookup->fetch();
+
+                if (!$actorRow || !canAccessAdminPanel((int)$actorRow['usergroupid'])) {
+                    $errors[] = 'You do not have access to user management.';
+                }
+
+                if (empty($errors)) {
+                    applyWebRoleToAccount($pdo, $userId, $roleKey);
+
+                    $targetLookup = $pdo->prepare('SELECT u.usergroupid, c.unbantime FROM user u INNER JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+                    $targetLookup->execute(['userid' => $userId]);
+                    $targetRow = $targetLookup->fetch();
+                    if ($targetRow) {
+                        syncDiscordRolesForUser($pdo, $config, $userId, (int)$targetRow['usergroupid'], (int)$targetRow['unbantime']);
+                    }
+
+                    $successMessage = 'Role bijgewerkt voor user #' . $userId . '.';
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Kon rol niet bijwerken. Probeer later opnieuw.';
+                error_log('Admin role update error: ' . $e->getMessage());
+            }
+        }
+    }
+
 }
 
-if (($page === 'download' || $page === 'change-password') && !isset($_SESSION['user_id'])) {
+if (($page === 'download' || $page === 'change-password' || $page === 'admin-users') && !isset($_SESSION['user_id'])) {
     $infoMessage = 'Please sign in first.';
     $page = 'login';
+}
+
+$currentSessionUserGroupId = isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : null;
+if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $errors)) {
+    try {
+        $pdo = pdoFromConfig($config);
+        $lookupSessionUser = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+        $lookupSessionUser->execute(['userid' => (int)$_SESSION['user_id']]);
+        $sessionUserRow = $lookupSessionUser->fetch();
+        if ($sessionUserRow) {
+            $currentSessionUserGroupId = (int)$sessionUserRow['usergroupid'];
+            $_SESSION['usergroupid'] = $currentSessionUserGroupId;
+        }
+
+        syncPendingDiscordRoles($pdo, $config);
+    } catch (Throwable $e) {
+        error_log('Session refresh error: ' . $e->getMessage());
+    }
+}
+
+if ($page === 'admin-users' && !canAccessAdminPanel($currentSessionUserGroupId)) {
+    $errors[] = 'You do not have access to user management.';
+    $page = 'download';
 }
 
 $resetTokenFromQuery = isset($_GET['token']) && is_string($_GET['token']) ? trim($_GET['token']) : '';
@@ -1067,6 +1379,31 @@ if (isset($_SESSION['discord_link_username'])) {
         'discord_username' => (string)$_SESSION['discord_link_username'],
         'last_synced_at' => (string)($_SESSION['discord_link_synced_at'] ?? ''),
     ];
+}
+
+$adminManageableUsers = [];
+if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) && requireConfiguredOrFail($configMissing, $errors)) {
+    try {
+        $pdo = pdoFromConfig($config);
+        $listUsers = $pdo->query(
+            'SELECT u.userid, u.username, u.usergroupid, c.unbantime
+             FROM user u
+             INNER JOIN game_characters c ON c.id = u.userid
+             ORDER BY u.userid DESC
+             LIMIT 200'
+        );
+
+        while ($row = $listUsers->fetch()) {
+            $adminManageableUsers[] = [
+                'userid' => (int)$row['userid'],
+                'username' => (string)$row['username'],
+                'role_key' => resolveRoleByUserData((int)$row['usergroupid'], (int)$row['unbantime']),
+            ];
+        }
+    } catch (Throwable $e) {
+        $errors[] = 'Kon users niet laden voor het admin panel.';
+        error_log('Admin users listing error: ' . $e->getMessage());
+    }
 }
 
 ?>
@@ -1164,6 +1501,34 @@ if (isset($_SESSION['discord_link_username'])) {
             margin-top: 14px;
             display: grid;
             gap: 10px;
+        }
+
+        .admin-list {
+            margin-top: 14px;
+            display: grid;
+            gap: 10px;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+        .admin-user-card {
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            background: #0b1220;
+        }
+        .admin-user-row {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0b1220;
+            color: #e2e8f0;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -1287,6 +1652,9 @@ if (isset($_SESSION['discord_link_username'])) {
                 <p class="meta">Linked Discord: <?= htmlspecialchars((string)$discordLinkStatus['discord_username'], ENT_QUOTES, 'UTF-8') ?> (last sync <?= htmlspecialchars((string)$discordLinkStatus['last_synced_at'], ENT_QUOTES, 'UTF-8') ?>)</p>
             <?php endif; ?>
             <a class="btn-link secondary" href="?page=change-password">Change password</a>
+            <?php if (canAccessAdminPanel($currentSessionUserGroupId)): ?>
+                <a class="btn-link secondary" href="?page=admin-users">User beheer</a>
+            <?php endif; ?>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
         </div>
     <?php endif; ?>
@@ -1307,6 +1675,33 @@ if (isset($_SESSION['discord_link_username'])) {
 
             <button type="submit">Change password</button>
         </form>
+        <div class="links">
+            <a class="btn-link secondary" href="?page=download">Back to downloads</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($page === 'admin-users'): ?>
+        <p class="meta">User beheer: alleen zichtbaar voor usergroups 6, 10 en 18.</p>
+        <div class="admin-list">
+            <?php foreach ($adminManageableUsers as $userRow): ?>
+                <div class="admin-user-card">
+                    <div class="admin-user-row">#<?= (int)$userRow['userid'] ?> - <?= htmlspecialchars((string)$userRow['username'], ENT_QUOTES, 'UTF-8') ?></div>
+                    <form method="post" action="">
+                        <input type="hidden" name="action" value="admin-update-role">
+                        <input type="hidden" name="user_id" value="<?= (int)$userRow['userid'] ?>">
+                        <label>Role</label>
+                        <select name="role_key" required>
+                            <?php foreach (getSupportedWebRoles() as $roleKey => $roleDefinition): ?>
+                                <option value="<?= htmlspecialchars((string)$roleKey, ENT_QUOTES, 'UTF-8') ?>" <?= $userRow['role_key'] === $roleKey ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars((string)$roleDefinition['label'], ENT_QUOTES, 'UTF-8') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit">Opslaan</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        </div>
         <div class="links">
             <a class="btn-link secondary" href="?page=download">Back to downloads</a>
         </div>

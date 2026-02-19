@@ -29,6 +29,12 @@ return [
         'guild_id' => '123456789012345678',
         'bot_token' => 'REPLACE_ME',
         'verified_role_id' => '123456789012345678',
+        'premium_role_id' => '123456789012345678',
+        'moderator_role_id' => '123456789012345678',
+        'trial_moderator_role_id' => '123456789012345678',
+        'administrator_role_id' => '123456789012345678',
+        'developer_role_id' => '123456789012345678',
+        'banned_role_id' => '123456789012345678',
     ],
     'turnstile' => [
         'site_key' => '0x4AAAAA-REPLACE_ME',
