@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,18 +126,21 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             }
         }
         buf.put(updateMask);
+        // Emit blocks in the exact order expected by Client.method86.
         if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
             appendAnimationRequest(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
             appendPrimaryHit2(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGfxUpdate(npc, buf);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
+            appendFaceCharacter(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
             appendTextUpdate(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
             appendPrimaryHit(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(npc, buf);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
+            appendAppearanceUpdate(npc, buf);
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
             appendFaceCoordinates(npc, buf);
     }
@@ -220,8 +224,13 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendFaceCharacter(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getViewX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getViewY(), ByteOrder.LITTLE); // writeWordBigEndian
+        // NPC 0x20 mask is an interacting entity id (unsigned short), not x/y coords.
+        buf.putShort(0xFFFF);
+    }
+
+    public void appendAppearanceUpdate(Npc npc, ByteMessage buf) {
+        // NPC 0x2 mask expects a transformed NPC id using little-endian + A.
+        buf.putShort(npc.getId(), ByteOrder.LITTLE, ValueType.ADD);
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {

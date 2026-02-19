@@ -236,7 +236,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             buf.put(updateMask);             // Single byte
         }
 
-        // Process update blocks in Hyperion's proven order for client compatibility
+        // Emit blocks in the exact order expected by Client.method107.
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
+            player.appendMask400Update(buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
             appendGraphic(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
@@ -255,8 +257,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             appendPrimaryHit(player, buf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2))
             appendPrimaryHit2(player, buf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(buf);
 
         // ---- Cache the freshly built update block for reuse ----
         int length = buf.getBuffer().writerIndex() - cacheStartOffset;
