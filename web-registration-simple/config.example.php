@@ -28,6 +28,7 @@ return [
         'redirect_uri' => 'http://localhost:8080/?page=discord-link',
         'guild_id' => '123456789012345678',
         'bot_token' => 'REPLACE_ME',
+        'verified_role_id' => '123456789012345678',
     ],
     'turnstile' => [
         'site_key' => '0x4AAAAA-REPLACE_ME',

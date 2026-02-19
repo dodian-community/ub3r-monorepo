@@ -244,6 +244,39 @@ function syncDiscordNickname(array $config, string $discordUserId, string $gameU
 }
 
 
+function syncDiscordVerifiedRole(array $config, string $discordUserId): void
+{
+    $discord = $config['discord'] ?? [];
+    $botToken = trim((string)($discord['bot_token'] ?? ''));
+    $guildId = trim((string)($discord['guild_id'] ?? ''));
+    $verifiedRoleId = trim((string)($discord['verified_role_id'] ?? ''));
+
+    if ($botToken === '' || $guildId === '' || $verifiedRoleId === '') {
+        throw new RuntimeException('Discord verified role sync is not configured. Add discord.bot_token, discord.guild_id, and discord.verified_role_id in config.php.');
+    }
+
+    discordApiRequest(
+        'PUT',
+        '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId) . '/roles/' . rawurlencode($verifiedRoleId),
+        ['authorization: Bot ' . $botToken]
+    );
+}
+
+function buildDiscordVerifiedRoleHelpMessage(Throwable $error): string
+{
+    $message = $error->getMessage();
+
+    if (str_contains($message, 'HTTP 403')) {
+        return 'Discord account linked, but assigning the Verified role failed. Ensure the bot can Manage Roles and that the bot role is above the Verified role.';
+    }
+
+    if (str_contains($message, 'HTTP 404')) {
+        return 'Discord account linked, but assigning the Verified role failed. Verify discord.verified_role_id and confirm the linked user is in the configured guild.';
+    }
+
+    return 'Discord account linked, but assigning the Verified role failed. Ask an admin to verify role permissions and configuration.';
+}
+
 function describeHighestRole(array $member, array $rolesById): array
 {
     $highest = ['name' => '@everyone', 'position' => 0, 'managed' => false];
@@ -587,21 +620,28 @@ if ($page === 'discord-link') {
                 $_SESSION['username'] = $gameUsername;
             }
 
-            $nicknameSyncWarning = null;
+            $syncWarnings = [];
             try {
                 syncDiscordNickname($config, $discordUserId, $gameUsername);
             } catch (Throwable $nicknameError) {
-                $nicknameSyncWarning = buildDiscordNicknameSyncHelpMessage($config, $discordUserId, $nicknameError);
+                $syncWarnings[] = buildDiscordNicknameSyncHelpMessage($config, $discordUserId, $nicknameError);
                 error_log('Discord nickname sync error: ' . $nicknameError->getMessage());
+            }
+
+            try {
+                syncDiscordVerifiedRole($config, $discordUserId);
+            } catch (Throwable $roleError) {
+                $syncWarnings[] = buildDiscordVerifiedRoleHelpMessage($roleError);
+                error_log('Discord verified role sync error: ' . $roleError->getMessage());
             }
 
             $_SESSION['discord_link_username'] = $discordUsername;
             $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
 
-            if ($nicknameSyncWarning === null) {
-                $successMessage = 'Discord linked successfully. Your server nickname is now synced to your game username.';
+            if (empty($syncWarnings)) {
+                $successMessage = 'Discord linked successfully. Nickname synced and Verified role assigned.';
             } else {
-                $infoMessage = $nicknameSyncWarning;
+                $infoMessage = implode(' ', $syncWarnings);
                 $successMessage = 'Discord account linked successfully.';
             }
             $page = 'download';

@@ -20,6 +20,7 @@ A minimal PHP + HTML account portal with registration, login, downloads, activat
    - `discord.redirect_uri` (set this to `.../?page=discord-link`)
    - `discord.guild_id`
    - `discord.bot_token`
+   - `discord.verified_role_id` (role ID for the Verified role)
 4. Start locally:
 
 ```bash
@@ -45,8 +46,8 @@ This demo uses the same flow as the game server:
 - Registration blocks duplicate usernames and duplicate email addresses.
 - Successful login redirects users to `?page=download` with one game client `.jar` download button, one Java download button, and Discord actions (join + link).
 - Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
-- After linking, the configured bot updates the member nickname in the configured guild to the website/game username for that linked Discord account during the linking flow.
-- The Discord bot must have `Manage Nicknames`, and its highest role position must be strictly above the member's highest role (same permissions are not enough; hierarchy wins, and guild owners still cannot be renamed). If this is wrong, linking still succeeds for the current session but nickname sync will show a concrete hierarchy hint.
+- After linking, the configured bot updates the member nickname in the configured guild to the website/game username and assigns the configured Verified role during the linking flow.
+- The Discord bot must have `Manage Nicknames` and `Manage Roles`. Its highest role position must be strictly above the member's highest role and above the Verified role (same permissions are not enough; hierarchy wins, and guild owners still cannot be renamed). If this is wrong, linking still succeeds for the current session but sync warnings will explain what failed.
 - If nickname sync returns Discord 404, verify `discord.guild_id` first (wrong guild or bot not in that guild can also cause 404), then verify the linked Discord account is a member of that guild.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 - Signed-in users can change their password from `?page=change-password` by confirming their current password.
