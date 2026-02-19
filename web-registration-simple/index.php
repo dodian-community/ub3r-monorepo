@@ -312,6 +312,28 @@ function resolveCurrentUserGroupId(PDO $pdo, ?int $sessionUserId, ?int $sessionU
     return $sessionUserGroupId;
 }
 
+
+function resolveUserGroupIdByUsername(PDO $pdo, ?string $username): ?int
+{
+    if ($username === null || trim($username) === '') {
+        return null;
+    }
+
+    try {
+        $lookup = $pdo->prepare('SELECT usergroupid FROM user WHERE username = :username LIMIT 1');
+        $lookup->execute(['username' => trim($username)]);
+        $row = $lookup->fetch();
+
+        if ($row) {
+            return (int)$row['usergroupid'];
+        }
+    } catch (Throwable $e) {
+        error_log('Unable to resolve usergroup by username: ' . $e->getMessage());
+    }
+
+    return null;
+}
+
 function findRoleKeyByUserGroupId(int $userGroupId): ?string
 {
     foreach (getSupportedWebRoles() as $roleKey => $roleDefinition) {
@@ -1360,7 +1382,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $actorRow = $actorLookup->fetch();
 
                 if (!$actorRow || !canAccessAdminPanel((int)$actorRow['usergroupid'])) {
-                    $errors[] = 'You do not have access to user management.';
+                    $errors[] = 'You do not have access to user management. Current detected usergroup: ' . (string)($currentSessionUserGroupId ?? 'unknown') . '.';
                 }
 
                 if (empty($errors)) {
@@ -1394,6 +1416,13 @@ if (isset($_SESSION['user_id']) && requireConfiguredOrFail($configMissing, $erro
     try {
         $pdo = pdoFromConfig($config);
         $currentSessionUserGroupId = resolveCurrentUserGroupId($pdo, (int)$_SESSION['user_id'], $currentSessionUserGroupId);
+        if (!canAccessAdminPanel($currentSessionUserGroupId)) {
+            $fallbackGroupId = resolveUserGroupIdByUsername($pdo, isset($_SESSION['username']) ? (string)$_SESSION['username'] : null);
+            if ($fallbackGroupId !== null) {
+                $currentSessionUserGroupId = $fallbackGroupId;
+            }
+        }
+
         if ($currentSessionUserGroupId !== null) {
             $_SESSION['usergroupid'] = $currentSessionUserGroupId;
         }
@@ -1409,6 +1438,13 @@ if ($page === 'admin-users' && !canAccessAdminPanel($currentSessionUserGroupId))
         try {
             $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : pdoFromConfig($config);
             $currentSessionUserGroupId = resolveCurrentUserGroupId($pdo, (int)$_SESSION['user_id'], $currentSessionUserGroupId);
+            if (!canAccessAdminPanel($currentSessionUserGroupId)) {
+                $fallbackGroupId = resolveUserGroupIdByUsername($pdo, isset($_SESSION['username']) ? (string)$_SESSION['username'] : null);
+                if ($fallbackGroupId !== null) {
+                    $currentSessionUserGroupId = $fallbackGroupId;
+                }
+            }
+
             if ($currentSessionUserGroupId !== null) {
                 $_SESSION['usergroupid'] = $currentSessionUserGroupId;
             }
