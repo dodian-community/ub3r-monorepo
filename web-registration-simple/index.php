@@ -1049,9 +1049,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 banExpiredPendingAccounts($pdo);
 
                 $stmt = $pdo->prepare(
-                    'SELECT userid, username, password, salt, usergroupid
-                     FROM user
-                     WHERE username = :username
+                    'SELECT u.userid, u.username, u.password, u.salt, u.usergroupid, c.unbantime
+                     FROM user u
+                     LEFT JOIN game_characters c ON c.id = u.userid
+                     WHERE u.username = :username
                      LIMIT 1'
                 );
                 $stmt->execute(['username' => $username]);
@@ -1065,8 +1066,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $errors[] = 'Invalid username or password.';
                     } elseif ((int)$user['usergroupid'] === INACTIVE_USERGROUP_ID) {
                         $errors[] = 'Your account is not activated yet. Please check your email first.';
-                    } elseif ((int)$user['usergroupid'] !== ACTIVE_USERGROUP_ID) {
-                        $errors[] = 'This account is not allowed to sign in.';
+                    } elseif ((int)$user['usergroupid'] === BANNED_USERGROUP_ID || (int)($user['unbantime'] ?? 0) > time()) {
+                        $errors[] = 'This account is banned.';
                     } else {
                         $_SESSION['user_id'] = (int)$user['userid'];
                         $_SESSION['username'] = (string)$user['username'];
@@ -1332,10 +1333,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         syncDiscordRolesForUser($pdo, $config, $userId, (int)$targetRow['usergroupid'], (int)$targetRow['unbantime']);
                     }
 
-                    $successMessage = 'Role bijgewerkt voor user #' . $userId . '.';
+                    $successMessage = 'Role updated for user #' . $userId . '.';
                 }
             } catch (Throwable $e) {
-                $errors[] = 'Kon rol niet bijwerken. Probeer later opnieuw.';
+                $errors[] = 'Could not update role right now. Please try again later.';
                 error_log('Admin role update error: ' . $e->getMessage());
             }
         }
@@ -1401,7 +1402,7 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
             ];
         }
     } catch (Throwable $e) {
-        $errors[] = 'Kon users niet laden voor het admin panel.';
+        $errors[] = 'Could not load users for the admin panel.';
         error_log('Admin users listing error: ' . $e->getMessage());
     }
 }
@@ -1653,7 +1654,7 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
             <?php endif; ?>
             <a class="btn-link secondary" href="?page=change-password">Change password</a>
             <?php if (canAccessAdminPanel($currentSessionUserGroupId)): ?>
-                <a class="btn-link secondary" href="?page=admin-users">User beheer</a>
+                <a class="btn-link secondary" href="?page=admin-users">User management</a>
             <?php endif; ?>
             <a class="btn-link secondary" href="?logout=1">Sign out</a>
         </div>
@@ -1681,7 +1682,7 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
     <?php endif; ?>
 
     <?php if ($page === 'admin-users'): ?>
-        <p class="meta">User beheer: alleen zichtbaar voor usergroups 6, 10 en 18.</p>
+        <p class="meta">User management: only visible for usergroups 6, 10, and 18.</p>
         <div class="admin-list">
             <?php foreach ($adminManageableUsers as $userRow): ?>
                 <div class="admin-user-card">
@@ -1697,7 +1698,7 @@ if ($page === 'admin-users' && canAccessAdminPanel($currentSessionUserGroupId) &
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="submit">Opslaan</button>
+                        <button type="submit">Save</button>
                     </form>
                 </div>
             <?php endforeach; ?>
