@@ -397,6 +397,39 @@ function ensureDiscordRoleSyncTable(PDO $pdo): void
             UNIQUE KEY unique_discord_user_id (discord_user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
     );
+
+    $requiredColumns = [
+        'access_token' => 'TEXT NULL',
+        'refresh_token' => 'TEXT NULL',
+        'token_expires_at' => 'DATETIME NULL',
+        'roles_last_synced_at' => 'DATETIME NULL',
+        'created_at' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP',
+        'updated_at' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+    ];
+
+    foreach ($requiredColumns as $columnName => $columnDefinition) {
+        $columnLookup = $pdo->prepare(
+            'SELECT 1
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table_name
+               AND COLUMN_NAME = :column_name
+             LIMIT 1'
+        );
+        $columnLookup->execute([
+            'table_name' => 'user_discord_links',
+            'column_name' => $columnName,
+        ]);
+
+        if (!$columnLookup->fetchColumn()) {
+            $pdo->exec('ALTER TABLE user_discord_links ADD COLUMN ' . $columnName . ' ' . $columnDefinition);
+        }
+    }
+
+    $indexLookup = $pdo->query("SHOW INDEX FROM user_discord_links WHERE Key_name = 'unique_discord_user_id'");
+    if (!$indexLookup->fetch()) {
+        $pdo->exec('ALTER TABLE user_discord_links ADD UNIQUE KEY unique_discord_user_id (discord_user_id)');
+    }
 }
 
 function upsertDiscordLink(PDO $pdo, int $userId, string $discordUserId, string $discordUsername, ?string $accessToken, ?string $refreshToken, ?int $expiresInSeconds): void
