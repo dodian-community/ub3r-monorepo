@@ -1599,6 +1599,9 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
             padding: 24px;
             box-shadow: 0 10px 30px rgba(0,0,0,.35);
         }
+        .card.admin-wide {
+            max-width: 980px;
+        }
         h1 { margin-top: 0; font-size: 1.4rem; }
         p.meta { color: #94a3b8; font-size: 0.95rem; }
         label { display: block; margin: 14px 0 6px; font-weight: 600; }
@@ -1672,19 +1675,46 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
             margin-top: 14px;
             display: grid;
             gap: 10px;
-            max-height: 360px;
+            max-height: 560px;
             overflow-y: auto;
+            padding-right: 4px;
         }
         .admin-user-card {
             border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 14px;
             background: #0b1220;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(240px, 1fr) 160px;
+            gap: 10px;
+            align-items: end;
         }
         .admin-user-row {
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
             color: #cbd5e1;
+            font-weight: 600;
+        }
+        .admin-role-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .admin-actions {
+            display: flex;
+            align-items: end;
+        }
+        .admin-actions button {
+            margin-top: 0;
+        }
+        @media (max-width: 860px) {
+            .card.admin-wide {
+                max-width: 100%;
+            }
+            .admin-user-card {
+                grid-template-columns: 1fr;
+            }
         }
         select {
             width: 100%;
@@ -1698,7 +1728,7 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
     </style>
 </head>
 <body>
-<div class="card">
+<div class="card<?= $page === 'admin-users' ? ' admin-wide' : '' ?>">
     <h1>Dodian account portal</h1>
 
     <?php if ($configMissing): ?>
@@ -1850,24 +1880,35 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
 
     <?php if ($page === 'admin-users'): ?>
         <p class="meta">User management: only visible for usergroups 6, 10, and 18.</p>
+        <?php if (empty($adminManageableUsers)): ?>
+            <p class="meta">No users found.</p>
+        <?php endif; ?>
         <div class="admin-list">
             <?php foreach ($adminManageableUsers as $userRow): ?>
-                <div class="admin-user-card">
-                    <div class="admin-user-row">#<?= (int)$userRow['userid'] ?> - <?= htmlspecialchars((string)$userRow['username'], ENT_QUOTES, 'UTF-8') ?></div>
-                    <form method="post" action="">
-                        <input type="hidden" name="action" value="admin-update-role">
-                        <input type="hidden" name="user_id" value="<?= (int)$userRow['userid'] ?>">
-                        <label>Role</label>
-                        <select name="role_key" required>
+                <form method="post" action="" class="admin-user-card">
+                    <input type="hidden" name="action" value="admin-update-role">
+                    <input type="hidden" name="user_id" value="<?= (int)$userRow['userid'] ?>">
+
+                    <div>
+                        <div class="admin-user-row">#<?= (int)$userRow['userid'] ?> - <?= htmlspecialchars((string)$userRow['username'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <span class="admin-role-label">Current role: <?= htmlspecialchars((string)(getSupportedWebRoles()[$userRow['role_key']]['label'] ?? ucfirst(str_replace('_', ' ', (string)$userRow['role_key']))), ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+
+                    <div>
+                        <label class="admin-role-label" for="role_<?= (int)$userRow['userid'] ?>">Assign role</label>
+                        <select id="role_<?= (int)$userRow['userid'] ?>" name="role_key" required>
                             <?php foreach (getSupportedWebRoles() as $roleKey => $roleDefinition): ?>
                                 <option value="<?= htmlspecialchars((string)$roleKey, ENT_QUOTES, 'UTF-8') ?>" <?= $userRow['role_key'] === $roleKey ? 'selected' : '' ?>>
                                     <?= htmlspecialchars((string)$roleDefinition['label'], ENT_QUOTES, 'UTF-8') ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="submit">Save</button>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="admin-actions">
+                        <button type="submit">Update role</button>
+                    </div>
+                </form>
             <?php endforeach; ?>
         </div>
         <div class="links">
