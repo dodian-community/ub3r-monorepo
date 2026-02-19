@@ -305,6 +305,46 @@ function detectDiscordHierarchyHint(array $config, string $discordUserId): ?stri
     return null;
 }
 
+
+function detectDiscord404Hint(array $config, string $discordUserId, string $baseMessage): ?string
+{
+    $messageLower = strtolower($baseMessage);
+    if (str_contains($messageLower, 'unknown guild')) {
+        return 'Discord account linked, but nickname sync failed because the configured guild_id is invalid for this bot. Verify discord.guild_id and ensure the bot is in that server.';
+    }
+
+    if (str_contains($messageLower, 'unknown member')) {
+        return 'Discord account linked, but nickname sync failed because this Discord account is not a member of the configured server. Join the server and run linking again.';
+    }
+
+    try {
+        $discord = $config['discord'] ?? [];
+        $botToken = trim((string)($discord['bot_token'] ?? ''));
+        $guildId = trim((string)($discord['guild_id'] ?? ''));
+        if ($botToken === '' || $guildId === '') {
+            return null;
+        }
+
+        $headers = ['authorization: Bot ' . $botToken];
+
+        try {
+            discordApiRequest('GET', '/guilds/' . rawurlencode($guildId), $headers);
+        } catch (Throwable $guildError) {
+            return 'Discord account linked, but nickname sync failed because the configured guild_id cannot be accessed by the bot. Verify discord.guild_id and bot membership in that server.';
+        }
+
+        try {
+            discordApiRequest('GET', '/guilds/' . rawurlencode($guildId) . '/members/' . rawurlencode($discordUserId), $headers);
+        } catch (Throwable $memberError) {
+            return 'Discord account linked, but nickname sync failed because this Discord account is not in the configured server. Join that server and run linking again.';
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
 function buildDiscordNicknameSyncHelpMessage(array $config, string $discordUserId, Throwable $error): string
 {
     $message = $error->getMessage();
@@ -319,7 +359,12 @@ function buildDiscordNicknameSyncHelpMessage(array $config, string $discordUserI
     }
 
     if (str_contains($message, 'HTTP 404')) {
-        return 'Discord account linked, but nickname sync failed because you are not a member of the configured Discord server yet. Join the server and run linking again.';
+        $membershipHint = detectDiscord404Hint($config, $discordUserId, $message);
+        if ($membershipHint !== null) {
+            return $membershipHint;
+        }
+
+        return 'Discord account linked, but nickname sync failed with Discord 404. Check discord.guild_id, bot guild membership, and whether the linked Discord account is in that server.';
     }
 
     return 'Discord account linked, but nickname sync failed. Please ask an admin to verify bot permissions and guild configuration.';

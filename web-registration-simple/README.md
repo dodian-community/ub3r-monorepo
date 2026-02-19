@@ -47,6 +47,7 @@ This demo uses the same flow as the game server:
 - Discord linking starts from the signed-in website only (`?page=discord-link`) and uses OAuth `identify` scope to connect a Discord account.
 - After linking, the configured bot updates the member nickname in the configured guild to the website/game username for that linked Discord account during the linking flow.
 - The Discord bot must have `Manage Nicknames`, and its highest role position must be strictly above the member's highest role (same permissions are not enough; hierarchy wins, and guild owners still cannot be renamed). If this is wrong, linking still succeeds for the current session but nickname sync will show a concrete hierarchy hint.
+- If nickname sync returns Discord 404, verify `discord.guild_id` first (wrong guild or bot not in that guild can also cause 404), then verify the linked Discord account is a member of that guild.
 - Forgot password stores reset tokens in `user_password_reset_tokens` and emails `?page=reset-password&token=...` links for active accounts.
 - Signed-in users can change their password from `?page=change-password` by confirming their current password.
 
