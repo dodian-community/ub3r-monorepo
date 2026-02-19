@@ -310,6 +310,25 @@ function resolveRoleByUserData(int $userGroupId, int $unbanTime): string
     return findRoleKeyByUserGroupId($userGroupId) ?? 'verified';
 }
 
+
+function isAccountCurrentlyBanned(PDO $pdo, int $userId): bool
+{
+    try {
+        $lookup = $pdo->prepare('SELECT unbantime FROM game_characters WHERE id = :id LIMIT 1');
+        $lookup->execute(['id' => $userId]);
+        $row = $lookup->fetch();
+
+        if (!$row) {
+            return false;
+        }
+
+        return (int)($row['unbantime'] ?? 0) > time();
+    } catch (Throwable $e) {
+        error_log('Ban status lookup failed for user ' . $userId . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
 function ensureDiscordRoleSyncTable(PDO $pdo): void
 {
     $pdo->exec(
@@ -1049,10 +1068,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 banExpiredPendingAccounts($pdo);
 
                 $stmt = $pdo->prepare(
-                    'SELECT u.userid, u.username, u.password, u.salt, u.usergroupid, c.unbantime
-                     FROM user u
-                     LEFT JOIN game_characters c ON c.id = u.userid
-                     WHERE u.username = :username
+                    'SELECT userid, username, password, salt, usergroupid
+                     FROM user
+                     WHERE username = :username
                      LIMIT 1'
                 );
                 $stmt->execute(['username' => $username]);
@@ -1066,7 +1084,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $errors[] = 'Invalid username or password.';
                     } elseif ((int)$user['usergroupid'] === INACTIVE_USERGROUP_ID) {
                         $errors[] = 'Your account is not activated yet. Please check your email first.';
-                    } elseif ((int)$user['usergroupid'] === BANNED_USERGROUP_ID || (int)($user['unbantime'] ?? 0) > time()) {
+                    } elseif ((int)$user['usergroupid'] === BANNED_USERGROUP_ID || isAccountCurrentlyBanned($pdo, (int)$user['userid'])) {
                         $errors[] = 'This account is banned.';
                     } else {
                         $_SESSION['user_id'] = (int)$user['userid'];
