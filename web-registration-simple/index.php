@@ -1480,22 +1480,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo = pdoFromConfig($config);
                 $userId = (int)$_SESSION['user_id'];
-                $roleContext = resolveUserRoleContext($pdo, $userId);
-
                 $actorGroupId = resolveCurrentUserGroupId($pdo, $userId, isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : null);
-                $syncedCount = 0;
 
-                if (canAccessAdminPanel($actorGroupId)) {
-                    $syncedCount = syncAllDiscordRoles($pdo, $config);
-                    $successMessage = 'Discord roles synced for linked users: ' . $syncedCount . '.';
+                if (!canAccessAdminPanel($actorGroupId)) {
+                    $errors[] = 'You do not have access to Discord role sync.';
                 } else {
-                    syncDiscordRolesForUser($pdo, $config, $userId, (int)$roleContext['usergroupid'], (int)$roleContext['unbantime']);
-                    $syncedCount = 1;
-                    $successMessage = 'Discord roles synced successfully.';
-                }
-
-                if ($syncedCount > 0) {
-                    $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
+                    $syncedCount = syncAllDiscordRoles($pdo, $config);
+                    if ($syncedCount > 0) {
+                        $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
+                    }
+                    $successMessage = 'Discord roles synced for linked users: ' . $syncedCount . '.';
                 }
             } catch (Throwable $e) {
                 $errors[] = 'Could not sync Discord roles right now. Please try again later.';
@@ -1981,10 +1975,12 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
             <a class="btn-link discord" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
             <a class="btn-link discord" href="?page=discord-link">Link Discord account</a>
-            <form method="post" action="">
-                <input type="hidden" name="action" value="sync-discord-roles">
-                <button type="submit">Sync Discord roles now</button>
-            </form>
+            <?php if ($hasAdminPanelAccess): ?>
+                <form method="post" action="">
+                    <input type="hidden" name="action" value="sync-discord-roles">
+                    <button type="submit">Sync Discord roles now</button>
+                </form>
+            <?php endif; ?>
             <?php if (is_array($discordLinkStatus)): ?>
                 <p class="meta">Linked Discord: <?= htmlspecialchars((string)$discordLinkStatus['discord_username'], ENT_QUOTES, 'UTF-8') ?> (last sync <?= htmlspecialchars((string)$discordLinkStatus['last_synced_at'], ENT_QUOTES, 'UTF-8') ?>)</p>
             <?php endif; ?>
