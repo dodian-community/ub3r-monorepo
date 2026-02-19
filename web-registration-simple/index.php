@@ -372,6 +372,34 @@ function isAccountCurrentlyBanned(PDO $pdo, int $userId): bool
     }
 }
 
+
+function resolveUserRoleContext(PDO $pdo, int $userId): array
+{
+    try {
+        $lookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+        $lookup->execute(['userid' => $userId]);
+        $row = $lookup->fetch();
+
+        if ($row) {
+            return [
+                'usergroupid' => (int)$row['usergroupid'],
+                'unbantime' => (int)$row['unbantime'],
+            ];
+        }
+    } catch (Throwable $joinError) {
+        error_log('Role context fallback without game_characters: ' . $joinError->getMessage());
+    }
+
+    $fallbackLookup = $pdo->prepare('SELECT usergroupid FROM user WHERE userid = :userid LIMIT 1');
+    $fallbackLookup->execute(['userid' => $userId]);
+    $fallbackRow = $fallbackLookup->fetch();
+
+    return [
+        'usergroupid' => $fallbackRow ? (int)$fallbackRow['usergroupid'] : ACTIVE_USERGROUP_ID,
+        'unbantime' => 0,
+    ];
+}
+
 function ensureDiscordRoleSyncTable(PDO $pdo): void
 {
     $pdo->exec(
@@ -903,8 +931,8 @@ if ($page === 'discord-link') {
             }
 
             try {
-                $currentUserGroup = isset($_SESSION['usergroupid']) ? (int)$_SESSION['usergroupid'] : ACTIVE_USERGROUP_ID;
-                syncDiscordRolesForUser($pdo, $config, $userId, $currentUserGroup, 0);
+                $roleContext = resolveUserRoleContext($pdo, $userId);
+                syncDiscordRolesForUser($pdo, $config, $userId, (int)$roleContext['usergroupid'], (int)$roleContext['unbantime']);
             } catch (Throwable $roleError) {
                 $syncWarnings[] = buildDiscordRoleSyncHelpMessage($roleError);
                 error_log('Discord role sync error: ' . $roleError->getMessage());
@@ -1324,6 +1352,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Throwable $e) {
                 $errors[] = 'Could not change password right now. Please try again later.';
                 error_log('Change password error: ' . $e->getMessage());
+            }
+        }
+    }
+
+    if ($action === 'sync-discord-roles') {
+        $page = 'download';
+
+        if (!isset($_SESSION['user_id'])) {
+            $errors[] = 'Please sign in first.';
+            $page = 'login';
+        } elseif (requireConfiguredOrFail($configMissing, $errors)) {
+            try {
+                $pdo = pdoFromConfig($config);
+                $userId = (int)$_SESSION['user_id'];
+                $roleContext = resolveUserRoleContext($pdo, $userId);
+                syncDiscordRolesForUser($pdo, $config, $userId, (int)$roleContext['usergroupid'], (int)$roleContext['unbantime']);
+
+                $_SESSION['discord_link_synced_at'] = date('Y-m-d H:i:s');
+                $successMessage = 'Discord roles synced successfully.';
+            } catch (Throwable $e) {
+                $errors[] = 'Could not sync Discord roles right now. Please try again later.';
+                error_log('Manual Discord role sync error: ' . $e->getMessage());
             }
         }
     }
@@ -1813,6 +1863,10 @@ if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($
             <a class="btn-link secondary" href="<?= htmlspecialchars($javaDownloadUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Download Java</a>
             <a class="btn-link discord" href="<?= htmlspecialchars($discordUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Join Discord</a>
             <a class="btn-link discord" href="?page=discord-link">Link Discord account</a>
+            <form method="post" action="">
+                <input type="hidden" name="action" value="sync-discord-roles">
+                <button type="submit">Sync Discord roles now</button>
+            </form>
             <?php if (is_array($discordLinkStatus)): ?>
                 <p class="meta">Linked Discord: <?= htmlspecialchars((string)$discordLinkStatus['discord_username'], ENT_QUOTES, 'UTF-8') ?> (last sync <?= htmlspecialchars((string)$discordLinkStatus['last_synced_at'], ENT_QUOTES, 'UTF-8') ?>)</p>
             <?php endif; ?>
