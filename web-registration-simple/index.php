@@ -1397,9 +1397,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($errors)) {
                     applyWebRoleToAccount($pdo, $userId, $roleKey);
 
-                    $targetLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
-                    $targetLookup->execute(['userid' => $userId]);
-                    $targetRow = $targetLookup->fetch();
+                    try {
+                        $targetLookup = $pdo->prepare('SELECT u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime FROM user u LEFT JOIN game_characters c ON c.id = u.userid WHERE u.userid = :userid LIMIT 1');
+                        $targetLookup->execute(['userid' => $userId]);
+                        $targetRow = $targetLookup->fetch();
+                    } catch (Throwable $targetJoinError) {
+                        error_log('Target lookup fallback without game_characters: ' . $targetJoinError->getMessage());
+                        $targetLookup = $pdo->prepare('SELECT u.usergroupid, 0 AS unbantime FROM user u WHERE u.userid = :userid LIMIT 1');
+                        $targetLookup->execute(['userid' => $userId]);
+                        $targetRow = $targetLookup->fetch();
+                    }
                     if ($targetRow) {
                         syncDiscordRolesForUser($pdo, $config, $userId, (int)$targetRow['usergroupid'], (int)$targetRow['unbantime']);
                     }
@@ -1532,13 +1539,24 @@ $adminManageableUsers = [];
 if ($page === 'admin-users' && $hasAdminPanelAccess && requireConfiguredOrFail($configMissing, $errors)) {
     try {
         $pdo = pdoFromConfig($config);
-        $listUsers = $pdo->query(
-            'SELECT u.userid, u.username, u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime
-             FROM user u
-             LEFT JOIN game_characters c ON c.id = u.userid
-             ORDER BY u.userid DESC
-             LIMIT 200'
-        );
+
+        try {
+            $listUsers = $pdo->query(
+                'SELECT u.userid, u.username, u.usergroupid, COALESCE(c.unbantime, 0) AS unbantime
+                 FROM user u
+                 LEFT JOIN game_characters c ON c.id = u.userid
+                 ORDER BY u.userid DESC
+                 LIMIT 200'
+            );
+        } catch (Throwable $joinError) {
+            error_log('Admin users listing fallback without game_characters: ' . $joinError->getMessage());
+            $listUsers = $pdo->query(
+                'SELECT u.userid, u.username, u.usergroupid, 0 AS unbantime
+                 FROM user u
+                 ORDER BY u.userid DESC
+                 LIMIT 200'
+            );
+        }
 
         while ($row = $listUsers->fetch()) {
             $adminManageableUsers[] = [
