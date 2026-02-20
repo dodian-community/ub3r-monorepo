@@ -64,7 +64,9 @@ public class EntityProcessor implements Runnable {
             return;
         }
 
-        if (!npc.isFighting() && npc.isAlive()) {
+        // Keep static NPCs facing their configured spawn direction, but do not
+        // force roaming NPCs back to spawn-facing every tick.
+        if (!npc.isFighting() && npc.isAlive() && npc.getWalkRadius() <= 0) {
             npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
         }
 
