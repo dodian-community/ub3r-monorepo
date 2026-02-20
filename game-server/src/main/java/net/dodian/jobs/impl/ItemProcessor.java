@@ -2,12 +2,10 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.model.item.GroundItem;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
-public class ItemProcessor implements Job {
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+public class ItemProcessor implements Runnable {
+    @Override
+    public void run() {
         if (!Ground.tradeable_items.isEmpty()) {
             for (GroundItem item : Ground.tradeable_items) {
                 item.reduceTime();

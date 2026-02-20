@@ -9,6 +9,7 @@ import net.dodian.cache.util.ZipUtils;
 import net.dodian.uber.game.model.Position;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
@@ -56,38 +57,51 @@ public class LandscapeParser {
         int y = (area & 0xFF) * 64;
 
         MapIndex index = cache.getIndexTable().getMapIndex(area);
+        if (index == null) {
+            return;
+        }
+        if (index.getLandscapeFile() < 0 || index.getLandscapeFile() == 65535) {
+            return;
+        }
 
-        ByteBuffer buf = ZipUtils.unzip(cache.getFile(4, index.getLandscapeFile()));
-        int objId = -1;
-        while (true) {
-            int objIdOffset = ByteBufferUtils.getSmart(buf);
-            if (objIdOffset == 0) {
-                break;
-            } else {
-                objId += objIdOffset;
-                int objPosInfo = 0;
-                while (true) {
-                    int objPosInfoOffset = ByteBufferUtils.getSmart(buf);
-                    if (objPosInfoOffset == 0) {
-                        break;
-                    } else {
-                        objPosInfo += objPosInfoOffset - 1;
+        try {
+            ByteBuffer buf = ZipUtils.unzip(cache.getFile(4, index.getLandscapeFile()));
+            int objId = -1;
+            while (true) {
+                int objIdOffset = ByteBufferUtils.getSmart(buf);
+                if (objIdOffset == 0) {
+                    break;
+                } else {
+                    objId += objIdOffset;
+                    int objPosInfo = 0;
+                    while (true) {
+                        int objPosInfoOffset = ByteBufferUtils.getSmart(buf);
+                        if (objPosInfoOffset == 0) {
+                            break;
+                        } else {
+                            objPosInfo += objPosInfoOffset - 1;
 
-                        int localX = objPosInfo >> 6 & 0x3f;
-                        int localY = objPosInfo & 0x3f;
-                        int plane = objPosInfo >> 12;
+                            int localX = objPosInfo >> 6 & 0x3f;
+                            int localY = objPosInfo & 0x3f;
+                            int plane = objPosInfo >> 12;
 
-                        int objOtherInfo = buf.get() & 0xFF;
+                            int objOtherInfo = buf.get() & 0xFF;
+                            int type = objOtherInfo >> 2;
+                            int rotation = objOtherInfo & 3;
 
-                        int type = objOtherInfo >> 2;
-                        int rotation = objOtherInfo & 3;
+                            GameObjectData definition = GameObjectData.forId(objId);
+                            if (definition == null) {
+                                continue;
+                            }
 
-                        Position loc = new Position(localX + x, localY + y, plane);
-
-                        listener.objectParsed(new CacheObject(GameObjectData.forId(objId), loc, type, rotation));
+                            Position loc = new Position(localX + x, localY + y, plane);
+                            listener.objectParsed(new CacheObject(definition, loc, type, rotation));
+                        }
                     }
                 }
             }
+        } catch (BufferUnderflowException | IllegalArgumentException ignored) {
+            // Malformed landscape payload; caller handles region-level skip semantics.
         }
     }
 

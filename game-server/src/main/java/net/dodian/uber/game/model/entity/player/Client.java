@@ -58,7 +58,12 @@ import static net.dodian.utilities.DotEnvKt.*;
 
 
 public class Client extends Player implements Runnable {
+    private static final int MAX_PENDING_INBOUND_PACKETS = 200;
+
     public Channel channel;
+    private final java.util.Queue<net.dodian.uber.game.netty.game.GamePacket> pendingInboundPackets = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private final java.util.concurrent.atomic.AtomicInteger pendingInboundPacketCount = new java.util.concurrent.atomic.AtomicInteger();
+
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
     public Fletching fletching = new Fletching();
@@ -528,6 +533,8 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        releaseQueuedInboundPackets();
+
         // Transport-specific shutdown
         if (channel != null) {
             channel.close();
@@ -555,6 +562,72 @@ public class Client extends Player implements Runnable {
         return this.channel;
     }
 
+    public boolean queueInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        if (packet == null || disconnected) {
+            return false;
+        }
+        int queued = pendingInboundPacketCount.incrementAndGet();
+        if (queued > MAX_PENDING_INBOUND_PACKETS) {
+            pendingInboundPacketCount.decrementAndGet();
+            return false;
+        }
+        pendingInboundPackets.add(packet);
+        return true;
+    }
+
+    public int processQueuedPackets(int maxPacketsPerTick) {
+        if (maxPacketsPerTick <= 0 || disconnected) {
+            return 0;
+        }
+
+        int processedCount = 0;
+        for (int processed = 0; processed < maxPacketsPerTick; processed++) {
+            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
+            if (packet == null) {
+                break;
+            }
+            pendingInboundPacketCount.decrementAndGet();
+            processedCount++;
+
+            try {
+                dispatchQueuedPacket(packet);
+            } catch (Exception ex) {
+                disconnected = true;
+                println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
+                break;
+            } finally {
+                if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
+                    packet.getPayload().release();
+                }
+            }
+        }
+        return processedCount;
+    }
+
+    private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
+        net.dodian.uber.game.netty.listener.PacketListener listener =
+                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
+        if (listener != null) {
+            listener.handle(this, packet);
+        }
+    }
+
+    private void releaseQueuedInboundPackets() {
+        for (;;) {
+            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
+            if (packet == null) {
+                pendingInboundPacketCount.set(0);
+                break;
+            }
+            if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
+                packet.getPayload().release();
+            }
+        }
+    }
+
+    public int getPendingInboundPacketCount() {
+        return pendingInboundPacketCount.get();
+    }
 
     public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
         if (disconnected || channel == null || !channel.isActive()) {
@@ -562,8 +635,18 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        // Pure Netty - send directly through the pipeline
-        channel.writeAndFlush(message);
+        if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
+            channel.write(message);
+        } else {
+            channel.writeAndFlush(message);
+        }
+    }
+
+    public void flushOutbound() {
+        if (disconnected || channel == null || !channel.isActive()) {
+            return;
+        }
+        channel.flush();
     }
 
     public void send(OutgoingPacket packet) {

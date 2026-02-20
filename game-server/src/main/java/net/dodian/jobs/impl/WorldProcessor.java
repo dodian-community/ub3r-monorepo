@@ -7,9 +7,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.utilities.DbTables;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +24,7 @@ import static net.dodian.utilities.DotEnvKt.getDatabaseUsername;
 import static net.dodian.utilities.DotEnvKt.getDatabasePassword;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
-public class WorldProcessor implements Job {
+public class WorldProcessor implements Runnable {
 
     private static final HikariDataSource dataSource;
     private static Integer cachedLatestNewsId = null;
@@ -80,7 +77,7 @@ public class WorldProcessor implements Job {
     }
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    public void run() {
         Thread.currentThread().setName("WorldProcessor-Thread");
         try {
             if (getGameWorldId() == 1) {
@@ -91,7 +88,7 @@ public class WorldProcessor implements Job {
             processMutesAndBans();
             Server.chat.clear();
         } catch (Exception e) {
-            System.err.println("Critical error in WorldProcessor execute: " + e.getMessage());
+            System.err.println("Critical error in WorldProcessor run: " + e.getMessage());
             e.printStackTrace();
         } finally {
             Thread.currentThread().setName("WorldProcessor-Thread-Idle");

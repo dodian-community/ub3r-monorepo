@@ -16,9 +16,11 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
@@ -102,20 +104,18 @@ public class NpcManager {
         int total = functionSpawns.size() + generatedSpawns.size();
         int loaded = 0;
         int skipped = 0;
+        int skippedFunctionOwned = 0;
+        int skippedDuplicatePosition = 0;
         int failed = 0;
+        Set<String> seen = new HashSet<>(total);
 
         for (NpcSpawnDef spawn : functionSpawns) {
             try {
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
-                if (hasSpawnAt(spawn.getNpcId(), position)) {
+                String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
+                if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
                     skipped++;
-                    logger.info(
-                            "Skipping duplicate function-owned NPC spawn (id={}, x={}, y={}, z={}).",
-                            spawn.getNpcId(),
-                            spawn.getX(),
-                            spawn.getY(),
-                            spawn.getZ()
-                    );
+                    skippedDuplicatePosition++;
                     continue;
                 }
                 Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
@@ -157,25 +157,14 @@ public class NpcManager {
             try {
                 if (functionOwnedNpcIds.contains(spawn.getNpcId())) {
                     skipped++;
-                    logger.info(
-                            "Skipping generated NPC spawn because function file owns spawns (id={}, x={}, y={}, z={}).",
-                            spawn.getNpcId(),
-                            spawn.getX(),
-                            spawn.getY(),
-                            spawn.getZ()
-                    );
+                    skippedFunctionOwned++;
                     continue;
                 }
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
-                if (hasSpawnAt(spawn.getNpcId(), position)) {
+                String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
+                if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
                     skipped++;
-                    logger.info(
-                            "Skipping duplicate generated NPC spawn (id={}, x={}, y={}, z={}).",
-                            spawn.getNpcId(),
-                            spawn.getX(),
-                            spawn.getY(),
-                            spawn.getZ()
-                    );
+                    skippedDuplicatePosition++;
                     continue;
                 }
                 Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
@@ -214,10 +203,12 @@ public class NpcManager {
         }
 
         logger.info(
-                "Loaded {}/{} content NPC spawns (skipped {}, failed {}).",
+                "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, function-owned {}, failed {}).",
                 loaded,
                 total,
                 skipped,
+                skippedDuplicatePosition,
+                skippedFunctionOwned,
                 failed
         );
         return loaded;
