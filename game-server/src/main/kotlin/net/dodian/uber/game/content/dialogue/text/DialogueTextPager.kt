@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.dialogue.text
  * Word-wrap + pagination for dialogue/chatbox text.
  *
  * Rules:
- * - 46 visible characters per line (formatting tags don't count).
+ * - 56 visible characters per line (formatting tags don't count).
  * - 4 text lines per page (client only supports 1–4 text lines per dialogue).
  * - Hard breaks via '\n' are preserved.
  * - Formatting tags ignored for length:
@@ -13,7 +13,7 @@ package net.dodian.uber.game.content.dialogue.text
  */
 object DialogueTextPager {
     const val MAX_INPUT_CHARS: Int = 10_000
-    const val MAX_VISIBLE_CHARS_PER_LINE: Int = 46
+    const val MAX_VISIBLE_CHARS_PER_LINE: Int = 56
     const val MAX_TEXT_LINES_PER_PAGE: Int = 4
 
     fun paginate(text: String): List<List<String>> {
