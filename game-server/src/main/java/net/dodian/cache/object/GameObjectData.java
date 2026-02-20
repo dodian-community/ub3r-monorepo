@@ -1,6 +1,7 @@
 package net.dodian.cache.object;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class GameObjectData {
 
@@ -8,6 +9,7 @@ public class GameObjectData {
      * The maximum number of object definitions
      */
     public static final int MAX_DEFINITIONS = 32538;
+    private static final int MAX_DYNAMIC_DEFINITIONS = 200_000;
 
     public static void init() throws IOException {
         /*
@@ -26,12 +28,33 @@ public class GameObjectData {
      */
     private static GameObjectData[] definitions = new GameObjectData[MAX_DEFINITIONS];
 
+    private static synchronized void ensureCapacity(int id) {
+        if (id < 0) {
+            return;
+        }
+        if (id > MAX_DYNAMIC_DEFINITIONS) {
+            return;
+        }
+        if (id < definitions.length) {
+            return;
+        }
+
+        int newLength = definitions.length;
+        while (newLength <= id) {
+            newLength = Math.max(newLength * 2, id + 1);
+        }
+        definitions = Arrays.copyOf(definitions, newLength);
+    }
+
     /**
      * Adds a definition. TODO better way?
      *
      * @param def The definition.
      */
     public static void addDefinition(GameObjectData def) {
+        if (def == null || def.id < 0 || def.id > MAX_DYNAMIC_DEFINITIONS) {
+            return;
+        }
         /* Fixes for now with names being null..Obs! */
         if(def.id == 7577 || def.id == 7578 || def.id == 7580)
             def.name = "Bush patch";
@@ -39,6 +62,7 @@ public class GameObjectData {
             def.name = "Fruit tree patch";
         if(def.id == 8388 || def.id == 8389 || def.id == 19147)
             def.name = "Tree patch";
+        ensureCapacity(def.getId());
         definitions[def.getId()] = def;
     }
 
@@ -49,23 +73,33 @@ public class GameObjectData {
      * @return The definition.
      */
     public static GameObjectData forId(int id) {
-        if (id < definitions.length) {
-            if (definitions[id] == null) {
-                ObjectDef def = ObjectDef.getObjectDef(id);
-                if (def == null)
-                    definitions[id] = produce(id);
-                else {
-                    String description = def.description == null ? "" : new String(def.description);
-                    GameObjectData obj = new GameObjectData(id, def.name, description, def.anInt744, def.anInt761, def.aBoolean767,
-                            def.aBoolean757, def.hasActions, def.aBoolean769, 0);
-                    if (id == 2781)
-                        obj.sizeX = 3;
-                    definitions[id] = obj;
-                }
-            }
-            return definitions[id];
+        if (id < 0) {
+            return null;
         }
-        return null;
+        if (id > MAX_DYNAMIC_DEFINITIONS) {
+            return produce(id);
+        }
+        ensureCapacity(id);
+        if (definitions[id] == null) {
+            ObjectDef def;
+            try {
+                def = ObjectDef.getObjectDef(id);
+            } catch (Exception e) {
+                definitions[id] = produce(id);
+                return definitions[id];
+            }
+            if (def == null)
+                definitions[id] = produce(id);
+            else {
+                String description = def.description == null ? "" : new String(def.description);
+                GameObjectData obj = new GameObjectData(id, def.name, description, def.anInt744, def.anInt761, def.aBoolean767,
+                        def.aBoolean757, def.hasActions, def.aBoolean769, 0);
+                if (id == 2781)
+                    obj.sizeX = 3;
+                definitions[id] = obj;
+            }
+        }
+        return definitions[id];
     }
 
     private static GameObjectData produce(int id) {

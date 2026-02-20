@@ -4,6 +4,7 @@ import net.dodian.cache.Cache;
 import net.dodian.cache.InvalidCacheException;
 import net.dodian.cache.index.impl.MapIndex;
 import net.dodian.cache.index.impl.StandardIndex;
+import net.dodian.cache.map.LandscapeParser;
 import net.dodian.cache.map.LandscapeListener;
 import net.dodian.cache.obj.ObjectDefinitionListener;
 import net.dodian.cache.obj.ObjectDefinitionParser;
@@ -50,11 +51,24 @@ public class ObjectLoader implements LandscapeListener, ObjectDefinitionListener
             new ObjectDefinitionParser(cache, defIndices, this).parse();
             logger.info("Loaded " + definitionCount + " object definitions.");
             logger.info("Loading map...");
-            @SuppressWarnings("unused")
             MapIndex[] mapIndices = cache.getIndexTable().getMapIndices();
-      /*for (MapIndex index : mapIndices) { //Still need to fox TODO: Check region!
-        new LandscapeParser(cache, index.getIdentifier(), this).parse();
-      }*/
+            int maxMapFileId = cache.getFileCount(4);
+            int parsedRegions = 0;
+            int skippedRegions = 0;
+            for (MapIndex index : mapIndices) {
+                int landscapeFile = index.getLandscapeFile();
+                if (landscapeFile < 0 || landscapeFile == 65535 || landscapeFile > maxMapFileId) {
+                    skippedRegions++;
+                    continue;
+                }
+                try {
+                    new LandscapeParser(cache, index.getIdentifier(), this).parse();
+                    parsedRegions++;
+                } catch (Exception e) {
+                    skippedRegions++;
+                }
+            }
+            logger.info("Parsed landscape regions: " + parsedRegions + " (skipped " + skippedRegions + ").");
             logger.info("Loaded " + objectCount + " objects.");
         } catch (Exception e) {
             e.printStackTrace();

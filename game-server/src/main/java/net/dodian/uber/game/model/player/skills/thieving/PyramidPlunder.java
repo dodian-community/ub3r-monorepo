@@ -1,7 +1,5 @@
 package net.dodian.uber.game.model.player.skills.thieving;
 
-import net.dodian.jobs.JobScheduler;
-import net.dodian.jobs.impl.PlunderDoor;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -38,8 +36,6 @@ public class PyramidPlunder {
         /* Set pyramid next door in all rooms except last! */
         for(int i = 0; i < nextRoom.length; i++)
             nextRoom[i] = Misc.random(3);
-        /* Timer every 15 minute to reset stuff! */
-        JobScheduler.ScheduleRepeatForeverJob(900_000, PlunderDoor.class);
     }
 
     public PyramidPlunder(Client c) {
