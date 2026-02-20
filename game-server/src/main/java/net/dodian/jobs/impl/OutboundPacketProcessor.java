@@ -33,6 +33,14 @@ public class OutboundPacketProcessor implements Runnable {
             updatePlayer(player, i);
         }
 
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || !player.isActive) {
+                continue;
+            }
+            player.flushOutbound();
+        }
+
         for (Npc npc : Server.npcManager.getNpcs()) {
             if (npc != null) {
                 npc.clearUpdateFlags();

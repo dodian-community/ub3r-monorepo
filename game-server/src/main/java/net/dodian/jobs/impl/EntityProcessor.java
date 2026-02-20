@@ -7,17 +7,24 @@ import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
 public class EntityProcessor implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
+    private static final boolean DEBUG_PACKET_QUEUE_METRICS = true;
 
     @Override
     public void run() {
+        processInboundPackets();
+
         long now = System.currentTimeMillis();
         Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
 
@@ -172,6 +179,54 @@ public class EntityProcessor implements Runnable {
                 continue;
             }
             player.syncChunkMembership();
+        }
+    }
+
+    private void processInboundPackets() {
+        int activePlayers = 0;
+        int processedPackets = 0;
+        int totalPendingBefore = 0;
+        int totalPendingAfter = 0;
+        int backlogPlayers = 0;
+        int maxPendingBefore = 0;
+        int maxPendingAfter = 0;
+
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || player.disconnected || !player.isActive) {
+                continue;
+            }
+            activePlayers++;
+
+            int pendingBefore = player.getPendingInboundPacketCount();
+            totalPendingBefore += pendingBefore;
+            if (pendingBefore > maxPendingBefore) {
+                maxPendingBefore = pendingBefore;
+            }
+
+            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT);
+
+            int pendingAfter = player.getPendingInboundPacketCount();
+            totalPendingAfter += pendingAfter;
+            if (pendingAfter > maxPendingAfter) {
+                maxPendingAfter = pendingAfter;
+            }
+            if (pendingAfter > 0) {
+                backlogPlayers++;
+            }
+        }
+
+        if (DEBUG_PACKET_QUEUE_METRICS && activePlayers > 0) {
+            logger.info(
+                    "packetQueueMetrics activePlayers={} processed={} preTotal={} postTotal={} backlogPlayers={} maxPre={} maxPost={}",
+                    activePlayers,
+                    processedPackets,
+                    totalPendingBefore,
+                    totalPendingAfter,
+                    backlogPlayers,
+                    maxPendingBefore,
+                    maxPendingAfter
+            );
         }
     }
 
