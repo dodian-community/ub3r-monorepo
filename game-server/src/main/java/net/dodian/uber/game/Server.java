@@ -21,6 +21,10 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
+import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.security.AsyncSqlService;
+import net.dodian.uber.game.security.ChatLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
@@ -33,11 +37,14 @@ import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.api.WebApiKt.launchWebApi;
 import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.utilities.DatabaseKt.closeConnectionPool;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -76,6 +83,7 @@ public class Server {
 
     private static NettyGameServer nettyServer;
     private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
         logger.info("Info log!");
@@ -184,10 +192,48 @@ public class Server {
     }
 
     public static void shutdown() {
-        gameTickScheduler.stop();
-        if (nettyServer != null) {
-            nettyServer.shutdown();
+        if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+            return;
         }
-        // Add any other shutdown logic here
+
+        gameTickScheduler.stop();
+
+        try {
+            PlayerSaveCoordinator.shutdownAndDrain(Duration.ofSeconds(30));
+        } catch (Exception exception) {
+            logger.warn("Failed to drain player save coordinator during shutdown", exception);
+        }
+
+        try {
+            WorldDbPollService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world DB poll service", exception);
+        }
+
+        try {
+            ChatLog.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown chat log service", exception);
+        }
+
+        try {
+            AsyncSqlService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown async SQL service", exception);
+        }
+
+        try {
+            closeConnectionPool();
+        } catch (Exception exception) {
+            logger.warn("Failed to close shared connection pool", exception);
+        }
+
+        try {
+            if (nettyServer != null) {
+                nettyServer.shutdown();
+            }
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown netty server", exception);
+        }
     }
 }

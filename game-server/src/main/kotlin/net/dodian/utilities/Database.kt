@@ -12,13 +12,14 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.sql.DataSource
 
 private val logger: Logger = LogManager.getLogger("Database")
 private val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC&autoReconnect=true"
 
-private val dataSource: DataSource by lazy { createDataSource() }
-private val scheduler = Executors.newScheduledThreadPool(1)
+private val dataSourceLazy = lazy { createDataSource() }
+private val schedulerLazy = lazy { Executors.newScheduledThreadPool(1) }
+private val dataSource: HikariDataSource
+    get() = dataSourceLazy.value
 
 private fun createDataSource(): HikariDataSource {
     logger.info("Initializing MySQL connection pool...")
@@ -81,7 +82,7 @@ val dbConnection: Connection
             // Capture the stack trace at the moment the connection is requested.
             val acquisitionStackTrace = Thread.currentThread().stackTrace
 
-            logger.debug("Connection obtained from pool (Active: ${(dataSource as HikariDataSource).hikariPoolMXBean.activeConnections}/${(dataSource as HikariDataSource).hikariPoolMXBean.totalConnections})")
+            logger.debug("Connection obtained from pool (Active: ${(dataSource.hikariPoolMXBean.activeConnections)}/${(dataSource.hikariPoolMXBean.totalConnections)})")
 
             // Return a proxy to intercept method calls, like 'close()'.
             Proxy.newProxyInstance(
@@ -92,10 +93,8 @@ val dbConnection: Connection
 
         } catch (e: SQLException) {
             logger.error("Failed to get connection from pool: ${e.message}", e)
-            if (dataSource is HikariDataSource) {
-                val poolStats = (dataSource as HikariDataSource).hikariPoolMXBean
-                logger.error("Pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}, Waiting: ${poolStats.threadsAwaitingConnection}")
-            }
+            val poolStats = dataSource.hikariPoolMXBean
+            logger.error("Pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}, Waiting: ${poolStats.threadsAwaitingConnection}")
             throw e
         }
     }
@@ -107,6 +106,7 @@ val dbStatement: Statement
     }
 
 private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
+    val scheduler = schedulerLazy.value
     scheduler.scheduleAtFixedRate({
         try {
             val poolStats = hikariDataSource.hikariPoolMXBean
@@ -131,30 +131,36 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
 }
 
 fun closeConnectionPool() {
+    if (!dataSourceLazy.isInitialized()) {
+        return
+    }
+
     logger.info("Shutting down connection pool...")
 
     // Stop monitoring
-    scheduler.shutdown()
-    try {
-        if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+    if (schedulerLazy.isInitialized()) {
+        val scheduler = schedulerLazy.value
+        scheduler.shutdown()
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow()
+            }
+        } catch (e: InterruptedException) {
             scheduler.shutdownNow()
         }
-    } catch (e: InterruptedException) {
-        scheduler.shutdownNow()
     }
 
     // Close pool
-    if (dataSource is HikariDataSource) {
-        val poolStats = (dataSource as HikariDataSource).hikariPoolMXBean
-        logger.info("Final pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}")
+    val dataSource = dataSourceLazy.value
+    val poolStats = dataSource.hikariPoolMXBean
+    logger.info("Final pool stats - Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}")
 
-        if (poolStats.activeConnections > 0) {
-            logger.warn("${poolStats.activeConnections} connections still active during shutdown - possible connection leaks!")
-        }
-
-        (dataSource as HikariDataSource).close()
-        logger.info("Connection pool closed")
+    if (poolStats.activeConnections > 0) {
+        logger.warn("${poolStats.activeConnections} connections still active during shutdown - possible connection leaks!")
     }
+
+    dataSource.close()
+    logger.info("Connection pool closed")
 }
 
 /**
