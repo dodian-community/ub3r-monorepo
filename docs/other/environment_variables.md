@@ -53,19 +53,6 @@ DATABASE_USERNAME=dodian_game
 DATABASE_PASSWORD=abcd1234
 DATABASE_INITIALIZE=false
 
-DATABASE_POOL_MIN_SIZE=5
-DATABASE_POOL_MAX_SIZE=20
-DATABASE_POOL_CONNECTION_TIMEOUT=30000
-DATABASE_POOL_IDLE_TIMEOUT=600000
-DATABASE_POOL_MAX_LIFETIME=1800000
-
-ASYNC_PLAYER_SAVE_ENABLED=true
-ASYNC_WORLD_DB_ENABLED=true
-DATABASE_SAVE_WORKERS=2
-DATABASE_SAVE_RETRY_BASE_MS=250
-DATABASE_SAVE_RETRY_MAX_MS=5000
-DATABASE_SAVE_BURST_ATTEMPTS=8
-
 CLIENT_CUSTOM_VERSION=dodian_client
 
 GAME_WORLD_ID=1
@@ -85,13 +72,3 @@ The above values can be added to your existing `.env`. Core database credentials
   - Nothing in this project requires you to specify a prefix, you may however do it if you see fit to, and know what you're doing
 - `DATABASE_INITIALIZE` = Provided you have valid database details for connecting to the database, it will try to execute all the files inside [database](/database)-folder, then it will create a `.initialized_database`-file to avoid doing this job again
   - All the default scripts we have included in this repository should be enough to run the game server, or even launch your own Dodian remake
-- `DATABASE_POOL_MIN_SIZE`, `DATABASE_POOL_MAX_SIZE`, `DATABASE_POOL_CONNECTION_TIMEOUT`, `DATABASE_POOL_IDLE_TIMEOUT`, `DATABASE_POOL_MAX_LIFETIME` = Shared HikariCP pool tuning values
-- `ASYNC_PLAYER_SAVE_ENABLED` = Enables asynchronous player persistence queueing and worker execution
-- `ASYNC_WORLD_DB_ENABLED` = Enables asynchronous world polling SQL (news/refunds/mutes/player counts) off the game tick thread
-- `DATABASE_SAVE_WORKERS`, `DATABASE_SAVE_RETRY_BASE_MS`, `DATABASE_SAVE_RETRY_MAX_MS`, `DATABASE_SAVE_BURST_ATTEMPTS` = Player save worker and retry policy controls
-- `GAME_WORLD_ID` = The ID of the world to use, depending on which ID you use, some stuff on the server will behave a little differently
-  - World ID of 2 or above will among other things disable player saving
-  - Traditionally in the past we've developed the server using a connection to the live database, and as such we've used another world ID than 1, to avoid conflicts with the live database
-- `GAME_MULTIPLIER_GLOBAL_XP` = The global xp rate multiplier to apply
-- `GAME_CONNECTIONS_PER_IP` = The maximum amounts of clients to be connected per IP address
-  - As of right now, this is not in use in the server
