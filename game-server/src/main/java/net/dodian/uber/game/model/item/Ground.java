@@ -47,32 +47,69 @@ public class Ground {
         }
     }
 
-    public static GroundItem findGroundItem(int id, int x, int y, int z) {
-        boolean tradeable = Server.itemManager.isTradable(id);
-        if(!tradeable) {
-            if (!Ground.ground_items.isEmpty())
-                for (GroundItem item : Ground.ground_items) {
-                    if(item.x == x && item.y == y && item.z == z && item.id == id)
-                        return item;
-                }
-            if (!Ground.untradeable_items.isEmpty())
-                for (GroundItem item : Ground.untradeable_items) {
-                    if(item.x == x && item.y == y && item.z == z && item.id == id)
-                        return item;
-                }
-        } else {
-            if (!Ground.ground_items.isEmpty())
-                for (GroundItem item : Ground.ground_items) {
-                    if(item.x == x && item.y == y && item.z == z && item.id == id)
-                        return item;
-                }
-            if (!Ground.tradeable_items.isEmpty())
-                for (GroundItem item : Ground.tradeable_items) {
-                    if(item.x == x && item.y == y && item.z == z && item.id == id && !item.isTaken())
-                        return item;
-                }
+    public static boolean isTracked(GroundItem item) {
+        if (item == null) {
+            return false;
+        }
+        switch (item.type) {
+            case 0:
+                return ground_items.contains(item);
+            case 1:
+                return untradeable_items.contains(item);
+            default:
+                return tradeable_items.contains(item);
+        }
+    }
+
+    public static boolean canPickup(Client client, GroundItem item) {
+        if (client == null || item == null || item.isTaken() || client.getPosition().getZ() != item.z) {
+            return false;
+        }
+        switch (item.type) {
+            case 0:
+                return item.isVisible();
+            case 1:
+                return client.dbId == item.playerId;
+            default:
+                return item.isVisible() || client.dbId == item.playerId;
+        }
+    }
+
+    private static GroundItem findGroundItem(CopyOnWriteArrayList<GroundItem> list, Client client, int id, int x, int y, int z) {
+        if (list.isEmpty()) {
+            return null;
+        }
+        for (GroundItem item : list) {
+            if (item.id != id || item.x != x || item.y != y || item.z != z || item.isTaken()) {
+                continue;
+            }
+            if (client != null && !canPickup(client, item)) {
+                continue;
+            }
+            return item;
         }
         return null;
+    }
+
+    public static GroundItem findGroundItem(Client client, int id, int x, int y, int z) {
+        boolean tradeable = Server.itemManager.isTradable(id);
+        if (!tradeable) {
+            GroundItem staticItem = findGroundItem(ground_items, client, id, x, y, z);
+            if (staticItem != null) {
+                return staticItem;
+            }
+            return findGroundItem(untradeable_items, client, id, x, y, z);
+        }
+
+        GroundItem staticItem = findGroundItem(ground_items, client, id, x, y, z);
+        if (staticItem != null) {
+            return staticItem;
+        }
+        return findGroundItem(tradeable_items, client, id, x, y, z);
+    }
+
+    public static GroundItem findGroundItem(int id, int x, int y, int z) {
+        return findGroundItem(null, id, x, y, z);
     }
     public static void addGroundItem(Position pos, int id, int amount, int time) {
         addItem(new GroundItem(pos, id, amount, time, true));

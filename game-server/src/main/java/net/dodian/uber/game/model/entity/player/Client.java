@@ -1319,87 +1319,44 @@ public class Client extends Player implements Runnable {
             pickupWanted = false;
             return;
         }
-        if (attemptGround != null) {
-            if (!hasSpace() && Server.itemManager.isStackable(attemptGround.id) && !playerHasItem(attemptGround.id)) {
-                send(new SendMessage("Your inventory is full!"));
-                attemptGround = null;
-                pickupWanted = false;
-                return;
-            }
-            switch (attemptGround.type) {
-                case 0:
-                    if (!Ground.ground_items.isEmpty())
-                        for (GroundItem item : Ground.ground_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-                    break;
-                case 1:
-                    if (!Ground.untradeable_items.isEmpty())
-                        for (GroundItem item : Ground.untradeable_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || dbId != item.playerId || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-                    break;
-                default:
-                    if (!Ground.tradeable_items.isEmpty())
-                        for (GroundItem item : Ground.tradeable_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-            }
+        GroundItem target = attemptGround;
+        if (target == null) {
+            return;
         }
+
+        if (target.x != x || target.y != y || target.z != getPosition().getZ()) {
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (!hasSpace() && Server.itemManager.isStackable(target.id) && !playerHasItem(target.id)) {
+            send(new SendMessage("Your inventory is full!"));
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (premiumItem(target.id) && !premium) {
+            send(new SendMessage("You must be a premium member to use this item"));
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (addItem(target.id, target.amount)) {
+            Ground.deleteItem(target);
+            ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
+            checkItemUpdate();
+        }
+        attemptGround = null;
+        pickupWanted = false;
     }
 
     public void openUpBank() {
