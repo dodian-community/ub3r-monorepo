@@ -36,9 +36,9 @@ The game server is configured via environment variables. These values can either
 
 ---
 
-Use your existing `game-server/.env` file and add or adjust only the values you need.
+We're going to refer to the [example.env](/example.env)-file, so you can see how it could look after it's configured properly.
 
-**Example entries for your existing `.env` file:**
+**Example .env file:**
 ```dotenv
 SERVER_NAME=Dodian
 SERVER_PORT=43594
@@ -59,7 +59,7 @@ GAME_WORLD_ID=1
 GAME_MULTIPLIER_GLOBAL_XP=1
 GAME_CONNECTIONS_PER_IP=2
 ```
-The above values can be added to your existing `.env`. Core database credentials (`DATABASE_HOST`, `DATABASE_NAME`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`) are required. The new async/pool settings are optional because `DotEnv.kt` provides defaults.
+The above example contains all the possible environment variables that can configure the server. If no values are provided, it will use the values you see above.
 
 - `SERVER_NAME` = The name of the server, used in the game chat etc
 - `SERVER_PORT` = The port the game client will need to connect to _(server's listening port)_
@@ -72,3 +72,9 @@ The above values can be added to your existing `.env`. Core database credentials
   - Nothing in this project requires you to specify a prefix, you may however do it if you see fit to, and know what you're doing
 - `DATABASE_INITIALIZE` = Provided you have valid database details for connecting to the database, it will try to execute all the files inside [database](/database)-folder, then it will create a `.initialized_database`-file to avoid doing this job again
   - All the default scripts we have included in this repository should be enough to run the game server, or even launch your own Dodian remake
+- `GAME_WORLD_ID` = The ID of the world to use, depending on which ID you use, some stuff on the server will behave a little differently
+  - World ID of 2 or above will among other things disable player saving
+  - Traditionally in the past we've developed the server using a connection to the live database, and as such we've used another world ID than 1, to avoid conflicts with the live database
+- `GAME_MULTIPLIER_GLOBAL_XP` = The global xp rate multiplier to apply
+- `GAME_CONNECTIONS_PER_IP` = The maximum amounts of clients to be connected per IP address
+  - As of right now, this is not in use in the server
