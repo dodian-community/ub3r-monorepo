@@ -3,6 +3,14 @@ package net.dodian.uber.game.content.npcs.spawns
 import net.dodian.uber.game.model.entity.player.Client
 
 const val MYSQL_DEFAULT_STAT = -1
+const val NORTH = 0
+const val EAST = 2
+const val SOUTH = 4
+const val WEST = 6
+const val north = NORTH
+const val east = EAST
+const val south = SOUTH
+const val west = WEST
 
 data class NpcSpawnDef(
     val npcId: Int,

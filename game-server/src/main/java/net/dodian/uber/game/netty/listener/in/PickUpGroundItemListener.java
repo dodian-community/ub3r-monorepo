@@ -44,11 +44,19 @@ public class PickUpGroundItemListener implements PacketListener {
             // date parse fallback; ignore
         }
         if (System.currentTimeMillis() - client.lastAction <= 600 ||
-                (client.attemptGround != null && client.attemptGround.id == itemId)) {
+                (client.attemptGround != null
+                        && client.attemptGround.id == itemId
+                        && client.attemptGround.x == itemX
+                        && client.attemptGround.y == itemY
+                        && client.attemptGround.z == client.getPosition().getZ())) {
             return;
         }
         client.lastAction = System.currentTimeMillis();
-        client.attemptGround = Ground.findGroundItem(itemId, itemX, itemY, client.getPosition().getZ());
+        client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.getPosition().getZ());
+        if (client.attemptGround == null) {
+            client.pickupWanted = false;
+            return;
+        }
         if (client.getPosition().getX() != itemX || client.getPosition().getY() != itemY) {
             client.pickupWanted = true;
         } else {

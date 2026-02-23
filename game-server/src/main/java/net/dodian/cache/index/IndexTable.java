@@ -7,6 +7,8 @@ import net.dodian.cache.index.impl.StandardIndex;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The <code>IndexTable</code> class manages all the <code>Index</code>es in the
@@ -65,16 +67,37 @@ public class IndexTable {
      */
     private void initMapIndices(Archive versionListArchive) throws IOException {
         ByteBuffer buf = versionListArchive.getFileAsByteBuffer("map_index");
-        int indices = buf.remaining() / 7;
-        mapIndices = new MapIndex[indices];
-        for (int i = 0; i < indices; i++) {
+        List<MapIndex> parsed = new ArrayList<>();
+
+        if (buf.remaining() >= 2) {
+            int count = buf.getShort() & 0xFFFF;
+            int remaining = buf.remaining();
+            if (remaining == count * 6 || remaining == count * 7) {
+                int entrySize = remaining / count;
+                for (int i = 0; i < count; i++) {
+                    int area = buf.getShort() & 0xFFFF;
+                    int mapFile = buf.getShort() & 0xFFFF;
+                    int landscapeFile = buf.getShort() & 0xFFFF;
+                    boolean members = entrySize == 7 && (buf.get() & 0xFF) == 1;
+                    parsed.add(new MapIndex(area, mapFile, landscapeFile, members));
+                }
+                mapIndices = parsed.toArray(new MapIndex[0]);
+                return;
+            }
+            buf.position(0);
+        }
+
+        int remaining = buf.remaining();
+        int entrySize = remaining % 7 == 0 ? 7 : 6;
+        int count = remaining / entrySize;
+        for (int i = 0; i < count; i++) {
             int area = buf.getShort() & 0xFFFF;
             int mapFile = buf.getShort() & 0xFFFF;
             int landscapeFile = buf.getShort() & 0xFFFF;
-            boolean members = (buf.get() & 0xFF) == 1;
-            MapIndex index = new MapIndex(area, mapFile, landscapeFile, members);
-            mapIndices[i] = index;
+            boolean members = entrySize == 7 && (buf.get() & 0xFF) == 1;
+            parsed.add(new MapIndex(area, mapFile, landscapeFile, members));
         }
+        mapIndices = parsed.toArray(new MapIndex[0]);
     }
 
     /**

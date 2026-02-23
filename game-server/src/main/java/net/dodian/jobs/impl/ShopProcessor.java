@@ -5,15 +5,10 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
-@DisallowConcurrentExecution
-
-public class ShopProcessor implements Job {
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+public class ShopProcessor implements Runnable {
+    @Override
+    public void run() {
         boolean DidUpdate = false;
         for (int i = 1; i <= ShopHandler.MaxShops; i++) {
             if (ShopHandler.ShopItemsDelay.length > i) {

@@ -30,7 +30,7 @@ public final class ByteBuffer {
 		stream_1.position = reserve_packet_slots ? pkt_content_start : pkt_opcode_slot;
 		stream_1.cipher = cipher;
 		return stream_1;
-	}
+    }
 
 	public void reset(boolean reserve_packet_slots) {
 		this.buffer = new byte[size];

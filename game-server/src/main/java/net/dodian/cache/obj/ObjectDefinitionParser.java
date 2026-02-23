@@ -7,6 +7,7 @@ import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.util.ByteBufferUtils;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
@@ -57,27 +58,32 @@ public class ObjectDefinitionParser {
         for (StandardIndex index : indices) {
             int id = index.getIdentifier();
             int offset = index.getFile(); // bad naming, should be getOffset()
+            if (offset < 0 || offset >= buf.limit()) {
+                continue;
+            }
             buf.position(offset);
 
             // TODO read the object definition now
 
-            String name = "null";
-            String desc = "null";
-            int sizeX = 1;
-            int sizeY = 1;
-            boolean isSolid = true;
-            boolean isWalkable = true;
-            boolean hasActions = false;
+            try {
+                boolean64 = true;
+                String name = "null";
+                String desc = "null";
+                int sizeX = 1;
+                int sizeY = 1;
+                boolean isSolid = true;
+                boolean isWalkable = true;
+                boolean hasActions = false;
 
-            outer_loop:
-            do {
-                int configCode;
+                outer_loop:
                 do {
-                    configCode = buf.get() & 0xFF;
-                    if (configCode == 0) {
-                        break outer_loop;
-                    }
-                    switch (configCode) {
+                    int configCode;
+                    do {
+                        configCode = buf.get() & 0xFF;
+                        if (configCode == 0) {
+                            break outer_loop;
+                        }
+                        switch (configCode) {
                         case 1:
                             int someCounter = buf.get() & 0xFF;
                             if(someCounter > 0 && someCounter <= 5) {
@@ -199,22 +205,31 @@ public class ObjectDefinitionParser {
                         default:
                             buf.get();
                             break;
+                        }
+                    } while (configCode != 77);
+
+                    if (buf.remaining() < 5) {
+                        break outer_loop;
                     }
-                } while (configCode != 77);
-
-                buf.getShort();
-                buf.getShort();
-
-                int counter = buf.get();
-                for (int i = 0; i <= counter; i++) {
                     buf.getShort();
-                }
-            } while (true);
-            if(id >= 8552 && id <= 8560) name = "Allotment";
-            if(id >= 7848 && id <= 7852) name = "Flower Patch";
-            if(id >= 8151 && id <= 8155) name = "Herb Patch";
-            listener.objectDefinitionParsed(
-                    new GameObjectData(id, name, desc, sizeX, sizeY, isSolid, isWalkable, hasActions, boolean64, 2));
+                    buf.getShort();
+
+                    int counter = buf.get() & 0xFF;
+                    if (buf.remaining() < (counter + 1) * 2) {
+                        break outer_loop;
+                    }
+                    for (int i = 0; i <= counter; i++) {
+                        buf.getShort();
+                    }
+                } while (true);
+                if(id >= 8552 && id <= 8560) name = "Allotment";
+                if(id >= 7848 && id <= 7852) name = "Flower Patch";
+                if(id >= 8151 && id <= 8155) name = "Herb Patch";
+                listener.objectDefinitionParsed(
+                        new GameObjectData(id, name, desc, sizeX, sizeY, isSolid, isWalkable, hasActions, boolean64, 2));
+            } catch (BufferUnderflowException | IllegalArgumentException ignored) {
+                // Skip malformed definition and continue loading others.
+            }
 
         }
     }

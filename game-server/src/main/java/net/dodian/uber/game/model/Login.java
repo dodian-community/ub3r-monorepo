@@ -69,7 +69,16 @@ public class Login extends Thread {
                 in.close();
             }
         } catch (FileNotFoundException fnf) {
-            System.out.println("Could not find the file!");
+            try {
+                File file = new File("./data/UUIDBans.txt");
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+                file.createNewFile();
+            } catch (IOException ignored) {
+                System.out.println("Could not initialize UUID ban file.");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

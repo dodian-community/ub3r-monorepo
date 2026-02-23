@@ -5,11 +5,9 @@ import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
 import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
-import net.dodian.jobs.JobScheduler;
+import net.dodian.jobs.GameTickScheduler;
 import net.dodian.jobs.impl.*;
 import net.dodian.uber.comm.LoginManager;
-
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
@@ -23,6 +21,10 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
+import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.security.AsyncSqlService;
+import net.dodian.uber.game.security.ChatLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
@@ -35,11 +37,14 @@ import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.api.WebApiKt.launchWebApi;
 import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.utilities.DatabaseKt.closeConnectionPool;
 import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
@@ -77,6 +82,8 @@ public class Server {
 
 
     private static NettyGameServer nettyServer;
+    private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
         logger.info("Info log!");
@@ -117,29 +124,32 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
-        new Thread(EventManager.getInstance()).start();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");
         nettyServer.start();
 
-        // Add a shutdown hook to gracefully close Netty resources.
+        // Add a shutdown hook to gracefully close server resources.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown hook triggered. Shutting down Netty server...");
-            nettyServer.shutdown();
-            logger.info("Netty server shut down.");
+            logger.info("Shutdown hook triggered. Shutting down server...");
+            shutdown();
+            logger.info("Server shut down.");
         }));
 
 
         new Thread(login).start();
         /* Processor for various stuff */
-        JobScheduler.ScheduleRepeatForeverJob(TICK, EntityProcessor.class);
-        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, WorldProcessor.class);
-        JobScheduler.ScheduleRepeatForeverJob(TICK * 100, FarmingProcess.class);
-        JobScheduler.ScheduleRepeatForeverJob(TICK, ItemProcessor.class);
-        JobScheduler.ScheduleRepeatForeverJob(TICK, ShopProcessor.class);
-        JobScheduler.ScheduleRepeatForeverJob(TICK, ObjectProcess.class);
         entryObject = new PyramidPlunder();
+        gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
+        gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
+        gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
+        gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
+        gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
+        gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
+        gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
+        gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
+        gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
+        gameTickScheduler.start();
         System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
@@ -182,9 +192,48 @@ public class Server {
     }
 
     public static void shutdown() {
-        if (nettyServer != null) {
-            nettyServer.shutdown();
+        if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+            return;
         }
-        // Add any other shutdown logic here
+
+        gameTickScheduler.stop();
+
+        try {
+            PlayerSaveCoordinator.shutdownAndDrain(Duration.ofSeconds(30));
+        } catch (Exception exception) {
+            logger.warn("Failed to drain player save coordinator during shutdown", exception);
+        }
+
+        try {
+            WorldDbPollService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world DB poll service", exception);
+        }
+
+        try {
+            ChatLog.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown chat log service", exception);
+        }
+
+        try {
+            AsyncSqlService.shutdown(Duration.ofSeconds(10));
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown async SQL service", exception);
+        }
+
+        try {
+            closeConnectionPool();
+        } catch (Exception exception) {
+            logger.warn("Failed to close shared connection pool", exception);
+        }
+
+        try {
+            if (nettyServer != null) {
+                nettyServer.shutdown();
+            }
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown netty server", exception);
+        }
     }
 }

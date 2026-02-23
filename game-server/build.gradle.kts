@@ -42,7 +42,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
-    implementation("org.quartz-scheduler:quartz:2.5.0")
 
     implementation("mysql:mysql-connector-java:8.0.29")
     implementation("com.zaxxer:HikariCP:6.3.0")
@@ -55,6 +54,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+    testImplementation("com.h2database:h2:2.2.224")
 
     implementation("com.sparkjava:spark-kotlin:1.0.0-alpha")
 }
@@ -164,6 +164,13 @@ tasks.register<JavaExec>("runIntegrationTest") {
     description = "Run PlayerUpdating integration test"
     classpath = sourceSets.main.get().runtimeClasspath + sourceSets.test.get().runtimeClasspath
     mainClass.set("net.dodian.uber.game.model.entity.player.PlayerUpdatingIntegrationTest")
+}
+
+tasks.register<JavaExec>("exportWorldFromCache") {
+    group = "build"
+    description = "Export data/world map+object files from data/cache for server clipping/object loaders"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.cache.tools.CacheWorldExporter")
 }
 
 // Custom task to run all migration tests

@@ -2,49 +2,47 @@ package net.dodian.utilities
 
 import io.github.cdimascio.dotenv.dotenv
 
-private val dotenv = dotenv {
-    ignoreIfMissing = true          // voorkomt crash als .env ontbreekt
-    ignoreIfMalformed = true        // optioneel, maar handig
-    systemProperties = true         // -DVAR=... (optioneel)
-    // systemEnv = true            // als jouw versie dit ondersteunt; zie noot hieronder
-}
-
-// helper: eerst OS env, dan .env, dan default
-private fun get(key: String): String? =
-    System.getenv(key) ?: dotenv[key]
-
-private fun getInt(key: String): Int? = get(key)?.toIntOrNull()
-private fun getLong(key: String): Long? = get(key)?.toLongOrNull()
-private fun getBool(key: String): Boolean? = get(key)?.lowercase()?.let { it == "true" || it == "1" || it == "yes" }
+private val dotenv = dotenv()
+private fun requiredEnv(key: String): String = dotenv[key]
+    ?: throw IllegalStateException("Missing required environment variable: $key")
 
 // Server Settings
-val serverName = get("SERVER_NAME") ?: "Dodian"
-val serverPort = getInt("SERVER_PORT") ?: 43894
-val serverDebugMode = getBool("SERVER_DEBUG_MODE") ?: true
-val serverEnv = get("SERVER_ENVIRONMENT") ?: "prod"
+val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
+val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
+val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: true
+val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
 
 // Database Settings
-val databaseHost = get("DATABASE_HOST") ?: "185.104.29.150"
-val databasePort = getInt("DATABASE_PORT") ?: 3306
-val databaseName = get("DATABASE_NAME") ?: "u43361p163932_dodian"
-val databaseTablePrefix = get("DATABASE_TABLE_PREFIX") ?: ""
-val databaseUsername = get("DATABASE_USERNAME") ?: "u43361p163932_dodian"
-val databasePassword = get("DATABASE_PASSWORD") ?: "MLJTX4CN4VtJGaKD5tcz"
-val databaseInitialize = getBool("DATABASE_INITIALIZE") ?: false
+val databaseHost = requiredEnv("DATABASE_HOST")
+val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
+val databaseName = requiredEnv("DATABASE_NAME")
+val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
+val databaseUsername = requiredEnv("DATABASE_USERNAME")
+val databasePassword = requiredEnv("DATABASE_PASSWORD")
+val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 // Game Settings - Various
-val gameWorldId = getInt("GAME_WORLD_ID") ?: 1
-val gameConnectionsPerIp = getInt("GAME_CONNECTIONS_PER_IP") ?: 2
+val gameWorldId = dotenv["GAME_WORLD_ID"]?.toInt() ?: 1
+val gameConnectionsPerIp = dotenv["GAME_CONNECTIONS_PER_IP"]?.toInt() ?: 2
 
 // Game Settings - Client
-val gameClientCustomVersion = get("CLIENT_CUSTOM_VERSION") ?: "dodian_client"
+val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
 
 // Database Pool Settings
-val databasePoolMinSize = getInt("DATABASE_POOL_MIN_SIZE") ?: 5
-val databasePoolMaxSize = getInt("DATABASE_POOL_MAX_SIZE") ?: 20
-val databasePoolConnectionTimeout = getLong("DATABASE_POOL_CONNECTION_TIMEOUT") ?: 30000L
-val databasePoolIdleTimeout = getLong("DATABASE_POOL_IDLE_TIMEOUT") ?: 600000L
-val databasePoolMaxLifetime = getLong("DATABASE_POOL_MAX_LIFETIME") ?: 1800000L
+val databasePoolMinSize = dotenv["DATABASE_POOL_MIN_SIZE"]?.toInt() ?: 5
+val databasePoolMaxSize = dotenv["DATABASE_POOL_MAX_SIZE"]?.toInt() ?: 20
+val databasePoolConnectionTimeout = dotenv["DATABASE_POOL_CONNECTION_TIMEOUT"]?.toLong() ?: 30000L
+val databasePoolIdleTimeout = dotenv["DATABASE_POOL_IDLE_TIMEOUT"]?.toLong() ?: 600000L
+val databasePoolMaxLifetime = dotenv["DATABASE_POOL_MAX_LIFETIME"]?.toLong() ?: 1800000L
+
+// Async Persistence / World SQL Settings
+// These are optional; existing .env files continue working with these defaults.
+val asyncPlayerSaveEnabled = dotenv["ASYNC_PLAYER_SAVE_ENABLED"]?.toBoolean() ?: true
+val asyncWorldDbEnabled = dotenv["ASYNC_WORLD_DB_ENABLED"]?.toBoolean() ?: true
+val databaseSaveWorkers = dotenv["DATABASE_SAVE_WORKERS"]?.toInt() ?: 2
+val databaseSaveRetryBaseMs = dotenv["DATABASE_SAVE_RETRY_BASE_MS"]?.toLong() ?: 250L
+val databaseSaveRetryMaxMs = dotenv["DATABASE_SAVE_RETRY_MAX_MS"]?.toLong() ?: 5000L
+val databaseSaveBurstAttempts = dotenv["DATABASE_SAVE_BURST_ATTEMPTS"]?.toInt() ?: 8
 
 // Game Settings - Multipliers
-val gameMultiplierGlobalXp = getInt("GAME_MULTIPLIER_GLOBAL_XP") ?: 1
+val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1

@@ -694,10 +694,7 @@ public abstract class Player extends Entity {
         playersUpdating.add(plr);
         str.putBits(11, id);
         str.putBits(1, 1);// Requires update?
-        boolean savedFlag = plr.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE);
-        plr.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        PlayerUpdating.getInstance().appendBlockUpdate(plr, updateBlock);
-        plr.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, savedFlag);
+        PlayerUpdating.getInstance().appendAddLocalBlockUpdate(plr, updateBlock);
         str.putBits(1, 1); // set to true, if we want to discard the
         // (clientside) walking queue
         // no idea what this might be useful for yet

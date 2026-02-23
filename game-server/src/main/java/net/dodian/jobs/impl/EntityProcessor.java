@@ -7,20 +7,24 @@ import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-public class EntityProcessor implements Job {
+public class EntityProcessor implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
+    private static final boolean DEBUG_PACKET_QUEUE_METRICS = true;
 
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    @Override
+    public void run() {
+        processInboundPackets();
+
         long now = System.currentTimeMillis();
         Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
 
@@ -48,25 +52,11 @@ public class EntityProcessor implements Job {
             processPlayer(player);
         }
 
-        // After processing update
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || !player.isActive) {
-                continue;
-            }
-            updatePlayer(player, i);
-        }
+        // Keep chunk membership in-sync for all movers before visibility discovery.
+        syncActivePlayerChunksForTick();
 
-        // Clear all update flags
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            if (npc != null) npc.clearUpdateFlags();
-        }
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player != null && player.isActive) {
-                player.clearUpdateFlags();
-            }
-        }
+        // Consume NPC walking direction once per tick, then reuse for all viewers.
+        consumeNpcDirectionsForTick();
     }
 
     private void processNpc(long now, Npc npc, Set<Chunk> activeNpcChunks) {
@@ -74,7 +64,9 @@ public class EntityProcessor implements Job {
             return;
         }
 
-        if (!npc.isFighting() && npc.isAlive()) {
+        // Keep static NPCs facing their configured spawn direction, but do not
+        // force roaming NPCs back to spawn-facing every tick.
+        if (!npc.isFighting() && npc.isAlive() && npc.getWalkRadius() <= 0) {
             npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
         }
 
@@ -180,6 +172,73 @@ public class EntityProcessor implements Job {
             }
         }
         return activeChunks;
+    }
+
+    static void syncActivePlayerChunksForTick() {
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || player.disconnected || !player.isActive) {
+                continue;
+            }
+            player.syncChunkMembership();
+        }
+    }
+
+    private void processInboundPackets() {
+        int activePlayers = 0;
+        int processedPackets = 0;
+        int totalPendingBefore = 0;
+        int totalPendingAfter = 0;
+        int backlogPlayers = 0;
+        int maxPendingBefore = 0;
+        int maxPendingAfter = 0;
+
+        for (int i = 0; i < Constants.maxPlayers; i++) {
+            Client player = (Client) PlayerHandler.players[i];
+            if (player == null || player.disconnected || !player.isActive) {
+                continue;
+            }
+            activePlayers++;
+
+            int pendingBefore = player.getPendingInboundPacketCount();
+            totalPendingBefore += pendingBefore;
+            if (pendingBefore > maxPendingBefore) {
+                maxPendingBefore = pendingBefore;
+            }
+
+            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT);
+
+            int pendingAfter = player.getPendingInboundPacketCount();
+            totalPendingAfter += pendingAfter;
+            if (pendingAfter > maxPendingAfter) {
+                maxPendingAfter = pendingAfter;
+            }
+            if (pendingAfter > 0) {
+                backlogPlayers++;
+            }
+        }
+
+        if (DEBUG_PACKET_QUEUE_METRICS && activePlayers > 0) {
+            logger.info(
+                    "packetQueueMetrics activePlayers={} processed={} preTotal={} postTotal={} backlogPlayers={} maxPre={} maxPost={}",
+                    activePlayers,
+                    processedPackets,
+                    totalPendingBefore,
+                    totalPendingAfter,
+                    backlogPlayers,
+                    maxPendingBefore,
+                    maxPendingAfter
+            );
+        }
+    }
+
+    private void consumeNpcDirectionsForTick() {
+        for (Npc npc : Server.npcManager.getNpcs()) {
+            if (npc == null) {
+                continue;
+            }
+            npc.setDirection(npc.getNextWalkingDirection());
+        }
     }
 
     private void handleNpcDeath(Npc npc) {
@@ -361,19 +420,4 @@ public class EntityProcessor implements Job {
         player.getNextPlayerMovement();
     }
 
-    private void updatePlayer(Client player, int playerIndex) {
-        if (player.timeOutCounter >= 84) {
-            player.disconnected = true;
-            player.println_debug("\nRemove non-responding " + player.getPlayerName() + " after 60 seconds of disconnect! ");
-        }
-
-        if (player.disconnected) {
-            player.println_debug("\nRemove disconnected player " + player.getPlayerName());
-            Server.playerHandler.removePlayer(player);
-            player.disconnected = false;
-            PlayerHandler.players[playerIndex] = null; // Use playerIndex directly
-        } else {
-            player.update();
-        }
-    }
 }

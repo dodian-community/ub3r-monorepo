@@ -9,8 +9,8 @@ internal object LegendsGuard {
     // Stats: 3951: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
-        NpcSpawnDef(npcId = 3951, x = 2727, y = 3349, z = 0, face = 0),
-        NpcSpawnDef(npcId = 3951, x = 2730, y = 3349, z = 0, face = 0),
+        NpcSpawnDef(npcId = 3951, x = 2727, y = 3349, z = 0, face = SOUTH),
+        NpcSpawnDef(npcId = 3951, x = 2730, y = 3349, z = 0, face = SOUTH),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
 

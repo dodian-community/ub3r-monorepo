@@ -26,6 +26,8 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -58,7 +60,12 @@ import static net.dodian.utilities.DotEnvKt.*;
 
 
 public class Client extends Player implements Runnable {
+    private static final int MAX_PENDING_INBOUND_PACKETS = 200;
+
     public Channel channel;
+    private final java.util.Queue<net.dodian.uber.game.netty.game.GamePacket> pendingInboundPackets = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private final java.util.concurrent.atomic.AtomicInteger pendingInboundPacketCount = new java.util.concurrent.atomic.AtomicInteger();
+
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
     public Fletching fletching = new Fletching();
@@ -528,6 +535,8 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        releaseQueuedInboundPackets();
+
         // Transport-specific shutdown
         if (channel != null) {
             channel.close();
@@ -536,7 +545,7 @@ public class Client extends Player implements Runnable {
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
-            saveStats(true, true);
+            saveStats(PlayerSaveReason.DISCONNECT, true, true);
         }
 
         // Release references
@@ -555,6 +564,72 @@ public class Client extends Player implements Runnable {
         return this.channel;
     }
 
+    public boolean queueInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        if (packet == null || disconnected) {
+            return false;
+        }
+        int queued = pendingInboundPacketCount.incrementAndGet();
+        if (queued > MAX_PENDING_INBOUND_PACKETS) {
+            pendingInboundPacketCount.decrementAndGet();
+            return false;
+        }
+        pendingInboundPackets.add(packet);
+        return true;
+    }
+
+    public int processQueuedPackets(int maxPacketsPerTick) {
+        if (maxPacketsPerTick <= 0 || disconnected) {
+            return 0;
+        }
+
+        int processedCount = 0;
+        for (int processed = 0; processed < maxPacketsPerTick; processed++) {
+            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
+            if (packet == null) {
+                break;
+            }
+            pendingInboundPacketCount.decrementAndGet();
+            processedCount++;
+
+            try {
+                dispatchQueuedPacket(packet);
+            } catch (Exception ex) {
+                disconnected = true;
+                println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
+                break;
+            } finally {
+                if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
+                    packet.getPayload().release();
+                }
+            }
+        }
+        return processedCount;
+    }
+
+    private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
+        net.dodian.uber.game.netty.listener.PacketListener listener =
+                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
+        if (listener != null) {
+            listener.handle(this, packet);
+        }
+    }
+
+    private void releaseQueuedInboundPackets() {
+        for (;;) {
+            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
+            if (packet == null) {
+                pendingInboundPacketCount.set(0);
+                break;
+            }
+            if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
+                packet.getPayload().release();
+            }
+        }
+    }
+
+    public int getPendingInboundPacketCount() {
+        return pendingInboundPacketCount.get();
+    }
 
     public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
         if (disconnected || channel == null || !channel.isActive()) {
@@ -562,8 +637,18 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        // Pure Netty - send directly through the pipeline
-        channel.writeAndFlush(message);
+        if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
+            channel.write(message);
+        } else {
+            channel.writeAndFlush(message);
+        }
+    }
+
+    public void flushOutbound() {
+        if (disconnected || channel == null || !channel.isActive()) {
+            return;
+        }
+        channel.flush();
     }
 
     public void send(OutgoingPacket packet) {
@@ -640,7 +725,7 @@ public class Client extends Player implements Runnable {
         }
 
         // Save player data before disconnecting
-        saveStats(true, true);
+        saveStats(PlayerSaveReason.LOGOUT, true, true);
 
         // Send the logout packet
         send(new Logout());
@@ -658,7 +743,7 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void saveStats(boolean logout, boolean updateProgress) {
+    public void saveStats(PlayerSaveReason reason, boolean logout, boolean updateProgress) {
         if (loginDelay > 0 && !logout) {
             println("Incomplete login, aborting save");
             return;
@@ -706,99 +791,25 @@ public class Client extends Player implements Runnable {
             }
         }
         // TODO: Look into improving this, and potentially a system to configure player saving per world id...
-        if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob"))
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) { // This is the try-with-resources block
-
-                long allXp = Skill.enabledSkills()
-                        .mapToInt(this::getExperience)
-                        .sum();
-
-                int totalLevel = totalLevel();
-                String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                StringBuilder query = new StringBuilder("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET total=" + totalLevel + ", combat=" + determineCombatLevel() + ", ");
-                StringBuilder query2 = new StringBuilder("INSERT INTO " + DbTables.GAME_CHARACTERS_STATS_PROGRESS + " SET updated='" + timeStamp + "', total=" + totalLevel + ", combat=" + determineCombatLevel() + ", uid=" + dbId + ", ");
-                Skill.enabledSkills().forEach(skill -> {
-                    query.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
-                    query2.append(skill.getName()).append("=").append(getExperience(skill)).append(", ");
-                });
-
-                query.append("totalxp=").append(allXp).append(" WHERE uid=").append(dbId);
-                query2.append("totalxp=").append(allXp);
-
-                statement.executeUpdate(query.toString());
-                if (updateProgress) statement.executeUpdate(query2.toString());
-                System.currentTimeMillis();
-                StringBuilder inventory = new StringBuilder();
-                StringBuilder equipment = new StringBuilder();
-                StringBuilder bank = new StringBuilder();
-                StringBuilder list = new StringBuilder();
-                StringBuilder boss_log = new StringBuilder();
-                StringBuilder monster_log = new StringBuilder();
-                StringBuilder effect = new StringBuilder();
-                StringBuilder daily_reward = new StringBuilder();
-                StringBuilder prayer = new StringBuilder();
-                StringBuilder boosted = new StringBuilder();
-                for (int i = 0; i < playerItems.length; i++) {
-                    if (playerItems[i] > 0) {
-                        inventory.append(i).append("-").append(playerItems[i] - 1).append("-").append(playerItemsN[i]).append(" ");
-                    }
-                }
-                for (int i = 0; i < bankItems.length; i++) {
-                    if (bankItems[i] > 0) {
-                        bank.append(i).append("-").append(bankItems[i] - 1).append("-").append(bankItemsN[i]).append(" ");
-                    }
-                }
-                for (int i = 0; i < getEquipment().length; i++) {
-                    if (getEquipment()[i] > 0) {
-                        equipment.append(i).append("-").append(getEquipment()[i]).append("-").append(getEquipmentN()[i]).append(" ");
-                    }
-                }
-                for (int i = 0; i < boss_name.length; i++) {
-                    if (boss_amount[i] >= 0) {
-                        boss_log.append(boss_name[i]).append(":").append(boss_amount[i]).append(" ");
-                    }
-                }
-                for (int i = 0; i < effects.size(); i++)
-                    effect.append(effects.get(i)).append(i == effects.size() - 1 ? "" : ":");
-                for (int i = 0; i < monsterName.size(); i++) {
-                    monster_log.append(monsterName.get(i)).append(",").append(monsterCount.get(i)).append(i == monsterName.size() - 1 ? "" : ";");
-                }
-                for (int i = 0; i < staffSize; i++)
-                    daily_reward.append(dailyReward.get(i)).append(i == staffSize - 1 && dailyReward.size() <= staffSize ? "" : i == staffSize - 1 ? ";" : ",");
-                prayer.append(getCurrentPrayer());
-                for (Prayers.Prayer pray : Prayers.Prayer.values()) {
-                    if (getPrayerManager().isPrayerOn(pray))
-                        prayer.append(":").append(pray.getButtonId());
-                }
-                boosted.append(lastRecover);
-                for (int boost : boostedLevel.clone()) {
-                    boosted.append(":").append(boost);
-                }
-                int num = 0;
-                for (Friend f : friends) {
-                    if (f.name > 0 && num < 200) {
-                        list.append(f.name).append(" ");
-                        num++;
-                    }
-                }
-
-                String last = "";
-                long elapsed = System.currentTimeMillis() - session_start;
-                if (elapsed > 10000) {
-                    last = ", lastlogin = '" + System.currentTimeMillis() + "'";
-                }
-                statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET pkrating=" + 1500 + ", health="
-                        + getCurrentHealth() + ", equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank
-                        + "', friends='" + list + "', fightStyle = " + fightType + ", slayerData='" + saveTaskAsString() + "', essence_pouch='" + getPouches() + "', effects='" + effect + "'"
-                        + ", autocast=" + autocast_spellIndex + ", news=" + latestNews + ", agility = '" + agilityCourseStage + "', height = " + getPosition().getZ() + ", x = " + getPosition().getX()
-                        + ", y = " + getPosition().getY() + ", lastlogin = '" + System.currentTimeMillis() + "', Monster_Log='" + monster_log + "', farming = '"+farmingJson.farmingSave()+"', dailyReward = '" + daily_reward + "',Boss_Log='"
-                        + boss_log + "', songUnlocked='" + getSongUnlockedSaveText() + "', travel='" + saveTravelAsString() + "', look='" + getLook() + "', unlocks='" + saveUnlocksAsString() + "'" +
-                        ", prayer='" + prayer + "', boosted='" + boosted + "'" + last
-                        + " WHERE id = " + dbId);
+        if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob")) {
+            try {
+                PlayerSaveCoordinator.requestSave(this, reason, updateProgress, logout);
             } catch (Exception e) {
                 println_debug("Save Exception: " + getSlot() + ", " + getPlayerName() + ", msg: " + e);
             }
+        }
+    }
+
+    public void saveStats(boolean logout, boolean updateProgress) {
+        PlayerSaveReason reason;
+        if (logout) {
+            reason = PlayerSaveReason.LOGOUT;
+        } else if (updateProgress) {
+            reason = PlayerSaveReason.PERIODIC_PROGRESS;
+        } else {
+            reason = PlayerSaveReason.PERIODIC;
+        }
+        saveStats(reason, logout, updateProgress);
     }
     public void saveStats(boolean logout) {
         saveStats(logout, false);
@@ -1308,87 +1319,44 @@ public class Client extends Player implements Runnable {
             pickupWanted = false;
             return;
         }
-        if (attemptGround != null) {
-            if (!hasSpace() && Server.itemManager.isStackable(attemptGround.id) && !playerHasItem(attemptGround.id)) {
-                send(new SendMessage("Your inventory is full!"));
-                attemptGround = null;
-                pickupWanted = false;
-                return;
-            }
-            switch (attemptGround.type) {
-                case 0:
-                    if (!Ground.ground_items.isEmpty())
-                        for (GroundItem item : Ground.ground_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-                    break;
-                case 1:
-                    if (!Ground.untradeable_items.isEmpty())
-                        for (GroundItem item : Ground.untradeable_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || dbId != item.playerId || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-                    break;
-                default:
-                    if (!Ground.tradeable_items.isEmpty())
-                        for (GroundItem item : Ground.tradeable_items) {
-                            /* Checks to stop or prevent! */
-                            if (attemptGround == null) //Break here as we do not check if no value!
-                                break;
-                            if (item.isTaken() || item.id != attemptGround.id || attemptGround.x != item.x || attemptGround.y != item.y || attemptGround.z != item.z)
-                                continue;
-
-                            if (premiumItem(id) && !premium) {
-                                send(new SendMessage("You must be a premium member to use this item"));
-                                attemptGround = null;
-                                pickupWanted = false;
-                                break;
-                            }
-                            if (addItem(item.id, item.amount)) {
-                                Ground.deleteItem(attemptGround);
-                                ItemLog.playerPickup(this, item.npc ? item.npcId : item.playerId, item.id, item.amount, getPosition().copy(), item.npc);
-                                checkItemUpdate();
-                            }
-                            attemptGround = null;
-                            pickupWanted = false;
-                        }
-            }
+        GroundItem target = attemptGround;
+        if (target == null) {
+            return;
         }
+
+        if (target.x != x || target.y != y || target.z != getPosition().getZ()) {
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (!hasSpace() && Server.itemManager.isStackable(target.id) && !playerHasItem(target.id)) {
+            send(new SendMessage("Your inventory is full!"));
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (premiumItem(target.id) && !premium) {
+            send(new SendMessage("You must be a premium member to use this item"));
+            attemptGround = null;
+            pickupWanted = false;
+            return;
+        }
+
+        if (addItem(target.id, target.amount)) {
+            Ground.deleteItem(target);
+            ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
+            checkItemUpdate();
+        }
+        attemptGround = null;
+        pickupWanted = false;
     }
 
     public void openUpBank() {
@@ -1945,11 +1913,11 @@ public class Client extends Player implements Runnable {
             // barTimer = 0;
         }
         if (current - lastSave >= 60_000) { // Save every minute except for skills!
-            saveStats(false);
+            saveStats(PlayerSaveReason.PERIODIC, false, false);
             lastSave = now;
         }
         if (current - lastProgressSave >= 3_600_000) { // Update skill progress every hour
-            saveStats(false, true);
+            saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
             lastProgressSave = now;
         }
         // check stairs
@@ -5766,7 +5734,7 @@ public class Client extends Player implements Runnable {
                     TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
                 send(new RemoveInterfaces());
                 tradeResetNeeded = true;
-                saveStats(false);
+                saveStats(PlayerSaveReason.TRADE, false, false);
                 tradeSuccessful = true;
                 faceTarget(-1);
                 checkItemUpdate();
@@ -6557,13 +6525,13 @@ public class Client extends Player implements Runnable {
                 TradeLog.recordTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);
             resetDuel();
             GetBonus(true);
-            saveStats(false);
+            saveStats(PlayerSaveReason.DUEL, false, false);
             faceTarget(-1);
             checkItemUpdate();
             if (validClient(duel_with)) {
                 other.resetDuel();
                 GetBonus(true);
-                other.saveStats(false);
+                other.saveStats(PlayerSaveReason.DUEL, false, false);
                 other.faceTarget(-1);
                 other.checkItemUpdate();
             }

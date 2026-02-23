@@ -10,6 +10,7 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
+import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.DbTables;
@@ -38,6 +39,9 @@ public class LoginManager {
             if (results.next()) {
                 /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
+                if (PlayerSaveCoordinator.isFinalSavePending(p.dbId)) {
+                    return 5;
+                }
                 p.playerGroup = results.getInt("usergroupid");
                 p.otherGroups = results.getString("membergroupids").split(",");
                 /* if(p.playerGroup != 10 && p.playerGroup != 6) { //Maintanance check!
