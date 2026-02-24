@@ -321,8 +321,10 @@ public abstract class Player extends Entity {
     public void setTask(String input) {
         if (input.isEmpty())
             input = "-1,-1,0,0,0,0,-1";
+        slayerData.clear();
         String[] tasks = input.split(",");
         for (String task : tasks) slayerData.add(Integer.parseInt(task));
+        ensureSlayerDataSize();
     }
     public String saveTaskAsString() {
         StringBuilder tasks = new StringBuilder();
@@ -333,7 +335,15 @@ public abstract class Player extends Entity {
     }
     public ArrayList<Integer> getSlayerData() {
         //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
+        ensureSlayerDataSize();
         return slayerData;
+    }
+
+    private void ensureSlayerDataSize() {
+        final int[] defaultSlayerData = {-1, -1, 0, 0, 0, 0, -1};
+        for (int i = slayerData.size(); i < defaultSlayerData.length; i++) {
+            slayerData.add(defaultSlayerData[i]);
+        }
     }
 
     public void setTravel(String input) {

@@ -13222,7 +13222,7 @@ public class Client extends GameApplet {
 			boldText.method382(0xffffff, 55, worldText, 78, true);
 			smallText.method382(0xffffff, 55, "Click to switch", 92, true);
 			Configuration.server_address = "localhost";
-			Configuration.server_port = 43594;
+			Configuration.server_port = 43894;
 		}
 
 		if (loginScreenState == 4) {

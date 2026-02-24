@@ -1,5 +1,7 @@
 package com.runescape;
 
+import java.io.File;
+
 /**
  * The main configuration for the Client
  * 
@@ -23,12 +25,13 @@ public final class Configuration {
 	/**
 	 * The port of the server that the client will be connecting to
 	 */
-	public static int server_port = 43594;
+	public static int server_port = 43894;
 	
 	public static final int CLIENT_VERSION = 317;
 
-	public static final String CACHE_DIRECTORY = "./Cache/";//System.getProperty("user.home") + File.separator + "OSRSPKV"+CLIENT_VERSION+"/";
-	
+	//public static final String CACHE_DIRECTORY = "./Cache/";//System.getProperty("user.home") + File.separator + "OSRSPKV"+CLIENT_VERSION+"/";
+    public static final String CACHE_DIRECTORY = System.getProperty("user.home") + File.separator + "Dodian-Exorth"+CLIENT_VERSION+"/";
+
 	public static boolean JAGCACHED_ENABLED = false;
 
 	/**
@@ -157,7 +160,7 @@ public final class Configuration {
 	/**
 	 * Is the combat overlay box enabled?
 	 */
-	public static boolean combatOverlayBox = true;
+	public static boolean combatOverlayBox = false;
 	
 	/**
 	 * Enables bounty hunter interface
