@@ -2,7 +2,6 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -25,6 +24,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
     private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
+    private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
 
@@ -116,33 +116,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendBlockUpdate(Npc npc, ByteMessage buf) {
-
-        if(!npc.getUpdateFlags().isUpdateRequired())
-            return;
-        int updateMask = 0;
-        for (UpdateFlag flag : npc.getUpdateFlags().keySet()) {
-            if (npc.getUpdateFlags().isRequired(flag)) {
-                updateMask |= flag.getMask(npc.getType());
-            }
-        }
-        buf.put(updateMask);
-        // Emit blocks in the exact order expected by Client.method86.
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGfxUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendTextUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
-            appendAppearanceUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(npc, buf);
+        BLOCK_SET.encode(this, npc, buf);
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {
