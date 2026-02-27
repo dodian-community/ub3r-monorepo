@@ -2,7 +2,6 @@ package net.dodian.uber.game.model.entity.player;
 
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.chunk.ChunkPlayerComparator;
 import net.dodian.uber.game.model.entity.Entity;
@@ -23,9 +22,12 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     private static final boolean DEBUG_REGION_UPDATES = false;
     private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
+    private static final int MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15;
+    private static final int MAX_LOCAL_PLAYER_CAP = 255;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
     private static final java.util.concurrent.atomic.AtomicInteger DEBUG_ADDED_LOCAL_COUNTER = new java.util.concurrent.atomic.AtomicInteger();
+    private static final PlayerUpdateBlockSet BLOCK_SET = new PlayerUpdateBlockSet();
 
     enum UpdatePhase {
         UPDATE_SELF,
@@ -82,38 +84,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                     }
                 }
 
-                // Chunk-based player discovery with prioritization/limits.
-                java.util.Set<Player> nearbyPlayers = findNearbyPlayers(player);
-                java.util.List<Player> candidates = new java.util.ArrayList<>(nearbyPlayers);
-
-                if (candidates.size() > 50) {
-                    candidates.sort(new ChunkPlayerComparator(player));
-                }
-
-                int playersAdded = 0;
-                for (Player other : candidates) {
-                    if (player == other || other == null || !other.isActive) {
-                        continue;
-                    }
-
-                    if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
-                        continue;
-                    }
-
-                    if (other.invis && !player.invis) {
-                        continue;
-                    }
-
-                    player.addNewPlayer(other, stream, updateBlock);
-                    playersAdded++;
-                    if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                        DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
-                    }
-
-                    if (playersAdded >= 15 || player.playerListSize >= 255) {
-                        break; // cap additions to avoid overflow
-                    }
-                }
+                addLocalPlayers(player, stream, updateBlock);
             } else {
                 stream.putBits(8, 0);
             }
@@ -137,12 +108,53 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
     }
 
-    private java.util.Set<Player> findNearbyPlayers(Player player) {
-        if (Server.chunkManager == null) {
-            return new java.util.HashSet<>(PlayerHandler.getLocalPlayers(player));
+    private void addLocalPlayers(Player player, ByteMessage stream, ByteMessage updateBlock) {
+        java.util.List<Player> candidates = new java.util.ArrayList<>(findNearbyPlayers(player));
+        if (candidates.isEmpty()) {
+            return;
         }
 
-        java.util.Set<Player> nearby = Server.chunkManager.find(player.getPosition(), EntityType.PLAYER, 16);
+        int startIndex = Math.floorMod(player.getLocalPlayerSelectionCursor(), candidates.size());
+        int playersAdded = 0;
+
+        for (int scan = 0; scan < candidates.size(); scan++) {
+            Player other = candidates.get((startIndex + scan) % candidates.size());
+            if (player == other || other == null || !other.isActive) {
+                continue;
+            }
+
+            if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
+                continue;
+            }
+
+            if (other.invis && !player.invis) {
+                continue;
+            }
+
+            player.addNewPlayer(other, stream, updateBlock);
+            playersAdded++;
+            if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            }
+
+            if (playersAdded >= MAX_LOCAL_PLAYER_ADDS_PER_TICK || player.playerListSize >= MAX_LOCAL_PLAYER_CAP) {
+                break;
+            }
+        }
+
+        player.advanceLocalPlayerSelectionCursor(candidates.size(), Math.max(playersAdded, 1));
+    }
+
+    private java.util.Set<Player> findNearbyPlayers(Player player) {
+        if (Server.chunkManager == null) {
+            java.util.List<Player> nearby = PlayerHandler.getLocalPlayers(player);
+            if (nearby.size() > 50) {
+                nearby.sort(new ChunkPlayerComparator(player));
+            }
+            return new java.util.LinkedHashSet<>(nearby);
+        }
+
+        java.util.Set<Player> nearby = Server.chunkManager.findUpdatePlayers(player, 16);
         nearby.remove(player); // exclude self if present
         return nearby;
     }
@@ -200,78 +212,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     void appendBlockUpdate(Player player, ByteMessage buf, UpdatePhase phase) {
-        boolean cacheablePhase = phase == UpdatePhase.UPDATE_LOCAL;
-        boolean includeChat = phase != UpdatePhase.UPDATE_SELF;
-        boolean forceAppearance = phase == UpdatePhase.ADD_LOCAL;
-
-        if (cacheablePhase && player != null && player.isCachedUpdateBlockValid()) {
-            player.writeCachedUpdateBlock(buf);
-            return;
-        }
-
-        ByteMessage blockBuf = buf;
-        if (cacheablePhase) {
-            blockBuf = ByteMessage.raw(256);
-        }
-
-        int updateMask = 0;
-        for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
-            if (!includeChat && flag == UpdateFlag.CHAT) {
-                continue;
-            }
-            if (player.getUpdateFlags().isRequired(flag)) {
-                updateMask |= flag.getMask(player.getType());
-            }
-        }
-        if (forceAppearance) {
-            updateMask |= UpdateFlag.APPEARANCE.getMask(player.getType());
-        }
-        if (updateMask == 0) {
-            if (cacheablePhase) {
-                blockBuf.release();
-            }
-            return;
-        }
-
-        // Hyperion-style mask overflow handling with proper flag indication
-        if (updateMask >= 0x100) {
-            updateMask |= 0x40;  // Set overflow flag
-            blockBuf.put(updateMask & 0xFF);      // Low byte
-            blockBuf.put(updateMask >> 8);        // High byte
-        } else {
-            blockBuf.put(updateMask);             // Single byte
-        }
-
-        // Emit blocks in the exact order expected by Client.method107.
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGraphic(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendForcedChatText(player, blockBuf);
-        if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
-            appendPlayerChatText(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(player, blockBuf);
-        if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
-            appendPlayerAppearance(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(player, blockBuf);
-
-        if (cacheablePhase) {
-            try {
-                buf.putBytes(blockBuf);
-                player.cacheUpdateBlock(blockBuf);
-            } finally {
-                blockBuf.release();
-            }
-        }
+        BLOCK_SET.encode(this, player, buf, phase);
     }
 
     public void appendAddLocalBlockUpdate(Player player, ByteMessage buf) {
@@ -282,16 +223,18 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (phase == UpdatePhase.ADD_LOCAL) {
             return true;
         }
-        for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
-            if (!player.getUpdateFlags().isRequired(flag)) {
-                continue;
-            }
-            if (phase == UpdatePhase.UPDATE_SELF && flag == UpdateFlag.CHAT) {
-                continue;
-            }
-            return true;
+        if (phase == UpdatePhase.UPDATE_SELF) {
+            return player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.ANIM)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.HIT)
+                    || player.getUpdateFlags().isRequired(UpdateFlag.HIT2);
         }
-        return false;
+        return player.getUpdateFlags().isUpdateRequired();
     }
 
     public static void resetDebugAddedLocalCounter() {

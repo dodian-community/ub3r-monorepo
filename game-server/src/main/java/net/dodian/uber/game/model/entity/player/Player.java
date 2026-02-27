@@ -103,7 +103,8 @@ public abstract class Player extends Entity {
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public ArrayList<Player> playersUpdating = new ArrayList<>();
+    public Set<Player> playersUpdating = new HashSet<>();
+    private int localPlayerSelectionCursor = 0;
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;
@@ -707,6 +708,21 @@ public abstract class Player extends Entity {
         if (z < 0)
             z += 32;
         str.putBits(5, z); // x coordinate relative to thisPlayer
+    }
+
+    public int getLocalPlayerSelectionCursor() {
+        return localPlayerSelectionCursor;
+    }
+
+    public void advanceLocalPlayerSelectionCursor(int totalCandidates, int amount) {
+        if (totalCandidates <= 0) {
+            localPlayerSelectionCursor = 0;
+            return;
+        }
+        if (amount <= 0) {
+            amount = 1;
+        }
+        localPlayerSelectionCursor = (localPlayerSelectionCursor + amount) % totalCandidates;
     }
 
     // --- Cached player update block (for efficient multi-viewer reuse) ---
