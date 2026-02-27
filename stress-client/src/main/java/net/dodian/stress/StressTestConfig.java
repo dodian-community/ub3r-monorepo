@@ -7,8 +7,7 @@ public final class StressTestConfig {
     private final String usernamePrefix;
     private final int startIndex;
     private final int botCount;
-    private final double connectRatePerSecond;
-    private final String password;
+    private final int connectIntervalMs;
     private final int keepAliveSeconds;
     private final int connectTimeoutMs;
     private final int clientVersion;
@@ -20,8 +19,7 @@ public final class StressTestConfig {
                             String usernamePrefix,
                             int startIndex,
                             int botCount,
-                            double connectRatePerSecond,
-                            String password,
+                            int connectIntervalMs,
                             int keepAliveSeconds,
                             int connectTimeoutMs,
                             int clientVersion,
@@ -32,8 +30,7 @@ public final class StressTestConfig {
         this.usernamePrefix = usernamePrefix;
         this.startIndex = startIndex;
         this.botCount = botCount;
-        this.connectRatePerSecond = connectRatePerSecond;
-        this.password = password;
+        this.connectIntervalMs = connectIntervalMs;
         this.keepAliveSeconds = keepAliveSeconds;
         this.connectTimeoutMs = connectTimeoutMs;
         this.clientVersion = clientVersion;
@@ -61,12 +58,8 @@ public final class StressTestConfig {
         return botCount;
     }
 
-    public double getConnectRatePerSecond() {
-        return connectRatePerSecond;
-    }
-
-    public String getPassword() {
-        return password;
+    public int getConnectIntervalMs() {
+        return connectIntervalMs;
     }
 
     public int getKeepAliveSeconds() {

@@ -691,6 +691,9 @@ public abstract class Player extends Entity {
     }
 
     public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
+        if (plr == null || playerListSize >= 255 || playerListSize >= playerList.length) {
+            return;
+        }
         int id = plr.getSlot();
         playerList[playerListSize++] = plr;
         playersUpdating.add(plr);

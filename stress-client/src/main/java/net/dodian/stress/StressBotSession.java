@@ -58,7 +58,7 @@ final class StressBotSession implements Runnable {
                     in,
                     out,
                     username,
-                    config.getPassword(),
+                    "",
                     config.isReconnecting(),
                     config.getClientVersion(),
                     config.isLowMemory()

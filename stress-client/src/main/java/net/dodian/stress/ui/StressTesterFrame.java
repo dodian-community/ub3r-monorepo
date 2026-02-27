@@ -18,21 +18,25 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public final class StressTesterFrame extends JFrame {
 
-    private final JTextField hostField = new JTextField("127.0.0.1");
-    private final JTextField portField = new JTextField("43594");
-    private final JTextField prefixField = new JTextField("player");
-    private final JTextField startField = new JTextField("1");
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 43594;
+    private static final String USER_PREFIX = "player";
+    private static final int USER_START = 1;
+
     private final JTextField botsField = new JTextField("100");
-    private final JTextField rateField = new JTextField("10");
-    private final JTextField passwordField = new JTextField("");
+    private final JTextField connectIntervalField = new JTextField("50");
     private final JTextField keepAliveField = new JTextField("20");
     private final JTextField timeoutField = new JTextField("5000");
 
@@ -59,6 +63,7 @@ public final class StressTesterFrame extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setMinimumSize(new Dimension(980, 640));
         setLayout(new BorderLayout(8, 8));
+        getContentPane().setBackground(new Color(24, 28, 34));
 
         add(buildConfigPanel(), BorderLayout.NORTH);
         add(buildLogPanel(), BorderLayout.CENTER);
@@ -78,36 +83,20 @@ public final class StressTesterFrame extends JFrame {
     }
 
     private JPanel buildConfigPanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 6, 8, 6));
-        panel.setBorder(BorderFactory.createTitledBorder("Connection Setup"));
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Stress Setup"),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        panel.setBackground(new Color(36, 42, 50));
 
-        panel.add(label("Host"));
-        panel.add(label("Port"));
-        panel.add(label("Username Prefix"));
-        panel.add(label("Start Number"));
-        panel.add(label("Bot Count"));
-        panel.add(label("Connects / sec"));
-
-        panel.add(hostField);
-        panel.add(portField);
-        panel.add(prefixField);
-        panel.add(startField);
-        panel.add(botsField);
-        panel.add(rateField);
-
-        panel.add(label("Password"));
-        panel.add(label("KeepAlive (sec)"));
-        panel.add(label("Connect Timeout (ms)"));
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
-
-        panel.add(passwordField);
-        panel.add(keepAliveField);
-        panel.add(timeoutField);
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
-        panel.add(new JLabel(""));
+        int row = 0;
+        addConfigRow(panel, row++, "Server", new JLabel(SERVER_HOST + ":" + SERVER_PORT));
+        addConfigRow(panel, row++, "Account Pattern", new JLabel(USER_PREFIX + USER_START + ", " + USER_PREFIX + (USER_START + 1) + ", ..."));
+        addConfigRow(panel, row++, "Bot Count", botsField);
+        addConfigRow(panel, row++, "Connect Interval (ms)", connectIntervalField);
+        addConfigRow(panel, row++, "KeepAlive (sec)", keepAliveField);
+        addConfigRow(panel, row, "Connect Timeout (ms)", timeoutField);
 
         return panel;
     }
@@ -115,9 +104,12 @@ public final class StressTesterFrame extends JFrame {
     private JPanel buildLogPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 0));
         panel.setBorder(BorderFactory.createTitledBorder("Session Log"));
+        panel.setBackground(new Color(36, 42, 50));
 
         logArea.setEditable(false);
         logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        logArea.setBackground(new Color(15, 18, 22));
+        logArea.setForeground(new Color(220, 228, 236));
         panel.add(new JScrollPane(logArea), BorderLayout.CENTER);
         return panel;
     }
@@ -125,9 +117,11 @@ public final class StressTesterFrame extends JFrame {
     private JPanel buildBottomPanel() {
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(new Color(24, 28, 34));
 
         JPanel status = new JPanel(new GridLayout(2, 5, 8, 4));
         status.setBorder(BorderFactory.createTitledBorder("Stats"));
+        status.setBackground(new Color(36, 42, 50));
         status.add(statusPanel("Running", runningValue));
         status.add(statusPanel("Progress", progressValue));
         status.add(statusPanel("Success", successValue));
@@ -140,6 +134,7 @@ public final class StressTesterFrame extends JFrame {
         status.add(statusPanel("Uptime", uptimeValue));
 
         JPanel actions = new JPanel();
+        actions.setBackground(new Color(24, 28, 34));
         actions.add(startButton);
         actions.add(stopButton);
         stopButton.setEnabled(false);
@@ -152,7 +147,12 @@ public final class StressTesterFrame extends JFrame {
 
     private JPanel statusPanel(String key, JLabel value) {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel(key), BorderLayout.NORTH);
+        panel.setBackground(new Color(36, 42, 50));
+        JLabel keyLabel = new JLabel(key);
+        keyLabel.setForeground(new Color(186, 200, 214));
+        value.setForeground(new Color(236, 242, 248));
+        value.setFont(value.getFont().deriveFont(Font.BOLD));
+        panel.add(keyLabel, BorderLayout.NORTH);
         panel.add(value, BorderLayout.CENTER);
         return panel;
     }
@@ -169,26 +169,18 @@ public final class StressTesterFrame extends JFrame {
     private void onStart() {
         try {
             StressTestConfig config = new StressTestConfig(
-                    hostField.getText().trim(),
-                    parseInt(portField, "Port", 1, 65535),
-                    prefixField.getText().trim(),
-                    parseInt(startField, "Start Number", 1, Integer.MAX_VALUE),
+                    SERVER_HOST,
+                    SERVER_PORT,
+                    USER_PREFIX,
+                    USER_START,
                     parseInt(botsField, "Bot Count", 1, 200_000),
-                    parseDouble(rateField, "Connects / sec", 0.1D, 10_000D),
-                    passwordField.getText(),
+                    parseInt(connectIntervalField, "Connect Interval (ms)", 1, 300_000),
                     parseInt(keepAliveField, "KeepAlive (sec)", 1, 300),
                     parseInt(timeoutField, "Connect Timeout (ms)", 100, 120_000),
                     317,
                     false,
                     false
             );
-
-            if (config.getUsernamePrefix().isEmpty()) {
-                throw new IllegalArgumentException("Username Prefix cannot be empty.");
-            }
-            if (config.getHost().isEmpty()) {
-                throw new IllegalArgumentException("Host cannot be empty.");
-            }
 
             controller.start(config, this::appendLog);
             startButton.setEnabled(false);
@@ -253,24 +245,35 @@ public final class StressTesterFrame extends JFrame {
         return value;
     }
 
-    private double parseDouble(JTextField field, String label, double min, double max) {
-        double value;
-        try {
-            value = Double.parseDouble(field.getText().trim());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(label + " must be a number.");
-        }
-        if (value < min || value > max) {
-            throw new IllegalArgumentException(label + " must be between " + min + " and " + max + ".");
-        }
-        return value;
-    }
-
     private String formatDuration(long millis) {
         long totalSeconds = Math.max(0L, millis / 1_000L);
         long hours = totalSeconds / 3_600L;
         long minutes = (totalSeconds % 3_600L) / 60L;
         long seconds = totalSeconds % 60L;
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    private void addConfigRow(JPanel panel, int row, String labelText, java.awt.Component field) {
+        GridBagConstraints labelConstraints = new GridBagConstraints();
+        labelConstraints.gridx = 0;
+        labelConstraints.gridy = row;
+        labelConstraints.insets = new Insets(4, 2, 4, 12);
+        labelConstraints.anchor = GridBagConstraints.WEST;
+        JLabel label = new JLabel(labelText);
+        label.setForeground(new Color(186, 200, 214));
+        panel.add(label, labelConstraints);
+
+        GridBagConstraints fieldConstraints = new GridBagConstraints();
+        fieldConstraints.gridx = 1;
+        fieldConstraints.gridy = row;
+        fieldConstraints.weightx = 1.0;
+        fieldConstraints.fill = GridBagConstraints.HORIZONTAL;
+        fieldConstraints.insets = new Insets(4, 2, 4, 2);
+
+        if (field instanceof JLabel labelField) {
+            labelField.setForeground(new Color(236, 242, 248));
+            labelField.setFont(labelField.getFont().deriveFont(Font.BOLD));
+        }
+        panel.add(field, fieldConstraints);
     }
 }

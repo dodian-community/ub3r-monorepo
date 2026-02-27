@@ -67,6 +67,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
             appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
             if (player.loaded) {
+                pruneLocalsToProtocolCap(player);
                 stream.putBits(8, player.playerListSize);
                 int size = player.playerListSize;
                 player.playersUpdating.clear();
@@ -132,6 +133,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
 
             player.addNewPlayer(other, stream, updateBlock);
+            if (!player.playersUpdating.contains(other)) {
+                continue;
+            }
             playersAdded++;
             if (DEBUG_ADDED_LOCAL_PLAYERS) {
                 DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
@@ -143,6 +147,27 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
 
         player.advanceLocalPlayerSelectionCursor(candidates.size(), Math.max(playersAdded, 1));
+    }
+
+    private void pruneLocalsToProtocolCap(Player player) {
+        if (player.playerListSize <= MAX_LOCAL_PLAYER_CAP) {
+            return;
+        }
+        int originalSize = player.playerListSize;
+        player.playersUpdating.clear();
+        int keep = 0;
+        for (int i = 0; i < originalSize && keep < MAX_LOCAL_PLAYER_CAP; i++) {
+            Player local = player.playerList[i];
+            if (local == null) {
+                continue;
+            }
+            player.playerList[keep++] = local;
+            player.playersUpdating.add(local);
+        }
+        for (int i = keep; i < originalSize; i++) {
+            player.playerList[i] = null;
+        }
+        player.playerListSize = keep;
     }
 
     private java.util.Set<Player> findNearbyPlayers(Player player) {

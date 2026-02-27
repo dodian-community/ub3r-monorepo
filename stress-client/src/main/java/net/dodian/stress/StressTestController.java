@@ -53,7 +53,7 @@ public final class StressTestController {
         log("Starting stress test: host=" + config.getHost() +
                 ":" + config.getPort() +
                 ", bots=" + config.getBotCount() +
-                ", rate=" + config.getConnectRatePerSecond() + "/s");
+                ", connectIntervalMs=" + config.getConnectIntervalMs());
 
         spawnExecutor.submit(this::spawnLoop);
     }
@@ -110,8 +110,7 @@ public final class StressTestController {
             return;
         }
 
-        double rate = Math.max(0.1D, currentConfig.getConnectRatePerSecond());
-        long intervalNanos = Math.max(1L, (long) (1_000_000_000D / rate));
+        long intervalNanos = Math.max(1L, TimeUnit.MILLISECONDS.toNanos(currentConfig.getConnectIntervalMs()));
         long nextAt = System.nanoTime();
 
         StressBotSession.Listener listener = new StressBotSession.Listener() {
