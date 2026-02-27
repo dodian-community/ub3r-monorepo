@@ -20,6 +20,11 @@ import java.util.Set;
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
     private static final boolean DEBUG_PACKET_QUEUE_METRICS = true;
+    private static final int[][] NPC_ROAM_DELTAS = {
+            {-1, -1}, {-1, 0}, {-1, 1},
+            {0, -1},           {0, 1},
+            {1, -1},  {1, 0},  {1, 1}
+    };
 
     @Override
     public void run() {
@@ -128,14 +133,8 @@ public class EntityProcessor implements Runnable {
             return;
         }
 
-        final int[][] deltas = {
-                {-1, -1}, {-1, 0}, {-1, 1},
-                {0, -1},           {0, 1},
-                {1, -1},  {1, 0},  {1, 1}
-        };
-
-        for (int attempt = 0; attempt < deltas.length; attempt++) {
-            int[] delta = deltas[Utils.random(deltas.length - 1)];
+        for (int attempt = 0; attempt < NPC_ROAM_DELTAS.length; attempt++) {
+            int[] delta = NPC_ROAM_DELTAS[Utils.random(NPC_ROAM_DELTAS.length - 1)];
             int dx = delta[0];
             int dy = delta[1];
 

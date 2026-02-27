@@ -27,8 +27,8 @@ import net.dodian.utilities.Utils;
 public class Npc extends Entity {
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
-    public int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
-    public int[] burnDamage = new int[]{-1, -1, 4, 0, 5}; //Player or npc (0 or 1), id, time left in ticks, damage, stopTime.
+    public final int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
+    public final int[] burnDamage = new int[]{-1, -1, 4, 0, 5}; //Player or npc (0 or 1), id, time left in ticks, damage, stopTime.
     private int id, currentHealth = 10, maxHealth = 10, respawn = 60, combat = 0, lastAttack = 0, maxHit;
     public boolean alive, visible = true, boss = false;
     String miniBoss = "";
@@ -650,8 +650,8 @@ public class Npc extends Entity {
             boostedStat[i] = 0;
         }
         /* REset effect! */
-        poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Default
-        burnDamage = new int[]{-1, -1, 4, 0, 0}; //Default
+        resetPoisonDamage(); //Default
+        resetBurnDamage(); //Default
     }
 
     public Client getTarget(boolean fighting) {
@@ -1252,7 +1252,11 @@ public class Npc extends Entity {
                 getId() != 239 && getId() != 3127 && getId() != 8 && //Ungadulu + jad + nechryael + kbd cant burn!
                         getId() != 2193 && getId() != 3123 && getId() != 2154 && getId() != 2167; //Tzhaar cavern immune to fire!
                 if(burnDamage[0] == -1 && canBurn) {
-                    burnDamage = new int[]{player ? 0 : 1, id, 4, damage, times};
+                    burnDamage[0] = player ? 0 : 1;
+                    burnDamage[1] = id;
+                    burnDamage[2] = 4;
+                    burnDamage[3] = damage;
+                    burnDamage[4] = times;
                     if(player) getClient(id).send(new SendMessage("You start to burn your target!"));
                 }
                 break;
@@ -1279,18 +1283,35 @@ public class Npc extends Entity {
                     poisonDamage[4]--;
                     poisonDamage[5] = 4;
                 }
-                if(poisonDamage[4] <= 0) poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Stop poison damage!
-            } else poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Default
+                if(poisonDamage[4] <= 0) resetPoisonDamage(); //Stop poison damage!
+            } else resetPoisonDamage(); //Default
         }
         if(burnDamage[0] > -1 && burnDamage[2] == 0) {
             burnDamage[2] = 4; //Every 2.4 sec3
             burnDamage[4]--;
             if(validClient(burnDamage[1])) {
                 dealDamage(getClient(burnDamage[1]), burnDamage[3], Entity.hitType.BURN);
-                if(burnDamage[4] <= 0) burnDamage = new int[]{-1, -1, 4, 0, 0}; //Stop burn damage!
-            } else burnDamage = new int[]{-1, -1, 4, 0, 0}; //Default
+                if(burnDamage[4] <= 0) resetBurnDamage(); //Stop burn damage!
+            } else resetBurnDamage(); //Default
         }
         /* Stop! */
+    }
+
+    private void resetPoisonDamage() {
+        poisonDamage[0] = -1;
+        poisonDamage[1] = -1;
+        poisonDamage[2] = 100;
+        poisonDamage[3] = 0;
+        poisonDamage[4] = 0;
+        poisonDamage[5] = 4;
+    }
+
+    private void resetBurnDamage() {
+        burnDamage[0] = -1;
+        burnDamage[1] = -1;
+        burnDamage[2] = 4;
+        burnDamage[3] = 0;
+        burnDamage[4] = 0;
     }
 
     @Override
