@@ -19,12 +19,25 @@ public class CacheDownloader {
 
 	private static final String CACHE_PATH = "http://www.exorth.net/dodian/";
 	private static final String CACHE_NAME = "cache.zip";
+	private static final String[] REQUIRED_CACHE_ENTRIES = {
+			"main_file_cache.idx4",
+			"main_file_cache.idx5",
+			"obj.dat",
+			"obj.idx",
+			"settings.dat",
+			"sprites.dat",
+			"sprites.idx",
+			"tradable.dat",
+			"packed_sprites"
+	};
 
 	public static void init(boolean force) {
 		double current = getCurrentVersion();
 		double latest = getLatestVersion();
+		boolean cachePresent = isCachePresent();
+		boolean shouldDownload = force || !cachePresent || (latest > 0.0 && latest > current);
 
-		if(latest > current || force) {
+		if(shouldDownload) {
 			try {
 
 				/**
@@ -35,7 +48,10 @@ public class CacheDownloader {
 				/**
 				 * Unzip the downloaded cache file
 				 */
-				Unzip.unZipIt(SignLink.findcachedir() + CACHE_NAME, SignLink.findcachedir(), true);
+					boolean extracted = Unzip.unZipIt(SignLink.findcachedir() + CACHE_NAME, SignLink.findcachedir(), true);
+					if (!extracted) {
+						throw new RuntimeException("Cache unzip failed.");
+					}
 
 				/**
 				 * Write new version
@@ -46,10 +62,24 @@ public class CacheDownloader {
 					f.close();
 				}
 				
-			} catch(Exception e) {
-				JOptionPane.showMessageDialog(null, "Cache could not be downloaded.\nPlease try again later.");
+				} catch(Exception e) {
+					JOptionPane.showMessageDialog(null, "Cache could not be downloaded.\nPlease try again later.");
+				}
 			}
 		}
+	
+	private static boolean isCachePresent() {
+		String basePath = SignLink.findcachedir();
+		for (String entry : REQUIRED_CACHE_ENTRIES) {
+			File file = new File(basePath + entry);
+			if (!file.exists()) {
+				return false;
+			}
+			if ("packed_sprites".equals(entry) && !file.isDirectory()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static void download() throws Exception {		

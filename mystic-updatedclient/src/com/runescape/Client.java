@@ -5126,10 +5126,18 @@ public class Client extends GameApplet {
 			return streamLoader;
 		}
 
-		//Retry to redl cache cause it's obvious corrupt or something
+		// Retry cache download once (no recursion) for local-cache mode.
 		if(buffer == null && !Configuration.JAGCACHED_ENABLED) {
-			CacheDownloader.init(true);
-			return createArchive(file, displayedName, name, expectedCRC, x);
+			CacheDownloader.init(false);
+			try {
+				if (indices[0] != null) {
+					buffer = indices[0].decompress(file);
+				}
+			} catch (Exception _ex) {
+			}
+			if (buffer != null) {
+				return new FileArchive(buffer);
+			}
 		}
 
 		while (buffer == null) {
@@ -9617,7 +9625,7 @@ public class Client extends GameApplet {
 			if (Configuration.JAGCACHED_ENABLED) {
 				JagGrab.onStart();
 			} else {
-				//	CacheDownloader.init(false);
+				CacheDownloader.init(false);
 			}
 
 			titleArchive = createArchive(JagGrab.TITLE_CRC, "title screen", "title", JagGrab.CRCs[JagGrab.TITLE_CRC], 25);
@@ -13218,12 +13226,10 @@ public class Client extends GameApplet {
 		loginScreenAccessories.drawGraphics(400, super.graphics, 0);
 		loginScreenAccessories.initDrawingArea();
 		cacheSprite[57].drawSprite(6, 63);
-		if (!Configuration.worldSwitch) {
-			boldText.method382(0xffffff, 55, worldText, 78, true);
-			smallText.method382(0xffffff, 55, "Click to switch", 92, true);
-			Configuration.server_address = "localhost";
-			Configuration.server_port = 43894;
-		}
+			if (!Configuration.worldSwitch) {
+				boldText.method382(0xffffff, 55, worldText, 78, true);
+				smallText.method382(0xffffff, 55, "Click to switch", 92, true);
+			}
 
 		if (loginScreenState == 4) {
 
