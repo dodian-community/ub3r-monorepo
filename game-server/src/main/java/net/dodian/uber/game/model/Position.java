@@ -166,8 +166,8 @@ public class Position {
      * @return The chunk containing this position
      */
     public Chunk getChunk() {
-        int chunkX = (x / Chunk.SIZE) - 6;
-        int chunkY = (y / Chunk.SIZE) - 6;
+        int chunkX = (x >> 3) - 6;
+        int chunkY = (y >> 3) - 6;
         return new Chunk(chunkX, chunkY);
     }
 

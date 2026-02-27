@@ -16,9 +16,8 @@ public final class ChunkManager {
 
     /**
      * Map of chunk to its repository.
-     * Key format: "x,y"
      */
-    private final Map<String, ChunkRepository> chunks = new ConcurrentHashMap<>();
+    private final Map<Chunk, ChunkRepository> chunks = new ConcurrentHashMap<>();
 
     /**
      * Loads or creates a chunk repository for the specified chunk.
@@ -28,8 +27,17 @@ public final class ChunkManager {
      * @return The chunk repository
      */
     public ChunkRepository load(Chunk chunk) {
-        String key = chunk.getX() + "," + chunk.getY();
-        return chunks.computeIfAbsent(key, k -> new ChunkRepository(chunk));
+        return chunks.computeIfAbsent(chunk, key -> new ChunkRepository(chunk));
+    }
+
+    /**
+     * Gets the repository for an already-loaded chunk.
+     *
+     * @param chunk The chunk key
+     * @return The repository, or null if not loaded
+     */
+    public ChunkRepository getLoaded(Chunk chunk) {
+        return chunks.get(chunk);
     }
 
     /**
@@ -50,11 +58,14 @@ public final class ChunkManager {
 
         Chunk centerChunk = center.getChunk();
 
-        // Scan all chunks in the radius
-        for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
-            for (int dy = -chunkRadius; dy <= chunkRadius; dy++) {
+        // Scan all chunks in the radius. Query path does not create chunks.
+        for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
+            for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
                 Chunk targetChunk = centerChunk.translate(dx, dy);
-                ChunkRepository repo = load(targetChunk);
+                ChunkRepository repo = getLoaded(targetChunk);
+                if (repo == null) {
+                    continue;
+                }
 
                 // Get all entities of this type in the chunk
                 Set<E> entities = repo.getAll(type);

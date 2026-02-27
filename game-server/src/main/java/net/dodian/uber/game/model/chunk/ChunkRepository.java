@@ -71,24 +71,33 @@ public final class ChunkRepository {
      *
      * @param type The entity type
      * @param <E> The entity class type
-     * @return Unmodifiable set of entities
+     * @return Set of entities
      */
     @SuppressWarnings("unchecked")
     public <E extends Entity> Set<E> getAll(EntityType type) {
-        return (Set<E>) Collections.unmodifiableSet(entities.get(type));
+        return (Set<E>) entities.get(type);
     }
 
     /**
      * Checks if this repository is empty (contains no entities).
      */
     public boolean isEmpty() {
-        return entities.values().stream().allMatch(Set::isEmpty);
+        for (Set<Entity> entitySet : entities.values()) {
+            if (!entitySet.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Gets the total count of entities in this chunk.
      */
     public int size() {
-        return entities.values().stream().mapToInt(Set::size).sum();
+        int total = 0;
+        for (Set<Entity> entitySet : entities.values()) {
+            total += entitySet.size();
+        }
+        return total;
     }
 }

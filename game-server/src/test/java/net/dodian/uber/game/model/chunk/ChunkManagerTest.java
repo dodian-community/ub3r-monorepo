@@ -52,6 +52,13 @@ public class ChunkManagerTest {
     }
 
     @Test
+    public void testLoadChunkCachingAcrossEquivalentInstances() {
+        ChunkRepository repo1 = chunkManager.load(new Chunk(10, 20));
+        ChunkRepository repo2 = chunkManager.load(new Chunk(10, 20));
+        assertSame(repo1, repo2);
+    }
+
+    @Test
     public void testFindEntitiesInRadius() {
         // Create entity at position (100, 100, 0)
         Position pos = new Position(100, 100, 0);
@@ -87,5 +94,13 @@ public class ChunkManagerTest {
         assertEquals(2, found.size());
         assertTrue(found.contains(entity1));
         assertTrue(found.contains(entity2));
+    }
+
+    @Test
+    public void testFindDoesNotCreateRepositoriesForEmptyChunks() {
+        assertEquals(0, chunkManager.getLoadedChunkCount());
+        Set<MockEntity> found = chunkManager.find(new Position(3200, 3200, 0), EntityType.PLAYER, 16);
+        assertTrue(found.isEmpty());
+        assertEquals(0, chunkManager.getLoadedChunkCount());
     }
 }
