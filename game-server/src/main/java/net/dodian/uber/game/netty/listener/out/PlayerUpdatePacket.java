@@ -1,11 +1,10 @@
 package net.dodian.uber.game.netty.listener.out;
 
+import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerUpdating;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.MessageType;
 
 /**
  * Sends player update data to the client using proper Netty ByteMessage.
@@ -20,26 +19,27 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Structure verified against mystic-updatedclient expectations
  */
 public class PlayerUpdatePacket implements OutgoingPacket {
-    
+
+    private static final PlayerUpdateMessageWriter WRITER = new PlayerUpdateMessageWriter();
     private final Player player;
-    
+
     public PlayerUpdatePacket(Player player) {
         this.player = player;
     }
-    
+
     @Override
     public void send(Client client) {
-        // Create the message with proper opcode and type (matches original createFrameVarSizeWord(81))
-        ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
-        
+        ByteBuf pooledBuffer = ByteMessage.pooledBuffer(8192);
+        ByteMessage msg = null;
         try {
-            // Use the existing PlayerUpdating logic to build the packet content
-            PlayerUpdating.getInstance().update(player, msg);
-            
-            // Send the message (this will handle encryption)
+            msg = WRITER.write(player, pooledBuffer);
             client.send(msg);
         } catch (Exception e) {
-            msg.releaseAll();
+            if (msg != null) {
+                msg.releaseAll();
+            } else if (pooledBuffer.refCnt() > 0) {
+                pooledBuffer.release(pooledBuffer.refCnt());
+            }
             throw e;
         }
     }
