@@ -3,9 +3,12 @@ package net.dodian.uber.game.model.chunk;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
+import net.dodian.uber.game.model.entity.player.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Manages all chunks in the game world.
@@ -50,7 +53,19 @@ public final class ChunkManager {
      * @return Set of entities within range
      */
     public <E extends Entity> Set<E> find(Position center, EntityType type, int distance) {
-        Set<E> found = new HashSet<>();
+        return find(center, type, distance, HashSet::new, entity -> true);
+    }
+
+    /**
+     * Finds entities using a caller-provided output set and predicate.
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends Entity> Set<E> find(Position center,
+                                          EntityType type,
+                                          int distance,
+                                          Supplier<Set<E>> setFactory,
+                                          Predicate<E> predicate) {
+        Set<E> found = setFactory.get();
 
         // Calculate chunk radius needed
         // Each chunk is 8 tiles, so divide distance by 8 and add 2 for safety
@@ -73,7 +88,9 @@ public final class ChunkManager {
                 // Filter by actual distance
                 for (E entity : entities) {
                     Position entityPos = entity.getPosition();
-                    if (entityPos != null && center.withinDistance(entityPos, distance)) {
+                    if (entityPos != null
+                            && center.withinDistance(entityPos, distance)
+                            && predicate.test(entity)) {
                         found.add(entity);
                     }
                 }
@@ -81,6 +98,26 @@ public final class ChunkManager {
         }
 
         return found;
+    }
+
+    /**
+     * Finds local players for a viewer with Luna-style prioritization.
+     */
+    public Set<Player> findUpdatePlayers(Player viewer, int distance) {
+        Supplier<Set<Player>> setFactory = () -> {
+            if (viewer.playerListSize > 50) {
+                return new TreeSet<>(new ChunkPlayerComparator(viewer));
+            }
+            return new HashSet<>();
+        };
+
+        return find(
+                viewer.getPosition(),
+                EntityType.PLAYER,
+                distance,
+                setFactory,
+                other -> other != null && other.isActive && other != viewer
+        );
     }
 
     /**
