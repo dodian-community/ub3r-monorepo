@@ -37,49 +37,49 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         ByteMessage updateBlock = ByteMessage.raw(16384);
         ByteMessage buf = stream;
         int movementWrites = 0;
+        try {
+            stream.startBitAccess();
 
-        stream.startBitAccess();
+            stream.putBits(8, player.getLocalNpcs().size());
+            for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
+                Npc npc = i.next();
+                boolean exceptions = removeNpc(player, npc);
+                if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
+                    updateNPCMovement(npc, stream);
+                    movementWrites++;
+                    appendBlockUpdate(npc, updateBlock);
+                } else {
+                    buf.putBits(1, 1);
+                    stream.putBits(2, 3); // tells client to remove this npc from list
+                    i.remove();
+                }
+            }
 
-        stream.putBits(8, player.getLocalNpcs().size());
-        for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
-            Npc npc = i.next();
-            boolean exceptions = removeNpc(player, npc);
-            if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
-                updateNPCMovement(npc, stream);
-                movementWrites++;
-                appendBlockUpdate(npc, updateBlock);
+            for (Npc npc : Server.npcManager.getNpcs()) {
+                boolean exceptions = removeNpc(player, npc);
+                if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
+                if (player.getLocalNpcs().add(npc)) {
+                    if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
+                        npc.setId(player.getGender() == 0 ? 1306 : 1307);
+                    addNpc(player, npc, stream);
+                    appendBlockUpdate(npc, updateBlock);
+                }
+            }
+            if (updateBlock.getBuffer().writerIndex() > 0) {
+                stream.putBits(14, 16383);
+                stream.endBitAccess();
+                stream.putBytes(updateBlock);
             } else {
-                buf.putBits(1, 1);
-                stream.putBits(2, 3); // tells client to remove this npc from list
-                i.remove();
+                stream.endBitAccess();
             }
-        }
+            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            boolean exceptions = removeNpc(player, npc);
-            if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-            if (player.getLocalNpcs().add(npc)) {
-                if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                    npc.setId(player.getGender() == 0 ? 1306 : 1307);
-                addNpc(player, npc, stream);
-                appendBlockUpdate(npc, updateBlock);
+            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
+                DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
+                logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
             }
-        }
-        if (updateBlock.getBuffer().writerIndex() > 0) {
-            stream.putBits(14, 16383);
-            stream.endBitAccess();
-            // Only copy the written bytes, not the entire buffer capacity
-            byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
-            updateBlock.getBuffer().getBytes(0, updateData);
-            stream.putBytes(updateData);
-        } else {
-            stream.endBitAccess();
-        }
-        // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
-
-        if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
-            DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
-            logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
+        } finally {
+            updateBlock.releaseAll();
         }
     }
 

@@ -40,100 +40,100 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     @Override
     public void update(Player player, ByteMessage stream) {
         ByteMessage updateBlock = ByteMessage.raw(8192); // replaced legacy Stream buffer
-
-        if (Server.updateRunning) {
-            // Send server update packet (114) as separate message
-            ByteMessage updateMsg = ByteMessage.message(114, MessageType.FIXED);
-            int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
-            updateMsg.putShort(seconds * 50 / 30, ByteOrder.BIG);
-            ((Client) player).send(updateMsg);
-        }
-
-        // Ensure the player is registered in the chunk index before discovery.
-        player.syncChunkMembership();
-
-        boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
-        updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
-        
-        // Handle teleportation - clear player list but continue to local player discovery
-        if (player.didTeleport()) {
-            // Clear existing player list when teleporting (similar to Hyperion's approach)
-            player.playerListSize = 0;
-            player.playersUpdating.clear();
-            // Don't return early - allow local player discovery to happen
-        }
-        
-        appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
-        if (player.loaded) {
-            stream.putBits(8, player.playerListSize);
-            int size = player.playerListSize;
-            player.playersUpdating.clear();
-            player.playerListSize = 0;
-            for (int i = 0; i < size; i++) {
-                if (player.playerList[i] != null && player.loaded && !player.playerList[i].didTeleport() && !player.didTeleport()
-                        && player.withinDistance(player.playerList[i])) {
-                    player.playerList[i].updatePlayerMovement(stream);
-                    appendBlockUpdate(player.playerList[i], updateBlock, UpdatePhase.UPDATE_LOCAL);
-                    player.playerList[player.playerListSize++] = player.playerList[i];
-                    player.playersUpdating.add(player.playerList[i]);
-                } else {
-                    stream.putBits(1, 1);
-                    stream.putBits(2, 3);
-                }
+        try {
+            if (Server.updateRunning) {
+                // Send server update packet (114) as separate message
+                ByteMessage updateMsg = ByteMessage.message(114, MessageType.FIXED);
+                int seconds = Server.updateSeconds + ((int)(Server.updateStartTime - System.currentTimeMillis()) / 1000);
+                updateMsg.putShort(seconds * 50 / 30, ByteOrder.BIG);
+                ((Client) player).send(updateMsg);
             }
 
-            // Chunk-based player discovery with prioritization/limits.
-            java.util.Set<Player> nearbyPlayers = findNearbyPlayers(player);
-            java.util.List<Player> candidates = new java.util.ArrayList<>(nearbyPlayers);
+            // Ensure the player is registered in the chunk index before discovery.
+            player.syncChunkMembership();
 
-            if (candidates.size() > 50) {
-                candidates.sort(new ChunkPlayerComparator(player));
+            boolean localPlayerUpdateRequired = hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
+            updateLocalPlayerMovement(player, stream, localPlayerUpdateRequired);
+
+            // Handle teleportation - clear player list but continue to local player discovery
+            if (player.didTeleport()) {
+                // Clear existing player list when teleporting (similar to Hyperion's approach)
+                player.playerListSize = 0;
+                player.playersUpdating.clear();
+                // Don't return early - allow local player discovery to happen
             }
 
-            int playersAdded = 0;
-            for (Player other : candidates) {
-                if (player == other || other == null || !other.isActive) {
-                    continue;
+            appendBlockUpdate(player, updateBlock, UpdatePhase.UPDATE_SELF);
+            if (player.loaded) {
+                stream.putBits(8, player.playerListSize);
+                int size = player.playerListSize;
+                player.playersUpdating.clear();
+                player.playerListSize = 0;
+                for (int i = 0; i < size; i++) {
+                    if (player.playerList[i] != null && player.loaded && !player.playerList[i].didTeleport() && !player.didTeleport()
+                            && player.withinDistance(player.playerList[i])) {
+                        player.playerList[i].updatePlayerMovement(stream);
+                        appendBlockUpdate(player.playerList[i], updateBlock, UpdatePhase.UPDATE_LOCAL);
+                        player.playerList[player.playerListSize++] = player.playerList[i];
+                        player.playersUpdating.add(player.playerList[i]);
+                    } else {
+                        stream.putBits(1, 1);
+                        stream.putBits(2, 3);
+                    }
                 }
 
-                if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
-                    continue;
+                // Chunk-based player discovery with prioritization/limits.
+                java.util.Set<Player> nearbyPlayers = findNearbyPlayers(player);
+                java.util.List<Player> candidates = new java.util.ArrayList<>(nearbyPlayers);
+
+                if (candidates.size() > 50) {
+                    candidates.sort(new ChunkPlayerComparator(player));
                 }
 
-                if (other.invis && !player.invis) {
-                    continue;
-                }
+                int playersAdded = 0;
+                for (Player other : candidates) {
+                    if (player == other || other == null || !other.isActive) {
+                        continue;
+                    }
 
-                player.addNewPlayer(other, stream, updateBlock);
-                playersAdded++;
-                if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
-                }
+                    if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
+                        continue;
+                    }
 
-                if (playersAdded >= 15 || player.playerListSize >= 255) {
-                    break; // cap additions to avoid overflow
+                    if (other.invis && !player.invis) {
+                        continue;
+                    }
+
+                    player.addNewPlayer(other, stream, updateBlock);
+                    playersAdded++;
+                    if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                        DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                    }
+
+                    if (playersAdded >= 15 || player.playerListSize >= 255) {
+                        break; // cap additions to avoid overflow
+                    }
                 }
+            } else {
+                stream.putBits(8, 0);
             }
-        } else {
-            stream.putBits(8, 0);
-        }
 
-        // Always write the magic termination value (2047) - required by protocol
-        stream.putBits(11, 2047);
-        stream.endBitAccess();
-        
-        if (updateBlock.getBuffer().writerIndex() > 0) {
-            // Only copy the written bytes, not the entire buffer capacity
-            byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
-            updateBlock.getBuffer().getBytes(0, updateData);
-            stream.putBytes(updateData);
-        }
-        // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
+            // Always write the magic termination value (2047) - required by protocol
+            stream.putBits(11, 2047);
+            stream.endBitAccess();
 
-        if (DEBUG_REGION_UPDATES) {
-            int rx = player.getPosition().getX() >> 6;
-            int ry = player.getPosition().getY() >> 6;
-            System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
+            if (updateBlock.getBuffer().writerIndex() > 0) {
+                stream.putBytes(updateBlock);
+            }
+            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
+
+            if (DEBUG_REGION_UPDATES) {
+                int rx = player.getPosition().getX() >> 6;
+                int ry = player.getPosition().getY() >> 6;
+                System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
+            }
+        } finally {
+            updateBlock.releaseAll();
         }
     }
 
@@ -209,6 +209,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             return;
         }
 
+        ByteMessage blockBuf = buf;
+        if (cacheablePhase) {
+            blockBuf = ByteMessage.raw(256);
+        }
+
         int updateMask = 0;
         for (UpdateFlag flag : player.getUpdateFlags().keySet()) {
             if (!includeChat && flag == UpdateFlag.CHAT) {
@@ -222,48 +227,50 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             updateMask |= UpdateFlag.APPEARANCE.getMask(player.getType());
         }
         if (updateMask == 0) {
+            if (cacheablePhase) {
+                blockBuf.release();
+            }
             return;
         }
-
-        int cacheStartOffset = buf.getBuffer().writerIndex(); // mark beginning for cache copy
 
         // Hyperion-style mask overflow handling with proper flag indication
         if (updateMask >= 0x100) {
             updateMask |= 0x40;  // Set overflow flag
-            buf.put(updateMask & 0xFF);      // Low byte
-            buf.put(updateMask >> 8);        // High byte
+            blockBuf.put(updateMask & 0xFF);      // Low byte
+            blockBuf.put(updateMask >> 8);        // High byte
         } else {
-            buf.put(updateMask);             // Single byte
+            blockBuf.put(updateMask);             // Single byte
         }
 
         // Emit blocks in the exact order expected by Client.method107.
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT))
-            player.appendMask400Update(buf);
+            player.appendMask400Update(blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGraphic(player, buf);
+            appendGraphic(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(player, buf);
+            appendAnimationRequest(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendForcedChatText(player, buf);
+            appendForcedChatText(player, blockBuf);
         if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT))
-            appendPlayerChatText(player, buf);
+            appendPlayerChatText(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(player, buf);
+            appendFaceCharacter(player, blockBuf);
         if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
-            appendPlayerAppearance(player, buf);
+            appendPlayerAppearance(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(player, buf);
+            appendFaceCoordinates(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(player, buf);
+            appendPrimaryHit(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(player, buf);
+            appendPrimaryHit2(player, blockBuf);
 
-        // ---- Cache the freshly built update block for reuse ----
-        int length = buf.getBuffer().writerIndex() - cacheStartOffset;
-        if (cacheablePhase && length > 0) {
-            byte[] copy = new byte[length];
-            buf.getBuffer().getBytes(cacheStartOffset, copy, 0, length);
-            player.cacheUpdateBlock(copy, length);
+        if (cacheablePhase) {
+            try {
+                buf.putBytes(blockBuf);
+                player.cacheUpdateBlock(blockBuf);
+            } finally {
+                blockBuf.release();
+            }
         }
     }
 
@@ -329,99 +336,99 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public static void appendPlayerAppearance(Player player, ByteMessage buf) {
         ByteMessage playerProps = ByteMessage.raw(128);
-        
-        playerProps.put(player.getGender());
-        playerProps.put((byte) player.headIcon); // Head icon aka prayer over head
-        playerProps.put((byte) player.skullIcon); // Skull icon
-        if (!player.isNpc) {
-            if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
+        try {
+            playerProps.put(player.getGender());
+            playerProps.put((byte) player.headIcon); // Head icon aka prayer over head
+            playerProps.put((byte) player.skullIcon); // Skull icon
+            if (!player.isNpc) {
+                if (player.getEquipment()[Equipment.Slot.HEAD.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HEAD.getId()]);
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.CAPE.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CAPE.getId()]);
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.NECK.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.NECK.getId()]);
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.WEAPON.getId()] > 1 && !player.UsingAgility) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.WEAPON.getId()]);
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.CHEST.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CHEST.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + player.getTorso());
+                }
+                if (player.getEquipment()[Equipment.Slot.SHIELD.getId()] > 1 && !player.UsingAgility) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.SHIELD.getId()]);
+                } else {
+                    playerProps.put(0);
+                }
+                if (!Server.itemManager.isFullBody(player.getEquipment()[Equipment.Slot.CHEST.getId()])) {
+                    playerProps.putShort(0x100 + player.getArms());
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.LEGS.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.LEGS.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + player.getLegs());
+                }
+                if (!Server.itemManager.isFullHelm(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && !Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()])) {
+                    playerProps.putShort(0x100 + player.getHead()); // head
+                } else {
+                    playerProps.put(0);
+                }
+                if (player.getEquipment()[Equipment.Slot.HANDS.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HANDS.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + player.getHands());
+                }
+                if (player.getEquipment()[Equipment.Slot.FEET.getId()] > 1) {
+                    playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.FEET.getId()]);
+                } else {
+                    playerProps.putShort(0x100 + player.getFeet());
+                }
+                if (!Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && (player.playerLooks[0] != 1)) {
+                    playerProps.putShort(0x100 + player.getBeard());
+                } else {
+                    playerProps.put(0); // 0 = nothing on and girl don't have beard
+                    // so send 0. -bakatool
+                }
             } else {
-                playerProps.put(0);
+                playerProps.putShort(-1);
+                playerProps.putShort(player.getPlayerNpc());
             }
-            if (player.getEquipment()[Equipment.Slot.CAPE.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CAPE.getId()]);
-            } else {
-                playerProps.put(0);
-            }
-            if (player.getEquipment()[Equipment.Slot.NECK.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.NECK.getId()]);
-            } else {
-                playerProps.put(0);
-            }
-            if (player.getEquipment()[Equipment.Slot.WEAPON.getId()] > 1 && !player.UsingAgility) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.WEAPON.getId()]);
-            } else {
-                playerProps.put(0);
-            }
-            if (player.getEquipment()[Equipment.Slot.CHEST.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.CHEST.getId()]);
-            } else {
-                playerProps.putShort(0x100 + player.getTorso());
-            }
-            if (player.getEquipment()[Equipment.Slot.SHIELD.getId()] > 1 && !player.UsingAgility) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.SHIELD.getId()]);
-            } else {
-                playerProps.put(0);
-            }
-            if (!Server.itemManager.isFullBody(player.getEquipment()[Equipment.Slot.CHEST.getId()])) {
-                playerProps.putShort(0x100 + player.getArms());
-            } else {
-                playerProps.put(0);
-            }
-            if (player.getEquipment()[Equipment.Slot.LEGS.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.LEGS.getId()]);
-            } else {
-                playerProps.putShort(0x100 + player.getLegs());
-            }
-            if (!Server.itemManager.isFullHelm(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && !Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()])) {
-                playerProps.putShort(0x100 + player.getHead()); // head
-            } else {
-                playerProps.put(0);
-            }
-            if (player.getEquipment()[Equipment.Slot.HANDS.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.HANDS.getId()]);
-            } else {
-                playerProps.putShort(0x100 + player.getHands());
-            }
-            if (player.getEquipment()[Equipment.Slot.FEET.getId()] > 1) {
-                playerProps.putShort(0x200 + player.getEquipment()[Equipment.Slot.FEET.getId()]);
-            } else {
-                playerProps.putShort(0x100 + player.getFeet());
-            }
-            if (!Server.itemManager.isMask(player.getEquipment()[Equipment.Slot.HEAD.getId()]) && (player.playerLooks[0] != 1)) {
-                playerProps.putShort(0x100 + player.getBeard());
-            } else {
-                playerProps.put(0); // 0 = nothing on and girl don't have beard
-                // so send 0. -bakatool
-            }
-        } else {
-            playerProps.putShort(-1);
-            playerProps.putShort(player.getPlayerNpc());
-        }
-        // array of 5 bytes defining the colors
-        playerProps.put(player.playerLooks[8]); // hair color
-        playerProps.put(player.playerLooks[9]); // torso color.
-        playerProps.put(player.playerLooks[10]); // leg color
-        playerProps.put(player.playerLooks[11]); // feet color
-        playerProps.put(player.playerLooks[12]); // skin color (0-6)
-        playerProps.putShort(player.getStandAnim()); // standAnimIndex
-        playerProps.putShort(player.getWalkAnim()); // standTurnAnimIndex, 823 default
-        playerProps.putShort(player.getWalkAnim()); // walkAnimIndex
-        playerProps.putShort(player.getWalkAnim()); // turn180AnimIndex, 820 default
-        playerProps.putShort(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
-        playerProps.putShort(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
-        playerProps.putShort(player.getRunAnim()); // runAnimIndex
+            // array of 5 bytes defining the colors
+            playerProps.put(player.playerLooks[8]); // hair color
+            playerProps.put(player.playerLooks[9]); // torso color.
+            playerProps.put(player.playerLooks[10]); // leg color
+            playerProps.put(player.playerLooks[11]); // feet color
+            playerProps.put(player.playerLooks[12]); // skin color (0-6)
+            playerProps.putShort(player.getStandAnim()); // standAnimIndex
+            playerProps.putShort(player.getWalkAnim()); // standTurnAnimIndex, 823 default
+            playerProps.putShort(player.getWalkAnim()); // walkAnimIndex
+            playerProps.putShort(player.getWalkAnim()); // turn180AnimIndex, 820 default
+            playerProps.putShort(player.getWalkAnim()); // turn90CWAnimIndex, 821 default
+            playerProps.putShort(player.getWalkAnim()); // turn90CCWAnimIndex, 822 default
+            playerProps.putShort(player.getRunAnim()); // runAnimIndex
 
-        playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
-        playerProps.put(player.determineCombatLevel()); // combat level
-        playerProps.putShort(0); // incase != 0, writes skill-%d
-        
-        buf.put(playerProps.getBuffer().writerIndex(), ValueType.NEGATE); // writeByteC = -value
-        // Only write the used portion of the appearance buffer
-        byte[] appearanceData = new byte[playerProps.getBuffer().writerIndex()];
-        playerProps.getBuffer().getBytes(0, appearanceData);
-        buf.putBytes(appearanceData);
+            playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
+            playerProps.put(player.determineCombatLevel()); // combat level
+            playerProps.putShort(0); // incase != 0, writes skill-%d
+
+            buf.put(playerProps.getBuffer().writerIndex(), ValueType.NEGATE); // writeByteC = -value
+            buf.putBytes(playerProps);
+        } finally {
+            playerProps.releaseAll();
+        }
     }
 
     @Override

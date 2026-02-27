@@ -17,7 +17,11 @@ public class PlayerUpdatingAddLocalAppearanceTest {
         target.isNpc = true;
         target.setPlayerNpc(1);
 
-        target.cacheUpdateBlock(new byte[]{0x55, 0x66}, 2);
+        ByteMessage cached = ByteMessage.raw(2);
+        cached.put(0x55);
+        cached.put(0x66);
+        target.cacheUpdateBlock(cached);
+        cached.release();
 
         ByteMessage updateBlock = ByteMessage.raw(256);
         try {

@@ -311,6 +311,7 @@ public abstract class Player extends Entity {
     }
 
     void destruct() {
+        releaseCachedUpdateBlock();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
         mapRegionX = mapRegionY = -1;
@@ -709,15 +710,16 @@ public abstract class Player extends Entity {
     }
 
     // --- Cached player update block (for efficient multi-viewer reuse) ---
-    private byte[] cachedUpdateBlock = null;
-    private int cachedUpdateBlockLength = 0;
+    private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
 
     /**
      * Returns true if the cached update block can be reused this cycle.
      */
     public boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid && cachedUpdateBlock != null;
+        return cachedUpdateBlockValid
+                && cachedUpdateBlock != null
+                && cachedUpdateBlock.getBuffer().refCnt() > 0;
     }
 
     /**
@@ -725,19 +727,21 @@ public abstract class Player extends Entity {
      * is valid first.
      */
     public void writeCachedUpdateBlock(ByteMessage dst) {
-        // Write only the valid portion of the cached block
-        byte[] dataToWrite = new byte[cachedUpdateBlockLength];
-        System.arraycopy(cachedUpdateBlock, 0, dataToWrite, 0, cachedUpdateBlockLength);
-        dst.putBytes(dataToWrite);
+        dst.putBytes(cachedUpdateBlock);
     }
 
     /**
      * Stores a freshly-built update block for re-use next time.
      */
-    public void cacheUpdateBlock(byte[] src, int length) {
-        this.cachedUpdateBlock = src;
-        this.cachedUpdateBlockLength = length;
-        this.cachedUpdateBlockValid = true;
+    public void cacheUpdateBlock(ByteMessage src) {
+        releaseCachedUpdateBlock();
+        if (src != null) {
+            src.retain();
+            this.cachedUpdateBlock = src;
+            this.cachedUpdateBlockValid = true;
+            return;
+        }
+        this.cachedUpdateBlockValid = false;
     }
 
     /**
@@ -746,6 +750,17 @@ public abstract class Player extends Entity {
      */
     public void invalidateCachedUpdateBlock() {
         this.cachedUpdateBlockValid = false;
+        releaseCachedUpdateBlock();
+    }
+
+    private void releaseCachedUpdateBlock() {
+        if (cachedUpdateBlock == null) {
+            return;
+        }
+        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
+            cachedUpdateBlock.release();
+        }
+        cachedUpdateBlock = null;
     }
 
     private final byte[] chatText = new byte[4096];
