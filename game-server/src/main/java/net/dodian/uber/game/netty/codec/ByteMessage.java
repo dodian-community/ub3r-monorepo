@@ -55,6 +55,19 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
+     * Creates a {@link ByteMessage} used to read and encode game messages with the
+     * argued pooled buffer.
+     *
+     * @param opcode The opcode.
+     * @param type The message type.
+     * @param buffer The backing buffer.
+     * @return A new buffer wrapper.
+     */
+    public static ByteMessage message(int opcode, MessageType type, ByteBuf buffer) {
+        return new ByteMessage(buffer, opcode, type);
+    }
+
+    /**
      * Creates a fixed type {@link ByteMessage} used to read and encode game messages.
      *
      * @param opcode The opcode.

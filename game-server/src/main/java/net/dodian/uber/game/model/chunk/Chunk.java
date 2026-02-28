@@ -1,7 +1,5 @@
 package net.dodian.uber.game.model.chunk;
 
-import java.util.Objects;
-
 /**
  * Represents an 8x8 tile chunk in the game world.
  * Chunks are used for spatial partitioning to optimize entity lookups.
@@ -88,7 +86,9 @@ public final class Chunk {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y);
+        int result = x;
+        result = 31 * result + y;
+        return result;
     }
 
     @Override

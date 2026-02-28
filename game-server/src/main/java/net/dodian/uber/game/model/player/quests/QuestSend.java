@@ -16,6 +16,10 @@ public enum QuestSend {
 
     private int id, config, clickId, end;
     private String name;
+    private static final QuestSend[] QUEST_SEND_VALUES = values();
+    private static final ThreadLocal<DecimalFormat> HOURS_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("0.000"));
+    private static long cachedUptimeMinutes = Long.MIN_VALUE;
+    private static String cachedUptimeText = "@gre@[0@gre@] minutes uptime";
 
     QuestSend(int id, int config, int clickId, int end, String name) {
         this.id = id;
@@ -38,7 +42,7 @@ public enum QuestSend {
         return this.end;
     }
     public static QuestSend getSender(int button) {
-        for (QuestSend quest : values()) {
+        for (QuestSend quest : QUEST_SEND_VALUES) {
             if(quest.getClickId() == button)
                 return quest;
         }
@@ -53,7 +57,7 @@ public enum QuestSend {
         c.sendCachedString("Dodian Quests", 640);
         c.sendCachedString("Premium", 663);
         c.sendCachedString("Other Stuff", 682);
-        for (QuestSend quest : values()) {
+        for (QuestSend quest : QUEST_SEND_VALUES) {
             if (c.quests[quest.getId()] == 0)
                 c.sendCachedString("@red@" + quest.getName(), quest.getConfig());
             if (c.quests[quest.getId()] > 0 && c.quests[quest.getId()] < quest.getEnd())
@@ -64,11 +68,9 @@ public enum QuestSend {
         return null;
     }
     public static QuestSend serverInterface(Client c) {
-        long uptimeMinutes = (System.currentTimeMillis() - Server.serverStartup) / 60000;
-        String hourText = uptimeMinutes % 60 == 0 ? (uptimeMinutes/60) + "" : new DecimalFormat("0.000").format(uptimeMinutes/60D);
         c.sendCachedString("Dodian Server", 640);
         c.sendCachedString("", 682); //7332
-        c.sendCachedString("@gre@[@whi@"+(uptimeMinutes < 60 ? uptimeMinutes + "@gre@] minutes" : hourText+"@gre@] hours")+" uptime", 663);
+        c.sendCachedString(getCachedUptimeText(), 663);
         c.sendCachedString("@lre@Boss Log", 7332);
         c.sendCachedString("@lre@Monster Log", 7333);
         c.sendCachedString("@lre@Commands", 7334);
@@ -216,9 +218,27 @@ public enum QuestSend {
     }
 
     public static void clearQuestName(Client c) {
-        for (QuestSend questClear : values()) { //Clear quest!
+        for (QuestSend questClear : QUEST_SEND_VALUES) { //Clear quest!
             c.send(new SendString("", questClear.getConfig()));
         }
+    }
+
+    private static String getCachedUptimeText() {
+        long uptimeMinutes = (System.currentTimeMillis() - Server.serverStartup) / 60000;
+        if (uptimeMinutes == cachedUptimeMinutes) {
+            return cachedUptimeText;
+        }
+
+        cachedUptimeMinutes = uptimeMinutes;
+        if (uptimeMinutes < 60) {
+            cachedUptimeText = "@gre@[@whi@" + uptimeMinutes + "@gre@] minutes uptime";
+        } else {
+            String hourText = uptimeMinutes % 60 == 0
+                    ? Long.toString(uptimeMinutes / 60)
+                    : HOURS_FORMAT.get().format(uptimeMinutes / 60D);
+            cachedUptimeText = "@gre@[@whi@" + hourText + "@gre@] hours uptime";
+        }
+        return cachedUptimeText;
     }
 
 }

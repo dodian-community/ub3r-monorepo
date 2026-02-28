@@ -3,9 +3,14 @@ package net.dodian.uber.game.model.chunk;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
+import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.model.entity.player.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Manages all chunks in the game world.
@@ -16,9 +21,8 @@ public final class ChunkManager {
 
     /**
      * Map of chunk to its repository.
-     * Key format: "x,y"
      */
-    private final Map<String, ChunkRepository> chunks = new ConcurrentHashMap<>();
+    private final Map<Chunk, ChunkRepository> chunks = new ConcurrentHashMap<>();
 
     /**
      * Loads or creates a chunk repository for the specified chunk.
@@ -28,8 +32,17 @@ public final class ChunkManager {
      * @return The chunk repository
      */
     public ChunkRepository load(Chunk chunk) {
-        String key = chunk.getX() + "," + chunk.getY();
-        return chunks.computeIfAbsent(key, k -> new ChunkRepository(chunk));
+        return chunks.computeIfAbsent(chunk, key -> new ChunkRepository(chunk));
+    }
+
+    /**
+     * Gets the repository for an already-loaded chunk.
+     *
+     * @param chunk The chunk key
+     * @return The repository, or null if not loaded
+     */
+    public ChunkRepository getLoaded(Chunk chunk) {
+        return chunks.get(chunk);
     }
 
     /**
@@ -42,7 +55,19 @@ public final class ChunkManager {
      * @return Set of entities within range
      */
     public <E extends Entity> Set<E> find(Position center, EntityType type, int distance) {
-        Set<E> found = new HashSet<>();
+        return find(center, type, distance, HashSet::new, entity -> true);
+    }
+
+    /**
+     * Finds entities using a caller-provided output set and predicate.
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends Entity> Set<E> find(Position center,
+                                          EntityType type,
+                                          int distance,
+                                          Supplier<Set<E>> setFactory,
+                                          Predicate<E> predicate) {
+        Set<E> found = setFactory.get();
 
         // Calculate chunk radius needed
         // Each chunk is 8 tiles, so divide distance by 8 and add 2 for safety
@@ -50,11 +75,14 @@ public final class ChunkManager {
 
         Chunk centerChunk = center.getChunk();
 
-        // Scan all chunks in the radius
-        for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
-            for (int dy = -chunkRadius; dy <= chunkRadius; dy++) {
+        // Scan all chunks in the radius. Query path does not create chunks.
+        for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
+            for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
                 Chunk targetChunk = centerChunk.translate(dx, dy);
-                ChunkRepository repo = load(targetChunk);
+                ChunkRepository repo = getLoaded(targetChunk);
+                if (repo == null) {
+                    continue;
+                }
 
                 // Get all entities of this type in the chunk
                 Set<E> entities = repo.getAll(type);
@@ -62,7 +90,9 @@ public final class ChunkManager {
                 // Filter by actual distance
                 for (E entity : entities) {
                     Position entityPos = entity.getPosition();
-                    if (entityPos != null && center.withinDistance(entityPos, distance)) {
+                    if (entityPos != null
+                            && center.withinDistance(entityPos, distance)
+                            && predicate.test(entity)) {
                         found.add(entity);
                     }
                 }
@@ -70,6 +100,74 @@ public final class ChunkManager {
         }
 
         return found;
+    }
+
+    /**
+     * Finds local players for a viewer with Luna-style prioritization.
+     */
+    public Set<Player> findUpdatePlayers(Player viewer, int distance) {
+        return find(
+                viewer.getPosition(),
+                EntityType.PLAYER,
+                distance,
+                LinkedHashSet::new,
+                other -> other != null && other.isActive && other != viewer
+        );
+    }
+
+    /**
+     * Finds local npcs for a viewer without scanning the full npc list.
+     */
+    public Set<Npc> findUpdateNpcs(Player viewer, int distance) {
+        return find(
+                viewer.getPosition(),
+                EntityType.NPC,
+                distance,
+                HashSet::new,
+                npc -> npc != null && npc.isVisible()
+        );
+    }
+
+    /**
+     * Iterates nearby update-player candidates without allocating an intermediate set.
+     */
+    public void forEachUpdatePlayerCandidate(Player viewer, int distance, Consumer<Player> consumer) {
+        forEach(
+                viewer.getPosition(),
+                EntityType.PLAYER,
+                distance,
+                other -> other != null && other.isActive && other != viewer,
+                consumer
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends Entity> void forEach(Position center,
+                                            EntityType type,
+                                            int distance,
+                                            Predicate<E> predicate,
+                                            Consumer<E> consumer) {
+        int chunkRadius = (distance / Chunk.SIZE) + 2;
+        Chunk centerChunk = center.getChunk();
+
+        for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
+            for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
+                ChunkRepository repo = getLoaded(centerChunk.translate(dx, dy));
+                if (repo == null) {
+                    continue;
+                }
+
+                Set<E> entities = repo.getAll(type);
+                for (E entity : entities) {
+                    Position entityPos = entity.getPosition();
+                    if (entityPos != null
+                            && center.withinDistance(entityPos, distance)
+                            && predicate.test(entity)) {
+                        consumer.accept(entity);
+                    }
+                }
+            }
+        }
     }
 
     /**

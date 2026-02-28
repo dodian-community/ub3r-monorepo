@@ -2,7 +2,6 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.EntityUpdating;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -24,7 +23,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
+    private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
+    private static final int MAX_LOCAL_NPC_CAP = 255;
     private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
+    private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
 
@@ -37,49 +39,79 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         ByteMessage updateBlock = ByteMessage.raw(16384);
         ByteMessage buf = stream;
         int movementWrites = 0;
+        try {
+            stream.startBitAccess();
 
-        stream.startBitAccess();
+            pruneLocalNpcsToProtocolCap(player);
+            stream.putBits(8, player.getLocalNpcs().size());
+            for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
+                Npc npc = i.next();
+                boolean exceptions = removeNpc(player, npc);
+                if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
+                    updateNPCMovement(npc, stream);
+                    movementWrites++;
+                    appendBlockUpdate(npc, updateBlock);
+                } else {
+                    buf.putBits(1, 1);
+                    stream.putBits(2, 3); // tells client to remove this npc from list
+                    i.remove();
+                }
+            }
 
-        stream.putBits(8, player.getLocalNpcs().size());
-        for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
-            Npc npc = i.next();
-            boolean exceptions = removeNpc(player, npc);
-            if (player.withinDistance(npc) && npc.isVisible() && !exceptions) {
-                updateNPCMovement(npc, stream);
-                movementWrites++;
-                appendBlockUpdate(npc, updateBlock);
+            int npcsAdded = 0;
+            for (Npc npc : findNearbyNpcs(player)) {
+                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcs().size() >= MAX_LOCAL_NPC_CAP) {
+                    break;
+                }
+                boolean exceptions = removeNpc(player, npc);
+                if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
+                if (player.getLocalNpcs().add(npc)) {
+                    if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
+                        npc.setId(player.getGender() == 0 ? 1306 : 1307);
+                    addNpc(player, npc, stream);
+                    appendBlockUpdate(npc, updateBlock);
+                    npcsAdded++;
+                }
+            }
+            if (updateBlock.getBuffer().writerIndex() > 0) {
+                stream.putBits(14, 16383);
+                stream.endBitAccess();
+                stream.putBytes(updateBlock);
             } else {
-                buf.putBits(1, 1);
-                stream.putBits(2, 3); // tells client to remove this npc from list
-                i.remove();
+                stream.endBitAccess();
             }
+            // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
+
+            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
+                DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
+                logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
+            }
+        } finally {
+            updateBlock.releaseAll();
+        }
+    }
+
+    private java.util.Collection<Npc> findNearbyNpcs(Player player) {
+        if (Server.chunkManager == null) {
+            return Server.npcManager.getNpcs();
+        }
+        return Server.chunkManager.findUpdateNpcs(player, 16);
+    }
+
+    private void pruneLocalNpcsToProtocolCap(Player player) {
+        if (player.getLocalNpcs().size() <= MAX_LOCAL_NPC_CAP) {
+            return;
         }
 
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            boolean exceptions = removeNpc(player, npc);
-            if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
-            if (player.getLocalNpcs().add(npc)) {
-                if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
-                    npc.setId(player.getGender() == 0 ? 1306 : 1307);
-                addNpc(player, npc, stream);
-                appendBlockUpdate(npc, updateBlock);
+        Iterator<Npc> iterator = player.getLocalNpcs().iterator();
+        int keep = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            keep++;
+            if (keep <= MAX_LOCAL_NPC_CAP) {
+                continue;
             }
-        }
-        if (updateBlock.getBuffer().writerIndex() > 0) {
-            stream.putBits(14, 16383);
-            stream.endBitAccess();
-            // Only copy the written bytes, not the entire buffer capacity
-            byte[] updateData = new byte[updateBlock.getBuffer().writerIndex()];
-            updateBlock.getBuffer().getBytes(0, updateData);
-            stream.putBytes(updateData);
-        } else {
-            stream.endBitAccess();
-        }
-        // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
-
-        if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
-            DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
-            logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
+            iterator.remove();
         }
     }
 
@@ -116,33 +148,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void appendBlockUpdate(Npc npc, ByteMessage buf) {
-
-        if(!npc.getUpdateFlags().isUpdateRequired())
-            return;
-        int updateMask = 0;
-        for (UpdateFlag flag : npc.getUpdateFlags().keySet()) {
-            if (npc.getUpdateFlags().isRequired(flag)) {
-                updateMask |= flag.getMask(npc.getType());
-            }
-        }
-        buf.put(updateMask);
-        // Emit blocks in the exact order expected by Client.method86.
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM))
-            appendAnimationRequest(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS))
-            appendGfxUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2))
-            appendPrimaryHit2(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER))
-            appendFaceCharacter(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT))
-            appendTextUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT))
-            appendPrimaryHit(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE))
-            appendAppearanceUpdate(npc, buf);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE))
-            appendFaceCoordinates(npc, buf);
+        BLOCK_SET.encode(this, npc, buf);
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {

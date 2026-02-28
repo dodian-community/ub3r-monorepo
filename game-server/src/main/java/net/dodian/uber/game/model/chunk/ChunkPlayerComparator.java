@@ -28,6 +28,10 @@ public final class ChunkPlayerComparator implements Comparator<Player> {
 
     @Override
     public int compare(Player left, Player right) {
+        if (left == right) {
+            return 0;
+        }
+
         int leftWeight = 0;
         int rightWeight = 0;
 
@@ -42,8 +46,14 @@ public final class ChunkPlayerComparator implements Comparator<Player> {
             rightWeight += 3;
         }
 
-        // Higher weight = higher priority = earlier in ordering
-        return Integer.compare(rightWeight, leftWeight);
+        int weightCompare = Integer.compare(rightWeight, leftWeight);
+        if (weightCompare != 0) {
+            // Higher weight = higher priority = earlier in ordering.
+            return weightCompare;
+        }
+
+        // Stable tie-breaker so sorted sets/lists keep deterministic ordering.
+        return Integer.compare(left.getSlot(), right.getSlot());
     }
 
     /**

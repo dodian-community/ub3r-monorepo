@@ -168,15 +168,18 @@ public class PlayerHandler {
         Client temp = (Client) plr;
         if (temp != null) {
             temp.destruct();
-            logger.info("Finished removing player: '" + temp.getPlayerName() + "'");
+            logger.info("Finished removing player: '{}' slot={} active={} disconnected={}",
+                    temp.getPlayerName(), temp.getSlot(), temp.isActive, temp.disconnected);
             int slot = temp.getSlot();
-            players[slot] = null;
-            if (temp.isActive && slot >= 1 && slot <= Constants.maxPlayers) {
+            if (slot >= 1 && slot <= Constants.maxPlayers) {
                 synchronized (SLOT_LOCK) {
-                    usedSlots.clear(slot); // Mark the slot as available
+                    usedSlots.clear(slot); // Mark the slot as available for all disconnect paths
                 }
+                players[slot] = null;
             }
             playersOnline.remove(Utils.playerNameToLong(temp.getPlayerName()));
+            temp.isActive = false;
+            temp.disconnected = true;
         } else {
             logger.warn("Tried to remove a null player!");
         }
