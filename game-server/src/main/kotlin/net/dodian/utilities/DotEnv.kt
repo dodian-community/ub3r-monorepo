@@ -9,8 +9,10 @@ private fun requiredEnv(key: String): String = dotenv[key]
 // Server Settings
 val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
 val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
-val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: true
+val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: false
 val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
+val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
+val debugPacketQueueMetrics = dotenv["DEBUG_PACKET_QUEUE_METRICS"]?.toBoolean() ?: false
 
 // Database Settings
 val databaseHost = requiredEnv("DATABASE_HOST")

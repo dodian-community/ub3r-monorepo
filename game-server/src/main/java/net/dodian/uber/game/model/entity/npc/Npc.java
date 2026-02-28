@@ -7,6 +7,8 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.chunk.Chunk;
+import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -54,6 +56,8 @@ public class Npc extends Entity {
     private Function1<Client, Boolean> spawnCondition = defaultSpawnCondition();
     private int pendingWalkingDirection = -1;
     private boolean walking = false;
+    private Chunk currentChunk;
+    private ChunkRepository chunkRepository;
 
     public Npc(int slot, int id, Position position, int face) {
         super(position.copy(), slot, Entity.Type.NPC);
@@ -216,6 +220,34 @@ public class Npc extends Entity {
 
     public int getHeadIcon() {
         return headIcon & 0xFF;
+    }
+
+    public void syncChunkMembership() {
+        if (Server.chunkManager == null) {
+            return;
+        }
+
+        Chunk newChunk = getPosition().getChunk();
+        if (currentChunk != null && currentChunk.equals(newChunk) && chunkRepository != null) {
+            return;
+        }
+
+        if (chunkRepository != null) {
+            chunkRepository.remove(this);
+        }
+
+        ChunkRepository repo = Server.chunkManager.load(newChunk);
+        repo.add(this);
+        currentChunk = newChunk;
+        chunkRepository = repo;
+    }
+
+    public void removeFromChunk() {
+        if (chunkRepository != null) {
+            chunkRepository.remove(this);
+        }
+        chunkRepository = null;
+        currentChunk = null;
     }
 
     public void setHeadIcon(int headIcon) {

@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.chunk;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.Entity;
+import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Player;
 
 import java.util.*;
@@ -117,6 +118,19 @@ public final class ChunkManager {
                 distance,
                 setFactory,
                 other -> other != null && other.isActive && other != viewer
+        );
+    }
+
+    /**
+     * Finds local npcs for a viewer without scanning the full npc list.
+     */
+    public Set<Npc> findUpdateNpcs(Player viewer, int distance) {
+        return find(
+                viewer.getPosition(),
+                EntityType.NPC,
+                distance,
+                HashSet::new,
+                npc -> npc != null && npc.isVisible()
         );
     }
 

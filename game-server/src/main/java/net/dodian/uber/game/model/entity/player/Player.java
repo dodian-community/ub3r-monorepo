@@ -104,7 +104,6 @@ public abstract class Player extends Entity {
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
     public Set<Player> playersUpdating = new HashSet<>();
-    private int localPlayerSelectionCursor = 0;
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;
@@ -711,21 +710,6 @@ public abstract class Player extends Entity {
         if (z < 0)
             z += 32;
         str.putBits(5, z); // x coordinate relative to thisPlayer
-    }
-
-    public int getLocalPlayerSelectionCursor() {
-        return localPlayerSelectionCursor;
-    }
-
-    public void advanceLocalPlayerSelectionCursor(int totalCandidates, int amount) {
-        if (totalCandidates <= 0) {
-            localPlayerSelectionCursor = 0;
-            return;
-        }
-        if (amount <= 0) {
-            amount = 1;
-        }
-        localPlayerSelectionCursor = (localPlayerSelectionCursor + amount) % totalCandidates;
     }
 
     // --- Cached player update block (for efficient multi-viewer reuse) ---
@@ -1575,6 +1559,8 @@ public abstract class Player extends Entity {
 	  */ //Test Yanille coords.
     }
 
+    private static final positions[] POSITION_VALUES = positions.values();
+
     public int getSkillId(String name) {
         for (int i = 0; i < Skill.values().length; i++)
             if (Skill.values()[i].getName().startsWith(name.toLowerCase()))
@@ -1583,7 +1569,7 @@ public abstract class Player extends Entity {
     }
 
     public positions getPositionName(Position current) {
-        for (positions pos : positions.values()) {
+        for (positions pos : POSITION_VALUES) {
             if (current.getX() >= pos.coordValue[0] && current.getX() <= pos.coordValue[1] && current.getY() >= pos.coordValue[2] && current.getY() <= pos.coordValue[3])
                 return pos;
         }
@@ -1591,8 +1577,8 @@ public abstract class Player extends Entity {
     }
 
     public String getPositionName() {
-        Position current = getPosition().copy();
-        for (positions pos : positions.values()) {
+        Position current = getPosition();
+        for (positions pos : POSITION_VALUES) {
             if (current.getX() >= pos.coordValue[0] && current.getX() <= pos.coordValue[1] && current.getY() >= pos.coordValue[2] && current.getY() <= pos.coordValue[3])
                 return pos.name;
         }

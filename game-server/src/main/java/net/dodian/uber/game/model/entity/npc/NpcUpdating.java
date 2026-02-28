@@ -23,6 +23,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcUpdating.class);
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
+    private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
+    private static final int MAX_LOCAL_NPC_CAP = 255;
     private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
     private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
@@ -40,6 +42,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         try {
             stream.startBitAccess();
 
+            pruneLocalNpcsToProtocolCap(player);
             stream.putBits(8, player.getLocalNpcs().size());
             for (Iterator<Npc> i = player.getLocalNpcs().iterator(); i.hasNext(); ) {
                 Npc npc = i.next();
@@ -55,7 +58,11 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 }
             }
 
-            for (Npc npc : Server.npcManager.getNpcs()) {
+            int npcsAdded = 0;
+            for (Npc npc : findNearbyNpcs(player)) {
+                if (npcsAdded >= MAX_LOCAL_NPC_ADDS_PER_TICK || player.getLocalNpcs().size() >= MAX_LOCAL_NPC_CAP) {
+                    break;
+                }
                 boolean exceptions = removeNpc(player, npc);
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
                 if (player.getLocalNpcs().add(npc)) {
@@ -63,6 +70,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                         npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
                     appendBlockUpdate(npc, updateBlock);
+                    npcsAdded++;
                 }
             }
             if (updateBlock.getBuffer().writerIndex() > 0) {
@@ -80,6 +88,30 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             }
         } finally {
             updateBlock.releaseAll();
+        }
+    }
+
+    private java.util.Collection<Npc> findNearbyNpcs(Player player) {
+        if (Server.chunkManager == null) {
+            return Server.npcManager.getNpcs();
+        }
+        return Server.chunkManager.findUpdateNpcs(player, 16);
+    }
+
+    private void pruneLocalNpcsToProtocolCap(Player player) {
+        if (player.getLocalNpcs().size() <= MAX_LOCAL_NPC_CAP) {
+            return;
+        }
+
+        Iterator<Npc> iterator = player.getLocalNpcs().iterator();
+        int keep = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            keep++;
+            if (keep <= MAX_LOCAL_NPC_CAP) {
+                continue;
+            }
+            iterator.remove();
         }
     }
 

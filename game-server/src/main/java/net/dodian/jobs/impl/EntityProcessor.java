@@ -17,9 +17,11 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
+import static net.dodian.utilities.DotEnvKt.getDebugPacketQueueMetrics;
+
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
-    private static final boolean DEBUG_PACKET_QUEUE_METRICS = true;
+    private static final boolean DEBUG_PACKET_QUEUE_METRICS = getDebugPacketQueueMetrics();
     private static final int[][] NPC_ROAM_DELTAS = {
             {-1, -1}, {-1, 0}, {-1, 1},
             {0, -1},           {0, 1},
@@ -37,6 +39,8 @@ public class EntityProcessor implements Runnable {
         for (Npc npc : Server.npcManager.getNpcs()) {
             processNpc(now, npc, activeNpcChunks);
         }
+
+        syncNpcChunksForTick();
 
         // End server when update finished
         if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
@@ -237,6 +241,18 @@ public class EntityProcessor implements Runnable {
                 continue;
             }
             npc.setDirection(npc.getNextWalkingDirection());
+        }
+    }
+
+    private void syncNpcChunksForTick() {
+        if (Server.chunkManager == null) {
+            return;
+        }
+        for (Npc npc : Server.npcManager.getNpcs()) {
+            if (npc == null) {
+                continue;
+            }
+            npc.syncChunkMembership();
         }
     }
 

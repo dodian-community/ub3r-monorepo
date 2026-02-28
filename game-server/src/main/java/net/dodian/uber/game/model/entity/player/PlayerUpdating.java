@@ -110,16 +110,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private void addLocalPlayers(Player player, ByteMessage stream, ByteMessage updateBlock) {
-        java.util.List<Player> candidates = new java.util.ArrayList<>(findNearbyPlayers(player));
+        java.util.Collection<Player> candidates = findNearbyPlayers(player);
         if (candidates.isEmpty()) {
             return;
         }
 
-        int startIndex = Math.floorMod(player.getLocalPlayerSelectionCursor(), candidates.size());
         int playersAdded = 0;
-
-        for (int scan = 0; scan < candidates.size(); scan++) {
-            Player other = candidates.get((startIndex + scan) % candidates.size());
+        for (Player other : candidates) {
             if (player == other || other == null || !other.isActive) {
                 continue;
             }
@@ -145,8 +142,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 break;
             }
         }
-
-        player.advanceLocalPlayerSelectionCursor(candidates.size(), Math.max(playersAdded, 1));
     }
 
     private void pruneLocalsToProtocolCap(Player player) {
@@ -170,13 +165,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         player.playerListSize = keep;
     }
 
-    private java.util.Set<Player> findNearbyPlayers(Player player) {
+    private java.util.Collection<Player> findNearbyPlayers(Player player) {
         if (Server.chunkManager == null) {
             java.util.List<Player> nearby = PlayerHandler.getLocalPlayers(player);
             if (nearby.size() > 50) {
                 nearby.sort(new ChunkPlayerComparator(player));
             }
-            return new java.util.LinkedHashSet<>(nearby);
+            return nearby;
         }
 
         java.util.Set<Player> nearby = Server.chunkManager.findUpdatePlayers(player, 16);
