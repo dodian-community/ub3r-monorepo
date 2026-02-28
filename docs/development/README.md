@@ -24,6 +24,8 @@ This is the category in which you'll find documentation about how things are des
     <li><a href="/docs/development">Development</a>
         <ul>
             <li><a href="/docs/development/database.md">Ub3r Database</a></li>
+            <li><a href="/docs/development/performance_luna_parity.md">Luna Parity Performance Harness</a></li>
+            <li><a href="/docs/development/performance_luna_parity_baseline.md">Luna Parity Baseline Report</a></li>
         </ul>
     </li>
     <li><a href="/docs/other">Other</a>

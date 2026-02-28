@@ -10,6 +10,8 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static net.dodian.utilities.DotEnvKt.getNettyLeakDetection;
+
 /**
  * Clean Netty bootstrap that binds the socket and wires the new {@link GameChannelInitializer}.
  * Behaviour is copied from the legacy NettyGameServer but lives under the new package to avoid
@@ -30,17 +32,10 @@ public class NettyGameServer {
     }
 
     public void start() {
-        // Configure resource leak detection like Luna - disabled in production
-        // Check if we're in development mode (you can customize this logic)
-        boolean isDevelopment = logger.isDebugEnabled() || Boolean.getBoolean("development.mode");
-        
-        if (isDevelopment) {
-            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
-            logger.debug("[Netty] Resource leak detection set to PARANOID level (development mode)");
-        } else {
-            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
-            logger.info("[Netty] Resource leak detection DISABLED (production mode)");
-        }
+        String configuredLevel = System.getProperty("netty.leakDetection", getNettyLeakDetection());
+        ResourceLeakDetector.Level leakDetectionLevel = resolveLeakDetectionLevel(configuredLevel);
+        ResourceLeakDetector.setLevel(leakDetectionLevel);
+        logger.info("[Netty] Resource leak detection {} ({})", leakDetectionLevel, describeLeakDetectionSource(configuredLevel));
 
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
@@ -63,5 +58,34 @@ public class NettyGameServer {
         logger.info("[Netty] Shutting down game server");
         if (bossGroup != null) bossGroup.shutdownGracefully();
         if (workerGroup != null) workerGroup.shutdownGracefully();
+    }
+
+    static ResourceLeakDetector.Level resolveLeakDetectionLevel(String configuredLevel) {
+        if (configuredLevel == null || configuredLevel.isBlank()) {
+            return ResourceLeakDetector.Level.DISABLED;
+        }
+
+        switch (configuredLevel.trim().toLowerCase()) {
+            case "disabled":
+            case "off":
+            case "false":
+                return ResourceLeakDetector.Level.DISABLED;
+            case "simple":
+                return ResourceLeakDetector.Level.SIMPLE;
+            case "advanced":
+                return ResourceLeakDetector.Level.ADVANCED;
+            case "paranoid":
+            case "true":
+                return ResourceLeakDetector.Level.PARANOID;
+            default:
+                throw new IllegalArgumentException("Unsupported NETTY_LEAK_DETECTION value: " + configuredLevel);
+        }
+    }
+
+    private static String describeLeakDetectionSource(String configuredLevel) {
+        if (configuredLevel == null || configuredLevel.isBlank() || "disabled".equalsIgnoreCase(configuredLevel)) {
+            return "default disabled";
+        }
+        return "explicit override";
     }
 }

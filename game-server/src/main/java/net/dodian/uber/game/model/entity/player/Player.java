@@ -103,7 +103,7 @@ public abstract class Player extends Entity {
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public ArrayList<Player> playersUpdating = new ArrayList<>();
+    public Set<Player> playersUpdating = new LinkedHashSet<>(255);
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;
@@ -311,6 +311,7 @@ public abstract class Player extends Entity {
     }
 
     void destruct() {
+        releaseCachedUpdateBlock();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
         mapRegionX = mapRegionY = -1;
@@ -689,6 +690,9 @@ public abstract class Player extends Entity {
     }
 
     public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
+        if (plr == null || playerListSize >= 255 || playerListSize >= playerList.length) {
+            return;
+        }
         int id = plr.getSlot();
         playerList[playerListSize++] = plr;
         playersUpdating.add(plr);
@@ -709,15 +713,16 @@ public abstract class Player extends Entity {
     }
 
     // --- Cached player update block (for efficient multi-viewer reuse) ---
-    private byte[] cachedUpdateBlock = null;
-    private int cachedUpdateBlockLength = 0;
+    private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
 
     /**
      * Returns true if the cached update block can be reused this cycle.
      */
     public boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid && cachedUpdateBlock != null;
+        return cachedUpdateBlockValid
+                && cachedUpdateBlock != null
+                && cachedUpdateBlock.getBuffer().refCnt() > 0;
     }
 
     /**
@@ -725,19 +730,21 @@ public abstract class Player extends Entity {
      * is valid first.
      */
     public void writeCachedUpdateBlock(ByteMessage dst) {
-        // Write only the valid portion of the cached block
-        byte[] dataToWrite = new byte[cachedUpdateBlockLength];
-        System.arraycopy(cachedUpdateBlock, 0, dataToWrite, 0, cachedUpdateBlockLength);
-        dst.putBytes(dataToWrite);
+        dst.putBytes(cachedUpdateBlock);
     }
 
     /**
      * Stores a freshly-built update block for re-use next time.
      */
-    public void cacheUpdateBlock(byte[] src, int length) {
-        this.cachedUpdateBlock = src;
-        this.cachedUpdateBlockLength = length;
-        this.cachedUpdateBlockValid = true;
+    public void cacheUpdateBlock(ByteMessage src) {
+        releaseCachedUpdateBlock();
+        if (src != null) {
+            src.retain();
+            this.cachedUpdateBlock = src;
+            this.cachedUpdateBlockValid = true;
+            return;
+        }
+        this.cachedUpdateBlockValid = false;
     }
 
     /**
@@ -746,6 +753,17 @@ public abstract class Player extends Entity {
      */
     public void invalidateCachedUpdateBlock() {
         this.cachedUpdateBlockValid = false;
+        releaseCachedUpdateBlock();
+    }
+
+    private void releaseCachedUpdateBlock() {
+        if (cachedUpdateBlock == null) {
+            return;
+        }
+        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
+            cachedUpdateBlock.release();
+        }
+        cachedUpdateBlock = null;
     }
 
     private final byte[] chatText = new byte[4096];
@@ -1541,6 +1559,8 @@ public abstract class Player extends Entity {
 	  */ //Test Yanille coords.
     }
 
+    private static final positions[] POSITION_VALUES = positions.values();
+
     public int getSkillId(String name) {
         for (int i = 0; i < Skill.values().length; i++)
             if (Skill.values()[i].getName().startsWith(name.toLowerCase()))
@@ -1549,7 +1569,7 @@ public abstract class Player extends Entity {
     }
 
     public positions getPositionName(Position current) {
-        for (positions pos : positions.values()) {
+        for (positions pos : POSITION_VALUES) {
             if (current.getX() >= pos.coordValue[0] && current.getX() <= pos.coordValue[1] && current.getY() >= pos.coordValue[2] && current.getY() <= pos.coordValue[3])
                 return pos;
         }
@@ -1557,8 +1577,8 @@ public abstract class Player extends Entity {
     }
 
     public String getPositionName() {
-        Position current = getPosition().copy();
-        for (positions pos : positions.values()) {
+        Position current = getPosition();
+        for (positions pos : POSITION_VALUES) {
             if (current.getX() >= pos.coordValue[0] && current.getX() <= pos.coordValue[1] && current.getY() >= pos.coordValue[2] && current.getY() <= pos.coordValue[3])
                 return pos.name;
         }

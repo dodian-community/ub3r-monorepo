@@ -25,7 +25,7 @@ public final class Configuration {
 	/**
 	 * The port of the server that the client will be connecting to
 	 */
-	public static int server_port = 43894;
+	public static int server_port = 43594;
 	
 	public static final int CLIENT_VERSION = 317;
 

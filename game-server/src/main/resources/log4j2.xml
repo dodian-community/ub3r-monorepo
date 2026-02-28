@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info">
+    <Properties>
+        <Property name="dodianLogLevel">${sys:dodian.log.level:-${env:DODIAN_LOG_LEVEL:-info}}</Property>
+    </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy-MM-dd H:mm:ss}] %highlight{%p: %msg} &lt;- %C{1}::%M()%n" disableAnsi="false"/>
@@ -11,6 +14,6 @@
         </Root>
         <Logger name="io.netty" level="info" additivity="false"/>
         <Logger name="org.pf4j" level="info" additivity="false"/>
-        <Logger name="net.dodian" level="debug" additivity="true"/>
+        <Logger name="net.dodian" level="${dodianLogLevel}" additivity="true"/>
     </Loggers>
 </Configuration>

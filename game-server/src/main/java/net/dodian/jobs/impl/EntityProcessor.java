@@ -19,7 +19,11 @@ import java.util.Set;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
-    private static final boolean DEBUG_PACKET_QUEUE_METRICS = true;
+    private static final int[][] NPC_ROAM_DELTAS = {
+            {-1, -1}, {-1, 0}, {-1, 1},
+            {0, -1},           {0, 1},
+            {1, -1},  {1, 0},  {1, 1}
+    };
 
     @Override
     public void run() {
@@ -32,6 +36,8 @@ public class EntityProcessor implements Runnable {
         for (Npc npc : Server.npcManager.getNpcs()) {
             processNpc(now, npc, activeNpcChunks);
         }
+
+        syncNpcChunksForTick();
 
         // End server when update finished
         if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
@@ -128,14 +134,8 @@ public class EntityProcessor implements Runnable {
             return;
         }
 
-        final int[][] deltas = {
-                {-1, -1}, {-1, 0}, {-1, 1},
-                {0, -1},           {0, 1},
-                {1, -1},  {1, 0},  {1, 1}
-        };
-
-        for (int attempt = 0; attempt < deltas.length; attempt++) {
-            int[] delta = deltas[Utils.random(deltas.length - 1)];
+        for (int attempt = 0; attempt < NPC_ROAM_DELTAS.length; attempt++) {
+            int[] delta = NPC_ROAM_DELTAS[Utils.random(NPC_ROAM_DELTAS.length - 1)];
             int dx = delta[0];
             int dy = delta[1];
 
@@ -218,18 +218,6 @@ public class EntityProcessor implements Runnable {
             }
         }
 
-        if (DEBUG_PACKET_QUEUE_METRICS && activePlayers > 0) {
-            logger.info(
-                    "packetQueueMetrics activePlayers={} processed={} preTotal={} postTotal={} backlogPlayers={} maxPre={} maxPost={}",
-                    activePlayers,
-                    processedPackets,
-                    totalPendingBefore,
-                    totalPendingAfter,
-                    backlogPlayers,
-                    maxPendingBefore,
-                    maxPendingAfter
-            );
-        }
     }
 
     private void consumeNpcDirectionsForTick() {
@@ -238,6 +226,18 @@ public class EntityProcessor implements Runnable {
                 continue;
             }
             npc.setDirection(npc.getNextWalkingDirection());
+        }
+    }
+
+    private void syncNpcChunksForTick() {
+        if (Server.chunkManager == null) {
+            return;
+        }
+        for (Npc npc : Server.npcManager.getNpcs()) {
+            if (npc == null) {
+                continue;
+            }
+            npc.syncChunkMembership();
         }
     }
 

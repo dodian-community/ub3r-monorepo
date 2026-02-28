@@ -3,8 +3,10 @@ package net.dodian.uber.game.model.chunk;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.entity.Entity;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.EnumMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Repository for storing entities within a single chunk.
@@ -20,7 +22,7 @@ public final class ChunkRepository {
 
     /**
      * Map of entity type to set of entities.
-     * Using ConcurrentHashMap for thread-safety.
+     * Using insertion-ordered sets for low-churn iteration on the game thread.
      */
     private final Map<EntityType, Set<Entity>> entities;
 
@@ -31,11 +33,11 @@ public final class ChunkRepository {
      */
     public ChunkRepository(Chunk chunk) {
         this.chunk = chunk;
-        this.entities = new ConcurrentHashMap<>();
+        this.entities = new EnumMap<>(EntityType.class);
 
         // Initialize empty sets for each entity type
         for (EntityType type : EntityType.values()) {
-            entities.put(type, ConcurrentHashMap.newKeySet());
+            entities.put(type, new LinkedHashSet<>());
         }
     }
 
@@ -71,24 +73,33 @@ public final class ChunkRepository {
      *
      * @param type The entity type
      * @param <E> The entity class type
-     * @return Unmodifiable set of entities
+     * @return Set of entities
      */
     @SuppressWarnings("unchecked")
     public <E extends Entity> Set<E> getAll(EntityType type) {
-        return (Set<E>) Collections.unmodifiableSet(entities.get(type));
+        return (Set<E>) entities.get(type);
     }
 
     /**
      * Checks if this repository is empty (contains no entities).
      */
     public boolean isEmpty() {
-        return entities.values().stream().allMatch(Set::isEmpty);
+        for (Set<Entity> entitySet : entities.values()) {
+            if (!entitySet.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Gets the total count of entities in this chunk.
      */
     public int size() {
-        return entities.values().stream().mapToInt(Set::size).sum();
+        int total = 0;
+        for (Set<Entity> entitySet : entities.values()) {
+            total += entitySet.size();
+        }
+        return total;
     }
 }
