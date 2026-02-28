@@ -60,6 +60,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             // Handle teleportation - clear player list but continue to local player discovery
             if (player.didTeleport()) {
                 // Clear existing player list when teleporting (similar to Hyperion's approach)
+                java.util.Arrays.fill(player.playerList, 0, player.playerListSize, null);
                 player.playerListSize = 0;
                 player.playersUpdating.clear();
                 // Don't return early - allow local player discovery to happen
@@ -70,20 +71,24 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 pruneLocalsToProtocolCap(player);
                 stream.putBits(8, player.playerListSize);
                 int size = player.playerListSize;
-                player.playersUpdating.clear();
-                player.playerListSize = 0;
+                int keep = 0;
                 for (int i = 0; i < size; i++) {
-                    if (player.playerList[i] != null && player.loaded && !player.playerList[i].didTeleport() && !player.didTeleport()
-                            && player.withinDistance(player.playerList[i])) {
-                        player.playerList[i].updatePlayerMovement(stream);
-                        appendBlockUpdate(player.playerList[i], updateBlock, UpdatePhase.UPDATE_LOCAL);
-                        player.playerList[player.playerListSize++] = player.playerList[i];
-                        player.playersUpdating.add(player.playerList[i]);
+                    Player local = player.playerList[i];
+                    if (local != null && player.loaded && !local.didTeleport() && !player.didTeleport()
+                            && player.withinDistance(local)) {
+                        local.updatePlayerMovement(stream);
+                        appendBlockUpdate(local, updateBlock, UpdatePhase.UPDATE_LOCAL);
+                        player.playerList[keep++] = local;
                     } else {
+                        if (local != null) {
+                            player.playersUpdating.remove(local);
+                        }
                         stream.putBits(1, 1);
                         stream.putBits(2, 3);
                     }
                 }
+                java.util.Arrays.fill(player.playerList, keep, size, null);
+                player.playerListSize = keep;
 
                 addLocalPlayers(player, stream, updateBlock);
             } else {
@@ -110,22 +115,52 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private void addLocalPlayers(Player player, ByteMessage stream, ByteMessage updateBlock) {
-        java.util.Collection<Player> candidates = findNearbyPlayers(player);
-        if (candidates.isEmpty()) {
+        int remainingAdds = Math.min(MAX_LOCAL_PLAYER_ADDS_PER_TICK, MAX_LOCAL_PLAYER_CAP - player.playerListSize);
+        if (remainingAdds <= 0) {
             return;
         }
 
+        if (Server.chunkManager == null) {
+            java.util.List<Player> candidates = PlayerHandler.getLocalPlayers(player);
+            if (candidates.isEmpty()) {
+                return;
+            }
+            if (player.playerListSize > 50) {
+                candidates.sort(new ChunkPlayerComparator(player));
+            }
+            addLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
+            return;
+        }
+
+        if (player.playerListSize > 50) {
+            addPrioritizedChunkLocalPlayers(player, stream, updateBlock, remainingAdds);
+            return;
+        }
+
+        final int[] playersAdded = {0};
+        Server.chunkManager.forEachUpdatePlayerCandidate(player, 16, other -> {
+            if (playersAdded[0] >= remainingAdds || !shouldAddLocalPlayerCandidate(player, other)) {
+                return;
+            }
+            player.addNewPlayer(other, stream, updateBlock);
+            if (!player.playersUpdating.contains(other)) {
+                return;
+            }
+            playersAdded[0]++;
+            if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            }
+        });
+    }
+
+    private void addLocalPlayersFromCollection(Player player,
+                                               ByteMessage stream,
+                                               ByteMessage updateBlock,
+                                               java.util.Collection<Player> candidates,
+                                               int remainingAdds) {
         int playersAdded = 0;
         for (Player other : candidates) {
-            if (player == other || other == null || !other.isActive) {
-                continue;
-            }
-
-            if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
-                continue;
-            }
-
-            if (other.invis && !player.invis) {
+            if (!shouldAddLocalPlayerCandidate(player, other)) {
                 continue;
             }
 
@@ -138,10 +173,95 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
             }
 
-            if (playersAdded >= MAX_LOCAL_PLAYER_ADDS_PER_TICK || player.playerListSize >= MAX_LOCAL_PLAYER_CAP) {
+            if (playersAdded >= remainingAdds || player.playerListSize >= MAX_LOCAL_PLAYER_CAP) {
                 break;
             }
         }
+    }
+
+    private void addPrioritizedChunkLocalPlayers(Player player,
+                                                 ByteMessage stream,
+                                                 ByteMessage updateBlock,
+                                                 int remainingAdds) {
+        Player[] prioritized = new Player[remainingAdds];
+        int[] prioritizedDistances = new int[remainingAdds];
+        int[] prioritizedCount = {0};
+
+        Server.chunkManager.forEachUpdatePlayerCandidate(player, 16, other -> {
+            if (!shouldAddLocalPlayerCandidate(player, other)) {
+                return;
+            }
+            insertPrioritizedCandidate(player, prioritized, prioritizedDistances, prioritizedCount, other);
+        });
+
+        for (int i = 0; i < prioritizedCount[0]; i++) {
+            Player other = prioritized[i];
+            if (!shouldAddLocalPlayerCandidate(player, other)) {
+                continue;
+            }
+            player.addNewPlayer(other, stream, updateBlock);
+            if (player.playersUpdating.contains(other) && DEBUG_ADDED_LOCAL_PLAYERS) {
+                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            }
+        }
+    }
+
+    private void insertPrioritizedCandidate(Player viewer,
+                                            Player[] prioritized,
+                                            int[] prioritizedDistances,
+                                            int[] prioritizedCount,
+                                            Player candidate) {
+        int distance = computeLongestDistance(viewer, candidate);
+        int count = prioritizedCount[0];
+        int limit = prioritized.length;
+
+        if (count == limit) {
+            Player worst = prioritized[count - 1];
+            if (compareCandidate(candidate, distance, worst, prioritizedDistances[count - 1]) >= 0) {
+                return;
+            }
+        } else {
+            prioritizedCount[0] = count + 1;
+        }
+
+        int insert = Math.min(count, limit - 1);
+        while (insert > 0 && compareCandidate(candidate, distance, prioritized[insert - 1], prioritizedDistances[insert - 1]) < 0) {
+            prioritized[insert] = prioritized[insert - 1];
+            prioritizedDistances[insert] = prioritizedDistances[insert - 1];
+            insert--;
+        }
+
+        prioritized[insert] = candidate;
+        prioritizedDistances[insert] = distance;
+    }
+
+    private int compareCandidate(Player left, int leftDistance, Player right, int rightDistance) {
+        if (right == null) {
+            return -1;
+        }
+        int distanceCompare = Integer.compare(leftDistance, rightDistance);
+        if (distanceCompare != 0) {
+            return distanceCompare;
+        }
+        return Integer.compare(left.getSlot(), right.getSlot());
+    }
+
+    private int computeLongestDistance(Player viewer, Player other) {
+        int dx = Math.abs(viewer.getPosition().getX() - other.getPosition().getX());
+        int dy = Math.abs(viewer.getPosition().getY() - other.getPosition().getY());
+        return Math.max(dx, dy);
+    }
+
+    private boolean shouldAddLocalPlayerCandidate(Player player, Player other) {
+        if (player == other || other == null || !other.isActive) {
+            return false;
+        }
+
+        if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
+            return false;
+        }
+
+        return !other.invis || player.invis;
     }
 
     private void pruneLocalsToProtocolCap(Player player) {
@@ -149,7 +269,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             return;
         }
         int originalSize = player.playerListSize;
-        player.playersUpdating.clear();
         int keep = 0;
         for (int i = 0; i < originalSize && keep < MAX_LOCAL_PLAYER_CAP; i++) {
             Player local = player.playerList[i];
@@ -157,26 +276,15 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 continue;
             }
             player.playerList[keep++] = local;
-            player.playersUpdating.add(local);
         }
         for (int i = keep; i < originalSize; i++) {
-            player.playerList[i] = null;
+            Player local = player.playerList[i];
+            if (local != null) {
+                player.playersUpdating.remove(local);
+                player.playerList[i] = null;
+            }
         }
         player.playerListSize = keep;
-    }
-
-    private java.util.Collection<Player> findNearbyPlayers(Player player) {
-        if (Server.chunkManager == null) {
-            java.util.List<Player> nearby = PlayerHandler.getLocalPlayers(player);
-            if (nearby.size() > 50) {
-                nearby.sort(new ChunkPlayerComparator(player));
-            }
-            return nearby;
-        }
-
-        java.util.Set<Player> nearby = Server.chunkManager.findUpdatePlayers(player, 16);
-        nearby.remove(player); // exclude self if present
-        return nearby;
     }
 
 

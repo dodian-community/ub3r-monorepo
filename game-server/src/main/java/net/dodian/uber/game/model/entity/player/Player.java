@@ -103,7 +103,7 @@ public abstract class Player extends Entity {
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public Set<Player> playersUpdating = new HashSet<>();
+    public Set<Player> playersUpdating = new LinkedHashSet<>(255);
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;

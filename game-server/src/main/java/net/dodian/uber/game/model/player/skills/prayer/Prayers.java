@@ -11,10 +11,12 @@ import java.util.HashMap;
 
 public class Prayers {
 
+    private static final Prayer[] PRAYER_VALUES = Prayer.values();
+
     /**
      * Prayer statuses
      */
-    private final boolean[] prayerstatus = new boolean[Prayer.values().length];
+    private final boolean[] prayerstatus = new boolean[PRAYER_VALUES.length];
 
     /**
      * The Player this manager belongs to
@@ -102,9 +104,10 @@ public class Prayers {
          * A map of Buttonid -> prayer
          */
         private static final HashMap<Integer, Prayer> prayers = new HashMap<>();
+        private static final Prayer[] VALUES = values();
 
         static {
-            for (Prayer prayer : Prayer.values()) {
+            for (Prayer prayer : VALUES) {
                 prayers.put(prayer.getButtonId(), prayer);
             }
         }
@@ -221,7 +224,7 @@ public class Prayers {
     /* Prayer drain rate! */
     public int getDrain() {
         int drain = 0;
-        for (Prayer prayer : Prayer.values()) {
+        for (Prayer prayer : PRAYER_VALUES) {
             if (isPrayerOn(prayer))
                 drain += prayer.getDrainEffect();
         }
@@ -239,7 +242,7 @@ public class Prayers {
      * Clear prayers/curses
      */
     public void reset() {
-        for (Prayer prayer : Prayer.values()) {
+        for (Prayer prayer : PRAYER_VALUES) {
             set(prayer, false);
             c.varbit(prayer.getConfigId(), 0);
         }
@@ -258,7 +261,7 @@ public class Prayers {
     }
 
     public boolean ifCheck() {
-        for (Prayer prayer : Prayer.values()) {
+        for (Prayer prayer : PRAYER_VALUES) {
             if (prayer.getMask() == 1 && prayerstatus[prayer.ordinal()])
                 return true;
         }
@@ -293,7 +296,7 @@ public class Prayers {
         boolean defencePrayer = (prayer.getMask() & DEFENCE_PRAYER) != 0;
         boolean rangePrayer = (prayer.getMask() & RANGE_PRAYER) != 0;
         boolean magicPrayer = (prayer.getMask() & MAGIC_PRAYER) != 0;
-        for (Prayer pray : Prayer.values()) {
+        for (Prayer pray : PRAYER_VALUES) {
             if (!isPrayerOn(pray) || pray == prayer) {
                 continue;
             }

@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.player.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -105,18 +106,11 @@ public final class ChunkManager {
      * Finds local players for a viewer with Luna-style prioritization.
      */
     public Set<Player> findUpdatePlayers(Player viewer, int distance) {
-        Supplier<Set<Player>> setFactory = () -> {
-            if (viewer.playerListSize > 50) {
-                return new TreeSet<>(new ChunkPlayerComparator(viewer));
-            }
-            return new HashSet<>();
-        };
-
         return find(
                 viewer.getPosition(),
                 EntityType.PLAYER,
                 distance,
-                setFactory,
+                LinkedHashSet::new,
                 other -> other != null && other.isActive && other != viewer
         );
     }
@@ -132,6 +126,48 @@ public final class ChunkManager {
                 HashSet::new,
                 npc -> npc != null && npc.isVisible()
         );
+    }
+
+    /**
+     * Iterates nearby update-player candidates without allocating an intermediate set.
+     */
+    public void forEachUpdatePlayerCandidate(Player viewer, int distance, Consumer<Player> consumer) {
+        forEach(
+                viewer.getPosition(),
+                EntityType.PLAYER,
+                distance,
+                other -> other != null && other.isActive && other != viewer,
+                consumer
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends Entity> void forEach(Position center,
+                                            EntityType type,
+                                            int distance,
+                                            Predicate<E> predicate,
+                                            Consumer<E> consumer) {
+        int chunkRadius = (distance / Chunk.SIZE) + 2;
+        Chunk centerChunk = center.getChunk();
+
+        for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
+            for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
+                ChunkRepository repo = getLoaded(centerChunk.translate(dx, dy));
+                if (repo == null) {
+                    continue;
+                }
+
+                Set<E> entities = repo.getAll(type);
+                for (E entity : entities) {
+                    Position entityPos = entity.getPosition();
+                    if (entityPos != null
+                            && center.withinDistance(entityPos, distance)
+                            && predicate.test(entity)) {
+                        consumer.accept(entity);
+                    }
+                }
+            }
+        }
     }
 
     /**
