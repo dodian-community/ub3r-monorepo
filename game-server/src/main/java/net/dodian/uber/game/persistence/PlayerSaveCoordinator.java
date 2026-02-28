@@ -8,12 +8,10 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 
 import static net.dodian.utilities.DotEnvKt.getAsyncPlayerSaveEnabled;
 import static net.dodian.utilities.DotEnvKt.getDatabaseSaveBurstAttempts;
@@ -48,14 +46,6 @@ public class PlayerSaveCoordinator {
 
     private final ConcurrentHashMap<Integer, SaveState> states = new ConcurrentHashMap<>();
 
-    private final LongAdder enqueued = new LongAdder();
-    private final LongAdder coalesced = new LongAdder();
-    private final LongAdder succeeded = new LongAdder();
-    private final LongAdder retried = new LongAdder();
-    private final LongAdder failed = new LongAdder();
-
-    private final java.util.concurrent.ScheduledExecutorService metricsLogger;
-
     public PlayerSaveCoordinator(PlayerSaveRepository repository,
                                  int workerCount,
                                  long retryBaseMs,
@@ -74,15 +64,6 @@ public class PlayerSaveCoordinator {
         };
 
         this.workers = Executors.newFixedThreadPool(Math.max(1, workerCount), workerFactory);
-        this.metricsLogger = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread thread = new Thread(r, "PlayerSaveMetrics");
-            thread.setDaemon(true);
-            return thread;
-        });
-
-        if (startMetricsLogger) {
-            this.metricsLogger.scheduleAtFixedRate(this::logMetricsSafe, 30, 30, TimeUnit.SECONDS);
-        }
     }
 
     public static void requestSave(Client client,
@@ -156,8 +137,6 @@ public class PlayerSaveCoordinator {
         SaveState state = states.computeIfAbsent(snapshot.getDbId(), ignored -> new SaveState(snapshot.getDbId()));
 
         synchronized (state) {
-            enqueued.increment();
-
             if (snapshot.isFinalSave()) {
                 state.finalSavePending = true;
             }
@@ -165,9 +144,6 @@ public class PlayerSaveCoordinator {
             if (state.inFlight == null && state.pending == null) {
                 state.pending = snapshot;
             } else {
-                if (state.pending != null) {
-                    coalesced.increment();
-                }
                 state.pending = snapshot;
             }
 
@@ -207,7 +183,6 @@ public class PlayerSaveCoordinator {
 
             synchronized (state) {
                 if (saved) {
-                    succeeded.increment();
                     state.inFlight = null;
                     state.inFlightAttempt = 0;
 
@@ -218,7 +193,6 @@ public class PlayerSaveCoordinator {
                     }
                 } else {
                     if (!current.isFinalSave()) {
-                        failed.increment();
                         state.inFlight = null;
                         state.inFlightAttempt = 0;
                     }
@@ -243,7 +217,6 @@ public class PlayerSaveCoordinator {
                 repository.saveSnapshot(snapshot);
                 return true;
             } catch (Exception exception) {
-                retried.increment();
                 state.inFlightAttempt++;
 
                 if (snapshot.isFinalSave()) {
@@ -261,7 +234,6 @@ public class PlayerSaveCoordinator {
                         continue;
                     }
 
-                    failed.increment();
                     logger.error(
                             "Final save burst exhausted for {} (dbId={}), entering periodic retry loop.",
                             snapshot.getPlayerName(),
@@ -339,7 +311,6 @@ public class PlayerSaveCoordinator {
             workers.shutdownNow();
         }
 
-        metricsLogger.shutdownNow();
     }
 
     public boolean awaitIdle(Duration timeout) {
@@ -362,42 +333,6 @@ public class PlayerSaveCoordinator {
             }
         }
         return true;
-    }
-
-    private void logMetricsSafe() {
-        try {
-            long finalLocks = 0;
-            long inFlight = 0;
-            long pending = 0;
-
-            for (SaveState state : states.values()) {
-                synchronized (state) {
-                    if (state.finalSavePending) {
-                        finalLocks++;
-                    }
-                    if (state.inFlight != null) {
-                        inFlight++;
-                    }
-                    if (state.pending != null) {
-                        pending++;
-                    }
-                }
-            }
-
-            logger.info(
-                    "playerSaveMetrics enqueued={} coalesced={} success={} retry={} failure={} inFlight={} pending={} pendingFinalLocks={}",
-                    enqueued.sum(),
-                    coalesced.sum(),
-                    succeeded.sum(),
-                    retried.sum(),
-                    failed.sum(),
-                    inFlight,
-                    pending,
-                    finalLocks
-            );
-        } catch (Exception e) {
-            logger.warn("Failed to log player save metrics", e);
-        }
     }
 
     private static final class SaveState {

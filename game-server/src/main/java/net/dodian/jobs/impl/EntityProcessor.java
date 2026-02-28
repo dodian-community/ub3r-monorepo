@@ -17,11 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.dodian.utilities.DotEnvKt.getDebugPacketQueueMetrics;
-
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
-    private static final boolean DEBUG_PACKET_QUEUE_METRICS = getDebugPacketQueueMetrics();
     private static final int[][] NPC_ROAM_DELTAS = {
             {-1, -1}, {-1, 0}, {-1, 1},
             {0, -1},           {0, 1},
@@ -221,18 +218,6 @@ public class EntityProcessor implements Runnable {
             }
         }
 
-        if (DEBUG_PACKET_QUEUE_METRICS && activePlayers > 0) {
-            logger.info(
-                    "packetQueueMetrics activePlayers={} processed={} preTotal={} postTotal={} backlogPlayers={} maxPre={} maxPost={}",
-                    activePlayers,
-                    processedPackets,
-                    totalPendingBefore,
-                    totalPendingAfter,
-                    backlogPlayers,
-                    maxPendingBefore,
-                    maxPendingAfter
-            );
-        }
     }
 
     private void consumeNpcDirectionsForTick() {
