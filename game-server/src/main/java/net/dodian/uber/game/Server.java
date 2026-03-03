@@ -20,8 +20,9 @@ import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
+import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;
@@ -83,6 +84,7 @@ public class Server {
 
     private static NettyGameServer nettyServer;
     private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
+    private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
@@ -140,16 +142,20 @@ public class Server {
         new Thread(login).start();
         /* Processor for various stuff */
         entryObject = new PyramidPlunder();
-        gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
-        gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
-        gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
-        gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
-        gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
-        gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-        gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
-        gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
-        gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
-        gameTickScheduler.start();
+        if (getGameLoopEnabled()) {
+            gameLoopService.start();
+        } else {
+            gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
+            gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
+            gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
+            gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
+            gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
+            gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
+            gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
+            gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
+            gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
+            gameTickScheduler.start();
+        }
         System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
@@ -196,12 +202,16 @@ public class Server {
             return;
         }
 
-        gameTickScheduler.stop();
+        if (getGameLoopEnabled()) {
+            gameLoopService.stop(Duration.ofSeconds(10));
+        } else {
+            gameTickScheduler.stop();
+        }
 
         try {
-            PlayerSaveCoordinator.shutdownAndDrain(Duration.ofSeconds(30));
+            AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
-            logger.warn("Failed to drain player save coordinator during shutdown", exception);
+            logger.warn("Failed to drain account persistence service during shutdown", exception);
         }
 
         try {

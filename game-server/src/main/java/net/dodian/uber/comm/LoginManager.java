@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.DbTables;
@@ -39,7 +39,7 @@ public class LoginManager {
             if (results.next()) {
                 /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
-                if (PlayerSaveCoordinator.isFinalSavePending(p.dbId)) {
+                if (AccountPersistenceService.isFinalSavePending(p.dbId)) {
                     return 5;
                 }
                 p.playerGroup = results.getInt("usergroupid");

@@ -66,6 +66,7 @@ private fun createDataSource(): HikariDataSource {
         logger.info("  - Max connections: ${config.maximumPoolSize}")
         logger.info("  - Connection timeout: ${config.connectionTimeout}ms")
         logger.info("  - Leak detection: ${config.leakDetectionThreshold}ms (This will show where leaking connections are acquired)")
+        logger.info("  - Connection proxy: ${if (databaseConnectionProxyEnabled) "enabled" else "disabled"}")
         logger.info("  - Database: ${config.jdbcUrl}")
 
         // Start pool monitoring
@@ -79,17 +80,19 @@ val dbConnection: Connection
             val connection = dataSource.connection.apply {
                 autoCommit = true
             }
-            // Capture the stack trace at the moment the connection is requested.
-            val acquisitionStackTrace = Thread.currentThread().stackTrace
 
             logger.debug("Connection obtained from pool (Active: ${(dataSource.hikariPoolMXBean.activeConnections)}/${(dataSource.hikariPoolMXBean.totalConnections)})")
 
-            // Return a proxy to intercept method calls, like 'close()'.
-            Proxy.newProxyInstance(
-                Connection::class.java.classLoader,
-                arrayOf(Connection::class.java),
-                ConnectionInvocationHandler(connection, acquisitionStackTrace)
-            ) as Connection
+            if (!databaseConnectionProxyEnabled) {
+                connection
+            } else {
+                val acquisitionStackTrace = Thread.currentThread().stackTrace
+                Proxy.newProxyInstance(
+                    Connection::class.java.classLoader,
+                    arrayOf(Connection::class.java),
+                    ConnectionInvocationHandler(connection, acquisitionStackTrace)
+                ) as Connection
+            }
 
         } catch (e: SQLException) {
             logger.error("Failed to get connection from pool: ${e.message}", e)

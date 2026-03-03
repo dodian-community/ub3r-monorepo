@@ -1,0 +1,18 @@
+package net.dodian.uber.game.runtime.zone
+
+internal class ChunkDeltaQueue {
+    private val deltas = ArrayList<ZoneDelta>()
+
+    fun add(delta: ZoneDelta) {
+        deltas += delta
+    }
+
+    fun drain(): List<ZoneDelta> {
+        if (deltas.isEmpty()) {
+            return emptyList()
+        }
+        val snapshot = ArrayList(deltas)
+        deltas.clear()
+        return snapshot
+    }
+}

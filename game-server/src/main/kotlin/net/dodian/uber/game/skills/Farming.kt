@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skills.FarmingData.patches
+import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
 import net.dodian.utilities.Misc
 
 class Farming {
@@ -204,6 +205,7 @@ class Farming {
                         farmCompost.set(0, JsonPrimitive(if(farmData.regularCompostItems.indexOf(itemId) >= 0) FarmingData.compost.COMPOST.toString() else FarmingData.compost.SUPERCOMPOST.toString()))
                         checkItemUpdate()
                         updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                        FarmingScheduler.INSTANCE.noteActivity(this)
                         return true
                     } else if (farmCompost.get(2).asInt == 15) send(
                         SendMessage(
@@ -252,6 +254,7 @@ class Farming {
                                 farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.WATER.toString()))
                                 checkItemUpdate()
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage(if(findPatch(objectId, 1) == FarmingData.patchState.PROTECTED.toString()) "The plant is already protected so no need to water the plant." else "The plant do not need watering."))
                         }
                         else if (itemName.endsWith("compost")) {
@@ -264,6 +267,7 @@ class Farming {
                                     addItem(1925, 1)
                                     farmPatches.set(checkPos + 2, JsonPrimitive(compost.name))
                                     checkItemUpdate()
+                                    FarmingScheduler.INSTANCE.noteActivity(this)
                                 } else if (itemId == compost.itemId) {
                                     send(SendMessage("There is no point in using " + itemName + " when the patch already got " + findPatch(objectId, 2).lowercase() + ""+if(findPatch(objectId, 2) != "COMPOST") "compost." else "."))
                                 }
@@ -311,6 +315,7 @@ class Farming {
                                             farmPatches.set(checkPos + 5, JsonPrimitive(System.currentTimeMillis()))
                                             checkItemUpdate()
                                             updateFarmPatch()
+                                            FarmingScheduler.INSTANCE.noteActivity(this)
                                         } else send(SendMessage("You need " + amount + " " + GetItemName(itemId).lowercase() + " to plant here."))
                                     } else send(SendMessage("You need level " + farmData.getPlantLevel(itemId) + " farming to plant " + GetItemName(itemId).lowercase() + "."))
                                 } else send(SendMessage("You are missing the "+GetItemName(tool).lowercase()+" tool."))
@@ -329,9 +334,11 @@ class Farming {
                 if(farmCompost.get(2).asInt == 15 && FarmingData.compostState.FILLED.toString() == farmCompost.get(1).asString) {
                     farmCompost.set(1, JsonPrimitive(FarmingData.compostState.CLOSED.toString()))
                     updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                    FarmingScheduler.INSTANCE.noteActivity(this)
                 } else if (FarmingData.compostState.DONE.toString() == farmCompost.get(1).asString) {
                     farmCompost.set(1, JsonPrimitive(FarmingData.compostState.OPEN.toString()))
                     updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                    FarmingScheduler.INSTANCE.noteActivity(this)
                 } else if (FarmingData.compostState.OPEN.toString() == farmCompost.get(1).asString) {
                     if(playerHasItem(farmData.BUCKET)) {
                         deleteItem(farmData.BUCKET, 1)
@@ -344,6 +351,7 @@ class Farming {
                         }
                         checkItemUpdate()
                         updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
+                        FarmingScheduler.INSTANCE.noteActivity(this)
                     } else send(SendMessage("You are missing a bucket to be filled with compost."))
                 }
             } else if (objectId == compost.objectId && option == 5) {
@@ -414,18 +422,21 @@ class Farming {
                                 addItem(farmData.regularCompostItems[0], 1)
                                 checkItemUpdate()
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You need a rake in order to clear the weed."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.DEAD.toString()) {
                             if(playerHasItem(farmData.SPADE)) {
                                 sendAnimation(farmData.SPADE_ANIM)
                                 clearPatch(farmPatches, checkPos)
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You need to have a spade in order to clear the dead plant."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.STUMP.toString()) {
                             if(playerHasItem(farmData.SPADE)) {
                                 sendAnimation(farmData.SPADE_ANIM)
                                 clearPatch(farmPatches, checkPos)
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You need to have a spade in order to clear the stump from the patch."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.DISEASE.toString() && farmData.getCheckHealthXp(checkItem) > 0) {
                             if(playerHasItem(farmData.SECATEURS) || playerHasItem(farmData.MAGIC_SECATEURS)) {
@@ -437,6 +448,7 @@ class Farming {
                                     farmPatches.set(checkPos + 4, JsonPrimitive(0))
                                 } else send(SendMessage("You failed to cure the tree."))
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You need to use a pair of secateurs to prune the tree."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.DISEASE.toString()) {
                             if(playerHasItem(farmData.PLANT_CURE)) {
@@ -446,6 +458,7 @@ class Farming {
                                 farmPatches.set(checkPos + 4, JsonPrimitive(0))
                                 updateFarmPatch()
                                 checkItemUpdate()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You need to use a spade in order to clear the dead plant."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.HARVEST.toString() && farmData.getCheckHealthXp(checkItem) < 1) {
                             if(playerHasItem(farmData.SPADE) && hasSpace()) {
@@ -458,6 +471,7 @@ class Farming {
                                     clearPatch(farmPatches, checkPos)
                                 updateFarmPatch()
                                 checkItemUpdate()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else if(!hasSpace()) send(SendMessage("You do not have enough inventory space!"))
                             else send(SendMessage("You need to use a spade in order to clear the dead plant."))
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.HARVEST.toString() && farmData.getCheckHealthXp(checkItem) > 0) {
@@ -468,11 +482,13 @@ class Farming {
                                 addExperience(farmData.getCheckHealthXp(checkItem), Skill.FARMING)
                                 send(SendMessage("You check the health of the "+farmData.getPlantName(checkItem).lowercase().replace("_", " ")+" and it is in perfect condition."))
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                         } else if (findPatch(objectId, 1) == FarmingData.patchState.PRODUCTION.toString() && farmData.getCheckHealthXp(checkItem) > 0) {
                             if(objName.startsWith("tree")) { //TODO: Custom code to cut down tree! 1:8 chance for stump
                                 //TODO: Fix woodcutting check for cutting to a stump!
                                 farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.STUMP.toString()))
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else if(hasSpace() && farmPatches.get(checkPos + 3).asInt > 0) {
                                 sendAnimation(if(objName.contains("tree")) farmData.HARVEST_FRUIT_ANIM else farmData.HARVEST_BUSH_ANIM)
                                 farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
@@ -480,13 +496,16 @@ class Farming {
                                 addExperience(farmData.getHarvestXp(checkItem), Skill.FARMING)
                                 updateFarmPatch()
                                 checkItemUpdate()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else if (farmPatches.get(checkPos + 3).asInt == 0 && objName.startsWith("fruit tree")) {
                                 //TODO: Fix woodcutting check for cutting to a stump!
                                 farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.STUMP.toString()))
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else if (farmPatches.get(checkPos + 3).asInt == 0 && objName.startsWith("bush")) {
                                 clearPatch(farmPatches, checkPos)
                                 updateFarmPatch()
+                                FarmingScheduler.INSTANCE.noteActivity(this)
                             } else send(SendMessage("You do not have enough inventory space!"))
                         }
                         return true
@@ -603,6 +622,7 @@ class Farming {
                 deleteItem(itemTwo, if(itemOne == farmData.FILLED_PLANT_POT) itemTwoSlot else itemOneSlot, 1)
                 addItemSlot(sapling.plantedId, 1, if(itemOne == farmData.FILLED_PLANT_POT) itemOneSlot else itemTwoSlot)
                 checkItemUpdate()
+                FarmingScheduler.INSTANCE.noteActivity(this)
             } else if ((itemOne == sapling.plantedId || itemTwo == sapling.plantedId) && (GetItemName(itemOne).startsWith("Watering can(") || GetItemName(itemTwo).startsWith("Watering can("))) {
                 deleteItem(if(itemOne == sapling.plantedId) itemTwo else itemOne, if(itemOne == sapling.plantedId) itemTwoSlot else itemOneSlot,1)
                 if((itemOne == sapling.plantedId && !GetItemName(itemTwo).endsWith("1)")) || (itemTwo == sapling.plantedId && !GetItemName(itemOne).endsWith("1)")))
@@ -611,6 +631,7 @@ class Farming {
                 deleteItem(sapling.plantedId, if(itemOne == sapling.plantedId) itemOneSlot else itemTwoSlot, 1)
                 addItem(sapling.waterId, 1)
                 checkItemUpdate()
+                FarmingScheduler.INSTANCE.noteActivity(this)
             }
         }
         if((itemOne == FarmingData.compost.COMPOST.itemId || itemTwo == FarmingData.compost.COMPOST.itemId) && (itemOne == farmData.EMPTY_PLANT_POT || itemTwo == farmData.EMPTY_PLANT_POT)) {
@@ -620,6 +641,7 @@ class Farming {
             addItemSlot(farmData.FILLED_PLANT_POT, 1, if(itemOne == farmData.EMPTY_PLANT_POT) itemOneSlot else itemTwoSlot)
             addItemSlot(farmData.BUCKET, 1, if(itemOne == FarmingData.compost.COMPOST.itemId) itemOneSlot else itemTwoSlot)
             checkItemUpdate()
+            FarmingScheduler.INSTANCE.noteActivity(this)
         }
     }
 }

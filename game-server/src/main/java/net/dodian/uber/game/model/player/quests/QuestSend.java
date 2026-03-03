@@ -68,9 +68,13 @@ public enum QuestSend {
         return null;
     }
     public static QuestSend serverInterface(Client c) {
+        return serverInterface(c, getCachedUptimeText());
+    }
+
+    public static QuestSend serverInterface(Client c, String uptimeText) {
         c.sendCachedString("Dodian Server", 640);
         c.sendCachedString("", 682); //7332
-        c.sendCachedString(getCachedUptimeText(), 663);
+        c.sendCachedString(uptimeText, 663);
         c.sendCachedString("@lre@Boss Log", 7332);
         c.sendCachedString("@lre@Monster Log", 7333);
         c.sendCachedString("@lre@Commands", 7334);
@@ -223,7 +227,7 @@ public enum QuestSend {
         }
     }
 
-    private static String getCachedUptimeText() {
+    public static String getCachedUptimeText() {
         long uptimeMinutes = (System.currentTimeMillis() - Server.serverStartup) / 60000;
         if (uptimeMinutes == cachedUptimeMinutes) {
             return cachedUptimeText;

@@ -26,8 +26,9 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
+import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -593,6 +594,7 @@ public class Client extends Player implements Runnable {
 
             try {
                 dispatchQueuedPacket(packet);
+                markSaveDirty(PlayerSaveSegment.ALL_MASK);
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -793,7 +795,7 @@ public class Client extends Player implements Runnable {
         // TODO: Look into improving this, and potentially a system to configure player saving per world id...
         if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob")) {
             try {
-                PlayerSaveCoordinator.requestSave(this, reason, updateProgress, logout);
+                AccountPersistenceService.requestSave(this, reason, updateProgress, logout);
             } catch (Exception e) {
                 println_debug("Save Exception: " + getSlot() + ", " + getPlayerName() + ", msg: " + e);
             }
@@ -1749,8 +1751,15 @@ public class Client extends Player implements Runnable {
     }
 
     public void update() { //Update player before npc for some reason!
-        // Use proper outgoing packet structure instead of direct buffer manipulation
+        sendPlayerSynchronization();
+        sendNpcSynchronization();
+    }
+
+    public void sendPlayerSynchronization() {
         new PlayerUpdatePacket(this).send(this);
+    }
+
+    public void sendNpcSynchronization() {
         new NpcUpdatePacket(this).send(this);
     }
 
@@ -1761,6 +1770,13 @@ public class Client extends Player implements Runnable {
         if (disconnected || isLoggingOut) {
             return;
         }
+        int startingHealth = getCurrentHealth();
+        int startingPrayer = getCurrentPrayer();
+        int startingX = getPosition().getX();
+        int startingY = getPosition().getY();
+        int startingZ = getPosition().getZ();
+        int startingEffectsHash = effects.hashCode();
+        int startingBoostedHash = Arrays.hashCode(boostedLevel);
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));
@@ -1781,17 +1797,6 @@ public class Client extends Player implements Runnable {
         if (getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
             addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
         //RegionMusic.handleRegionMusic(this);
-        /* Other timers! */
-        if (mutedTill <= rightNow) {
-            sendCachedString(invis ? "You are invisible!" : "", 6572);
-        } else {
-            int mutedHours = 0;
-            int mutedDays = (int) ((mutedTill - rightNow) / 86_400_000);
-            if (mutedDays == 0)
-                mutedHours = (int) ((mutedTill - rightNow) / 3_600_000);
-            mutedHours = Math.max(mutedHours, 1);
-            sendCachedString("Muted: " + (mutedDays > 0 ? mutedDays + " days" : mutedHours + " hours"), 6572);
-        }
         if (getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
             boolean gotIcon = getEquipment()[Equipment.Slot.NECK.getId()] == 8923 || gotSlayerHelmet(this);
             if (iconTimer > 0 && !gotIcon) iconTimer--;
@@ -1844,41 +1849,10 @@ public class Client extends Player implements Runnable {
             pray(0);
         }
         // RubberCheck();
-        if (questPage == 0)
-            QuestSend.questInterface(this);
-        else
-            QuestSend.serverInterface(this);
         long now = System.currentTimeMillis();
         if (now >= walkBlock && xLog) {
             UsingAgility = false;
             disconnected = true;
-        }
-        if (getWildLevel() < 1) {
-            if (wildyLevel > 0)
-                setWildLevel(0);
-            updatePlayerDisplay();
-        } else
-            setWildLevel(getWildLevel());
-        if (duelFight || inWildy()) {
-            setPlayerContextMenu(3, true, "Attack");
-            setPlayerContextMenu(2, false, "null");
-            if (!inWildy()) {
-                setPlayerContextMenu(4, false, "null");
-            } else {
-                setPlayerContextMenu(4, false, "Trade with");
-            }
-        } else {
-            setPlayerContextMenu(3, true, "null");
-            setPlayerContextMenu(4, false, "Trade with");
-            setPlayerContextMenu(2, false, "Duel");
-            if (playerRights > 0) {
-                setPlayerContextMenu(5, false, "Mod Action Lookup");
-            }
-        }
-        if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
-            setPlayerContextMenu(1, true, "Whack");
-        } else {
-            setPlayerContextMenu(1, false, "null");
         }
         if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
             pickUpItem(attemptGround.x, attemptGround.y);
@@ -1906,17 +1880,11 @@ public class Client extends Player implements Runnable {
                 UsingAgility = false;
             }
         }
-        long current = System.currentTimeMillis();
-        if (wildyLevel < 1 && current - lastBar >= 30_000) {
-            lastBar = current;
-            updatePlayerDisplay();
-            // barTimer = 0;
-        }
-        if (current - lastSave >= 60_000) { // Save every minute except for skills!
+        if (now - lastSave >= 60_000) { // Save every minute except for skills!
             saveStats(PlayerSaveReason.PERIODIC, false, false);
             lastSave = now;
         }
-        if (current - lastProgressSave >= 3_600_000) { // Update skill progress every hour
+        if (now - lastProgressSave >= 3_600_000) { // Update skill progress every hour
             saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
             lastProgressSave = now;
         }
@@ -2091,6 +2059,16 @@ public class Client extends Player implements Runnable {
             disconnected = true;
         else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
             logout();
+
+        if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
+            markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
+        }
+        if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
+            markSaveDirty(PlayerSaveSegment.POSITION.getMask());
+        }
+        if (startingEffectsHash != effects.hashCode() || startingBoostedHash != Arrays.hashCode(boostedLevel)) {
+            markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
+        }
     }
 
 

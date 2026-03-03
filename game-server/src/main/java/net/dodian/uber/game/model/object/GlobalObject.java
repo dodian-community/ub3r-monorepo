@@ -4,8 +4,11 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.runtime.zone.ZoneUpdateBus;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static net.dodian.utilities.DotEnvKt.getZoneUpdateBatchingEnabled;
 
 public class GlobalObject {
 
@@ -16,6 +19,10 @@ public class GlobalObject {
     }
 
     public static void updateNewObject(Object o) {
+        if (getZoneUpdateBatchingEnabled()) {
+            ZoneUpdateBus.queueGlobalObjectNew(new Position(o.x, o.y, o.z), o.id, o.face, o.type);
+            return;
+        }
         for (Player p : PlayerHandler.players) {
             if (p == null || !p.isActive) {
                 continue;
@@ -27,6 +34,10 @@ public class GlobalObject {
     }
 
     public static void updateOldObject(Object o) {
+        if (getZoneUpdateBatchingEnabled()) {
+            ZoneUpdateBus.queueGlobalObjectOld(new Position(o.x, o.y, o.z), o.oldId, o.face, o.type);
+            return;
+        }
         for (Player p : PlayerHandler.players) {
             if (p == null || !p.isActive) {
                 continue;

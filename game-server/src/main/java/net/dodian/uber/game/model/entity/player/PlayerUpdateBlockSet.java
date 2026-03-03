@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 
 /**
  * Stateless Luna-style player update block encoder.
@@ -12,6 +13,18 @@ final class PlayerUpdateBlockSet {
         boolean cacheablePhase = phase == PlayerUpdating.UpdatePhase.UPDATE_LOCAL;
         boolean includeChat = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
         boolean forceAppearance = phase == PlayerUpdating.UpdatePhase.ADD_LOCAL;
+        boolean sharedCacheablePhase = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
+        int updateMask = computeUpdateMask(player, includeChat, forceAppearance);
+
+        if (sharedCacheablePhase && updateMask != 0) {
+            byte[] sharedBlock = SynchronizationContext.getSharedPlayerBlock(player, phase.name());
+            if (sharedBlock != null) {
+                out.putBytes(sharedBlock);
+                SynchronizationContext.recordPlayerBlockCacheHit(true);
+                return;
+            }
+            SynchronizationContext.recordPlayerBlockCacheHit(false);
+        }
 
         if (cacheablePhase && player.isCachedUpdateBlockValid()) {
             player.writeCachedUpdateBlock(out);
@@ -20,7 +33,6 @@ final class PlayerUpdateBlockSet {
 
         ByteMessage blockBuf = cacheablePhase ? ByteMessage.raw(256) : out;
         try {
-            int updateMask = computeUpdateMask(player, includeChat, forceAppearance);
             if (updateMask == 0) {
                 return;
             }
