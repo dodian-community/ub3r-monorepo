@@ -14,8 +14,9 @@ class LocalAdmissionQueue {
         }
 
         val additions = desiredDiff.additions
-        ensureCapacity(state, additions.size)
-        if (additions.isEmpty()) {
+        val additionsCount = desiredDiff.additionsCount
+        ensureCapacity(state, additionsCount)
+        if (additionsCount <= 0) {
             state.pendingAddHead = 0
             state.pendingAddTail = 0
             state.pendingAddCount = 0
@@ -23,12 +24,12 @@ class LocalAdmissionQueue {
             return 0
         }
 
-        System.arraycopy(additions, 0, state.pendingAddSlots, 0, additions.size)
+        System.arraycopy(additions, 0, state.pendingAddSlots, 0, additionsCount)
         state.pendingAddHead = 0
-        state.pendingAddTail = additions.size
-        state.pendingAddCount = additions.size
+        state.pendingAddTail = additionsCount
+        state.pendingAddCount = additionsCount
         state.pendingAddSignature = desiredSignature
-        return additions.size
+        return additionsCount
     }
 
     fun rebuildPending(

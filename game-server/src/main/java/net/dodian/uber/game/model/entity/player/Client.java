@@ -644,21 +644,7 @@ public class Client extends Player implements Runnable {
             processedCount++;
 
             try {
-                if (getInboundOpcodeProfilingEnabled()) {
-                    long startNs = System.nanoTime();
-                    dispatchQueuedPacket(packet);
-                    long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
-                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
-                        println_debug(
-                                "Slow inbound opcode " + packet.getOpcode() +
-                                        " size=" + packet.getSize() +
-                                        " player=" + getPlayerName() +
-                                        " took=" + elapsedMs + "ms"
-                        );
-                    }
-                } else {
-                    dispatchQueuedPacket(packet);
-                }
+                dispatchQueuedPacket(packet);
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -676,7 +662,29 @@ public class Client extends Player implements Runnable {
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
         if (listener != null) {
-            listener.handle(this, packet);
+            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            if (sample || getInboundOpcodeProfilingEnabled()) {
+                long startNs = System.nanoTime();
+                listener.handle(this, packet);
+                long elapsedNs = System.nanoTime() - startNs;
+                if (sample) {
+                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
+                }
+                if (getInboundOpcodeProfilingEnabled()) {
+                    long elapsedMs = elapsedNs / 1_000_000L;
+                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
+                        println_debug(
+                                "Slow inbound opcode " + packet.getOpcode() +
+                                        " size=" + packet.getSize() +
+                                        " player=" + getPlayerName() +
+                                        " listener=" + listener.getClass().getSimpleName() +
+                                        " took=" + elapsedMs + "ms"
+                        );
+                    }
+                }
+            } else {
+                listener.handle(this, packet);
+            }
         }
     }
 

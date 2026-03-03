@@ -2,6 +2,7 @@ package net.dodian.uber.game.runtime.sync
 
 import io.netty.buffer.ByteBuf
 import kotlin.system.measureNanoTime
+import java.util.IdentityHashMap
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -37,7 +38,6 @@ import net.dodian.utilities.syncRootBlockCacheEnabled
 import net.dodian.utilities.syncScratchBufferReuseEnabled
 import net.dodian.utilities.syncSkipEmptyPlayerPacketEnabled
 import net.dodian.utilities.syncSkipEmptyNpcPacketEnabled
-import net.dodian.utilities.syncViewportSnapshotEnabled
 import org.slf4j.LoggerFactory
 
 class WorldSynchronizationService {
@@ -53,7 +53,13 @@ class WorldSynchronizationService {
     fun run() {
         tick++
         val activePlayers = currentActivePlayers()
-        val activeNpcs = currentActiveNpcs()
+        val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
+        val relevantNpcs: Collection<Npc> =
+            if (viewportIndex != null) {
+                collectRelevantNpcs(activePlayers, viewportIndex)
+            } else {
+                currentActiveNpcs()
+            }
         val rootCache = RootSynchronizationCache()
         val playerActivityIndex = if (syncPlayerActivityIndexEnabled) PlayerChunkActivityIndex() else null
         val npcActivityIndex = if (syncNpcActivityIndexEnabled) NpcChunkActivityIndex() else null
@@ -61,13 +67,13 @@ class WorldSynchronizationService {
             playerRevisionIndex.rebuild(activePlayers, tick, playerActivityIndex)
         }
         if (npcActivityIndex != null) {
-            npcRevisionIndex.rebuild(activeNpcs, tick, npcActivityIndex)
+            npcRevisionIndex.rebuild(relevantNpcs, tick, npcActivityIndex)
         }
         val cycle =
             SynchronizationCycle(
                 tick = tick,
                 rootCache = rootCache,
-                viewportIndex = if (syncViewportSnapshotEnabled) ViewportIndex.build(activePlayers, VIEW_DISTANCE) else null,
+                viewportIndex = viewportIndex,
                 playerRevisionIndex = if (syncPlayerActivityIndexEnabled) playerRevisionIndex else null,
                 playerActivityIndex = playerActivityIndex,
                 npcRevisionIndex = if (syncNpcActivityIndexEnabled) npcRevisionIndex else null,
@@ -78,7 +84,7 @@ class WorldSynchronizationService {
             buildPlayerRootCache(activePlayers, rootCache)
         }
         measure(cycle, SynchronizationStage.SYNC_NPC_PREP) {
-            buildNpcRootCache(activeNpcs, rootCache)
+            buildNpcRootCache(relevantNpcs, rootCache)
         }
 
         SynchronizationContext.setCurrent(cycle)
@@ -126,12 +132,25 @@ class WorldSynchronizationService {
         return npcs
     }
 
+    private fun collectRelevantNpcs(viewers: List<Client>, viewportIndex: ViewportIndex): List<Npc> {
+        val seen = IdentityHashMap<Npc, Boolean>()
+        val out = ArrayList<Npc>()
+        viewers.forEach { viewer ->
+            val snapshot = viewportIndex.snapshotFor(viewer) ?: return@forEach
+            snapshot.npcs.forEach { npc ->
+                if (seen.put(npc, true) == null) {
+                    out += npc
+                }
+            }
+        }
+        return out
+    }
+
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
         if (!syncRootBlockCacheEnabled) {
             return
         }
         activePlayers.forEach { player ->
-            rootCache.movementCache.freezePlayer(player)
             rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
             if (player.updateFlags.isUpdateRequired) {
                 rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL))
@@ -139,13 +158,14 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun buildNpcRootCache(activeNpcs: List<Npc>, rootCache: RootSynchronizationCache) {
+    private fun buildNpcRootCache(activeNpcs: Collection<Npc>, rootCache: RootSynchronizationCache) {
+        if (!syncRootBlockCacheEnabled) {
+            return
+        }
         activeNpcs.forEach { npc ->
-            rootCache.movementCache.freezeNpc(npc)
-            if (!syncRootBlockCacheEnabled || !npc.updateFlags.isUpdateRequired) {
-                return@forEach
+            if (npc.updateFlags.isUpdateRequired) {
+                rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc))
             }
-            rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc))
         }
     }
 

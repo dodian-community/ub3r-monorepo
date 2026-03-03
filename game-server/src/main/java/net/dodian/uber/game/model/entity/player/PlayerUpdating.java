@@ -164,8 +164,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (viewer.loaded) {
                 pruneLocalsToProtocolCap(viewer);
                 stream.putBits(8, viewer.playerListSize);
-                java.util.BitSet removals = toBitSet(plan.getDiff().getRemovals());
-                java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained());
+                java.util.BitSet removals = toBitSet(plan.getDiff().getRemovals(), plan.getDiff().getRemovalsCount());
+                java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained(), plan.getDiff().getChangedRetainedCount());
                 int originalSize = viewer.playerListSize;
                 int keep = 0;
                 for (int i = 0; i < originalSize; i++) {
@@ -903,9 +903,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
     }
 
-    private java.util.BitSet toBitSet(int[] slots) {
+    private java.util.BitSet toBitSet(int[] slots, int count) {
         java.util.BitSet set = new java.util.BitSet(PlayerHandler.players.length);
-        for (int slot : slots) {
+        int limit = Math.min(count, slots.length);
+        for (int i = 0; i < limit; i++) {
+            int slot = slots[i];
             if (slot >= 0) {
                 set.set(slot);
             }

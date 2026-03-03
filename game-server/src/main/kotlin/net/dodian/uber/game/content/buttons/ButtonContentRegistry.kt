@@ -162,11 +162,24 @@ object ButtonContentRegistry {
             client.send(RemoveInterfaces())
             return true
         }
+        val startNs = System.nanoTime()
         return try {
             content.onClick(client, buttonId)
         } catch (e: Exception) {
             logger.error("Error handling buttonId={} via {}", buttonId, content::class.java.name, e)
             false
+        } finally {
+            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000L
+            if (elapsedMs >= 2L) {
+                logger.warn(
+                    "Slow button: buttonId={} handler={} iface={} player={} {}ms",
+                    buttonId,
+                    content::class.java.name,
+                    client.activeInterfaceId,
+                    client.playerName,
+                    elapsedMs
+                )
+            }
         }
     }
 }

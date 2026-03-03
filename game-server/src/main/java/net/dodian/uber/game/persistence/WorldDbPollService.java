@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,13 +28,7 @@ public final class WorldDbPollService {
 
     private static final Logger logger = LoggerFactory.getLogger(WorldDbPollService.class);
 
-    private static final ThreadFactory THREAD_FACTORY = runnable -> {
-        Thread thread = new Thread(runnable, "WorldDbPollWorker");
-        thread.setDaemon(true);
-        return thread;
-    };
-
-    private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(THREAD_FACTORY);
+    private static final ExecutorService WORKER = DbDispatchers.worldExecutor;
     private static final AtomicReference<CompletableFuture<WorldPollResult>> IN_FLIGHT = new AtomicReference<>();
     private static final AtomicReference<WorldPollResult> LATEST_RESULT = new AtomicReference<>(WorldPollResult.EMPTY);
     private static final AtomicBoolean RUNNING = new AtomicBoolean(true);
@@ -188,14 +180,6 @@ public final class WorldDbPollService {
             }
         }
 
-        WORKER.shutdown();
-        try {
-            if (!WORKER.awaitTermination(Math.max(1L, timeout.toMillis()), TimeUnit.MILLISECONDS)) {
-                WORKER.shutdownNow();
-            }
-        } catch (InterruptedException interruptedException) {
-            Thread.currentThread().interrupt();
-            WORKER.shutdownNow();
-        }
+        DbDispatchers.shutdown(WORKER, timeout);
     }
 }

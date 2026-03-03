@@ -12,30 +12,48 @@ class DesiredLocalSetPlanner {
     fun build(
         viewer: Client,
         currentLocalSlots: IntArray,
-        visibleSlots: IntArray,
+        currentLocalCount: Int,
+        candidates: Iterable<Player>,
         maxLocals: Int,
     ): DesiredLocalSet {
         scratch.reset()
         var visibleCandidateCount = 0
-        for (slot in visibleSlots) {
-            if (slot < 0) {
+        for (other in candidates) {
+            if (other === viewer || !other.isActive) {
                 continue
             }
+            if (!viewer.withinDistance(other)) {
+                continue
+            }
+            if (other.invis && !viewer.invis) {
+                continue
+            }
+            val slot = other.slot
             scratch.mark(slot)
             scratch.candidateSlots[visibleCandidateCount++] = slot
         }
 
         var desiredCount = 0
-        for (slot in currentLocalSlots) {
+        for (i in 0 until currentLocalCount) {
+            val slot = currentLocalSlots[i]
             if (slot < 0 || desiredCount >= maxLocals) {
                 continue
             }
             if (!scratch.isMarked(slot)) {
                 continue
             }
-            val player = resolveVisiblePlayer(viewer, slot) ?: continue
-            scratch.desiredSlots[desiredCount++] = player.slot
-            scratch.markCurrent(player.slot)
+            val player = PlayerHandler.players.getOrNull(slot)
+            if (player == null || !player.isActive) {
+                continue
+            }
+            if (!viewer.withinDistance(player)) {
+                continue
+            }
+            if (player.invis && !viewer.invis) {
+                continue
+            }
+            scratch.desiredSlots[desiredCount++] = slot
+            scratch.markCurrent(slot)
         }
 
         if (desiredCount < maxLocals) {
@@ -45,8 +63,8 @@ class DesiredLocalSetPlanner {
                 if (slot < 0 || scratch.isCurrent(slot)) {
                     continue
                 }
-                val player = resolveVisiblePlayer(viewer, slot) ?: continue
-                insertSorted(viewer, player.slot, sortedCount)
+                val player = PlayerHandler.players.getOrNull(slot) ?: continue
+                insertSorted(viewer, player, sortedCount)
                 sortedCount++
             }
 
@@ -63,7 +81,7 @@ class DesiredLocalSetPlanner {
             signature = 31 * signature + scratch.desiredSlots[index]
         }
         return DesiredLocalSet(
-            slots = scratch.desiredSlots.copyOf(desiredCount),
+            slots = scratch.desiredSlots,
             count = desiredCount,
             signature = signature,
             isSaturated = desiredCount >= maxLocals,
@@ -72,10 +90,12 @@ class DesiredLocalSetPlanner {
 
     fun diff(
         currentLocalSlots: IntArray,
+        currentLocalCount: Int,
         desired: DesiredLocalSet,
     ): DesiredLocalSetDiff {
         scratch.reset()
-        for (slot in desired.slots) {
+        for (index in 0 until desired.count) {
+            val slot = desired.slots[index]
             if (slot >= 0) {
                 scratch.mark(slot)
             }
@@ -84,7 +104,8 @@ class DesiredLocalSetPlanner {
         var removalsCount = 0
         var retainsCount = 0
         var changedCount = 0
-        for (slot in currentLocalSlots) {
+        for (i in 0 until currentLocalCount) {
+            val slot = currentLocalSlots[i]
             if (slot < 0) {
                 continue
             }
@@ -101,7 +122,8 @@ class DesiredLocalSetPlanner {
         }
 
         var additionsCount = 0
-        for (slot in desired.slots) {
+        for (index in 0 until desired.count) {
+            val slot = desired.slots[index]
             if (slot < 0 || scratch.isCurrent(slot)) {
                 continue
             }
@@ -109,17 +131,22 @@ class DesiredLocalSetPlanner {
         }
 
         return DesiredLocalSetDiff(
-            removals = scratch.removals.copyOf(removalsCount),
-            retains = scratch.retains.copyOf(retainsCount),
-            additions = scratch.additions.copyOf(additionsCount),
-            changedRetained = scratch.changedRetained.copyOf(changedCount),
+            removals = scratch.removals,
+            removalsCount = removalsCount,
+            retains = scratch.retains,
+            retainsCount = retainsCount,
+            additions = scratch.additions,
+            additionsCount = additionsCount,
+            changedRetained = scratch.changedRetained,
+            changedRetainedCount = changedCount,
             desiredCount = desired.count,
             desiredSaturated = desired.isSaturated,
         )
     }
 
-    private fun insertSorted(viewer: Client, slot: Int, count: Int) {
-        val distance = distance(viewer.position, PlayerHandler.players[slot]?.position)
+    private fun insertSorted(viewer: Client, player: Player, count: Int) {
+        val slot = player.slot
+        val distance = distance(viewer.position, player.position)
         var index = count
         while (index > 0) {
             val previousSlot = scratch.sortedCandidateSlots[index - 1]
@@ -144,17 +171,5 @@ class DesiredLocalSetPlanner {
         return maxOf(dx, dy)
     }
 
-    private fun resolveVisiblePlayer(viewer: Client, slot: Int): Player? {
-        val player = PlayerHandler.players.getOrNull(slot) ?: return null
-        if (player === viewer || !player.isActive) {
-            return null
-        }
-        if (!viewer.withinDistance(player)) {
-            return null
-        }
-        if (player.invis && !viewer.invis) {
-            return null
-        }
-        return player
-    }
+    // Visibility gating is performed in the build/diff loops.
 }

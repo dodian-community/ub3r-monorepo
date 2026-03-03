@@ -22,6 +22,7 @@ import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
+import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
 import net.dodian.uber.game.security.AsyncSqlService;
@@ -108,10 +109,18 @@ public class Server {
 
         npcManager = new NpcManager();
         npcManager.loadSpawns();
+        NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         chunkManager = new ChunkManager();
+        // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
+        // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
+        for (net.dodian.uber.game.model.entity.npc.Npc npc : npcManager.getNpcs()) {
+            if (npc != null) {
+                npc.syncChunkMembership();
+            }
+        }
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();

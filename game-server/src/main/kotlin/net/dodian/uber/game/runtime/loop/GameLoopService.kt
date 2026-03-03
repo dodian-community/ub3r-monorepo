@@ -25,6 +25,7 @@ import net.dodian.jobs.impl.ShopProcessor
 import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.runtime.metrics.TickPhaseTimer
+import net.dodian.uber.game.runtime.metrics.GcStallTracker
 import net.dodian.uber.game.runtime.process.InboundPacketPhase
 import net.dodian.uber.game.runtime.process.LegacyActionPhase
 import net.dodian.uber.game.runtime.process.MovementFinalizePhase
@@ -58,6 +59,7 @@ class GameLoopService(
     private val dispatcher = executor.asCoroutineDispatcher()
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val phaseTimer = TickPhaseTimer()
+    private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
     private val worldMaintenancePhase = WorldMaintenancePhase(worldProcessor, farmingProcess, plunderDoor)
@@ -133,10 +135,23 @@ class GameLoopService(
             return
         }
         phaseTimer.measure(phase) {
+            val gcBefore = gcTracker.snapshot()
             val elapsed = measureNanoTime(block)
+            val gcAfter = gcTracker.snapshot()
+            val gcDelta = gcTracker.delta(gcBefore, gcAfter)
             val elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsed)
             if (elapsedMs >= runtimePhaseWarnMs) {
-                logger.warn("Phase {} took {}ms", phase, elapsedMs)
+                if (gcDelta.collectionTimeMs > 0L || gcDelta.collectionCount > 0L) {
+                    logger.warn(
+                        "Phase {} took {}ms (gc={}ms/{} collections)",
+                        phase,
+                        elapsedMs,
+                        gcDelta.collectionTimeMs,
+                        gcDelta.collectionCount,
+                    )
+                } else {
+                    logger.warn("Phase {} took {}ms", phase, elapsedMs)
+                }
             }
         }
     }

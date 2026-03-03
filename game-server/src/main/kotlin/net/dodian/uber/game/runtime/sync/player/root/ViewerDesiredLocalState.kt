@@ -1,9 +1,9 @@
 package net.dodian.uber.game.runtime.sync.player.root
 
 data class ViewerDesiredLocalState(
-    var currentLocalSlots: IntArray = IntArray(0),
+    var currentLocalSlots: IntArray = IntArray(255),
     var currentLocalCount: Int = 0,
-    var desiredLocalSlots: IntArray = IntArray(0),
+    var desiredLocalSlots: IntArray = IntArray(255),
     var desiredLocalCount: Int = 0,
     var pendingAddSlots: IntArray = IntArray(16),
     var pendingAddCount: Int = 0,
