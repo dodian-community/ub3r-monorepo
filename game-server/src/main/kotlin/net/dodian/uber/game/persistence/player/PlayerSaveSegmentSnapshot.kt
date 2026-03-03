@@ -1,4 +1,4 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 data class PlayerSaveSegmentSnapshot(
     val segment: PlayerSaveSegment,

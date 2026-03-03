@@ -1,4 +1,4 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend

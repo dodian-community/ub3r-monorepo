@@ -1,4 +1,4 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -35,7 +35,7 @@ object PlayerSaveService {
     private val oldestQueuedAt = AtomicLong(0)
     private val lastWriteDurationMs = AtomicLong(0)
     private val totalRetries = AtomicLong(0)
-    private val repository = PlayerSaveRepositoryV2()
+    private val repository = PlayerSaveRepository()
 
     @Volatile
     private var worker: Job? = null
@@ -209,7 +209,7 @@ object PlayerSaveService {
             totalRetries.incrementAndGet()
             if (!request.envelope.finalSave && request.attempts >= databaseSaveBurstAttempts.coerceAtLeast(1)) {
                 logger.error(
-                    "V2 save failed after {} attempts for {} (dbId={})",
+                    "Save failed after {} attempts for {} (dbId={})",
                     request.attempts,
                     request.envelope.playerName,
                     request.envelope.dbId,
@@ -218,7 +218,7 @@ object PlayerSaveService {
             }
 
             logger.warn(
-                "Retrying V2 save attempt {} for {} (dbId={})",
+                "Retrying save attempt {} for {} (dbId={})",
                 request.attempts,
                 request.envelope.playerName,
                 request.envelope.dbId,

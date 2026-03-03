@@ -1,4 +1,4 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 import java.sql.Connection
 import java.sql.SQLException
@@ -7,7 +7,7 @@ import net.dodian.uber.game.persistence.PlayerSaveRepository
 import net.dodian.uber.game.persistence.PlayerSaveSnapshot
 import net.dodian.utilities.DbTables
 
-class PlayerSaveRepositoryV2(
+class PlayerSaveRepository(
     private val delegate: PlayerSaveRepository = PlayerSaveRepository(),
 ) {
     fun saveEnvelope(envelope: PlayerSaveEnvelope) {

@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.PlayerSaveReason
-import net.dodian.uber.game.persistence.v2.PlayerSaveService
+import net.dodian.uber.game.persistence.player.PlayerSaveService
 import org.slf4j.LoggerFactory
 
 object AccountPersistenceService {

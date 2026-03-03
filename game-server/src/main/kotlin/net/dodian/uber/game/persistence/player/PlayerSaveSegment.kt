@@ -1,4 +1,4 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 enum class PlayerSaveSegment(val mask: Int) {
     STATS(1 shl 0),

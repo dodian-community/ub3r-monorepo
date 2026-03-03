@@ -1,12 +1,12 @@
-package net.dodian.uber.game.persistence.v2
+package net.dodian.uber.game.persistence.player
 
 import net.dodian.uber.game.persistence.PlayerSaveReason
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class PlayerSaveRepositoryV2Test {
-    private val repository = PlayerSaveRepositoryV2()
+class PlayerSaveRepositoryTest {
+    private val repository = PlayerSaveRepository()
 
     @Test
     fun `buildSnapshot writes expected key fields`() {
