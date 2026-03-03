@@ -7,7 +7,10 @@ import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,15 +56,22 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
 
         // If this channel had an active Client linked, remove it from the server.
         Object attr = ctx.channel().attr(AttributeKey.valueOf("activeClient")).getAndSet(null);
-        if (attr instanceof net.dodian.uber.game.model.entity.player.Client) {
-            net.dodian.uber.game.model.entity.player.Client client = (net.dodian.uber.game.model.entity.player.Client) attr;
+        if (attr instanceof Client) {
+            Client client = (Client) attr;
+            // Mark disconnected immediately (Netty thread) so the game thread stops processing this client ASAP.
+            client.disconnected = true;
+            // Remove the stale online entry promptly to avoid "already logged in" false-positives during relog.
+            try {
+                long key = Utils.playerNameToLong(client.getPlayerName());
+                PlayerHandler.playersOnline.remove(key, client);
+            } catch (Exception ignored) {
+                // If the name isn't available yet, removal will happen during game-thread cleanup.
+            }
             // Enqueue removal onto the game thread to avoid mutating PlayerHandler state off-thread.
             GameThreadTaskQueue.submit(() -> {
-                client.disconnected = true;
                 Server.playerHandler.removePlayer(client);
             });
         }
         super.channelInactive(ctx);
     }
 }
-

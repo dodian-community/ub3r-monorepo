@@ -25,13 +25,23 @@ class FarmingScheduler {
             }
         }
 
-        val iterator = scheduled.keys.iterator()
+        // Do not call unschedule() while iterating scheduled: that would mutate the same map
+        // and trigger CME. Remove from buckets using the known scheduled cycle value instead.
+        val iterator = scheduled.entries.iterator()
         while (iterator.hasNext()) {
-            val client = iterator.next()
+            val entry = iterator.next()
+            val client = entry.key
             if (activeSet.containsKey(client)) {
                 continue
             }
-            unschedule(client)
+            val existing = entry.value
+            val bucket = buckets[existing]
+            if (bucket != null) {
+                bucket.duePlayers.remove(client)
+                if (bucket.duePlayers.isEmpty()) {
+                    buckets.remove(existing)
+                }
+            }
             iterator.remove()
         }
     }

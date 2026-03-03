@@ -5,10 +5,10 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -69,12 +69,11 @@ public class PlayerInitializer {
         long hourJitterMs = (client.dbId > 0 ? (client.dbId % 3600L) : (client.getSlot() % 3600L)) * 1000L;
         client.lastSave = now + minuteJitterMs;
         client.lastProgressSave = now + hourJitterMs;
-        client.markSaveDirty(PlayerSaveSegment.ALL_MASK);
         
-        /* Set a player active to a world */
-        PlayerHandler.playersOnline.put(client.longName, client);
+        /* Note: player registration (playersOnline/players[]) is owned by the game-thread login finalizer. */
         sendWelcomeMessages(client);
-        checkRefundedItems(client);
+        // Refund checks are account-db owned to avoid blocking the game thread.
+        AccountPersistenceService.submitRefundCheck(client);
 
     }
     

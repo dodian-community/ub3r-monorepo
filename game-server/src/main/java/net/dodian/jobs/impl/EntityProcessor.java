@@ -217,7 +217,7 @@ public class EntityProcessor implements Runnable {
                 maxPendingBefore = pendingBefore;
             }
 
-            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT);
+            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
 
             int pendingAfter = player.getPendingInboundPacketCount();
             totalPendingAfter += pendingAfter;

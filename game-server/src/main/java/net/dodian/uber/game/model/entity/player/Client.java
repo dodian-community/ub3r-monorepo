@@ -91,6 +91,7 @@ public class Client extends Player implements Runnable {
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
+    private long lastEffectsPeriodicDirtyAtMs = 0L;
     /**
      * Tracks if the client window currently has focus.
      */
@@ -593,7 +594,21 @@ public class Client extends Player implements Runnable {
             processedCount++;
 
             try {
-                dispatchQueuedPacket(packet);
+                if (getInboundOpcodeProfilingEnabled()) {
+                    long startNs = System.nanoTime();
+                    dispatchQueuedPacket(packet);
+                    long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
+                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
+                        println_debug(
+                                "Slow inbound opcode " + packet.getOpcode() +
+                                        " size=" + packet.getSize() +
+                                        " player=" + getPlayerName() +
+                                        " took=" + elapsedMs + "ms"
+                        );
+                    }
+                } else {
+                    dispatchQueuedPacket(packet);
+                }
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -1798,8 +1813,6 @@ public class Client extends Player implements Runnable {
         int startingX = getPosition().getX();
         int startingY = getPosition().getY();
         int startingZ = getPosition().getZ();
-        int startingEffectsHash = effects.hashCode();
-        int startingBoostedHash = Arrays.hashCode(boostedLevel);
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));
@@ -1870,6 +1883,7 @@ public class Client extends Player implements Runnable {
                     }
                     if (changed) {
                         refreshSkill(skill);
+                        markSaveDirty(PlayerSaveSegment.STATS.getMask());
                     }
                 });
             }
@@ -2097,8 +2111,20 @@ public class Client extends Player implements Runnable {
         if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
             markSaveDirty(PlayerSaveSegment.POSITION.getMask());
         }
-        if (startingEffectsHash != effects.hashCode() || startingBoostedHash != Arrays.hashCode(boostedLevel)) {
-            markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
+        // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
+        // and always on final save/logout.
+        if (!effects.isEmpty()) {
+            boolean hasActiveEffect = false;
+            for (int i = 0; i < effects.size(); i++) {
+                if (effects.get(i) != null && effects.get(i) > 0) {
+                    hasActiveEffect = true;
+                    break;
+                }
+            }
+            if (hasActiveEffect && now - lastEffectsPeriodicDirtyAtMs >= 10_000L) {
+                markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
+                lastEffectsPeriodicDirtyAtMs = now;
+            }
         }
     }
 

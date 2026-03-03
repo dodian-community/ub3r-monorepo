@@ -89,5 +89,9 @@ val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 25L
 val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
 val runtimeCycleLogIntervalTicks = dotenv["RUNTIME_CYCLE_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
 
+// Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)
+val inboundOpcodeProfilingEnabled = dotenv["INBOUND_OPCODE_PROFILING_ENABLED"]?.toBoolean() ?: false
+val inboundOpcodeProfilingWarnMs = dotenv["INBOUND_OPCODE_PROFILING_WARN_MS"]?.toLong() ?: 2L
+
 // Game Settings - Multipliers
 val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1

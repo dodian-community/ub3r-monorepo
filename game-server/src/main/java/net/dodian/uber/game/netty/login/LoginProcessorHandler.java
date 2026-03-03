@@ -19,6 +19,7 @@ import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketEncoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
+import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,7 +158,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         client.handler = ph;
         client.setPlayerName(Utils.capitalize(username.replace('_', ' ')));
         client.playerPass = password;
-        client.longName  = Utils.playerNameToInt64(client.getPlayerName());
+        // Canonical name hash used across online maps/friends.
+        client.longName  = Utils.playerNameToLong(client.getPlayerName());
         try {
             InetSocketAddress isa = (InetSocketAddress) ctx.channel().remoteAddress();
             client.connectedFrom = isa.getAddress().getHostAddress();
@@ -193,9 +195,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
         sendLoginSuccess(ctx, client.playerRights);
 
-        PlayerHandler.players[slot] = client;
-        PlayerHandler.playersOnline.put(Utils.playerNameToLong(client.getPlayerName()), client);
-
         // CRITICAL: Setup game pipeline BEFORE PlayerInitializer sends packets
         // Remove handshake & login-specific decoders first
         if (ctx.pipeline().get(net.dodian.uber.game.netty.login.LoginPayloadDecoder.class) != null) {
@@ -217,20 +216,36 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         // Store reference for disconnect cleanup
         ctx.channel().attr(AttributeKey.valueOf("activeClient")).set(client);
 
-        // NOW initialize player - packets will go through proper game pipeline
-        try {
-            new PlayerInitializer().initializePlayer(client);
-            client.initialized = true;
-        } catch (Exception ex) {
-            logger.warn("[Netty] PlayerInitializer error for {}: {}", client.getPlayerName(), ex.getMessage());
-        }
-        client.isActive = true;
-        if (client.getUpdateFlags() != null) {
-            client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        }
-        // client.flushOutStream(); // No longer needed with pure Netty
+        // Finish registration + initialization on the game thread. This avoids cross-thread mutation
+        // of PlayerHandler players[]/playersOnline and reduces login-related sync spikes.
+        final io.netty.channel.Channel channel = ctx.channel();
+        final int slotCopy = slot;
+        GameThreadTaskQueue.submit(() -> {
+            if (!channel.isActive() || client.disconnected) {
+                // Channel died before the game thread could register the player; release the reserved slot.
+                synchronized (PlayerHandler.SLOT_LOCK) {
+                    PlayerHandler.usedSlots.clear(slotCopy);
+                    PlayerHandler.players[slotCopy] = null;
+                }
+                return;
+            }
 
-        client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+            PlayerHandler.players[slotCopy] = client;
+            PlayerHandler.playersOnline.put(client.longName, client);
+
+            try {
+                new PlayerInitializer().initializePlayer(client);
+                client.initialized = true;
+            } catch (Exception ex) {
+                logger.warn("[GameThread] PlayerInitializer error for {}: {}", client.getPlayerName(), ex.getMessage());
+            }
+
+            client.isActive = true;
+            if (client.getUpdateFlags() != null) {
+                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+            }
+            client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+        });
 
         loginFinished = true;
         logger.info("[Netty] Login finished for {} slot {} (async)", client.getPlayerName(), slot);
