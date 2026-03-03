@@ -2,10 +2,8 @@ package net.dodian.uber.game.runtime.sync
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.runtime.sync.npc.NpcViewportActivitySnapshot
 import net.dodian.uber.game.runtime.sync.npc.ViewerNpcSyncState
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState
-import net.dodian.uber.game.runtime.sync.player.ViewportActivitySnapshot
 import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketBuildReason
 import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketMode
 import net.dodian.uber.game.runtime.sync.player.root.PlayerSyncRecoveryReason
@@ -41,12 +39,12 @@ object SynchronizationContext {
     fun getViewportSnapshot(viewer: Player): ViewportSnapshot? = current()?.viewportIndex?.snapshotFor(viewer)
 
     @JvmStatic
-    fun getPlayerViewportActivitySnapshot(viewer: Player): ViewportActivitySnapshot? =
-        current()?.let { cycle ->
-            val activity = cycle.playerActivityIndex?.snapshotFor(viewer, 16) ?: return@let null
-            val localStamp = cycle.playerRevisionIndex?.localActivityStamp(viewer) ?: 0L
-            ViewportActivitySnapshot(activity.chunkActivityStamp, localStamp)
-        }
+    fun getPlayerChunkActivityStamp(viewer: Player): Long =
+        current()?.playerActivityIndex?.maxChunkActivityStampFor(viewer, 16) ?: 0L
+
+    @JvmStatic
+    fun getPlayerLocalActivityStamp(viewer: Player): Long =
+        current()?.playerRevisionIndex?.localActivityStamp(viewer) ?: 0L
 
     @JvmStatic
     fun getPlayerMovementRevision(player: Player): Long = current()?.playerRevisionIndex?.movementRevision(player) ?: 0L
@@ -58,12 +56,12 @@ object SynchronizationContext {
     fun getViewerPlayerSyncState(viewer: Player): ViewerPlayerSyncState? = current()?.playerRevisionIndex?.viewerState(viewer)
 
     @JvmStatic
-    fun getNpcViewportActivitySnapshot(viewer: net.dodian.uber.game.model.entity.player.Client): NpcViewportActivitySnapshot? {
-        val cycle = current() ?: return null
-        val activityIndex = cycle.npcActivityIndex ?: return null
-        val localStamp = cycle.npcRevisionIndex?.localActivityStamp(viewer) ?: 0L
-        return activityIndex.snapshotFor(viewer, 16, localStamp)
-    }
+    fun getNpcChunkActivityStamp(viewer: net.dodian.uber.game.model.entity.player.Client): Long =
+        current()?.npcActivityIndex?.maxChunkActivityStampFor(viewer, 16) ?: 0L
+
+    @JvmStatic
+    fun getNpcLocalActivityStamp(viewer: net.dodian.uber.game.model.entity.player.Client): Long =
+        current()?.npcRevisionIndex?.localActivityStamp(viewer) ?: 0L
 
     @JvmStatic
     fun getViewerNpcSyncState(viewer: net.dodian.uber.game.model.entity.player.Client): ViewerNpcSyncState? =

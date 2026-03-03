@@ -214,18 +214,27 @@ class WorldSynchronizationService {
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
+        val trackActivityStamps = syncSkipEmptyNpcPacketEnabled && syncNpcActivityIndexEnabled
         activePlayers.forEach { player ->
-            val decision = shouldSkipNpcSync(player)
+            val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
+            val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
+            val localStamp = if (trackActivityStamps) SynchronizationContext.getNpcLocalActivityStamp(player) else 0L
+            val decision =
+                if (trackActivityStamps) {
+                    shouldSkipNpcSync(player, state, chunkStamp, localStamp)
+                } else {
+                    NpcSyncDecision.BUILD
+                }
             if (decision == NpcSyncDecision.SKIP) {
                 SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
                 SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                updateNpcViewerSyncState(player)
+                updateNpcViewerSyncState(player, chunkStamp, localStamp)
                 return@forEach
             }
             player.sendNpcSynchronization()
             SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
             SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-            updateNpcViewerSyncState(player)
+            updateNpcViewerSyncState(player, chunkStamp, localStamp)
         }
     }
 
@@ -250,12 +259,13 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun shouldSkipNpcSync(player: Client): NpcSyncDecision {
-        if (!syncSkipEmptyNpcPacketEnabled || !syncNpcActivityIndexEnabled) {
-            return NpcSyncDecision.BUILD
-        }
-        val state = SynchronizationContext.getViewerNpcSyncState(player) ?: return NpcSyncDecision.BUILD
-        val activity = SynchronizationContext.getNpcViewportActivitySnapshot(player) ?: return NpcSyncDecision.BUILD
+    private fun shouldSkipNpcSync(
+        player: Client,
+        state: ViewerNpcSyncState?,
+        chunkStamp: Long,
+        localStamp: Long,
+    ): NpcSyncDecision {
+        state ?: return NpcSyncDecision.BUILD
         val mapChanged =
             state.lastKnownMapRegionX != Int.MIN_VALUE &&
                 (state.lastKnownMapRegionX != player.mapRegionX || state.lastKnownMapRegionY != player.mapRegionY)
@@ -271,8 +281,8 @@ class WorldSynchronizationService {
             return NpcSyncDecision.BUILD
         }
         return if (
-            state.lastChunkActivityStamp == activity.chunkActivityStamp &&
-            state.lastLocalNpcActivityStamp == activity.localNpcActivityStamp
+            state.lastChunkActivityStamp == chunkStamp &&
+            state.lastLocalNpcActivityStamp == localStamp
         ) {
             NpcSyncDecision.SKIP
         } else {
@@ -301,18 +311,20 @@ class WorldSynchronizationService {
 
     private fun updateViewerSyncState(player: Client) {
         val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
-        val activity = SynchronizationContext.getPlayerViewportActivitySnapshot(player)
+        val trackActivityStamps = syncPlayerActivityIndexEnabled && syncSkipEmptyPlayerPacketEnabled
+        val chunkStamp = if (trackActivityStamps) SynchronizationContext.getPlayerChunkActivityStamp(player) else 0L
+        val localStamp = if (trackActivityStamps) SynchronizationContext.getPlayerLocalActivityStamp(player) else 0L
         state.lastPlayerSyncTick = tick
         state.lastSelfMovementRevision = playerRevisionIndex.movementRevision(player)
         state.lastSelfBlockRevision = playerRevisionIndex.blockRevision(player)
-        state.lastViewportRevision = activity?.chunkActivityStamp ?: 0L
+        state.lastViewportRevision = chunkStamp
         state.lastKnownLocalCount = player.playerListSize
         state.lastKnownMapRegionX = player.mapRegionX
         state.lastKnownMapRegionY = player.mapRegionY
         state.lastKnownPlane = player.position.z
         state.lastKnownTeleportState = player.didTeleport()
-        state.lastChunkActivityStamp = activity?.chunkActivityStamp ?: 0L
-        state.lastLocalActivityStamp = activity?.localActivityStamp ?: 0L
+        state.lastChunkActivityStamp = chunkStamp
+        state.lastLocalActivityStamp = localStamp
     }
 
     private fun sendPlayerTemplate(player: Client, payload: ByteArray) {
@@ -322,16 +334,15 @@ class WorldSynchronizationService {
         player.send(message)
     }
 
-    private fun updateNpcViewerSyncState(player: Client) {
+    private fun updateNpcViewerSyncState(player: Client, chunkStamp: Long, localStamp: Long) {
         val state: ViewerNpcSyncState = npcRevisionIndex.viewerState(player)
-        val activity = SynchronizationContext.getNpcViewportActivitySnapshot(player)
         state.lastNpcSyncTick = tick
-        state.lastNpcViewportRevision = activity?.chunkActivityStamp ?: 0L
+        state.lastNpcViewportRevision = chunkStamp
         state.lastKnownLocalNpcCount = player.localNpcs.size
         state.lastKnownMapRegionX = player.mapRegionX
         state.lastKnownMapRegionY = player.mapRegionY
         state.lastKnownPlane = player.position.z
-        state.lastChunkActivityStamp = activity?.chunkActivityStamp ?: 0L
-        state.lastLocalNpcActivityStamp = activity?.localNpcActivityStamp ?: 0L
+        state.lastChunkActivityStamp = chunkStamp
+        state.lastLocalNpcActivityStamp = localStamp
     }
 }

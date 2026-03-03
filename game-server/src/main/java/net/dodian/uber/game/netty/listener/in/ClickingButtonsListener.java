@@ -33,8 +33,8 @@ public class ClickingButtonsListener implements PacketListener {
         ByteBuf payload = packet.getPayload();
         int actionButton = payload.readInt();
 
-        if (getServerDebugMode() || client.playerRights == 2) {
-            client.println_debug("ClickButton: " + actionButton + " (size=" + packetSize + ")");
+        if (getServerDebugMode() && logger.isDebugEnabled()) {
+            logger.debug("ClickButton: {} (size={}) player={}", actionButton, packetSize, client.getPlayerName());
         }
         if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) {
             client.lastButton = System.currentTimeMillis();
@@ -52,8 +52,8 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
 
-        if (client.playerRights > 1) {
-            client.println_debug("Case 185: Action Button: " + client.actionButtonId);
+        if (getServerDebugMode() && logger.isDebugEnabled()) {
+            logger.debug("Unhandled button: {} player={} iface={}", client.actionButtonId, client.getPlayerName(), client.activeInterfaceId);
         }
     }
 }

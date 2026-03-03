@@ -15,7 +15,6 @@ import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision;
 import net.dodian.uber.game.runtime.sync.player.root.RootPlayerInfoPlan;
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState;
-import net.dodian.uber.game.runtime.sync.player.ViewportActivitySnapshot;
 import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey;
@@ -535,10 +534,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public PlayerSyncDecision shouldSkipPlayerSync(Player viewer) {
-        ViewportActivitySnapshot activitySnapshot = SynchronizationContext.getPlayerViewportActivitySnapshot(viewer);
         ViewerPlayerSyncState viewerState = SynchronizationContext.getViewerPlayerSyncState(viewer);
         ViewportSnapshot viewportSnapshot = SynchronizationContext.getViewportSnapshot(viewer);
-        if (activitySnapshot == null || viewerState == null || viewportSnapshot == null || !viewer.loaded) {
+        if (viewerState == null || viewportSnapshot == null || !viewer.loaded) {
             return PlayerSyncDecision.BUILD;
         }
 
@@ -551,7 +549,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 viewer.mapRegionX == viewerState.getLastKnownMapRegionX()
                         && viewer.mapRegionY == viewerState.getLastKnownMapRegionY()
                         && viewer.getPosition().getZ() == viewerState.getLastKnownPlane();
-        boolean localActivityStable = activitySnapshot.getLocalActivityStamp() == viewerState.getLastLocalActivityStamp();
+        long localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(viewer);
+        boolean localActivityStable = localActivityStamp == viewerState.getLastLocalActivityStamp();
         boolean noImmediateStateChange =
                 !viewer.didTeleport()
                         && !viewer.didMapRegionChange()

@@ -4,8 +4,6 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -21,8 +19,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 
 /**
  * Consolidated Netty handler for npc interaction opcodes:
@@ -77,12 +73,6 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineEnabled()) {
-            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1));
-            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
-            return;
-        }
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -90,21 +80,9 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    stop();
-                    return;
-                }
-                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
-                    return;
-                }
-                performNpcClick1(client, tempNpc);
-                client.setWalkToTask(null);
-                stop();
-            }
-        });
+        // OpenRune-style: tick-owned routing. The game thread will execute when in range.
+        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1));
+        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
     }
 
     private void performNpcClick1(Client client, Npc tempNpc) {
@@ -143,12 +121,6 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineEnabled()) {
-            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2));
-            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
-            return;
-        }
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -156,21 +128,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    stop();
-                    return;
-                }
-                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
-                    return;
-                }
-                performNpcClick2(client, tempNpc);
-                client.setWalkToTask(null);
-                stop();
-            }
-        });
+        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2));
+        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
     }
 
     private void performNpcClick2(Client client, Npc tempNpc) {
@@ -209,12 +168,6 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineEnabled()) {
-            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3));
-            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
-            return;
-        }
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -222,21 +175,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    stop();
-                    return;
-                }
-                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
-                    return;
-                }
-                performNpcClick3(client, tempNpc);
-                client.setWalkToTask(null);
-                stop();
-            }
-        });
+        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3));
+        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
     }
 
     private void performNpcClick3(Client client, Npc tempNpc) {
@@ -273,12 +213,6 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineEnabled()) {
-            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4));
-            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
-            return;
-        }
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -286,21 +220,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    stop();
-                    return;
-                }
-                if (!client.goodDistanceEntity(tempNpc, 1) || tempNpc.getPosition().withinDistance(client.getPosition(), 0)) {
-                    return;
-                }
-                performNpcClick4(client, tempNpc);
-                client.setWalkToTask(null);
-                stop();
-            }
-        });
+        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4));
+        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
     }
 
     private void performNpcClick4(Client client, Npc tempNpc) {
@@ -351,27 +272,8 @@ public class NpcInteractionListener implements PacketListener {
 
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
-        if (getInteractionPipelineEnabled()) {
-            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5));
-            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
-            return;
-        }
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    stop();
-                    return;
-                }
-                if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(npc, 5))
-                        || client.goodDistanceEntity(npc, 1)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(npc);
-                    client.setWalkToTask(null);
-                    stop();
-                }
-            }
-        });
+        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5));
+        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
     }
 
     private static int readSignedWordBigEndianA(ByteBuf buf) {

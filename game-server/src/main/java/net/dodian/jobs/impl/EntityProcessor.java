@@ -461,9 +461,8 @@ public class EntityProcessor implements Runnable {
 
         player.postProcessing();
         player.getNextPlayerMovement();
-        if (getInteractionPipelineEnabled()) {
-            InteractionProcessor.process(player);
-        }
+        // OpenRune-style: tick-owned interaction processing. No-op when the player has no pending interaction.
+        InteractionProcessor.process(player);
     }
 
 }

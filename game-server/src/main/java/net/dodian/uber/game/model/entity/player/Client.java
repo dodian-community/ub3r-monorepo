@@ -58,9 +58,12 @@ import net.dodian.uber.game.skills.*;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Client extends Player implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
 
     public Channel channel;
@@ -593,7 +596,7 @@ public class Client extends Player implements Runnable {
         if (channel != null) {
             channel.close();
         }
-        println("Thread removed from Server");
+        logger.debug("Thread removed from Server for player={}", getPlayerName());
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
