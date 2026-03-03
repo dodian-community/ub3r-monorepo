@@ -115,7 +115,9 @@ class GameLoopService(
         val now = System.currentTimeMillis()
         phaseTimer.clear()
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
-        timed(GamePhase.WORLD_MAINTENANCE) { worldMaintenancePhase.run(currentCycle, now) }
+        timed(GamePhase.WORLD_DB_POLL) { worldMaintenancePhase.runWorldDb(currentCycle) }
+        timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
+        timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
         timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
         timed(GamePhase.LEGACY_ACTIONS) { legacyActionPhase.run() }

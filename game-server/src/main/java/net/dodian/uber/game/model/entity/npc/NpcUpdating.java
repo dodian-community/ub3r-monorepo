@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author Dashboard
@@ -38,7 +41,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     @Override
     public void update(Player player, ByteMessage stream) {
-        ByteMessage updateBlock = ByteMessage.raw(16384);
+        ByteMessage updateBlock = withUpdateBlock();
         ByteMessage buf = stream;
         int movementWrites = 0;
         try {
@@ -90,7 +93,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
             }
         } finally {
-            updateBlock.releaseAll();
+            releaseScratch(updateBlock);
         }
     }
 
@@ -159,15 +162,32 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public byte[] buildSharedBlock(Npc npc) {
-        ByteMessage block = ByteMessage.raw(256);
+        ByteMessage block = withSharedBlock();
         try {
             appendBlockUpdate(npc, block);
-            int length = block.getBuffer().writerIndex();
-            byte[] bytes = new byte[length];
-            block.getBuffer().getBytes(0, bytes);
-            return bytes;
+            return block.toByteArray();
         } finally {
-            block.releaseAll();
+            releaseScratch(block);
+        }
+    }
+
+    private ByteMessage withUpdateBlock() {
+        if (getSyncScratchBufferReuseEnabled()) {
+            return ThreadLocalSyncScratch.npcUpdateBlock();
+        }
+        return ByteMessage.raw(16384);
+    }
+
+    private ByteMessage withSharedBlock() {
+        if (getSyncScratchBufferReuseEnabled()) {
+            return ThreadLocalSyncScratch.sharedBlock();
+        }
+        return ByteMessage.raw(512);
+    }
+
+    private static void releaseScratch(ByteMessage message) {
+        if (!getSyncScratchBufferReuseEnabled()) {
+            message.releaseAll();
         }
     }
 

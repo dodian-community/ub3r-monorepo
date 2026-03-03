@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.dodian.utilities.DotEnvKt.getInteractionPipelineV2Enabled;
+import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
@@ -428,7 +428,7 @@ public class EntityProcessor implements Runnable {
 
         player.postProcessing();
         player.getNextPlayerMovement();
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             InteractionProcessor.process(player);
         }
     }

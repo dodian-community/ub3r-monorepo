@@ -8,9 +8,10 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.entity.player.PlayerUpdating;
 import net.dodian.uber.game.runtime.sync.WorldSynchronizationService;
+import net.dodian.uber.game.runtime.zone.ZoneUpdateBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static net.dodian.utilities.DotEnvKt.getSyncServiceV2Enabled;
+import static net.dodian.utilities.DotEnvKt.getSynchronizationEnabled;
 
 /**
  * Flushes outbound entity update packets after simulation/actions for the tick are complete.
@@ -24,7 +25,7 @@ public class OutboundPacketProcessor implements Runnable {
 
     @Override
     public void run() {
-        if (getSyncServiceV2Enabled()) {
+        if (getSynchronizationEnabled()) {
             WorldSynchronizationService.INSTANCE.run();
             return;
         }
@@ -45,6 +46,15 @@ public class OutboundPacketProcessor implements Runnable {
                 }
                 updatePlayer(player, i);
             }
+
+            java.util.ArrayList<Client> activePlayers = new java.util.ArrayList<>();
+            for (int i = 0; i < Constants.maxPlayers; i++) {
+                Client player = (Client) PlayerHandler.players[i];
+                if (player != null && player.isActive) {
+                    activePlayers.add(player);
+                }
+            }
+            ZoneUpdateBus.flush(activePlayers);
 
             for (int i = 0; i < Constants.maxPlayers; i++) {
                 Client player = (Client) PlayerHandler.players[i];

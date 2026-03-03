@@ -35,12 +35,6 @@ public class ChangeRegionListener implements PacketListener {
         if (!client.pLoaded) {
             client.pLoaded = true;
         }
-        int wild = client.getWildLevel();
-        if (wild > 0) {
-            client.setWildLevel(wild);
-        } else {
-            client.updatePlayerDisplay();
-        }
         if (!client.IsPMLoaded) {
             client.refreshFriends();
             client.IsPMLoaded = true;

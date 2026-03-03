@@ -725,6 +725,9 @@ public abstract class Player extends Entity {
     // --- Cached player update block (for efficient multi-viewer reuse) ---
     private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
+    private volatile long appearanceRevision = 0L;
+    private volatile long cachedAppearanceRevision = -1L;
+    private volatile byte[] cachedAppearanceBytes = null;
 
     /**
      * Returns true if the cached update block can be reused this cycle.
@@ -764,6 +767,29 @@ public abstract class Player extends Entity {
     public void invalidateCachedUpdateBlock() {
         this.cachedUpdateBlockValid = false;
         releaseCachedUpdateBlock();
+    }
+
+    public void markAppearanceDirty() {
+        appearanceRevision++;
+        cachedAppearanceRevision = -1L;
+        cachedAppearanceBytes = null;
+    }
+
+    public long getAppearanceRevision() {
+        return appearanceRevision;
+    }
+
+    public boolean isCachedAppearanceValid() {
+        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+    }
+
+    public byte[] getCachedAppearanceBytes() {
+        return cachedAppearanceBytes;
+    }
+
+    public void cacheAppearanceBytes(byte[] bytes) {
+        cachedAppearanceBytes = bytes;
+        cachedAppearanceRevision = appearanceRevision;
     }
 
     private void releaseCachedUpdateBlock() {
@@ -1294,6 +1320,7 @@ public abstract class Player extends Entity {
 
     public void setGender(int pGender) {
         this.pGender = pGender;
+        markAppearanceDirty();
     }
 
     public int getTorso() {
@@ -1302,6 +1329,7 @@ public abstract class Player extends Entity {
 
     public void setTorso(int pTorso) {
         this.pTorso = pTorso;
+        markAppearanceDirty();
     }
 
     public int getArms() {
@@ -1310,6 +1338,7 @@ public abstract class Player extends Entity {
 
     public void setArms(int pArms) {
         this.pArms = pArms;
+        markAppearanceDirty();
     }
 
     public int getLegs() {
@@ -1318,6 +1347,7 @@ public abstract class Player extends Entity {
 
     public void setLegs(int pLegs) {
         this.pLegs = pLegs;
+        markAppearanceDirty();
     }
 
     public int getHands() {
@@ -1326,6 +1356,7 @@ public abstract class Player extends Entity {
 
     public void setHands(int pHands) {
         this.pHands = pHands;
+        markAppearanceDirty();
     }
 
     public int getFeet() {
@@ -1334,6 +1365,7 @@ public abstract class Player extends Entity {
 
     public void setFeet(int pFeet) {
         this.pFeet = pFeet;
+        markAppearanceDirty();
     }
 
     public int getBeard() {
@@ -1342,6 +1374,7 @@ public abstract class Player extends Entity {
 
     public void setBeard(int pBeard) {
         this.pBeard = pBeard;
+        markAppearanceDirty();
     }
 
     public int getHead() {
@@ -1350,6 +1383,7 @@ public abstract class Player extends Entity {
 
     public void setHead(int pHead) {
         this.pHead = pHead;
+        markAppearanceDirty();
     }
 
     public int getStandAnim() {
@@ -1367,11 +1401,13 @@ public abstract class Player extends Entity {
     public void setAgilityEmote(int walk, int run) {
         setWalkAnim(walk);
         setRunAnim(run);
+        markAppearanceDirty();
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
     public void setWalkAnim(int playerSEW) {
         this.playerSEW = playerSEW;
+        markAppearanceDirty();
         this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
@@ -1381,6 +1417,7 @@ public abstract class Player extends Entity {
 
     public void setRunAnim(int playerSER) {
         this.playerSER = playerSER;
+        markAppearanceDirty();
         this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
@@ -1390,6 +1427,7 @@ public abstract class Player extends Entity {
 
     public void setPlayerNpc(int playerNpc) {
         this.playerNpc = playerNpc;
+        markAppearanceDirty();
     }
 
     public int getDamageDealt() {

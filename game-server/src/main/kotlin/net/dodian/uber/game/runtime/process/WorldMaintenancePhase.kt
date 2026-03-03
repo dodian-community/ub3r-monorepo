@@ -3,27 +3,24 @@ package net.dodian.uber.game.runtime.process
 import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.WorldProcessor
+import net.dodian.uber.game.runtime.world.WorldMaintenanceService
 
 class WorldMaintenancePhase(
     private val worldProcessor: WorldProcessor,
     private val farmingProcess: FarmingProcess,
     private val plunderDoor: PlunderDoor,
 ) {
-    private var lastPlunderRunMs = 0L
+    private val service = WorldMaintenanceService(worldProcessor, farmingProcess, plunderDoor)
 
-    fun run(cycle: Long, nowMs: Long) {
-        if (cycle % 100L == 0L) {
-            worldProcessor.run()
-            farmingProcess.run()
-        }
-
-        if (lastPlunderRunMs == 0L || nowMs - lastPlunderRunMs >= PLUNDER_DOOR_INTERVAL_MS) {
-            plunderDoor.run()
-            lastPlunderRunMs = nowMs
-        }
+    fun runWorldDb(cycle: Long) {
+        service.runWorldDb(cycle)
     }
 
-    private companion object {
-        private const val PLUNDER_DOOR_INTERVAL_MS = 900_000L
+    fun runFarming(cycle: Long) {
+        service.runFarming(cycle)
+    }
+
+    fun runPlunder(nowMs: Long) {
+        service.runPlunder(nowMs)
     }
 }

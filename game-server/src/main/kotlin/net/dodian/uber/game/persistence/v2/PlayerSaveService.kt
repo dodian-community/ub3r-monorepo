@@ -2,33 +2,27 @@ package net.dodian.uber.game.persistence.v2
 
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.system.measureTimeMillis
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.PlayerSaveReason
 import net.dodian.uber.game.persistence.PlayerSaveSnapshot
 import org.slf4j.LoggerFactory
 import net.dodian.utilities.databaseSaveBurstAttempts
 import net.dodian.utilities.databaseSaveRetryBaseMs
 import net.dodian.utilities.databaseSaveRetryMaxMs
-import net.dodian.utilities.playerSavePipelineV2BatchDelayMs
-import net.dodian.utilities.playerSavePipelineV2RequestTimeoutMs
-import net.dodian.utilities.playerSavePipelineV2ShadowEnabled
+import net.dodian.utilities.playerSaveBatchDelayMs
+import net.dodian.utilities.playerSaveRequestTimeoutMs
+import net.dodian.utilities.playerSaveShadowEnabled
 
 object PlayerSaveService {
     private val logger = LoggerFactory.getLogger(PlayerSaveService::class.java)
@@ -43,12 +37,6 @@ object PlayerSaveService {
     private val totalRetries = AtomicLong(0)
     private val repository = PlayerSaveRepositoryV2()
 
-    private val executor =
-        Executors.newSingleThreadExecutor(ThreadFactory { runnable ->
-            Thread(runnable, "player-save").apply { isDaemon = true }
-        })
-    private val dispatcher = executor.asCoroutineDispatcher()
-    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     @Volatile
     private var worker: Job? = null
 
@@ -75,7 +63,7 @@ object PlayerSaveService {
         val seq = sequence.incrementAndGet()
         val envelope = PlayerSaveEnvelope.fromClient(client, seq, reason, updateProgress, finalSave, dirtyMask)
         val shadowSnapshot =
-            if (playerSavePipelineV2ShadowEnabled) {
+            if (playerSaveShadowEnabled) {
                 PlayerSaveSnapshot.fromClient(client, seq, reason, updateProgress, finalSave)
             } else {
                 null
@@ -127,11 +115,6 @@ object PlayerSaveService {
         runBlocking {
             worker?.cancel()
         }
-        executor.shutdown()
-        val remaining = maxOf(1L, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime()))
-        if (!executor.awaitTermination(remaining, TimeUnit.MILLISECONDS)) {
-            executor.shutdownNow()
-        }
     }
 
     @JvmStatic
@@ -169,10 +152,10 @@ object PlayerSaveService {
             return
         }
         worker =
-            scope.launch {
+            AccountPersistenceService.scope.launch {
                 while (isActive) {
                     drainOnce()
-                    delay(playerSavePipelineV2BatchDelayMs)
+                    delay(playerSaveBatchDelayMs)
                 }
             }
     }
@@ -207,9 +190,9 @@ object PlayerSaveService {
 
     private suspend fun handleRequest(request: PlayerSaveRequest) {
         var backoffMs = databaseSaveRetryBaseMs.coerceAtLeast(50L)
-        while (scope.isActive) {
+        while (AccountPersistenceService.scope.isActive) {
             val elapsed =
-                withTimeoutOrNull(playerSavePipelineV2RequestTimeoutMs) {
+                withTimeoutOrNull(playerSaveRequestTimeoutMs) {
                     measureTimeMillis {
                         val snapshot = repository.buildSnapshot(request.envelope)
                         request.shadowSnapshot?.let { shadow -> compareShadow(shadow, snapshot) }

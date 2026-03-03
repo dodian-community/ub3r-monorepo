@@ -14,8 +14,9 @@ final class PlayerUpdateBlockSet {
         boolean includeChat = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
         boolean forceAppearance = phase == PlayerUpdating.UpdatePhase.ADD_LOCAL;
         boolean sharedCacheablePhase = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
+        int updateMask = computeUpdateMask(player, includeChat, forceAppearance);
 
-        if (sharedCacheablePhase) {
+        if (sharedCacheablePhase && updateMask != 0) {
             byte[] sharedBlock = SynchronizationContext.getSharedPlayerBlock(player, phase.name());
             if (sharedBlock != null) {
                 out.putBytes(sharedBlock);
@@ -32,7 +33,6 @@ final class PlayerUpdateBlockSet {
 
         ByteMessage blockBuf = cacheablePhase ? ByteMessage.raw(256) : out;
         try {
-            int updateMask = computeUpdateMask(player, includeChat, forceAppearance);
             if (updateMask == 0) {
                 return;
             }

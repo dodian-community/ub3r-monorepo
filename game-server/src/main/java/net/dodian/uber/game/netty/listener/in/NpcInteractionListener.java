@@ -22,7 +22,7 @@ import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.utilities.DotEnvKt.getInteractionPipelineV2Enabled;
+import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 
 /**
  * Consolidated Netty handler for npc interaction opcodes:
@@ -77,7 +77,7 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1));
             client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
             return;
@@ -143,7 +143,7 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2));
             client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
             return;
@@ -209,7 +209,7 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3));
             client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
             return;
@@ -273,7 +273,7 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4));
             client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
             return;
@@ -351,7 +351,7 @@ public class NpcInteractionListener implements PacketListener {
 
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
-        if (getInteractionPipelineV2Enabled()) {
+        if (getInteractionPipelineEnabled()) {
             client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5));
             client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
             return;

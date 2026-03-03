@@ -7,6 +7,9 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem;
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem;
+import net.dodian.uber.game.runtime.zone.ZoneUpdateBus;
+
+import static net.dodian.utilities.DotEnvKt.getZoneUpdateBatchingEnabled;
 
 public class GroundItem {
     public int x, y, z, id, amount, dropper, playerId = -1, npcId = -1, type = 2;
@@ -29,8 +32,13 @@ public class GroundItem {
             this.type = 1;
         }
         if (dropper > 0 && Server.playerHandler.validClient(dropper)) {
-            Server.playerHandler.getClient(dropper).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
-            playerId = Server.playerHandler.getClient(dropper).dbId;
+            Client owner = Server.playerHandler.getClient(dropper);
+            playerId = owner.dbId;
+            if (getZoneUpdateBatchingEnabled()) {
+                ZoneUpdateBus.queueGroundItemCreate(id, amount, new Position(x, y, z), playerId, null);
+            } else {
+                owner.send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
+            }
         }
     }
 
@@ -60,8 +68,13 @@ public class GroundItem {
             this.type = 1;
         }
         if (drop[0] >= 0 && Server.playerHandler.validClient(drop[0])) {
-            Server.playerHandler.getClient(drop[0]).send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
-            playerId = Server.playerHandler.getClient(drop[0]).dbId;
+            Client owner = Server.playerHandler.getClient(drop[0]);
+            playerId = owner.dbId;
+            if (getZoneUpdateBatchingEnabled()) {
+                ZoneUpdateBus.queueGroundItemCreate(id, amount, new Position(x, y, z), playerId, null);
+            } else {
+                owner.send(new CreateGroundItem(new GameItem(id, amount), new Position(x, y, z)));
+            }
         }
     }
 
@@ -88,6 +101,10 @@ public class GroundItem {
     }
 
     public void removeItemDisplay() {
+        if (getZoneUpdateBatchingEnabled()) {
+            ZoneUpdateBus.queueGroundItemRemove(id, amount, new Position(this.x, this.y, this.z));
+            return;
+        }
         for (int i = 0; i < Constants.maxPlayers; i++) {
             if (PlayerHandler.players[i] == null) continue;
             Client c = (Client) PlayerHandler.players[i];
@@ -96,6 +113,12 @@ public class GroundItem {
         }
     }
     public void itemDisplay() {
+        if (getZoneUpdateBatchingEnabled()) {
+            Integer onlyDbId = type == 1 ? playerId : null;
+            Integer excludeDbId = (type == 1 || !isVisible()) ? null : playerId;
+            ZoneUpdateBus.queueGroundItemCreate(id, amount, new Position(this.x, this.y, this.z), onlyDbId, excludeDbId);
+            return;
+        }
         for (int i = 0; i < Constants.maxPlayers; i++) {
             if (PlayerHandler.players[i] == null || (PlayerHandler.players[i] != null && type == 1 && playerId != PlayerHandler.players[i].dbId)) continue;
             Client c = (Client) PlayerHandler.players[i];

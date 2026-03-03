@@ -987,6 +987,24 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
+     * Clears this message for scratch-buffer reuse.
+     */
+    public ByteMessage clear() {
+        buf.clear();
+        bitIndex = -1;
+        return this;
+    }
+
+    /**
+     * Copies the currently written bytes into a heap array.
+     */
+    public byte[] toByteArray() {
+        byte[] bytes = new byte[buf.writerIndex()];
+        buf.getBytes(0, bytes);
+        return bytes;
+    }
+
+    /**
      * @return The opcode.
      */
     public int getOpcode() {

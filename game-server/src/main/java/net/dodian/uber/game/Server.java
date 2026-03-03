@@ -22,7 +22,7 @@ import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;
@@ -142,7 +142,7 @@ public class Server {
         new Thread(login).start();
         /* Processor for various stuff */
         entryObject = new PyramidPlunder();
-        if (getGameLoopV2Enabled()) {
+        if (getGameLoopEnabled()) {
             gameLoopService.start();
         } else {
             gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
@@ -202,16 +202,16 @@ public class Server {
             return;
         }
 
-        if (getGameLoopV2Enabled()) {
+        if (getGameLoopEnabled()) {
             gameLoopService.stop(Duration.ofSeconds(10));
         } else {
             gameTickScheduler.stop();
         }
 
         try {
-            PlayerSaveCoordinator.shutdownAndDrain(Duration.ofSeconds(30));
+            AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
-            logger.warn("Failed to drain player save coordinator during shutdown", exception);
+            logger.warn("Failed to drain account persistence service during shutdown", exception);
         }
 
         try {
