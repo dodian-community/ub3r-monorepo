@@ -11,6 +11,8 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.codec.MessageType;
+import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 
 /**
@@ -120,6 +122,20 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             return;
         }
 
+        ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
+        if (snapshot != null) {
+            java.util.Collection<Player> candidates = snapshot.getPlayers();
+            if (candidates.isEmpty()) {
+                return;
+            }
+            if (player.playerListSize > 50) {
+                addPrioritizedLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
+                return;
+            }
+            addLocalPlayersFromCollection(player, stream, updateBlock, candidates, remainingAdds);
+            return;
+        }
+
         if (Server.chunkManager == null) {
             java.util.List<Player> candidates = PlayerHandler.getLocalPlayers(player);
             if (candidates.isEmpty()) {
@@ -147,6 +163,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 return;
             }
             playersAdded[0]++;
+            SynchronizationContext.recordPlayerAdd();
             if (DEBUG_ADDED_LOCAL_PLAYERS) {
                 DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
             }
@@ -169,6 +186,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 continue;
             }
             playersAdded++;
+            SynchronizationContext.recordPlayerAdd();
             if (DEBUG_ADDED_LOCAL_PLAYERS) {
                 DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
             }
@@ -200,8 +218,41 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 continue;
             }
             player.addNewPlayer(other, stream, updateBlock);
-            if (player.playersUpdating.contains(other) && DEBUG_ADDED_LOCAL_PLAYERS) {
-                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            if (player.playersUpdating.contains(other)) {
+                SynchronizationContext.recordPlayerAdd();
+                if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                }
+            }
+        }
+    }
+
+    private void addPrioritizedLocalPlayersFromCollection(Player player,
+                                                          ByteMessage stream,
+                                                          ByteMessage updateBlock,
+                                                          java.util.Collection<Player> candidates,
+                                                          int remainingAdds) {
+        Player[] prioritized = new Player[remainingAdds];
+        int[] prioritizedDistances = new int[remainingAdds];
+        int[] prioritizedCount = {0};
+        for (Player other : candidates) {
+            if (!shouldAddLocalPlayerCandidate(player, other)) {
+                continue;
+            }
+            insertPrioritizedCandidate(player, prioritized, prioritizedDistances, prioritizedCount, other);
+        }
+
+        for (int i = 0; i < prioritizedCount[0]; i++) {
+            Player other = prioritized[i];
+            if (!shouldAddLocalPlayerCandidate(player, other)) {
+                continue;
+            }
+            player.addNewPlayer(other, stream, updateBlock);
+            if (player.playersUpdating.contains(other)) {
+                SynchronizationContext.recordPlayerAdd();
+                if (DEBUG_ADDED_LOCAL_PLAYERS) {
+                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                }
             }
         }
     }
@@ -345,6 +396,20 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public void appendAddLocalBlockUpdate(Player player, ByteMessage buf) {
         appendBlockUpdate(player, buf, UpdatePhase.ADD_LOCAL);
+    }
+
+    public byte[] buildSharedBlock(Player player, String phaseName) {
+        UpdatePhase phase = UpdatePhase.valueOf(phaseName);
+        ByteMessage block = ByteMessage.raw(256);
+        try {
+            appendBlockUpdate(player, block, phase);
+            int length = block.getBuffer().writerIndex();
+            byte[] bytes = new byte[length];
+            block.getBuffer().getBytes(0, bytes);
+            return bytes;
+        } finally {
+            block.releaseAll();
+        }
     }
 
     private boolean hasUpdatesForPhase(Player player, UpdatePhase phase) {

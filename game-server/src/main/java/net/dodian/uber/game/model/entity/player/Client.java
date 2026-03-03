@@ -28,6 +28,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
+import net.dodian.uber.game.persistence.v2.PlayerSaveSegment;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -593,6 +594,7 @@ public class Client extends Player implements Runnable {
 
             try {
                 dispatchQueuedPacket(packet);
+                markSaveDirty(PlayerSaveSegment.ALL_MASK);
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -1749,8 +1751,15 @@ public class Client extends Player implements Runnable {
     }
 
     public void update() { //Update player before npc for some reason!
-        // Use proper outgoing packet structure instead of direct buffer manipulation
+        sendPlayerSynchronization();
+        sendNpcSynchronization();
+    }
+
+    public void sendPlayerSynchronization() {
         new PlayerUpdatePacket(this).send(this);
+    }
+
+    public void sendNpcSynchronization() {
         new NpcUpdatePacket(this).send(this);
     }
 
@@ -1761,6 +1770,13 @@ public class Client extends Player implements Runnable {
         if (disconnected || isLoggingOut) {
             return;
         }
+        int startingHealth = getCurrentHealth();
+        int startingPrayer = getCurrentPrayer();
+        int startingX = getPosition().getX();
+        int startingY = getPosition().getY();
+        int startingZ = getPosition().getZ();
+        int startingEffectsHash = effects.hashCode();
+        int startingBoostedHash = Arrays.hashCode(boostedLevel);
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));
@@ -2091,6 +2107,16 @@ public class Client extends Player implements Runnable {
             disconnected = true;
         else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
             logout();
+
+        if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
+            markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
+        }
+        if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
+            markSaveDirty(PlayerSaveSegment.POSITION.getMask());
+        }
+        if (startingEffectsHash != effects.hashCode() || startingBoostedHash != Arrays.hashCode(boostedLevel)) {
+            markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
+        }
     }
 
 

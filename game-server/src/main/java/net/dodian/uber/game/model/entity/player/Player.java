@@ -33,6 +33,9 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.persistence.v2.PlayerSaveSegment;
+import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
+import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 
@@ -49,6 +52,13 @@ public abstract class Player extends Entity {
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
+    private volatile int saveDirtyMask = PlayerSaveSegment.ALL_MASK;
+    private volatile long lastSavedRevision = 0L;
+    private volatile long saveRevision = 0L;
+    private volatile long lastProcessedCycle = 0L;
+    private volatile InteractionIntent pendingInteraction;
+    private volatile ActiveInteraction activeInteraction;
+    private volatile long interactionEarliestCycle = 0L;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -843,6 +853,68 @@ public abstract class Player extends Entity {
         return this.faceTarget;
     }
     public abstract void process(); //Send every 600 ms
+
+    public void markSaveDirty(int segmentMask) {
+        saveDirtyMask |= segmentMask;
+        saveRevision++;
+    }
+
+    public void clearSaveDirtyMask(int segmentMask) {
+        saveDirtyMask &= ~segmentMask;
+    }
+
+    public void clearAllSaveDirty() {
+        saveDirtyMask = 0;
+        lastSavedRevision = saveRevision;
+    }
+
+    public int getSaveDirtyMask() {
+        return saveDirtyMask;
+    }
+
+    public long getLastSavedRevision() {
+        return lastSavedRevision;
+    }
+
+    public long getSaveRevision() {
+        return saveRevision;
+    }
+
+    public void setLastSavedRevision(long lastSavedRevision) {
+        this.lastSavedRevision = lastSavedRevision;
+    }
+
+    public long getLastProcessedCycle() {
+        return lastProcessedCycle;
+    }
+
+    public void setLastProcessedCycle(long lastProcessedCycle) {
+        this.lastProcessedCycle = lastProcessedCycle;
+    }
+
+    public InteractionIntent getPendingInteraction() {
+        return pendingInteraction;
+    }
+
+    public void setPendingInteraction(InteractionIntent pendingInteraction) {
+        this.pendingInteraction = pendingInteraction;
+    }
+
+    public ActiveInteraction getActiveInteraction() {
+        return activeInteraction;
+    }
+
+    public void setActiveInteraction(ActiveInteraction activeInteraction) {
+        this.activeInteraction = activeInteraction;
+    }
+
+    public long getInteractionEarliestCycle() {
+        return interactionEarliestCycle;
+    }
+
+    public void setInteractionEarliestCycle(long interactionEarliestCycle) {
+        this.interactionEarliestCycle = interactionEarliestCycle;
+    }
 
 
 

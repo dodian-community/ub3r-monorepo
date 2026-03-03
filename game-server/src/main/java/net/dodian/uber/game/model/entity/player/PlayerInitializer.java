@@ -5,6 +5,7 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.persistence.v2.PlayerSaveSegment;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
@@ -65,6 +66,7 @@ public class PlayerInitializer {
         /* Initialize save timers */
         client.lastSave = System.currentTimeMillis();
         client.lastProgressSave = client.lastSave;
+        client.markSaveDirty(PlayerSaveSegment.ALL_MASK);
         
         /* Set a player active to a world */
         PlayerHandler.playersOnline.put(client.longName, client);

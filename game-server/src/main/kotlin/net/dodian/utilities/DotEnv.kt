@@ -44,6 +44,23 @@ val databaseSaveWorkers = dotenv["DATABASE_SAVE_WORKERS"]?.toInt() ?: 2
 val databaseSaveRetryBaseMs = dotenv["DATABASE_SAVE_RETRY_BASE_MS"]?.toLong() ?: 250L
 val databaseSaveRetryMaxMs = dotenv["DATABASE_SAVE_RETRY_MAX_MS"]?.toLong() ?: 5000L
 val databaseSaveBurstAttempts = dotenv["DATABASE_SAVE_BURST_ATTEMPTS"]?.toInt() ?: 8
+val playerSavePipelineV2Enabled = dotenv["PLAYER_SAVE_PIPELINE_V2_ENABLED"]?.toBoolean() ?: true
+val playerSavePipelineV2ShadowEnabled = dotenv["PLAYER_SAVE_PIPELINE_V2_SHADOW_ENABLED"]?.toBoolean() ?: false
+val playerSavePipelineV2BatchDelayMs = dotenv["PLAYER_SAVE_PIPELINE_V2_BATCH_DELAY_MS"]?.toLong() ?: 100L
+val playerSavePipelineV2RequestTimeoutMs = dotenv["PLAYER_SAVE_PIPELINE_V2_REQUEST_TIMEOUT_MS"]?.toLong() ?: 5000L
+val gameLoopV2Enabled = dotenv["GAME_LOOP_V2_ENABLED"]?.toBoolean() ?: true
+val interactionPipelineV2Enabled = dotenv["INTERACTION_PIPELINE_V2_ENABLED"]?.toBoolean() ?: false
+val updatePrepV2Enabled = dotenv["UPDATE_PREP_V2_ENABLED"]?.toBoolean() ?: false
+val syncServiceV2Enabled = dotenv["SYNC_SERVICE_V2_ENABLED"]?.toBoolean() ?: true
+val syncRootBlockCacheEnabled = dotenv["SYNC_ROOT_BLOCK_CACHE_ENABLED"]?.toBoolean() ?: true
+val syncViewportSnapshotEnabled = dotenv["SYNC_VIEWPORT_SNAPSHOT_ENABLED"]?.toBoolean() ?: true
+val syncSkipEmptyNpcPacketEnabled = dotenv["SYNC_SKIP_EMPTY_NPC_PACKET_ENABLED"]?.toBoolean() ?: false
+val syncMetricsVerboseEnabled = dotenv["SYNC_METRICS_VERBOSE_ENABLED"]?.toBoolean() ?: true
+val syncMetricsLogIntervalTicks = dotenv["SYNC_METRICS_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
+val runtimePhaseTimingEnabled = dotenv["RUNTIME_PHASE_TIMING_ENABLED"]?.toBoolean() ?: true
+val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 25L
+val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
+val runtimeCycleLogIntervalTicks = dotenv["RUNTIME_CYCLE_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
 
 // Game Settings - Multipliers
 val gameMultiplierGlobalXp = dotenv["GAME_MULTIPLIER_GLOBAL_XP"]?.toInt() ?: 1

@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                         npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
                     appendBlockUpdate(npc, updateBlock);
+                    SynchronizationContext.recordNpcAdd();
                     npcsAdded++;
                 }
             }
@@ -92,6 +95,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     private java.util.Collection<Npc> findNearbyNpcs(Player player) {
+        ViewportSnapshot snapshot = SynchronizationContext.getViewportSnapshot(player);
+        if (snapshot != null) {
+            return snapshot.getNpcs();
+        }
         if (Server.chunkManager == null) {
             return Server.npcManager.getNpcs();
         }
@@ -149,6 +156,19 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     @Override
     public void appendBlockUpdate(Npc npc, ByteMessage buf) {
         BLOCK_SET.encode(this, npc, buf);
+    }
+
+    public byte[] buildSharedBlock(Npc npc) {
+        ByteMessage block = ByteMessage.raw(256);
+        try {
+            appendBlockUpdate(npc, block);
+            int length = block.getBuffer().writerIndex();
+            byte[] bytes = new byte[length];
+            block.getBuffer().getBytes(0, bytes);
+            return bytes;
+        } finally {
+            block.releaseAll();
+        }
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {

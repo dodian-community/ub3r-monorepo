@@ -9,6 +9,7 @@ import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -17,8 +18,11 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static net.dodian.utilities.DotEnvKt.getInteractionPipelineV2Enabled;
 
 /**
  * Consolidated Netty handler for npc interaction opcodes:
@@ -72,6 +76,12 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
+
+        if (getInteractionPipelineV2Enabled()) {
+            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1));
+            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+            return;
+        }
 
         if (client.randomed || client.UsingAgility) {
             return;
@@ -133,6 +143,12 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
+        if (getInteractionPipelineV2Enabled()) {
+            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2));
+            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+            return;
+        }
+
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -193,6 +209,12 @@ public class NpcInteractionListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
 
+        if (getInteractionPipelineV2Enabled()) {
+            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3));
+            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+            return;
+        }
+
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -250,6 +272,12 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
         client.setWalkToTask(task);
+
+        if (getInteractionPipelineV2Enabled()) {
+            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4));
+            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+            return;
+        }
 
         if (client.randomed || client.UsingAgility) {
             return;
@@ -323,6 +351,11 @@ public class NpcInteractionListener implements PacketListener {
 
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
+        if (getInteractionPipelineV2Enabled()) {
+            client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5));
+            client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+            return;
+        }
         EventManager.getInstance().registerEvent(new Event(600) {
             @Override
             public void execute() {

@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.runtime.interaction.InteractionProcessor;
 import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
@@ -16,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
+
+import static net.dodian.utilities.DotEnvKt.getInteractionPipelineV2Enabled;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
@@ -27,29 +30,27 @@ public class EntityProcessor implements Runnable {
 
     @Override
     public void run() {
-        processInboundPackets();
-
         long now = System.currentTimeMillis();
-        Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
+        runInboundPacketPhase();
+        runNpcMainPhase(now);
+        runPlayerMainPhase();
+        runMovementFinalizePhase();
+        runHousekeepingPhase(now);
+    }
 
-        // Process NPCs
+    public void runInboundPacketPhase() {
+        processInboundPackets();
+    }
+
+    public void runNpcMainPhase(long now) {
+        Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
         for (Npc npc : Server.npcManager.getNpcs()) {
             processNpc(now, npc, activeNpcChunks);
         }
-
         syncNpcChunksForTick();
+    }
 
-        // End server when update finished
-        if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
-            if (PlayerHandler.getPlayerCount() < 1) {
-                System.exit(0);
-            }
-        }
-
-        // Handle server cycles
-        handleServerCycles();
-
-        // Process players
+    public void runPlayerMainPhase() {
         for (int i = 0; i < Constants.maxPlayers; i++) {
             Client player = (Client) PlayerHandler.players[i];
             if (player == null || player.disconnected || !player.isActive) {
@@ -57,12 +58,20 @@ public class EntityProcessor implements Runnable {
             }
             processPlayer(player);
         }
+    }
 
-        // Keep chunk membership in-sync for all movers before visibility discovery.
+    public void runMovementFinalizePhase() {
         syncActivePlayerChunksForTick();
-
-        // Consume NPC walking direction once per tick, then reuse for all viewers.
         consumeNpcDirectionsForTick();
+    }
+
+    public void runHousekeepingPhase(long now) {
+        if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
+            if (PlayerHandler.getPlayerCount() < 1) {
+                System.exit(0);
+            }
+        }
+        handleServerCycles();
     }
 
     private void processNpc(long now, Npc npc, Set<Chunk> activeNpcChunks) {
@@ -414,10 +423,14 @@ public class EntityProcessor implements Runnable {
             player.initialize();
             player.initialized = true;
         }
+        player.setLastProcessedCycle(PlayerHandler.cycle);
         player.process();
 
         player.postProcessing();
         player.getNextPlayerMovement();
+        if (getInteractionPipelineV2Enabled()) {
+            InteractionProcessor.process(player);
+        }
     }
 
 }

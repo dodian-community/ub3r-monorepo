@@ -1,6 +1,7 @@
 package net.dodian.uber.game.persistence;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.persistence.v2.PlayerSaveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import static net.dodian.utilities.DotEnvKt.getDatabaseSaveBurstAttempts;
 import static net.dodian.utilities.DotEnvKt.getDatabaseSaveRetryBaseMs;
 import static net.dodian.utilities.DotEnvKt.getDatabaseSaveRetryMaxMs;
 import static net.dodian.utilities.DotEnvKt.getDatabaseSaveWorkers;
+import static net.dodian.utilities.DotEnvKt.getPlayerSavePipelineV2Enabled;
 
 public class PlayerSaveCoordinator {
 
@@ -74,6 +76,15 @@ public class PlayerSaveCoordinator {
             return;
         }
 
+        if (getPlayerSavePipelineV2Enabled()) {
+            if (!getAsyncPlayerSaveEnabled()) {
+                PlayerSaveService.saveSynchronously(client, reason, updateProgress, finalSave);
+            } else {
+                PlayerSaveService.requestSave(client, reason, updateProgress, finalSave);
+            }
+            return;
+        }
+
         if (!getAsyncPlayerSaveEnabled()) {
             saveSynchronously(client, reason, updateProgress, finalSave);
             return;
@@ -110,10 +121,17 @@ public class PlayerSaveCoordinator {
     }
 
     public static boolean isFinalSavePending(int dbId) {
+        if (getPlayerSavePipelineV2Enabled()) {
+            return PlayerSaveService.isFinalSavePending(dbId);
+        }
         return Holder.INSTANCE.isFinalSavePendingInternal(dbId);
     }
 
     public static void shutdownAndDrain(Duration timeout) {
+        if (getPlayerSavePipelineV2Enabled()) {
+            PlayerSaveService.shutdownAndDrain(timeout);
+            return;
+        }
         Holder.INSTANCE.shutdownAndDrainInternal(timeout);
     }
 
