@@ -18,10 +18,19 @@ class PlayerInfoViewportIndex private constructor(
             val slotsByViewer = IdentityHashMap<Player, IntArray>(viewers.size)
             val signatureByViewer = IdentityHashMap<Player, Int>(viewers.size)
             viewers.forEach { viewer ->
-                val snapshotPlayers = viewportIndex?.snapshotFor(viewer)?.players.orEmpty()
-                val visible = ArrayList<Int>(snapshotPlayers.size)
+                // Viewport snapshots are an optimization only. If they're unavailable (or temporarily
+                // empty during lifecycle transitions), fall back to the active player list so that
+                // player visibility never collapses to "no locals" (which makes players invisible).
+                val snapshotPlayers = viewportIndex?.snapshotFor(viewer)?.players
+                val candidates =
+                    if (snapshotPlayers.isNullOrEmpty()) {
+                        viewers
+                    } else {
+                        snapshotPlayers
+                    }
+                val visible = ArrayList<Int>(candidates.size)
                 var signature = 1
-                for (other in snapshotPlayers) {
+                for (other in candidates) {
                     if (viewer === other || !other.isActive) {
                         continue
                     }

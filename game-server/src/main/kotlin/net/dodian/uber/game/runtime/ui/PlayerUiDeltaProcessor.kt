@@ -54,10 +54,8 @@ object PlayerUiDeltaProcessor {
                     }
                 "Muted: " + if (mutedDays > 0) "$mutedDays days" else "$mutedHours hours"
             }
-        if (state.lastOverlayText != overlayText) {
-            player.sendCachedString(overlayText, 6572)
-            state.lastOverlayText = overlayText
-        }
+        player.sendCachedString(overlayText, 6572)
+        state.lastOverlayText = overlayText
 
         val wildLevel = player.wildLevelForUi
         if (wildLevel > 0) {
@@ -66,15 +64,21 @@ object PlayerUiDeltaProcessor {
                 state.lastWildLevel = wildLevel
             }
         } else {
-            if (state.lastTopBarText != payload.topBarText) {
-                player.sendCachedString(payload.topBarText, 6570)
-                state.lastTopBarText = payload.topBarText
+            // Ensure server-side wilderness state is cleared when leaving. setWildLevel(0) is
+            // a no-op packet-wise, but it updates the cached wildyLevel used by teleport rules.
+            if (state.lastWildLevel != 0) {
+                player.setWildLevel(0)
             }
+            player.sendCachedString(payload.topBarText, 6570)
+            state.lastTopBarText = payload.topBarText
             if (state.lastWildLevel != 0) {
                 player.sendCachedString("", 6664)
-                player.setWalkableInterface(6673)
                 state.lastWildLevel = 0
             }
+            // Always reassert the normal walkable overlay. If another path cleared it while the
+            // player was already out of wilderness, the cached lastWildLevel alone is not enough
+            // to restore 6673.
+            player.setWalkableInterface(6673)
         }
     }
 

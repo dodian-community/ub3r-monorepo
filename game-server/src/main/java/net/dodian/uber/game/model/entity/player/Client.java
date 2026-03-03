@@ -88,6 +88,8 @@ public class Client extends Player implements Runnable {
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
     private int currentWalkableInterface = -1;
+    private int lastWalkableInterfaceSent = -2;
+    private boolean walkableInterfaceDirty = true;
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
@@ -258,12 +260,60 @@ public class Client extends Player implements Runnable {
         send(new SendString(text, lineId));
     }
 
-    public void setWalkableInterface(int id) {
-        if (currentWalkableInterface == id) {
-            return;
+    public void invalidateUiText(int lineId) {
+        uiTextCache.remove(lineId);
+        if (lineId == 6570) {
+            lastTopBarText = null;
         }
-        currentWalkableInterface = id;
-        send(new SetInterfaceWalkable(id));
+    }
+
+    public void invalidateWalkableUiTexts() {
+        invalidateUiText(6570);
+        invalidateUiText(6572);
+        invalidateUiText(6664);
+    }
+
+    public void setWalkableInterface(int id) {
+        if (currentWalkableInterface != id) {
+            currentWalkableInterface = id;
+            walkableInterfaceDirty = true;
+            invalidateWalkableUiTexts();
+            if (getServerDebugMode()) {
+                println_debug("Walkable interface changed to " + id + " for " + getPlayerName());
+            }
+        }
+        if (walkableInterfaceDirty || lastWalkableInterfaceSent != id) {
+            lastWalkableInterfaceSent = id;
+            walkableInterfaceDirty = false;
+            send(new SetInterfaceWalkable(id));
+        }
+    }
+
+    public void clearWalkableInterface() {
+        setWalkableInterface(-1);
+    }
+
+    public void forceWalkableInterfaceRefresh() {
+        walkableInterfaceDirty = true;
+        lastWalkableInterfaceSent = -2;
+        invalidateWalkableUiTexts();
+        if (getServerDebugMode()) {
+            println_debug("Forced walkable interface refresh for " + getPlayerName());
+        }
+    }
+
+    public int getCurrentWalkableInterface() {
+        return currentWalkableInterface;
+    }
+
+    public boolean isWalkableInterfaceActive(int id) {
+        return currentWalkableInterface == id;
+    }
+
+    public void onPostLoginUiInit() {
+        WriteEnergy();
+        forceWalkableInterfaceRefresh();
+        updatePlayerDisplay();
     }
 
     public void setPlayerContextMenu(int slot, boolean enabled, String text) {
@@ -3213,6 +3263,10 @@ public class Client extends Player implements Runnable {
     public void WriteEnergy() {
         // Stub: always report 100% run energy to the client
         send(new SendRunEnergy(100));
+        invalidateUiText(149);
+        if (getServerDebugMode()) {
+            println_debug("Sent run energy for " + getPlayerName());
+        }
         send(new SendString("100%", 149));
     }
 
@@ -6458,10 +6512,8 @@ public class Client extends Player implements Runnable {
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
         String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
-        if (!text.equals(lastTopBarText)) {
-            lastTopBarText = text;
-            send(new SendString(text, 6570));
-        }
+        sendCachedString(text, 6570);
+        lastTopBarText = text;
         sendCachedString("", 6664);
         setWalkableInterface(6673);
     }

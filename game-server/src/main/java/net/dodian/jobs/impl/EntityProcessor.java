@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
+import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
@@ -45,11 +46,30 @@ public class EntityProcessor implements Runnable {
     }
 
     public void runNpcMainPhase(long now) {
+        long startNs = System.nanoTime();
+        long chunksNsStart = startNs;
         Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
+        long chunksNs = System.nanoTime() - chunksNsStart;
+        long npcLoopNsStart = System.nanoTime();
         for (Npc npc : Server.npcManager.getNpcs()) {
             processNpc(now, npc, activeNpcChunks);
         }
+        long npcLoopNs = System.nanoTime() - npcLoopNsStart;
+        long syncNsStart = System.nanoTime();
         syncNpcChunksForTick();
+        long syncNs = System.nanoTime() - syncNsStart;
+
+        long totalMs = (System.nanoTime() - startNs) / 1_000_000L;
+        if (totalMs >= getRuntimePhaseWarnMs()) {
+            logger.warn(
+                    "NPC_MAIN slow: total={}ms activeChunks={} chunks={}ms loop={}ms syncChunks={}ms",
+                    totalMs,
+                    activeNpcChunks.size(),
+                    chunksNs / 1_000_000L,
+                    npcLoopNs / 1_000_000L,
+                    syncNs / 1_000_000L
+            );
+        }
     }
 
     public void runPlayerMainPhase() {
@@ -196,6 +216,7 @@ public class EntityProcessor implements Runnable {
     }
 
     private void processInboundPackets() {
+        long startNs = System.nanoTime();
         int activePlayers = 0;
         int processedPackets = 0;
         int totalPendingBefore = 0;
@@ -229,6 +250,20 @@ public class EntityProcessor implements Runnable {
             }
         }
 
+        long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
+        if (elapsedMs >= getRuntimePhaseWarnMs()) {
+            logger.warn(
+                    "INBOUND_PACKETS slow: total={}ms activePlayers={} processedPackets={} backlogPlayers={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={}",
+                    elapsedMs,
+                    activePlayers,
+                    processedPackets,
+                    backlogPlayers,
+                    totalPendingBefore,
+                    totalPendingAfter,
+                    maxPendingBefore,
+                    maxPendingAfter
+            );
+        }
     }
 
     private void consumeNpcDirectionsForTick() {

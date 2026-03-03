@@ -28,7 +28,6 @@ public class PlayerInitializer {
 
         QuestSend.clearQuestName(client);
         client.questPage = 1;
-        client.WriteEnergy();
         client.pmstatus(2);
         client.setConfigIds();
         client.resetTabs(); // Set tabs!
@@ -58,6 +57,7 @@ public class PlayerInitializer {
         }
         
         initializeInterfaceTexts(client);
+        client.onPostLoginUiInit();
 
         
         client.loaded = true;

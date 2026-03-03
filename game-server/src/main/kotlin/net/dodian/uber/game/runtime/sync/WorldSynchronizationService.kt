@@ -98,7 +98,9 @@ class WorldSynchronizationService {
         } finally {
             SynchronizationContext.clear()
             if (syncMetricsVerboseEnabled) {
-                metrics.record(cycle, PlayerHandler.getPlayerCount(), logger)
+                measure(cycle, SynchronizationStage.SYNC_METRICS_LOG) {
+                    metrics.record(cycle, PlayerHandler.getPlayerCount(), logger)
+                }
             }
         }
     }

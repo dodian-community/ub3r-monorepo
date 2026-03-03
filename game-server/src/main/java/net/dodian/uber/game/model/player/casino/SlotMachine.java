@@ -71,7 +71,7 @@ public class SlotMachine {
             c.NpcDialogueSend = true;
             c.convoId = -1;
             c.send(new RemoveInterfaces());
-                        c.send(new SetInterfaceWalkable(-1));
+            c.clearWalkableInterface();
             if (amt > 50000000)
                 c.send(new SendMessage("You can't bet more than 50M"));
             if (amt < 100000)
@@ -121,7 +121,7 @@ public class SlotMachine {
         }
         // c.showInterface(6675);
         c.checkItemUpdate();
-                c.send(new SetInterfaceWalkable(6675));
+        c.setWalkableInterface(6675);
     }
 
     public int CoinsBillion_Win, CoinsBillion_Lose = 0;
