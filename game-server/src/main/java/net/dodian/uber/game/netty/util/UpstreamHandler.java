@@ -6,6 +6,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import net.dodian.uber.game.Server;
+import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,10 +55,13 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
         Object attr = ctx.channel().attr(AttributeKey.valueOf("activeClient")).getAndSet(null);
         if (attr instanceof net.dodian.uber.game.model.entity.player.Client) {
             net.dodian.uber.game.model.entity.player.Client client = (net.dodian.uber.game.model.entity.player.Client) attr;
-            net.dodian.uber.game.Server.playerHandler.removePlayer(client);
+            // Enqueue removal onto the game thread to avoid mutating PlayerHandler state off-thread.
+            GameThreadTaskQueue.submit(() -> {
+                client.disconnected = true;
+                Server.playerHandler.removePlayer(client);
+            });
         }
         super.channelInactive(ctx);
     }
 }
-
 

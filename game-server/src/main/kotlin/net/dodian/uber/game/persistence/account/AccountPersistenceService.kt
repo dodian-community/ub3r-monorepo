@@ -8,7 +8,9 @@ import java.util.function.IntConsumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.dodian.uber.comm.LoginManager
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.PlayerSaveReason
@@ -38,7 +40,21 @@ object AccountPersistenceService {
         scope.launch {
             val result =
                 try {
-                    Server.loginManager.loadgame(client, username, password)
+                    val deadline = System.currentTimeMillis() + 3_000L
+                    var finalCode = 13
+                    while (true) {
+                        val code = Server.loginManager.loadgame(client, username, password)
+                        if (code != LoginManager.FINAL_SAVE_PENDING_INTERNAL) {
+                            finalCode = code
+                            break
+                        }
+                        if (System.currentTimeMillis() >= deadline) {
+                            finalCode = 5
+                            break
+                        }
+                        delay(50L)
+                    }
+                    finalCode
                 } catch (exception: Exception) {
                     logger.warn("Account load failed for {}", username, exception)
                     13

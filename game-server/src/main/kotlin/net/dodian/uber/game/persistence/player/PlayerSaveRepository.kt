@@ -1,7 +1,5 @@
 package net.dodian.uber.game.persistence.player
 
-import java.sql.Connection
-import java.sql.SQLException
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.persistence.PlayerSaveRepository
 import net.dodian.uber.game.persistence.PlayerSaveSnapshot
@@ -10,31 +8,46 @@ import net.dodian.utilities.DbTables
 class PlayerSaveRepository(
     private val delegate: PlayerSaveRepository = PlayerSaveRepository(),
 ) {
+    private companion object {
+        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled }
+    }
+
     fun saveEnvelope(envelope: PlayerSaveEnvelope) {
         delegate.saveSnapshot(buildSnapshot(envelope))
     }
 
     fun buildSnapshot(envelope: PlayerSaveEnvelope): PlayerSaveSnapshot {
         val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(envelope.createdAt))
-        val skills = Skill.values().filter { it.isEnabled }
+        val stats = envelope.segment<StatsSegmentSnapshot>()
+        val inventory = envelope.segment<InventorySegmentSnapshot>()
+        val bank = envelope.segment<BankSegmentSnapshot>()
+        val equipment = envelope.segment<EquipmentSegmentSnapshot>()
+        val position = envelope.segment<PositionSegmentSnapshot>()
+        val social = envelope.segment<SocialSegmentSnapshot>()
+        val slayer = envelope.segment<SlayerSegmentSnapshot>()
+        val farming = envelope.segment<FarmingSegmentSnapshot>()
+        val effects = envelope.segment<EffectsSegmentSnapshot>()
+        val looks = envelope.segment<LooksSegmentSnapshot>()
+        val meta = envelope.segment<MetaSegmentSnapshot>()
 
+        val requiredStats = requireNotNull(stats) { "Missing STATS segment for save envelope dbId=${envelope.dbId}" }
         val statsQuery =
             buildString {
                 append("UPDATE ")
                 append(DbTables.GAME_CHARACTERS_STATS)
                 append(" SET total=")
-                append(envelope.totalLevel)
+                append(requiredStats.totalLevel)
                 append(", combat=")
-                append(envelope.combatLevel)
+                append(requiredStats.combatLevel)
                 append(", ")
-                skills.forEachIndexed { index, skill ->
+                ENABLED_SKILLS.forEachIndexed { index, skill ->
                     append(skill.name.lowercase())
                     append("=")
-                    append(envelope.skillExperience[index])
+                    append(requiredStats.skillExperience[index])
                     append(", ")
                 }
                 append("totalxp=")
-                append(envelope.totalXp)
+                append(requiredStats.totalXp)
                 append(" WHERE uid=")
                 append(envelope.dbId)
             }
@@ -49,91 +62,25 @@ class PlayerSaveRepository(
                     append(" SET updated='")
                     append(timestamp)
                     append("', total=")
-                    append(envelope.totalLevel)
+                    append(requiredStats.totalLevel)
                     append(", combat=")
-                    append(envelope.combatLevel)
+                    append(requiredStats.combatLevel)
                     append(", uid=")
                     append(envelope.dbId)
                     append(", ")
-                    skills.forEachIndexed { index, skill ->
+                    ENABLED_SKILLS.forEachIndexed { index, skill ->
                         append(skill.name.lowercase())
                         append("=")
-                        append(envelope.skillExperience[index])
+                        append(requiredStats.skillExperience[index])
                         append(", ")
                     }
                     append("totalxp=")
-                    append(envelope.totalXp)
+                    append(requiredStats.totalXp)
                 }
             }
 
         val characterQuery =
-            buildString {
-                append("UPDATE ")
-                append(DbTables.GAME_CHARACTERS)
-                append(" SET pkrating=1500")
-                append(", health=")
-                append(envelope.currentHealth)
-                append(", equipment='")
-                append(encodeItemSlots(envelope.equipment))
-                append("', inventory='")
-                append(encodeItemSlots(envelope.inventory))
-                append("', bank='")
-                append(encodeItemSlots(envelope.bank))
-                append("', friends='")
-                append(envelope.friends.joinToString(" "))
-                append("', fightStyle = ")
-                append(envelope.fightType)
-                append(", slayerData='")
-                append(envelope.slayerData)
-                append("', essence_pouch='")
-                append(envelope.essencePouch)
-                append("', effects='")
-                append(envelope.effects.joinToString(":"))
-                append("'")
-                append(", autocast=")
-                append(envelope.autocastSpellIndex)
-                append(", news=")
-                append(envelope.latestNews)
-                append(", agility = '")
-                append(envelope.agilityCourseStage)
-                append("', height = ")
-                append(envelope.height)
-                append(", x = ")
-                append(envelope.x)
-                append(", y = ")
-                append(envelope.y)
-                append(", lastlogin = '")
-                append(System.currentTimeMillis())
-                append("', Monster_Log='")
-                append(encodeNamedCounts(envelope.monsterLog, ",", ";"))
-                append("', farming = '")
-                append(envelope.farming)
-                append("', dailyReward = '")
-                append(encodeDailyReward(envelope.dailyReward))
-                append("',Boss_Log='")
-                append(encodeNamedCounts(envelope.bossLog, ":", " "))
-                append("', songUnlocked='")
-                append(envelope.songUnlocked)
-                append("', travel='")
-                append(envelope.travel)
-                append("', look='")
-                append(envelope.look)
-                append("', unlocks='")
-                append(envelope.unlocks)
-                append("'")
-                append(", prayer='")
-                append(encodePrayer(envelope))
-                append("', boosted='")
-                append(encodeBoosted(envelope))
-                append("'")
-                if (envelope.loginDurationMs > 10_000L) {
-                    append(", lastlogin = '")
-                    append(System.currentTimeMillis())
-                    append("'")
-                }
-                append(" WHERE id = ")
-                append(envelope.dbId)
-            }
+            buildCharacterQuery(envelope, requiredStats, inventory, bank, equipment, position, social, slayer, farming, effects, looks, meta)
 
         return PlayerSaveSnapshot.forSql(
             envelope.sequence,
@@ -146,6 +93,89 @@ class PlayerSaveRepository(
             progressQuery,
             characterQuery,
         )
+    }
+
+    private fun buildCharacterQuery(
+        envelope: PlayerSaveEnvelope,
+        stats: StatsSegmentSnapshot,
+        inventory: InventorySegmentSnapshot?,
+        bank: BankSegmentSnapshot?,
+        equipment: EquipmentSegmentSnapshot?,
+        position: PositionSegmentSnapshot?,
+        social: SocialSegmentSnapshot?,
+        slayer: SlayerSegmentSnapshot?,
+        farming: FarmingSegmentSnapshot?,
+        effects: EffectsSegmentSnapshot?,
+        looks: LooksSegmentSnapshot?,
+        meta: MetaSegmentSnapshot?,
+    ): String {
+        return buildString {
+            append("UPDATE ")
+            append(DbTables.GAME_CHARACTERS)
+            append(" SET ")
+
+            var first = true
+            fun setRaw(fragment: String) {
+                if (!first) append(", ") else first = false
+                append(fragment)
+            }
+
+            setRaw("pkrating=1500")
+            setRaw("lastlogin='${System.currentTimeMillis()}'")
+
+            setRaw("health=${stats.currentHealth}")
+            setRaw("fightStyle=${stats.fightType}")
+            setRaw("prayer='${encodePrayer(stats)}'")
+            setRaw("boosted='${encodeBoosted(stats)}'")
+            if (equipment != null) {
+                setRaw("equipment='${encodeItemSlots(equipment.entries)}'")
+            }
+            if (inventory != null) {
+                setRaw("inventory='${encodeItemSlots(inventory.entries)}'")
+            }
+            if (bank != null) {
+                setRaw("bank='${encodeItemSlots(bank.entries)}'")
+            }
+            if (social != null) {
+                val friendsValue = social.friends.joinToString(" ")
+                setRaw("friends='$friendsValue'")
+            }
+            if (slayer != null) {
+                setRaw("slayerData='${slayer.slayerData}'")
+                setRaw("essence_pouch='${slayer.essencePouch}'")
+                setRaw("autocast=${slayer.autocastSpellIndex}")
+            }
+            if (effects != null) {
+                val effectsValue = effects.effects.joinToString(":")
+                setRaw("effects='$effectsValue'")
+            }
+            if (position != null) {
+                setRaw("height=${position.height}")
+                setRaw("x=${position.x}")
+                setRaw("y=${position.y}")
+            }
+            if (farming != null) {
+                setRaw("farming='${farming.farming}'")
+                setRaw("dailyReward='${encodeDailyReward(farming.dailyReward)}'")
+            }
+            if (looks != null) {
+                setRaw("songUnlocked='${looks.songUnlocked}'")
+                setRaw("travel='${looks.travel}'")
+                setRaw("look='${looks.look}'")
+                setRaw("unlocks='${looks.unlocks}'")
+            }
+            if (meta != null) {
+                setRaw("news=${meta.latestNews}")
+                setRaw("agility='${meta.agilityCourseStage}'")
+                val monsterLogValue = encodeNamedCounts(meta.monsterLog, ",", ";")
+                val bossLogValue = encodeNamedCounts(meta.bossLog, ":", " ")
+                setRaw("Monster_Log='$monsterLogValue'")
+                setRaw("Boss_Log='$bossLogValue'")
+            }
+
+            append(" WHERE id = ")
+            append(envelope.dbId)
+        }
     }
 
     private fun encodeItemSlots(entries: List<ItemSlotEntry>): String =
@@ -161,25 +191,28 @@ class PlayerSaveRepository(
         return rewards.joinToString(",")
     }
 
-    private fun encodePrayer(envelope: PlayerSaveEnvelope): String {
-        if (envelope.prayerButtons.isEmpty()) {
-            return envelope.currentPrayer.toString()
+    private fun encodePrayer(stats: StatsSegmentSnapshot): String {
+        if (stats.prayerButtons.isEmpty()) {
+            return stats.currentPrayer.toString()
         }
         return buildString {
-            append(envelope.currentPrayer)
-            envelope.prayerButtons.forEach { buttonId ->
+            append(stats.currentPrayer)
+            stats.prayerButtons.forEach { buttonId ->
                 append(":")
                 append(buttonId)
             }
         }
     }
 
-    private fun encodeBoosted(envelope: PlayerSaveEnvelope): String =
+    private fun encodeBoosted(stats: StatsSegmentSnapshot): String =
         buildString {
-            append(envelope.lastRecover)
-            envelope.boostedLevels.forEach { boost ->
+            append(stats.lastRecover)
+            stats.boostedLevels.forEach { boost ->
                 append(":")
                 append(boost)
             }
         }
+
+    private inline fun <reified T : PlayerSaveSegmentSnapshot> PlayerSaveEnvelope.segment(): T? =
+        segments.firstOrNull { it is T } as? T
 }

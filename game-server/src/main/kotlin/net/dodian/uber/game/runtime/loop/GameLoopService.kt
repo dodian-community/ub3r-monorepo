@@ -113,6 +113,7 @@ class GameLoopService(
     private fun runTick() {
         currentCycle++
         val now = System.currentTimeMillis()
+        GameThreadTaskQueue.drain()
         phaseTimer.clear()
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
         timed(GamePhase.WORLD_DB_POLL) { worldMaintenancePhase.runWorldDb(currentCycle) }

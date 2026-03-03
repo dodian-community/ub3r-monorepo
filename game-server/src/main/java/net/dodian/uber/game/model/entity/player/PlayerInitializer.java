@@ -64,8 +64,11 @@ public class PlayerInitializer {
         //TODO everyone is premium for now
         client.premium = true;
         /* Initialize save timers */
-        client.lastSave = System.currentTimeMillis();
-        client.lastProgressSave = client.lastSave;
+        long now = System.currentTimeMillis();
+        long minuteJitterMs = (client.dbId > 0 ? (client.dbId % 60L) : (client.getSlot() % 60L)) * 1000L;
+        long hourJitterMs = (client.dbId > 0 ? (client.dbId % 3600L) : (client.getSlot() % 3600L)) * 1000L;
+        client.lastSave = now + minuteJitterMs;
+        client.lastProgressSave = now + hourJitterMs;
         client.markSaveDirty(PlayerSaveSegment.ALL_MASK);
         
         /* Set a player active to a world */
