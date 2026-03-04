@@ -19,6 +19,11 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.persistence.CommandDbService;
 import net.dodian.uber.game.runtime.queue.QueueTaskService;
+import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
+import net.dodian.uber.game.runtime.eventbus.GameEventBus;
+import net.dodian.uber.game.runtime.eventbus.events.CommandEvent;
+import net.dodian.uber.game.runtime.task.GameTaskRuntime;
+import net.dodian.uber.game.runtime.task.TaskPriority;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -105,6 +110,9 @@ public class CommandsListener implements PacketListener {
      */
     public void executeCommand(Client client, String command) {
         String[] cmd = command.split(" ");
+        if (GameEventBus.INSTANCE.postWithResult(new CommandEvent(client, command, java.util.Arrays.asList(cmd)))) {
+            return;
+        }
         boolean specialRights = client.playerGroup == 6 || client.playerGroup == 10 || client.playerGroup == 35;
 
         try {
@@ -219,21 +227,25 @@ public class CommandsListener implements PacketListener {
                             case 4: //Farm patch test values!
                                 client.cancelFarmDebugTask();
                                 final int[] farmConfig = {0};
-                                client.setFarmDebugTaskHandle(QueueTaskService.schedule(1, 1, () -> {
-                                    if (client.disconnected || !client.isActive) {
-                                        client.setFarmDebugTaskHandle(null);
-                                        return false;
-                                    }
-                                    if (farmConfig[0] >= 2000) {
-                                        client.send(new SendMessage("Finished farming config test."));
-                                        client.setFarmDebugTaskHandle(null);
-                                        return false;
-                                    }
-                                    client.send(new SendMessage("config = " + farmConfig[0]));
-                                    client.varbit(4771, farmConfig[0]);
-                                    farmConfig[0]++;
-                                    return true;
-                                }));
+                                client.setFarmDebugTaskHandle(
+                                        QueueTaskHandle.from(
+                                                GameTaskRuntime.queuePlayerRepeating(client, TaskPriority.STANDARD, 1, 1, () -> {
+                                                    if (client.disconnected || !client.isActive) {
+                                                        client.setFarmDebugTaskHandle(null);
+                                                        return false;
+                                                    }
+                                                    if (farmConfig[0] >= 2000) {
+                                                        client.send(new SendMessage("Finished farming config test."));
+                                                        client.setFarmDebugTaskHandle(null);
+                                                        return false;
+                                                    }
+                                                    client.send(new SendMessage("config = " + farmConfig[0]));
+                                                    client.varbit(4771, farmConfig[0]);
+                                                    farmConfig[0]++;
+                                                    return true;
+                                                })
+                                        )
+                                );
                                 break;
                             default: gotValue = false;
                         }

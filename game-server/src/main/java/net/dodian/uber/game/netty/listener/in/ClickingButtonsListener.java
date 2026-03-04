@@ -7,6 +7,8 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.eventbus.GameEventBus;
+import net.dodian.uber.game.runtime.eventbus.events.ButtonClickEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,10 @@ public class ClickingButtonsListener implements PacketListener {
         }
         if (actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
             client.resetAction(false);
+        }
+
+        if (GameEventBus.INSTANCE.postWithResult(new ButtonClickEvent(client, actionButton))) {
+            return;
         }
 
         if (ButtonClickDispatcher.tryHandle(client, actionButton)) {
