@@ -30,6 +30,7 @@ import net.dodian.uber.game.persistence.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.uber.game.content.objects.impl.mining.MiningService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -110,12 +111,12 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean mining = false, woodcutting = false;
+    public boolean woodcutting = false;
     public boolean stringing = false;
     public boolean filling = false;
     public int fillingObj = -1;
     public int boneItem = -1;
-    public int mineIndex = -1, cuttingIndex = -1;
+    public int cuttingIndex = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -2163,18 +2164,6 @@ public class Client extends Player implements Runnable {
                 resetAction();
                 send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
             }
-        } else if (mining && now - lastAction >= getMiningSpeed()) {
-            lastAction = now;
-            mining(mineIndex);
-        } else if (mining && now - lastPickAction <= 0) { //Reapply animation every 3 tick!
-            int checkPickxe = findPick();
-            if (checkPickxe >= 0) {
-                requestAnim(getMiningEmote(Utils.picks[checkPickxe]), 0);
-                lastPickAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
-            }
         } else if (cooking && now - lastAction >= 1800) {
             lastAction = now;
             cook();
@@ -3782,39 +3771,6 @@ public class Client extends Player implements Runnable {
         return -1;
     }
 
-    public int getMiningEmote(int item) {
-        switch (item) {
-            case 1275: //bronze
-                return 624;
-            case 1271: //iron
-                return 628;
-            case 1273: //steel
-                return 629;
-            case 1269: // mithril
-                return 627;
-            case 1267: // addy
-                return 626;
-            case 1265: // rune
-                return 625;
-            case 11920: //dragon
-            case 20014: //3rd age
-                return 7139;
-        }
-        return -1;
-    }
-
-    public long getMiningSpeed() {
-        double pickBonus = findPick() >= 0 ? Utils.pickBonus[findPick()] : 0.0;
-        double level = getLevel(Skill.MINING) / 256D;
-        double bonus = 1 + pickBonus + level;
-        double timer = Utils.mineTimes[mineIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && pickBonus > 0.0 && (Utils.picks[findPick()] == 11920 || Utils.picks[findPick()] == 20014)) //11920, 20014
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
-    }
-
     public long getWoodcuttingSpeed() {
         double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
         double level = getLevel(Skill.WOODCUTTING) / 256D;
@@ -5146,6 +5102,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetAction(boolean full) {
+        MiningService.stopMiningFromReset(this, full);
         smelting = false;
         smelt_id = -1;
         goldCrafting = false;
@@ -5158,8 +5115,6 @@ public class Client extends Player implements Runnable {
         crafting = false;
         fishing = false;
         stringing = false;
-        mining = false;
-        mineIndex = -1;
         woodcutting = false;
         cuttingIndex = -1;
         resourcesGathered = 0;
@@ -6304,25 +6259,6 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public int findPick() {
-        int Eaxe = -1, Iaxe = -1;
-        int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        for (int i = 0; i < Utils.picks.length; i++) {
-            if (Utils.picks[i] == weapon) {
-                if (getLevel(Skill.MINING) >= Utils.pickReq[i])
-                    Eaxe = i;
-            }
-            for (int playerItem : playerItems) {
-                if (Utils.picks[i] == playerItem - 1) {
-                    if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
-        }
-        return Math.max(Eaxe, Iaxe);
-    }
-
     public int findAxe() {
         int Eaxe = -1, Iaxe = -1;
         int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
@@ -6340,55 +6276,6 @@ public class Client extends Player implements Runnable {
             }
         }
         return Math.max(Eaxe, Iaxe);
-    }
-
-    public void mining(int index) {
-        int minePick = findPick();
-        if (minePick == -1) {
-            resetAction();
-            send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Your inventory is full!"));
-            resetAction(true);
-            return;
-        }
-        if (index != 6) {
-            send(new SendMessage("You mine some " + GetItemName(Utils.ore[index]).toLowerCase()));
-        }
-        lastAction = System.currentTimeMillis();
-        int ore = Utils.ore[index];
-        //TODO: Should we add gem rock?
-        addItem(ore, 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, ore, 1, getPosition().copy(), "Mining");
-        resourcesGathered++;
-        giveExperience(Utils.oreExp[index], Skill.MINING);
-        triggerRandom(Utils.oreExp[index]);
-        if (Utils.ore[index] != 1436)
-            randomGem();
-        int amount = Utils.ore[index] == 1436 ? 14 : 4;
-        if (resourcesGathered >= amount && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        } else requestAnim(getMiningEmote(Utils.picks[minePick]), 0);
-    }
-
-    public void randomGem() {
-        if (freeSlots() < 1) { //No inventory space so do not give gem!
-            return;
-        }
-        int chance = GetItemName(getEquipment()[Equipment.Slot.NECK.getId()]).toLowerCase().contains("glory") ? 128 : 256;
-        int roll = Misc.chance(chance);
-        if (roll == 1) { //~0.39% chance to find gem! -> ~0.78% with glory!
-            int[] gems = {1623, 1623, 1623, 1621, 1621, 1619, 1617}; //1:7 diamond or ruby, 2:7 emerald, 3:7 sapphire
-            int gem = gems[Misc.random(gems.length - 1)];
-            addItem(gem, 1);
-            checkItemUpdate();
-            ItemLog.playerGathering(this, gem, 1, getPosition().copy(), "Mining");
-            send(new SendMessage("You found a " + GetItemName(gem).toLowerCase() + " inside the rock."));
-        }
     }
 
     /* WOODCUTTING */

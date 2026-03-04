@@ -34,6 +34,7 @@ import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.uber.game.content.objects.impl.mining.MiningState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
@@ -67,7 +68,9 @@ public abstract class Player extends Entity {
     private volatile long interactionEarliestCycle = 0L;
     private volatile QueueTaskHandle interactionTaskHandle;
     private volatile QueueTaskHandle farmDebugTaskHandle;
+    private volatile QueueTaskHandle miningTaskHandle;
     private volatile GameTaskSet<?> playerTaskSet;
+    private volatile MiningState miningState;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -333,6 +336,8 @@ public abstract class Player extends Entity {
 
     void destruct() {
         releaseCachedUpdateBlock();
+        cancelMiningTask();
+        clearMiningState();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;
@@ -997,6 +1002,34 @@ public abstract class Player extends Entity {
         if (handle != null) {
             handle.cancel();
         }
+    }
+
+    public QueueTaskHandle getMiningTaskHandle() {
+        return miningTaskHandle;
+    }
+
+    public void setMiningTaskHandle(QueueTaskHandle miningTaskHandle) {
+        this.miningTaskHandle = miningTaskHandle;
+    }
+
+    public void cancelMiningTask() {
+        QueueTaskHandle handle = miningTaskHandle;
+        miningTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
+
+    public MiningState getMiningState() {
+        return miningState;
+    }
+
+    public void setMiningState(MiningState miningState) {
+        this.miningState = miningState;
+    }
+
+    public void clearMiningState() {
+        miningState = null;
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {
