@@ -15,12 +15,13 @@ import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision;
 import net.dodian.uber.game.runtime.sync.player.root.RootPlayerInfoPlan;
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState;
-import net.dodian.uber.game.runtime.sync.player.ViewportActivitySnapshot;
 import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey;
 import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DotEnvKt.getSyncAppearanceCacheEnabled;
 import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
@@ -32,6 +33,7 @@ import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
  */
 public class PlayerUpdating extends EntityUpdating<Player> {
 
+    private static final Logger logger = LoggerFactory.getLogger(PlayerUpdating.class);
     private static final boolean DEBUG_REGION_UPDATES = false;
     private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
     private static final int MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15;
@@ -111,10 +113,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
             // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
-            if (DEBUG_REGION_UPDATES) {
+            if (DEBUG_REGION_UPDATES && logger.isTraceEnabled()) {
                 int rx = player.getPosition().getX() >> 6;
                 int ry = player.getPosition().getY() >> 6;
-                System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
+                logger.trace("[RegionUpdate] {} region({},{}) locals={}", player.getPlayerName(), rx, ry, player.playerListSize);
             }
         } finally {
             releaseScratch(updateBlock);
@@ -164,8 +166,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             if (viewer.loaded) {
                 pruneLocalsToProtocolCap(viewer);
                 stream.putBits(8, viewer.playerListSize);
-                java.util.BitSet removals = toBitSet(plan.getDiff().getRemovals());
-                java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained());
+                java.util.BitSet removals = toBitSet(plan.getDiff().getRemovals(), plan.getDiff().getRemovalsCount());
+                java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained(), plan.getDiff().getChangedRetainedCount());
                 int originalSize = viewer.playerListSize;
                 int keep = 0;
                 for (int i = 0; i < originalSize; i++) {
@@ -535,10 +537,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public PlayerSyncDecision shouldSkipPlayerSync(Player viewer) {
-        ViewportActivitySnapshot activitySnapshot = SynchronizationContext.getPlayerViewportActivitySnapshot(viewer);
         ViewerPlayerSyncState viewerState = SynchronizationContext.getViewerPlayerSyncState(viewer);
         ViewportSnapshot viewportSnapshot = SynchronizationContext.getViewportSnapshot(viewer);
-        if (activitySnapshot == null || viewerState == null || viewportSnapshot == null || !viewer.loaded) {
+        if (viewerState == null || viewportSnapshot == null || !viewer.loaded) {
             return PlayerSyncDecision.BUILD;
         }
 
@@ -551,7 +552,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 viewer.mapRegionX == viewerState.getLastKnownMapRegionX()
                         && viewer.mapRegionY == viewerState.getLastKnownMapRegionY()
                         && viewer.getPosition().getZ() == viewerState.getLastKnownPlane();
-        boolean localActivityStable = activitySnapshot.getLocalActivityStamp() == viewerState.getLastLocalActivityStamp();
+        long localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(viewer);
+        boolean localActivityStable = localActivityStamp == viewerState.getLastLocalActivityStamp();
         boolean noImmediateStateChange =
                 !viewer.didTeleport()
                         && !viewer.didMapRegionChange()
@@ -903,9 +905,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
     }
 
-    private java.util.BitSet toBitSet(int[] slots) {
+    private java.util.BitSet toBitSet(int[] slots, int count) {
         java.util.BitSet set = new java.util.BitSet(PlayerHandler.players.length);
-        for (int slot : slots) {
+        int limit = Math.min(count, slots.length);
+        for (int i = 0; i < limit; i++) {
+            int slot = slots[i];
             if (slot >= 0) {
                 set.set(slot);
             }

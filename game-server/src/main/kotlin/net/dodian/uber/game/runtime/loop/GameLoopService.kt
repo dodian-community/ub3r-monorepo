@@ -25,6 +25,7 @@ import net.dodian.jobs.impl.ShopProcessor
 import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.runtime.metrics.TickPhaseTimer
+import net.dodian.uber.game.runtime.metrics.GcStallTracker
 import net.dodian.uber.game.runtime.process.InboundPacketPhase
 import net.dodian.uber.game.runtime.process.LegacyActionPhase
 import net.dodian.uber.game.runtime.process.MovementFinalizePhase
@@ -34,7 +35,6 @@ import net.dodian.uber.game.runtime.process.PlayerMainPhase
 import net.dodian.uber.game.runtime.process.WorldMaintenancePhase
 import org.slf4j.LoggerFactory
 import net.dodian.utilities.runtimeCycleLogEnabled
-import net.dodian.utilities.runtimeCycleLogIntervalTicks
 import net.dodian.utilities.runtimePhaseTimingEnabled
 import net.dodian.utilities.runtimePhaseWarnMs
 
@@ -58,6 +58,7 @@ class GameLoopService(
     private val dispatcher = executor.asCoroutineDispatcher()
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val phaseTimer = TickPhaseTimer()
+    private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
     private val worldMaintenancePhase = WorldMaintenancePhase(worldProcessor, farmingProcess, plunderDoor)
@@ -73,6 +74,7 @@ class GameLoopService(
     private var excessCycleNanos = 0L
     private var debugTick = 0
     private var accumulatedCycleTimeMs = 0L
+    private var accumulatedLoggedMillis = 0L
 
     fun start() {
         if (!running.compareAndSet(false, true)) {
@@ -94,7 +96,7 @@ class GameLoopService(
                     if (overdue) {
                         logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
                     }
-                    maybeLogCycle(elapsedMillis, sleepTime)
+                    maybeLogCycle(elapsedMillis)
                     excessCycleNanos = elapsedNanos - TimeUnit.MILLISECONDS.toNanos(elapsedMillis)
                     delay(sleepTime)
                 }
@@ -116,7 +118,9 @@ class GameLoopService(
         GameThreadTaskQueue.drain()
         phaseTimer.clear()
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
-        timed(GamePhase.WORLD_DB_POLL) { worldMaintenancePhase.runWorldDb(currentCycle) }
+        timed(GamePhase.WORLD_DB_INPUT_BUILD) { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
+        timed(GamePhase.WORLD_DB_RESULT_READ) { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
+        timed(GamePhase.WORLD_DB_APPLY) { worldMaintenancePhase.runWorldDbApply(currentCycle) }
         timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
         timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
@@ -133,38 +137,52 @@ class GameLoopService(
             return
         }
         phaseTimer.measure(phase) {
+            val gcBefore = gcTracker.snapshot()
             val elapsed = measureNanoTime(block)
+            val gcAfter = gcTracker.snapshot()
+            val gcDelta = gcTracker.delta(gcBefore, gcAfter)
             val elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsed)
             if (elapsedMs >= runtimePhaseWarnMs) {
-                logger.warn("Phase {} took {}ms", phase, elapsedMs)
+                if (gcDelta.collectionTimeMs > 0L || gcDelta.collectionCount > 0L) {
+                    logger.warn(
+                        "Phase {} took {}ms (gc={}ms/{} collections)",
+                        phase,
+                        elapsedMs,
+                        gcDelta.collectionTimeMs,
+                        gcDelta.collectionCount,
+                    )
+                } else {
+                    logger.warn("Phase {} took {}ms", phase, elapsedMs)
+                }
             }
         }
     }
 
-    private fun maybeLogCycle(elapsedMillis: Long, sleepTime: Long) {
+    private fun maybeLogCycle(elapsedMillis: Long) {
         if (!runtimeCycleLogEnabled) {
             return
         }
-        val interval = runtimeCycleLogIntervalTicks.coerceAtLeast(1)
         debugTick++
         accumulatedCycleTimeMs += elapsedMillis
-        if (debugTick < interval) {
+        accumulatedLoggedMillis += GAME_TICK_INTERVAL_MS
+        if (accumulatedLoggedMillis < CYCLE_LOG_INTERVAL_MS) {
             return
         }
         val average = accumulatedCycleTimeMs.toDouble() / debugTick.toDouble()
         logger.info(
-            "[Cycle time: {}ms avg / {}ms last] [Sleep: {}ms] [Players: {}] [Tick: {}]",
+            "[Cycle time: {}ms avg / {}ms last] [Players: {}] [Tick: {}]",
             String.format("%.2f", average),
             elapsedMillis,
-            sleepTime,
             PlayerHandler.getPlayerCount(),
             currentCycle,
         )
         debugTick = 0
         accumulatedCycleTimeMs = 0L
+        accumulatedLoggedMillis = 0L
     }
 
     private companion object {
         private const val GAME_TICK_INTERVAL_MS = 600L
+        private const val CYCLE_LOG_INTERVAL_MS = 60_000L
     }
 }

@@ -36,12 +36,16 @@ import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public abstract class Player extends Entity {
+    private static final Logger logger = LoggerFactory.getLogger(Player.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
     public long longName = 0;
     public int wildyLevel = 0;
@@ -60,6 +64,7 @@ public abstract class Player extends Entity {
     private volatile InteractionIntent pendingInteraction;
     private volatile ActiveInteraction activeInteraction;
     private volatile long interactionEarliestCycle = 0L;
+    private volatile QueueTaskHandle interactionTaskHandle;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -428,11 +433,21 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("[player-{}]: {}", getSlot(), str);
+        }
     }
 
     public void println(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        logger.info("[player-{}]: {}", getSlot(), str);
     }
 
     public String getSongUnlockedSaveText() {
@@ -943,6 +958,22 @@ public abstract class Player extends Entity {
 
     public void setInteractionEarliestCycle(long interactionEarliestCycle) {
         this.interactionEarliestCycle = interactionEarliestCycle;
+    }
+
+    public QueueTaskHandle getInteractionTaskHandle() {
+        return interactionTaskHandle;
+    }
+
+    public void setInteractionTaskHandle(QueueTaskHandle interactionTaskHandle) {
+        this.interactionTaskHandle = interactionTaskHandle;
+    }
+
+    public void cancelInteractionTask() {
+        QueueTaskHandle handle = interactionTaskHandle;
+        interactionTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
     }
 
 
@@ -1703,7 +1734,7 @@ public abstract class Player extends Entity {
         try {
             c.send(new SendMessage(pageName + "#url#"));
         } catch (Exception e) {
-            System.out.println("error opening page.." + e);
+            logger.warn("error opening page..", e);
         }
     }
 

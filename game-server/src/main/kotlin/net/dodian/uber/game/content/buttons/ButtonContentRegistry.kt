@@ -64,109 +64,161 @@ import net.dodian.uber.game.content.buttons.ui.TabInterfaceButtons
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object ButtonContentRegistry {
     private val logger = LoggerFactory.getLogger(ButtonContentRegistry::class.java)
 
-    private val loaded = AtomicBoolean(false)
-    private val byButtonId = ConcurrentHashMap<Int, ButtonContent>()
+    private val bootstrapped = AtomicBoolean(false)
+    private val definitions = mutableListOf<ButtonContent>()
 
-    fun ensureLoaded() {
-        if (!loaded.compareAndSet(false, true)) {
+    @Volatile
+    private var byButtonId: Array<ButtonContent?> = emptyArray()
+
+    @JvmStatic
+    fun bootstrap() {
+        if (bootstrapped.get()) {
             return
         }
-        register(PinHelpButtons)
-        register(SettingsTabButtons)
-        register(QuestMenuButtons)
-        register(PrayerButtons)
-        register(NpcDialogueStateButtons)
-        register(BankDepositButtons)
-        register(BankInterfaceButtons)
-        register(ProductionAmountButtons)
-        register(GlassCraftButtons)
-        register(SmeltingButtons)
-        register(LeatherCraftButtons)
-        register(TanningButtons)
-        register(BowFletchingButtons)
-        register(DuelOfferRuleButtons)
-        register(DuelRuleButtons)
-        register(DuelConfirmButtons)
-        register(AppearanceConfirmButtons)
-        register(AutocastButtons)
-        register(SpellbookToggleButtons)
-        register(CombatStyleButtons)
-        register(CloseInterfaceButtons)
-        register(TabInterfaceButtons)
-        register(RunButtons)
-        register(LogoutButtons)
-        register(SidebarButtons)
-        register(QuestTabButtons)
-        register(BossYellButtons)
-        register(DialogueOptionButtons)
-        register(RewardLampButtons)
-        register(TradeConfirmButtons)
-        register(AttackSkillGuideButtons)
-        register(HitpointsSkillGuideButtons)
-        register(MiningSkillGuideButtons)
-        register(StrengthSkillGuideButtons)
-        register(AgilitySkillGuideButtons)
-        register(DefenceSkillGuideButtons)
-        register(RangedSkillGuideButtons)
-        register(PrayerSkillGuideButtons)
-        register(ThievingSkillGuideButtons)
-        register(HerbloreSkillGuideButtons)
-        register(CraftingSkillGuideButtons)
-        register(SmithingSkillGuideButtons)
-        register(WoodcuttingSkillGuideButtons)
-        register(MagicSkillGuideButtons)
-        register(FiremakingSkillGuideButtons)
-        register(CookingSkillGuideButtons)
-        register(RunecraftingSkillGuideButtons)
-        register(FletchingSkillGuideButtons)
-        register(FishingSkillGuideButtons)
-        register(SlayerSkillGuideButtons)
-        register(FarmingSkillGuideButtons)
-        register(SkillGuideSubTabButtons)
-        register(BasicEmoteButtons)
-        register(SpecialEmoteButtons)
-        register(MorphButtons)
-        register(SlotsButtons)
-        register(IgnoredButtons)
-        register(TravelMenuButtons)
-        register(PartyRoomDepositButtons)
-        register(AncientTeleportButtons)
-        register(NormalTeleportButtons)
+        synchronized(this) {
+            if (bootstrapped.get()) {
+                return
+            }
+            definitions += builtinContents()
+            rebuildLookupLocked()
+            bootstrapped.set(true)
+        }
+    }
+
+    fun ensureLoaded() {
+        bootstrap()
     }
 
     fun register(content: ButtonContent) {
-        for (buttonId in content.buttonIds) {
-            val existing = byButtonId.putIfAbsent(buttonId, content)
-            if (existing != null) {
-                logger.error(
-                    "Duplicate ButtonContent for buttonId={} (existing={}, new={})",
-                    buttonId,
-                    existing::class.java.name,
-                    content::class.java.name
-                )
+        synchronized(this) {
+            definitions += content
+            if (bootstrapped.get()) {
+                rebuildLookupLocked()
             }
         }
     }
 
     fun tryHandle(client: Client, buttonId: Int): Boolean {
-        ensureLoaded()
-        val content = byButtonId[buttonId] ?: return false
+        bootstrap()
+        val table = byButtonId
+        if (buttonId < 0 || buttonId >= table.size) {
+            return false
+        }
+        val content = table[buttonId] ?: return false
         val requiredInterfaceId = content.requiredInterfaceId
         if (requiredInterfaceId != -1 && client.activeInterfaceId != requiredInterfaceId) {
             client.send(RemoveInterfaces())
             return true
         }
+        val startNs = System.nanoTime()
         return try {
             content.onClick(client, buttonId)
         } catch (e: Exception) {
             logger.error("Error handling buttonId={} via {}", buttonId, content::class.java.name, e)
             false
+        } finally {
+            val elapsedMs = (System.nanoTime() - startNs) / 1_000_000L
+            if (elapsedMs >= 2L) {
+                logger.warn(
+                    "Slow button: buttonId={} handler={} iface={} player={} {}ms",
+                    buttonId,
+                    content::class.java.name,
+                    client.activeInterfaceId,
+                    client.playerName,
+                    elapsedMs
+                )
+            }
         }
     }
+
+    private fun rebuildLookupLocked() {
+        val maxButtonId = definitions.asSequence().flatMap { it.buttonIds.asSequence() }.maxOrNull() ?: -1
+        val rebuilt = arrayOfNulls<ButtonContent>(maxButtonId + 1)
+        for (content in definitions) {
+            for (buttonId in content.buttonIds) {
+                val existing = rebuilt[buttonId]
+                if (existing != null && existing !== content) {
+                    logger.error(
+                        "Duplicate ButtonContent for buttonId={} (existing={}, new={})",
+                        buttonId,
+                        existing::class.java.name,
+                        content::class.java.name,
+                    )
+                } else {
+                    rebuilt[buttonId] = content
+                }
+            }
+        }
+        byButtonId = rebuilt
+    }
+
+    private fun builtinContents(): List<ButtonContent> =
+        listOf(
+            PinHelpButtons,
+            SettingsTabButtons,
+            QuestMenuButtons,
+            PrayerButtons,
+            NpcDialogueStateButtons,
+            BankDepositButtons,
+            BankInterfaceButtons,
+            ProductionAmountButtons,
+            GlassCraftButtons,
+            SmeltingButtons,
+            LeatherCraftButtons,
+            TanningButtons,
+            BowFletchingButtons,
+            DuelOfferRuleButtons,
+            DuelRuleButtons,
+            DuelConfirmButtons,
+            AppearanceConfirmButtons,
+            AutocastButtons,
+            SpellbookToggleButtons,
+            CombatStyleButtons,
+            CloseInterfaceButtons,
+            TabInterfaceButtons,
+            RunButtons,
+            LogoutButtons,
+            SidebarButtons,
+            QuestTabButtons,
+            BossYellButtons,
+            DialogueOptionButtons,
+            RewardLampButtons,
+            TradeConfirmButtons,
+            AttackSkillGuideButtons,
+            HitpointsSkillGuideButtons,
+            MiningSkillGuideButtons,
+            StrengthSkillGuideButtons,
+            AgilitySkillGuideButtons,
+            DefenceSkillGuideButtons,
+            RangedSkillGuideButtons,
+            PrayerSkillGuideButtons,
+            ThievingSkillGuideButtons,
+            HerbloreSkillGuideButtons,
+            CraftingSkillGuideButtons,
+            SmithingSkillGuideButtons,
+            WoodcuttingSkillGuideButtons,
+            MagicSkillGuideButtons,
+            FiremakingSkillGuideButtons,
+            CookingSkillGuideButtons,
+            RunecraftingSkillGuideButtons,
+            FletchingSkillGuideButtons,
+            FishingSkillGuideButtons,
+            SlayerSkillGuideButtons,
+            FarmingSkillGuideButtons,
+            SkillGuideSubTabButtons,
+            BasicEmoteButtons,
+            SpecialEmoteButtons,
+            MorphButtons,
+            SlotsButtons,
+            IgnoredButtons,
+            TravelMenuButtons,
+            PartyRoomDepositButtons,
+            AncientTeleportButtons,
+            NormalTeleportButtons,
+        )
 }

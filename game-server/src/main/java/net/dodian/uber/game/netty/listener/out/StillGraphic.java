@@ -33,7 +33,6 @@ public class StillGraphic implements OutgoingPacket {
         this.height = height;
         this.time = time;
         this.showAll = showAll;
-        System.out.println("Still gfx: " + id);
     }
 
     @Override

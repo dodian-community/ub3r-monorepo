@@ -58,9 +58,12 @@ import net.dodian.uber.game.skills.*;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Client extends Player implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
 
     public Channel channel;
@@ -88,10 +91,15 @@ public class Client extends Player implements Runnable {
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
     private int currentWalkableInterface = -1;
+    private int lastWalkableInterfaceSent = -2;
+    private boolean walkableInterfaceDirty = true;
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
     private long lastEffectsPeriodicDirtyAtMs = 0L;
+    private boolean outboundDirty = false;
+    private int lastPlayerUpdateCapacity = 8192;
+    private int lastNpcUpdateCapacity = 16384;
     /**
      * Tracks if the client window currently has focus.
      */
@@ -258,12 +266,54 @@ public class Client extends Player implements Runnable {
         send(new SendString(text, lineId));
     }
 
-    public void setWalkableInterface(int id) {
-        if (currentWalkableInterface == id) {
-            return;
+    public void invalidateUiText(int lineId) {
+        uiTextCache.remove(lineId);
+        if (lineId == 6570) {
+            lastTopBarText = null;
         }
-        currentWalkableInterface = id;
-        send(new SetInterfaceWalkable(id));
+    }
+
+    public void invalidateWalkableUiTexts() {
+        invalidateUiText(6570);
+        invalidateUiText(6572);
+        invalidateUiText(6664);
+    }
+
+    public void setWalkableInterface(int id) {
+        if (currentWalkableInterface != id) {
+            currentWalkableInterface = id;
+            walkableInterfaceDirty = true;
+            invalidateWalkableUiTexts();
+        }
+        if (walkableInterfaceDirty || lastWalkableInterfaceSent != id) {
+            lastWalkableInterfaceSent = id;
+            walkableInterfaceDirty = false;
+            send(new SetInterfaceWalkable(id));
+        }
+    }
+
+    public void clearWalkableInterface() {
+        setWalkableInterface(-1);
+    }
+
+    public void forceWalkableInterfaceRefresh() {
+        walkableInterfaceDirty = true;
+        lastWalkableInterfaceSent = -2;
+        invalidateWalkableUiTexts();
+    }
+
+    public int getCurrentWalkableInterface() {
+        return currentWalkableInterface;
+    }
+
+    public boolean isWalkableInterfaceActive(int id) {
+        return currentWalkableInterface == id;
+    }
+
+    public void onPostLoginUiInit() {
+        WriteEnergy();
+        forceWalkableInterfaceRefresh();
+        updatePlayerDisplay();
     }
 
     public void setPlayerContextMenu(int slot, boolean enabled, String text) {
@@ -341,7 +391,6 @@ public class Client extends Player implements Runnable {
 
     public void animation2(int id, Position pos) {
         send(new Animation2(id, pos, 0, 0));
-        System.out.println("Animation: " + id + " at " + pos);
     }
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
@@ -433,8 +482,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        System.out.println("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
+        if (!getClientPacketTraceEnabled() && !getClientUiTraceEnabled()) {
+            return;
+        }
+        logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void print_debug(String str) {
@@ -446,8 +497,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void println(String str) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-        System.out.println("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
+        logger.info("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void rerequestAnim() {
@@ -543,7 +593,7 @@ public class Client extends Player implements Runnable {
         if (channel != null) {
             channel.close();
         }
-        println("Thread removed from Server");
+        logger.debug("Thread removed from Server for player={}", getPlayerName());
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
@@ -594,21 +644,7 @@ public class Client extends Player implements Runnable {
             processedCount++;
 
             try {
-                if (getInboundOpcodeProfilingEnabled()) {
-                    long startNs = System.nanoTime();
-                    dispatchQueuedPacket(packet);
-                    long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
-                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
-                        println_debug(
-                                "Slow inbound opcode " + packet.getOpcode() +
-                                        " size=" + packet.getSize() +
-                                        " player=" + getPlayerName() +
-                                        " took=" + elapsedMs + "ms"
-                        );
-                    }
-                } else {
-                    dispatchQueuedPacket(packet);
-                }
+                dispatchQueuedPacket(packet);
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -626,7 +662,29 @@ public class Client extends Player implements Runnable {
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
         if (listener != null) {
-            listener.handle(this, packet);
+            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            if (sample || getInboundOpcodeProfilingEnabled()) {
+                long startNs = System.nanoTime();
+                listener.handle(this, packet);
+                long elapsedNs = System.nanoTime() - startNs;
+                if (sample) {
+                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
+                }
+                if (getInboundOpcodeProfilingEnabled()) {
+                    long elapsedMs = elapsedNs / 1_000_000L;
+                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
+                        println_debug(
+                                "Slow inbound opcode " + packet.getOpcode() +
+                                        " size=" + packet.getSize() +
+                                        " player=" + getPlayerName() +
+                                        " listener=" + listener.getClass().getSimpleName() +
+                                        " took=" + elapsedMs + "ms"
+                        );
+                    }
+                }
+            } else {
+                listener.handle(this, packet);
+            }
         }
     }
 
@@ -653,6 +711,7 @@ public class Client extends Player implements Runnable {
             return;
         }
 
+        outboundDirty = true;
         if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
             channel.write(message);
         } else {
@@ -664,7 +723,31 @@ public class Client extends Player implements Runnable {
         if (disconnected || channel == null || !channel.isActive()) {
             return;
         }
+        if (!outboundDirty) {
+            return;
+        }
         channel.flush();
+        outboundDirty = false;
+    }
+
+    public int getPlayerUpdateCapacity() {
+        return lastPlayerUpdateCapacity;
+    }
+
+    public int getNpcUpdateCapacity() {
+        return lastNpcUpdateCapacity;
+    }
+
+    public void updatePlayerUpdateCapacity(int size) {
+        if (size > lastPlayerUpdateCapacity) {
+            lastPlayerUpdateCapacity = Math.min(size, 65536);
+        }
+    }
+
+    public void updateNpcUpdateCapacity(int size) {
+        if (size > lastNpcUpdateCapacity) {
+            lastNpcUpdateCapacity = Math.min(size, 65536);
+        }
     }
 
     public void send(OutgoingPacket packet) {
@@ -693,12 +776,6 @@ public class Client extends Player implements Runnable {
 
         packet.send(this);
 
-        // Debug helper: show which interface is being opened.
-        // Comment out/remove once you don't need it anymore.
-        if (openedInterfaceId != null) {
-            send(new SendMessage("Open interface (" + openedVia + "): " + openedInterfaceId));
-        }
-        
     }
 
     @Override
@@ -1794,11 +1871,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void sendPlayerSynchronization() {
-        new PlayerUpdatePacket(this).send(this);
+        PlayerUpdatePacket.sendTo(this, this);
     }
 
     public void sendNpcSynchronization() {
-        new NpcUpdatePacket(this).send(this);
+        NpcUpdatePacket.sendTo(this, this);
     }
 
 
@@ -2891,7 +2968,9 @@ public class Client extends Player implements Runnable {
     public void stairs(int stairs, int teleX, int teleY) {
         if (stairBlock > System.currentTimeMillis()) {
             resetStairs();
-            System.out.println(getPlayerName() + " stair blocked!");
+            if (getClientPacketTraceEnabled()) {
+                logger.debug("{} stair blocked!", getPlayerName());
+            }
             return;
         }
         stairBlock = System.currentTimeMillis() + 1000;
@@ -3213,6 +3292,7 @@ public class Client extends Player implements Runnable {
     public void WriteEnergy() {
         // Stub: always report 100% run energy to the client
         send(new SendRunEnergy(100));
+        invalidateUiText(149);
         send(new SendString("100%", 149));
     }
 
@@ -3800,7 +3880,7 @@ public class Client extends Player implements Runnable {
             send(new SendString("", 3431));
             other.send(new SendString("", 3431));
         } catch (Exception e) {
-            System.out.println("Error with trade " + e);
+            logger.warn("Error with trade for {}", getPlayerName(), e);
         }
     }
 
@@ -3816,7 +3896,9 @@ public class Client extends Player implements Runnable {
             amount = Math.min(amount, playerItemsN[fromSlot]);
         Client other = getClient(trade_reqId);
         if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            System.out.println("declining in tradeItem()");
+            if (getClientPacketTraceEnabled()) {
+                logger.debug("declining in tradeItem() for {}", getPlayerName());
+            }
             declineTrade();
             return;
         }
@@ -4996,7 +5078,9 @@ public class Client extends Player implements Runnable {
         File file = new File("./data/checkExploit.txt");
         try {
             if (file.createNewFile())
-                System.out.println("Created new file for exploit check!");
+                if (getClientPacketTraceEnabled()) {
+                    logger.debug("Created new file for exploit check!");
+                }
             try (FileWriter fw = new FileWriter(file, true);
                  BufferedWriter bw = new BufferedWriter(fw)) {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -5775,7 +5859,7 @@ public class Client extends Player implements Runnable {
                 checkItemUpdate();
                 //System.out.println("trade succesful");
             } catch (Exception e) {
-                System.out.println("giving items failed.." + e);
+                logger.warn("Giving items failed for {}", getPlayerName(), e);
             }
         }
     }
@@ -6353,7 +6437,9 @@ public class Client extends Player implements Runnable {
         if (speed.length != 3) { //Need atleast 3 values!
             return;
         }
-        System.out.println("x = " + startPos.getX() + ", " + startPos.getY());
+        if (getClientPacketTraceEnabled()) {
+            logger.debug("x = {}, y = {}", startPos.getX(), startPos.getY());
+        }
         int startX = startPos.getX();
         int startY = startPos.getY();
         int endX = endPos.getX();
@@ -6458,10 +6544,8 @@ public class Client extends Player implements Runnable {
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
         String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
-        if (!text.equals(lastTopBarText)) {
-            lastTopBarText = text;
-            send(new SendString(text, 6570));
-        }
+        sendCachedString(text, 6570);
+        lastTopBarText = text;
         sendCachedString("", 6664);
         setWalkableInterface(6673);
     }
@@ -7124,7 +7208,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7181,7 +7265,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7255,7 +7339,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + user + "' have yet to login!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7378,7 +7462,7 @@ public class Client extends Player implements Runnable {
                         send(new SendMessage("username '" + user + "' have yet to login!"));
                 }
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7485,7 +7569,7 @@ public class Client extends Player implements Runnable {
                 rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
             }
         } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
         }
     }
 
@@ -7549,7 +7633,7 @@ public class Client extends Player implements Runnable {
                     addItem(item.getId(), 1);
             checkItemUpdate();
         } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
         }
     }
 

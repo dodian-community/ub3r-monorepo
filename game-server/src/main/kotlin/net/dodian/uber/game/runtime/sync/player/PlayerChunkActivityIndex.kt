@@ -1,12 +1,12 @@
 package net.dodian.uber.game.runtime.sync.player
 
-import java.util.HashMap
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.chunk.Chunk
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.runtime.sync.util.LongLongStampMap
 
 class PlayerChunkActivityIndex {
-    private val chunkStamps = HashMap<ChunkLevelKey, Long>()
+    private val chunkStamps = LongLongStampMap(1024)
     private var sequence = 0L
 
     fun bump(position: Position?) {
@@ -21,29 +21,31 @@ class PlayerChunkActivityIndex {
             return
         }
         val next = ++sequence
-        chunkStamps[ChunkLevelKey(chunk.x, chunk.y, level)] = next
+        chunkStamps.put(packKey(chunk.x, chunk.y, level), next)
     }
 
-    fun snapshotFor(viewer: Player, distance: Int): ViewportActivitySnapshot {
-        val position = viewer.position ?: return ViewportActivitySnapshot(0L, 0L)
+    fun maxChunkActivityStampFor(viewer: Player, distance: Int): Long {
+        val position = viewer.position ?: return 0L
         val centerChunk = position.chunk
         val level = position.z
         val chunkRadius = (distance / Chunk.SIZE) + 2
         var maxStamp = 0L
         for (dx in -chunkRadius until chunkRadius) {
             for (dy in -chunkRadius until chunkRadius) {
-                val stamp = chunkStamps[ChunkLevelKey(centerChunk.x + dx, centerChunk.y + dy, level)] ?: 0L
+                val stamp = chunkStamps.getOrZero(packKey(centerChunk.x + dx, centerChunk.y + dy, level))
                 if (stamp > maxStamp) {
                     maxStamp = stamp
                 }
             }
         }
-        return ViewportActivitySnapshot(maxStamp, maxStamp)
+        return maxStamp
     }
 
-    private data class ChunkLevelKey(
-        val x: Int,
-        val y: Int,
-        val level: Int,
-    )
+    private fun packKey(chunkX: Int, chunkY: Int, level: Int): Long {
+        // +1 ensures the key is never 0 (reserved as the empty sentinel in the stamp map).
+        val x = chunkX.toLong() and 0xFFFF
+        val y = chunkY.toLong() and 0xFFFF
+        val z = level.toLong() and 0xFFFF
+        return (((x shl 32) or (y shl 16) or z) + 1L)
+    }
 }

@@ -1,19 +1,17 @@
 package net.dodian.uber.game.persistence.account
 
 import java.time.Duration
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.function.IntConsumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dodian.uber.comm.LoginManager
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.PlayerSaveReason
+import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue
@@ -23,13 +21,8 @@ import net.dodian.utilities.dbConnection
 
 object AccountPersistenceService {
     private val logger = LoggerFactory.getLogger(AccountPersistenceService::class.java)
-    private val executor =
-        Executors.newSingleThreadExecutor(ThreadFactory { runnable ->
-            Thread(runnable, "account-db").apply { isDaemon = true }
-        })
-
     @JvmField
-    val dispatcher = executor.asCoroutineDispatcher()
+    val dispatcher = DbDispatchers.accountDispatcher
 
     @JvmField
     val scope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -143,10 +136,6 @@ object AccountPersistenceService {
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
         PlayerSaveService.shutdownAndDrain(timeout)
-        executor.shutdown()
-        val waitMs = timeout.toMillis().coerceAtLeast(1L)
-        if (!executor.awaitTermination(waitMs, TimeUnit.MILLISECONDS)) {
-            executor.shutdownNow()
-        }
+        DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }
 }

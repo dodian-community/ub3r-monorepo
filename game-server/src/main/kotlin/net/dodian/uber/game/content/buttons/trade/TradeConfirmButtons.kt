@@ -4,8 +4,10 @@ import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
+import org.slf4j.LoggerFactory
 
 object TradeConfirmButtons : ButtonContent {
+    private val logger = LoggerFactory.getLogger(TradeConfirmButtons::class.java)
     override val buttonIds: IntArray = intArrayOf(13092, 13218)
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
@@ -36,7 +38,7 @@ object TradeConfirmButtons : ButtonContent {
                         }
                     }
                 } catch (e: Exception) {
-                    System.out.println("Trade button issue! $e")
+                    logger.warn("Trade button issue!", e)
                 }
                 return true
             }
@@ -59,7 +61,7 @@ object TradeConfirmButtons : ButtonContent {
                         }
                     }
                 } catch (e: Exception) {
-                    System.out.println("Trade button issue! $e")
+                    logger.warn("Trade button issue!", e)
                 }
                 return true
             }
@@ -67,4 +69,3 @@ object TradeConfirmButtons : ButtonContent {
         return false
     }
 }
-

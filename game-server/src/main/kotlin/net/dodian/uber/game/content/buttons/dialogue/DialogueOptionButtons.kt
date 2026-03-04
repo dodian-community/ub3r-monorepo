@@ -98,7 +98,7 @@ object DialogueOptionButtons : ButtonContent {
                         client.NpcDialogueSend = false
                     }
                     1001 -> {
-                        client.send(SetInterfaceWalkable(-1))
+                        client.clearWalkableInterface()
                         client.send(RemoveInterfaces())
                     }
                     27 -> {

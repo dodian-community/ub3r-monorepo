@@ -125,7 +125,6 @@ public class CommandsListener implements PacketListener {
                 if (cmd[0].equalsIgnoreCase("death")) {
                     int type = Integer.parseInt(cmd[1]);
                     if(type > 0 && type <= Entity.hitType.values().length) {
-                        System.out.println("wtf..." + client.getCurrentHealth());
                         client.dealDamage(null, client.getCurrentHealth(), Entity.hitType.values()[type - 1]);
                     } else client.send(new SendMessage("Only type 1 to " + Entity.hitType.values().length + " works!"));
                 }
@@ -199,7 +198,6 @@ public class CommandsListener implements PacketListener {
                                         //check = 2 << 6;
                                     } else if (i == 3) check = 0 << 6;*/
                                     int valueTest = (startConfig[i] + stage[i]) | check;
-                                    System.out.println("farm shiez test..." + valueTest);
                                     client.varbit(4771 + i,  (startConfig[i] + stage[i]) | check);
                                 }
                                 break;
@@ -228,7 +226,6 @@ public class CommandsListener implements PacketListener {
                                         config++;
                                         Thread.sleep(600);
                                     } catch(Exception e) {
-                                        System.out.println("msg: " + e.getMessage());
                                     }
                                 }
                                 break;
@@ -237,7 +234,6 @@ public class CommandsListener implements PacketListener {
                         client.send(new SendMessage(gotValue ? "You set farming config to " + value : "Could not find a value!"));
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " patchId"));
-                        System.out.println("send...." + e.toString());
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("forcemove")) { //We are still in testing for agility, not sure what each values do yet... :oof:
@@ -245,8 +241,6 @@ public class CommandsListener implements PacketListener {
                     client.appendForcemovement(client.getPosition(), new Position(client.getPosition().getX(), client.getPosition().getY() + 10), 5, 5, 3);
                 }
                 if (cmd[0].equalsIgnoreCase("plist")) {
-                    System.out.println("test1..." + PlayerHandler.allOnline.toString());
-                    System.out.println("test2..." + PlayerHandler.playersOnline.toString());
                 }
                 if (cmd[0].equalsIgnoreCase("goup")) {
                     int x = client.getPosition().getX(), y = client.getPosition().getY(), z = client.getPosition().getZ();
@@ -626,7 +620,6 @@ public class CommandsListener implements PacketListener {
                                 client.send(new SendMessage(client.GetItemName(itemid) + " with the chance of " + chance + "% already exist for the " + Server.npcManager.getName(client.getPlayerNpc())));
                             else {
                                 client.send(new SendMessage("Something bad happend with sql!"));
-                                System.out.println("sql error: " + e.getMessage());
                             }
                         }
                     } catch (Exception e) {
@@ -667,7 +660,6 @@ public class CommandsListener implements PacketListener {
                         client.send(new SendMessage("Object added, at x = " + client.getPosition().getX()
                                 + " y = " + client.getPosition().getY()));
                     } catch (Exception e) {
-                        System.out.println("something wrong with xmas tree: " + e.getMessage());
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("addnpc")) {
@@ -842,7 +834,6 @@ public class CommandsListener implements PacketListener {
                         }
                     } catch (Exception e) {
                         client.send(new SendMessage("wrong usage! ::quest id amount or ::quest id"));
-                        System.out.println(e.getMessage());
                     }
                 }
                 if (cmd[0].equalsIgnoreCase("quest_reward") && client.playerRights > 1) {
@@ -962,7 +953,6 @@ public class CommandsListener implements PacketListener {
                         if (otherPIndex != -1) {
                             Client p = (Client) PlayerHandler.players[otherPIndex];
                             Login.addUidToFile(p.UUID);
-                            System.out.println("mac ban: " + p.UUID);
                             p.logout();
                             CommandLog.recordCommand(client, command);
                         } else {

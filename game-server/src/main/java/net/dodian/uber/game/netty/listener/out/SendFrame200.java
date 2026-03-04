@@ -16,7 +16,6 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Sub Frame: 2 bytes
  */
 public class SendFrame200 implements OutgoingPacket {
-
     private final int mainFrame;
     private final int subFrame;
 
@@ -40,6 +39,5 @@ public class SendFrame200 implements OutgoingPacket {
         message.putShort(subFrame, ByteOrder.BIG);
         
         client.send(message);
-        System.out.println("SendFrame200: mainFrame=" + mainFrame + ", subFrame=" + subFrame);
     }
 }

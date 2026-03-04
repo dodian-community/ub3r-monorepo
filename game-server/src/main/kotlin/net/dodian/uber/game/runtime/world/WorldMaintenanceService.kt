@@ -5,18 +5,14 @@ import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.persistence.WorldDbPollService
-import net.dodian.uber.game.persistence.WorldPollInput
 import net.dodian.uber.game.persistence.WorldPollResult
+import net.dodian.uber.game.persistence.WorldPollPublisher
+import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
-import net.dodian.uber.game.runtime.world.metrics.WorldMaintenanceMetrics
-import net.dodian.utilities.asyncWorldDbEnabled
 import net.dodian.utilities.farmingSchedulerEnabled
 import net.dodian.utilities.gameWorldId
 import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.worldMaintenanceMetricsLogIntervalRuns
 import net.dodian.utilities.worldMaintenanceEnabled
-import net.dodian.utilities.worldMaintenanceVerboseMetricsEnabled
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
@@ -28,30 +24,50 @@ class WorldMaintenanceService(
     private val playerIndex = OnlinePlayerIndex()
     private val pollApplier = TargetedWorldPollApplier()
     private val farmingScheduler = FarmingScheduler.INSTANCE
-    private val metrics = WorldMaintenanceMetrics(worldMaintenanceMetricsLogIntervalRuns)
     private var lastPlunderRunMs = 0L
+    private var worldDbDueCycle = Long.MIN_VALUE
+    private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
+    private var legacyWorldDbHandledForCycle = Long.MIN_VALUE
 
-    fun runWorldDb(cycle: Long) {
-        if (cycle % MAINTENANCE_INTERVAL_TICKS != 0L) {
+    fun runWorldDbInputBuild(cycle: Long) {
+        if (!isMaintenanceDue(cycle)) {
             return
         }
         if (!worldMaintenanceEnabled) {
-            legacyWorldProcessor.run()
+            if (legacyWorldDbHandledForCycle != cycle) {
+                legacyWorldProcessor.run()
+                legacyWorldDbHandledForCycle = cycle
+            }
             return
         }
         playerIndex.refresh()
-        metrics.recordPlayersIndexed(playerIndex.playerCount())
-        val input = timed(WorldMaintenanceStage.WORLD_DB_POLL) {
-            createInput(playerIndex)
+        val snapshot = timed(WorldMaintenanceStage.WORLD_DB_INPUT_BUILD) {
+            createSnapshot(playerIndex)
         }
-        val result = timed(WorldMaintenanceStage.WORLD_DB_POLL) {
-            poll(input)
+        WorldPollPublisher.publish(snapshot)
+        worldDbDueCycle = cycle
+    }
+
+    fun runWorldDbResultRead(cycle: Long) {
+        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+            return
+        }
+        pendingWorldPollResult =
+            timed(WorldMaintenanceStage.WORLD_DB_RESULT_READ) {
+                WorldPollPublisher.latestResult()
+            }
+    }
+
+    fun runWorldDbApply(cycle: Long) {
+        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+            return
         }
         timed(WorldMaintenanceStage.WORLD_DB_APPLY) {
-            pollApplier.apply(result, playerIndex)
+            pollApplier.apply(pendingWorldPollResult, playerIndex)
             Server.chat.clear()
         }
-        maybeLogMetrics()
+        pendingWorldPollResult = WorldPollResult.EMPTY
+        worldDbDueCycle = Long.MIN_VALUE
     }
 
     fun runFarming(cycle: Long) {
@@ -65,10 +81,8 @@ class WorldMaintenanceService(
         playerIndex.refresh()
         farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
         timed(WorldMaintenanceStage.FARMING_TICK) {
-            val (due, processed) = farmingScheduler.runDue(cycle)
-            metrics.recordFarming(due, processed)
+            farmingScheduler.runDue(cycle)
         }
-        maybeLogMetrics()
     }
 
     fun runPlunder(nowMs: Long) {
@@ -79,20 +93,10 @@ class WorldMaintenanceService(
             plunderDoor.run()
             lastPlunderRunMs = nowMs
         }
-        maybeLogMetrics()
     }
 
-    private fun createInput(playerIndex: OnlinePlayerIndex): WorldPollInput =
-        WorldPollInput(gameWorldId, playerIndex.playerCount(), playerIndex.dbIds())
-
-    private fun poll(input: WorldPollInput): WorldPollResult {
-        return if (asyncWorldDbEnabled) {
-            WorldDbPollService.pollAsync(input)
-            WorldDbPollService.getLatestResult()
-        } else {
-            WorldDbPollService.runBlockingPoll(input)
-        }
-    }
+    private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldPollSnapshot =
+        WorldPollSnapshot(gameWorldId, playerIndex.playerCount(), playerIndex.dbIdsArray())
 
     private fun <T> timed(
         stage: WorldMaintenanceStage,
@@ -102,7 +106,6 @@ class WorldMaintenanceService(
         val elapsed = measureNanoTime {
             result = block()
         }
-        metrics.record(stage, elapsed)
         val elapsedMs = elapsed / 1_000_000L
         if (elapsedMs >= runtimePhaseWarnMs) {
             logger.warn("World maintenance stage {} took {}ms", stage, elapsedMs)
@@ -110,15 +113,10 @@ class WorldMaintenanceService(
         return result as T
     }
 
-    private fun maybeLogMetrics() {
-        if (!worldMaintenanceVerboseMetricsEnabled) {
-            return
-        }
-        metrics.finishRun(logger)
-    }
-
     private companion object {
         private const val MAINTENANCE_INTERVAL_TICKS = 100L
         private const val PLUNDER_DOOR_INTERVAL_MS = 900_000L
     }
+
+    private fun isMaintenanceDue(cycle: Long): Boolean = cycle % MAINTENANCE_INTERVAL_TICKS == 0L
 }

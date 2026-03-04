@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.chunk.ChunkRepository
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.runtime.sync.util.LongObjectMap
 
 class ViewportIndex private constructor(
     private val snapshots: IdentityHashMap<Player, ViewportSnapshot>,
@@ -17,48 +18,54 @@ class ViewportIndex private constructor(
     companion object {
         fun build(viewers: List<Client>, distance: Int): ViewportIndex? {
             val chunkManager = Server.chunkManager ?: return null
-            val neighborhoodCache = HashMap<ChunkKey, ChunkSyncSnapshot>()
+            val neighborhoodCache = LongObjectMap<ViewportSnapshot>(viewers.size.coerceAtLeast(16))
             val snapshots = IdentityHashMap<Player, ViewportSnapshot>(viewers.size)
             viewers.forEach { viewer ->
                 val position = viewer.position ?: return@forEach
-                val key = ChunkKey(position.chunk, position.z)
-                val neighborhood =
-                    neighborhoodCache.computeIfAbsent(key) {
-                        ChunkSyncSnapshot(buildNeighborhood(chunkManager, key.chunk, key.level, distance))
-                    }.neighborhood
-                snapshots[viewer] = ViewportSnapshot(neighborhood.players, neighborhood.npcs)
+                val centerChunkX = position.chunkX
+                val centerChunkY = position.chunkY
+                val neighborhoodKey = pack(centerChunkX, centerChunkY, position.z)
+                val snapshot =
+                    neighborhoodCache.getOrPut(neighborhoodKey) {
+                        buildNeighborhood(chunkManager, centerChunkX, centerChunkY, position.z, distance)
+                    }
+                snapshots[viewer] = snapshot
             }
             return ViewportIndex(snapshots)
         }
 
         private fun buildNeighborhood(
             chunkManager: net.dodian.uber.game.model.chunk.ChunkManager,
-            centerChunk: Chunk,
+            centerChunkX: Int,
+            centerChunkY: Int,
             level: Int,
             distance: Int,
-        ): ChunkNeighborhoodSnapshot {
+        ): ViewportSnapshot {
             val chunkRadius = (distance / Chunk.SIZE) + 2
-            val players = LinkedHashSet<Player>()
-            val npcs = LinkedHashSet<Npc>()
+            val players = ArrayList<Player>()
+            val npcs = ArrayList<Npc>()
             for (dx in -chunkRadius until chunkRadius) {
                 for (dy in -chunkRadius until chunkRadius) {
-                    val repo: ChunkRepository = chunkManager.getLoaded(centerChunk.translate(dx, dy)) ?: continue
-                    repo.getAll<Player>(EntityType.PLAYER)
-                        .filterTo(players) { other ->
-                            other != null && other.isActive && other.position?.z == level
+                    val repo: ChunkRepository = chunkManager.getLoaded(centerChunkX + dx, centerChunkY + dy) ?: continue
+                    for (other in repo.getAll<Player>(EntityType.PLAYER)) {
+                        if (other != null && other.isActive && other.position?.z == level) {
+                            players += other
                         }
-                    repo.getAll<Npc>(EntityType.NPC)
-                        .filterTo(npcs) { npc ->
-                            npc != null && npc.isVisible && npc.position?.z == level
+                    }
+                    for (npc in repo.getAll<Npc>(EntityType.NPC)) {
+                        if (npc != null && npc.isVisible && npc.position?.z == level) {
+                            npcs += npc
                         }
+                    }
                 }
             }
-            return ChunkNeighborhoodSnapshot(players.toList(), npcs.toList())
+            return ViewportSnapshot(players, npcs)
         }
 
-        private data class ChunkKey(
-            val chunk: Chunk,
-            val level: Int,
-        )
+        private fun pack(
+            chunkX: Int,
+            chunkY: Int,
+            level: Int,
+        ): Long = (((chunkX.toLong() and 0x1fffffL) shl 43) or ((chunkY.toLong() and 0x1fffffL) shl 22) or (level.toLong() and 0x3fffffL))
     }
 }

@@ -75,19 +75,17 @@ val syncPlayerFragmentReuseEnabled = dotenv["SYNC_PLAYER_FRAGMENT_REUSE_ENABLED"
 val syncPlayerStateValidationEnabled = dotenv["SYNC_PLAYER_STATE_VALIDATION_ENABLED"]?.toBoolean() ?: true
 val syncNpcActivityIndexEnabled = dotenv["SYNC_NPC_ACTIVITY_INDEX_ENABLED"]?.toBoolean() ?: true
 val worldMaintenanceEnabled = dotenv["WORLD_MAINTENANCE_ENABLED"]?.toBoolean() ?: true
-val worldMaintenanceVerboseMetricsEnabled = dotenv["WORLD_MAINTENANCE_VERBOSE_METRICS_ENABLED"]?.toBoolean() ?: true
-val worldMaintenanceMetricsLogIntervalRuns = dotenv["WORLD_MAINTENANCE_METRICS_LOG_INTERVAL_RUNS"]?.toInt() ?: 5
 val farmingSchedulerEnabled = dotenv["FARMING_SCHEDULER_ENABLED"]?.toBoolean() ?: true
 val zoneUpdateBatchingEnabled = dotenv["ZONE_UPDATE_BATCHING_ENABLED"]?.toBoolean() ?: false
 val queueTasksEnabled = dotenv["QUEUE_TASKS_ENABLED"]?.toBoolean() ?: false
 val clientUiDeltaProcessorEnabled = dotenv["CLIENT_UI_DELTA_PROCESSOR_ENABLED"]?.toBoolean() ?: true
 val databaseConnectionProxyEnabled = dotenv["DATABASE_CONNECTION_PROXY_ENABLED"]?.toBoolean() ?: false
-val syncMetricsVerboseEnabled = dotenv["SYNC_METRICS_VERBOSE_ENABLED"]?.toBoolean() ?: true
-val syncMetricsLogIntervalTicks = dotenv["SYNC_METRICS_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
 val runtimePhaseTimingEnabled = dotenv["RUNTIME_PHASE_TIMING_ENABLED"]?.toBoolean() ?: true
 val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 25L
 val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
-val runtimeCycleLogIntervalTicks = dotenv["RUNTIME_CYCLE_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
+val clientUiTraceEnabled = dotenv["CLIENT_UI_TRACE_ENABLED"]?.toBoolean() ?: false
+val clientPacketTraceEnabled = dotenv["CLIENT_PACKET_TRACE_ENABLED"]?.toBoolean() ?: false
+val buttonTraceEnabled = dotenv["BUTTON_TRACE_ENABLED"]?.toBoolean() ?: false
 
 // Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)
 val inboundOpcodeProfilingEnabled = dotenv["INBOUND_OPCODE_PROFILING_ENABLED"]?.toBoolean() ?: false

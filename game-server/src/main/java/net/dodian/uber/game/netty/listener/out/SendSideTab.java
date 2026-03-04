@@ -15,7 +15,6 @@ public class SendSideTab implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        System.out.println("SendSideTab: " + tabId);
         ByteMessage message = ByteMessage.message(106);
         message.put(tabId, ValueType.NEGATE);
         client.send(message);

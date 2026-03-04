@@ -4,6 +4,7 @@ data class RootPlayerInfoPlan(
     val mode: PlayerPacketMode,
     val buildReason: PlayerPacketBuildReason?,
     val skipReason: PlayerPacketSkipReason?,
+    val visibleSignature: Int,
     val diff: DesiredLocalSetDiff,
     val desiredLocalSet: DesiredLocalSet,
     val pendingAddCount: Int,

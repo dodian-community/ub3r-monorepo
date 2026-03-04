@@ -3,7 +3,6 @@ package net.dodian.uber.game.content.buttons.ui
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable
 
 object CloseInterfaceButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -16,7 +15,7 @@ object CloseInterfaceButtons : ButtonContent {
     override fun onClick(client: Client, buttonId: Int): Boolean {
         client.send(RemoveInterfaces())
         if (client.NpcDialogue == 1001) {
-            client.send(SetInterfaceWalkable(-1))
+            client.clearWalkableInterface()
         }
         if (client.NpcDialogue > 0) {
             client.NpcDialogue = 0

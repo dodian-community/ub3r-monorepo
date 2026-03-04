@@ -56,7 +56,6 @@ public class Projectile implements OutgoingPacket {
         this.begin = begin;
         this.slope = slope;
         this.initDistance = initDistance;
-        System.out.println("Projectile: " + gfxMoving);
     }
 
     @Override

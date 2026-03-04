@@ -2,13 +2,16 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.chunk.Chunk;
+import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.runtime.interaction.InteractionProcessor;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.runtime.sync.util.IntHashSet;
+import net.dodian.uber.game.runtime.sync.util.LongHashSet;
+import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
@@ -16,10 +19,11 @@ import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
+import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);
@@ -28,6 +32,11 @@ public class EntityProcessor implements Runnable {
             {0, -1},           {0, 1},
             {1, -1},  {1, 0},  {1, 1}
     };
+
+    private final ArrayList<Npc> activeNpcsForTick = new ArrayList<>();
+    private final LongHashSet activeNpcChunks = new LongHashSet(128);
+    private final IntHashSet activeNpcSlots = new IntHashSet(256);
+    private static volatile Npc[] SPAWN_ALWAYS_ACTIVE = null;
 
     @Override
     public void run() {
@@ -45,11 +54,37 @@ public class EntityProcessor implements Runnable {
     }
 
     public void runNpcMainPhase(long now) {
-        Set<Chunk> activeNpcChunks = buildActiveNpcChunks();
-        for (Npc npc : Server.npcManager.getNpcs()) {
+        long startNs = System.nanoTime();
+        // Advance offscreen timers (death-floor, respawn, boosted stat decay) without scanning all NPCs.
+        long timerNsStart = startNs;
+        NpcTimerScheduler.runDue(now);
+        long timerNs = System.nanoTime() - timerNsStart;
+        long chunkBuildNsStart = System.nanoTime();
+        buildActiveNpcChunks(activeNpcChunks);
+        long chunkBuildNs = System.nanoTime() - chunkBuildNsStart;
+        long collectNsStart = System.nanoTime();
+        List<Npc> activeNpcs = collectActiveNpcs(activeNpcChunks, activeNpcsForTick);
+        long collectNs = System.nanoTime() - collectNsStart;
+        long npcLoopNsStart = System.nanoTime();
+        for (Npc npc : activeNpcs) {
             processNpc(now, npc, activeNpcChunks);
+            // Keep chunk membership current for active NPCs; avoids full-world chunk-sync scans.
+            npc.syncChunkMembership();
         }
-        syncNpcChunksForTick();
+        long npcLoopNs = System.nanoTime() - npcLoopNsStart;
+
+        long totalMs = (System.nanoTime() - startNs) / 1_000_000L;
+        if (totalMs >= getRuntimePhaseWarnMs()) {
+            logger.warn(
+                    "NPC_MAIN slow: total={}ms activeChunks={} timer={}ms chunks={}ms collect={}ms loop={}ms",
+                    totalMs,
+                    activeNpcChunks.size(),
+                    timerNs / 1_000_000L,
+                    chunkBuildNs / 1_000_000L,
+                    collectNs / 1_000_000L,
+                    npcLoopNs / 1_000_000L
+            );
+        }
     }
 
     public void runPlayerMainPhase() {
@@ -76,7 +111,7 @@ public class EntityProcessor implements Runnable {
         handleServerCycles();
     }
 
-    private void processNpc(long now, Npc npc, Set<Chunk> activeNpcChunks) {
+    private void processNpc(long now, Npc npc, LongHashSet activeNpcChunks) {
         if (!shouldProcessNpc(npc, activeNpcChunks)) {
             return;
         }
@@ -85,18 +120,6 @@ public class EntityProcessor implements Runnable {
         // force roaming NPCs back to spawn-facing every tick.
         if (!npc.isFighting() && npc.isAlive() && npc.getWalkRadius() <= 0) {
             npc.setFocus(npc.getPosition().getX() + Utils.directionDeltaX[npc.getFace()], npc.getPosition().getY() + Utils.directionDeltaY[npc.getFace()]);
-        }
-
-        if (now - npc.lastBoostedStat >= 30000) {
-            npc.changeStat();
-        }
-
-        if (!npc.alive && npc.visible && (now - npc.getDeathTime() >= npc.getTimeOnFloor())) {
-            handleNpcDeath(npc);
-        }
-
-        if (!npc.alive && !npc.visible && (now - (npc.getDeathTime() + npc.getTimeOnFloor()) >= (npc.getRespawn() * 1000L))) {
-            npc.respawn();
         }
 
         if (npc.getLastAttack() > 0) {
@@ -113,14 +136,18 @@ public class EntityProcessor implements Runnable {
         handleNpcRandomActions(npc);
     }
 
-    private boolean shouldProcessNpc(Npc npc, Set<Chunk> activeNpcChunks) {
+    private boolean shouldProcessNpc(Npc npc, LongHashSet activeNpcChunks) {
         if (npc == null) {
             return false;
         }
         if (npc.isSpawnAlwaysActive()) {
             return true;
         }
-        return activeNpcChunks.contains(npc.getPosition().getChunk());
+        Position position = npc.getPosition();
+        if (position == null) {
+            return false;
+        }
+        return activeNpcChunks.contains(packChunkKey(position.getChunkX(), position.getChunkY()));
     }
 
     static boolean withinWalkRadius(Position origin, int targetX, int targetY, int walkRadius) {
@@ -168,21 +195,91 @@ public class EntityProcessor implements Runnable {
         }
     }
 
-    static Set<Chunk> buildActiveNpcChunks() {
-        Set<Chunk> activeChunks = new HashSet<>();
+    static void buildActiveNpcChunks(LongHashSet activeChunks) {
+        activeChunks.clear();
         for (int i = 0; i < Constants.maxPlayers; i++) {
             Client player = (Client) PlayerHandler.players[i];
             if (player == null || player.disconnected || !player.isActive) {
                 continue;
             }
-            Chunk center = player.getPosition().getChunk();
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    activeChunks.add(center.translate(dx, dy));
+            Position position = player.getPosition();
+            if (position == null) {
+                continue;
+            }
+            int centerChunkX = position.getChunkX();
+            int centerChunkY = position.getChunkY();
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    activeChunks.add(packChunkKey(centerChunkX + dx, centerChunkY + dy));
                 }
             }
         }
-        return activeChunks;
+    }
+
+    private List<Npc> collectActiveNpcs(LongHashSet activeChunks, ArrayList<Npc> output) {
+        output.clear();
+        activeNpcSlots.clear();
+        if (activeChunks.isEmpty()) {
+            return output;
+        }
+        if (Server.chunkManager != null) {
+            activeChunks.forEach(key -> {
+                int chunkX = unpackChunkX(key);
+                int chunkY = unpackChunkY(key);
+                ChunkRepository repo = Server.chunkManager.getLoaded(chunkX, chunkY);
+                if (repo == null) {
+                    return;
+                }
+                for (Npc npc : repo.<Npc>getAll(EntityType.NPC)) {
+                    if (npc != null && activeNpcSlots.add(npc.getSlot())) {
+                        output.add(npc);
+                    }
+                }
+            });
+        }
+        else {
+            for (Npc npc : Server.npcManager.getNpcs()) {
+                if (npc == null || npc.getPosition() == null) {
+                    continue;
+                }
+                Position position = npc.getPosition();
+                if (activeChunks.contains(packChunkKey(position.getChunkX(), position.getChunkY()))
+                        && activeNpcSlots.add(npc.getSlot())) {
+                    output.add(npc);
+                }
+            }
+        }
+
+        // Preserve legacy "spawn always active" semantics without scanning the full npc list every tick.
+        for (Npc npc : getSpawnAlwaysActiveNpcs()) {
+            if (npc != null && activeNpcSlots.add(npc.getSlot())) {
+                output.add(npc);
+            }
+        }
+
+        return output;
+    }
+
+    private static Npc[] getSpawnAlwaysActiveNpcs() {
+        Npc[] cached = SPAWN_ALWAYS_ACTIVE;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (EntityProcessor.class) {
+            cached = SPAWN_ALWAYS_ACTIVE;
+            if (cached != null) {
+                return cached;
+            }
+            ArrayList<Npc> list = new ArrayList<>();
+            for (Npc npc : Server.npcManager.getNpcs()) {
+                if (npc != null && npc.isSpawnAlwaysActive()) {
+                    list.add(npc);
+                }
+            }
+            cached = list.toArray(new Npc[0]);
+            SPAWN_ALWAYS_ACTIVE = cached;
+            return cached;
+        }
     }
 
     static void syncActivePlayerChunksForTick() {
@@ -196,6 +293,8 @@ public class EntityProcessor implements Runnable {
     }
 
     private void processInboundPackets() {
+        net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.beginTick();
+        long startNs = System.nanoTime();
         int activePlayers = 0;
         int processedPackets = 0;
         int totalPendingBefore = 0;
@@ -229,78 +328,26 @@ public class EntityProcessor implements Runnable {
             }
         }
 
+        long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
+        if (elapsedMs >= getRuntimePhaseWarnMs()) {
+            logger.warn(
+                    "INBOUND_PACKETS slow: total={}ms activePlayers={} processedPackets={} backlogPlayers={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
+                    elapsedMs,
+                    activePlayers,
+                    processedPackets,
+                    backlogPlayers,
+                    totalPendingBefore,
+                    totalPendingAfter,
+                    maxPendingBefore,
+                    maxPendingAfter,
+                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.top3Summary()
+            );
+        }
     }
 
     private void consumeNpcDirectionsForTick() {
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            if (npc == null) {
-                continue;
-            }
+        for (Npc npc : activeNpcsForTick) {
             npc.setDirection(npc.getNextWalkingDirection());
-        }
-    }
-
-    private void syncNpcChunksForTick() {
-        if (Server.chunkManager == null) {
-            return;
-        }
-        for (Npc npc : Server.npcManager.getNpcs()) {
-            if (npc == null) {
-                continue;
-            }
-            npc.syncChunkMembership();
-        }
-    }
-
-    private void handleNpcDeath(Npc npc) {
-        npc.setVisible(false);
-        npc.drop();
-        Client p = npc.getTarget(false);
-        npc.removeEnemy(p);
-
-        if (isJadNpc(npc)) {
-            handleJadLoot(npc, p);
-        } else if (isNewBossNpc(npc)) {
-            handleNewBossLoot(npc, p);
-        }
-    }
-
-    private boolean isJadNpc(Npc npc) {
-        return npc.getId() == 3127;
-    }
-
-    private boolean isNewBossNpc(Npc npc) {
-        return npc.getId() == 4303 || npc.getId() == 4304 || npc.getId() == 6610;
-    }
-
-    private void handleJadLoot(Npc npc, Client p) {
-        for (int i = 1; i <= 4 && !npc.getDamage().isEmpty(); i++) {
-            p = npc.getTarget(false);
-            if (p != null) {
-                handleLootRoll(npc, p);
-            }
-            npc.removeEnemy(p);
-        }
-    }
-
-    private void handleNewBossLoot(Npc npc, Client p) {
-        p = npc.getSecondTarget(p, false);
-        if (p != null) {
-            handleLootRoll(npc, p);
-        }
-        npc.removeEnemy(p);
-    }
-
-    private void handleLootRoll(Npc npc, Client p) {
-        double chance = (0.1 + (npc.getDamage().get(p) / (double) npc.getMaxHealth())) * 100;
-        double rate = Misc.chance(100000) / 1000D;
-        if (chance - 10 >= 5 && rate <= chance) {
-            npc.drop();
-            p.send(new SendMessage("You managed to roll for the loot!"));
-        } else if (chance - 10 < 5) {
-            p.send(new SendMessage("You were not eligible for the drop!"));
-        } else {
-            p.send(new SendMessage("Unlucky! Better luck next time."));
         }
     }
 
@@ -430,9 +477,18 @@ public class EntityProcessor implements Runnable {
 
         player.postProcessing();
         player.getNextPlayerMovement();
-        if (getInteractionPipelineEnabled()) {
-            InteractionProcessor.process(player);
-        }
+    }
+
+    private static long packChunkKey(int chunkX, int chunkY) {
+        return (((long) chunkX) << 32) ^ (chunkY & 0xffffffffL);
+    }
+
+    private static int unpackChunkX(long key) {
+        return (int) (key >> 32);
+    }
+
+    private static int unpackChunkY(long key) {
+        return (int) key;
     }
 
 }

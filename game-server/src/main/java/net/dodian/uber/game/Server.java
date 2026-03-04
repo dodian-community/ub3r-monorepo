@@ -11,6 +11,8 @@ import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
+import net.dodian.uber.game.content.buttons.ButtonContentRegistry;
+import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -22,8 +24,10 @@ import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
+import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;
 import net.dodian.utilities.DbTables;
@@ -108,10 +112,18 @@ public class Server {
 
         npcManager = new NpcManager();
         npcManager.loadSpawns();
+        NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         chunkManager = new ChunkManager();
+        // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
+        // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
+        for (net.dodian.uber.game.model.entity.npc.Npc npc : npcManager.getNpcs()) {
+            if (npc != null) {
+                npc.syncChunkMembership();
+            }
+        }
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
@@ -126,6 +138,10 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
+        ButtonContentRegistry.bootstrap();
+        ObjectContentRegistry.bootstrap();
+        net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        ObjectContentRegistry.prewarmObjectDefinitions();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");
@@ -212,6 +228,12 @@ public class Server {
             AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
             logger.warn("Failed to drain account persistence service during shutdown", exception);
+        }
+
+        try {
+            WorldPollPublisher.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world poll publisher", exception);
         }
 
         try {
