@@ -3,7 +3,6 @@ package net.dodian.uber.game.runtime.sync
 import io.netty.buffer.ByteBuf
 import kotlin.system.measureNanoTime
 import java.util.IdentityHashMap
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
@@ -92,26 +91,17 @@ class WorldSynchronizationService {
                 encodeNpcs(activePlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLUSH) {
-                flushActivePlayers()
+                flushActivePlayers(activePlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLAG_CLEAR) {
-                clearFlags()
+                clearFlags(activePlayers)
             }
         } finally {
             SynchronizationContext.clear()
         }
     }
 
-    private fun currentActivePlayers(): List<Client> {
-        val players = ArrayList<Client>(PlayerHandler.getPlayerCount().coerceAtLeast(1))
-        for (i in 0 until Constants.maxPlayers) {
-            val player = PlayerHandler.players[i] as? Client ?: continue
-            if (player.isActive) {
-                players += player
-            }
-        }
-        return players
-    }
+    private fun currentActivePlayers(): List<Client> = PlayerHandler.snapshotActivePlayers()
 
     private fun currentActiveNpcs(): List<Npc> {
         val npcs = ArrayList<Npc>()
@@ -229,8 +219,7 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun flushActivePlayers() {
-        val activePlayers = currentActivePlayers()
+    private fun flushActivePlayers(activePlayers: List<Client>) {
         PlayerUiDeltaProcessor.process(activePlayers)
         ZoneUpdateBus.flush(activePlayers)
         activePlayers.forEach { player ->
@@ -238,16 +227,11 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun clearFlags() {
+    private fun clearFlags(activePlayers: List<Client>) {
         for (npc in Server.npcManager.getNpcs()) {
             npc?.clearUpdateFlags()
         }
-        for (i in 0 until Constants.maxPlayers) {
-            val player = PlayerHandler.players[i] as? Client ?: continue
-            if (player.isActive) {
-                player.clearUpdateFlags()
-            }
-        }
+        activePlayers.forEach(Client::clearUpdateFlags)
     }
 
     private fun shouldSkipNpcSync(

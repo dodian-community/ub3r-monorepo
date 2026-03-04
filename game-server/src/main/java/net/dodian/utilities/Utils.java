@@ -33,16 +33,6 @@ public class Utils {
 
     public static int[] shortExp = {80, 120, 160, 200, 250, 320};
     public static int[] longExp = {90, 135, 180, 230, 290, 360};
-    // cooper tin iron coal mith addy
-    public static int[] rocks = {7471, 7451, 7484, 7452, 7485, 7455, 7488, 7456, 7489, 7458, 7491, 7459, 7492, 7460, 7493, 7461, 7494, /*7464, 7463*/};
-    public static int[] rockLevels = {1, 1, 1, 1, 1, 15, 15, 30, 30, 40, 40, 55, 55, 70, 70, 85, 85, 50, 50};
-    public static long[] mineTimes = {1000, 2000, 2000, 2000, 2000, 3000, 3000, 5000, 5000, 6000, 6000, 7000, 7000, 9000, 9000, 35000, 35000, 6500, 6500};
-    public static int[] ore = {1436, 436, 436, 438, 438, 440, 440, 453, 453, 444, 444, 447, 447, 449, 449, 451, 451, 1625, 1625};
-    public static int[] oreExp = {50, 110, 110, 110, 110, 280, 280, 420, 420, 510, 510, 620, 620, 780, 780, 3100, 3100, 550, 550};
-    public static int[] picks = {1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920, 20014};
-    public static double[] pickBonus = {0.04, 0.065, 0.1, 0.15, 0.24, 0.33, 0.42, 0.8, 0.8};
-    public static int[] pickReq = {1, 1, 6, 11, 21, 31, 41, 61, 61};
-
     public static int[] woodcuttingDelays = {1800, 2400, 3200, 4600, 5600, 8200};
     public static int[] woodcuttingLevels = {1, 15, 30, 45, 60, 75};
     public static int[] woodcuttingLogs = {1511, 1521, 1519, 1517, 1515, 1513};

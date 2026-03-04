@@ -5,6 +5,8 @@ import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.services.ObjectInteractionType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.runtime.eventbus.GameEventBus
+import net.dodian.uber.game.runtime.eventbus.events.ObjectClickEvent
 import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -74,6 +76,20 @@ object ObjectContentDispatcher {
         }
 
         try {
+            if (context.type == ObjectInteractionType.CLICK &&
+                GameEventBus.postWithResult(
+                    ObjectClickEvent(
+                        client = context.client,
+                        option = context.option ?: -1,
+                        objectId = context.objectId,
+                        position = context.position,
+                        obj = context.obj,
+                    ),
+                )
+            ) {
+                return DispatchTiming(true, 0L, 0L, "GameEventBus")
+            }
+
             val resolveStart = System.nanoTime()
             val candidates = ObjectContentRegistry.resolveAll(context.objectId, context.position)
             val resolveNs = System.nanoTime() - resolveStart

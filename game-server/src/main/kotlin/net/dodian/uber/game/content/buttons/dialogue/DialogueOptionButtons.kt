@@ -8,6 +8,8 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable
+import net.dodian.uber.game.runtime.eventbus.GameEventBus
+import net.dodian.uber.game.runtime.eventbus.events.DialogueOptionEvent
 
 object DialogueOptionButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -30,6 +32,9 @@ object DialogueOptionButtons : ButtonContent {
         }
 
         val optionIndex = optionSlot(buttonId)
+        if (GameEventBus.postWithResult(DialogueOptionEvent(client, optionIndex))) {
+            return true
+        }
         if (DialogueService.onOption(client, optionIndex)) {
             return true
         }

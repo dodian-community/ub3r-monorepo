@@ -88,13 +88,7 @@ public class EntityProcessor implements Runnable {
     }
 
     public void runPlayerMainPhase() {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || player.disconnected || !player.isActive) {
-                continue;
-            }
-            processPlayer(player);
-        }
+        PlayerHandler.forEachActivePlayer(this::processPlayer);
     }
 
     public void runMovementFinalizePhase() {
@@ -197,14 +191,10 @@ public class EntityProcessor implements Runnable {
 
     static void buildActiveNpcChunks(LongHashSet activeChunks) {
         activeChunks.clear();
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || player.disconnected || !player.isActive) {
-                continue;
-            }
+        PlayerHandler.forEachActivePlayer(player -> {
             Position position = player.getPosition();
             if (position == null) {
-                continue;
+                return;
             }
             int centerChunkX = position.getChunkX();
             int centerChunkY = position.getChunkY();
@@ -213,7 +203,7 @@ public class EntityProcessor implements Runnable {
                     activeChunks.add(packChunkKey(centerChunkX + dx, centerChunkY + dy));
                 }
             }
-        }
+        });
     }
 
     private List<Npc> collectActiveNpcs(LongHashSet activeChunks, ArrayList<Npc> output) {
@@ -283,13 +273,7 @@ public class EntityProcessor implements Runnable {
     }
 
     static void syncActivePlayerChunksForTick() {
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || player.disconnected || !player.isActive) {
-                continue;
-            }
-            player.syncChunkMembership();
-        }
+        PlayerHandler.forEachActivePlayer(Client::syncChunkMembership);
     }
 
     private void processInboundPackets() {
@@ -303,11 +287,7 @@ public class EntityProcessor implements Runnable {
         int maxPendingBefore = 0;
         int maxPendingAfter = 0;
 
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            Client player = (Client) PlayerHandler.players[i];
-            if (player == null || player.disconnected || !player.isActive) {
-                continue;
-            }
+        for (Client player : PlayerHandler.snapshotActivePlayers()) {
             activePlayers++;
 
             int pendingBefore = player.getPendingInboundPacketCount();
@@ -437,18 +417,16 @@ public class EntityProcessor implements Runnable {
 
     private void handlePlayerCountsAnnouncement(Npc npc) {
         if (Misc.chance(25) == 1) {
-            int peopleInEdge = 0;
-            int peopleInWild = 0;
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                Client checkPlayer = (Client) PlayerHandler.players[i];
-                if (checkPlayer != null) {
-                    if (checkPlayer.inWildy()) {
-                        peopleInWild++;
-                    } else if (checkPlayer.inEdgeville()) {
-                        peopleInEdge++;
-                    }
+            final int[] counts = new int[2];
+            PlayerHandler.forEachActivePlayer(checkPlayer -> {
+                if (checkPlayer.inWildy()) {
+                    counts[0]++;
+                } else if (checkPlayer.inEdgeville()) {
+                    counts[1]++;
                 }
-            }
+            });
+            int peopleInWild = counts[0];
+            int peopleInEdge = counts[1];
             npc.setText("There is currently " + peopleInWild + " player" + (peopleInWild != 1 ? "s" : "") + " in the wild and " + peopleInEdge + " player" + (peopleInEdge != 1 ? "s" : "") + " in Edgeville!");
         }
     }

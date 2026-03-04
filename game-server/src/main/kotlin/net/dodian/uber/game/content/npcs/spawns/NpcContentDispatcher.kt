@@ -2,6 +2,8 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.runtime.eventbus.GameEventBus
+import net.dodian.uber.game.runtime.eventbus.events.NpcClickEvent
 import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
 
@@ -20,6 +22,9 @@ object NpcContentDispatcher {
 
     @JvmStatic
     fun tryHandleClickTimed(client: Client, option: Int, npc: Npc): DispatchTiming {
+        if (GameEventBus.postWithResult(NpcClickEvent(client, option, npc))) {
+            return DispatchTiming(true, 0L, 0L, "GameEventBus")
+        }
         val resolveStart = System.nanoTime()
         val content = NpcContentRegistry.get(npc.id)
         val resolveNs = System.nanoTime() - resolveStart
