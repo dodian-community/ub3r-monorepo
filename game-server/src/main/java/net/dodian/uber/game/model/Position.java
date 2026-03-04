@@ -5,16 +5,14 @@ import net.dodian.utilities.Misc;
 
 public class Position {
 
-    private int x, y, z;
-    private int cachedChunkX = Integer.MIN_VALUE;
-    private int cachedChunkY = Integer.MIN_VALUE;
-    private boolean chunkCacheDirty = true;
-    private Chunk cachedChunk;
+    private short x;
+    private short y;
+    private byte z;
 
     public Position(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.x = toCoordinate("x", x);
+        this.y = toCoordinate("y", y);
+        this.z = toHeight(z);
     }
 
     public Position(int x, int y) {
@@ -38,7 +36,7 @@ public class Position {
     }
 
     public void setZ(int z) {
-        this.z = z;
+        this.z = toHeight(z);
     }
 
     public double getDistance(Position position) {
@@ -52,10 +50,9 @@ public class Position {
     }
 
     public void moveTo(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        chunkCacheDirty = true;
+        this.x = toCoordinate("x", x);
+        this.y = toCoordinate("y", y);
+        this.z = toHeight(z);
     }
 
     public void moveTo(int x, int y) {
@@ -73,10 +70,9 @@ public class Position {
      * @return an instance of this position.
      */
     public final Position move(int amountX, int amountY, int amountZ) {
-        this.x += amountX;
-        this.y += amountY;
-        this.z += amountZ;
-        chunkCacheDirty = true;
+        this.x = toCoordinate("x", this.x + amountX);
+        this.y = toCoordinate("y", this.y + amountY);
+        this.z = toHeight(this.z + amountZ);
         return this;
     }
 
@@ -172,32 +168,15 @@ public class Position {
      * @return The chunk containing this position
      */
     public Chunk getChunk() {
-        refreshChunkCache();
-        return cachedChunk;
+        return new Chunk(getChunkX(), getChunkY());
     }
 
     public int getChunkX() {
-        refreshChunkCache();
-        return cachedChunkX;
+        return (x >> 3) - 6;
     }
 
     public int getChunkY() {
-        refreshChunkCache();
-        return cachedChunkY;
-    }
-
-    private void refreshChunkCache() {
-        if (!chunkCacheDirty && cachedChunk != null) {
-            return;
-        }
-        int chunkX = (x >> 3) - 6;
-        int chunkY = (y >> 3) - 6;
-        if (chunkX != cachedChunkX || chunkY != cachedChunkY || cachedChunk == null) {
-            cachedChunkX = chunkX;
-            cachedChunkY = chunkY;
-            cachedChunk = new Chunk(chunkX, chunkY);
-        }
-        chunkCacheDirty = false;
+        return (y >> 3) - 6;
     }
 
     /**
@@ -236,6 +215,20 @@ public class Position {
 
     public String toString() {
         return "x=" + this.x + " y=" + this.y + " z=" + this.z;
+    }
+
+    private static short toCoordinate(String axis, int value) {
+        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
+            throw new IllegalArgumentException("Position " + axis + " out of range: " + value);
+        }
+        return (short) value;
+    }
+
+    private static byte toHeight(int value) {
+        if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
+            throw new IllegalArgumentException("Position z out of range: " + value);
+        }
+        return (byte) value;
     }
 
 }
