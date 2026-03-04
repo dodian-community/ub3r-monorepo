@@ -17,6 +17,8 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
+import net.dodian.uber.game.runtime.interaction.task.InteractionTaskScheduler;
+import net.dodian.uber.game.runtime.interaction.task.NpcInteractionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,8 +83,8 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         // OpenRune-style: tick-owned routing. The game thread will execute when in range.
-        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1));
-        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
     private void performNpcClick1(Client client, Npc tempNpc) {
@@ -128,8 +130,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2));
-        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
     private void performNpcClick2(Client client, Npc tempNpc) {
@@ -175,8 +177,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3));
-        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
     private void performNpcClick3(Client client, Npc tempNpc) {
@@ -220,8 +222,8 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4));
-        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
     private void performNpcClick4(Client client, Npc tempNpc) {
@@ -272,8 +274,8 @@ public class NpcInteractionListener implements PacketListener {
 
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
-        client.setPendingInteraction(new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5));
-        client.setInteractionEarliestCycle(PlayerHandler.cycle + 1L);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
     private static int readSignedWordBigEndianA(ByteBuf buf) {

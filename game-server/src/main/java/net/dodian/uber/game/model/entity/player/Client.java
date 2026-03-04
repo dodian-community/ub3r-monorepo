@@ -281,7 +281,7 @@ public class Client extends Player implements Runnable {
             currentWalkableInterface = id;
             walkableInterfaceDirty = true;
             invalidateWalkableUiTexts();
-            if (getServerDebugMode()) {
+            if (getClientUiTraceEnabled()) {
                 println_debug("Walkable interface changed to " + id + " for " + getPlayerName());
             }
         }
@@ -300,7 +300,7 @@ public class Client extends Player implements Runnable {
         walkableInterfaceDirty = true;
         lastWalkableInterfaceSent = -2;
         invalidateWalkableUiTexts();
-        if (getServerDebugMode()) {
+        if (getClientUiTraceEnabled()) {
             println_debug("Forced walkable interface refresh for " + getPlayerName());
         }
     }
@@ -754,12 +754,6 @@ public class Client extends Player implements Runnable {
 
         packet.send(this);
 
-        // Debug helper: show which interface is being opened.
-        // Comment out/remove once you don't need it anymore.
-        if (openedInterfaceId != null) {
-            send(new SendMessage("Open interface (" + openedVia + "): " + openedInterfaceId));
-        }
-        
     }
 
     @Override
@@ -1855,11 +1849,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void sendPlayerSynchronization() {
-        new PlayerUpdatePacket(this).send(this);
+        PlayerUpdatePacket.sendTo(this, this);
     }
 
     public void sendNpcSynchronization() {
-        new NpcUpdatePacket(this).send(this);
+        NpcUpdatePacket.sendTo(this, this);
     }
 
 
@@ -3275,7 +3269,7 @@ public class Client extends Player implements Runnable {
         // Stub: always report 100% run energy to the client
         send(new SendRunEnergy(100));
         invalidateUiText(149);
-        if (getServerDebugMode()) {
+        if (getClientUiTraceEnabled()) {
             println_debug("Sent run energy for " + getPlayerName());
         }
         send(new SendString("100%", 149));

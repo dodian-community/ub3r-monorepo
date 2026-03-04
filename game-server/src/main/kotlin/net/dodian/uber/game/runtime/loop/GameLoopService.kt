@@ -118,7 +118,9 @@ class GameLoopService(
         GameThreadTaskQueue.drain()
         phaseTimer.clear()
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
-        timed(GamePhase.WORLD_DB_POLL) { worldMaintenancePhase.runWorldDb(currentCycle) }
+        timed(GamePhase.WORLD_DB_INPUT_BUILD) { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
+        timed(GamePhase.WORLD_DB_RESULT_READ) { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
+        timed(GamePhase.WORLD_DB_APPLY) { worldMaintenancePhase.runWorldDbApply(currentCycle) }
         timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
         timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }

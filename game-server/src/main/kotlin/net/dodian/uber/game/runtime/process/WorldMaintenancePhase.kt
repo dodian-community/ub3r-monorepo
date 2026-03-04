@@ -12,8 +12,16 @@ class WorldMaintenancePhase(
 ) {
     private val service = WorldMaintenanceService(worldProcessor, farmingProcess, plunderDoor)
 
-    fun runWorldDb(cycle: Long) {
-        service.runWorldDb(cycle)
+    fun runWorldDbInputBuild(cycle: Long) {
+        service.runWorldDbInputBuild(cycle)
+    }
+
+    fun runWorldDbResultRead(cycle: Long) {
+        service.runWorldDbResultRead(cycle)
+    }
+
+    fun runWorldDbApply(cycle: Long) {
+        service.runWorldDbApply(cycle)
     }
 
     fun runFarming(cycle: Long) {

@@ -11,6 +11,8 @@ import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
+import net.dodian.uber.game.content.buttons.ButtonContentRegistry;
+import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -25,6 +27,7 @@ import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;
 import net.dodian.utilities.DbTables;
@@ -135,6 +138,8 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
+        ButtonContentRegistry.bootstrap();
+        ObjectContentRegistry.bootstrap();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");
@@ -221,6 +226,12 @@ public class Server {
             AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
             logger.warn("Failed to drain account persistence service during shutdown", exception);
+        }
+
+        try {
+            WorldPollPublisher.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world poll publisher", exception);
         }
 
         try {

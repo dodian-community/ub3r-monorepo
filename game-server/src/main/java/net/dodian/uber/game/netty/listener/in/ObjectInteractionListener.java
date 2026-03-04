@@ -19,6 +19,8 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.runtime.interaction.ItemOnObjectIntent;
 import net.dodian.uber.game.runtime.interaction.MagicOnObjectIntent;
 import net.dodian.uber.game.runtime.interaction.ObjectClickIntent;
+import net.dodian.uber.game.runtime.interaction.task.InteractionTaskScheduler;
+import net.dodian.uber.game.runtime.interaction.task.ObjectInteractionTask;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +100,7 @@ public class ObjectInteractionListener implements PacketListener {
         }
 
         // OpenRune-style: tick-owned routing. The game thread will execute when in range.
-        client.setPendingInteraction(
+        ObjectClickIntent intent =
                 new ObjectClickIntent(
                         packet.getOpcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
@@ -108,9 +110,8 @@ public class ObjectInteractionListener implements PacketListener {
                         task,
                         object,
                         def
-                )
-        );
-        client.setInteractionEarliestCycle(net.dodian.uber.game.model.entity.player.PlayerHandler.cycle + 1L);
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private void handleItemOnObject(Client client, GamePacket packet) {
@@ -142,7 +143,7 @@ public class ObjectInteractionListener implements PacketListener {
         client.setWalkToTask(task);
         GameObjectData objectData = GameObjectData.forId(objectId);
         GameObjectDef def = Misc.getObject(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getZ());
-        client.setPendingInteraction(
+        ItemOnObjectIntent intent =
                 new ItemOnObjectIntent(
                         packet.getOpcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
@@ -154,9 +155,8 @@ public class ObjectInteractionListener implements PacketListener {
                         task,
                         objectData,
                         def
-                )
-        );
-        client.setInteractionEarliestCycle(net.dodian.uber.game.model.entity.player.PlayerHandler.cycle + 1L);
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private void handleMagicOnObject(Client client, GamePacket packet) {
@@ -183,7 +183,7 @@ public class ObjectInteractionListener implements PacketListener {
         if (client.randomed || client.UsingAgility) {
             return;
         }
-        client.setPendingInteraction(
+        MagicOnObjectIntent intent =
                 new MagicOnObjectIntent(
                         packet.getOpcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
@@ -193,9 +193,8 @@ public class ObjectInteractionListener implements PacketListener {
                         task,
                         object,
                         def
-                )
-        );
-        client.setInteractionEarliestCycle(net.dodian.uber.game.model.entity.player.PlayerHandler.cycle + 1L);
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private Position resolveDistancePosition(

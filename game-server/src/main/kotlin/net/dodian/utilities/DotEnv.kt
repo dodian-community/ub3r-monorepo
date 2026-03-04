@@ -88,6 +88,9 @@ val runtimePhaseTimingEnabled = dotenv["RUNTIME_PHASE_TIMING_ENABLED"]?.toBoolea
 val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 25L
 val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
 val runtimeCycleLogIntervalTicks = dotenv["RUNTIME_CYCLE_LOG_INTERVAL_TICKS"]?.toInt() ?: 10
+val clientUiTraceEnabled = dotenv["CLIENT_UI_TRACE_ENABLED"]?.toBoolean() ?: false
+val clientPacketTraceEnabled = dotenv["CLIENT_PACKET_TRACE_ENABLED"]?.toBoolean() ?: false
+val buttonTraceEnabled = dotenv["BUTTON_TRACE_ENABLED"]?.toBoolean() ?: false
 
 // Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)
 val inboundOpcodeProfilingEnabled = dotenv["INBOUND_OPCODE_PROFILING_ENABLED"]?.toBoolean() ?: false

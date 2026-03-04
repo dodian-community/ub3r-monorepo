@@ -29,6 +29,10 @@ public class NpcUpdatePacket implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
+        sendTo(player, client);
+    }
+
+    public static void sendTo(Player player, Client client) {
         ByteBuf pooledBuffer = ByteMessage.pooledBuffer(16384);
         ByteMessage msg = null;
         try {

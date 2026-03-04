@@ -8,41 +8,46 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
 import org.slf4j.LoggerFactory
 
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
 
     @JvmStatic
-    fun process(player: Client) {
-        val intent = player.pendingInteraction ?: return
+    fun process(player: Client): InteractionExecutionResult {
+        val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
         if (player.didTeleport() || player.didMapRegionChange()) {
             player.walkToTask = null
             clear(player)
-            return
+            return InteractionExecutionResult.CANCELLED
         }
         if (PlayerHandler.cycle < player.interactionEarliestCycle) {
-            return
+            return InteractionExecutionResult.WAITING
         }
-        when (intent) {
+        return when (intent) {
             is NpcInteractionIntent -> processNpcInteraction(player, intent)
             is ObjectClickIntent -> processObjectClick(player, intent)
             is ItemOnObjectIntent -> processItemOnObject(player, intent)
             is MagicOnObjectIntent -> processMagicOnObject(player, intent)
+            else -> {
+                clear(player)
+                InteractionExecutionResult.CANCELLED
+            }
         }
     }
 
-    private fun processNpcInteraction(player: Client, intent: NpcInteractionIntent) {
+    private fun processNpcInteraction(player: Client, intent: NpcInteractionIntent): InteractionExecutionResult {
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
             clear(player)
-            return
+            return InteractionExecutionResult.CANCELLED
         }
 
         if (player.randomed || player.UsingAgility) {
             clear(player)
-            return
+            return InteractionExecutionResult.CANCELLED
         }
 
         val range =
@@ -50,10 +55,10 @@ object InteractionProcessor {
                 5
             } else {
                 1
-            }
+        }
 
         if (!player.goodDistanceEntity(npc, range) || npc.position.withinDistance(player.position, 0)) {
-            return
+            return InteractionExecutionResult.WAITING
         }
 
         player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
@@ -66,17 +71,18 @@ object InteractionProcessor {
         }
         clear(player)
         slowLogIfNeeded(player, intent, startNs)
+        return InteractionExecutionResult.COMPLETE
     }
 
-    private fun processObjectClick(player: Client, intent: ObjectClickIntent) {
+    private fun processObjectClick(player: Client, intent: ObjectClickIntent): InteractionExecutionResult {
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed || player.UsingAgility) {
             clear(player)
-            return
+            return InteractionExecutionResult.CANCELLED
         }
         if (player.walkToTask !== intent.task) {
             clear(player)
-            return
+            return InteractionExecutionResult.CANCELLED
         }
 
         if (
@@ -89,14 +95,14 @@ object InteractionProcessor {
                 ObjectInteractionDistance.DistanceMode.CLICK,
             ) == null
         ) {
-            return
+            return InteractionExecutionResult.WAITING
         }
 
         if (intent.option == 1) {
             if (!player.validClient || player.randomed) {
                 player.walkToTask = null
                 clear(player)
-                return
+                return InteractionExecutionResult.CANCELLED
             }
             if (player.adding) {
                 // Preserve legacy debug behavior.
@@ -112,7 +118,7 @@ object InteractionProcessor {
             if (System.currentTimeMillis() < player.walkBlock || player.genie || player.antique) {
                 player.walkToTask = null
                 clear(player)
-                return
+                return InteractionExecutionResult.CANCELLED
             }
             val playerPos = player.position.copy()
             val xDiff = kotlin.math.abs(playerPos.x - intent.objectPosition.x)
@@ -122,7 +128,7 @@ object InteractionProcessor {
             if (xDiff > 5 || yDiff > 5) {
                 player.walkToTask = null
                 clear(player)
-                return
+                return InteractionExecutionResult.CANCELLED
             }
         } else if (intent.option == 2) {
             if (player.adding) {
@@ -138,7 +144,7 @@ object InteractionProcessor {
             if (System.currentTimeMillis() < player.walkBlock) {
                 player.walkToTask = null
                 clear(player)
-                return
+                return InteractionExecutionResult.CANCELLED
             }
             player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
         } else if (intent.option == 3) {
@@ -149,15 +155,18 @@ object InteractionProcessor {
         player.walkToTask = null
         clear(player)
         slowLogIfNeeded(player, intent, startNs)
+        return InteractionExecutionResult.COMPLETE
     }
 
-    private fun processItemOnObject(player: Client, intent: ItemOnObjectIntent) {
+    private fun processItemOnObject(player: Client, intent: ItemOnObjectIntent): InteractionExecutionResult {
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed) {
-            clear(player); return
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
         }
         if (player.walkToTask !== intent.task) {
-            clear(player); return
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
         }
         if (
             ObjectInteractionDistance.resolveDistancePosition(
@@ -169,7 +178,7 @@ object InteractionProcessor {
                 ObjectInteractionDistance.DistanceMode.ITEM_ON_OBJECT,
             ) == null
         ) {
-            return
+            return InteractionExecutionResult.WAITING
         }
 
         if (player.playerHasItem(intent.itemId)) {
@@ -187,15 +196,18 @@ object InteractionProcessor {
         player.walkToTask = null
         clear(player)
         slowLogIfNeeded(player, intent, startNs)
+        return InteractionExecutionResult.COMPLETE
     }
 
-    private fun processMagicOnObject(player: Client, intent: MagicOnObjectIntent) {
+    private fun processMagicOnObject(player: Client, intent: MagicOnObjectIntent): InteractionExecutionResult {
         val startNs = System.nanoTime()
         if (player.disconnected || player.randomed || player.UsingAgility) {
-            clear(player); return
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
         }
         if (player.walkToTask !== intent.task) {
-            clear(player); return
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
         }
         if (
             ObjectInteractionDistance.resolveDistancePosition(
@@ -207,7 +219,7 @@ object InteractionProcessor {
                 ObjectInteractionDistance.DistanceMode.MAGIC,
             ) == null
         ) {
-            return
+            return InteractionExecutionResult.WAITING
         }
 
         player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
@@ -215,6 +227,7 @@ object InteractionProcessor {
         player.walkToTask = null
         clear(player)
         slowLogIfNeeded(player, intent, startNs)
+        return InteractionExecutionResult.COMPLETE
     }
 
     private fun handleNpcClick1(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
@@ -281,6 +294,7 @@ object InteractionProcessor {
         player.pendingInteraction = null
         player.activeInteraction = null
         player.interactionEarliestCycle = 0
+        player.interactionTaskHandle = null
     }
 
     private fun slowLogIfNeeded(player: Client, intent: InteractionIntent, startNs: Long) {

@@ -5,6 +5,10 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled;
 
 /**
  * Sends a frame 164 packet to display an interface.
@@ -15,6 +19,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Frame: 2 bytes (interface ID to display)
  */
 public class SendFrame164 implements OutgoingPacket {
+    private static final Logger logger = LoggerFactory.getLogger(SendFrame164.class);
 
     private final int frame;
 
@@ -40,6 +45,8 @@ public class SendFrame164 implements OutgoingPacket {
         message.putShort(frame, ByteOrder.LITTLE);
         
         client.send(message);
-        System.out.println("Send frame 164: " + frame);
+        if (getClientPacketTraceEnabled() && logger.isTraceEnabled()) {
+            logger.trace("SendFrame164 frame={} player={}", frame, client.getPlayerName());
+        }
     }
 }

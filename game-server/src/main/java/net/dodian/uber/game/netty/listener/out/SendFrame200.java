@@ -5,6 +5,10 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled;
 
 /**
  * Sends a frame 200 packet with main and sub frame parameters.
@@ -16,6 +20,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Sub Frame: 2 bytes
  */
 public class SendFrame200 implements OutgoingPacket {
+    private static final Logger logger = LoggerFactory.getLogger(SendFrame200.class);
 
     private final int mainFrame;
     private final int subFrame;
@@ -40,6 +45,8 @@ public class SendFrame200 implements OutgoingPacket {
         message.putShort(subFrame, ByteOrder.BIG);
         
         client.send(message);
-        System.out.println("SendFrame200: mainFrame=" + mainFrame + ", subFrame=" + subFrame);
+        if (getClientPacketTraceEnabled() && logger.isTraceEnabled()) {
+            logger.trace("SendFrame200 mainFrame={} subFrame={} player={}", mainFrame, subFrame, client.getPlayerName());
+        }
     }
 }

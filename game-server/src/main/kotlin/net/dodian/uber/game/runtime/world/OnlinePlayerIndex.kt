@@ -36,6 +36,15 @@ class OnlinePlayerIndex {
 
     fun dbIds(): List<Int> = ArrayList(byDbId.keys)
 
+    fun dbIdsArray(): IntArray {
+        val ids = IntArray(byDbId.size)
+        var index = 0
+        byDbId.keys.forEach { dbId ->
+            ids[index++] = dbId
+        }
+        return ids
+    }
+
     fun byDbId(dbId: Int): Client? = byDbId[dbId]
 
     fun activeSet(): IdentityHashMap<Client, Boolean> = activeSet

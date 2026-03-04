@@ -22,7 +22,7 @@ public final class ChunkManager {
     /**
      * Map of chunk to its repository.
      */
-    private final Map<Chunk, ChunkRepository> chunks = new ConcurrentHashMap<>();
+    private final Map<Long, ChunkRepository> chunks = new ConcurrentHashMap<>();
 
     /**
      * Loads or creates a chunk repository for the specified chunk.
@@ -32,7 +32,7 @@ public final class ChunkManager {
      * @return The chunk repository
      */
     public ChunkRepository load(Chunk chunk) {
-        return chunks.computeIfAbsent(chunk, key -> new ChunkRepository(chunk));
+        return chunks.computeIfAbsent(pack(chunk.getX(), chunk.getY()), key -> new ChunkRepository(chunk));
     }
 
     /**
@@ -42,7 +42,11 @@ public final class ChunkManager {
      * @return The repository, or null if not loaded
      */
     public ChunkRepository getLoaded(Chunk chunk) {
-        return chunks.get(chunk);
+        return chunks.get(pack(chunk.getX(), chunk.getY()));
+    }
+
+    public ChunkRepository getLoaded(int chunkX, int chunkY) {
+        return chunks.get(pack(chunkX, chunkY));
     }
 
     /**
@@ -74,12 +78,13 @@ public final class ChunkManager {
         int chunkRadius = (distance / Chunk.SIZE) + 2;
 
         Chunk centerChunk = center.getChunk();
+        int centerChunkX = centerChunk.getX();
+        int centerChunkY = centerChunk.getY();
 
         // Scan all chunks in the radius. Query path does not create chunks.
         for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
             for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
-                Chunk targetChunk = centerChunk.translate(dx, dy);
-                ChunkRepository repo = getLoaded(targetChunk);
+                ChunkRepository repo = getLoaded(centerChunkX + dx, centerChunkY + dy);
                 if (repo == null) {
                     continue;
                 }
@@ -149,10 +154,12 @@ public final class ChunkManager {
                                             Consumer<E> consumer) {
         int chunkRadius = (distance / Chunk.SIZE) + 2;
         Chunk centerChunk = center.getChunk();
+        int centerChunkX = centerChunk.getX();
+        int centerChunkY = centerChunk.getY();
 
         for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
             for (int dy = -chunkRadius; dy < chunkRadius; dy++) {
-                ChunkRepository repo = getLoaded(centerChunk.translate(dx, dy));
+                ChunkRepository repo = getLoaded(centerChunkX + dx, centerChunkY + dy);
                 if (repo == null) {
                     continue;
                 }
@@ -182,5 +189,9 @@ public final class ChunkManager {
      */
     public void clear() {
         chunks.clear();
+    }
+
+    private static long pack(int x, int y) {
+        return (((long) x) << 32) ^ (y & 0xffffffffL);
     }
 }
