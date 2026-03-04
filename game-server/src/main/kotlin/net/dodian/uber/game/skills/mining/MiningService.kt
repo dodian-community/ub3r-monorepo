@@ -1,8 +1,5 @@
-package net.dodian.uber.game.content.objects.impl.mining
+package net.dodian.uber.game.skills.mining
 
-import net.dodian.uber.game.content.objects.impl.mining.MiningDefinitions.pickaxesDescending
-import net.dodian.uber.game.content.objects.impl.mining.MiningDefinitions.randomGemDropTable
-import net.dodian.uber.game.content.objects.impl.mining.MiningDefinitions.rocksByObjectId
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -72,7 +69,7 @@ object MiningService {
         client.lastAction = now - INITIAL_SWING_DELAY_MS
         client.miningState =
             MiningState(
-                rockObjectId = rock.objectId,
+                rockObjectId = rock.objectIds.first(),
                 rockPosition = position.copy(),
                 startedAtMs = now,
                 lastSwingAnimationAtMs = now + INITIAL_SWING_DELAY_MS,
@@ -109,7 +106,7 @@ object MiningService {
     fun resolveBestPickaxe(client: Client): PickaxeDef? {
         val miningLevel = client.getLevel(Skill.MINING)
         val equippedWeapon = client.getEquipment()[Equipment.Slot.WEAPON.id]
-        return pickaxesDescending.firstOrNull { pickaxe ->
+        return MiningData.pickaxesDescending.firstOrNull { pickaxe ->
             miningLevel >= pickaxe.requiredLevel &&
                 (pickaxe.itemId == equippedWeapon || client.playerHasItem(pickaxe.itemId))
         }
@@ -138,7 +135,7 @@ object MiningService {
     @JvmStatic
     fun performMiningCycle(client: Client): Boolean {
         val state = client.miningState ?: return false
-        val rock = rocksByObjectId[state.rockObjectId]
+        val rock = MiningData.rockByObjectId[state.rockObjectId]
             ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK, invokeResetAction = false, fullReset = false)
         val pickaxe =
             resolveBestPickaxe(client)
@@ -153,7 +150,7 @@ object MiningService {
         }
 
         if (rock.oreItemId != 1436) {
-            client.send(SendMessage("You mine some ${resolveOreName(client, rock)}"))
+            client.send(SendMessage("You mine some ${client.GetItemName(rock.oreItemId).lowercase()}"))
         }
         client.lastAction = System.currentTimeMillis()
         client.addItem(rock.oreItemId, 1)
@@ -196,7 +193,7 @@ object MiningService {
 
     internal fun tryAwardRandomGem(client: Client): Int? {
         val chance = resolveRandomGemChance(client)
-        return tryAwardRandomGem(client, chance, Misc.chance(chance), Misc.random(randomGemDropTable.size - 1))
+        return tryAwardRandomGem(client, chance, Misc.chance(chance), Misc.random(MiningData.randomGemDropTable.size - 1))
     }
 
     internal fun resolveRandomGemChance(client: Client): Int {
@@ -219,7 +216,7 @@ object MiningService {
         if (client.freeSlots() < 1 || roll != 1) {
             return null
         }
-        val gem = randomGemDropTable[gemIndex.coerceIn(0, randomGemDropTable.lastIndex)]
+        val gem = MiningData.randomGemDropTable[gemIndex.coerceIn(0, MiningData.randomGemDropTable.lastIndex)]
         client.addItem(gem, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, gem, 1, client.position.copy(), "Mining")
@@ -229,7 +226,7 @@ object MiningService {
 
     private fun advanceMining(client: Client): Boolean {
         val state = client.miningState ?: return false
-        val rock = rocksByObjectId[state.rockObjectId]
+        val rock = MiningData.rockByObjectId[state.rockObjectId]
             ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK, invokeResetAction = false, fullReset = false)
 
         if (client.disconnected || !client.isActive) {
@@ -266,7 +263,7 @@ object MiningService {
         fullReset: Boolean,
     ): Boolean {
         val state = client.miningState
-        val rock = state?.let { rocksByObjectId[it.rockObjectId] }
+        val rock = state?.let { MiningData.rockByObjectId[it.rockObjectId] }
         val position = state?.rockPosition?.copy()
         val hadMining = state != null || client.miningTaskHandle != null
 
@@ -287,7 +284,4 @@ object MiningService {
             client.GoodDistance(client.position.x, client.position.y, rockPosition.x, rockPosition.y, 1)
     }
 
-    private fun resolveOreName(client: Client, rock: MiningRockDef): String {
-        return (rock.displayNameOverride ?: client.GetItemName(rock.oreItemId)).lowercase()
-    }
 }

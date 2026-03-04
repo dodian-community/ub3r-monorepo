@@ -24,7 +24,7 @@ abstract class GameTaskSet<OWNER : Any>(
             cancelWeakerTasks()
         }
 
-        queue.addFirst(task)
+        queue.addLast(task)
         return TaskHandle(control)
     }
 

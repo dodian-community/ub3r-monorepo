@@ -34,7 +34,7 @@ import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.content.objects.impl.mining.MiningState;
+import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.queue.QueueTaskHandle;

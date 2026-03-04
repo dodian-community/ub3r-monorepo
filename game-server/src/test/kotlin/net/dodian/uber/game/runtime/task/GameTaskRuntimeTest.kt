@@ -34,10 +34,25 @@ class GameTaskRuntimeTest {
         }
 
         GameTaskRuntime.cycle()
-        assertEquals(listOf("second", "first-start", "first-end"), trace)
+        assertEquals(listOf("first-start", "first-end", "second"), trace)
+    }
+
+    @Test
+    fun `nested player task scheduling keeps child queued until parent completes`() {
+        val player = activeClient(11, 1100)
+        val trace = mutableListOf<String>()
+
+        GameTaskRuntime.queuePlayer(player) {
+            trace += "parent-start"
+            GameTaskRuntime.queuePlayer(player) {
+                trace += "child"
+            }
+            wait(1)
+            trace += "parent-end"
+        }
 
         GameTaskRuntime.cycle()
-        assertEquals(listOf("second", "first-start", "first-end"), trace)
+        assertEquals(listOf("parent-start", "parent-end", "child"), trace)
     }
 
     @Test
@@ -56,10 +71,10 @@ class GameTaskRuntimeTest {
         }
 
         GameTaskRuntime.cycle()
-        assertEquals(listOf("b0", "b1", "a0"), trace)
+        assertEquals(listOf("a0", "b0", "b1"), trace)
 
         GameTaskRuntime.cycle()
-        assertEquals(listOf("b0", "b1", "a0", "a1"), trace)
+        assertEquals(listOf("a0", "b0", "b1", "a1"), trace)
     }
 
     @Test

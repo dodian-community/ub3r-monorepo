@@ -4,12 +4,14 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.mining.MiningData
+import net.dodian.uber.game.skills.mining.MiningService
 
 object MiningRocksObjects : ObjectContent {
-    override val objectIds: IntArray = MiningDefinitions.standardRocks.map { it.objectId }.toIntArray()
+    override val objectIds: IntArray = MiningData.allRockObjectIds
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        val rock = MiningDefinitions.rocksByObjectId[objectId] ?: return false
+        val rock = MiningData.rockByObjectId[objectId] ?: return false
         return MiningService.startMining(client, rock, position)
     }
 }

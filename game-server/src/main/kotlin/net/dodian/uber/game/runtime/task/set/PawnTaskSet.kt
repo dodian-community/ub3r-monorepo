@@ -21,7 +21,7 @@ class PawnTaskSet<OWNER : Any>(
             }
             task.cycle()
             if (task.isFinished()) {
-                queue.removeFirst()
+                queue.remove(task)
                 continue
             }
             return

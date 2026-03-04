@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.impl.mining
+package net.dodian.uber.game.skills.mining
 
 import io.netty.channel.embedded.EmbeddedChannel
 import java.lang.reflect.Proxy
@@ -13,6 +13,7 @@ import net.dodian.uber.game.model.item.Item
 import net.dodian.uber.game.model.item.ItemManager
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.runtime.task.GameTaskRuntime
+import net.dodian.uber.game.runtime.task.TaskPriority
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -49,8 +50,8 @@ class MiningServiceTest {
     @Test
     fun `speed formula matches old java behavior without boost`() {
         val client = activeClient(2, 102, miningLevel = 61)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7458)
-        val pickaxe = MiningDefinitions.pickaxeByItemId.getValue(1275)
+        val rock = MiningData.rockByObjectId.getValue(7458)
+        val pickaxe = MiningData.pickaxeByItemId.getValue(1275)
 
         val delay = MiningService.computeMiningDelayMs(client, rock, pickaxe, boostRoll = 2)
 
@@ -60,8 +61,8 @@ class MiningServiceTest {
     @Test
     fun `dragon tier boost branch matches old logic`() {
         val client = activeClient(3, 103, miningLevel = 61)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7458)
-        val pickaxe = MiningDefinitions.pickaxeByItemId.getValue(11920)
+        val rock = MiningData.rockByObjectId.getValue(7458)
+        val pickaxe = MiningData.pickaxeByItemId.getValue(11920)
 
         val boostedDelay = MiningService.computeMiningDelayMs(client, rock, pickaxe, boostRoll = 1)
         val normalDelay = MiningService.computeMiningDelayMs(client, rock, pickaxe, boostRoll = 2)
@@ -72,7 +73,7 @@ class MiningServiceTest {
 
     @Test
     fun `rune essence uses special rest threshold and no random gems`() {
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7471)
+        val rock = MiningData.rockByObjectId.getValue(7471)
 
         assertEquals(1436, rock.oreItemId)
         assertFalse(rock.randomGemEligible)
@@ -103,7 +104,7 @@ class MiningServiceTest {
     @Test
     fun `mining starts a player task and state`() {
         val client = minerClient(6, 106)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
 
         val started = MiningService.startMining(client, rock, client.position.copy())
 
@@ -115,7 +116,7 @@ class MiningServiceTest {
     @Test
     fun `mining success grants ore and xp`() {
         val client = minerClient(7, 107)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
         val startedXp = client.getExperience(Skill.MINING)
 
         MiningService.startMining(client, rock, client.position.copy())
@@ -129,9 +130,66 @@ class MiningServiceTest {
     }
 
     @Test
+    fun `coal mining survives startup cycles and later gathers ore`() {
+        val client = minerClient(12, 112)
+        val rock = MiningData.rockByObjectId.getValue(7456)
+        val startedXp = client.getExperience(Skill.MINING)
+
+        MiningService.startMining(client, rock, client.position.copy())
+
+        GameTaskRuntime.cycle()
+        assertNotNull(client.miningState)
+        assertFalse(client.playerHasItem(453))
+
+        client.lastAction = 0L
+        GameTaskRuntime.cycle()
+
+        assertTrue(client.playerHasItem(453))
+        assertTrue(client.getExperience(Skill.MINING) > startedXp)
+        assertNotNull(client.miningState)
+        assertEquals(1, client.miningState!!.resourcesGathered)
+    }
+
+    @Test
+    fun `nested start inside another player task still gathers ore`() {
+        val client = minerClient(13, 113)
+        val rock = MiningData.rockByObjectId.getValue(7451)
+
+        GameTaskRuntime.queuePlayer(client) {
+            MiningService.startMining(client, rock, client.position.copy())
+        }
+
+        GameTaskRuntime.cycle()
+        assertNotNull(client.miningState)
+        assertNotNull(client.miningTaskHandle)
+        assertFalse(client.playerHasItem(436))
+
+        client.lastAction = 0L
+        GameTaskRuntime.cycle()
+
+        assertTrue(client.playerHasItem(436))
+        assertNotNull(client.miningState)
+    }
+
+    @Test
+    fun `repeated mining can gather more than one ore`() {
+        val client = minerClient(14, 114)
+        val rock = MiningData.rockByObjectId.getValue(7451)
+
+        MiningService.startMining(client, rock, client.position.copy())
+        client.lastAction = 0L
+        GameTaskRuntime.cycle()
+        assertEquals(1, client.miningState!!.resourcesGathered)
+
+        client.lastAction = 0L
+        GameTaskRuntime.cycle()
+        assertEquals(2, client.miningState!!.resourcesGathered)
+    }
+
+    @Test
     fun `mining stops on full inventory`() {
         val client = minerClient(8, 108)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
 
         MiningService.startMining(client, rock, client.position.copy())
         Arrays.fill(client.playerItems, 1)
@@ -146,7 +204,7 @@ class MiningServiceTest {
     @Test
     fun `mining stops on missing pickaxe`() {
         val client = minerClient(9, 109)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
 
         MiningService.startMining(client, rock, client.position.copy())
         client.getEquipment()[Equipment.Slot.WEAPON.id] = -1
@@ -161,7 +219,7 @@ class MiningServiceTest {
     @Test
     fun `mining stops when player moves away`() {
         val client = minerClient(10, 110)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
 
         MiningService.startMining(client, rock, client.position.copy())
         client.miningState = client.miningState!!.copy(rockPosition = Position(client.position.x + 10, client.position.y + 10, client.position.z))
@@ -174,7 +232,7 @@ class MiningServiceTest {
     @Test
     fun `reset action cancels mining task and clears state`() {
         val client = minerClient(11, 111)
-        val rock = MiningDefinitions.rocksByObjectId.getValue(7451)
+        val rock = MiningData.rockByObjectId.getValue(7451)
 
         MiningService.startMining(client, rock, client.position.copy())
         client.resetAction(true)
@@ -207,6 +265,7 @@ class MiningServiceTest {
         }
         val manager = Server.itemManager
         manager.items[436] = fakeItem(436, "Copper ore")
+        manager.items[453] = fakeItem(453, "Coal")
         manager.items[1436] = fakeItem(1436, "Rune essence")
         manager.items[1621] = fakeItem(1621, "Emerald")
         manager.items[1704] = fakeItem(1704, "Amulet of glory")

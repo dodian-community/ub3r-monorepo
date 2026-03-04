@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.impl.mining
+package net.dodian.uber.game.skills.mining
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client

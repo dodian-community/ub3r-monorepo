@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.impl.mining
+package net.dodian.uber.game.skills.mining
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -9,24 +9,26 @@ class MiningDefinitionsTest {
 
     @Test
     fun `every standard rock object id resolves uniquely`() {
-        assertEquals(MiningDefinitions.standardRocks.size, MiningDefinitions.rocksByObjectId.size)
-        MiningDefinitions.standardRocks.forEach { rock ->
-            assertEquals(rock, MiningDefinitions.rocksByObjectId[rock.objectId])
+        assertEquals(17, MiningData.rockByObjectId.size)
+        MiningData.rocks.forEach { rock ->
+            rock.objectIds.forEach { objectId ->
+                assertEquals(rock, MiningData.rockByObjectId[objectId])
+            }
         }
     }
 
     @Test
     fun `legacy rock rows are represented in definitions`() {
-        assertEquals(17, MiningDefinitions.standardRocks.size)
-        assertNotNull(MiningDefinitions.rocksByObjectId[7471])
-        assertNotNull(MiningDefinitions.rocksByObjectId[7494])
-        assertTrue(MiningDefinitions.standardRocks.any { it.oreItemId == 1436 && !it.randomGemEligible && it.restThreshold == 14 })
+        assertEquals(9, MiningData.rocks.size)
+        assertNotNull(MiningData.rockByObjectId[7471])
+        assertNotNull(MiningData.rockByObjectId[7494])
+        assertTrue(MiningData.rocks.any { it.oreItemId == 1436 && !it.randomGemEligible && it.restThreshold == 14 })
     }
 
     @Test
     fun `pickaxes are ordered from strongest to weakest`() {
-        val ids = MiningDefinitions.pickaxesDescending.map { it.itemId }
+        val ids = MiningData.pickaxesDescending.map { it.itemId }
         assertEquals(listOf(20014, 11920, 1275, 1271, 1273, 12297, 1269, 1267, 1265), ids)
-        assertEquals(MiningDefinitions.pickaxesDescending.size, MiningDefinitions.pickaxeByItemId.size)
+        assertEquals(MiningData.pickaxesDescending.size, MiningData.pickaxeByItemId.size)
     }
 }
