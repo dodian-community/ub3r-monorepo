@@ -91,6 +91,7 @@ public class Client extends Player implements Runnable {
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
+    private long lastEffectsPeriodicDirtyAtMs = 0L;
     /**
      * Tracks if the client window currently has focus.
      */
@@ -593,8 +594,21 @@ public class Client extends Player implements Runnable {
             processedCount++;
 
             try {
-                dispatchQueuedPacket(packet);
-                markSaveDirty(PlayerSaveSegment.ALL_MASK);
+                if (getInboundOpcodeProfilingEnabled()) {
+                    long startNs = System.nanoTime();
+                    dispatchQueuedPacket(packet);
+                    long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
+                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
+                        println_debug(
+                                "Slow inbound opcode " + packet.getOpcode() +
+                                        " size=" + packet.getSize() +
+                                        " player=" + getPlayerName() +
+                                        " took=" + elapsedMs + "ms"
+                        );
+                    }
+                } else {
+                    dispatchQueuedPacket(packet);
+                }
             } catch (Exception ex) {
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
@@ -731,18 +745,6 @@ public class Client extends Player implements Runnable {
 
         // Send the logout packet
         send(new Logout());
-
-        // Wait a short time to ensure the packet is processed by the client
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // Ignore
-        }
-
-        // Now close the connection
-        if (getChannel() != null && getChannel().isActive()) {
-            getChannel().close();
-        }
     }
 
     public void saveStats(PlayerSaveReason reason, boolean logout, boolean updateProgress) {
@@ -822,6 +824,7 @@ public class Client extends Player implements Runnable {
             send(new RemoveInterfaces());
             return;
         }
+        boolean bankChanged = false;
         int id = GetNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
@@ -839,11 +842,13 @@ public class Client extends Player implements Runnable {
                         if (bankItemsN[fromSlot] > amount) {
                             if (addItem((bankItems[fromSlot] - 1), amount)) {
                                 bankItemsN[fromSlot] -= amount;
+                                bankChanged = true;
                             }
                         } else {
                             if (addItem(itemID, bankItemsN[fromSlot])) {
                                 bankItems[fromSlot] = 0;
                                 bankItemsN[fromSlot] = 0;
+                                bankChanged = true;
                             }
                         }
                     } else {
@@ -851,6 +856,7 @@ public class Client extends Player implements Runnable {
                             if (bankItemsN[fromSlot] > 0) {
                                 if (addItem(itemID, 1)) {
                                     bankItemsN[fromSlot] -= 1;
+                                    bankChanged = true;
                                     amount--;
                                 } else {
                                     amount = 0;
@@ -864,11 +870,13 @@ public class Client extends Player implements Runnable {
                     if (bankItemsN[fromSlot] > amount) {
                         if (addItem(id, amount)) {
                             bankItemsN[fromSlot] -= amount;
+                            bankChanged = true;
                         }
                     } else {
                         if (addItem(id, bankItemsN[fromSlot])) {
                             bankItems[fromSlot] = 0;
                             bankItemsN[fromSlot] = 0;
+                            bankChanged = true;
                         }
                     }
                 } else {
@@ -877,11 +885,13 @@ public class Client extends Player implements Runnable {
                         if (bankItemsN[fromSlot] > amount) {
                             if (addItem(itemID, amount)) {
                                 bankItemsN[fromSlot] -= amount;
+                                bankChanged = true;
                             }
                         } else {
                             if (addItem(itemID, bankItemsN[fromSlot])) {
                                 bankItems[fromSlot] = 0;
                                 bankItemsN[fromSlot] = 0;
+                                bankChanged = true;
                             }
                         }
                     } else {
@@ -889,6 +899,7 @@ public class Client extends Player implements Runnable {
                             if (bankItemsN[fromSlot] > 0) {
                                 if (addItem(itemID, 1)) {
                                     bankItemsN[fromSlot] -= 1;
+                                    bankChanged = true;
                                     amount--;
                                 } else {
                                     amount = 0;
@@ -902,6 +913,9 @@ public class Client extends Player implements Runnable {
             }
         }
         checkItemUpdate();
+        if (bankChanged) {
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
+        }
     }
 
     public int getInvAmt(int itemID) {
@@ -941,6 +955,7 @@ public class Client extends Player implements Runnable {
         int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
         amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
         addExperience(amount, skill);
+        markSaveDirty(PlayerSaveSegment.STATS.getMask());
         int animation = -1;
         if (newLevel - oldLevel > 0) {
             animation = 199;
@@ -1007,6 +1022,7 @@ public class Client extends Player implements Runnable {
             send(new RemoveInterfaces());
             return;
         }
+        boolean bankChanged = false;
         int id = GetUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
@@ -1035,11 +1051,13 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
+                    bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
                     }
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         send(new SendMessage("Bank full!"));
                         return;
@@ -1048,6 +1066,7 @@ public class Client extends Player implements Runnable {
                 } else if (alreadyInBank) {
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         send(new SendMessage("Bank full!"));
                         return;
@@ -1089,6 +1108,7 @@ public class Client extends Player implements Runnable {
                         if (itemExists) {
                             bankItems[toBankSlot] = playerItems[firstPossibleSlot];
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1109,6 +1129,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1145,11 +1166,13 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
+                    bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
                     }
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         return;
                     }
@@ -1157,6 +1180,7 @@ public class Client extends Player implements Runnable {
                 } else if (alreadyInBank) {
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         return;
                     }
@@ -1197,6 +1221,7 @@ public class Client extends Player implements Runnable {
                         if (itemExists) {
                             bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1217,6 +1242,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1229,6 +1255,9 @@ public class Client extends Player implements Runnable {
             }
         } else {
             send(new SendMessage("Item not supported " + itemID));
+        }
+        if (bankChanged) {
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
         }
     }
 
@@ -1278,6 +1307,7 @@ public class Client extends Player implements Runnable {
             playerItemsN[to] = playerItemsN[from];
             playerItems[from] = tempI;
             playerItemsN[from] = tempN;
+            markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
         if (moveWindow == 5382 && from >= 0 && to >= 0 && from < bankSize() && to < bankSize()) {
@@ -1287,6 +1317,7 @@ public class Client extends Player implements Runnable {
             bankItemsN[from] = bankItemsN[to];
             bankItems[to] = tempI;
             bankItemsN[to] = tempN;
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
             resetBank();
         }
     }
@@ -1424,6 +1455,7 @@ public class Client extends Player implements Runnable {
                     } else {
                         playerItemsN[i] = maxItemAmount;
                     }
+                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
                     return true;
                 }
             }
@@ -1431,6 +1463,7 @@ public class Client extends Player implements Runnable {
                 if (playerItems[i] <= 0) {
                     playerItems[i] = item + 1;
                     playerItemsN[i] = Math.min(amount, maxItemAmount);
+                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
                     return true;
                 }
             }
@@ -1448,6 +1481,7 @@ public class Client extends Player implements Runnable {
                 return false;
             }
             playerItemsN[slot] = playerItemsN[slot] + amount;
+            markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             checkItemUpdate();
             return true;
         } else {
@@ -1460,6 +1494,7 @@ public class Client extends Player implements Runnable {
         item++;
         playerItems[slot] = item;
         playerItemsN[slot] = amount;
+        markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
         checkItemUpdate();
     }
 
@@ -1500,6 +1535,7 @@ public class Client extends Player implements Runnable {
                     playerItemsN[slot] = 0;
                     playerItems[slot] = 0;
                 }
+                markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             }
         }
     }
@@ -1513,6 +1549,7 @@ public class Client extends Player implements Runnable {
                     bankItemsN[slot] = 0;
                     bankItems[slot] = 0;
                 }
+                markSaveDirty(PlayerSaveSegment.BANK.getMask());
                 checkItemUpdate();
             }
         }
@@ -1593,6 +1630,7 @@ public class Client extends Player implements Runnable {
             getEquipment()[targetSlot] = wearID;
             getEquipmentN()[targetSlot] = wearAmount;
             setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
+            markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
             getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         }
@@ -1775,8 +1813,6 @@ public class Client extends Player implements Runnable {
         int startingX = getPosition().getX();
         int startingY = getPosition().getY();
         int startingZ = getPosition().getZ();
-        int startingEffectsHash = effects.hashCode();
-        int startingBoostedHash = Arrays.hashCode(boostedLevel);
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));
@@ -1825,21 +1861,30 @@ public class Client extends Player implements Runnable {
                 lastRecover = 4;
 
                 Skill.enabledSkills().forEach(skill -> {
+                    boolean changed = false;
                     switch (skill) {
                         case HITPOINTS:
                             if (getCurrentHealth() < getMaxHealth())
+                            {
                                 heal(1); //Not sure if we should remove 1 to max health!
+                                changed = true;
+                            }
                             break;
                         case PRAYER: //Do not restore prayer!
                             break;
                         default:
-                            if (boostedLevel[skill.getId()] > 0)
+                            int before = boostedLevel[skill.getId()];
+                            if (before > 0)
                                 boostedLevel[skill.getId()]--;
-                            else if (boostedLevel[skill.getId()] != 0)
+                            else if (before != 0)
                                 boostedLevel[skill.getId()]++;
+                            changed = boostedLevel[skill.getId()] != before;
                             break;
                     }
-                    refreshSkill(skill);
+                    if (changed) {
+                        refreshSkill(skill);
+                        markSaveDirty(PlayerSaveSegment.STATS.getMask());
+                    }
                 });
             }
         }
@@ -2066,8 +2111,20 @@ public class Client extends Player implements Runnable {
         if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
             markSaveDirty(PlayerSaveSegment.POSITION.getMask());
         }
-        if (startingEffectsHash != effects.hashCode() || startingBoostedHash != Arrays.hashCode(boostedLevel)) {
-            markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
+        // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
+        // and always on final save/logout.
+        if (!effects.isEmpty()) {
+            boolean hasActiveEffect = false;
+            for (int i = 0; i < effects.size(); i++) {
+                if (effects.get(i) != null && effects.get(i) > 0) {
+                    hasActiveEffect = true;
+                    break;
+                }
+            }
+            if (hasActiveEffect && now - lastEffectsPeriodicDirtyAtMs >= 10_000L) {
+                markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
+                lastEffectsPeriodicDirtyAtMs = now;
+            }
         }
     }
 
@@ -6653,8 +6710,10 @@ public class Client extends Player implements Runnable {
             if (getEquipmentN()[trueSlots[i]] > 0) {
                 int id = getEquipment()[trueSlots[i]];
                 int amount = getEquipmentN()[trueSlots[i]];
-                if (remove(trueSlots[i], true))
+                if (remove(trueSlots[i], true)) {
+                    markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
                     addItem(id, amount);
+                }
                 checkItemUpdate();
             }
         }

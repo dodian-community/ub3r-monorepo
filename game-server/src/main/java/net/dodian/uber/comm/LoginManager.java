@@ -25,6 +25,12 @@ import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
 
+    /**
+     * Internal-only return code used to signal that a final save is still pending for this account.
+     * This must never be sent directly to the client; the account lane will retry/wait briefly.
+     */
+    public static final int FINAL_SAVE_PENDING_INTERNAL = 98;
+
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
         int returnCode = 0;
         if (PlayerHandler.isPlayerOn(playerName))
@@ -40,7 +46,7 @@ public class LoginManager {
                 /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
                 if (AccountPersistenceService.isFinalSavePending(p.dbId)) {
-                    return 5;
+                    return FINAL_SAVE_PENDING_INTERNAL;
                 }
                 p.playerGroup = results.getInt("usergroupid");
                 p.otherGroups = results.getString("membergroupids").split(",");

@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.runtime.interaction.InteractionProcessor;
+import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
@@ -31,6 +32,7 @@ public class EntityProcessor implements Runnable {
     @Override
     public void run() {
         long now = System.currentTimeMillis();
+        GameThreadTaskQueue.drain();
         runInboundPacketPhase();
         runNpcMainPhase(now);
         runPlayerMainPhase();
@@ -215,7 +217,7 @@ public class EntityProcessor implements Runnable {
                 maxPendingBefore = pendingBefore;
             }
 
-            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT);
+            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
 
             int pendingAfter = player.getPendingInboundPacketCount();
             totalPendingAfter += pendingAfter;

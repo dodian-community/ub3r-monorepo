@@ -32,6 +32,7 @@ object PlayerSaveService {
     private val pending = ConcurrentHashMap<Int, PlayerSaveRequest>()
     private val pendingFinalSaves = ConcurrentHashMap.newKeySet<Int>()
     private val activeDbId = AtomicInteger(-1)
+    private val activeFinalDbId = AtomicInteger(-1)
     private val oldestQueuedAt = AtomicLong(0)
     private val lastWriteDurationMs = AtomicLong(0)
     private val totalRetries = AtomicLong(0)
@@ -70,6 +71,9 @@ object PlayerSaveService {
             }
 
         queue(PlayerSaveRequest(envelope = envelope, shadowSnapshot = shadowSnapshot))
+        if (!finalSave) {
+            client.clearSaveDirtyMask(dirtyMask)
+        }
     }
 
     @JvmStatic
@@ -99,7 +103,7 @@ object PlayerSaveService {
 
     @JvmStatic
     fun isFinalSavePending(dbId: Int): Boolean =
-        pendingFinalSaves.contains(dbId) || activeDbId.get() == dbId
+        pendingFinalSaves.contains(dbId) || activeFinalDbId.get() == dbId
 
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
@@ -140,9 +144,24 @@ object PlayerSaveService {
             return
         }
         ensureStarted()
-        pending[request.envelope.dbId] = request
-        if (request.envelope.finalSave) {
-            pendingFinalSaves += request.envelope.dbId
+        val dbId = request.envelope.dbId
+        val chosen =
+            pending.compute(dbId) { _, existing ->
+                if (existing == null) {
+                    request
+                } else if (existing.envelope.finalSave && !request.envelope.finalSave) {
+                    // Never allow a periodic save to overwrite a queued final save.
+                    existing
+                } else if (!existing.envelope.finalSave && request.envelope.finalSave) {
+                    request
+                } else {
+                    if (request.envelope.sequence >= existing.envelope.sequence) request else existing
+                }
+            } ?: request
+        if (chosen.envelope.finalSave) {
+            pendingFinalSaves += dbId
+        } else {
+            pendingFinalSaves.remove(dbId)
         }
         oldestQueuedAt.compareAndSet(0L, System.currentTimeMillis())
     }
@@ -165,11 +184,14 @@ object PlayerSaveService {
             val next = nextPendingRequest() ?: break
             val dbId = next.envelope.dbId
             activeDbId.set(dbId)
+            activeFinalDbId.set(if (next.envelope.finalSave) dbId else -1)
             try {
                 handleRequest(next)
             } finally {
                 activeDbId.set(-1)
-                if (!pending.containsKey(dbId)) {
+                activeFinalDbId.set(-1)
+                val stillFinalQueued = pending[dbId]?.envelope?.finalSave == true
+                if (!stillFinalQueued) {
                     pendingFinalSaves.remove(dbId)
                 }
                 if (pending.isEmpty()) {
@@ -195,7 +217,9 @@ object PlayerSaveService {
                 withTimeoutOrNull(playerSaveRequestTimeoutMs) {
                     measureTimeMillis {
                         val snapshot = repository.buildSnapshot(request.envelope)
-                        request.shadowSnapshot?.let { shadow -> compareShadow(shadow, snapshot) }
+                        if (request.envelope.finalSave || request.envelope.updateProgress) {
+                            request.shadowSnapshot?.let { shadow -> compareShadow(shadow, snapshot) }
+                        }
                         repository.saveEnvelope(request.envelope)
                     }
                 }

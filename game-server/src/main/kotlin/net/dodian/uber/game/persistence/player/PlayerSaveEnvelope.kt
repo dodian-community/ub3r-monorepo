@@ -26,41 +26,12 @@ data class PlayerSaveEnvelope(
     val updateProgress: Boolean,
     val finalSave: Boolean,
     val dirtyMask: Int,
-    val totalLevel: Int,
-    val combatLevel: Int,
-    val totalXp: Int,
-    val skillExperience: IntArray,
-    val inventory: List<ItemSlotEntry>,
-    val bank: List<ItemSlotEntry>,
-    val equipment: List<ItemSlotEntry>,
-    val bossLog: List<NamedCountEntry>,
-    val monsterLog: List<NamedCountEntry>,
-    val effects: List<Int>,
-    val dailyReward: List<String>,
-    val prayerButtons: List<Int>,
-    val boostedLevels: IntArray,
-    val currentPrayer: Int,
-    val lastRecover: Int,
-    val friends: List<Long>,
-    val currentHealth: Int,
-    val fightType: Int,
-    val slayerData: String,
-    val essencePouch: String,
-    val autocastSpellIndex: Int,
-    val latestNews: Int,
-    val agilityCourseStage: Int,
-    val x: Int,
-    val y: Int,
-    val height: Int,
-    val farming: String,
-    val songUnlocked: String,
-    val travel: String,
-    val look: String,
-    val unlocks: String,
-    val loginDurationMs: Long,
+    val saveRevisionAtCapture: Long,
     val segments: List<PlayerSaveSegmentSnapshot>,
 ) {
     companion object {
+        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled }
+
         @JvmStatic
         fun fromClient(
             client: Client,
@@ -70,14 +41,7 @@ data class PlayerSaveEnvelope(
             finalSave: Boolean,
             dirtyMask: Int,
         ): PlayerSaveEnvelope {
-            val enabledSkills = Skill.values().filter { it.isEnabled }
-            val skillExperience = IntArray(enabledSkills.size)
-            var totalXp = 0
-            enabledSkills.forEachIndexed { index, skill ->
-                val experience = client.getExperience(skill)
-                skillExperience[index] = experience
-                totalXp += experience
-            }
+            fun has(segment: PlayerSaveSegment): Boolean = dirtyMask and segment.mask != 0
 
             fun collectSlots(ids: IntArray, amounts: IntArray, transform: (Int) -> Int): List<ItemSlotEntry> {
                 val entries = ArrayList<ItemSlotEntry>(ids.size)
@@ -91,30 +55,104 @@ data class PlayerSaveEnvelope(
                 return entries
             }
 
-            val inventory = collectSlots(client.playerItems.clone(), client.playerItemsN.clone()) { rawId -> rawId - 1 }
-            val bank = collectSlots(client.bankItems.clone(), client.bankItemsN.clone()) { rawId -> rawId - 1 }
-            val equipment = collectSlots(client.equipment.clone(), client.equipmentN.clone()) { rawId -> rawId }
-
-            val bossLog = client.boss_name.indices.map { index ->
-                NamedCountEntry(client.boss_name[index], client.boss_amount[index])
+            val segments = ArrayList<PlayerSaveSegmentSnapshot>(8)
+            val skillExperience = IntArray(ENABLED_SKILLS.size)
+            var totalXp = 0
+            ENABLED_SKILLS.forEachIndexed { index, skill ->
+                val experience = client.getExperience(skill)
+                skillExperience[index] = experience
+                totalXp += experience
             }
-
-            val monsterLog = client.monsterName.indices.map { index ->
-                NamedCountEntry(client.monsterName[index], client.monsterCount[index])
-            }
-
-            val effects = client.effects.toList()
-            val rewards = ArrayList<String>(client.dailyReward.size)
-            rewards.addAll(client.dailyReward)
             val prayerButtons =
-                Prayers.Prayer.values().filter { prayer -> client.prayerManager.isPrayerOn(prayer) }.map { it.buttonId }
-            val boosted =
-                IntArray(client.boostedLevel.size) { index -> client.boostedLevel[index] }
-            val friends =
-                client.friends
-                    .filter { friend: Friend -> friend.name > 0 }
-                    .take(200)
-                    .map { friend -> friend.name }
+                Prayers.Prayer.values()
+                    .filter { prayer -> client.prayerManager.isPrayerOn(prayer) }
+                    .map { it.buttonId }
+                    .toIntArray()
+            val boosted = IntArray(client.boostedLevel.size) { index -> client.boostedLevel[index] }
+            segments +=
+                StatsSegmentSnapshot(
+                    totalLevel = client.totalLevel(),
+                    combatLevel = client.determineCombatLevel(),
+                    totalXp = totalXp,
+                    skillExperience = skillExperience,
+                    currentHealth = client.currentHealth,
+                    currentPrayer = client.currentPrayer,
+                    prayerButtons = prayerButtons,
+                    boostedLevels = boosted,
+                    lastRecover = client.lastRecover,
+                    fightType = client.fightType,
+                )
+
+            if (has(PlayerSaveSegment.INVENTORY)) {
+                segments +=
+                    InventorySegmentSnapshot(
+                        collectSlots(client.playerItems.clone(), client.playerItemsN.clone()) { rawId -> rawId - 1 },
+                    )
+            }
+            if (has(PlayerSaveSegment.BANK)) {
+                segments +=
+                    BankSegmentSnapshot(
+                        collectSlots(client.bankItems.clone(), client.bankItemsN.clone()) { rawId -> rawId - 1 },
+                    )
+            }
+            if (has(PlayerSaveSegment.EQUIPMENT)) {
+                segments +=
+                    EquipmentSegmentSnapshot(
+                        collectSlots(client.equipment.clone(), client.equipmentN.clone()) { rawId -> rawId },
+                    )
+            }
+            if (has(PlayerSaveSegment.POSITION)) {
+                segments += PositionSegmentSnapshot(client.position.x, client.position.y, client.position.z)
+            }
+            if (has(PlayerSaveSegment.SOCIAL)) {
+                val friends =
+                    client.friends
+                        .filter { friend: Friend -> friend.name > 0 }
+                        .take(200)
+                        .map { friend -> friend.name }
+                segments += SocialSegmentSnapshot(friends)
+            }
+            if (has(PlayerSaveSegment.SLAYER)) {
+                segments +=
+                    SlayerSegmentSnapshot(
+                        slayerData = client.saveTaskAsString(),
+                        essencePouch = client.getPouches(),
+                        autocastSpellIndex = client.autocast_spellIndex,
+                    )
+            }
+            if (has(PlayerSaveSegment.FARMING)) {
+                val rewards = ArrayList<String>(client.dailyReward.size)
+                rewards.addAll(client.dailyReward)
+                segments += FarmingSegmentSnapshot(farming = client.farmingJson.farmingSave(), dailyReward = rewards)
+            }
+            if (has(PlayerSaveSegment.EFFECTS)) {
+                segments += EffectsSegmentSnapshot(client.effects.toList())
+            }
+            if (has(PlayerSaveSegment.LOOKS)) {
+                segments +=
+                    LooksSegmentSnapshot(
+                        songUnlocked = client.songUnlockedSaveText,
+                        travel = client.saveTravelAsString(),
+                        look = client.look,
+                        unlocks = client.saveUnlocksAsString(),
+                    )
+            }
+            if (has(PlayerSaveSegment.META)) {
+                val bossLog =
+                    client.boss_name.indices.map { index -> NamedCountEntry(client.boss_name[index], client.boss_amount[index]) }
+                val monsterLog =
+                    client.monsterName.indices.map { index ->
+                        NamedCountEntry(client.monsterName[index], client.monsterCount[index])
+                    }
+                segments +=
+                    MetaSegmentSnapshot(
+                        latestNews = client.latestNews,
+                        agilityCourseStage = client.agilityCourseStage,
+                        bossLog = bossLog,
+                        monsterLog = monsterLog,
+                        loginDurationMs = System.currentTimeMillis() - client.session_start,
+                    )
+            }
 
             return PlayerSaveEnvelope(
                 sequence = sequence,
@@ -125,41 +163,8 @@ data class PlayerSaveEnvelope(
                 updateProgress = updateProgress,
                 finalSave = finalSave,
                 dirtyMask = dirtyMask,
-                totalLevel = client.totalLevel(),
-                combatLevel = client.determineCombatLevel(),
-                totalXp = totalXp,
-                skillExperience = skillExperience,
-                inventory = inventory,
-                bank = bank,
-                equipment = equipment,
-                bossLog = bossLog,
-                monsterLog = monsterLog,
-                effects = effects,
-                dailyReward = rewards,
-                prayerButtons = prayerButtons,
-                boostedLevels = boosted,
-                currentPrayer = client.currentPrayer,
-                lastRecover = client.lastRecover,
-                friends = friends,
-                currentHealth = client.currentHealth,
-                fightType = client.fightType,
-                slayerData = client.saveTaskAsString(),
-                essencePouch = client.getPouches(),
-                autocastSpellIndex = client.autocast_spellIndex,
-                latestNews = client.latestNews,
-                agilityCourseStage = client.agilityCourseStage,
-                x = client.position.x,
-                y = client.position.y,
-                height = client.position.z,
-                farming = client.farmingJson.farmingSave(),
-                songUnlocked = client.songUnlockedSaveText,
-                travel = client.saveTravelAsString(),
-                look = client.look,
-                unlocks = client.saveUnlocksAsString(),
-                loginDurationMs = System.currentTimeMillis() - client.session_start,
-                segments = PlayerSaveSegment.fromMask(dirtyMask).map { segment ->
-                    PlayerSaveSegmentSnapshot(segment = segment)
-                },
+                saveRevisionAtCapture = client.saveRevision,
+                segments = segments,
             )
         }
     }

@@ -54,7 +54,8 @@ class PlayerSyncRevisionIndex {
         val iterator = subjectStates.entries.iterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
-            if (seen.containsKey(entry.key)) {
+            val player = entry.key
+            if (seen.containsKey(player)) {
                 continue
             }
             val state = entry.value
@@ -62,7 +63,7 @@ class PlayerSyncRevisionIndex {
                 activityIndex.bump(net.dodian.uber.game.model.chunk.Chunk(state.lastChunkX, state.lastChunkY), state.lastLevel)
             }
             iterator.remove()
-            viewerStates.remove(entry.key)
+            viewerStates.remove(player)
         }
     }
 

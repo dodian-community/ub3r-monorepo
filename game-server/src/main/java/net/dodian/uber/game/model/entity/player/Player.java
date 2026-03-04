@@ -52,7 +52,8 @@ public abstract class Player extends Entity {
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
-    private volatile int saveDirtyMask = PlayerSaveSegment.ALL_MASK;
+    // Start clean after account load; dirtiness is tracked by mutation sites.
+    private volatile int saveDirtyMask = 0;
     private volatile long lastSavedRevision = 0L;
     private volatile long saveRevision = 0L;
     private volatile long lastProcessedCycle = 0L;
@@ -286,6 +287,7 @@ public abstract class Player extends Entity {
             } else if (i == 1 && effects.get(i) == 0) {
                 addEffectTime(1, -1);
                 c.send(new SendMessage("<col=702963>Your antifire potion has expired."));
+                c.markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
             } else if(i == 2 && effects.get(i) == 0) { //Overload
                 for(int skill = 0; skill < 4; skill++) {
                     skill = skill == 3 ? 4 : skill;
@@ -294,6 +296,7 @@ public abstract class Player extends Entity {
                 }
                 addEffectTime(2, -1);
                 c.send(new SendMessage("Your overload effect is now over!"));
+                c.markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
             }
         }
     }
@@ -1487,6 +1490,7 @@ public abstract class Player extends Entity {
         boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
         boostedLevel[skill.getId()] = boosted;
         c.refreshSkill(skill);
+        c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
     }
 
     public int getCurrentPrayer() {
