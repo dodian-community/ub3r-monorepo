@@ -106,7 +106,7 @@ class MiningServiceTest {
         val client = minerClient(6, 106)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        val started = MiningService.startMining(client, rock, client.position.copy())
+        val started = MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
 
         assertTrue(started)
         assertNotNull(client.miningState)
@@ -119,7 +119,7 @@ class MiningServiceTest {
         val rock = MiningData.rockByObjectId.getValue(7451)
         val startedXp = client.getExperience(Skill.MINING)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         client.lastAction = 0L
 
         GameTaskRuntime.cycle()
@@ -135,7 +135,7 @@ class MiningServiceTest {
         val rock = MiningData.rockByObjectId.getValue(7456)
         val startedXp = client.getExperience(Skill.MINING)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
 
         GameTaskRuntime.cycle()
         assertNotNull(client.miningState)
@@ -156,7 +156,7 @@ class MiningServiceTest {
         val rock = MiningData.rockByObjectId.getValue(7451)
 
         GameTaskRuntime.queuePlayer(client) {
-            MiningService.startMining(client, rock, client.position.copy())
+            MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         }
 
         GameTaskRuntime.cycle()
@@ -176,7 +176,7 @@ class MiningServiceTest {
         val client = minerClient(14, 114)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         client.lastAction = 0L
         GameTaskRuntime.cycle()
         assertEquals(1, client.miningState!!.resourcesGathered)
@@ -191,7 +191,7 @@ class MiningServiceTest {
         val client = minerClient(8, 108)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         Arrays.fill(client.playerItems, 1)
         client.lastAction = 0L
 
@@ -206,7 +206,7 @@ class MiningServiceTest {
         val client = minerClient(9, 109)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         client.getEquipment()[Equipment.Slot.WEAPON.id] = -1
         client.lastAction = 0L
 
@@ -221,9 +221,44 @@ class MiningServiceTest {
         val client = minerClient(10, 110)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         client.miningState = client.miningState!!.copy(rockPosition = Position(client.position.x + 10, client.position.y + 10, client.position.z))
 
+        GameTaskRuntime.cycle()
+
+        assertNull(client.miningState)
+    }
+
+    @Test
+    fun `mining stops when only diagonally adjacent to rock`() {
+        val client = minerClient(16, 116)
+        val rock = MiningData.rockByObjectId.getValue(7451)
+
+        MiningService.startMining(client, rock, Position(client.position.x + 1, client.position.y + 1, client.position.z))
+        GameTaskRuntime.cycle()
+
+        assertNull(client.miningState)
+        assertNull(client.miningTaskHandle)
+    }
+
+    @Test
+    fun `mining continues when cardinal-adjacent to rock`() {
+        val client = minerClient(17, 117)
+        val rock = MiningData.rockByObjectId.getValue(7451)
+
+        MiningService.startMining(client, rock, Position(client.position.x + 1, client.position.y, client.position.z))
+        GameTaskRuntime.cycle()
+
+        assertNotNull(client.miningState)
+        assertNotNull(client.miningTaskHandle)
+    }
+
+    @Test
+    fun `mining start range remains adjacency based`() {
+        val client = minerClient(15, 115)
+        val rock = MiningData.rockByObjectId.getValue(7451)
+
+        MiningService.startMining(client, rock, Position(client.position.x + 4, client.position.y, client.position.z))
         GameTaskRuntime.cycle()
 
         assertNull(client.miningState)
@@ -234,7 +269,7 @@ class MiningServiceTest {
         val client = minerClient(11, 111)
         val rock = MiningData.rockByObjectId.getValue(7451)
 
-        MiningService.startMining(client, rock, client.position.copy())
+        MiningService.startMining(client, rock, cardinalAdjacentRockPosition(client))
         client.resetAction(true)
 
         assertNull(client.miningState)
@@ -257,6 +292,10 @@ class MiningServiceTest {
         Arrays.fill(client.getEquipment(), -1)
         PlayerHandler.playersOnline[slot.toLong()] = client
         return client
+    }
+
+    private fun cardinalAdjacentRockPosition(client: Client): Position {
+        return Position(client.position.x + 1, client.position.y, client.position.z)
     }
 
     private fun ensureItemManager() {

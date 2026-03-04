@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -102,6 +103,7 @@ object InteractionProcessor {
         }
 
         val routeStart = System.nanoTime()
+        val distanceMode = resolveObjectClickDistanceMode(intent.objectId)
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
@@ -109,7 +111,7 @@ object InteractionProcessor {
                 intent.objectId,
                 intent.objectData,
                 intent.objectDef,
-                ObjectInteractionDistance.DistanceMode.CLICK,
+                distanceMode,
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
@@ -371,6 +373,14 @@ object InteractionProcessor {
         player.activeInteraction = null
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
+    }
+
+    private fun resolveObjectClickDistanceMode(objectId: Int): ObjectInteractionDistance.DistanceMode {
+        return if (MiningData.rockByObjectId.containsKey(objectId)) {
+            ObjectInteractionDistance.DistanceMode.MINING
+        } else {
+            ObjectInteractionDistance.DistanceMode.CLICK
+        }
     }
 
     private fun slowLogIfNeeded(

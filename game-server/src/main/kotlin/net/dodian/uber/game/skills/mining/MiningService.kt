@@ -280,8 +280,12 @@ object MiningService {
     }
 
     private fun isNearRock(client: Client, rockPosition: Position): Boolean {
-        return client.position.z == rockPosition.z &&
-            client.GoodDistance(client.position.x, client.position.y, rockPosition.x, rockPosition.y, 1)
+        if (client.position.z != rockPosition.z) {
+            return false
+        }
+        val deltaX = kotlin.math.abs(client.position.x - rockPosition.x)
+        val deltaY = kotlin.math.abs(client.position.y - rockPosition.y)
+        return (deltaX + deltaY) == 1
     }
 
 }
