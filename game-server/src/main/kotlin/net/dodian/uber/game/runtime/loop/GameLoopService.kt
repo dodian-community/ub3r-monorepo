@@ -35,7 +35,6 @@ import net.dodian.uber.game.runtime.process.PlayerMainPhase
 import net.dodian.uber.game.runtime.process.WorldMaintenancePhase
 import org.slf4j.LoggerFactory
 import net.dodian.utilities.runtimeCycleLogEnabled
-import net.dodian.utilities.runtimeCycleLogIntervalTicks
 import net.dodian.utilities.runtimePhaseTimingEnabled
 import net.dodian.utilities.runtimePhaseWarnMs
 
@@ -75,6 +74,7 @@ class GameLoopService(
     private var excessCycleNanos = 0L
     private var debugTick = 0
     private var accumulatedCycleTimeMs = 0L
+    private var accumulatedLoggedMillis = 0L
 
     fun start() {
         if (!running.compareAndSet(false, true)) {
@@ -96,7 +96,7 @@ class GameLoopService(
                     if (overdue) {
                         logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
                     }
-                    maybeLogCycle(elapsedMillis, sleepTime)
+                    maybeLogCycle(elapsedMillis)
                     excessCycleNanos = elapsedNanos - TimeUnit.MILLISECONDS.toNanos(elapsedMillis)
                     delay(sleepTime)
                 }
@@ -158,30 +158,31 @@ class GameLoopService(
         }
     }
 
-    private fun maybeLogCycle(elapsedMillis: Long, sleepTime: Long) {
+    private fun maybeLogCycle(elapsedMillis: Long) {
         if (!runtimeCycleLogEnabled) {
             return
         }
-        val interval = runtimeCycleLogIntervalTicks.coerceAtLeast(1)
         debugTick++
         accumulatedCycleTimeMs += elapsedMillis
-        if (debugTick < interval) {
+        accumulatedLoggedMillis += GAME_TICK_INTERVAL_MS
+        if (accumulatedLoggedMillis < CYCLE_LOG_INTERVAL_MS) {
             return
         }
         val average = accumulatedCycleTimeMs.toDouble() / debugTick.toDouble()
         logger.info(
-            "[Cycle time: {}ms avg / {}ms last] [Sleep: {}ms] [Players: {}] [Tick: {}]",
+            "[Cycle time: {}ms avg / {}ms last] [Players: {}] [Tick: {}]",
             String.format("%.2f", average),
             elapsedMillis,
-            sleepTime,
             PlayerHandler.getPlayerCount(),
             currentCycle,
         )
         debugTick = 0
         accumulatedCycleTimeMs = 0L
+        accumulatedLoggedMillis = 0L
     }
 
     private companion object {
         private const val GAME_TICK_INTERVAL_MS = 600L
+        private const val CYCLE_LOG_INTERVAL_MS = 60_000L
     }
 }

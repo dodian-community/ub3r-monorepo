@@ -7,5 +7,4 @@ enum class SynchronizationStage {
     SYNC_NPC_ENCODE,
     SYNC_FLUSH,
     SYNC_FLAG_CLEAR,
-    SYNC_METRICS_LOG,
 }

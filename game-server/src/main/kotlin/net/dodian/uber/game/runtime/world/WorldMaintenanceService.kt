@@ -9,13 +9,10 @@ import net.dodian.uber.game.persistence.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
-import net.dodian.uber.game.runtime.world.metrics.WorldMaintenanceMetrics
 import net.dodian.utilities.farmingSchedulerEnabled
 import net.dodian.utilities.gameWorldId
 import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.worldMaintenanceMetricsLogIntervalRuns
 import net.dodian.utilities.worldMaintenanceEnabled
-import net.dodian.utilities.worldMaintenanceVerboseMetricsEnabled
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
@@ -27,7 +24,6 @@ class WorldMaintenanceService(
     private val playerIndex = OnlinePlayerIndex()
     private val pollApplier = TargetedWorldPollApplier()
     private val farmingScheduler = FarmingScheduler.INSTANCE
-    private val metrics = WorldMaintenanceMetrics(worldMaintenanceMetricsLogIntervalRuns)
     private var lastPlunderRunMs = 0L
     private var worldDbDueCycle = Long.MIN_VALUE
     private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
@@ -45,7 +41,6 @@ class WorldMaintenanceService(
             return
         }
         playerIndex.refresh()
-        metrics.recordPlayersIndexed(playerIndex.playerCount())
         val snapshot = timed(WorldMaintenanceStage.WORLD_DB_INPUT_BUILD) {
             createSnapshot(playerIndex)
         }
@@ -73,7 +68,6 @@ class WorldMaintenanceService(
         }
         pendingWorldPollResult = WorldPollResult.EMPTY
         worldDbDueCycle = Long.MIN_VALUE
-        maybeLogMetrics()
     }
 
     fun runFarming(cycle: Long) {
@@ -87,10 +81,8 @@ class WorldMaintenanceService(
         playerIndex.refresh()
         farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
         timed(WorldMaintenanceStage.FARMING_TICK) {
-            val (due, processed) = farmingScheduler.runDue(cycle)
-            metrics.recordFarming(due, processed)
+            farmingScheduler.runDue(cycle)
         }
-        maybeLogMetrics()
     }
 
     fun runPlunder(nowMs: Long) {
@@ -101,7 +93,6 @@ class WorldMaintenanceService(
             plunderDoor.run()
             lastPlunderRunMs = nowMs
         }
-        maybeLogMetrics()
     }
 
     private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldPollSnapshot =
@@ -115,19 +106,11 @@ class WorldMaintenanceService(
         val elapsed = measureNanoTime {
             result = block()
         }
-        metrics.record(stage, elapsed)
         val elapsedMs = elapsed / 1_000_000L
         if (elapsedMs >= runtimePhaseWarnMs) {
             logger.warn("World maintenance stage {} took {}ms", stage, elapsedMs)
         }
         return result as T
-    }
-
-    private fun maybeLogMetrics() {
-        if (!worldMaintenanceVerboseMetricsEnabled) {
-            return
-        }
-        metrics.finishRun(logger)
     }
 
     private companion object {

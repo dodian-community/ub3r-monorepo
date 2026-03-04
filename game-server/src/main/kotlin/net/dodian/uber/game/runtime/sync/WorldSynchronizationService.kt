@@ -13,7 +13,6 @@ import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
 import net.dodian.uber.game.runtime.sync.cache.RootSynchronizationCache
-import net.dodian.uber.game.runtime.sync.metrics.SynchronizationMetrics
 import net.dodian.uber.game.runtime.sync.npc.NpcChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.npc.NpcSyncDecision
 import net.dodian.uber.game.runtime.sync.npc.RootNpcDeltaIndex
@@ -28,8 +27,6 @@ import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
 import net.dodian.utilities.runtimePhaseWarnMs
 import net.dodian.utilities.syncAppearanceCacheEnabled
-import net.dodian.utilities.syncMetricsLogIntervalTicks
-import net.dodian.utilities.syncMetricsVerboseEnabled
 import net.dodian.utilities.syncNpcActivityIndexEnabled
 import net.dodian.utilities.syncPlayerActivityIndexEnabled
 import net.dodian.utilities.playerSynchronizationEnabled
@@ -44,7 +41,6 @@ class WorldSynchronizationService {
     private val logger = LoggerFactory.getLogger(WorldSynchronizationService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val npcUpdating = NpcUpdating.getInstance()
-    private val metrics = SynchronizationMetrics(syncMetricsLogIntervalTicks.coerceAtLeast(1))
     private val playerRevisionIndex = PlayerSyncRevisionIndex()
     private val npcRevisionIndex = RootNpcDeltaIndex()
     private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
@@ -103,11 +99,6 @@ class WorldSynchronizationService {
             }
         } finally {
             SynchronizationContext.clear()
-            if (syncMetricsVerboseEnabled) {
-                measure(cycle, SynchronizationStage.SYNC_METRICS_LOG) {
-                    metrics.record(cycle, PlayerHandler.getPlayerCount(), logger)
-                }
-            }
         }
     }
 
