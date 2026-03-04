@@ -39,28 +39,15 @@ public class OutboundPacketProcessor implements Runnable {
                 PlayerUpdating.resetDebugAddedLocalCounter();
             }
 
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                Client player = (Client) PlayerHandler.players[i];
-                if (player == null || !player.isActive) {
-                    continue;
-                }
-                updatePlayer(player, i);
+            java.util.List<Client> activePlayers = PlayerHandler.snapshotActivePlayers();
+            for (Client player : activePlayers) {
+                updatePlayer(player);
             }
 
-            java.util.ArrayList<Client> activePlayers = new java.util.ArrayList<>();
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                Client player = (Client) PlayerHandler.players[i];
-                if (player != null && player.isActive) {
-                    activePlayers.add(player);
-                }
-            }
+            activePlayers = PlayerHandler.snapshotActivePlayers();
             ZoneUpdateBus.flush(activePlayers);
 
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                Client player = (Client) PlayerHandler.players[i];
-                if (player == null || !player.isActive) {
-                    continue;
-                }
+            for (Client player : activePlayers) {
                 player.flushOutbound();
             }
 
@@ -69,11 +56,8 @@ public class OutboundPacketProcessor implements Runnable {
                     npc.clearUpdateFlags();
                 }
             }
-            for (int i = 0; i < Constants.maxPlayers; i++) {
-                Client player = (Client) PlayerHandler.players[i];
-                if (player != null && player.isActive) {
-                    player.clearUpdateFlags();
-                }
+            for (Client player : activePlayers) {
+                player.clearUpdateFlags();
             }
 
             if (DEBUG_ADDED_LOCAL_PLAYERS) {
@@ -84,7 +68,7 @@ public class OutboundPacketProcessor implements Runnable {
             }
         }
 
-        private static void updatePlayer(Client player, int playerIndex) {
+        private static void updatePlayer(Client player) {
             if (player.timeOutCounter >= 84) {
                 player.disconnected = true;
                 player.println_debug("\nRemove non-responding " + player.getPlayerName() + " after 60 seconds of disconnect! ");
@@ -94,7 +78,7 @@ public class OutboundPacketProcessor implements Runnable {
                 player.println_debug("\nRemove disconnected player " + player.getPlayerName());
                 Server.playerHandler.removePlayer(player);
                 player.disconnected = false;
-                PlayerHandler.players[playerIndex] = null;
+                PlayerHandler.players[player.getSlot()] = null;
             } else {
                 player.update();
             }

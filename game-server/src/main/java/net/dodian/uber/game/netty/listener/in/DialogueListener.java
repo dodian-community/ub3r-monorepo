@@ -7,6 +7,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.eventbus.GameEventBus;
+import net.dodian.uber.game.runtime.eventbus.events.DialogueContinueEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,10 @@ public class DialogueListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
+        if (GameEventBus.INSTANCE.postWithResult(new DialogueContinueEvent(client))) {
+            return;
+        }
+
         if (DialogueService.onContinue(client)) {
             return;
         }

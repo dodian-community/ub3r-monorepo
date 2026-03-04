@@ -20,6 +20,7 @@ public final class ObjectInteractionDistance {
 
     public enum DistanceMode {
         CLICK,
+        MINING,
         ITEM_ON_OBJECT,
         MAGIC,
     }
@@ -34,6 +35,10 @@ public final class ObjectInteractionDistance {
     ) {
         Position walkTo = task.getWalkToPosition();
         Position objectPosition = null;
+
+        if (mode == DistanceMode.MINING) {
+            return resolveMiningDistancePosition(client, walkTo, objectData, def, objectId);
+        }
 
         Object objectAtTile = new Object(objectId, walkTo.getX(), walkTo.getY(), walkTo.getZ(), 10);
         if (def != null && !GlobalObject.hasGlobalObject(objectAtTile)) {
@@ -136,5 +141,118 @@ public final class ObjectInteractionDistance {
 
         return objectPosition;
     }
-}
 
+    private static Position resolveMiningDistancePosition(
+            Client client,
+            Position walkTo,
+            GameObjectData objectData,
+            GameObjectDef def,
+            int objectId
+    ) {
+        if (client.getPosition().getZ() != walkTo.getZ()) {
+            return null;
+        }
+
+        Footprint footprint = resolveObjectFootprint(client, walkTo, objectData, def, objectId);
+        Position nearestBoundaryTile = resolveNearestBoundaryTile(client.getPosition(), footprint);
+        if (nearestBoundaryTile == null) {
+            return null;
+        }
+
+        if (isCardinalAdjacent(client.getPosition(), nearestBoundaryTile)) {
+            return nearestBoundaryTile;
+        }
+        return null;
+    }
+
+    private static Footprint resolveObjectFootprint(
+            Client client,
+            Position walkTo,
+            GameObjectData objectData,
+            GameObjectDef def,
+            int objectId
+    ) {
+        int minX = walkTo.getX();
+        int minY = walkTo.getY();
+        int maxX = walkTo.getX();
+        int maxY = walkTo.getY();
+
+        if (objectData != null) {
+            int sizeX = objectData.getSizeX();
+            int sizeY = objectData.getSizeY();
+
+            Object globalObject = GlobalObject.getGlobalObject(walkTo.getX(), walkTo.getY());
+            if (globalObject != null && globalObject.id == objectId) {
+                int rotation = globalObject.face;
+                sizeX = objectData.getSizeX(rotation);
+                sizeY = objectData.getSizeY(rotation);
+            } else if (def != null) {
+                int rotation = def.getFace();
+                sizeX = objectData.getSizeX(rotation);
+                sizeY = objectData.getSizeY(rotation);
+            }
+
+            sizeX = Math.max(1, sizeX);
+            sizeY = Math.max(1, sizeY);
+            maxX = minX + sizeX - 1;
+            maxY = minY + sizeY - 1;
+        }
+
+        return new Footprint(minX, minY, maxX, maxY, client.getPosition().getZ());
+    }
+
+    private static Position resolveNearestBoundaryTile(Position player, Footprint footprint) {
+        int nearestX = clamp(player.getX(), footprint.minX, footprint.maxX);
+        int nearestY = clamp(player.getY(), footprint.minY, footprint.maxY);
+
+        if (nearestX > footprint.minX && nearestX < footprint.maxX
+                && nearestY > footprint.minY && nearestY < footprint.maxY) {
+            int toWest = nearestX - footprint.minX;
+            int toEast = footprint.maxX - nearestX;
+            int toSouth = nearestY - footprint.minY;
+            int toNorth = footprint.maxY - nearestY;
+
+            int minDelta = Math.min(Math.min(toWest, toEast), Math.min(toSouth, toNorth));
+            if (minDelta == toWest) {
+                nearestX = footprint.minX;
+            } else if (minDelta == toEast) {
+                nearestX = footprint.maxX;
+            } else if (minDelta == toSouth) {
+                nearestY = footprint.minY;
+            } else {
+                nearestY = footprint.maxY;
+            }
+        }
+
+        return new Position(nearestX, nearestY, footprint.z);
+    }
+
+    private static boolean isCardinalAdjacent(Position player, Position tile) {
+        if (player.getZ() != tile.getZ()) {
+            return false;
+        }
+        int deltaX = Math.abs(player.getX() - tile.getX());
+        int deltaY = Math.abs(player.getY() - tile.getY());
+        return (deltaX + deltaY) == 1;
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static final class Footprint {
+        private final int minX;
+        private final int minY;
+        private final int maxX;
+        private final int maxY;
+        private final int z;
+
+        private Footprint(int minX, int minY, int maxX, int maxY, int z) {
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+            this.z = z;
+        }
+    }
+}

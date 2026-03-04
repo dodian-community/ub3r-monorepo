@@ -26,9 +26,11 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.persistence.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -109,12 +111,12 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean mining = false, woodcutting = false;
+    public boolean woodcutting = false;
     public boolean stringing = false;
     public boolean filling = false;
     public int fillingObj = -1;
     public int boneItem = -1;
-    public int mineIndex = -1, cuttingIndex = -1;
+    public int cuttingIndex = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -457,28 +459,51 @@ public class Client extends Player implements Runnable {
 
     public void arrowGfx(int offsetY, int offsetX, int angle, int speed,
                          int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
-        for (int a = 0; a < Constants.maxPlayers; a++) {
-            Client projCheck = (Client) PlayerHandler.players[a];
-            if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-                    && Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 64
-                    && Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 64) {
-                projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
-                        startHeight, endHeight, index, begin, slope, 64);
-            }
-        }
+        forEachProjectileViewer(viewer ->
+                viewer.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                        startHeight, endHeight, index, begin, slope, 64));
     }
 
     public void arrowNpcGfx(Position pos, int offsetY, int offsetX, int angle, int speed,
                             int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
-        for (int a = 0; a < Constants.maxPlayers; a++) {
-            Client projCheck = (Client) PlayerHandler.players[a];
-            if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-                    && Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 64
-                    && Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 64) {
-                projCheck.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, angle, speed, gfxMoving,
-                        startHeight, endHeight, index, begin, slope, 64);
-            }
+        forEachProjectileViewer(viewer ->
+                viewer.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                        startHeight, endHeight, index, begin, slope, 64));
+    }
+
+    private void forEachProjectileViewer(java.util.function.Consumer<Client> consumer) {
+        Position source = getPosition();
+        if (source == null || consumer == null) {
+            return;
         }
+        if (Server.chunkManager != null) {
+            Server.chunkManager.forEachUpdatePlayerCandidate(this, 64, other -> {
+                Client viewer = (Client) other;
+                if (canViewProjectile(viewer, source, true)) {
+                    consumer.accept(viewer);
+                }
+            });
+            if (canViewProjectile(this, source, true)) {
+                consumer.accept(this);
+            }
+            return;
+        }
+        PlayerHandler.forEachActivePlayer(viewer -> {
+            if (canViewProjectile(viewer, source, false)) {
+                consumer.accept(viewer);
+            }
+        });
+    }
+
+    private boolean canViewProjectile(Client viewer, Position source, boolean requireSamePlane) {
+        if (viewer == null || viewer.dbId <= 0 || viewer.disconnected || viewer.getPosition() == null
+                || viewer.getPosition().getX() <= 0) {
+            return false;
+        }
+        if (requireSamePlane && viewer.getPosition().getZ() != source.getZ()) {
+            return false;
+        }
+        return viewer.getPosition().withinDistance(source, 64);
     }
 
     public void println_debug(String str) {
@@ -588,6 +613,7 @@ public class Client extends Player implements Runnable {
     @Override
     public void destruct() {
         releaseQueuedInboundPackets();
+        cancelFarmDebugTask();
 
         // Transport-specific shutdown
         if (channel != null) {
@@ -2137,18 +2163,6 @@ public class Client extends Player implements Runnable {
             } else {
                 resetAction();
                 send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            }
-        } else if (mining && now - lastAction >= getMiningSpeed()) {
-            lastAction = now;
-            mining(mineIndex);
-        } else if (mining && now - lastPickAction <= 0) { //Reapply animation every 3 tick!
-            int checkPickxe = findPick();
-            if (checkPickxe >= 0) {
-                requestAnim(getMiningEmote(Utils.picks[checkPickxe]), 0);
-                lastPickAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
             }
         } else if (cooking && now - lastAction >= 1800) {
             lastAction = now;
@@ -3757,39 +3771,6 @@ public class Client extends Player implements Runnable {
         return -1;
     }
 
-    public int getMiningEmote(int item) {
-        switch (item) {
-            case 1275: //bronze
-                return 624;
-            case 1271: //iron
-                return 628;
-            case 1273: //steel
-                return 629;
-            case 1269: // mithril
-                return 627;
-            case 1267: // addy
-                return 626;
-            case 1265: // rune
-                return 625;
-            case 11920: //dragon
-            case 20014: //3rd age
-                return 7139;
-        }
-        return -1;
-    }
-
-    public long getMiningSpeed() {
-        double pickBonus = findPick() >= 0 ? Utils.pickBonus[findPick()] : 0.0;
-        double level = getLevel(Skill.MINING) / 256D;
-        double bonus = 1 + pickBonus + level;
-        double timer = Utils.mineTimes[mineIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && pickBonus > 0.0 && (Utils.picks[findPick()] == 11920 || Utils.picks[findPick()] == 20014)) //11920, 20014
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
-    }
-
     public long getWoodcuttingSpeed() {
         double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
         double level = getLevel(Skill.WOODCUTTING) / 256D;
@@ -5121,6 +5102,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetAction(boolean full) {
+        MiningService.stopMiningFromReset(this, full);
         smelting = false;
         smelt_id = -1;
         goldCrafting = false;
@@ -5133,8 +5115,6 @@ public class Client extends Player implements Runnable {
         crafting = false;
         fishing = false;
         stringing = false;
-        mining = false;
-        mineIndex = -1;
         woodcutting = false;
         cuttingIndex = -1;
         resourcesGathered = 0;
@@ -6279,25 +6259,6 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public int findPick() {
-        int Eaxe = -1, Iaxe = -1;
-        int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        for (int i = 0; i < Utils.picks.length; i++) {
-            if (Utils.picks[i] == weapon) {
-                if (getLevel(Skill.MINING) >= Utils.pickReq[i])
-                    Eaxe = i;
-            }
-            for (int playerItem : playerItems) {
-                if (Utils.picks[i] == playerItem - 1) {
-                    if (getLevel(Skill.MINING) >= Utils.pickReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
-        }
-        return Math.max(Eaxe, Iaxe);
-    }
-
     public int findAxe() {
         int Eaxe = -1, Iaxe = -1;
         int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
@@ -6315,55 +6276,6 @@ public class Client extends Player implements Runnable {
             }
         }
         return Math.max(Eaxe, Iaxe);
-    }
-
-    public void mining(int index) {
-        int minePick = findPick();
-        if (minePick == -1) {
-            resetAction();
-            send(new SendMessage("You need a pickaxe in which you got the required mining level for."));
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Your inventory is full!"));
-            resetAction(true);
-            return;
-        }
-        if (index != 6) {
-            send(new SendMessage("You mine some " + GetItemName(Utils.ore[index]).toLowerCase()));
-        }
-        lastAction = System.currentTimeMillis();
-        int ore = Utils.ore[index];
-        //TODO: Should we add gem rock?
-        addItem(ore, 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, ore, 1, getPosition().copy(), "Mining");
-        resourcesGathered++;
-        giveExperience(Utils.oreExp[index], Skill.MINING);
-        triggerRandom(Utils.oreExp[index]);
-        if (Utils.ore[index] != 1436)
-            randomGem();
-        int amount = Utils.ore[index] == 1436 ? 14 : 4;
-        if (resourcesGathered >= amount && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        } else requestAnim(getMiningEmote(Utils.picks[minePick]), 0);
-    }
-
-    public void randomGem() {
-        if (freeSlots() < 1) { //No inventory space so do not give gem!
-            return;
-        }
-        int chance = GetItemName(getEquipment()[Equipment.Slot.NECK.getId()]).toLowerCase().contains("glory") ? 128 : 256;
-        int roll = Misc.chance(chance);
-        if (roll == 1) { //~0.39% chance to find gem! -> ~0.78% with glory!
-            int[] gems = {1623, 1623, 1623, 1621, 1621, 1619, 1617}; //1:7 diamond or ruby, 2:7 emerald, 3:7 sapphire
-            int gem = gems[Misc.random(gems.length - 1)];
-            addItem(gem, 1);
-            checkItemUpdate();
-            ItemLog.playerGathering(this, gem, 1, getPosition().copy(), "Mining");
-            send(new SendMessage("You found a " + GetItemName(gem).toLowerCase() + " inside the rock."));
-        }
     }
 
     /* WOODCUTTING */
@@ -7177,39 +7089,18 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("User " + player + "'s inventory is now being shown."));
             checkInv = true;
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-                ResultSet results = statement.executeQuery(query);
-                int id = -1;
-                if (results.next())
-                    id = results.getInt("userid");
-                if (id >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("inventory");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherInv.add(new GameItem(item, amount));
-                            }
+            send(new SendMessage("Loading " + player + "'s inventory..."));
+            CommandDbService.submit(
+                    "check-inventory",
+                    () -> CommandDbService.loadOfflineContainerView(player, "inventory"),
+                    result -> applyOfflineInventoryView(player, result),
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not load that inventory right now."));
                         }
-                        sendInventory(3214, otherInv);
-                        send(new SendMessage("User " + player + "'s inventory is now being shown."));
-                        checkInv = true;
-                    } else
-                        send(new SendMessage("username '" + player + "' have yet to login!"));
-                } else
-                    send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                    }
+            );
         }
     }
 
@@ -7232,41 +7123,18 @@ public class Client extends Player implements Runnable {
             IsBanking = false;
             checkBankInterface = true;
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-                ResultSet results = statement.executeQuery(query);
-                int id = -1;
-                if (results.next())
-                    id = results.getInt("userid");
-                if (id >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("bank");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherBank.add(new GameItem(item, amount));
-                            }
+            send(new SendMessage("Loading " + player + "'s bank..."));
+            CommandDbService.submit(
+                    "check-bank",
+                    () -> CommandDbService.loadOfflineContainerView(player, "bank"),
+                    result -> applyOfflineBankView(player, result),
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not load that bank right now."));
                         }
-                        send(new SendString("Examine the bank of " + player, 5383));
-                        sendBank(5382, otherBank);
-                        resetItems(5064);
-                        send(new InventoryInterface(5292, 5063));
-                        checkBankInterface = true;
-                    } else
-                        send(new SendMessage("username '" + player + "' have yet to login!"));
-                } else
-                    send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                    }
+            );
         }
     }
 
@@ -7310,37 +7178,28 @@ public class Client extends Player implements Runnable {
             other.refreshSkill(Skill.getSkill(id));
             send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                boolean found = true;
-                int currentXp = 0, totalXp = 0, totalLevel = 0;
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-                ResultSet results = statement.executeQuery(query);
-                int userid = -1;
-                if (results.next())
-                    userid = results.getInt("userid");
-                if (userid >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        currentXp = results.getInt(skillName);
-                        totalXp = results.getInt("totalxp");
-                        totalLevel = results.getInt("total");
+            final int requestedXp = xp;
+            CommandDbService.submit(
+                    "remove-skill",
+                    () -> CommandDbService.removeOfflineExperience(user, skillName, requestedXp),
+                    result -> {
+                        if (disconnected) {
+                            return;
+                        }
+                        if (result.getStatus() == CommandDbService.OfflineSkillMutationResult.Status.NOT_FOUND) {
+                            send(new SendMessage("username '" + user + "' have yet to login!"));
+                            return;
+                        }
+                        send(new SendMessage("Removed " + result.getRemovedXp() + "/" + result.getCurrentXp()
+                                + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
+                    },
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not update that player's skill right now."));
+                        }
                     }
-                } else
-                    found = false;
-                if (found) {
-                    xp = Math.min(currentXp, xp);
-                    int newXp = currentXp - xp;
-                    totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
-                    totalXp -= xp;
-                    statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET " + skillName + "='" + newXp + "', totalxp='" + totalXp + "', total='" + totalLevel + "' WHERE uid = " + userid);
-                    send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-                } else
-                    send(new SendMessage("username '" + user + "' have yet to login!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+            );
         }
     }
 
@@ -7387,84 +7246,76 @@ public class Client extends Player implements Runnable {
             } else
                 send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
         } else { //Database check!
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                boolean found = true;
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-                ResultSet results = statement.executeQuery(query);
-                int userid = -1;
-                if (results.next())
-                    userid = results.getInt("userid");
-                if (userid >= 0) {
-                    StringBuilder bank = new StringBuilder();
-                    StringBuilder inventory = new StringBuilder();
-                    StringBuilder equipment = new StringBuilder();
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("bank");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        bank.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    bank.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
+            final int requestedAmount = amount;
+            CommandDbService.submit(
+                    "remove-items",
+                    () -> CommandDbService.removeOfflineItems(user, id, requestedAmount),
+                    result -> {
+                        if (disconnected) {
+                            return;
                         }
-                        text = results.getString("inventory");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
+                        if (result.getStatus() == CommandDbService.OfflineItemRemovalResult.Status.NOT_FOUND) {
+                            send(new SendMessage("username '" + user + "' have yet to login!"));
+                            return;
                         }
-                        text = results.getString("equipment");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
-                        }
-                    } else
-                        found = false;
-                    if (found) {
-                        statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
-                        if (totalItemRemoved > 0)
-                            send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
-                        else
+                        if (result.getTotalItemRemoved() > 0) {
+                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + GetItemName(id).toLowerCase()));
+                        } else {
                             send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
-                    } else
-                        send(new SendMessage("username '" + user + "' have yet to login!"));
-                }
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                        }
+                    },
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not remove those items right now."));
+                        }
+                    }
+            );
         }
+    }
+
+    private void applyOfflineInventoryView(String player, CommandDbService.OfflineContainerViewResult result) {
+        if (disconnected) {
+            return;
+        }
+        if (IsBanking || isShopping() || duelFight) {
+            send(new SendMessage("Inventory view cancelled because you started another action."));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' do not exist in the database!"));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' have yet to login!"));
+            return;
+        }
+        sendInventory(3214, result.getItems());
+        send(new SendMessage("User " + player + "'s inventory is now being shown."));
+        checkInv = true;
+    }
+
+    private void applyOfflineBankView(String player, CommandDbService.OfflineContainerViewResult result) {
+        if (disconnected) {
+            return;
+        }
+        if (IsBanking || isShopping() || duelFight) {
+            send(new SendMessage("Bank view cancelled because you started another action."));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' do not exist in the database!"));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' have yet to login!"));
+            return;
+        }
+        send(new SendString("Examine the bank of " + player, 5383));
+        sendBank(5382, result.getItems());
+        resetItems(5064);
+        send(new InventoryInterface(5292, 5063));
+        checkBankInterface = true;
     }
 
     public void dropAllItems() {

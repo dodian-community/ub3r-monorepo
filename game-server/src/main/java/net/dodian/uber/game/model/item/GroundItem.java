@@ -105,12 +105,10 @@ public class GroundItem {
             ZoneUpdateBus.queueGroundItemRemove(id, amount, new Position(this.x, this.y, this.z));
             return;
         }
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null) continue;
-            Client c = (Client) PlayerHandler.players[i];
+        PlayerHandler.forEachActivePlayer(c -> {
             if(c.GoodDistance(c.getPosition().getX(), c.getPosition().getY(), this.x, this.y, 104))
                 c.send(new RemoveGroundItem(new GameItem(id, amount), new Position(this.x, this.y, this.z)));
-        }
+        });
     }
     public void itemDisplay() {
         if (getZoneUpdateBatchingEnabled()) {
@@ -119,12 +117,13 @@ public class GroundItem {
             ZoneUpdateBus.queueGroundItemCreate(id, amount, new Position(this.x, this.y, this.z), onlyDbId, excludeDbId);
             return;
         }
-        for (int i = 0; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] == null || (PlayerHandler.players[i] != null && type == 1 && playerId != PlayerHandler.players[i].dbId)) continue;
-            Client c = (Client) PlayerHandler.players[i];
+        PlayerHandler.forEachActivePlayer(c -> {
+            if (type == 1 && playerId != c.dbId) {
+                return;
+            }
             if(c.GoodDistance(c.getPosition().getX(), c.getPosition().getY(), this.x, this.y, 104) && c.dbId != playerId && isVisible())
                 c.send(new CreateGroundItem(new GameItem(id, amount), new Position(this.x, this.y, this.z)));
-        }
+        });
     }
 
 }

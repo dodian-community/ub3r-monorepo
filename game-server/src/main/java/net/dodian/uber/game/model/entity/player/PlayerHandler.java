@@ -10,6 +10,9 @@ import java.nio.channels.SocketChannel;
 import java.net.InetSocketAddress;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.BitSet;
 import org.slf4j.Logger;
@@ -147,6 +150,31 @@ public class PlayerHandler {
 
     public static int getPlayerCount() {
         return (int) playersOnline.size();
+    }
+
+    public static void forEachActivePlayer(Consumer<Client> consumer) {
+        if (consumer == null) {
+            return;
+        }
+        for (Client client : playersOnline.values()) {
+            if (isActiveClient(client)) {
+                consumer.accept(client);
+            }
+        }
+    }
+
+    public static List<Client> snapshotActivePlayers() {
+        List<Client> activePlayers = new ArrayList<>(Math.max(1, playersOnline.size()));
+        forEachActivePlayer(activePlayers::add);
+        return activePlayers;
+    }
+
+    private static boolean isActiveClient(Client client) {
+        return client != null
+                && client.isActive
+                && !client.disconnected
+                && client.getChannel() != null
+                && client.getChannel().isActive();
     }
 
     public static boolean isPlayerOn(String playerName) {

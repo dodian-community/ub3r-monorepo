@@ -25,6 +25,9 @@ object DialogueService {
     private val sessions = Collections.synchronizedMap(WeakHashMap<Client, DialogueSession>())
 
     @JvmStatic
+    fun hasActiveSession(client: Client): Boolean = sessions.containsKey(client)
+
+    @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
         clear(client, closeInterfaces = false)
         clearLegacyDialogueState(client)

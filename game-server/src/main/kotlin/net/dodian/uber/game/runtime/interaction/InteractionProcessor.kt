@@ -9,12 +9,15 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
+import java.util.IdentityHashMap
 
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
+    private val miningSettledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
@@ -102,6 +105,7 @@ object InteractionProcessor {
         }
 
         val routeStart = System.nanoTime()
+        val distanceMode = resolveObjectClickDistanceMode(intent.objectId)
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
@@ -109,12 +113,28 @@ object InteractionProcessor {
                 intent.objectId,
                 intent.objectData,
                 intent.objectDef,
-                ObjectInteractionDistance.DistanceMode.CLICK,
+                distanceMode,
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
+
+        if (distanceMode == ObjectInteractionDistance.DistanceMode.MINING) {
+            if (!isMovementSettled(player)) {
+                miningSettledSinceCycle.remove(intent)
+                return InteractionExecutionResult.WAITING
+            }
+            val settledSince = miningSettledSinceCycle[intent]
+            if (settledSince == null) {
+                miningSettledSinceCycle[intent] = PlayerHandler.cycle.toLong()
+                return InteractionExecutionResult.WAITING
+            }
+            if (PlayerHandler.cycle.toLong() <= settledSince) {
+                return InteractionExecutionResult.WAITING
+            }
+            miningSettledSinceCycle.remove(intent)
+        }
 
         if (intent.option == 1) {
             if (!player.validClient || player.randomed) {
@@ -367,10 +387,25 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
+        player.pendingInteraction?.let { miningSettledSinceCycle.remove(it) }
         player.pendingInteraction = null
         player.activeInteraction = null
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
+    }
+
+    private fun resolveObjectClickDistanceMode(objectId: Int): ObjectInteractionDistance.DistanceMode {
+        return if (MiningData.rockByObjectId.containsKey(objectId)) {
+            ObjectInteractionDistance.DistanceMode.MINING
+        } else {
+            ObjectInteractionDistance.DistanceMode.CLICK
+        }
+    }
+
+    private fun isMovementSettled(player: Client): Boolean {
+        return player.primaryDirection == -1 &&
+            player.secondaryDirection == -1 &&
+            player.wQueueReadPtr == player.wQueueWritePtr
     }
 
     private fun slowLogIfNeeded(
