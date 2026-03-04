@@ -5,8 +5,11 @@ package net.dodian.utilities;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Utils {
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
     public static int[] buttons_smelting = {15147, 15146, 10247, 9110, 15151, 15150, 15149, 15148, 15155, 15154, 15153,
             15152, 15159, 15158, 15157, 15156, 15163, 15162, 15161, 15160, 29017, 29016, 24253, 16062, 29022, 29020, 29019,
             29018, 29026, 29025, 29024, 29023};
@@ -325,8 +328,14 @@ public class Utils {
     public static byte xlateDirectionToClient[] = new byte[]{1, 2, 4, 7, 6, 5, 3, 0};
 
 	public static void println_debug(String message) {
+		if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+				&& !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+			return;
+		}
 		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		System.out.println("[" + timestamp + "] " + message);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[{}] {}", timestamp, message);
+		}
 	}
 
 	public static String capitalize(String str) {

@@ -1,14 +1,14 @@
 package net.dodian.uber.game.content.npcs.spawns
 
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object NpcContentRegistry {
     private val logger = LoggerFactory.getLogger(NpcContentRegistry::class.java)
 
-    private val loaded = AtomicBoolean(false)
-    private val byNpcId = ConcurrentHashMap<Int, NpcContentDefinition>()
+    private val bootstrapped = AtomicBoolean(false)
+    @Volatile
+    private var byNpcId: Array<NpcContentDefinition?> = emptyArray()
     private val definitions = mutableListOf<NpcContentDefinition>()
 
     private fun registerNpc(
@@ -33,10 +33,11 @@ object NpcContentRegistry {
         onAttack = onAttack,
     )
 
-    fun ensureLoaded() {
-        if (loaded.get()) return
+    @JvmStatic
+    fun bootstrap() {
+        if (bootstrapped.get()) return
         synchronized(this) {
-            if (loaded.get()) return
+            if (bootstrapped.get()) return
             val pending = mutableListOf<NpcContentDefinition>()
             pending += registerNpc(
                 name = "Aubury",
@@ -378,8 +379,13 @@ object NpcContentRegistry {
             pending
                 .sortedBy { it.name }
                 .forEach(::register)
-            loaded.set(true)
+            rebuildLookupLocked()
+            bootstrapped.set(true)
         }
+    }
+
+    fun ensureLoaded() {
+        bootstrap()
     }
 
     fun register(content: NpcContentDefinition) {
@@ -405,19 +411,17 @@ object NpcContentRegistry {
             logger.warn("NpcContent {} owns spawn definitions but has no entries.", content.name)
         }
 
-        val duplicateNpcIds = content.npcIds.filter { byNpcId.containsKey(it) }.distinct().sorted()
+        val existingNpcIds = definitions.asSequence().flatMap { it.npcIds.asSequence() }.toSet()
+        val duplicateNpcIds = content.npcIds.filter { it in existingNpcIds }.distinct().sorted()
         require(duplicateNpcIds.isEmpty()) {
             val details = duplicateNpcIds.joinToString(",") { npcId ->
-                val existing = byNpcId[npcId]
+                val existing = definitions.firstOrNull { it.npcIds.contains(npcId) }
                 "$npcId(existing=${existing?.name})"
             }
             "Duplicate NpcContent registration for ${content.name}: $details"
         }
 
         definitions += content
-        for (npcId in content.npcIds) {
-            byNpcId[npcId] = content
-        }
 
         logger.debug(
             "Registered NpcContent {} for npcIds={}",
@@ -428,19 +432,19 @@ object NpcContentRegistry {
 
     @JvmStatic
     fun get(npcId: Int): NpcContentDefinition? {
-        ensureLoaded()
-        return byNpcId[npcId]
+        bootstrap()
+        return byNpcId.getOrNull(npcId)
     }
 
     @JvmStatic
     fun allSpawns(): List<NpcSpawnDef> {
-        ensureLoaded()
+        bootstrap()
         return definitions.flatMap { it.entries }
     }
 
     @JvmStatic
     fun spawnSourceNpcIds(): Set<Int> {
-        ensureLoaded()
+        bootstrap()
         return definitions
             .asSequence()
             .filter { it.ownsSpawnDefinitions }
@@ -449,14 +453,38 @@ object NpcContentRegistry {
     }
 
     internal fun clearForTests() {
-        loaded.set(true)
-        byNpcId.clear()
+        bootstrapped.set(true)
+        byNpcId = emptyArray()
         definitions.clear()
     }
 
     internal fun resetForTests() {
-        loaded.set(false)
-        byNpcId.clear()
+        bootstrapped.set(false)
+        byNpcId = emptyArray()
         definitions.clear()
+    }
+
+    private fun rebuildLookupLocked() {
+        val maxNpcId = definitions.asSequence().flatMap { it.npcIds.asSequence() }.maxOrNull() ?: -1
+        val rebuilt = arrayOfNulls<NpcContentDefinition>(maxNpcId + 1)
+        for (definition in definitions) {
+            for (npcId in definition.npcIds) {
+                if (npcId < 0) {
+                    continue
+                }
+                val existing = rebuilt[npcId]
+                if (existing != null && existing !== definition) {
+                    logger.error(
+                        "Duplicate NpcContentDefinition for npcId={} (existing={}, new={})",
+                        npcId,
+                        existing.name,
+                        definition.name,
+                    )
+                } else {
+                    rebuilt[npcId] = definition
+                }
+            }
+        }
+        byNpcId = rebuilt
     }
 }

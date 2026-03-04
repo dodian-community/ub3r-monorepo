@@ -15,7 +15,6 @@ public class Frame171 implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        System.out.println("Frame 171: " + mainFrame + ", " + subFrame);
         ByteMessage message = ByteMessage.message(171);
         message.put(mainFrame);
         message.putShort(subFrame);

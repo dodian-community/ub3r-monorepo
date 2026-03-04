@@ -20,6 +20,8 @@ import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey;
 import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DotEnvKt.getSyncAppearanceCacheEnabled;
 import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
@@ -31,6 +33,7 @@ import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
  */
 public class PlayerUpdating extends EntityUpdating<Player> {
 
+    private static final Logger logger = LoggerFactory.getLogger(PlayerUpdating.class);
     private static final boolean DEBUG_REGION_UPDATES = false;
     private static final boolean DEBUG_ADDED_LOCAL_PLAYERS = false;
     private static final int MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15;
@@ -110,10 +113,10 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
             // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
-            if (DEBUG_REGION_UPDATES) {
+            if (DEBUG_REGION_UPDATES && logger.isTraceEnabled()) {
                 int rx = player.getPosition().getX() >> 6;
                 int ry = player.getPosition().getY() >> 6;
-                System.out.println("[RegionUpdate] " + player.getPlayerName() + " region(" + rx + "," + ry + ") locals=" + player.playerListSize);
+                logger.trace("[RegionUpdate] {} region({},{}) locals={}", player.getPlayerName(), rx, ry, player.playerListSize);
             }
         } finally {
             releaseScratch(updateBlock);

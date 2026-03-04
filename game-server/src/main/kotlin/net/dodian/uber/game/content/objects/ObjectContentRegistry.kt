@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.objects
 
+import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -67,6 +68,17 @@ object ObjectContentRegistry {
             .map { it.content }
             .toList()
         return resolved.distinctBy { it::class.java.name }
+    }
+
+    @JvmStatic
+    fun prewarmObjectDefinitions() {
+        bootstrap()
+        val snapshot = byObjectId
+        for (objectId in snapshot.indices) {
+            if (snapshot[objectId] != null) {
+                GameObjectData.forId(objectId)
+            }
+        }
     }
 
     @JvmStatic

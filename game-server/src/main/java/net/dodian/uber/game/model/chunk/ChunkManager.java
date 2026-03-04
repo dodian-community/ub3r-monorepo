@@ -77,9 +77,8 @@ public final class ChunkManager {
         // Each chunk is 8 tiles, so divide distance by 8 and add 2 for safety
         int chunkRadius = (distance / Chunk.SIZE) + 2;
 
-        Chunk centerChunk = center.getChunk();
-        int centerChunkX = centerChunk.getX();
-        int centerChunkY = centerChunk.getY();
+        int centerChunkX = center.getChunkX();
+        int centerChunkY = center.getChunkY();
 
         // Scan all chunks in the radius. Query path does not create chunks.
         for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
@@ -153,9 +152,8 @@ public final class ChunkManager {
                                             Predicate<E> predicate,
                                             Consumer<E> consumer) {
         int chunkRadius = (distance / Chunk.SIZE) + 2;
-        Chunk centerChunk = center.getChunk();
-        int centerChunkX = centerChunk.getX();
-        int centerChunkY = centerChunk.getY();
+        int centerChunkX = center.getChunkX();
+        int centerChunkY = center.getChunkY();
 
         for (int dx = -chunkRadius; dx < chunkRadius; dx++) {
             for (int dy = -chunkRadius; dy < chunkRadius; dy++) {

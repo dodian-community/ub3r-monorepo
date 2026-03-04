@@ -23,11 +23,14 @@ import net.dodian.uber.game.security.ItemLog;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Owner
  */
 public class Npc extends Entity {
+    private static final Logger logger = LoggerFactory.getLogger(Npc.class);
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
     public final int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
@@ -623,7 +626,7 @@ public class Npc extends Entity {
         Client target = getTarget(false);
         Position pos = getPosition().copy();
         if (target == null) {
-            System.out.println("Target null.. Please investigate for " + getId() + " at position " + pos.toString());
+            logger.warn("Target null.. Please investigate for {} at position {}", getId(), pos);
             return;
         }
         double rolledChance, currentChance, checkChance;

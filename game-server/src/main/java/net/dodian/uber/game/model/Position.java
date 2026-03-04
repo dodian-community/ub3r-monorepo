@@ -6,6 +6,10 @@ import net.dodian.utilities.Misc;
 public class Position {
 
     private int x, y, z;
+    private int cachedChunkX = Integer.MIN_VALUE;
+    private int cachedChunkY = Integer.MIN_VALUE;
+    private boolean chunkCacheDirty = true;
+    private Chunk cachedChunk;
 
     public Position(int x, int y, int z) {
         this.x = x;
@@ -51,6 +55,7 @@ public class Position {
         this.x = x;
         this.y = y;
         this.z = z;
+        chunkCacheDirty = true;
     }
 
     public void moveTo(int x, int y) {
@@ -71,6 +76,7 @@ public class Position {
         this.x += amountX;
         this.y += amountY;
         this.z += amountZ;
+        chunkCacheDirty = true;
         return this;
     }
 
@@ -166,9 +172,32 @@ public class Position {
      * @return The chunk containing this position
      */
     public Chunk getChunk() {
+        refreshChunkCache();
+        return cachedChunk;
+    }
+
+    public int getChunkX() {
+        refreshChunkCache();
+        return cachedChunkX;
+    }
+
+    public int getChunkY() {
+        refreshChunkCache();
+        return cachedChunkY;
+    }
+
+    private void refreshChunkCache() {
+        if (!chunkCacheDirty && cachedChunk != null) {
+            return;
+        }
         int chunkX = (x >> 3) - 6;
         int chunkY = (y >> 3) - 6;
-        return new Chunk(chunkX, chunkY);
+        if (chunkX != cachedChunkX || chunkY != cachedChunkY || cachedChunk == null) {
+            cachedChunkX = chunkX;
+            cachedChunkY = chunkY;
+            cachedChunk = new Chunk(chunkX, chunkY);
+        }
+        chunkCacheDirty = false;
     }
 
     /**

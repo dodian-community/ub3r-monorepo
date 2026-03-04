@@ -17,7 +17,6 @@ public class SetTabInterface implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        System.out.println("Set tab interface: " + mainFrame + ", " + subFrame);
         ByteMessage message = ByteMessage.message(248);
         message.putShort(mainFrame, ValueType.ADD);
         message.putShort(subFrame);

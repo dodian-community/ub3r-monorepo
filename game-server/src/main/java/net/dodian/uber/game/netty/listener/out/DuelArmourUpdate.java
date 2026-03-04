@@ -58,8 +58,6 @@ public class DuelArmourUpdate implements OutgoingPacket {
             int itemId = equipment != null && slot < equipment.length ? equipment[slot] : -1;
             int containerId = (safeAmount > 0 && itemId > 0) ? (itemId + 1) : 0;
             message.putShort(containerId);
-            System.out.println("[DUEL ARMOUR] sending to " + client.getPlayerName() + " slot=" + slot
-                    + " amount=" + safeAmount + " containerId=" + containerId);
 
             // Send the packet
             client.send(message);

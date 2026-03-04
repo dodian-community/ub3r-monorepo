@@ -22,11 +22,12 @@ class ViewportIndex private constructor(
             val snapshots = IdentityHashMap<Player, ViewportSnapshot>(viewers.size)
             viewers.forEach { viewer ->
                 val position = viewer.position ?: return@forEach
-                val centerChunk = position.chunk
-                val neighborhoodKey = pack(centerChunk.x, centerChunk.y, position.z)
+                val centerChunkX = position.chunkX
+                val centerChunkY = position.chunkY
+                val neighborhoodKey = pack(centerChunkX, centerChunkY, position.z)
                 val snapshot =
                     neighborhoodCache.getOrPut(neighborhoodKey) {
-                        buildNeighborhood(chunkManager, centerChunk.x, centerChunk.y, position.z, distance)
+                        buildNeighborhood(chunkManager, centerChunkX, centerChunkY, position.z, distance)
                     }
                 snapshots[viewer] = snapshot
             }

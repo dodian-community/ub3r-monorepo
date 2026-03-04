@@ -35,7 +35,6 @@ public class InterfaceStatus implements OutgoingPacket {
         // Match old client's expected format: put(show ? 0 : 1) followed by putShort(interfaceId)
         msg.put(show ? 0 : 1);
         msg.putShort(interfaceId);
-        System.out.println("InterfaceStatus: " + (show ? "Show" : "Hide") + " interface " + interfaceId);
         client.send(msg);
     }
 }

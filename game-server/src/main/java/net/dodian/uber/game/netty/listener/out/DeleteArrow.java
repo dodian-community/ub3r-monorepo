@@ -57,6 +57,5 @@ public class DeleteArrow implements OutgoingPacket {
         message.putShort(containerId);
 
         client.send(message);
-        System.out.println("Sending DeleteArrow packet for slot " + slot + " with item ID " + itemId + " and amount " + amount);
     }
 }

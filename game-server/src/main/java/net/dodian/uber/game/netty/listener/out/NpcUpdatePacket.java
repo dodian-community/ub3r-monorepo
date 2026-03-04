@@ -33,10 +33,15 @@ public class NpcUpdatePacket implements OutgoingPacket {
     }
 
     public static void sendTo(Player player, Client client) {
-        ByteBuf pooledBuffer = ByteMessage.pooledBuffer(16384);
+        int capacity = Math.max(1024, client.getNpcUpdateCapacity());
+        ByteBuf pooledBuffer =
+                client.channel != null && client.channel.isActive()
+                        ? client.channel.alloc().buffer(capacity)
+                        : ByteMessage.pooledBuffer(capacity);
         ByteMessage msg = null;
         try {
             msg = WRITER.write(player, pooledBuffer);
+            client.updateNpcUpdateCapacity(msg.content().writerIndex());
             client.send(msg);
         } catch (Exception e) {
             if (msg != null) {

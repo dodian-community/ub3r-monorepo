@@ -33,10 +33,15 @@ public class PlayerUpdatePacket implements OutgoingPacket {
     }
 
     public static void sendTo(Player player, Client client) {
-        ByteBuf pooledBuffer = ByteMessage.pooledBuffer(8192);
+        int capacity = Math.max(1024, client.getPlayerUpdateCapacity());
+        ByteBuf pooledBuffer =
+                client.channel != null && client.channel.isActive()
+                        ? client.channel.alloc().buffer(capacity)
+                        : ByteMessage.pooledBuffer(capacity);
         ByteMessage msg = null;
         try {
             msg = WRITER.write(player, pooledBuffer);
+            client.updatePlayerUpdateCapacity(msg.content().writerIndex());
             client.send(msg);
         } catch (Exception e) {
             if (msg != null) {

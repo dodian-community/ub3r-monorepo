@@ -53,7 +53,6 @@ public class ItemOnItemListener implements PacketListener {
         // From here on the code is IDENTICAL to legacy handler ----------------
         int useWith = client.playerItems[usedWithSlot] - 1;
         int itemUsed = client.playerItems[itemUsedSlot] - 1;
-        System.out.println("useWith: " + useWith + ", itemUsed: " + itemUsed);
         if (!client.playerHasItem(itemUsed) || !client.playerHasItem(useWith)) {
             return;
         }

@@ -2,6 +2,7 @@ package net.dodian.uber.game.runtime.interaction
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.combat.getAttackStyle
+import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectContentDispatcher
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
 import net.dodian.uber.game.model.entity.player.Client
@@ -57,20 +58,34 @@ object InteractionProcessor {
                 1
         }
 
+        val routeStart = System.nanoTime()
         if (!player.goodDistanceEntity(npc, range) || npc.position.withinDistance(player.position, 0)) {
             return InteractionExecutionResult.WAITING
         }
+        val routeNs = System.nanoTime() - routeStart
 
         player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
-        when (intent.option) {
-            1 -> handleNpcClick1(player, npc)
-            2 -> handleNpcClick2(player, npc)
-            3 -> handleNpcClick3(player, npc)
-            4 -> handleNpcClick4(player, npc)
-            NPC_ATTACK_OPTION -> handleNpcAttack(player, npc)
+        val timing =
+            when (intent.option) {
+                1 -> handleNpcClick1(player, npc)
+                2 -> handleNpcClick2(player, npc)
+                3 -> handleNpcClick3(player, npc)
+                4 -> handleNpcClick4(player, npc)
+                NPC_ATTACK_OPTION -> handleNpcAttack(player, npc)
+                else -> DispatchTiming(false, 0L, 0L, null)
         }
         clear(player)
-        slowLogIfNeeded(player, intent, startNs)
+        slowLogIfNeeded(
+            player,
+            intent,
+            npc.id,
+            intent.option,
+            routeNs,
+            timing.resolveNs,
+            timing.handlerNs,
+            timing.handlerName,
+            startNs,
+        )
         return InteractionExecutionResult.COMPLETE
     }
 
@@ -85,6 +100,7 @@ object InteractionProcessor {
             return InteractionExecutionResult.CANCELLED
         }
 
+        val routeStart = System.nanoTime()
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
@@ -97,6 +113,7 @@ object InteractionProcessor {
         ) {
             return InteractionExecutionResult.WAITING
         }
+        val routeNs = System.nanoTime() - routeStart
 
         if (intent.option == 1) {
             if (!player.validClient || player.randomed) {
@@ -151,10 +168,29 @@ object InteractionProcessor {
             player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
         }
 
-        ObjectContentDispatcher.tryHandleClick(player, intent.option, intent.task.walkToId, intent.task.walkToPosition, intent.objectData)
+        val timing =
+            ObjectContentDispatcher.tryHandleTimed(
+                ObjectInteractionContext.click(
+                    client = player,
+                    option = intent.option,
+                    objectId = intent.task.walkToId,
+                    position = intent.task.walkToPosition,
+                    obj = intent.objectData,
+                ),
+            )
         player.walkToTask = null
         clear(player)
-        slowLogIfNeeded(player, intent, startNs)
+        slowLogIfNeeded(
+            player,
+            intent,
+            intent.objectId,
+            intent.option,
+            routeNs,
+            timing.resolveNs,
+            timing.handlerNs,
+            timing.handlerName,
+            startNs,
+        )
         return InteractionExecutionResult.COMPLETE
     }
 
@@ -168,6 +204,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
+        val routeStart = System.nanoTime()
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
@@ -180,22 +217,37 @@ object InteractionProcessor {
         ) {
             return InteractionExecutionResult.WAITING
         }
+        val routeNs = System.nanoTime() - routeStart
 
+        var timing = DispatchTiming(false, 0L, 0L, null)
         if (player.playerHasItem(intent.itemId)) {
             player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
-            ObjectContentDispatcher.tryHandleUseItem(
-                player,
-                intent.objectId,
-                intent.task.walkToPosition,
-                intent.objectData,
-                intent.itemId,
-                intent.itemSlot,
-                intent.interfaceId,
-            )
+            timing =
+                ObjectContentDispatcher.tryHandleTimed(
+                    ObjectInteractionContext.useItem(
+                        client = player,
+                        objectId = intent.objectId,
+                        position = intent.task.walkToPosition,
+                        obj = intent.objectData,
+                        itemId = intent.itemId,
+                        itemSlot = intent.itemSlot,
+                        interfaceId = intent.interfaceId,
+                    ),
+                )
         }
         player.walkToTask = null
         clear(player)
-        slowLogIfNeeded(player, intent, startNs)
+        slowLogIfNeeded(
+            player,
+            intent,
+            intent.objectId,
+            -1,
+            routeNs,
+            timing.resolveNs,
+            timing.handlerNs,
+            timing.handlerName,
+            startNs,
+        )
         return InteractionExecutionResult.COMPLETE
     }
 
@@ -209,6 +261,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
+        val routeStart = System.nanoTime()
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
@@ -221,73 +274,95 @@ object InteractionProcessor {
         ) {
             return InteractionExecutionResult.WAITING
         }
+        val routeNs = System.nanoTime() - routeStart
 
         player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
-        ObjectContentDispatcher.tryHandleMagic(player, intent.task.walkToId, intent.task.walkToPosition, intent.objectData, intent.spellId)
+        val timing =
+            ObjectContentDispatcher.tryHandleTimed(
+                ObjectInteractionContext.magic(
+                    client = player,
+                    objectId = intent.task.walkToId,
+                    position = intent.task.walkToPosition,
+                    obj = intent.objectData,
+                    spellId = intent.spellId,
+                ),
+            )
         player.walkToTask = null
         clear(player)
-        slowLogIfNeeded(player, intent, startNs)
+        slowLogIfNeeded(
+            player,
+            intent,
+            intent.objectId,
+            -1,
+            routeNs,
+            timing.resolveNs,
+            timing.handlerNs,
+            timing.handlerName,
+            startNs,
+        )
         return InteractionExecutionResult.COMPLETE
     }
 
-    private fun handleNpcClick1(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
+    private fun handleNpcClick1(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (!npc.isAlive) {
             player.send(SendMessage("That monster has been killed!"))
-            return
+            return DispatchTiming(false, 0L, 0L, null)
         }
         player.resetAction()
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
         player.startFishing(npc.id, 1)
-        NpcContentDispatcher.tryHandleClick(player, 1, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 1, npc)
     }
 
-    private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
+    private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (!npc.isAlive) {
             player.send(SendMessage("That monster has been killed!"))
-            return
+            return DispatchTiming(false, 0L, 0L, null)
         }
         player.resetAction()
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
         player.startFishing(npc.id, 2)
-        NpcContentDispatcher.tryHandleClick(player, 2, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 2, npc)
     }
 
-    private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
+    private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
-            return
+            return DispatchTiming(false, 0L, 0L, null)
         }
         player.resetAction()
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        NpcContentDispatcher.tryHandleClick(player, 3, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 3, npc)
     }
 
-    private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
+    private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
-            return
+            return DispatchTiming(false, 0L, 0L, null)
         }
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        NpcContentDispatcher.tryHandleClick(player, 4, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 4, npc)
     }
 
-    private fun handleNpcAttack(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc) {
+    private fun handleNpcAttack(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.magicId >= 0) {
             player.magicId = -1
         }
         if (player.deathStage >= 1) {
-            return
+            return DispatchTiming(false, 0L, 0L, null)
         }
-        if (NpcContentDispatcher.tryHandleAttack(player, npc)) {
-            return
+        val timing = NpcContentDispatcher.tryHandleAttackTimed(player, npc)
+        if (timing.handled) {
+            return timing
         }
         player.resetWalkingQueue()
         player.startAttack(npc)
+        return timing
     }
 
     private fun clear(player: Client) {
@@ -297,10 +372,37 @@ object InteractionProcessor {
         player.interactionTaskHandle = null
     }
 
-    private fun slowLogIfNeeded(player: Client, intent: InteractionIntent, startNs: Long) {
+    private fun slowLogIfNeeded(
+        player: Client,
+        intent: InteractionIntent,
+        targetId: Int,
+        option: Int,
+        routeNs: Long,
+        resolveNs: Long,
+        handlerNs: Long,
+        handlerName: String?,
+        startNs: Long,
+    ) {
         val elapsedMs = (System.nanoTime() - startNs) / 1_000_000L
         if (elapsedMs >= 2L) {
-            logger.warn("Slow interaction: type={} player={} {}ms", intent::class.java.name, player.playerName, elapsedMs)
+            val routeMs = routeNs / 1_000_000L
+            val resolveMs = resolveNs / 1_000_000L
+            val handlerMs = handlerNs / 1_000_000L
+            val accounted = routeMs + resolveMs + handlerMs
+            val overheadMs = (elapsedMs - accounted).coerceAtLeast(0L)
+            logger.warn(
+                "Slow interaction: type={} player={} target={} option={} total={}ms route={}ms resolve={}ms handler={}ms overhead={}ms handlerName={}",
+                intent::class.java.name,
+                player.playerName,
+                targetId,
+                option,
+                elapsedMs,
+                routeMs,
+                resolveMs,
+                handlerMs,
+                overheadMs,
+                handlerName ?: "n/a",
+            )
         }
     }
 

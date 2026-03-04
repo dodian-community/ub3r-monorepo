@@ -23,7 +23,6 @@ public class MoveItemsListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        System.out.println("MoveItemsListener");
         ByteMessage msg = ByteMessage.wrap(packet.getPayload());
         
         // Read values using the same byte order as the original packet

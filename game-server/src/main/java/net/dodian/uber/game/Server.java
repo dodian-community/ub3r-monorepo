@@ -140,6 +140,8 @@ public class Server {
         new DoorHandler();
         ButtonContentRegistry.bootstrap();
         ObjectContentRegistry.bootstrap();
+        net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        ObjectContentRegistry.prewarmObjectDefinitions();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");

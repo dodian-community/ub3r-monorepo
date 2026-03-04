@@ -291,11 +291,19 @@ class RootPlayerInfoService {
     }
 
     private fun sendPacket(viewer: Client, write: (ByteMessage) -> Unit) {
-        val pooledBuffer: ByteBuf = ByteMessage.pooledBuffer(8192)
+        val capacity = viewer.playerUpdateCapacity
+        val pooledBuffer: ByteBuf = viewer.channel?.let { channel ->
+            if (channel.isActive) {
+                channel.alloc().buffer(capacity)
+            } else {
+                null
+            }
+        } ?: ByteMessage.pooledBuffer(capacity)
         var message: ByteMessage? = null
         try {
             message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
             write(message)
+            viewer.updatePlayerUpdateCapacity(message.content().writerIndex())
             viewer.send(message)
         } catch (e: Exception) {
             if (message != null) {

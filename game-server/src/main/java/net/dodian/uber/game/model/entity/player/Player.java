@@ -39,10 +39,13 @@ import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public abstract class Player extends Entity {
+    private static final Logger logger = LoggerFactory.getLogger(Player.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
     public long longName = 0;
     public int wildyLevel = 0;
@@ -430,11 +433,21 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("[player-{}]: {}", getSlot(), str);
+        }
     }
 
     public void println(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        logger.info("[player-{}]: {}", getSlot(), str);
     }
 
     public String getSongUnlockedSaveText() {
@@ -1721,7 +1734,7 @@ public abstract class Player extends Entity {
         try {
             c.send(new SendMessage(pageName + "#url#"));
         } catch (Exception e) {
-            System.out.println("error opening page.." + e);
+            logger.warn("error opening page..", e);
         }
     }
 
