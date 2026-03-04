@@ -37,13 +37,13 @@ public class ObjectInteractionListener implements PacketListener {
 
     static {
         ObjectInteractionListener listener = new ObjectInteractionListener();
-        PacketListenerManager.register(132, listener); // click1
-        PacketListenerManager.register(252, listener); // click2
-        PacketListenerManager.register(70, listener);  // click3
-        PacketListenerManager.register(234, listener); // click4
-        PacketListenerManager.register(228, listener); // click5
-        PacketListenerManager.register(192, listener); // item on object
-        PacketListenerManager.register(35, listener);  // magic on object
+        safeRegister(132, listener); // click1
+        safeRegister(252, listener); // click2
+        safeRegister(70, listener);  // click3
+        safeRegister(234, listener); // click4
+        safeRegister(228, listener); // click5
+        safeRegister(192, listener); // item on object
+        safeRegister(35, listener);  // magic on object
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectX = decoded.objectX;
         final int objectY = decoded.objectY;
 
-        final WalkToTask task = new WalkToTask(actionForOption(option), objectId, new Position(objectX, objectY));
+        final WalkToTask task = new WalkToTask(actionForOption(option), objectId, new Position(objectX, objectY, client.getPosition().getZ()));
         final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
         final GameObjectData object = GameObjectData.forId(task.getWalkToId());
         client.setWalkToTask(task);
@@ -174,7 +174,7 @@ public class ObjectInteractionListener implements PacketListener {
         final WalkToTask task = new WalkToTask(
             WalkToTask.Action.OBJECT_FIRST_CLICK,
             objectId,
-            new Position(objectX, objectY)
+            new Position(objectX, objectY, client.getPosition().getZ())
         );
         final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
         final GameObjectData object = GameObjectData.forId(task.getWalkToId());
@@ -443,6 +443,14 @@ public class ObjectInteractionListener implements PacketListener {
         int low = (buf.readUnsignedByte() - 128) & 0xFF;
         int high = buf.readUnsignedByte();
         return ((high << 8) | low) & 0xFFFF;
+    }
+
+    private static void safeRegister(int opcode, PacketListener listener) {
+        try {
+            PacketListenerManager.register(opcode, listener);
+        } catch (RuntimeException ex) {
+            logger.debug("Skipping object interaction listener registration for opcode {}: {}", opcode, ex.getMessage());
+        }
     }
 
     private static final class DecodedObjectClick {

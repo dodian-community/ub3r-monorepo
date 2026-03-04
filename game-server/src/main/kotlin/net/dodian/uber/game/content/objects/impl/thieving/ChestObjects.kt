@@ -10,11 +10,28 @@ import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.thieving.Thieving
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.security.ItemLog
 import net.dodian.utilities.Utils
 
 object ChestObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(375, 378, 6847, 20873, 11729, 11730, 11731, 11732, 11733, 11734)
+
+    override fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ): ObjectInteractionPolicy? {
+        if (option != 1 && option != 2) {
+            return null
+        }
+        return ObjectInteractionPolicy(
+            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
+            requireMovementSettled = true,
+            settleTicks = 1,
+        )
+    }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 20873 || objectId == 6847) {

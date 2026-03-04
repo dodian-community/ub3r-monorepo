@@ -3,7 +3,6 @@ package net.dodian.uber.game.runtime.interaction;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
@@ -20,24 +19,27 @@ public final class ObjectInteractionDistance {
 
     public enum DistanceMode {
         CLICK,
-        MINING,
         ITEM_ON_OBJECT,
         MAGIC,
+        POLICY_NEAREST_BOUNDARY_CARDINAL,
+        POLICY_NEAREST_BOUNDARY_ANY,
     }
 
     public static Position resolveDistancePosition(
             Client client,
-            WalkToTask task,
+            Position walkTo,
             int objectId,
             GameObjectData objectData,
             GameObjectDef def,
             DistanceMode mode
     ) {
-        Position walkTo = task.getWalkToPosition();
         Position objectPosition = null;
 
-        if (mode == DistanceMode.MINING) {
-            return resolveMiningDistancePosition(client, walkTo, objectData, def, objectId);
+        if (mode == DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL) {
+            return resolveNearestBoundaryDistancePosition(client, walkTo, objectData, def, objectId, true);
+        }
+        if (mode == DistanceMode.POLICY_NEAREST_BOUNDARY_ANY) {
+            return resolveNearestBoundaryDistancePosition(client, walkTo, objectData, def, objectId, false);
         }
 
         Object objectAtTile = new Object(objectId, walkTo.getX(), walkTo.getY(), walkTo.getZ(), 10);
@@ -142,31 +144,34 @@ public final class ObjectInteractionDistance {
         return objectPosition;
     }
 
-    private static Position resolveMiningDistancePosition(
+    private static Position resolveNearestBoundaryDistancePosition(
             Client client,
             Position walkTo,
             GameObjectData objectData,
             GameObjectDef def,
-            int objectId
+            int objectId,
+            boolean cardinalOnly
     ) {
         if (client.getPosition().getZ() != walkTo.getZ()) {
             return null;
         }
 
-        Footprint footprint = resolveObjectFootprint(client, walkTo, objectData, def, objectId);
+        Footprint footprint = resolveObjectFootprint(walkTo, objectData, def, objectId);
         Position nearestBoundaryTile = resolveNearestBoundaryTile(client.getPosition(), footprint);
         if (nearestBoundaryTile == null) {
             return null;
         }
 
-        if (isCardinalAdjacent(client.getPosition(), nearestBoundaryTile)) {
+        if (cardinalOnly && isCardinalAdjacent(client.getPosition(), nearestBoundaryTile)) {
+            return nearestBoundaryTile;
+        }
+        if (!cardinalOnly && isAdjacent(client.getPosition(), nearestBoundaryTile)) {
             return nearestBoundaryTile;
         }
         return null;
     }
 
     private static Footprint resolveObjectFootprint(
-            Client client,
             Position walkTo,
             GameObjectData objectData,
             GameObjectDef def,
@@ -198,7 +203,7 @@ public final class ObjectInteractionDistance {
             maxY = minY + sizeY - 1;
         }
 
-        return new Footprint(minX, minY, maxX, maxY, client.getPosition().getZ());
+        return new Footprint(minX, minY, maxX, maxY, walkTo.getZ());
     }
 
     private static Position resolveNearestBoundaryTile(Position player, Footprint footprint) {
@@ -234,6 +239,15 @@ public final class ObjectInteractionDistance {
         int deltaX = Math.abs(player.getX() - tile.getX());
         int deltaY = Math.abs(player.getY() - tile.getY());
         return (deltaX + deltaY) == 1;
+    }
+
+    private static boolean isAdjacent(Position player, Position tile) {
+        if (player.getZ() != tile.getZ()) {
+            return false;
+        }
+        int deltaX = Math.abs(player.getX() - tile.getX());
+        int deltaY = Math.abs(player.getY() - tile.getY());
+        return Math.max(deltaX, deltaY) == 1;
     }
 
     private static int clamp(int value, int min, int max) {

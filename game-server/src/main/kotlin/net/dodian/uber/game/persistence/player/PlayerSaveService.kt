@@ -17,12 +17,6 @@ import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.PlayerSaveReason
 import net.dodian.uber.game.persistence.PlayerSaveSnapshot
 import org.slf4j.LoggerFactory
-import net.dodian.utilities.databaseSaveBurstAttempts
-import net.dodian.utilities.databaseSaveRetryBaseMs
-import net.dodian.utilities.databaseSaveRetryMaxMs
-import net.dodian.utilities.playerSaveBatchDelayMs
-import net.dodian.utilities.playerSaveRequestTimeoutMs
-import net.dodian.utilities.playerSaveShadowEnabled
 
 object PlayerSaveService {
     private val logger = LoggerFactory.getLogger(PlayerSaveService::class.java)
@@ -64,7 +58,7 @@ object PlayerSaveService {
         val seq = sequence.incrementAndGet()
         val envelope = PlayerSaveEnvelope.fromClient(client, seq, reason, updateProgress, finalSave, dirtyMask)
         val shadowSnapshot =
-            if (playerSaveShadowEnabled) {
+            if (SAVE_SHADOW_ENABLED) {
                 PlayerSaveSnapshot.fromClient(client, seq, reason, updateProgress, finalSave)
             } else {
                 null
@@ -174,7 +168,7 @@ object PlayerSaveService {
             AccountPersistenceService.scope.launch {
                 while (isActive) {
                     drainOnce()
-                    delay(playerSaveBatchDelayMs)
+                    delay(SAVE_BATCH_DELAY_MS)
                 }
             }
     }
@@ -211,10 +205,10 @@ object PlayerSaveService {
     }
 
     private suspend fun handleRequest(request: PlayerSaveRequest) {
-        var backoffMs = databaseSaveRetryBaseMs.coerceAtLeast(50L)
+        var backoffMs = SAVE_RETRY_BASE_MS.coerceAtLeast(50L)
         while (AccountPersistenceService.scope.isActive) {
             val elapsed =
-                withTimeoutOrNull(playerSaveRequestTimeoutMs) {
+                withTimeoutOrNull(SAVE_REQUEST_TIMEOUT_MS) {
                     measureTimeMillis {
                         val snapshot = repository.buildSnapshot(request.envelope)
                         if (request.envelope.finalSave || request.envelope.updateProgress) {
@@ -231,7 +225,7 @@ object PlayerSaveService {
 
             request.attempts++
             totalRetries.incrementAndGet()
-            if (!request.envelope.finalSave && request.attempts >= databaseSaveBurstAttempts.coerceAtLeast(1)) {
+            if (!request.envelope.finalSave && request.attempts >= SAVE_BURST_ATTEMPTS.coerceAtLeast(1)) {
                 logger.error(
                     "Save failed after {} attempts for {} (dbId={})",
                     request.attempts,
@@ -248,7 +242,7 @@ object PlayerSaveService {
                 request.envelope.dbId,
             )
             delay(timeMillis = backoffMs)
-            backoffMs = (backoffMs * 2).coerceAtMost(databaseSaveRetryMaxMs)
+            backoffMs = (backoffMs * 2).coerceAtMost(SAVE_RETRY_MAX_MS)
         }
     }
 
@@ -266,4 +260,11 @@ object PlayerSaveService {
             )
         }
     }
+
+    private const val SAVE_BURST_ATTEMPTS = 8
+    private const val SAVE_RETRY_BASE_MS = 250L
+    private const val SAVE_RETRY_MAX_MS = 5000L
+    private const val SAVE_BATCH_DELAY_MS = 100L
+    private const val SAVE_REQUEST_TIMEOUT_MS = 5000L
+    private const val SAVE_SHADOW_ENABLED = false
 }

@@ -4,6 +4,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.WalkToTask
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
@@ -62,6 +63,33 @@ class InteractionProcessorTest {
         }
     }
 
+    @Test
+    fun `object interaction is not cancelled by map region change while walking`() {
+        val player = miningReadyPlayer(slot = 203, dbId = 9203)
+        val target = Position(player.position.x + 4, player.position.y, player.position.z)
+        val task = WalkToTask(WalkToTask.Action.OBJECT_FIRST_CLICK, 11643, target)
+        val intent =
+            ObjectClickIntent(
+                opcode = 132,
+                createdCycle = PlayerHandler.cycle.toLong(),
+                option = 1,
+                objectId = 11643,
+                objectPosition = target,
+                task = task,
+                objectData = null,
+                objectDef = null,
+            )
+        player.walkToTask = task
+        player.pendingInteraction = intent
+        player.interactionEarliestCycle = PlayerHandler.cycle.toLong()
+        setMapRegionDidChange(player, true)
+
+        val result = InteractionProcessor.process(player)
+
+        assertEquals(InteractionExecutionResult.WAITING, result)
+        assertNotNull(player.pendingInteraction)
+    }
+
     private fun miningReadyPlayer(slot: Int, dbId: Int): Client {
         val client = Client(EmbeddedChannel(), slot)
         client.dbId = dbId
@@ -92,5 +120,11 @@ class InteractionProcessorTest {
             objectData = null,
             objectDef = null,
         )
+    }
+
+    private fun setMapRegionDidChange(player: Client, value: Boolean) {
+        val field = Player::class.java.getDeclaredField("mapRegionDidChange")
+        field.isAccessible = true
+        field.setBoolean(player, value)
     }
 }
