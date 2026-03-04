@@ -28,7 +28,6 @@ public class ViewOtherPlayerBank implements OutgoingPacket {
     public ViewOtherPlayerBank(int interfaceId, List<GameItem> bankItems) {
         this.interfaceId = interfaceId;
         this.bankItems = new ArrayList<>(bankItems);
-        System.out.println("ViewOtherPlayerBank: Showing " + bankItems.size() + " items from another player's bank");
     }
 
     @Override
@@ -37,7 +36,6 @@ public class ViewOtherPlayerBank implements OutgoingPacket {
         message.putShort(interfaceId); // writeWord - interface ID
         message.putShort(bankItems.size()); // writeWord - number of items
         
-        System.out.println("Sending other player's bank with " + bankItems.size() + " items");
         
         for (GameItem item : bankItems) {
             int amount = item.getAmount();

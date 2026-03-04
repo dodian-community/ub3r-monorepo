@@ -15,7 +15,6 @@ import net.dodian.uber.game.netty.codec.MessageType;
  * - Frame: 2 bytes (interface ID to display)
  */
 public class SendFrame164 implements OutgoingPacket {
-
     private final int frame;
 
     /**
@@ -40,6 +39,5 @@ public class SendFrame164 implements OutgoingPacket {
         message.putShort(frame, ByteOrder.LITTLE);
         
         client.send(message);
-        System.out.println("Send frame 164: " + frame);
     }
 }

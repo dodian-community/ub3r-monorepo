@@ -19,12 +19,12 @@ import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketEncoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
+import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Processes the full second-stage login payload and, on success, creates the
@@ -41,10 +41,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     private static final AttributeKey<ISAACCipher> IN_CIPHER_KEY  = AttributeKey.valueOf("inCipher");
     private static final AttributeKey<ISAACCipher> OUT_CIPHER_KEY = AttributeKey.valueOf("outCipher");
-
-    // Dedicated thread pool for blocking login operations
-    private static final ExecutorService LOGIN_EXECUTOR =
-            Executors.newFixedThreadPool(Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
 
     private final PlayerHandler playerHandler;
 
@@ -162,7 +158,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         client.handler = ph;
         client.setPlayerName(Utils.capitalize(username.replace('_', ' ')));
         client.playerPass = password;
-        client.longName  = Utils.playerNameToInt64(client.getPlayerName());
+        // Canonical name hash used across online maps/friends.
+        client.longName  = Utils.playerNameToLong(client.getPlayerName());
         try {
             InetSocketAddress isa = (InetSocketAddress) ctx.channel().remoteAddress();
             client.connectedFrom = isa.getAddress().getHostAddress();
@@ -175,18 +172,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         // if (client.getInputStream()  != null) client.getInputStream().packetEncryption  = inCipher;
 
         final int slotCopy = reservedSlot;
-        LOGIN_EXECUTOR.submit(() -> {
-            int loadResult;
-            try {
-                loadResult = Server.loginManager.loadgame(client, username, password);
-            } catch (Exception ex) {
-                logger.warn("[Netty] loadgame exception for {}: {}", username, ex.getMessage(), ex);
-                loadResult = 13; // generic error
-            }
-            final int lr = loadResult;
-            // Ensure completion logic runs back on the Netty event loop thread
-            ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, lr, slotCopy));
-        });
+        AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
+                ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, loadResult, slotCopy)));
         return;
     }
 
@@ -207,9 +194,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         client.premium = client.playerRights > 0 || client.premium;
 
         sendLoginSuccess(ctx, client.playerRights);
-
-        PlayerHandler.players[slot] = client;
-        PlayerHandler.playersOnline.put(Utils.playerNameToLong(client.getPlayerName()), client);
 
         // CRITICAL: Setup game pipeline BEFORE PlayerInitializer sends packets
         // Remove handshake & login-specific decoders first
@@ -232,20 +216,36 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         // Store reference for disconnect cleanup
         ctx.channel().attr(AttributeKey.valueOf("activeClient")).set(client);
 
-        // NOW initialize player - packets will go through proper game pipeline
-        try {
-            new PlayerInitializer().initializePlayer(client);
-            client.initialized = true;
-        } catch (Exception ex) {
-            logger.warn("[Netty] PlayerInitializer error for {}: {}", client.getPlayerName(), ex.getMessage());
-        }
-        client.isActive = true;
-        if (client.getUpdateFlags() != null) {
-            client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        }
-        // client.flushOutStream(); // No longer needed with pure Netty
+        // Finish registration + initialization on the game thread. This avoids cross-thread mutation
+        // of PlayerHandler players[]/playersOnline and reduces login-related sync spikes.
+        final io.netty.channel.Channel channel = ctx.channel();
+        final int slotCopy = slot;
+        GameThreadTaskQueue.submit(() -> {
+            if (!channel.isActive() || client.disconnected) {
+                // Channel died before the game thread could register the player; release the reserved slot.
+                synchronized (PlayerHandler.SLOT_LOCK) {
+                    PlayerHandler.usedSlots.clear(slotCopy);
+                    PlayerHandler.players[slotCopy] = null;
+                }
+                return;
+            }
 
-        client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+            PlayerHandler.players[slotCopy] = client;
+            PlayerHandler.playersOnline.put(client.longName, client);
+
+            try {
+                new PlayerInitializer().initializePlayer(client);
+                client.initialized = true;
+            } catch (Exception ex) {
+                logger.warn("[GameThread] PlayerInitializer error for {}: {}", client.getPlayerName(), ex.getMessage());
+            }
+
+            client.isActive = true;
+            if (client.getUpdateFlags() != null) {
+                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+            }
+            client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+        });
 
         loginFinished = true;
         logger.info("[Netty] Login finished for {} slot {} (async)", client.getPlayerName(), slot);

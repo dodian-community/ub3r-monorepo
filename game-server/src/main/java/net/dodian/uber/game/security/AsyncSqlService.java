@@ -1,27 +1,18 @@
 package net.dodian.uber.game.security;
 
+import net.dodian.uber.game.persistence.DbDispatchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AsyncSqlService {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncSqlService.class);
 
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable, "AsyncSqlService");
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
+    private static final ExecutorService EXECUTOR = DbDispatchers.logExecutor;
 
     private static final AtomicBoolean SHUTTING_DOWN = new AtomicBoolean(false);
 
@@ -51,15 +42,6 @@ public final class AsyncSqlService {
         if (!SHUTTING_DOWN.compareAndSet(false, true)) {
             return;
         }
-
-        EXECUTOR.shutdown();
-        try {
-            if (!EXECUTOR.awaitTermination(Math.max(1L, timeout.toMillis()), TimeUnit.MILLISECONDS)) {
-                EXECUTOR.shutdownNow();
-            }
-        } catch (InterruptedException interruptedException) {
-            Thread.currentThread().interrupt();
-            EXECUTOR.shutdownNow();
-        }
+        DbDispatchers.shutdown(EXECUTOR, timeout);
     }
 }

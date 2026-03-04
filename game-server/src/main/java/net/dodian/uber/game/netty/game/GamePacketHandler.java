@@ -42,16 +42,16 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
             windowRateLimitLogged = false;
         }
 
-        if (packetsInWindow >= NetworkConstants.PACKET_PROCESS_LIMIT) {
+        if (packetsInWindow >= NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW) {
             if (!windowRateLimitLogged) {
                 logger.warn("[Netty] Rate limit exceeded for {}: opcode={} size={} (>{} packets in {}ms window)",
                         client.getPlayerName(), packet.getOpcode(), packet.getSize(),
-                        NetworkConstants.PACKET_PROCESS_LIMIT, PACKET_WINDOW_MILLIS);
+                        NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
                 windowRateLimitLogged = true;
             }
             logger.debug("[Netty] Dropping packet opcode={} size={} from {} due to rate limit ({} per {}ms)",
                     packet.getOpcode(), packet.getSize(), client.getPlayerName(),
-                    NetworkConstants.PACKET_PROCESS_LIMIT, PACKET_WINDOW_MILLIS);
+                    NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
             releasePacket(packet);
             return;
         }

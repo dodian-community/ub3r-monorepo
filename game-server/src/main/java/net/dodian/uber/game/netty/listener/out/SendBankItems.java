@@ -9,11 +9,16 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Sent to update the client's bank interface with a specific set of items.
  */
 public class SendBankItems implements OutgoingPacket {
+    private static final Logger logger = LoggerFactory.getLogger(SendBankItems.class);
+    private static final int[] TRACE_ITEM_IDS = {1157, 526, 995, 379, 1193, 1007, 1069, 1731, 1083, 1119};
+    private static final int[] TRACE_ITEM_AMOUNTS = {114, 1000, 199713, 279, 108, 152, 99, 35, 94, 91};
 
     private final List<Integer> itemIds;
     private final List<Integer> amounts;
@@ -30,7 +35,9 @@ public class SendBankItems implements OutgoingPacket {
         this.itemIds = new ArrayList<>(itemIds);
         this.amounts = new ArrayList<>(amounts);
         this.interfaceId = interfaceId;
-        System.out.println("SendBankItems: for npc " + itemIds + ", " + amounts + ", " + interfaceId);
+        if (matchesTraceSubset(this.itemIds, this.amounts, interfaceId)) {
+            logger.info("SendBankItems: for npc {} , {} , {}", this.itemIds, this.amounts, interfaceId);
+        }
     }
 
     /**
@@ -50,7 +57,14 @@ public class SendBankItems implements OutgoingPacket {
             throw new IllegalArgumentException("Item IDs and amounts lists must be of equal size");
         }
 
-        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
+        int size = 4 + 2;
+        for (int i = 0; i < itemIds.size(); i++) {
+            size += 4;
+            if (amounts.get(i) != 0) {
+                size += 2;
+            }
+        }
+        ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT, ByteMessage.pooledBuffer(size + 8));
 
         // Mystic client SEND_UPDATE_ITEMS layout:
         // int interfaceId, short itemCount,
@@ -73,5 +87,29 @@ public class SendBankItems implements OutgoingPacket {
         }
 
         client.send(message);
+    }
+
+    private static boolean matchesTraceSubset(List<Integer> itemIds, List<Integer> amounts, int interfaceId) {
+        if (interfaceId != 50300) {
+            return false;
+        }
+        if (itemIds.size() != amounts.size()) {
+            return false;
+        }
+        for (int i = 0; i < TRACE_ITEM_IDS.length; i++) {
+            int targetId = TRACE_ITEM_IDS[i];
+            int targetAmount = TRACE_ITEM_AMOUNTS[i];
+            boolean found = false;
+            for (int j = 0; j < itemIds.size(); j++) {
+                if (itemIds.get(j) == targetId && amounts.get(j) == targetAmount) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
     }
 }

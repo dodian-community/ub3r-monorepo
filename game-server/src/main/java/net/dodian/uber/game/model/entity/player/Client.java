@@ -26,8 +26,9 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
+import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -57,9 +58,12 @@ import net.dodian.uber.game.skills.*;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Client extends Player implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
 
     public Channel channel;
@@ -87,9 +91,15 @@ public class Client extends Player implements Runnable {
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
     private int currentWalkableInterface = -1;
+    private int lastWalkableInterfaceSent = -2;
+    private boolean walkableInterfaceDirty = true;
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
+    private long lastEffectsPeriodicDirtyAtMs = 0L;
+    private boolean outboundDirty = false;
+    private int lastPlayerUpdateCapacity = 8192;
+    private int lastNpcUpdateCapacity = 16384;
     /**
      * Tracks if the client window currently has focus.
      */
@@ -256,12 +266,54 @@ public class Client extends Player implements Runnable {
         send(new SendString(text, lineId));
     }
 
-    public void setWalkableInterface(int id) {
-        if (currentWalkableInterface == id) {
-            return;
+    public void invalidateUiText(int lineId) {
+        uiTextCache.remove(lineId);
+        if (lineId == 6570) {
+            lastTopBarText = null;
         }
-        currentWalkableInterface = id;
-        send(new SetInterfaceWalkable(id));
+    }
+
+    public void invalidateWalkableUiTexts() {
+        invalidateUiText(6570);
+        invalidateUiText(6572);
+        invalidateUiText(6664);
+    }
+
+    public void setWalkableInterface(int id) {
+        if (currentWalkableInterface != id) {
+            currentWalkableInterface = id;
+            walkableInterfaceDirty = true;
+            invalidateWalkableUiTexts();
+        }
+        if (walkableInterfaceDirty || lastWalkableInterfaceSent != id) {
+            lastWalkableInterfaceSent = id;
+            walkableInterfaceDirty = false;
+            send(new SetInterfaceWalkable(id));
+        }
+    }
+
+    public void clearWalkableInterface() {
+        setWalkableInterface(-1);
+    }
+
+    public void forceWalkableInterfaceRefresh() {
+        walkableInterfaceDirty = true;
+        lastWalkableInterfaceSent = -2;
+        invalidateWalkableUiTexts();
+    }
+
+    public int getCurrentWalkableInterface() {
+        return currentWalkableInterface;
+    }
+
+    public boolean isWalkableInterfaceActive(int id) {
+        return currentWalkableInterface == id;
+    }
+
+    public void onPostLoginUiInit() {
+        WriteEnergy();
+        forceWalkableInterfaceRefresh();
+        updatePlayerDisplay();
     }
 
     public void setPlayerContextMenu(int slot, boolean enabled, String text) {
@@ -339,7 +391,6 @@ public class Client extends Player implements Runnable {
 
     public void animation2(int id, Position pos) {
         send(new Animation2(id, pos, 0, 0));
-        System.out.println("Animation: " + id + " at " + pos);
     }
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
@@ -431,8 +482,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        System.out.println("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
+        if (!getClientPacketTraceEnabled() && !getClientUiTraceEnabled()) {
+            return;
+        }
+        logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void print_debug(String str) {
@@ -444,8 +497,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void println(String str) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-        System.out.println("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
+        logger.info("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void rerequestAnim() {
@@ -541,7 +593,7 @@ public class Client extends Player implements Runnable {
         if (channel != null) {
             channel.close();
         }
-        println("Thread removed from Server");
+        logger.debug("Thread removed from Server for player={}", getPlayerName());
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
@@ -610,7 +662,29 @@ public class Client extends Player implements Runnable {
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
         if (listener != null) {
-            listener.handle(this, packet);
+            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            if (sample || getInboundOpcodeProfilingEnabled()) {
+                long startNs = System.nanoTime();
+                listener.handle(this, packet);
+                long elapsedNs = System.nanoTime() - startNs;
+                if (sample) {
+                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
+                }
+                if (getInboundOpcodeProfilingEnabled()) {
+                    long elapsedMs = elapsedNs / 1_000_000L;
+                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
+                        println_debug(
+                                "Slow inbound opcode " + packet.getOpcode() +
+                                        " size=" + packet.getSize() +
+                                        " player=" + getPlayerName() +
+                                        " listener=" + listener.getClass().getSimpleName() +
+                                        " took=" + elapsedMs + "ms"
+                        );
+                    }
+                }
+            } else {
+                listener.handle(this, packet);
+            }
         }
     }
 
@@ -637,6 +711,7 @@ public class Client extends Player implements Runnable {
             return;
         }
 
+        outboundDirty = true;
         if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
             channel.write(message);
         } else {
@@ -648,7 +723,31 @@ public class Client extends Player implements Runnable {
         if (disconnected || channel == null || !channel.isActive()) {
             return;
         }
+        if (!outboundDirty) {
+            return;
+        }
         channel.flush();
+        outboundDirty = false;
+    }
+
+    public int getPlayerUpdateCapacity() {
+        return lastPlayerUpdateCapacity;
+    }
+
+    public int getNpcUpdateCapacity() {
+        return lastNpcUpdateCapacity;
+    }
+
+    public void updatePlayerUpdateCapacity(int size) {
+        if (size > lastPlayerUpdateCapacity) {
+            lastPlayerUpdateCapacity = Math.min(size, 65536);
+        }
+    }
+
+    public void updateNpcUpdateCapacity(int size) {
+        if (size > lastNpcUpdateCapacity) {
+            lastNpcUpdateCapacity = Math.min(size, 65536);
+        }
     }
 
     public void send(OutgoingPacket packet) {
@@ -677,12 +776,6 @@ public class Client extends Player implements Runnable {
 
         packet.send(this);
 
-        // Debug helper: show which interface is being opened.
-        // Comment out/remove once you don't need it anymore.
-        if (openedInterfaceId != null) {
-            send(new SendMessage("Open interface (" + openedVia + "): " + openedInterfaceId));
-        }
-        
     }
 
     @Override
@@ -729,18 +822,6 @@ public class Client extends Player implements Runnable {
 
         // Send the logout packet
         send(new Logout());
-
-        // Wait a short time to ensure the packet is processed by the client
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // Ignore
-        }
-
-        // Now close the connection
-        if (getChannel() != null && getChannel().isActive()) {
-            getChannel().close();
-        }
     }
 
     public void saveStats(PlayerSaveReason reason, boolean logout, boolean updateProgress) {
@@ -793,7 +874,7 @@ public class Client extends Player implements Runnable {
         // TODO: Look into improving this, and potentially a system to configure player saving per world id...
         if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob")) {
             try {
-                PlayerSaveCoordinator.requestSave(this, reason, updateProgress, logout);
+                AccountPersistenceService.requestSave(this, reason, updateProgress, logout);
             } catch (Exception e) {
                 println_debug("Save Exception: " + getSlot() + ", " + getPlayerName() + ", msg: " + e);
             }
@@ -820,6 +901,7 @@ public class Client extends Player implements Runnable {
             send(new RemoveInterfaces());
             return;
         }
+        boolean bankChanged = false;
         int id = GetNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
@@ -837,11 +919,13 @@ public class Client extends Player implements Runnable {
                         if (bankItemsN[fromSlot] > amount) {
                             if (addItem((bankItems[fromSlot] - 1), amount)) {
                                 bankItemsN[fromSlot] -= amount;
+                                bankChanged = true;
                             }
                         } else {
                             if (addItem(itemID, bankItemsN[fromSlot])) {
                                 bankItems[fromSlot] = 0;
                                 bankItemsN[fromSlot] = 0;
+                                bankChanged = true;
                             }
                         }
                     } else {
@@ -849,6 +933,7 @@ public class Client extends Player implements Runnable {
                             if (bankItemsN[fromSlot] > 0) {
                                 if (addItem(itemID, 1)) {
                                     bankItemsN[fromSlot] -= 1;
+                                    bankChanged = true;
                                     amount--;
                                 } else {
                                     amount = 0;
@@ -862,11 +947,13 @@ public class Client extends Player implements Runnable {
                     if (bankItemsN[fromSlot] > amount) {
                         if (addItem(id, amount)) {
                             bankItemsN[fromSlot] -= amount;
+                            bankChanged = true;
                         }
                     } else {
                         if (addItem(id, bankItemsN[fromSlot])) {
                             bankItems[fromSlot] = 0;
                             bankItemsN[fromSlot] = 0;
+                            bankChanged = true;
                         }
                     }
                 } else {
@@ -875,11 +962,13 @@ public class Client extends Player implements Runnable {
                         if (bankItemsN[fromSlot] > amount) {
                             if (addItem(itemID, amount)) {
                                 bankItemsN[fromSlot] -= amount;
+                                bankChanged = true;
                             }
                         } else {
                             if (addItem(itemID, bankItemsN[fromSlot])) {
                                 bankItems[fromSlot] = 0;
                                 bankItemsN[fromSlot] = 0;
+                                bankChanged = true;
                             }
                         }
                     } else {
@@ -887,6 +976,7 @@ public class Client extends Player implements Runnable {
                             if (bankItemsN[fromSlot] > 0) {
                                 if (addItem(itemID, 1)) {
                                     bankItemsN[fromSlot] -= 1;
+                                    bankChanged = true;
                                     amount--;
                                 } else {
                                     amount = 0;
@@ -900,6 +990,9 @@ public class Client extends Player implements Runnable {
             }
         }
         checkItemUpdate();
+        if (bankChanged) {
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
+        }
     }
 
     public int getInvAmt(int itemID) {
@@ -939,6 +1032,7 @@ public class Client extends Player implements Runnable {
         int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
         amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
         addExperience(amount, skill);
+        markSaveDirty(PlayerSaveSegment.STATS.getMask());
         int animation = -1;
         if (newLevel - oldLevel > 0) {
             animation = 199;
@@ -1005,6 +1099,7 @@ public class Client extends Player implements Runnable {
             send(new RemoveInterfaces());
             return;
         }
+        boolean bankChanged = false;
         int id = GetUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
@@ -1033,11 +1128,13 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
+                    bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
                     }
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         send(new SendMessage("Bank full!"));
                         return;
@@ -1046,6 +1143,7 @@ public class Client extends Player implements Runnable {
                 } else if (alreadyInBank) {
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         send(new SendMessage("Bank full!"));
                         return;
@@ -1087,6 +1185,7 @@ public class Client extends Player implements Runnable {
                         if (itemExists) {
                             bankItems[toBankSlot] = playerItems[firstPossibleSlot];
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1107,6 +1206,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1143,11 +1243,13 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
+                    bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
                     }
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         return;
                     }
@@ -1155,6 +1257,7 @@ public class Client extends Player implements Runnable {
                 } else if (alreadyInBank) {
                     if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
                         bankItemsN[toBankSlot] += amount;
+                        bankChanged = true;
                     } else {
                         return;
                     }
@@ -1195,6 +1298,7 @@ public class Client extends Player implements Runnable {
                         if (itemExists) {
                             bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1215,6 +1319,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItemsN[toBankSlot] += 1;
+                            bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
                             amount--;
                         } else {
@@ -1227,6 +1332,9 @@ public class Client extends Player implements Runnable {
             }
         } else {
             send(new SendMessage("Item not supported " + itemID));
+        }
+        if (bankChanged) {
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
         }
     }
 
@@ -1276,6 +1384,7 @@ public class Client extends Player implements Runnable {
             playerItemsN[to] = playerItemsN[from];
             playerItems[from] = tempI;
             playerItemsN[from] = tempN;
+            markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
         if (moveWindow == 5382 && from >= 0 && to >= 0 && from < bankSize() && to < bankSize()) {
@@ -1285,6 +1394,7 @@ public class Client extends Player implements Runnable {
             bankItemsN[from] = bankItemsN[to];
             bankItems[to] = tempI;
             bankItemsN[to] = tempN;
+            markSaveDirty(PlayerSaveSegment.BANK.getMask());
             resetBank();
         }
     }
@@ -1422,6 +1532,7 @@ public class Client extends Player implements Runnable {
                     } else {
                         playerItemsN[i] = maxItemAmount;
                     }
+                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
                     return true;
                 }
             }
@@ -1429,6 +1540,7 @@ public class Client extends Player implements Runnable {
                 if (playerItems[i] <= 0) {
                     playerItems[i] = item + 1;
                     playerItemsN[i] = Math.min(amount, maxItemAmount);
+                    markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
                     return true;
                 }
             }
@@ -1446,6 +1558,7 @@ public class Client extends Player implements Runnable {
                 return false;
             }
             playerItemsN[slot] = playerItemsN[slot] + amount;
+            markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             checkItemUpdate();
             return true;
         } else {
@@ -1458,6 +1571,7 @@ public class Client extends Player implements Runnable {
         item++;
         playerItems[slot] = item;
         playerItemsN[slot] = amount;
+        markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
         checkItemUpdate();
     }
 
@@ -1498,6 +1612,7 @@ public class Client extends Player implements Runnable {
                     playerItemsN[slot] = 0;
                     playerItems[slot] = 0;
                 }
+                markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             }
         }
     }
@@ -1511,6 +1626,7 @@ public class Client extends Player implements Runnable {
                     bankItemsN[slot] = 0;
                     bankItems[slot] = 0;
                 }
+                markSaveDirty(PlayerSaveSegment.BANK.getMask());
                 checkItemUpdate();
             }
         }
@@ -1591,6 +1707,7 @@ public class Client extends Player implements Runnable {
             getEquipment()[targetSlot] = wearID;
             getEquipmentN()[targetSlot] = wearAmount;
             setEquipment(getEquipment()[targetSlot], getEquipmentN()[targetSlot], targetSlot);
+            markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
             getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         }
@@ -1749,9 +1866,16 @@ public class Client extends Player implements Runnable {
     }
 
     public void update() { //Update player before npc for some reason!
-        // Use proper outgoing packet structure instead of direct buffer manipulation
-        new PlayerUpdatePacket(this).send(this);
-        new NpcUpdatePacket(this).send(this);
+        sendPlayerSynchronization();
+        sendNpcSynchronization();
+    }
+
+    public void sendPlayerSynchronization() {
+        PlayerUpdatePacket.sendTo(this, this);
+    }
+
+    public void sendNpcSynchronization() {
+        NpcUpdatePacket.sendTo(this, this);
     }
 
 
@@ -1761,6 +1885,11 @@ public class Client extends Player implements Runnable {
         if (disconnected || isLoggingOut) {
             return;
         }
+        int startingHealth = getCurrentHealth();
+        int startingPrayer = getCurrentPrayer();
+        int startingX = getPosition().getX();
+        int startingY = getPosition().getY();
+        int startingZ = getPosition().getZ();
         /* Combat stuff! */
         setLastCombat(Math.max(getLastCombat() - 1, 0));
         setCombatTimer(Math.max(getCombatTimer() - 1, 0));
@@ -1781,17 +1910,6 @@ public class Client extends Player implements Runnable {
         if (getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
             addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
         //RegionMusic.handleRegionMusic(this);
-        /* Other timers! */
-        if (mutedTill <= rightNow) {
-            sendCachedString(invis ? "You are invisible!" : "", 6572);
-        } else {
-            int mutedHours = 0;
-            int mutedDays = (int) ((mutedTill - rightNow) / 86_400_000);
-            if (mutedDays == 0)
-                mutedHours = (int) ((mutedTill - rightNow) / 3_600_000);
-            mutedHours = Math.max(mutedHours, 1);
-            sendCachedString("Muted: " + (mutedDays > 0 ? mutedDays + " days" : mutedHours + " hours"), 6572);
-        }
         if (getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
             boolean gotIcon = getEquipment()[Equipment.Slot.NECK.getId()] == 8923 || gotSlayerHelmet(this);
             if (iconTimer > 0 && !gotIcon) iconTimer--;
@@ -1820,21 +1938,30 @@ public class Client extends Player implements Runnable {
                 lastRecover = 4;
 
                 Skill.enabledSkills().forEach(skill -> {
+                    boolean changed = false;
                     switch (skill) {
                         case HITPOINTS:
                             if (getCurrentHealth() < getMaxHealth())
+                            {
                                 heal(1); //Not sure if we should remove 1 to max health!
+                                changed = true;
+                            }
                             break;
                         case PRAYER: //Do not restore prayer!
                             break;
                         default:
-                            if (boostedLevel[skill.getId()] > 0)
+                            int before = boostedLevel[skill.getId()];
+                            if (before > 0)
                                 boostedLevel[skill.getId()]--;
-                            else if (boostedLevel[skill.getId()] != 0)
+                            else if (before != 0)
                                 boostedLevel[skill.getId()]++;
+                            changed = boostedLevel[skill.getId()] != before;
                             break;
                     }
-                    refreshSkill(skill);
+                    if (changed) {
+                        refreshSkill(skill);
+                        markSaveDirty(PlayerSaveSegment.STATS.getMask());
+                    }
                 });
             }
         }
@@ -1844,41 +1971,10 @@ public class Client extends Player implements Runnable {
             pray(0);
         }
         // RubberCheck();
-        if (questPage == 0)
-            QuestSend.questInterface(this);
-        else
-            QuestSend.serverInterface(this);
         long now = System.currentTimeMillis();
         if (now >= walkBlock && xLog) {
             UsingAgility = false;
             disconnected = true;
-        }
-        if (getWildLevel() < 1) {
-            if (wildyLevel > 0)
-                setWildLevel(0);
-            updatePlayerDisplay();
-        } else
-            setWildLevel(getWildLevel());
-        if (duelFight || inWildy()) {
-            setPlayerContextMenu(3, true, "Attack");
-            setPlayerContextMenu(2, false, "null");
-            if (!inWildy()) {
-                setPlayerContextMenu(4, false, "null");
-            } else {
-                setPlayerContextMenu(4, false, "Trade with");
-            }
-        } else {
-            setPlayerContextMenu(3, true, "null");
-            setPlayerContextMenu(4, false, "Trade with");
-            setPlayerContextMenu(2, false, "Duel");
-            if (playerRights > 0) {
-                setPlayerContextMenu(5, false, "Mod Action Lookup");
-            }
-        }
-        if (getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
-            setPlayerContextMenu(1, true, "Whack");
-        } else {
-            setPlayerContextMenu(1, false, "null");
         }
         if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
             pickUpItem(attemptGround.x, attemptGround.y);
@@ -1906,17 +2002,11 @@ public class Client extends Player implements Runnable {
                 UsingAgility = false;
             }
         }
-        long current = System.currentTimeMillis();
-        if (wildyLevel < 1 && current - lastBar >= 30_000) {
-            lastBar = current;
-            updatePlayerDisplay();
-            // barTimer = 0;
-        }
-        if (current - lastSave >= 60_000) { // Save every minute except for skills!
+        if (now - lastSave >= 60_000) { // Save every minute except for skills!
             saveStats(PlayerSaveReason.PERIODIC, false, false);
             lastSave = now;
         }
-        if (current - lastProgressSave >= 3_600_000) { // Update skill progress every hour
+        if (now - lastProgressSave >= 3_600_000) { // Update skill progress every hour
             saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
             lastProgressSave = now;
         }
@@ -2091,6 +2181,28 @@ public class Client extends Player implements Runnable {
             disconnected = true;
         else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
             logout();
+
+        if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
+            markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
+        }
+        if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
+            markSaveDirty(PlayerSaveSegment.POSITION.getMask());
+        }
+        // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
+        // and always on final save/logout.
+        if (!effects.isEmpty()) {
+            boolean hasActiveEffect = false;
+            for (int i = 0; i < effects.size(); i++) {
+                if (effects.get(i) != null && effects.get(i) > 0) {
+                    hasActiveEffect = true;
+                    break;
+                }
+            }
+            if (hasActiveEffect && now - lastEffectsPeriodicDirtyAtMs >= 10_000L) {
+                markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
+                lastEffectsPeriodicDirtyAtMs = now;
+            }
+        }
     }
 
 
@@ -2856,7 +2968,9 @@ public class Client extends Player implements Runnable {
     public void stairs(int stairs, int teleX, int teleY) {
         if (stairBlock > System.currentTimeMillis()) {
             resetStairs();
-            System.out.println(getPlayerName() + " stair blocked!");
+            if (getClientPacketTraceEnabled()) {
+                logger.debug("{} stair blocked!", getPlayerName());
+            }
             return;
         }
         stairBlock = System.currentTimeMillis() + 1000;
@@ -3178,6 +3292,7 @@ public class Client extends Player implements Runnable {
     public void WriteEnergy() {
         // Stub: always report 100% run energy to the client
         send(new SendRunEnergy(100));
+        invalidateUiText(149);
         send(new SendString("100%", 149));
     }
 
@@ -3765,7 +3880,7 @@ public class Client extends Player implements Runnable {
             send(new SendString("", 3431));
             other.send(new SendString("", 3431));
         } catch (Exception e) {
-            System.out.println("Error with trade " + e);
+            logger.warn("Error with trade for {}", getPlayerName(), e);
         }
     }
 
@@ -3781,7 +3896,9 @@ public class Client extends Player implements Runnable {
             amount = Math.min(amount, playerItemsN[fromSlot]);
         Client other = getClient(trade_reqId);
         if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            System.out.println("declining in tradeItem()");
+            if (getClientPacketTraceEnabled()) {
+                logger.debug("declining in tradeItem() for {}", getPlayerName());
+            }
             declineTrade();
             return;
         }
@@ -4961,7 +5078,9 @@ public class Client extends Player implements Runnable {
         File file = new File("./data/checkExploit.txt");
         try {
             if (file.createNewFile())
-                System.out.println("Created new file for exploit check!");
+                if (getClientPacketTraceEnabled()) {
+                    logger.debug("Created new file for exploit check!");
+                }
             try (FileWriter fw = new FileWriter(file, true);
                  BufferedWriter bw = new BufferedWriter(fw)) {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -5740,7 +5859,7 @@ public class Client extends Player implements Runnable {
                 checkItemUpdate();
                 //System.out.println("trade succesful");
             } catch (Exception e) {
-                System.out.println("giving items failed.." + e);
+                logger.warn("Giving items failed for {}", getPlayerName(), e);
             }
         }
     }
@@ -6318,7 +6437,9 @@ public class Client extends Player implements Runnable {
         if (speed.length != 3) { //Need atleast 3 values!
             return;
         }
-        System.out.println("x = " + startPos.getX() + ", " + startPos.getY());
+        if (getClientPacketTraceEnabled()) {
+            logger.debug("x = {}, y = {}", startPos.getX(), startPos.getY());
+        }
         int startX = startPos.getX();
         int startY = startPos.getY();
         int endX = endPos.getX();
@@ -6423,10 +6544,8 @@ public class Client extends Player implements Runnable {
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
         String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
-        if (!text.equals(lastTopBarText)) {
-            lastTopBarText = text;
-            send(new SendString(text, 6570));
-        }
+        sendCachedString(text, 6570);
+        lastTopBarText = text;
         sendCachedString("", 6664);
         setWalkableInterface(6673);
     }
@@ -6675,8 +6794,10 @@ public class Client extends Player implements Runnable {
             if (getEquipmentN()[trueSlots[i]] > 0) {
                 int id = getEquipment()[trueSlots[i]];
                 int amount = getEquipmentN()[trueSlots[i]];
-                if (remove(trueSlots[i], true))
+                if (remove(trueSlots[i], true)) {
+                    markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
                     addItem(id, amount);
+                }
                 checkItemUpdate();
             }
         }
@@ -7087,7 +7208,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7144,7 +7265,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + player + "' do not exist in the database!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7218,7 +7339,7 @@ public class Client extends Player implements Runnable {
                 } else
                     send(new SendMessage("username '" + user + "' have yet to login!"));
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7341,7 +7462,7 @@ public class Client extends Player implements Runnable {
                         send(new SendMessage("username '" + user + "' have yet to login!"));
                 }
             } catch (Exception e) {
-                System.out.println("issue: " + e.getMessage());
+                logger.debug("issue: {}", e.getMessage());
             }
         }
     }
@@ -7448,7 +7569,7 @@ public class Client extends Player implements Runnable {
                 rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
             }
         } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
         }
     }
 
@@ -7512,7 +7633,7 @@ public class Client extends Player implements Runnable {
                     addItem(item.getId(), 1);
             checkItemUpdate();
         } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
+            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
         }
     }
 

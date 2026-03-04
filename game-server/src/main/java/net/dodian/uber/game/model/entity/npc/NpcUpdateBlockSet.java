@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 
 /**
  * Stateless Luna-style NPC update block encoder.
@@ -9,6 +10,14 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 final class NpcUpdateBlockSet {
 
     void encode(NpcUpdating updating, Npc npc, ByteMessage out) {
+        byte[] sharedBlock = SynchronizationContext.getSharedNpcBlock(npc);
+        if (sharedBlock != null) {
+            out.putBytes(sharedBlock);
+            SynchronizationContext.recordNpcBlockCacheHit(true);
+            return;
+        }
+        SynchronizationContext.recordNpcBlockCacheHit(false);
+
         int mask = computeMask(npc);
         if (mask == 0) {
             return;

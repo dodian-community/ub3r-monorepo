@@ -11,6 +11,8 @@ import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
+import net.dodian.uber.game.content.buttons.ButtonContentRegistry;
+import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -20,9 +22,12 @@ import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
+import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;
 import net.dodian.utilities.DbTables;
@@ -83,6 +88,7 @@ public class Server {
 
     private static NettyGameServer nettyServer;
     private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
+    private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
@@ -106,10 +112,18 @@ public class Server {
 
         npcManager = new NpcManager();
         npcManager.loadSpawns();
+        NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
         playerHandler = new PlayerHandler();
         chunkManager = new ChunkManager();
+        // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
+        // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
+        for (net.dodian.uber.game.model.entity.npc.Npc npc : npcManager.getNpcs()) {
+            if (npc != null) {
+                npc.syncChunkMembership();
+            }
+        }
         loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
@@ -124,6 +138,10 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
+        ButtonContentRegistry.bootstrap();
+        ObjectContentRegistry.bootstrap();
+        net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        ObjectContentRegistry.prewarmObjectDefinitions();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
         logger.info("Starting Netty game server...");
@@ -140,16 +158,20 @@ public class Server {
         new Thread(login).start();
         /* Processor for various stuff */
         entryObject = new PyramidPlunder();
-        gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
-        gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
-        gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
-        gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
-        gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
-        gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-        gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
-        gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
-        gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
-        gameTickScheduler.start();
+        if (getGameLoopEnabled()) {
+            gameLoopService.start();
+        } else {
+            gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
+            gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
+            gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
+            gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
+            gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
+            gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
+            gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
+            gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
+            gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
+            gameTickScheduler.start();
+        }
         System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
@@ -196,12 +218,22 @@ public class Server {
             return;
         }
 
-        gameTickScheduler.stop();
+        if (getGameLoopEnabled()) {
+            gameLoopService.stop(Duration.ofSeconds(10));
+        } else {
+            gameTickScheduler.stop();
+        }
 
         try {
-            PlayerSaveCoordinator.shutdownAndDrain(Duration.ofSeconds(30));
+            AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));
         } catch (Exception exception) {
-            logger.warn("Failed to drain player save coordinator during shutdown", exception);
+            logger.warn("Failed to drain account persistence service during shutdown", exception);
+        }
+
+        try {
+            WorldPollPublisher.shutdown();
+        } catch (Exception exception) {
+            logger.warn("Failed to shutdown world poll publisher", exception);
         }
 
         try {

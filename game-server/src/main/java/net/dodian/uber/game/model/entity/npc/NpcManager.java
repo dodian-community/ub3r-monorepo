@@ -376,6 +376,11 @@ public class NpcManager {
         Npc npc = new Npc(nextIndex, id, position, face);
         npcs.put(nextIndex, npc);
         nextIndex++;
+        // Ensure runtime NPC spawns are visible to chunk-based systems.
+        // Startup spawns are bootstrapped in Server.main after ChunkManager is constructed.
+        if (net.dodian.uber.game.Server.chunkManager != null) {
+            npc.syncChunkMembership();
+        }
         return npc;
     }
 

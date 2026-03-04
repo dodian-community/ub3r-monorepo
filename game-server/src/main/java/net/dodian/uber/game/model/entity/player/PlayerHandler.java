@@ -2,6 +2,8 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.comm.Memory;
 import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.Server;
+import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.utilities.Utils;
 
 import java.nio.channels.SocketChannel;
@@ -149,11 +151,26 @@ public class PlayerHandler {
 
     public static boolean isPlayerOn(String playerName) {
         long playerId = Utils.playerNameToLong(playerName);
-        if (playersOnline.containsKey(playerId)) {
-            logger.info("Player is already logged in as: " + playerName);
-            return true;
+        Client existing = playersOnline.get(playerId);
+        if (existing == null) {
+            return false;
         }
-        return false;
+
+        // Treat stale/disconnected sessions as offline. This avoids relog loops where the Netty
+        // disconnect cleanup hasn't been drained by the game thread yet.
+        boolean stale =
+                existing.disconnected ||
+                !existing.isActive ||
+                existing.getChannel() == null ||
+                !existing.getChannel().isActive();
+        if (stale) {
+            playersOnline.remove(playerId, existing);
+            GameThreadTaskQueue.submit(() -> Server.playerHandler.removePlayer(existing));
+            return false;
+        }
+
+        logger.info("Player is already logged in as: " + playerName);
+        return true;
     }
 
     public static int getPlayerID(String playerName) {
@@ -177,7 +194,7 @@ public class PlayerHandler {
                 }
                 players[slot] = null;
             }
-            playersOnline.remove(Utils.playerNameToLong(temp.getPlayerName()));
+            playersOnline.remove(temp.longName, temp);
             temp.isActive = false;
             temp.disconnected = true;
         } else {

@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.objects
 
+import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object ObjectContentRegistry {
@@ -14,96 +14,54 @@ object ObjectContentRegistry {
         val binding: ObjectBinding,
     )
 
-    private val loaded = AtomicBoolean(false)
-    private val byObjectId = ConcurrentHashMap<Int, List<RegisteredBinding>>()
+    private val bootstrapped = AtomicBoolean(false)
     private val definitions = mutableListOf<Pair<String, ObjectContent>>()
+
+    @Volatile
+    private var byObjectId: Array<Array<RegisteredBinding>?> = emptyArray()
 
     private val resolutionComparator = compareByDescending<RegisteredBinding> { it.binding.matcher.specificity }
         .thenByDescending { it.binding.priority }
         .thenBy { it.moduleName }
         .thenBy { it.binding.matcher.describe() }
 
-    fun ensureLoaded() {
-        if (loaded.get()) return
+    @JvmStatic
+    fun bootstrap() {
+        if (bootstrapped.get()) return
         synchronized(this) {
-            if (loaded.get()) return
-            val pending = listOf(
-                "AltarObjects" to net.dodian.uber.game.content.objects.impl.prayer.AltarObjects,
-                "AnvilObjects" to net.dodian.uber.game.content.objects.impl.smithing.AnvilObjects,
-                "BarbarianCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.BarbarianCourseObjects,
-                "BankBoothObjects" to net.dodian.uber.game.content.objects.impl.banking.BankBoothObjects,
-                "BankChestObjects" to net.dodian.uber.game.content.objects.impl.banking.BankChestObjects,
-                "ChestObjects" to net.dodian.uber.game.content.objects.impl.thieving.ChestObjects,
-                "CompostBinObjects" to net.dodian.uber.game.content.objects.impl.farming.CompostBinObjects,
-                "DoorToggleObjects" to net.dodian.uber.game.content.objects.impl.doors.DoorToggleObjects,
-                "FarmingPatchObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchObjects,
-                "FurnaceObjects" to net.dodian.uber.game.content.objects.impl.smithing.FurnaceObjects,
-                "FarmingPatchGuideObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchGuideObjects,
-                "GemRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.GemRocksObjects,
-                "GnomeCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.GnomeCourseObjects,
-                "LadderObjects" to net.dodian.uber.game.content.objects.impl.travel.LadderObjects,
-                "MiningRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.MiningRocksObjects,
-                "PassageObjects" to net.dodian.uber.game.content.objects.impl.travel.PassageObjects,
-                "PartyRoomObjects" to net.dodian.uber.game.content.objects.impl.events.PartyRoomObjects,
-                "PlunderObjects" to net.dodian.uber.game.content.objects.impl.thieving.PlunderObjects,
-                "RangeObjects" to net.dodian.uber.game.content.objects.impl.cooking.RangeObjects,
-                "ResourceFillingObjects" to net.dodian.uber.game.content.objects.impl.crafting.ResourceFillingObjects,
-                "RunecraftingObjects" to net.dodian.uber.game.content.objects.impl.runecrafting.RunecraftingObjects,
-                "SpecialMiningObjects" to net.dodian.uber.game.content.objects.impl.mining.SpecialMiningObjects,
-                "SpinningWheelObjects" to net.dodian.uber.game.content.objects.impl.crafting.SpinningWheelObjects,
-                "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
-                "StallObjects" to net.dodian.uber.game.content.objects.impl.thieving.StallObjects,
-                "TeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.TeleportObjects,
-                "WebObstacleObjects" to net.dodian.uber.game.content.objects.impl.travel.WebObstacleObjects,
-                "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WerewolfCourseObjects,
-                "WildernessCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WildernessCourseObjects,
-                "WoodcuttingTreesObjects" to net.dodian.uber.game.content.objects.impl.woodcutting.WoodcuttingTreesObjects,
-            )
-            pending
-                .sortedBy { it.first }
-                .forEach { (name, content) -> register(name, content) }
-            loaded.set(true)
+            if (bootstrapped.get()) return
+            definitions += builtinDefinitions()
+            rebuildIndexLocked()
+            bootstrapped.set(true)
         }
     }
+
+    fun ensureLoaded() = bootstrap()
 
     fun register(content: ObjectContent) = register(content::class.simpleName ?: "ObjectContent", content)
 
     fun register(name: String, content: ObjectContent) {
-        val bindings = content.bindings()
-        val registeredBindings = bindings.map { RegisteredBinding(name, content, it) }
-        validateInternalOverlaps(name, registeredBindings)
-
-        for (entry in registeredBindings.sortedWith(compareBy({ it.binding.objectId }, { it.binding.matcher.describe() }))) {
-            val existing = byObjectId[entry.binding.objectId].orEmpty()
-            validateCrossModuleOverlap(entry, existing)
-            byObjectId[entry.binding.objectId] = (existing + entry).sortedWith(resolutionComparator)
-        }
-
-        definitions += name to content
-        if (bindings.isNotEmpty()) {
-            logger.debug(
-                "Registered ObjectContent {} with {} bindings and objectIds={}",
-                name,
-                bindings.size,
-                bindings.map { it.objectId }.distinct().sorted().joinToString(","),
-            )
-        } else {
-            logger.debug("Registered ObjectContent {} with no bindings", name)
+        synchronized(this) {
+            definitions += name to content
+            if (bootstrapped.get()) {
+                rebuildIndexLocked()
+            }
         }
     }
 
     @JvmStatic
     fun resolve(objectId: Int, position: Position): ObjectContent? {
-        ensureLoaded()
-        return byObjectId[objectId]
+        bootstrap()
+        val bucket = byObjectId.getOrNull(objectId) ?: return null
+        return bucket
             ?.firstOrNull { it.binding.matcher.matches(position) }
             ?.content
     }
 
     @JvmStatic
     fun resolveAll(objectId: Int, position: Position): List<ObjectContent> {
-        ensureLoaded()
-        val resolved = byObjectId[objectId]
+        bootstrap()
+        val resolved = byObjectId.getOrNull(objectId)
             .orEmpty()
             .asSequence()
             .filter { it.binding.matcher.matches(position) }
@@ -113,26 +71,108 @@ object ObjectContentRegistry {
     }
 
     @JvmStatic
+    fun prewarmObjectDefinitions() {
+        bootstrap()
+        val snapshot = byObjectId
+        for (objectId in snapshot.indices) {
+            if (snapshot[objectId] != null) {
+                GameObjectData.forId(objectId)
+            }
+        }
+    }
+
+    @JvmStatic
     fun get(objectId: Int): ObjectContent? {
-        ensureLoaded()
-        return byObjectId[objectId]?.firstOrNull()?.content
+        bootstrap()
+        return byObjectId.getOrNull(objectId)?.firstOrNull()?.content
     }
 
     internal fun bindingsForObjectForTests(objectId: Int): List<ObjectBinding> {
-        return byObjectId[objectId].orEmpty().map { it.binding }
+        return byObjectId.getOrNull(objectId).orEmpty().map { it.binding }
     }
 
     internal fun clearForTests() {
-        loaded.set(true)
-        byObjectId.clear()
+        bootstrapped.set(true)
+        byObjectId = emptyArray()
         definitions.clear()
     }
 
     internal fun resetForTests() {
-        loaded.set(false)
-        byObjectId.clear()
+        bootstrapped.set(false)
+        byObjectId = emptyArray()
         definitions.clear()
     }
+
+    private fun rebuildIndexLocked() {
+        val registered =
+            definitions
+                .flatMap { (name, content) ->
+                    val bindings = content.bindings()
+                    val registeredBindings = bindings.map { RegisteredBinding(name, content, it) }
+                    validateInternalOverlaps(name, registeredBindings)
+                    if (bindings.isNotEmpty()) {
+                        logger.debug(
+                            "Registered ObjectContent {} with {} bindings and objectIds={}",
+                            name,
+                            bindings.size,
+                            bindings.map { it.objectId }.distinct().sorted().joinToString(","),
+                        )
+                    } else {
+                        logger.debug("Registered ObjectContent {} with no bindings", name)
+                    }
+                    registeredBindings
+                }
+                .sortedWith(compareBy({ it.binding.objectId }, { it.binding.matcher.describe() }))
+
+        val maxObjectId = registered.maxOfOrNull { it.binding.objectId } ?: -1
+        val buckets = arrayOfNulls<MutableList<RegisteredBinding>>(maxObjectId + 1)
+        for (entry in registered) {
+            val objectId = entry.binding.objectId
+            val bucket = buckets[objectId] ?: ArrayList<RegisteredBinding>().also { buckets[objectId] = it }
+            validateCrossModuleOverlap(entry, bucket)
+            bucket += entry
+        }
+        val rebuilt = arrayOfNulls<Array<RegisteredBinding>>(maxObjectId + 1)
+        for (objectId in buckets.indices) {
+            val bucket = buckets[objectId] ?: continue
+            rebuilt[objectId] = bucket.sortedWith(resolutionComparator).toTypedArray()
+        }
+        byObjectId = rebuilt
+    }
+
+    private fun builtinDefinitions(): List<Pair<String, ObjectContent>> =
+        listOf(
+            "AltarObjects" to net.dodian.uber.game.content.objects.impl.prayer.AltarObjects,
+            "AnvilObjects" to net.dodian.uber.game.content.objects.impl.smithing.AnvilObjects,
+            "BarbarianCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.BarbarianCourseObjects,
+            "BankBoothObjects" to net.dodian.uber.game.content.objects.impl.banking.BankBoothObjects,
+            "BankChestObjects" to net.dodian.uber.game.content.objects.impl.banking.BankChestObjects,
+            "ChestObjects" to net.dodian.uber.game.content.objects.impl.thieving.ChestObjects,
+            "CompostBinObjects" to net.dodian.uber.game.content.objects.impl.farming.CompostBinObjects,
+            "DoorToggleObjects" to net.dodian.uber.game.content.objects.impl.doors.DoorToggleObjects,
+            "FarmingPatchObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchObjects,
+            "FurnaceObjects" to net.dodian.uber.game.content.objects.impl.smithing.FurnaceObjects,
+            "FarmingPatchGuideObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchGuideObjects,
+            "GemRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.GemRocksObjects,
+            "GnomeCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.GnomeCourseObjects,
+            "LadderObjects" to net.dodian.uber.game.content.objects.impl.travel.LadderObjects,
+            "MiningRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.MiningRocksObjects,
+            "PassageObjects" to net.dodian.uber.game.content.objects.impl.travel.PassageObjects,
+            "PartyRoomObjects" to net.dodian.uber.game.content.objects.impl.events.PartyRoomObjects,
+            "PlunderObjects" to net.dodian.uber.game.content.objects.impl.thieving.PlunderObjects,
+            "RangeObjects" to net.dodian.uber.game.content.objects.impl.cooking.RangeObjects,
+            "ResourceFillingObjects" to net.dodian.uber.game.content.objects.impl.crafting.ResourceFillingObjects,
+            "RunecraftingObjects" to net.dodian.uber.game.content.objects.impl.runecrafting.RunecraftingObjects,
+            "SpecialMiningObjects" to net.dodian.uber.game.content.objects.impl.mining.SpecialMiningObjects,
+            "SpinningWheelObjects" to net.dodian.uber.game.content.objects.impl.crafting.SpinningWheelObjects,
+            "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
+            "StallObjects" to net.dodian.uber.game.content.objects.impl.thieving.StallObjects,
+            "TeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.TeleportObjects,
+            "WebObstacleObjects" to net.dodian.uber.game.content.objects.impl.travel.WebObstacleObjects,
+            "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WerewolfCourseObjects,
+            "WildernessCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WildernessCourseObjects,
+            "WoodcuttingTreesObjects" to net.dodian.uber.game.content.objects.impl.woodcutting.WoodcuttingTreesObjects,
+        )
 
     private fun validateInternalOverlaps(name: String, entries: List<RegisteredBinding>) {
         val grouped = entries.groupBy { it.binding.objectId }

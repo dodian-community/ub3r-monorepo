@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.persistence.PlayerSaveCoordinator;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.security.ItemLog;
 import net.dodian.utilities.DbTables;
@@ -24,6 +24,12 @@ import java.util.Date;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class LoginManager {
+
+    /**
+     * Internal-only return code used to signal that a final save is still pending for this account.
+     * This must never be sent directly to the client; the account lane will retry/wait briefly.
+     */
+    public static final int FINAL_SAVE_PENDING_INTERNAL = 98;
 
     public int loadCharacterGame(Client p, String playerName, String playerPass) {
         int returnCode = 0;
@@ -39,8 +45,8 @@ public class LoginManager {
             if (results.next()) {
                 /* Add data value to check a user for */
                 p.dbId = results.getInt("userid");
-                if (PlayerSaveCoordinator.isFinalSavePending(p.dbId)) {
-                    return 5;
+                if (AccountPersistenceService.isFinalSavePending(p.dbId)) {
+                    return FINAL_SAVE_PENDING_INTERNAL;
                 }
                 p.playerGroup = results.getInt("usergroupid");
                 p.otherGroups = results.getString("membergroupids").split(",");

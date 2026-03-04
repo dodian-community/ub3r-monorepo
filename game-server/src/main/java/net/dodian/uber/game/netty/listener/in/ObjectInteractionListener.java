@@ -3,9 +3,6 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
-import net.dodian.uber.game.content.objects.ObjectContentDispatcher;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -19,6 +16,11 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.interaction.ItemOnObjectIntent;
+import net.dodian.uber.game.runtime.interaction.MagicOnObjectIntent;
+import net.dodian.uber.game.runtime.interaction.ObjectClickIntent;
+import net.dodian.uber.game.runtime.interaction.task.InteractionTaskScheduler;
+import net.dodian.uber.game.runtime.interaction.task.ObjectInteractionTask;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,62 +99,19 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    this.stop();
-                    return;
-                }
-
-                Position objectPosition = resolveDistancePosition(client, task, objectId, object, def, DistanceMode.CLICK);
-                if (objectPosition == null) {
-                    return;
-                }
-
-                if (option == 1) {
-                    if (!client.validClient || client.randomed) {
-                        client.setWalkToTask(null);
-                        this.stop();
-                        return;
-                    }
-                    if (client.adding) {
-                        client.objects.add(new RS2Object(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), 1));
-                    }
-                    if (System.currentTimeMillis() < client.walkBlock || client.genie || client.antique) {
-                        client.setWalkToTask(null);
-                        this.stop();
-                        return;
-                    }
-                    Position playerPos = client.getPosition().copy();
-                    int xDiff = Math.abs(playerPos.getX() - task.getWalkToPosition().getX());
-                    int yDiff = Math.abs(playerPos.getY() - task.getWalkToPosition().getY());
-                    client.resetAction(false);
-                    client.setFocus(task.getWalkToPosition().getX(), task.getWalkToPosition().getY());
-                    if (xDiff > 5 || yDiff > 5) {
-                        client.setWalkToTask(null);
-                        this.stop();
-                        return;
-                    }
-                } else if (option == 2) {
-                    if (client.adding) {
-                        client.objects.add(new RS2Object(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), 2));
-                    }
-                    if (System.currentTimeMillis() < client.walkBlock) {
-                        client.setWalkToTask(null);
-                        this.stop();
-                        return;
-                    }
-                    client.setFocus(task.getWalkToPosition().getX(), task.getWalkToPosition().getY());
-                } else if (option == 3) {
-                    client.setFocus(task.getWalkToPosition().getX(), task.getWalkToPosition().getY());
-                }
-
-                ObjectContentDispatcher.tryHandleClick(client, option, task.getWalkToId(), task.getWalkToPosition(), object);
-                client.setWalkToTask(null);
-                this.stop();
-            }
-        });
+        // OpenRune-style: tick-owned routing. The game thread will execute when in range.
+        ObjectClickIntent intent =
+                new ObjectClickIntent(
+                        packet.getOpcode(),
+                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        option,
+                        objectId,
+                        task.getWalkToPosition(),
+                        task,
+                        object,
+                        def
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private void handleItemOnObject(Client client, GamePacket packet) {
@@ -182,39 +141,22 @@ public class ObjectInteractionListener implements PacketListener {
             new Position(objectX, objectY, client.getPosition().getZ())
         );
         client.setWalkToTask(task);
-
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    this.stop();
-                    return;
-                }
-
-                GameObjectData objectData = GameObjectData.forId(objectId);
-                GameObjectDef def = Misc.getObject(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getZ());
-                Position objectPosition = resolveDistancePosition(client, task, objectId, objectData, def, DistanceMode.ITEM_ON_OBJECT);
-                if (objectPosition == null) {
-                    return;
-                }
-
-                if (client.playerHasItem(itemId)) {
-                    client.setFocus(task.getWalkToPosition().getX(), task.getWalkToPosition().getY());
-                    ObjectContentDispatcher.tryHandleUseItem(
-                        client,
+        GameObjectData objectData = GameObjectData.forId(objectId);
+        GameObjectDef def = Misc.getObject(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getZ());
+        ItemOnObjectIntent intent =
+                new ItemOnObjectIntent(
+                        packet.getOpcode(),
+                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        interfaceId,
+                        itemSlot,
+                        itemId,
                         objectId,
                         task.getWalkToPosition(),
+                        task,
                         objectData,
-                        itemId,
-                        itemSlot,
-                        interfaceId
-                    );
-                }
-
-                client.setWalkToTask(null);
-                this.stop();
-            }
-        });
+                        def
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private void handleMagicOnObject(Client client, GamePacket packet) {
@@ -241,26 +183,18 @@ public class ObjectInteractionListener implements PacketListener {
         if (client.randomed || client.UsingAgility) {
             return;
         }
-
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    this.stop();
-                    return;
-                }
-
-                Position objectPosition = resolveDistancePosition(client, task, objectId, object, def, DistanceMode.MAGIC);
-                if (objectPosition == null) {
-                    return;
-                }
-
-                client.setFocus(task.getWalkToPosition().getX(), task.getWalkToPosition().getY());
-                ObjectContentDispatcher.tryHandleMagic(client, task.getWalkToId(), task.getWalkToPosition(), object, spellId);
-                client.setWalkToTask(null);
-                this.stop();
-            }
-        });
+        MagicOnObjectIntent intent =
+                new MagicOnObjectIntent(
+                        packet.getOpcode(),
+                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        spellId,
+                        objectId,
+                        task.getWalkToPosition(),
+                        task,
+                        object,
+                        def
+                );
+        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
     }
 
     private Position resolveDistancePosition(

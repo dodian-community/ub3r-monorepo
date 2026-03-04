@@ -9,10 +9,13 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.queue.QueueTask;
+import net.dodian.uber.game.runtime.queue.QueueTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
+import static net.dodian.utilities.DotEnvKt.getQueueTasksEnabled;
 
 /**
  * Opcode 73 – player attacking another player.
@@ -55,6 +58,21 @@ public class AttackPlayerListener implements PacketListener {
         // Need to walk closer first
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victimSlot, plr.getPosition());
         client.setWalkToTask(task);
+        if (getQueueTasksEnabled()) {
+            QueueTaskService.schedule(1, 1, (QueueTask) () -> {
+                if (client.disconnected || plr.disconnected || client.getWalkToTask() != task) {
+                    return false;
+                }
+                if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
+                    client.resetWalkingQueue();
+                    client.startAttack(plr);
+                    client.setWalkToTask(null);
+                    return false;
+                }
+                return true;
+            });
+            return;
+        }
         EventManager.getInstance().registerEvent(new Event(600) {
             @Override
             public void execute() {

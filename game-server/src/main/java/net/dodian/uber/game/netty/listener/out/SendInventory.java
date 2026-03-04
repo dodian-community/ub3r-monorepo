@@ -30,7 +30,6 @@ public class SendInventory implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        System.out.println("Send inventory: " + interfaceId);
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
         // interface id as int to match client.readInt()
         msg.putInt(interfaceId);

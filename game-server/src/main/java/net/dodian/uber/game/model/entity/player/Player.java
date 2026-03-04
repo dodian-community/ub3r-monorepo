@@ -33,12 +33,19 @@ import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
+import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public abstract class Player extends Entity {
+    private static final Logger logger = LoggerFactory.getLogger(Player.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false;
     public long longName = 0;
     public int wildyLevel = 0;
@@ -49,6 +56,15 @@ public abstract class Player extends Entity {
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
+    // Start clean after account load; dirtiness is tracked by mutation sites.
+    private volatile int saveDirtyMask = 0;
+    private volatile long lastSavedRevision = 0L;
+    private volatile long saveRevision = 0L;
+    private volatile long lastProcessedCycle = 0L;
+    private volatile InteractionIntent pendingInteraction;
+    private volatile ActiveInteraction activeInteraction;
+    private volatile long interactionEarliestCycle = 0L;
+    private volatile QueueTaskHandle interactionTaskHandle;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -276,6 +292,7 @@ public abstract class Player extends Entity {
             } else if (i == 1 && effects.get(i) == 0) {
                 addEffectTime(1, -1);
                 c.send(new SendMessage("<col=702963>Your antifire potion has expired."));
+                c.markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
             } else if(i == 2 && effects.get(i) == 0) { //Overload
                 for(int skill = 0; skill < 4; skill++) {
                     skill = skill == 3 ? 4 : skill;
@@ -284,6 +301,7 @@ public abstract class Player extends Entity {
                 }
                 addEffectTime(2, -1);
                 c.send(new SendMessage("Your overload effect is now over!"));
+                c.markSaveDirty(PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.STATS.getMask());
             }
         }
     }
@@ -415,11 +433,21 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("[player-{}]: {}", getSlot(), str);
+        }
     }
 
     public void println(String str) {
-        System.out.println("[player-" + getSlot() + "]: " + str);
+        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
+                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
+            return;
+        }
+        logger.info("[player-{}]: {}", getSlot(), str);
     }
 
     public String getSongUnlockedSaveText() {
@@ -715,6 +743,9 @@ public abstract class Player extends Entity {
     // --- Cached player update block (for efficient multi-viewer reuse) ---
     private ByteMessage cachedUpdateBlock = null;
     private boolean cachedUpdateBlockValid = false;
+    private volatile long appearanceRevision = 0L;
+    private volatile long cachedAppearanceRevision = -1L;
+    private volatile byte[] cachedAppearanceBytes = null;
 
     /**
      * Returns true if the cached update block can be reused this cycle.
@@ -754,6 +785,29 @@ public abstract class Player extends Entity {
     public void invalidateCachedUpdateBlock() {
         this.cachedUpdateBlockValid = false;
         releaseCachedUpdateBlock();
+    }
+
+    public void markAppearanceDirty() {
+        appearanceRevision++;
+        cachedAppearanceRevision = -1L;
+        cachedAppearanceBytes = null;
+    }
+
+    public long getAppearanceRevision() {
+        return appearanceRevision;
+    }
+
+    public boolean isCachedAppearanceValid() {
+        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+    }
+
+    public byte[] getCachedAppearanceBytes() {
+        return cachedAppearanceBytes;
+    }
+
+    public void cacheAppearanceBytes(byte[] bytes) {
+        cachedAppearanceBytes = bytes;
+        cachedAppearanceRevision = appearanceRevision;
     }
 
     private void releaseCachedUpdateBlock() {
@@ -843,6 +897,84 @@ public abstract class Player extends Entity {
         return this.faceTarget;
     }
     public abstract void process(); //Send every 600 ms
+
+    public void markSaveDirty(int segmentMask) {
+        saveDirtyMask |= segmentMask;
+        saveRevision++;
+    }
+
+    public void clearSaveDirtyMask(int segmentMask) {
+        saveDirtyMask &= ~segmentMask;
+    }
+
+    public void clearAllSaveDirty() {
+        saveDirtyMask = 0;
+        lastSavedRevision = saveRevision;
+    }
+
+    public int getSaveDirtyMask() {
+        return saveDirtyMask;
+    }
+
+    public long getLastSavedRevision() {
+        return lastSavedRevision;
+    }
+
+    public long getSaveRevision() {
+        return saveRevision;
+    }
+
+    public void setLastSavedRevision(long lastSavedRevision) {
+        this.lastSavedRevision = lastSavedRevision;
+    }
+
+    public long getLastProcessedCycle() {
+        return lastProcessedCycle;
+    }
+
+    public void setLastProcessedCycle(long lastProcessedCycle) {
+        this.lastProcessedCycle = lastProcessedCycle;
+    }
+
+    public InteractionIntent getPendingInteraction() {
+        return pendingInteraction;
+    }
+
+    public void setPendingInteraction(InteractionIntent pendingInteraction) {
+        this.pendingInteraction = pendingInteraction;
+    }
+
+    public ActiveInteraction getActiveInteraction() {
+        return activeInteraction;
+    }
+
+    public void setActiveInteraction(ActiveInteraction activeInteraction) {
+        this.activeInteraction = activeInteraction;
+    }
+
+    public long getInteractionEarliestCycle() {
+        return interactionEarliestCycle;
+    }
+
+    public void setInteractionEarliestCycle(long interactionEarliestCycle) {
+        this.interactionEarliestCycle = interactionEarliestCycle;
+    }
+
+    public QueueTaskHandle getInteractionTaskHandle() {
+        return interactionTaskHandle;
+    }
+
+    public void setInteractionTaskHandle(QueueTaskHandle interactionTaskHandle) {
+        this.interactionTaskHandle = interactionTaskHandle;
+    }
+
+    public void cancelInteractionTask() {
+        QueueTaskHandle handle = interactionTaskHandle;
+        interactionTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
 
 
 
@@ -1222,6 +1354,7 @@ public abstract class Player extends Entity {
 
     public void setGender(int pGender) {
         this.pGender = pGender;
+        markAppearanceDirty();
     }
 
     public int getTorso() {
@@ -1230,6 +1363,7 @@ public abstract class Player extends Entity {
 
     public void setTorso(int pTorso) {
         this.pTorso = pTorso;
+        markAppearanceDirty();
     }
 
     public int getArms() {
@@ -1238,6 +1372,7 @@ public abstract class Player extends Entity {
 
     public void setArms(int pArms) {
         this.pArms = pArms;
+        markAppearanceDirty();
     }
 
     public int getLegs() {
@@ -1246,6 +1381,7 @@ public abstract class Player extends Entity {
 
     public void setLegs(int pLegs) {
         this.pLegs = pLegs;
+        markAppearanceDirty();
     }
 
     public int getHands() {
@@ -1254,6 +1390,7 @@ public abstract class Player extends Entity {
 
     public void setHands(int pHands) {
         this.pHands = pHands;
+        markAppearanceDirty();
     }
 
     public int getFeet() {
@@ -1262,6 +1399,7 @@ public abstract class Player extends Entity {
 
     public void setFeet(int pFeet) {
         this.pFeet = pFeet;
+        markAppearanceDirty();
     }
 
     public int getBeard() {
@@ -1270,6 +1408,7 @@ public abstract class Player extends Entity {
 
     public void setBeard(int pBeard) {
         this.pBeard = pBeard;
+        markAppearanceDirty();
     }
 
     public int getHead() {
@@ -1278,6 +1417,7 @@ public abstract class Player extends Entity {
 
     public void setHead(int pHead) {
         this.pHead = pHead;
+        markAppearanceDirty();
     }
 
     public int getStandAnim() {
@@ -1295,11 +1435,13 @@ public abstract class Player extends Entity {
     public void setAgilityEmote(int walk, int run) {
         setWalkAnim(walk);
         setRunAnim(run);
+        markAppearanceDirty();
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
     public void setWalkAnim(int playerSEW) {
         this.playerSEW = playerSEW;
+        markAppearanceDirty();
         this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
@@ -1309,6 +1451,7 @@ public abstract class Player extends Entity {
 
     public void setRunAnim(int playerSER) {
         this.playerSER = playerSER;
+        markAppearanceDirty();
         this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 
@@ -1318,6 +1461,7 @@ public abstract class Player extends Entity {
 
     public void setPlayerNpc(int playerNpc) {
         this.playerNpc = playerNpc;
+        markAppearanceDirty();
     }
 
     public int getDamageDealt() {
@@ -1377,6 +1521,7 @@ public abstract class Player extends Entity {
         boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
         boostedLevel[skill.getId()] = boosted;
         c.refreshSkill(skill);
+        c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
     }
 
     public int getCurrentPrayer() {
@@ -1589,7 +1734,7 @@ public abstract class Player extends Entity {
         try {
             c.send(new SendMessage(pageName + "#url#"));
         } catch (Exception e) {
-            System.out.println("error opening page.." + e);
+            logger.warn("error opening page..", e);
         }
     }
 

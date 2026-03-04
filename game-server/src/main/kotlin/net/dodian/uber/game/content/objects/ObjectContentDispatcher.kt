@@ -5,6 +5,7 @@ import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.services.ObjectInteractionType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
@@ -22,7 +23,7 @@ object ObjectContentDispatcher {
         position: Position,
         obj: GameObjectData?,
     ): Boolean {
-        return tryHandle(ObjectInteractionContext.click(client, option, objectId, position, obj))
+        return tryHandleTimed(ObjectInteractionContext.click(client, option, objectId, position, obj)).handled
     }
 
     @JvmStatic
@@ -35,7 +36,7 @@ object ObjectContentDispatcher {
         itemSlot: Int,
         interfaceId: Int,
     ): Boolean {
-        return tryHandle(
+        return tryHandleTimed(
             ObjectInteractionContext.useItem(
                 client = client,
                 objectId = objectId,
@@ -45,7 +46,7 @@ object ObjectContentDispatcher {
                 itemSlot = itemSlot,
                 interfaceId = interfaceId,
             ),
-        )
+        ).handled
     }
 
     @JvmStatic
@@ -56,26 +57,36 @@ object ObjectContentDispatcher {
         obj: GameObjectData?,
         spellId: Int,
     ): Boolean {
-        return tryHandle(ObjectInteractionContext.magic(client, objectId, position, obj, spellId))
+        return tryHandleTimed(ObjectInteractionContext.magic(client, objectId, position, obj, spellId)).handled
     }
 
     @JvmStatic
     fun tryHandle(context: ObjectInteractionContext): Boolean {
+        return tryHandleTimed(context).handled
+    }
+
+    @JvmStatic
+    fun tryHandleTimed(context: ObjectInteractionContext): DispatchTiming {
         val key = buildReentrancyKey(context)
         val active = reentrancyGuard.get()
         if (!active.add(key)) {
-            return false
+            return DispatchTiming(false, 0L, 0L, null)
         }
 
         try {
+            val resolveStart = System.nanoTime()
             val candidates = ObjectContentRegistry.resolveAll(context.objectId, context.position)
+            val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
                 logUnhandled(context)
-                return false
+                return DispatchTiming(false, resolveNs, 0L, null)
             }
 
+            var handlerNs = 0L
+            var handlerName: String? = null
             for (content in candidates) {
                 try {
+                    val handlerStart = System.nanoTime()
                     val handled = when (context.type) {
                         ObjectInteractionType.CLICK -> when (context.option) {
                             1 -> content.onFirstClick(context.client, context.objectId, context.position, context.obj)
@@ -104,10 +115,13 @@ object ObjectContentDispatcher {
                             spellId = context.spellId ?: -1,
                         )
                     }
+                    handlerNs += System.nanoTime() - handlerStart
                     if (handled) {
-                        return true
+                        handlerName = content::class.java.name
+                        return DispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
                 } catch (e: Exception) {
+                    handlerNs += 0L
                     logger.error(
                         "Error handling object interaction type={} objectId={} at {} via {}",
                         context.type,
@@ -119,7 +133,7 @@ object ObjectContentDispatcher {
                 }
             }
             logUnhandled(context)
-            return false
+            return DispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
             active.remove(key)
             if (active.isEmpty()) {

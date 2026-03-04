@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.utilities.DotEnvKt.getServerDebugMode;
+import static net.dodian.utilities.DotEnvKt.getButtonTraceEnabled;
 
 @PacketHandler(opcode = 185)
 public class ClickingButtonsListener implements PacketListener {
@@ -33,8 +33,8 @@ public class ClickingButtonsListener implements PacketListener {
         ByteBuf payload = packet.getPayload();
         int actionButton = payload.readInt();
 
-        if (getServerDebugMode() || client.playerRights == 2) {
-            client.println_debug("ClickButton: " + actionButton + " (size=" + packetSize + ")");
+        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
+            logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
         }
         if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) {
             client.lastButton = System.currentTimeMillis();
@@ -52,8 +52,8 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
 
-        if (client.playerRights > 1) {
-            client.println_debug("Case 185: Action Button: " + client.actionButtonId);
+        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
+            logger.trace("Unhandled button buttonId={} player={} iface={}", client.actionButtonId, client.getPlayerName(), client.activeInterfaceId);
         }
     }
 }

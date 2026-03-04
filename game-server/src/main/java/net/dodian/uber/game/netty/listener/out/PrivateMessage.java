@@ -26,7 +26,6 @@ public class PrivateMessage implements OutgoingPacket {
 
     @Override
     public void send(Client client) {
-        System.out.println("Send private message: " + recipient);
         ByteMessage msg = ByteMessage.message(196, MessageType.VAR);
         msg.putLong(recipient);
         msg.putInt(messageId);

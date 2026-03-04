@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
+import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -27,7 +28,6 @@ public class PlayerInitializer {
 
         QuestSend.clearQuestName(client);
         client.questPage = 1;
-        client.WriteEnergy();
         client.pmstatus(2);
         client.setConfigIds();
         client.resetTabs(); // Set tabs!
@@ -57,19 +57,23 @@ public class PlayerInitializer {
         }
         
         initializeInterfaceTexts(client);
+        client.onPostLoginUiInit();
 
         
         client.loaded = true;
         //TODO everyone is premium for now
         client.premium = true;
         /* Initialize save timers */
-        client.lastSave = System.currentTimeMillis();
-        client.lastProgressSave = client.lastSave;
+        long now = System.currentTimeMillis();
+        long minuteJitterMs = (client.dbId > 0 ? (client.dbId % 60L) : (client.getSlot() % 60L)) * 1000L;
+        long hourJitterMs = (client.dbId > 0 ? (client.dbId % 3600L) : (client.getSlot() % 3600L)) * 1000L;
+        client.lastSave = now + minuteJitterMs;
+        client.lastProgressSave = now + hourJitterMs;
         
-        /* Set a player active to a world */
-        PlayerHandler.playersOnline.put(client.longName, client);
+        /* Note: player registration (playersOnline/players[]) is owned by the game-thread login finalizer. */
         sendWelcomeMessages(client);
-        checkRefundedItems(client);
+        // Refund checks are account-db owned to avoid blocking the game thread.
+        AccountPersistenceService.submitRefundCheck(client);
 
     }
     

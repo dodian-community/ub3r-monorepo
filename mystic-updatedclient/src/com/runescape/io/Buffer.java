@@ -361,7 +361,7 @@ public final class Buffer extends Cacheable {
 				+ (payload[currentPosition - 3] & 0xff);
 	}
 
-	public int readIMEInt() { // V2
+	public int readIMEInt() { // alternate order
 		currentPosition += 4;
 		return ((payload[currentPosition - 3] & 0xff) << 24)
 				+ ((payload[currentPosition - 4] & 0xff) << 16)

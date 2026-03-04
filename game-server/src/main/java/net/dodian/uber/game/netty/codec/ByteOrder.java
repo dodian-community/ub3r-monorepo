@@ -23,8 +23,7 @@ public enum ByteOrder {
     MIDDLE,
 
     /**
-     * Neither big endian nor little endian, the v2 order.
+     * Neither big endian nor little endian, the alternate scrambled order.
      */
     INVERSE_MIDDLE
 }
-

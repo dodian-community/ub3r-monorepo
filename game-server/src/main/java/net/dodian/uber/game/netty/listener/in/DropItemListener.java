@@ -53,7 +53,6 @@ public class DropItemListener implements PacketListener {
         }
 
         if (slot < 0 || slot > 27) {
-            System.out.println("Warning: Player " + client.getPlayerName() + " sent invalid drop slot: " + slot);
             return;
         }
 
