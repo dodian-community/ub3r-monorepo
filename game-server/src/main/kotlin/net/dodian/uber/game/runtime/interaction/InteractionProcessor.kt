@@ -10,6 +10,7 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
+import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 object InteractionProcessor {
@@ -384,7 +385,7 @@ object InteractionProcessor {
         startNs: Long,
     ) {
         val elapsedMs = (System.nanoTime() - startNs) / 1_000_000L
-        if (elapsedMs >= 2L) {
+        if (elapsedMs >= runtimePhaseWarnMs) {
             val routeMs = routeNs / 1_000_000L
             val resolveMs = resolveNs / 1_000_000L
             val handlerMs = handlerNs / 1_000_000L

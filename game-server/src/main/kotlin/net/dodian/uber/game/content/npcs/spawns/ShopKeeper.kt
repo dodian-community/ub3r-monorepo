@@ -18,9 +18,16 @@ internal object ShopKeeper {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        if (npc.id != 520) return false
-        client.NpcWanneTalk = 19
-        client.convoId = 4
+        when (npc.id) {
+            520 -> {
+                client.NpcWanneTalk = 19
+                client.convoId = 4
+            }
+            506 -> {
+                client.WanneShop = 3
+            }
+            else -> return false
+        }
         return true
     }
 
