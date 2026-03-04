@@ -17,6 +17,8 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.netty.game.GamePacket;
+import net.dodian.uber.game.persistence.CommandDbService;
+import net.dodian.uber.game.runtime.queue.QueueTaskService;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -29,12 +31,9 @@ import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.Statement;
 import java.text.DecimalFormat;
 
 import static net.dodian.uber.game.combat.ClientExtensionsKt.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 /**
@@ -218,16 +217,23 @@ public class CommandsListener implements PacketListener {
                                 //Dead = 170 - 172! or 168 + stage!
                                 break;
                             case 4: //Farm patch test values!
-                                config = 0;
-                                while(config < 2000) {
-                                    try {
-                                        client.send(new SendMessage("config = " + config));
-                                        client.varbit(4771,  config);
-                                        config++;
-                                        Thread.sleep(600);
-                                    } catch(Exception e) {
+                                client.cancelFarmDebugTask();
+                                final int[] farmConfig = {0};
+                                client.setFarmDebugTaskHandle(QueueTaskService.schedule(1, 1, () -> {
+                                    if (client.disconnected || !client.isActive) {
+                                        client.setFarmDebugTaskHandle(null);
+                                        return false;
                                     }
-                                }
+                                    if (farmConfig[0] >= 2000) {
+                                        client.send(new SendMessage("Finished farming config test."));
+                                        client.setFarmDebugTaskHandle(null);
+                                        return false;
+                                    }
+                                    client.send(new SendMessage("config = " + farmConfig[0]));
+                                    client.varbit(4771, farmConfig[0]);
+                                    farmConfig[0]++;
+                                    return true;
+                                }));
                                 break;
                             default: gotValue = false;
                         }
@@ -429,15 +435,29 @@ public class CommandsListener implements PacketListener {
                             client.send(new SendMessage("Only available ranks: 'normal', 'premium', 'trial', 'mod'"));
                             return;
                         }
-                        try (Connection conn = getDbConnection();
-                             Statement statement = conn.createStatement()) {
-                            statement.executeUpdate("UPDATE " + DbTables.WEB_USERS_TABLE + " SET usergroupid='" + rankId + "' WHERE username ='" + name + "'");
-                            if (other != null)
-                                other.disconnected = true;
-                            client.send(new SendMessage("You set " + name + " to a " + rank + "!"));
-                        } catch (Exception e) {
-                            client.send(new SendMessage("Sql issue! Contact a admin!"));
-                        }
+                        final int finalRankId = rankId;
+                        final String finalRank = rank;
+                        final String finalName = name;
+                        final Client finalOther = other;
+                        CommandDbService.submit(
+                                "set-rank",
+                                () -> CommandDbService.updateRank(finalName, finalRankId),
+                                result -> {
+                                    if (client.disconnected) {
+                                        return;
+                                    }
+                                    if (finalOther != null) {
+                                        finalOther.disconnected = true;
+                                    }
+                                    client.send(new SendMessage("You set " + finalName + " to a " + finalRank + "!"));
+                                },
+                                exception -> {
+                                    if (!client.disconnected) {
+                                        client.send(new SendMessage("Sql issue! Contact a admin!"));
+                                        logger.debug("set-rank failed for {}", finalName, exception);
+                                    }
+                                }
+                        );
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " rank playername"));
                     }
@@ -566,19 +586,29 @@ public class CommandsListener implements PacketListener {
                     }
                     int itemid = Integer.parseInt(cmd[1]);
                     double chance = Double.parseDouble(cmd[2]);
-                    try (Connection conn = getDbConnection();
-                         Statement statement = conn.createStatement()) {
-                        String sql = "delete FROM " + DbTables.GAME_NPC_DROPS + " where npcid=" + client.getPlayerNpc() + " && itemid=" + itemid
-                                + " && percent=" + chance;
-                        if (statement.executeUpdate(sql) < 1)
-                            client.send(new SendMessage(Server.npcManager.getName(client.getPlayerNpc())
-                                    + " does not have the " + client.GetItemName(itemid) + " with the chance " + chance + "% !"));
-                        else
-                            client.send(new SendMessage("You deleted " + client.GetItemName(itemid) + " drop with the chance of " + chance + "% from "
-                                    + Server.npcManager.getName(client.getPlayerNpc())));
-                    } catch (Exception e) {
-                        client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " itemid chance"));
-                    }
+                    int npcId = client.getPlayerNpc();
+                    CommandDbService.submit(
+                            "delete-npc-drop",
+                            () -> CommandDbService.deleteNpcDrop(npcId, itemid, chance),
+                            result -> {
+                                if (client.disconnected) {
+                                    return;
+                                }
+                                if (result.getUpdatedRows() < 1) {
+                                    client.send(new SendMessage(Server.npcManager.getName(npcId)
+                                            + " does not have the " + client.GetItemName(itemid) + " with the chance " + chance + "% !"));
+                                } else {
+                                    client.send(new SendMessage("You deleted " + client.GetItemName(itemid) + " drop with the chance of " + chance + "% from "
+                                            + Server.npcManager.getName(npcId)));
+                                }
+                            },
+                            exception -> {
+                                if (!client.disconnected) {
+                                    client.send(new SendMessage("Wrong usage.. ::d_drop itemid chance"));
+                                    logger.debug("delete-npc-drop failed for npcId={} itemId={}", npcId, itemid, exception);
+                                }
+                            }
+                    );
                 }
                 if (cmd[0].equalsIgnoreCase("npc_data")) {
                     if (client.getPlayerNpc() < 0) {
@@ -608,20 +638,31 @@ public class CommandsListener implements PacketListener {
                         double chance = first != 0.0 || second != 0.0 ? Double.parseDouble(numberFormat.format((first / second) * 100)) : Double.parseDouble(cmd[4]);
                         chance = chance > 100.000 ? 100.0 : Math.max(chance, 0.001);
                         String rareShout = cmd.length >= 6 && (cmd[5].equalsIgnoreCase("false") || cmd[5].equalsIgnoreCase("true")) ? cmd[5].toLowerCase() : "false";
-                        try (Connection conn = getDbConnection();
-                             Statement statement = conn.createStatement()) {
-                            String sql = "INSERT INTO " + DbTables.GAME_NPC_DROPS + " SET npcid='" + client.getPlayerNpc() + "', percent='" + chance
-                                    + "', itemid='" + itemid + "', amt_min='" + min + "', amt_max='" + max + "', rareShout='" + rareShout + "'";
-                            statement.execute(sql);
-                            client.send(new SendMessage("You added " + min + "-" + max + " " + client.GetItemName(itemid) + " to "
-                                    + Server.npcManager.getName(client.getPlayerNpc()) + " with a chance of " + chance + "%" + (rareShout.equals("true") ? " with a yell!" : "")));
-                        } catch (Exception e) {
-                            if (e.getMessage().contains("Duplicate entry"))
-                                client.send(new SendMessage(client.GetItemName(itemid) + " with the chance of " + chance + "% already exist for the " + Server.npcManager.getName(client.getPlayerNpc())));
-                            else {
-                                client.send(new SendMessage("Something bad happend with sql!"));
-                            }
-                        }
+                        int npcId = client.getPlayerNpc();
+                        final double finalChance = chance;
+                        final String finalRareShout = rareShout;
+                        CommandDbService.submit(
+                                "add-npc-drop",
+                                () -> CommandDbService.insertNpcDrop(npcId, finalChance, itemid, min, max, finalRareShout),
+                                result -> {
+                                    if (client.disconnected) {
+                                        return;
+                                    }
+                                    client.send(new SendMessage("You added " + min + "-" + max + " " + client.GetItemName(itemid) + " to "
+                                            + Server.npcManager.getName(npcId) + " with a chance of " + finalChance + "%" + (finalRareShout.equals("true") ? " with a yell!" : "")));
+                                },
+                                exception -> {
+                                    if (client.disconnected) {
+                                        return;
+                                    }
+                                    if (exception.getMessage() != null && exception.getMessage().contains("Duplicate entry")) {
+                                        client.send(new SendMessage(client.GetItemName(itemid) + " with the chance of " + finalChance + "% already exist for the " + Server.npcManager.getName(npcId)));
+                                    } else {
+                                        client.send(new SendMessage("Something bad happend with sql!"));
+                                        logger.debug("add-npc-drop failed for npcId={} itemId={}", npcId, itemid, exception);
+                                    }
+                                }
+                        );
                     } catch (Exception e) {
                         client.send(new SendMessage("Wrong usage.. ::" + cmd[0] + " itemid min max procent(x:y or %)"));
                     }
@@ -651,16 +692,18 @@ public class CommandsListener implements PacketListener {
                         client.send(new SendMessage("Npc " + npcData.getName() + " (" + npcId + ") has no assigned drops!"));
                 }
                 if (cmd[0].equalsIgnoreCase("addxmastree")) {
-                    try (Connection conn = getDbConnection();
-                         Statement statement = conn.createStatement()) {
-                        statement
-                                .executeUpdate("INSERT INTO " + DbTables.GAME_OBJECT_DEFINITIONS + " SET id = 1318, x = " + client.getPosition().getX()
-                                        + ", y = " + client.getPosition().getY() + ", type = 2");
-                        //Server.objects.add(new RS2Object(1318, client.getPosition().getX(), client.getPosition().getY(), 10));
-                        client.send(new SendMessage("Object added, at x = " + client.getPosition().getX()
-                                + " y = " + client.getPosition().getY()));
-                    } catch (Exception e) {
-                    }
+                    int x = client.getPosition().getX();
+                    int y = client.getPosition().getY();
+                    CommandDbService.submit(
+                            "add-xmas-tree",
+                            () -> CommandDbService.insertObjectDefinition(1318, x, y, 2),
+                            result -> {
+                                if (!client.disconnected) {
+                                    client.send(new SendMessage("Object added, at x = " + x + " y = " + y));
+                                }
+                            },
+                            exception -> logger.debug("add-xmas-tree failed at x={} y={}", x, y, exception)
+                    );
                 }
                 if (cmd[0].equalsIgnoreCase("addnpc")) {
                     client.send(new SendMessage("This command is disabled after the NPC spawn hard cutover."));

@@ -65,6 +65,7 @@ public abstract class Player extends Entity {
     private volatile ActiveInteraction activeInteraction;
     private volatile long interactionEarliestCycle = 0L;
     private volatile QueueTaskHandle interactionTaskHandle;
+    private volatile QueueTaskHandle farmDebugTaskHandle;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -971,6 +972,22 @@ public abstract class Player extends Entity {
     public void cancelInteractionTask() {
         QueueTaskHandle handle = interactionTaskHandle;
         interactionTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
+
+    public QueueTaskHandle getFarmDebugTaskHandle() {
+        return farmDebugTaskHandle;
+    }
+
+    public void setFarmDebugTaskHandle(QueueTaskHandle farmDebugTaskHandle) {
+        this.farmDebugTaskHandle = farmDebugTaskHandle;
+    }
+
+    public void cancelFarmDebugTask() {
+        QueueTaskHandle handle = farmDebugTaskHandle;
+        farmDebugTaskHandle = null;
         if (handle != null) {
             handle.cancel();
         }

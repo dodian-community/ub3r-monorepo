@@ -26,6 +26,7 @@ import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.persistence.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
@@ -457,28 +458,51 @@ public class Client extends Player implements Runnable {
 
     public void arrowGfx(int offsetY, int offsetX, int angle, int speed,
                          int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
-        for (int a = 0; a < Constants.maxPlayers; a++) {
-            Client projCheck = (Client) PlayerHandler.players[a];
-            if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-                    && Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 64
-                    && Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 64) {
-                projCheck.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
-                        startHeight, endHeight, index, begin, slope, 64);
-            }
-        }
+        forEachProjectileViewer(viewer ->
+                viewer.createProjectile(getPosition().getY(), getPosition().getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                        startHeight, endHeight, index, begin, slope, 64));
     }
 
     public void arrowNpcGfx(Position pos, int offsetY, int offsetX, int angle, int speed,
                             int gfxMoving, int startHeight, int endHeight, int index, int begin, int slope) {
-        for (int a = 0; a < Constants.maxPlayers; a++) {
-            Client projCheck = (Client) PlayerHandler.players[a];
-            if (projCheck != null && projCheck.dbId > 0 && projCheck.getPosition().getX() > 0 && !projCheck.disconnected
-                    && Math.abs(getPosition().getX() - projCheck.getPosition().getX()) <= 64
-                    && Math.abs(getPosition().getY() - projCheck.getPosition().getY()) <= 64) {
-                projCheck.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, angle, speed, gfxMoving,
-                        startHeight, endHeight, index, begin, slope, 64);
-            }
+        forEachProjectileViewer(viewer ->
+                viewer.createProjectile(pos.getY(), pos.getX(), offsetY, offsetX, angle, speed, gfxMoving,
+                        startHeight, endHeight, index, begin, slope, 64));
+    }
+
+    private void forEachProjectileViewer(java.util.function.Consumer<Client> consumer) {
+        Position source = getPosition();
+        if (source == null || consumer == null) {
+            return;
         }
+        if (Server.chunkManager != null) {
+            Server.chunkManager.forEachUpdatePlayerCandidate(this, 64, other -> {
+                Client viewer = (Client) other;
+                if (canViewProjectile(viewer, source, true)) {
+                    consumer.accept(viewer);
+                }
+            });
+            if (canViewProjectile(this, source, true)) {
+                consumer.accept(this);
+            }
+            return;
+        }
+        PlayerHandler.forEachActivePlayer(viewer -> {
+            if (canViewProjectile(viewer, source, false)) {
+                consumer.accept(viewer);
+            }
+        });
+    }
+
+    private boolean canViewProjectile(Client viewer, Position source, boolean requireSamePlane) {
+        if (viewer == null || viewer.dbId <= 0 || viewer.disconnected || viewer.getPosition() == null
+                || viewer.getPosition().getX() <= 0) {
+            return false;
+        }
+        if (requireSamePlane && viewer.getPosition().getZ() != source.getZ()) {
+            return false;
+        }
+        return viewer.getPosition().withinDistance(source, 64);
     }
 
     public void println_debug(String str) {
@@ -588,6 +612,7 @@ public class Client extends Player implements Runnable {
     @Override
     public void destruct() {
         releaseQueuedInboundPackets();
+        cancelFarmDebugTask();
 
         // Transport-specific shutdown
         if (channel != null) {
@@ -7177,39 +7202,18 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("User " + player + "'s inventory is now being shown."));
             checkInv = true;
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-                ResultSet results = statement.executeQuery(query);
-                int id = -1;
-                if (results.next())
-                    id = results.getInt("userid");
-                if (id >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("inventory");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherInv.add(new GameItem(item, amount));
-                            }
+            send(new SendMessage("Loading " + player + "'s inventory..."));
+            CommandDbService.submit(
+                    "check-inventory",
+                    () -> CommandDbService.loadOfflineContainerView(player, "inventory"),
+                    result -> applyOfflineInventoryView(player, result),
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not load that inventory right now."));
                         }
-                        sendInventory(3214, otherInv);
-                        send(new SendMessage("User " + player + "'s inventory is now being shown."));
-                        checkInv = true;
-                    } else
-                        send(new SendMessage("username '" + player + "' have yet to login!"));
-                } else
-                    send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                    }
+            );
         }
     }
 
@@ -7232,41 +7236,18 @@ public class Client extends Player implements Runnable {
             IsBanking = false;
             checkBankInterface = true;
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + player + "'";
-                ResultSet results = statement.executeQuery(query);
-                int id = -1;
-                if (results.next())
-                    id = results.getInt("userid");
-                if (id >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + id;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("bank");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                @SuppressWarnings("unused")
-                                int slot = Integer.parseInt(parts[0]);
-                                int item = Integer.parseInt(parts[1]);
-                                int amount = Integer.parseInt(parts[2]);
-                                otherBank.add(new GameItem(item, amount));
-                            }
+            send(new SendMessage("Loading " + player + "'s bank..."));
+            CommandDbService.submit(
+                    "check-bank",
+                    () -> CommandDbService.loadOfflineContainerView(player, "bank"),
+                    result -> applyOfflineBankView(player, result),
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not load that bank right now."));
                         }
-                        send(new SendString("Examine the bank of " + player, 5383));
-                        sendBank(5382, otherBank);
-                        resetItems(5064);
-                        send(new InventoryInterface(5292, 5063));
-                        checkBankInterface = true;
-                    } else
-                        send(new SendMessage("username '" + player + "' have yet to login!"));
-                } else
-                    send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                    }
+            );
         }
     }
 
@@ -7310,37 +7291,28 @@ public class Client extends Player implements Runnable {
             other.refreshSkill(Skill.getSkill(id));
             send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
         } else {
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                boolean found = true;
-                int currentXp = 0, totalXp = 0, totalLevel = 0;
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-                ResultSet results = statement.executeQuery(query);
-                int userid = -1;
-                if (results.next())
-                    userid = results.getInt("userid");
-                if (userid >= 0) {
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS_STATS + " WHERE uid = " + userid;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        currentXp = results.getInt(skillName);
-                        totalXp = results.getInt("totalxp");
-                        totalLevel = results.getInt("total");
+            final int requestedXp = xp;
+            CommandDbService.submit(
+                    "remove-skill",
+                    () -> CommandDbService.removeOfflineExperience(user, skillName, requestedXp),
+                    result -> {
+                        if (disconnected) {
+                            return;
+                        }
+                        if (result.getStatus() == CommandDbService.OfflineSkillMutationResult.Status.NOT_FOUND) {
+                            send(new SendMessage("username '" + user + "' have yet to login!"));
+                            return;
+                        }
+                        send(new SendMessage("Removed " + result.getRemovedXp() + "/" + result.getCurrentXp()
+                                + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
+                    },
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not update that player's skill right now."));
+                        }
                     }
-                } else
-                    found = false;
-                if (found) {
-                    xp = Math.min(currentXp, xp);
-                    int newXp = currentXp - xp;
-                    totalLevel -= Skills.getLevelForExperience(currentXp) - Skills.getLevelForExperience(newXp);
-                    totalXp -= xp;
-                    statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS_STATS + " SET " + skillName + "='" + newXp + "', totalxp='" + totalXp + "', total='" + totalLevel + "' WHERE uid = " + userid);
-                    send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-                } else
-                    send(new SendMessage("username '" + user + "' have yet to login!"));
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+            );
         }
     }
 
@@ -7387,84 +7359,76 @@ public class Client extends Player implements Runnable {
             } else
                 send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
         } else { //Database check!
-            try (java.sql.Connection conn = getDbConnection();
-                 Statement statement = conn.createStatement()) {
-                boolean found = true;
-                String query = "SELECT * FROM " + DbTables.WEB_USERS_TABLE + " WHERE username = '" + user + "'";
-                ResultSet results = statement.executeQuery(query);
-                int userid = -1;
-                if (results.next())
-                    userid = results.getInt("userid");
-                if (userid >= 0) {
-                    StringBuilder bank = new StringBuilder();
-                    StringBuilder inventory = new StringBuilder();
-                    StringBuilder equipment = new StringBuilder();
-                    query = "SELECT * FROM " + DbTables.GAME_CHARACTERS + " WHERE id = " + userid;
-                    results = statement.executeQuery(query);
-                    if (results.next()) {
-                        String text = results.getString("bank");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        bank.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    bank.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
+            final int requestedAmount = amount;
+            CommandDbService.submit(
+                    "remove-items",
+                    () -> CommandDbService.removeOfflineItems(user, id, requestedAmount),
+                    result -> {
+                        if (disconnected) {
+                            return;
                         }
-                        text = results.getString("inventory");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    inventory.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
+                        if (result.getStatus() == CommandDbService.OfflineItemRemovalResult.Status.NOT_FOUND) {
+                            send(new SendMessage("username '" + user + "' have yet to login!"));
+                            return;
                         }
-                        text = results.getString("equipment");
-                        if (text != null && text.length() > 2) {
-                            String[] lines = text.split(" ");
-                            for (String line : lines) {
-                                String[] parts = line.split("-");
-                                int checkItem = Integer.parseInt(parts[1]);
-                                if (checkItem == id) {
-                                    int canRemove = Math.min(Integer.parseInt(parts[2]), amount);
-                                    if (canRemove < Integer.parseInt(parts[2]))
-                                        equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(Integer.parseInt(parts[2]) - canRemove).append(" ");
-                                    amount -= canRemove;
-                                    totalItemRemoved += canRemove;
-                                } else
-                                    equipment.append(parts[0]).append("-").append(parts[1]).append("-").append(parts[2]).append(" ");
-                            }
-                        }
-                    } else
-                        found = false;
-                    if (found) {
-                        statement.executeUpdate("UPDATE " + DbTables.GAME_CHARACTERS + " SET equipment='" + equipment + "', inventory='" + inventory + "', bank='" + bank + "' WHERE id = " + userid);
-                        if (totalItemRemoved > 0)
-                            send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
-                        else
+                        if (result.getTotalItemRemoved() > 0) {
+                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + GetItemName(id).toLowerCase()));
+                        } else {
                             send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
-                    } else
-                        send(new SendMessage("username '" + user + "' have yet to login!"));
-                }
-            } catch (Exception e) {
-                logger.debug("issue: {}", e.getMessage());
-            }
+                        }
+                    },
+                    exception -> {
+                        if (!disconnected) {
+                            logger.debug("issue: {}", exception.getMessage(), exception);
+                            send(new SendMessage("Could not remove those items right now."));
+                        }
+                    }
+            );
         }
+    }
+
+    private void applyOfflineInventoryView(String player, CommandDbService.OfflineContainerViewResult result) {
+        if (disconnected) {
+            return;
+        }
+        if (IsBanking || isShopping() || duelFight) {
+            send(new SendMessage("Inventory view cancelled because you started another action."));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' do not exist in the database!"));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' have yet to login!"));
+            return;
+        }
+        sendInventory(3214, result.getItems());
+        send(new SendMessage("User " + player + "'s inventory is now being shown."));
+        checkInv = true;
+    }
+
+    private void applyOfflineBankView(String player, CommandDbService.OfflineContainerViewResult result) {
+        if (disconnected) {
+            return;
+        }
+        if (IsBanking || isShopping() || duelFight) {
+            send(new SendMessage("Bank view cancelled because you started another action."));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' do not exist in the database!"));
+            return;
+        }
+        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
+            send(new SendMessage("username '" + player + "' have yet to login!"));
+            return;
+        }
+        send(new SendString("Examine the bank of " + player, 5383));
+        sendBank(5382, result.getItems());
+        resetItems(5064);
+        send(new InventoryInterface(5292, 5063));
+        checkBankInterface = true;
     }
 
     public void dropAllItems() {

@@ -26,6 +26,9 @@ object DbDispatchers {
     val logExecutor: ExecutorService = newSingleThreadExecutor("log-db")
 
     @JvmField
+    val commandExecutor: ExecutorService = newSingleThreadExecutor("command-db")
+
+    @JvmField
     val accountDispatcher: CoroutineDispatcher = accountExecutor.asCoroutineDispatcher()
 
     @JvmField
@@ -43,4 +46,3 @@ object DbDispatchers {
         }
     }
 }
-
