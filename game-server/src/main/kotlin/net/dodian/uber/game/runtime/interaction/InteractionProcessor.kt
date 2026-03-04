@@ -13,9 +13,11 @@ import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
+import java.util.IdentityHashMap
 
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
+    private val miningSettledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
@@ -117,6 +119,22 @@ object InteractionProcessor {
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
+
+        if (distanceMode == ObjectInteractionDistance.DistanceMode.MINING) {
+            if (!isMovementSettled(player)) {
+                miningSettledSinceCycle.remove(intent)
+                return InteractionExecutionResult.WAITING
+            }
+            val settledSince = miningSettledSinceCycle[intent]
+            if (settledSince == null) {
+                miningSettledSinceCycle[intent] = PlayerHandler.cycle.toLong()
+                return InteractionExecutionResult.WAITING
+            }
+            if (PlayerHandler.cycle.toLong() <= settledSince) {
+                return InteractionExecutionResult.WAITING
+            }
+            miningSettledSinceCycle.remove(intent)
+        }
 
         if (intent.option == 1) {
             if (!player.validClient || player.randomed) {
@@ -369,6 +387,7 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
+        player.pendingInteraction?.let { miningSettledSinceCycle.remove(it) }
         player.pendingInteraction = null
         player.activeInteraction = null
         player.interactionEarliestCycle = 0
@@ -381,6 +400,12 @@ object InteractionProcessor {
         } else {
             ObjectInteractionDistance.DistanceMode.CLICK
         }
+    }
+
+    private fun isMovementSettled(player: Client): Boolean {
+        return player.primaryDirection == -1 &&
+            player.secondaryDirection == -1 &&
+            player.wQueueReadPtr == player.wQueueWritePtr
     }
 
     private fun slowLogIfNeeded(

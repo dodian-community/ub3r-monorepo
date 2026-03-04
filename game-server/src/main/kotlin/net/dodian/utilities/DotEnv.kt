@@ -78,6 +78,7 @@ val worldMaintenanceEnabled = dotenv["WORLD_MAINTENANCE_ENABLED"]?.toBoolean() ?
 val farmingSchedulerEnabled = dotenv["FARMING_SCHEDULER_ENABLED"]?.toBoolean() ?: true
 val zoneUpdateBatchingEnabled = dotenv["ZONE_UPDATE_BATCHING_ENABLED"]?.toBoolean() ?: false
 val queueTasksEnabled = dotenv["QUEUE_TASKS_ENABLED"]?.toBoolean() ?: false
+val opcode248HasExtra14ByteSuffix = dotenv["OPCODE_248_HAS_EXTRA_14_BYTE_SUFFIX"]?.toBoolean() ?: false
 val clientUiDeltaProcessorEnabled = dotenv["CLIENT_UI_DELTA_PROCESSOR_ENABLED"]?.toBoolean() ?: true
 val databaseConnectionProxyEnabled = dotenv["DATABASE_CONNECTION_PROXY_ENABLED"]?.toBoolean() ?: false
 val runtimePhaseTimingEnabled = dotenv["RUNTIME_PHASE_TIMING_ENABLED"]?.toBoolean() ?: true

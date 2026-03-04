@@ -16,7 +16,8 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable;
+import java.util.concurrent.atomic.AtomicLong;
+import static net.dodian.utilities.DotEnvKt.getLegacyMinimapWalkSuffixEnabled;
 
 
 
@@ -28,12 +29,19 @@ import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable;
 public final class WalkingListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(WalkingListener.class);
+    private static final int OP_MINIMAP_WALK = 248;
+    private static final int MIN_WALK_PACKET_SIZE = 5;
+    private static final int MINIMAP_TRAILING_BYTES = 14;
+    private static final int MIN_WORLD_COORD = 0;
+    private static final int MAX_WORLD_COORD = 16382;
+    private static final long MALFORMED_LOG_INTERVAL_MS = 5000L;
+    private static final AtomicLong lastMalformedLogMs = new AtomicLong(0L);
 
     static {
         WalkingListener handler = new WalkingListener();
-        PacketListenerManager.register(248, handler);
-        PacketListenerManager.register(164, handler);
-        PacketListenerManager.register(98, handler);
+        safeRegister(248, handler);
+        safeRegister(164, handler);
+        safeRegister(98, handler);
     }
 
     @Override
@@ -76,23 +84,33 @@ public final class WalkingListener implements PacketListener {
         }
 
         ByteBuf buf = packet.getPayload();
-        
-        // DEBUG: Buffer validation
-        logger.debug("Buffer readable bytes: {}, expected size: {}", buf.readableBytes(), size);
-        if (buf.readableBytes() < 5) {
-            logger.warn("Insufficient buffer data for walking packet - readable: {}, size: {}", buf.readableBytes(), size);
+        int effectiveSize = resolveEffectiveSize(opcode, size);
+        if (effectiveSize < MIN_WALK_PACKET_SIZE) {
+            rejectMalformedWalkPacket(client, opcode, size, -1, -1, "effective size below minimum");
             return;
         }
-        
-        // Steps calculation
-        int steps = (size - 5) / 2;
+        if (buf.readableBytes() < effectiveSize) {
+            rejectMalformedWalkPacket(client, opcode, size, -1, -1, "payload shorter than effective size");
+            return;
+        }
+        if (((effectiveSize - MIN_WALK_PACKET_SIZE) & 1) != 0) {
+            rejectMalformedWalkPacket(client, opcode, size, -1, -1, "step payload has odd byte count");
+            return;
+        }
+        if (client.mapRegionX < 0 || client.mapRegionY < 0) {
+            rejectMalformedWalkPacket(client, opcode, size, -1, -1, "map region not initialized");
+            return;
+        }
+
+        int steps = (effectiveSize - MIN_WALK_PACKET_SIZE) / 2;
         client.newWalkCmdSteps = steps;
         if (++client.newWalkCmdSteps > Player.WALKING_QUEUE_SIZE) {
             client.newWalkCmdSteps = 0;
             return;
         }
 
-        int firstStepX = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.BIG) - client.mapRegionX * 8;
+        int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.BIG);
+        int firstStepX = firstStepXAbs - client.mapRegionX * 8;
 
         for (int i = 1; i < client.newWalkCmdSteps; i++) {
             client.newWalkCmdX[i] = readSignedByte(buf);
@@ -101,7 +119,12 @@ public final class WalkingListener implements PacketListener {
             client.tmpNWCY[i] = client.newWalkCmdY[i];
         }
 
-        int firstStepY = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.BIG) - client.mapRegionY * 8;
+        int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.BIG);
+        int firstStepY = firstStepYAbs - client.mapRegionY * 8;
+        if (!isValidWorldCoordinate(firstStepXAbs) || !isValidWorldCoordinate(firstStepYAbs)) {
+            rejectMalformedWalkPacket(client, opcode, size, firstStepXAbs, firstStepYAbs, "first step out of world bounds");
+            return;
+        }
         client.newWalkCmdIsRunning = (readSignedByteC(buf) == 1);
 
         client.newWalkCmdX[0] = client.newWalkCmdY[0] = client.tmpNWCX[0] = client.tmpNWCY[0] = 0;
@@ -183,5 +206,66 @@ public final class WalkingListener implements PacketListener {
 
     private static int readSignedByteC(ByteBuf buf) {
         return -buf.readByte();
+    }
+
+    private static void safeRegister(int opcode, WalkingListener handler) {
+        try {
+            PacketListenerManager.register(opcode, handler);
+        } catch (RuntimeException ex) {
+            logger.debug("Skipping walking listener registration for opcode {}: {}", opcode, ex.getMessage());
+        }
+    }
+
+    static int resolveEffectiveSize(int opcode, int packetSize) {
+        return resolveEffectiveSize(opcode, packetSize, getLegacyMinimapWalkSuffixEnabled());
+    }
+
+    static int resolveEffectiveSize(int opcode, int packetSize, boolean legacyMinimapSuffixMode) {
+        if (opcode == OP_MINIMAP_WALK) {
+            return legacyMinimapSuffixMode ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
+        }
+        return packetSize;
+    }
+
+    private static boolean isValidWorldCoordinate(int value) {
+        return value >= MIN_WORLD_COORD && value <= MAX_WORLD_COORD;
+    }
+
+    private static void rejectMalformedWalkPacket(
+            Client client,
+            int opcode,
+            int packetSize,
+            int firstStepXAbs,
+            int firstStepYAbs,
+            String reason
+    ) {
+        client.resetWalkingQueue();
+        logMalformedWalkPacket(client, opcode, packetSize, firstStepXAbs, firstStepYAbs, reason);
+    }
+
+    private static void logMalformedWalkPacket(
+            Client client,
+            int opcode,
+            int packetSize,
+            int firstStepXAbs,
+            int firstStepYAbs,
+            String reason
+    ) {
+        long now = System.currentTimeMillis();
+        long last = lastMalformedLogMs.get();
+        if (now - last < MALFORMED_LOG_INTERVAL_MS || !lastMalformedLogMs.compareAndSet(last, now)) {
+            return;
+        }
+        logger.warn(
+                "Rejected malformed walk packet player={} opcode={} size={} firstStep=({}, {}) region=({}, {}) reason={}",
+                client.getPlayerName(),
+                opcode,
+                packetSize,
+                firstStepXAbs,
+                firstStepYAbs,
+                client.mapRegionX,
+                client.mapRegionY,
+                reason
+        );
     }
 }
