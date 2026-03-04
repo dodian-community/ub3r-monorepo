@@ -17,7 +17,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
-import static net.dodian.utilities.DotEnvKt.getLegacyMinimapWalkSuffixEnabled;
+import static net.dodian.utilities.DotEnvKt.getOpcode248HasExtra14ByteSuffix;
 
 
 
@@ -217,12 +217,12 @@ public final class WalkingListener implements PacketListener {
     }
 
     static int resolveEffectiveSize(int opcode, int packetSize) {
-        return resolveEffectiveSize(opcode, packetSize, getLegacyMinimapWalkSuffixEnabled());
+        return resolveEffectiveSize(opcode, packetSize, getOpcode248HasExtra14ByteSuffix());
     }
 
-    static int resolveEffectiveSize(int opcode, int packetSize, boolean legacyMinimapSuffixMode) {
+    static int resolveEffectiveSize(int opcode, int packetSize, boolean opcode248HasExtra14ByteSuffix) {
         if (opcode == OP_MINIMAP_WALK) {
-            return legacyMinimapSuffixMode ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
+            return opcode248HasExtra14ByteSuffix ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
         }
         return packetSize;
     }
