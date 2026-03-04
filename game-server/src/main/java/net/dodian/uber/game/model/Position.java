@@ -5,14 +5,23 @@ import net.dodian.utilities.Misc;
 
 public class Position {
 
-    private short x;
-    private short y;
-    private byte z;
+    private static final int X_BITS = 14;
+    private static final int Y_BITS = 14;
+    private static final int Z_BITS = 4;
+    private static final int Y_SHIFT = Z_BITS;
+    private static final int X_SHIFT = Y_SHIFT + Y_BITS;
+    private static final int X_MASK = (1 << X_BITS) - 1;
+    private static final int Y_MASK = (1 << Y_BITS) - 1;
+    private static final int Z_MASK = (1 << Z_BITS) - 1;
+    private static final int MIN_COORDINATE = -1;
+    private static final int MAX_COORDINATE = X_MASK - 1;
+    private static final int MIN_HEIGHT = 0;
+    private static final int MAX_HEIGHT = Z_MASK;
+
+    private int packed;
 
     public Position(int x, int y, int z) {
-        this.x = toCoordinate("x", x);
-        this.y = toCoordinate("y", y);
-        this.z = toHeight(z);
+        this.packed = pack(x, y, z);
     }
 
     public Position(int x, int y) {
@@ -24,19 +33,19 @@ public class Position {
     }
 
     public int getX() {
-        return this.x;
+        return unpackCoordinate(packed >> X_SHIFT);
     }
 
     public int getY() {
-        return this.y;
+        return unpackCoordinate(packed >> Y_SHIFT);
     }
 
     public int getZ() {
-        return this.z;
+        return packed & Z_MASK;
     }
 
     public void setZ(int z) {
-        this.z = toHeight(z);
+        packed = pack(getX(), getY(), z);
     }
 
     public double getDistance(Position position) {
@@ -50,13 +59,11 @@ public class Position {
     }
 
     public void moveTo(int x, int y, int z) {
-        this.x = toCoordinate("x", x);
-        this.y = toCoordinate("y", y);
-        this.z = toHeight(z);
+        packed = pack(x, y, z);
     }
 
     public void moveTo(int x, int y) {
-        moveTo(x, y, this.z);
+        moveTo(x, y, getZ());
     }
 
     /**
@@ -70,9 +77,7 @@ public class Position {
      * @return an instance of this position.
      */
     public final Position move(int amountX, int amountY, int amountZ) {
-        this.x = toCoordinate("x", this.x + amountX);
-        this.y = toCoordinate("y", this.y + amountY);
-        this.z = toHeight(this.z + amountZ);
+        packed = pack(getX() + amountX, getY() + amountY, getZ() + amountZ);
         return this;
     }
 
@@ -96,7 +101,7 @@ public class Position {
      * @return the copy of this instance that does not hold any references.
      */
     public Position copy() {
-        return new Position(x, y, z);
+        return new Position(getX(), getY(), getZ());
     }
 
 
@@ -112,7 +117,7 @@ public class Position {
      * @return the local {@code X} coordinate.
      */
     public final int getLocalX(Position base) {
-        return x - 8 * base.getRegionX();
+        return getX() - 8 * base.getRegionX();
     }
 
     /**
@@ -122,7 +127,7 @@ public class Position {
      * @return the local {@code Y} coordinate.
      */
     public final int getLocalY(Position base) {
-        return y - 8 * base.getRegionY();
+        return getY() - 8 * base.getRegionY();
     }
 
     /**
@@ -149,7 +154,7 @@ public class Position {
      * @return the {@code X} coordinate of the region.
      */
     public final int getRegionX() {
-        return (x >> 3) - 6;
+        return (getX() >> 3) - 6;
     }
 
     /**
@@ -158,7 +163,7 @@ public class Position {
      * @return the {@code Y} coordinate of the region
      */
     public final int getRegionY() {
-        return (y >> 3) - 6;
+        return (getY() >> 3) - 6;
     }
 
     /**
@@ -172,11 +177,11 @@ public class Position {
     }
 
     public int getChunkX() {
-        return (x >> 3) - 6;
+        return (getX() >> 3) - 6;
     }
 
     public int getChunkY() {
-        return (y >> 3) - 6;
+        return (getY() >> 3) - 6;
     }
 
     /**
@@ -189,9 +194,15 @@ public class Position {
      * {@code false} otherwise.
      */
     public final boolean withinDistance(Position other, int amount) {
-        if (this.z != other.z)
+        int thisX = getX();
+        int thisY = getY();
+        int thisZ = getZ();
+        int otherX = other.getX();
+        int otherY = other.getY();
+        if (thisZ != other.getZ()) {
             return false;
-        return Math.abs(other.x - this.x) <= amount && Math.abs(other.y - this.y) <= amount;
+        }
+        return Math.abs(otherX - thisX) <= amount && Math.abs(otherY - thisY) <= amount;
     }
 
     /**
@@ -204,31 +215,53 @@ public class Position {
      * @return the delta coordinates contained within a position.
      */
     public static Position delta(Position a, Position b) {
-        return new Position(b.x - a.x, b.y - a.y);
+        return new Position(b.getX() - a.getX(), b.getY() - a.getY());
     }
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Position)) {
+            return false;
+        }
         Position other = (Position) o;
-        return other.getX() == this.getX() && other.getY() == this.getY() && other.getZ() == this.getZ();
+        return packed == other.packed;
+    }
+
+    @Override
+    public int hashCode() {
+        return packed;
     }
 
     public String toString() {
-        return "x=" + this.x + " y=" + this.y + " z=" + this.z;
+        return "x=" + getX() + " y=" + getY() + " z=" + getZ();
     }
 
-    private static short toCoordinate(String axis, int value) {
-        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
+    private static int pack(int x, int y, int z) {
+        int encodedX = encodeCoordinate("x", x);
+        int encodedY = encodeCoordinate("y", y);
+        int encodedZ = encodeHeight(z);
+        return (encodedX << X_SHIFT) | (encodedY << Y_SHIFT) | encodedZ;
+    }
+
+    private static int encodeCoordinate(String axis, int value) {
+        if (value < MIN_COORDINATE || value > MAX_COORDINATE) {
             throw new IllegalArgumentException("Position " + axis + " out of range: " + value);
         }
-        return (short) value;
+        return value + 1;
     }
 
-    private static byte toHeight(int value) {
-        if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
+    private static int unpackCoordinate(int encoded) {
+        return (encoded & X_MASK) - 1;
+    }
+
+    private static int encodeHeight(int value) {
+        if (value < MIN_HEIGHT || value > MAX_HEIGHT) {
             throw new IllegalArgumentException("Position z out of range: " + value);
         }
-        return (byte) value;
+        return value;
     }
 
 }

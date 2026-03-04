@@ -33,8 +33,21 @@ class PositionTest {
 
     @Test
     void rejectsCoordinateOverflow() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(Short.MAX_VALUE + 1, 3200, 0));
-        assertThrows(IllegalArgumentException.class, () -> new Position(3200, Short.MIN_VALUE - 1, 0));
-        assertThrows(IllegalArgumentException.class, () -> new Position(3200, 3200, Byte.MAX_VALUE + 1));
+        assertThrows(IllegalArgumentException.class, () -> new Position(16383, 3200, 0));
+        assertThrows(IllegalArgumentException.class, () -> new Position(-2, 3200, 0));
+        assertThrows(IllegalArgumentException.class, () -> new Position(3200, 3200, 16));
+    }
+
+    @Test
+    void supportsSentinelAndMaxPackedCoordinates() {
+        Position sentinel = new Position(-1, -1, 0);
+        Position max = new Position(16382, 16382, 15);
+
+        assertEquals(-1, sentinel.getX());
+        assertEquals(-1, sentinel.getY());
+        assertEquals(0, sentinel.getZ());
+        assertEquals(16382, max.getX());
+        assertEquals(16382, max.getY());
+        assertEquals(15, max.getZ());
     }
 }
