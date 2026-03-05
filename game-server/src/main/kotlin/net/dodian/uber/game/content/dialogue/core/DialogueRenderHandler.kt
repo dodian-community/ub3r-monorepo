@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.dialogue.legacy.core
+package net.dodian.uber.game.content.dialogue.core
 
 import net.dodian.uber.game.model.entity.player.Client
 

@@ -9,6 +9,7 @@ public class RemoveInterfaces implements OutgoingPacket {
     @Override
     public void send(Client client) {
         client.checkBankInterface = false;
+        client.clearItemListPreview();
         client.currentSkill = -1;
         ByteMessage bm = ByteMessage.message(219);
         client.send(bm);

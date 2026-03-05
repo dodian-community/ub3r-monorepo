@@ -43,6 +43,10 @@ public class BankAllListener implements PacketListener {
         int removeId = readUnsignedWordA(buf);
         int bankSlot = removeSlot;
 
+        if (interfaceId == 5382 && client.itemListPreviewOpen) {
+            return;
+        }
+
         // Resolve the real item id from local container for bank / inventory
         int resolvedItemId = removeId;
         if (interfaceId == 5064) { // inventory

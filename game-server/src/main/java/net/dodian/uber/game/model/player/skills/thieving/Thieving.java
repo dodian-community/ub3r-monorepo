@@ -214,8 +214,8 @@ public class Thieving {
                     player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase()));
                 }
                 if (data.getThievingType() == ThievingType.STALL_THIEVING) {
-                    final Object o = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
-                    GlobalObject.addGlobalObject(o, data.getRespawnTime() * 1000);
+                    final Object stallObject = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
+                    GlobalObject.addGlobalObject(stallObject, data.getRespawnTime() * 1000);
                 }
                 player.checkItemUpdate();
                 player.triggerRandom(data.getReceivedExperience());

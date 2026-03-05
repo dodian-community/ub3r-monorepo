@@ -42,6 +42,11 @@ public class ClickingStuffListener implements PacketListener {
             client.checkItemUpdate();
             client.send(new RemoveInterfaces());
         }
+        if (client.itemListPreviewOpen) {
+            client.clearItemListPreview();
+            client.checkItemUpdate();
+            client.send(new RemoveInterfaces());
+        }
         if (client.isPartyInterface) {
             client.isPartyInterface = false;
             client.checkItemUpdate();

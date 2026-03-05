@@ -98,7 +98,7 @@ public abstract class Player extends Entity {
     public boolean attackingPlayer = false, attackingNpc = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
-    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
+    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, itemListPreviewOpen = false, NpcDialogueSend = false;
     private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
@@ -1948,11 +1948,7 @@ public abstract class Player extends Entity {
                         currentChance += checkChance;
                 }
             }
-            c.send(new SendString("Loot from 1000 " + n.getName(), 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.sendItemListPreview(lootedItem, lootedAmount, "Loot from 1000 " + n.getName());
             if (wealth)
                 c.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
     }
@@ -2002,11 +1998,7 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.sendItemListPreview(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
         if(objectId == 375 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
             ArrayList<Integer> lootedItem = new ArrayList<>();
@@ -2032,11 +2024,7 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.sendItemListPreview(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
     }
 

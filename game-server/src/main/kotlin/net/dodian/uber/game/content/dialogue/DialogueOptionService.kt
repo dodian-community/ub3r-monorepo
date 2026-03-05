@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.dialogue.legacy
+package net.dodian.uber.game.content.dialogue
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Ground
@@ -16,7 +16,7 @@ import net.dodian.utilities.Utils
 import kotlin.math.ceil
 import kotlin.math.min
 
-object LegacyDialogueOptionService {
+object DialogueOptionService {
 
     @JvmStatic
     fun triggerChat(c: net.dodian.uber.game.model.entity.player.Client, button: Int) {
@@ -41,7 +41,7 @@ object LegacyDialogueOptionService {
 //                                c.send(SendMessage("This npc has already been removed!"))
 //                            } else {
 //                                tempNpc.die()
-//                                LegacyEventScheduler.getInstance().registerEvent(object : LegacyEvent(tempNpc.timeOnFloor + 600) {
+//                                Replaced with GameEventScheduler after legacy event scheduler removal.
 //                                    override fun execute() {
 //                                        Server.npcManager.npcs.remove(tempNpc)
 //                                        stop()

@@ -52,6 +52,14 @@ object GameEventScheduler {
     @JvmStatic
     fun runRepeatingMs(
         delayMs: Int,
+        action: BooleanSupplier,
+    ): TaskHandle {
+        return runRepeatingMs(delayMs, delayMs, action)
+    }
+
+    @JvmStatic
+    fun runRepeatingMs(
+        delayMs: Int,
         intervalMs: Int = delayMs,
         action: BooleanSupplier,
     ): TaskHandle {

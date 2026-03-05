@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.dialogue.modules
 
-import net.dodian.uber.game.content.dialogue.legacy.core.DialogueIds
-import net.dodian.uber.game.content.dialogue.legacy.core.DialogueRegistry
-import net.dodian.uber.game.content.dialogue.legacy.core.DialogueRenderModule
+import net.dodian.uber.game.content.dialogue.core.DialogueIds
+import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.content.dialogue.core.DialogueRenderModule
 import net.dodian.uber.game.netty.listener.out.Frame171
 import net.dodian.uber.game.netty.listener.out.SendString
 

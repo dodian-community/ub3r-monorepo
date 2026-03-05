@@ -32,8 +32,8 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.runtime.loop.GameThreadContext;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
+import net.dodian.uber.game.content.dialogue.DialogueOptionService;
+import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
@@ -582,6 +582,9 @@ public class Client extends Player implements Runnable {
     public String bankSearchQuery = "";
     public int[] bankSlotTabs = null;
     public int[][] bankContainerSlotMap = null;
+    public ArrayList<Integer> itemListPreviewIds = new ArrayList<>();
+    public ArrayList<Integer> itemListPreviewAmounts = new ArrayList<>();
+    public String itemListPreviewTitle = "";
 
     /**
      * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
@@ -1411,6 +1414,26 @@ public class Client extends Player implements Runnable {
         send(new SendBankItems(id, amt));
     }
 
+    public void sendItemListPreview(ArrayList<Integer> id, ArrayList<Integer> amt, String title) {
+        itemListPreviewIds = new ArrayList<>(id);
+        itemListPreviewAmounts = new ArrayList<>(amt);
+        itemListPreviewTitle = title;
+        itemListPreviewOpen = true;
+        IsBanking = false;
+        checkBankInterface = false;
+        send(new SendString(title, 5383));
+        send(new SendBankItems(itemListPreviewIds, itemListPreviewAmounts, 5382));
+        resetItems(5064);
+        send(new InventoryInterface(5292, 5063));
+    }
+
+    public void clearItemListPreview() {
+        itemListPreviewOpen = false;
+        itemListPreviewIds.clear();
+        itemListPreviewAmounts.clear();
+        itemListPreviewTitle = "";
+    }
+
     public void sendBank(int interfaceId, ArrayList<GameItem> bank) {
         send(new ViewOtherPlayerBank(interfaceId, bank));
     }
@@ -1427,6 +1450,9 @@ public class Client extends Player implements Runnable {
             resetItems(moveWindow);
         }
         if (moveWindow == 5382 || (moveWindow >= 50300 && moveWindow <= 50310)) {
+            if (moveWindow == 5382 && itemListPreviewOpen) {
+                return;
+            }
             int actualFrom = resolveBankSlot(moveWindow, from);
             int actualTo = resolveBankSlot(moveWindow, to);
             if (actualFrom < 0 || actualTo < 0 || actualFrom >= bankSize() || actualTo >= bankSize()) {
@@ -1541,6 +1567,7 @@ public class Client extends Player implements Runnable {
         bankSearchQuery = "";
         IsBanking = true;
         checkBankInterface = false;
+        clearItemListPreview();
         checkItemUpdate();
     }
 
@@ -1571,6 +1598,11 @@ public class Client extends Player implements Runnable {
                 refreshBankHeader();
                 send(new SendCurrentBankTab(currentBankTab));
             }
+            resetItems(5064);
+            send(new InventoryInterface(5292, 5063));
+        } else if (itemListPreviewOpen) {
+            send(new SendString(itemListPreviewTitle, 5383));
+            send(new SendBankItems(itemListPreviewIds, itemListPreviewAmounts, 5382));
             resetItems(5064);
             send(new InventoryInterface(5292, 5063));
         } else if (isPartyInterface) {
@@ -4183,19 +4215,19 @@ public class Client extends Player implements Runnable {
 
     /* NPC Talking */
     public void UpdateNPCChat() {
-        LegacyDialogueService.updateNpcChat(this);
+        DialogueDisplayService.updateNpcChat(this);
     }
 
     public void showPlayerOption(String[] text) {
-        LegacyDialogueService.showPlayerOption(this, text);
+        DialogueDisplayService.showPlayerOption(this, text);
     }
 
     public void showNPCChat(int npcId, int emote, String[] text) {
-        LegacyDialogueService.showNpcChat(this, npcId, emote, text);
+        DialogueDisplayService.showNpcChat(this, npcId, emote, text);
     }
 
     public void showPlayerChat(String[] text, int emote) {
-        LegacyDialogueService.showPlayerChat(this, text, emote);
+        DialogueDisplayService.showPlayerChat(this, text, emote);
     }
 
     /* Equipment level checking */
@@ -6350,7 +6382,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void triggerChat(int button) {
-        LegacyDialogueOptionService.triggerChat(this, button);
+        DialogueOptionService.triggerChat(this, button);
     }
 
     public boolean smithCheck(int id) {
@@ -7097,6 +7129,7 @@ public class Client extends Player implements Runnable {
         }
         ArrayList<GameItem> otherBank = new ArrayList<>();
         IsBanking = false;
+        clearItemListPreview();
         if (PlayerHandler.getPlayer(player) != null) { //Online check
             Client other = (Client) PlayerHandler.getPlayer(player);
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
@@ -7301,6 +7334,7 @@ public class Client extends Player implements Runnable {
         sendBank(5382, result.getItems());
         resetItems(5064);
         send(new InventoryInterface(5292, 5063));
+        clearItemListPreview();
         checkBankInterface = true;
     }
 
