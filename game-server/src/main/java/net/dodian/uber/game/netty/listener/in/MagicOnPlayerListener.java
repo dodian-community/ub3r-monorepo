@@ -2,8 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 
@@ -78,20 +77,17 @@ public class MagicOnPlayerListener implements PacketListener {
         if (!client.goodDistanceEntity(victim, 5)) {
             final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victimIndex, victim.getPosition());
             client.setWalkToTask(task);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                @Override
-                public void execute() {
-                    if (client.disconnected || client.getWalkToTask() != task) {
-                        this.stop();
-                        return;
-                    }
-                    if (client.goodDistanceEntity(victim, 5)) {
-                        client.resetWalkingQueue();
-                        client.startAttack(victim);
-                        client.setWalkToTask(null);
-                        this.stop();
-                    }
+            GameEventScheduler.runRepeatingMs(600, () -> {
+                if (client.disconnected || client.getWalkToTask() != task) {
+                    return false;
                 }
+                if (client.goodDistanceEntity(victim, 5)) {
+                    client.resetWalkingQueue();
+                    client.startAttack(victim);
+                    client.setWalkToTask(null);
+                    return false;
+                }
+                return true;
             });
         }
     }

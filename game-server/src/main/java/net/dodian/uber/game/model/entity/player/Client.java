@@ -4,8 +4,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -3333,15 +3332,7 @@ public class Client extends Player implements Runnable {
         stairDistanceAdd = 0;
         resetWalkingQueue();
         final Client p = this;
-        EventManager.getInstance().registerEvent(new Event(500) {
-
-            @Override
-            public void execute() {
-                p.resetWalkingQueue();
-                stop();
-            }
-
-        });
+        GameEventScheduler.runLaterMs(500, p::resetWalkingQueue);
     }
 
     public boolean usingBow = false;
@@ -6108,20 +6099,20 @@ public class Client extends Player implements Runnable {
         }
         otherdbId = other.dbId;
         final Client player = this;
+        final int[] countDown = {7};
         player.requestForceChat("It is time to D-D-D-DUEL!");
-        EventManager.getInstance().registerEvent(new Event(600) {
-            int count = 7;
-
-            public void execute() {
-                count--;
-                if (count > 0 && count % 2 == 0)
-                    player.requestForceChat("" + (count / 2));
-                else if (count < 1) {
-                    player.requestForceChat("Fight!");
-                    player.canAttack = true;
-                    stop();
-                }
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            countDown[0]--;
+            if (countDown[0] > 0 && countDown[0] % 2 == 0) {
+                player.requestForceChat("" + (countDown[0] / 2));
+                return true;
             }
+            if (countDown[0] < 1) {
+                player.requestForceChat("Fight!");
+                player.canAttack = true;
+                return false;
+            }
+            return true;
         });
     }
 
@@ -7388,15 +7379,11 @@ public class Client extends Player implements Runnable {
                 final int pos = i;
                 varbit(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
                 travelInitiate = true;
-                EventManager.getInstance().registerEvent(new Event(1800) {
-                    @Override
-                    public void execute() {
-                        if (!disconnected) {
-                            transport(new Position(travel[pos][1], travel[pos][2], 0));
-                            send(new RemoveInterfaces());
-                            travelInitiate = false;
-                        }
-                        this.stop();
+                GameEventScheduler.runLaterMs(1800, () -> {
+                    if (!disconnected) {
+                        transport(new Position(travel[pos][1], travel[pos][2], 0));
+                        send(new RemoveInterfaces());
+                        travelInitiate = false;
                     }
                 });
             }

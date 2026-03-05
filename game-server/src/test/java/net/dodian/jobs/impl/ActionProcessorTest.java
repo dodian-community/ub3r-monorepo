@@ -1,8 +1,8 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.runtime.eventbus.GameEventBus;
-import net.dodian.uber.game.runtime.eventbus.events.WorldTickEvent;
+import net.dodian.uber.game.event.GameEventBus;
+import net.dodian.uber.game.event.events.WorldTickEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import kotlin.Unit;
@@ -22,7 +22,7 @@ class ActionProcessorTest {
     void postsWorldTickEventDuringRun() {
         AtomicInteger observedCycle = new AtomicInteger(-1);
         PlayerHandler.cycle = 123;
-        GameEventBus.on(WorldTickEvent.class, new net.dodian.uber.game.runtime.eventbus.EventListener<>(
+        GameEventBus.on(WorldTickEvent.class, new net.dodian.uber.game.event.EventListener<>(
                 event -> true,
                 event -> {
                     observedCycle.set(event.getCycle());

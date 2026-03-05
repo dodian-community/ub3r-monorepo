@@ -1,8 +1,8 @@
 package net.dodian.uber.game.model.player.skills.agility;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.LegacyEvent;
+import net.dodian.uber.game.event.LegacyEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.npc.Npc;
@@ -32,7 +32,7 @@ public class Agility {
             c.setWalkAnim(762);
             int time = 4800;
             c.AddToWalkCords(0, -7, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                 public void execute() {
                     c.requestWeaponAnims();
                     giveEndExperience(280);
@@ -56,7 +56,7 @@ public class Agility {
         npc.setText("My mom is faster than you!");
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.teleportTo(2473, 3424, 1);
                 giveEndExperience(150);
@@ -77,7 +77,7 @@ public class Agility {
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
         c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.teleportTo(2473, 3420, 2);
                 giveEndExperience(50);
@@ -101,7 +101,7 @@ public class Agility {
         c.setWalkAnim(762);
         int time = 4800;
         c.AddToWalkCords(6, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
             public void execute() {
                 c.requestWeaponAnims();
                 giveEndExperience(250);
@@ -121,7 +121,7 @@ public class Agility {
                 npc.setText("To darn easy.");
                 c.requestAnim(828, 0);
                 c.walkBlock = System.currentTimeMillis() + 600;
-                EventManager.getInstance().registerEvent(new Event(600) {
+                net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
                     public void execute() {
                 c.teleportTo(2485, 3421, 0);
                 giveEndExperience(50);
@@ -144,7 +144,7 @@ public class Agility {
         npc.setText("net profit of zero effort.");
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.teleportTo(c.getPosition().getX(), c.getPosition().getY() + 2, 0);
                 giveEndExperience(150);
@@ -164,7 +164,7 @@ public class Agility {
         npc.setText("Pipe it down...You are nothing special!");
         c.setWalkAnim(746);
         c.AddToWalkCords(0, 7, 4200);
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             int part = 0;
 
             public void execute() {
@@ -207,7 +207,7 @@ public class Agility {
             int distance = 3549 - c.getPosition().getY();
             c.setAgilityEmote(1501, 1501);
             c.AddToWalkCords(0, distance, (distance * -1) * 600L);
-            EventManager.getInstance().registerEvent(new Event((distance * -1) * 600) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent((distance * -1) * 600) {
                 public void execute() {
                     c.requestWeaponAnims();
                     giveEndExperience(400);
@@ -231,7 +231,7 @@ public class Agility {
         int time = 7200;
         if (c.getPosition().getY() == 3547 || c.getPosition().getY() == 3545) {
             c.AddToWalkCords(1, 0, time);
-            EventManager.getInstance().registerEvent(new Event(600) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
                 int stage = 0;
 
                 public void execute() {
@@ -242,7 +242,7 @@ public class Agility {
                     } else if (stage > 3) {
                         c.setWalkAnim(762);
                         c.AddToWalkCords(-10, 0, time);
-                        EventManager.getInstance().registerEvent(new Event(time) {
+                        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                             public void execute() {
                                 if (c.disconnected) {
                                     stop();
@@ -262,7 +262,7 @@ public class Agility {
         } else if (c.getPosition().getX() == 2551 && c.getPosition().getY() == 3546) {
             c.setWalkAnim(762);
             c.AddToWalkCords(-10, 0, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                 public void execute() {
                     c.requestWeaponAnims();
                     giveEndExperience(600);
@@ -288,7 +288,7 @@ public class Agility {
         c.UsingAgility = true;
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.teleportTo(c.getPosition().getX() - 2, c.getPosition().getY(), 1);
                 giveEndExperience(250);
@@ -311,7 +311,7 @@ public class Agility {
         c.setWalkAnim(756);
         int time = 2400;
         c.AddToWalkCords(-4, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
             public void execute() {
                 c.requestWeaponAnims();
                 giveEndExperience(350);
@@ -342,7 +342,7 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.requestWeaponAnims();
                 giveEndExperience(100);
@@ -367,7 +367,7 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.requestWeaponAnims();
                 giveEndExperience(100);
@@ -392,7 +392,7 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
             public void execute() {
                 c.requestWeaponAnims();
                 if (c.agilityCourseStage == 6) {
@@ -425,7 +425,7 @@ public class Agility {
                 c.requestAnim(746, 0);
                 c.setWalkAnim(747);
                 c.AddToWalkCords(0, distance, distance * 600);
-                EventManager.getInstance().registerEvent(new Event(600) {
+                net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
                     int part = 0;
 
                     public void execute() {
@@ -457,7 +457,7 @@ public class Agility {
             int distance = 3958 - c.getPosition().getY();
             c.setWalkAnim(1501);
             c.AddToWalkCords(0, distance, distance * 600L);
-            EventManager.getInstance().registerEvent(new Event(distance * 600) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(distance * 600) {
                 public void execute() {
                     c.requestWeaponAnims();
                     giveEndExperience(500);
@@ -483,7 +483,7 @@ public class Agility {
             c.setFocus(2996, 3960);
             c.setWalkAnim(769);
             c.AddToWalkCords(-1, 0, 4200);
-            EventManager.getInstance().registerEvent(new Event(600) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
                 int parts = 0;
                 public void execute() {
                     parts++;
@@ -509,7 +509,7 @@ public class Agility {
         c.UsingAgility = true;
         if (c.getPosition().getY() == 3944 || c.getPosition().getY() == 3946) {
             c.AddToWalkCords(1, 0, time);
-            EventManager.getInstance().registerEvent(new Event(600) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(600) {
                 int stage = 0;
 
                 public void execute() {
@@ -520,7 +520,7 @@ public class Agility {
                     } else if (stage > 3) {
                         c.setWalkAnim(762);
                         c.AddToWalkCords(-8, 0, time);
-                        EventManager.getInstance().registerEvent(new Event(time) {
+                        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                             public void execute() {
                                 if (c.disconnected) {
                                     stop();
@@ -540,7 +540,7 @@ public class Agility {
         } else if (c.getPosition().getX() == 3002 && c.getPosition().getY() == 3945) {
             c.setWalkAnim(762);
             c.AddToWalkCords(-8, 0, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                 public void execute() {
                     c.requestWeaponAnims();
                     giveEndExperience(650);
@@ -564,7 +564,7 @@ public class Agility {
             c.UsingAgility = true;
             c.setWalkAnim(737);
             c.AddToWalkCords(0, -4, 2400);
-            EventManager.getInstance().registerEvent(new Event(2400) { //We need this to be 3k?
+            net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(2400) { //We need this to be 3k?
                 public void execute() {
                     c.requestWeaponAnims();
                     if (c.agilityCourseStage == 4) {
@@ -591,7 +591,7 @@ public class Agility {
         }
         int time = c.getPosition().getX() == 2600 || c.getPosition().getX() == 2597 ? 1200 : c.getPosition().getY() == 9488 || c.getPosition().getY() == 9495 ? 600 : 0;
         c.AddToWalkCords(c.getPosition().getX() == 2597 ? 1 : c.getPosition().getX() == 2600 ? -1 : 0, c.getPosition().getY() == 9488 ? 1 : c.getPosition().getY() == 9495 ? -1 : 0, time);
-        EventManager.getInstance().registerEvent(new Event(time > 0 ? 600 : 0) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time > 0 ? 600 : 0) {
             int stage = 0;
 
             public void execute() {
@@ -607,7 +607,7 @@ public class Agility {
                     int distance = c.getPosition().getY() == 9488 ? 6 : c.getPosition().getY() == 9489 ? 5 : c.getPosition().getY() == 9494 ? -5 : c.getPosition().getY() == 9495 ? -6 : 0;
                     int time = distance == 6 || distance == -6 ? 6 * 600 : distance == 5 || distance == -5 ? 6 * 600 : 0;
                     c.AddToWalkCords(0, distance, time);
-                    EventManager.getInstance().registerEvent(new Event(time) {
+                    net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
                         public void execute() {
                             if (c.disconnected) {
                                 stop();
@@ -641,7 +641,7 @@ public class Agility {
         c.setWalkAnim(distance == 8 ? 756 : 754);
         int time = 5400;
         c.AddToWalkCords(0, distance, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
             public void execute() {
                 c.requestWeaponAnims();
                 c.UsingAgility = false;
@@ -663,7 +663,7 @@ public class Agility {
         c.ReplaceObject(3305, 9375, 6451, -1, 0);
         int time = 600;
         c.AddToWalkCords(distance, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
+        net.dodian.uber.game.event.GameEventScheduler.scheduleLegacy(new LegacyEvent(time) {
             public void execute() {
                 c.ReplaceObject(3305, 9376, 6452, 0, 0);
                 c.ReplaceObject(3305, 9375, 6451, 0, 0);

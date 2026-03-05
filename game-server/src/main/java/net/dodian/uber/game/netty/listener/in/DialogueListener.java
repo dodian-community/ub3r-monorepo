@@ -7,8 +7,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.eventbus.GameEventBus;
-import net.dodian.uber.game.runtime.eventbus.events.DialogueContinueEvent;
+import net.dodian.uber.game.event.GameEventBus;
+import net.dodian.uber.game.event.events.DialogueContinueEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

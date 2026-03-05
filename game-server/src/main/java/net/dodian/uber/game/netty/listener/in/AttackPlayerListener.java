@@ -2,8 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -73,17 +72,17 @@ public class AttackPlayerListener implements PacketListener {
             });
             return;
         }
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) { stop(); return; }
-                if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(plr);
-                    client.setWalkToTask(null);
-                    stop();
-                }
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            if (client.disconnected || client.getWalkToTask() != task) {
+                return false;
             }
+            if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
+                client.resetWalkingQueue();
+                client.startAttack(plr);
+                client.setWalkToTask(null);
+                return false;
+            }
+            return true;
         });
     }
 }

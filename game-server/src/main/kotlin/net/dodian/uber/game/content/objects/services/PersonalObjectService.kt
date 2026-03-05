@@ -1,7 +1,6 @@
 package net.dodian.uber.game.content.objects.services
 
-import net.dodian.uber.game.event.Event
-import net.dodian.uber.game.event.EventManager
+import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.queue.QueueTask
@@ -88,22 +87,18 @@ object PersonalObjectService {
             return
         }
 
-        EventManager.getInstance().registerEvent(object : Event(durationMs.toInt()) {
-            override fun execute() {
-                if (client.disconnected) {
-                    perPlayerObjects.remove(key(client, position))
-                    stop()
-                    return
-                }
-                if (zoneUpdateBatchingEnabled) {
-                    ZoneUpdateBus.queuePersonalObject(client.dbId, position, revertObjectId, revertFace, revertType)
-                } else {
-                    client.ReplaceObject2(position, revertObjectId, revertFace, revertType)
-                }
+        GameEventScheduler.runLaterMs(durationMs.toInt()) {
+            if (client.disconnected) {
                 perPlayerObjects.remove(key(client, position))
-                stop()
+                return@runLaterMs
             }
-        })
+            if (zoneUpdateBatchingEnabled) {
+                ZoneUpdateBus.queuePersonalObject(client.dbId, position, revertObjectId, revertFace, revertType)
+            } else {
+                client.ReplaceObject2(position, revertObjectId, revertFace, revertType)
+            }
+            perPlayerObjects.remove(key(client, position))
+        }
     }
 
     internal fun stateForTests(client: Client, position: Position): PersonalObjectState? {

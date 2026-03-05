@@ -1,8 +1,7 @@
 package net.dodian.uber.game.model.player.skills.agility;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -11,6 +10,8 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Misc;
+
+import java.util.function.BooleanSupplier;
 
 public class Werewolf {
     final Client c;
@@ -22,6 +23,14 @@ public class Werewolf {
         if(ringCheck && c.getEquipment()[Equipment.Slot.RING.getId()] == 4202) xp = (int)(xp * 1.1);
         c.giveExperience(xp, Skill.AGILITY);
         c.triggerRandom(xp);
+    }
+
+    private void runLater(int delayMs, Runnable action) {
+        GameEventScheduler.runLaterMs(delayMs, action);
+    }
+
+    private void runRepeating(int delayMs, BooleanSupplier action) {
+        GameEventScheduler.runRepeatingMs(delayMs, action);
     }
 
     public void StepStone(Position pos) {
@@ -47,86 +56,66 @@ public class Werewolf {
             npc.setText("Go fetch!");
             c.createProjectile(npc.getPosition().getY(), npc.getPosition().getX(), offsetY, offsetX, 50, 50 + (distance * 5), 338,
                     0, 35, 0, 51, 16, 64);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY(), 0));
-                    giveEndExperience(160, true);
-                    Ground.addFloorItem(c, new Position(x, y, 0), 4179, 1, 100);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY(), 0));
+                giveEndExperience(160, true);
+                Ground.addFloorItem(c, new Position(x, y, 0), 4179, 1, 100);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() == 3538 && pos.getY() == 9877 && c.getPosition().getX() == 3538 && c.getPosition().getY() == 9875) {
             c.UsingAgility = true;
             c.requestAnim(769, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY(), 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY(), 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() == 3540 && pos.getY() == 9877 && c.getPosition().getX() == 3538 && c.getPosition().getY() == 9877) {
             c.UsingAgility = true;
             c.requestAnim(769, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY(), 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY(), 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() == 3540 && pos.getY() == 9879 && c.getPosition().getX() == 3540 && c.getPosition().getY() == 9877) {
             c.UsingAgility = true;
             c.requestAnim(769, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY(), 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY(), 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() == 3540 && pos.getY() == 9881 && c.getPosition().getX() == 3540 && c.getPosition().getY() == 9879) {
             c.UsingAgility = true;
             c.requestAnim(769, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY(), 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY(), 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
     }
@@ -146,17 +135,13 @@ public class Werewolf {
             c.setFocus(pos.getX(), pos.getY());
             c.requestAnim(2750, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() >= 3537 && pos.getX() <= 3543 && pos.getY() == 9896 && c.getPosition().getX() >= 3537 && c.getPosition().getX() <= 3543 && c.getPosition().getY() == 9895) {
@@ -164,17 +149,13 @@ public class Werewolf {
             c.setFocus(pos.getX(), pos.getY());
             c.requestAnim(2750, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
         else if(pos.getX() >= 3537 && pos.getX() <= 3543 && pos.getY() == 9899 && c.getPosition().getX() >= 3537 && c.getPosition().getX() <= 3543 && c.getPosition().getY() == 9898) {
@@ -182,17 +163,13 @@ public class Werewolf {
             c.setFocus(pos.getX(), pos.getY());
             c.requestAnim(2750, 0);
             c.walkBlock = System.currentTimeMillis() + 600;
-            EventManager.getInstance().registerEvent(new Event(600) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
-                    giveEndExperience(160, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(600, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.transport(new Position(pos.getX(), pos.getY() + 1, 0));
+                giveEndExperience(160, true);
+                c.UsingAgility = false;
             });
         }
     }
@@ -211,24 +188,22 @@ public class Werewolf {
             npc.setText("You smell good!!");
             c.setWalkAnim(746);
             c.AddToWalkCords(0, 6, 3600);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                int part = 0;
-
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    part++;
-                    if (part == 6) {
-                        c.requestWeaponAnims();
-                        c.requestAnim(748, 0);
-                        giveEndExperience(600, true);
-                        c.UsingAgility = false;
-                        stop();
-                    } else if (part == 1)
-                        c.setWalkAnim(747);
+            final int[] part = {0};
+            runRepeating(600, () -> {
+                if (c.disconnected) {
+                    return false;
                 }
+                part[0]++;
+                if (part[0] == 6) {
+                    c.requestWeaponAnims();
+                    c.requestAnim(748, 0);
+                    giveEndExperience(600, true);
+                    c.UsingAgility = false;
+                    return false;
+                } else if (part[0] == 1) {
+                    c.setWalkAnim(747);
+                }
+                return true;
             });
         }
     }
@@ -247,17 +222,13 @@ public class Werewolf {
             npc.setText("You fetch good... Now bleed!");
             c.setWalkAnim(737);
             c.AddToWalkCords(-3, 0, 1800);
-            EventManager.getInstance().registerEvent(new Event(1800) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.requestWeaponAnims();
-                    giveEndExperience(400, true);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(1800, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.requestWeaponAnims();
+                giveEndExperience(400, true);
+                c.UsingAgility = false;
             });
         }
     }
@@ -280,18 +251,14 @@ public class Werewolf {
             c.setRunAnim(904);
             int time = 22800 / 2; //38 distance!
             c.AddToRunCords(0, -38, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
-                public void execute() {
-                    if (c.disconnected) {
-                        stop();
-                        return;
-                    }
-                    c.requestWeaponAnims();
-                    giveEndExperience(1500, true);
-                    lastNpc.setText("Hand in that juicy stick to me!");
-                    c.UsingAgility = false;
-                    stop();
+            runLater(time, () -> {
+                if (c.disconnected) {
+                    return;
                 }
+                c.requestWeaponAnims();
+                giveEndExperience(1500, true);
+                lastNpc.setText("Hand in that juicy stick to me!");
+                c.UsingAgility = false;
             });
         }
     }

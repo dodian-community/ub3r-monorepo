@@ -1,8 +1,6 @@
 package net.dodian.uber.game.content.dialogue.legacy
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.event.Event
-import net.dodian.uber.game.event.EventManager
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
@@ -43,7 +41,7 @@ object LegacyDialogueOptionService {
 //                                c.send(SendMessage("This npc has already been removed!"))
 //                            } else {
 //                                tempNpc.die()
-//                                EventManager.getInstance().registerEvent(object : Event(tempNpc.timeOnFloor + 600) {
+//                                LegacyEventScheduler.getInstance().registerEvent(object : LegacyEvent(tempNpc.timeOnFloor + 600) {
 //                                    override fun execute() {
 //                                        Server.npcManager.npcs.remove(tempNpc)
 //                                        stop()

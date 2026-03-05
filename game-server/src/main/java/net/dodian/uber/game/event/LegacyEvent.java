@@ -5,7 +5,8 @@ package net.dodian.uber.game.event;
  *
  * @author Graham
  */
-public abstract class Event {
+@Deprecated
+public abstract class LegacyEvent {
 
     /**
      * How many ms the event should wait between each cycle.
@@ -27,7 +28,7 @@ public abstract class Event {
      *
      * @param tick
      */
-    public Event(int tick) {
+    public LegacyEvent(int tick) {
         this.tick = tick;
         this.lastRun = System.currentTimeMillis();
     }

@@ -1,7 +1,6 @@
 package net.dodian.uber.game.model.player.skills.thieving;
 
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
@@ -181,61 +180,50 @@ public class Thieving {
 //			player.requestAnim(STALL_THIEVING_EMOTE, 0);
 //		}
 
-        EventManager.getInstance().registerEvent(new Event(600) {
+        GameEventScheduler.runLaterMs(600, () -> {
+            if (player.disconnected) {
+                return;
+            }
 
-            @Override
-            public void execute() {
-                if (player.disconnected) {
-                    this.stop();
-                    return;
-                }
+            if (failChance > 75) {
+                player.send(new SendMessage("You fail to thieve from the " + data.toString().toLowerCase().replace('_', ' ')));
+                return;
+            }
 
-                if (failChance > 75) {
-                    player.send(new SendMessage("You fail to thieve from the " + data.toString().toLowerCase().replace('_', ' ')));
-                    this.stop();
-                    return;
-                }
+            if (player.hasSpace()) {
+                player.giveExperience(data.getReceivedExperience(), Skill.THIEVING);
+                player.canPreformAction = false;
 
-                if (player.hasSpace()) {
-                    player.giveExperience(data.getReceivedExperience(), Skill.THIEVING);
-                    player.canPreformAction = false;
+                if (data.getItemId().length > 1) {
+                    int rollChance = (int) (Math.random() * 100);
 
-                    if (data.getItemId().length > 1) {
-                        int rollChance = (int) (Math.random() * 100);
-
-                        for (int i = 0; i < data.getItemId().length; i++) {
-                            if (rollChance < data.getItemItemChance()[i]) {
-                                int id = data.getItemId()[i], amount = data.getItemAmount()[i].getValue();
-                                player.addItem(id, amount);
-                                ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
-                                player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[i])) + " " + player.GetItemName(data.getItemId()[i]).toLowerCase()));
-                                break;
-                            }
-                        }
-
-                    } else {
-                        int id = data.getItemId()[0], amount = data.getItemAmount()[0].getValue();
-                        player.addItem(id, amount);
-                        ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
-                        player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase()));
-                    }
-                    if (data.getThievingType() == ThievingType.STALL_THIEVING) {
-                        final Object o = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
-                        if (!GlobalObject.addGlobalObject(o, data.getRespawnTime() * 1000)) {
-                            stop();
+                    for (int i = 0; i < data.getItemId().length; i++) {
+                        if (rollChance < data.getItemItemChance()[i]) {
+                            int id = data.getItemId()[i], amount = data.getItemAmount()[i].getValue();
+                            player.addItem(id, amount);
+                            ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
+                            player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[i])) + " " + player.GetItemName(data.getItemId()[i]).toLowerCase()));
+                            break;
                         }
                     }
-                    player.checkItemUpdate();
-                    //player.send(new Sound(356));
-                    player.triggerRandom(data.getReceivedExperience());
-                    player.chestEvent++;
-                    stop();
 
                 } else {
-                    player.send(new SendMessage("You don't have enough inventory space!"));
-                    stop();
+                    int id = data.getItemId()[0], amount = data.getItemAmount()[0].getValue();
+                    player.addItem(id, amount);
+                    ItemLog.playerGathering(player, id, amount, player.getPosition().copy(), "Thieving");
+                    player.send(new SendMessage("You receive " + aAnOrSome(player.GetItemName(data.getItemId()[0])) + " " + player.GetItemName(data.getItemId()[0]).toLowerCase()));
                 }
+                if (data.getThievingType() == ThievingType.STALL_THIEVING) {
+                    final Object o = new Object(EMPTY_STALL_ID, position.getX(), position.getY(), position.getZ(), 10, face, data.getEntityId());
+                    GlobalObject.addGlobalObject(o, data.getRespawnTime() * 1000);
+                }
+                player.checkItemUpdate();
+                player.triggerRandom(data.getReceivedExperience());
+                player.chestEvent++;
+                return;
             }
+
+            player.send(new SendMessage("You don't have enough inventory space!"));
         });
     }
 }

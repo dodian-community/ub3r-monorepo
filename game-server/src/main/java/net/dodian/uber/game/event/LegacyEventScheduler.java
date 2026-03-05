@@ -10,27 +10,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
 
-public class EventManager implements Runnable {
+@Deprecated
+public class LegacyEventScheduler implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(EventManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(LegacyEventScheduler.class);
 
     /**
      * The world instance.
      */
-    private static EventManager instance = null;
+    private static LegacyEventScheduler instance = null;
 
     /**
      * A list of connected players.
      */
     // private EntityList<Player> players;
-    public static EventManager getInstance() {
+    public static LegacyEventScheduler getInstance() {
         if (instance == null) {
-            instance = new EventManager();
+            instance = new LegacyEventScheduler();
         }
         return instance;
     }
 
-    private EventManager() {
+    private LegacyEventScheduler() {
         pendingAdds = new ConcurrentLinkedQueue<>();
         scheduled = new PriorityQueue<>((a, b) -> {
             int dueCompare = Long.compare(a.dueAtMs, b.dueAtMs);
@@ -41,7 +42,7 @@ public class EventManager implements Runnable {
     /**
      * A list of pending events.
      */
-    private final Queue<Event> pendingAdds;
+    private final Queue<LegacyEvent> pendingAdds;
     private final PriorityQueue<ScheduledEvent> scheduled;
     private long nextId = 0L;
 
@@ -65,7 +66,8 @@ public class EventManager implements Runnable {
      *
      * @param event
      */
-    public void registerEvent(Event event) {
+    @Deprecated
+    public void registerEvent(LegacyEvent event) {
         if (event == null) {
             return;
         }
@@ -81,7 +83,7 @@ public class EventManager implements Runnable {
 
         // Drain any newly registered events.
         for (;;) {
-            Event event = pendingAdds.poll();
+            LegacyEvent event = pendingAdds.poll();
             if (event == null) {
                 break;
             }
@@ -108,7 +110,7 @@ public class EventManager implements Runnable {
             scheduled.poll();
             duePolledCount++;
 
-            Event event = next.event;
+            LegacyEvent event = next.event;
             if (event == null || event.isStopped()) {
                 continue;
             }
@@ -124,7 +126,7 @@ public class EventManager implements Runnable {
             try {
                 event.run();
             } catch (Exception exception) {
-                logger.error("Event failed: {}", event.getClass().getSimpleName(), exception);
+                logger.error("Legacy event failed: {}", event.getClass().getSimpleName(), exception);
                 try {
                     event.stop();
                 } catch (Exception ignored) {
@@ -163,7 +165,7 @@ public class EventManager implements Runnable {
         long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
         if (elapsedMs >= getRuntimePhaseWarnMs()) {
             logger.warn(
-                    "EventManager slow: total={}ms duePolled={} ran={} queueSize={} slowest=[{}:{}ms, {}:{}ms, {}:{}ms]",
+                    "LegacyEventScheduler slow: total={}ms duePolled={} ran={} queueSize={} slowest=[{}:{}ms, {}:{}ms, {}:{}ms]",
                     elapsedMs,
                     duePolledCount,
                     ranCount,
@@ -178,7 +180,7 @@ public class EventManager implements Runnable {
         }
     }
 
-    private void schedule(Event event, long nowMs) {
+    private void schedule(LegacyEvent event, long nowMs) {
         int tick = event.getTick();
         long tickMs = Math.max(0L, tick);
         long dueAt = event.isReady() ? (nowMs + 1L) : (nowMs + tickMs + 1L);
@@ -188,9 +190,9 @@ public class EventManager implements Runnable {
     private static final class ScheduledEvent {
         final long id;
         final long dueAtMs;
-        final Event event;
+        final LegacyEvent event;
 
-        ScheduledEvent(long id, long dueAtMs, Event event) {
+        ScheduledEvent(long id, long dueAtMs, LegacyEvent event) {
             this.id = id;
             this.dueAtMs = dueAtMs;
             this.event = event;

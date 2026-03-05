@@ -1,4 +1,4 @@
-package net.dodian.uber.game.runtime.eventbus
+package net.dodian.uber.game.event
 
 class EventListener<E : GameEvent>(
     val condition: (E) -> Boolean = { true },

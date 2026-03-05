@@ -1,8 +1,8 @@
-package net.dodian.uber.game.runtime.eventbus.bootstrap
+package net.dodian.uber.game.event.bootstrap
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.eventbus.GameEventBus
-import net.dodian.uber.game.runtime.eventbus.events.CommandEvent
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.CommandEvent
 
 object CoreEventBusBootstrap {
     @JvmStatic

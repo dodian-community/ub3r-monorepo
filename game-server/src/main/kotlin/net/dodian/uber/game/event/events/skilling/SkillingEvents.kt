@@ -1,7 +1,7 @@
-package net.dodian.uber.game.runtime.eventbus.events.skilling
+package net.dodian.uber.game.event.events.skilling
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.eventbus.GameEvent
+import net.dodian.uber.game.event.GameEvent
 import net.dodian.uber.game.skills.core.ActionStopReason
 
 data class SkillingActionStartedEvent(

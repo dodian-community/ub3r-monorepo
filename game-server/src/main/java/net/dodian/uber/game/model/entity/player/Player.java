@@ -5,8 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -1245,41 +1244,27 @@ public abstract class Player extends Entity {
         if(source instanceof Client && target instanceof Npc) {
             final Client p = (Client) source;
             final Npc n = (Npc) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(!n.alive) {
-                        stop();
-                        return;
-                    }
-                    n.dealDamage(p, damage, type);
-                    stop();
+            GameEventScheduler.runLaterMs(delay, () -> {
+                if(p.disconnected) {
+                    return;
                 }
-
+                if(!n.alive) {
+                    return;
+                }
+                n.dealDamage(p, damage, type);
             });
         }
         if(source instanceof Client && target instanceof Client) {
             final Client p = (Client) source;
             final Client other = (Client) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(other.disconnected || other.deathStage > 0) {
-                        stop();
-                        return;
-                    }
-                    other.receieveDamage(p, damage, type);
-                    stop();
+            GameEventScheduler.runLaterMs(delay, () -> {
+                if(p.disconnected) {
+                    return;
                 }
-
+                if(other.disconnected || other.deathStage > 0) {
+                    return;
+                }
+                other.receieveDamage(p, damage, type);
             });
         }
     }

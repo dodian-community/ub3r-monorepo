@@ -1,10 +1,10 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package net.dodian.uber.game.runtime.eventbus
+package net.dodian.uber.game.event
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
-import net.dodian.uber.game.runtime.eventbus.bootstrap.CoreEventBusBootstrap
+import net.dodian.uber.game.event.bootstrap.CoreEventBusBootstrap
 import org.slf4j.LoggerFactory
 
 object GameEventBus {

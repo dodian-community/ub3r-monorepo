@@ -2,8 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -450,16 +449,11 @@ public class Npc extends Entity {
                                 CalculateMaxHit(false);
                                 delayGfx(enemy, 2652, -1, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
                                 final Client c = enemy;
-                                EventManager.getInstance().registerEvent(new Event(600) {
-
-                                    public void execute() {
-                                        if(c.disconnected || c.getCurrentHealth() < 1) {
-                                            stop();
-                                            return;
-                                        }
-                                        c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
-                                        stop();
+                                GameEventScheduler.runLaterMs(600, () -> {
+                                    if(c.disconnected || c.getCurrentHealth() < 1) {
+                                        return;
                                     }
+                                    c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
                                 });
                             } else {
                                 requestAnim(data.getAttackEmote(), 0);
@@ -1253,21 +1247,16 @@ public class Npc extends Entity {
 
     public void delayGfx(Client c, int anim, int gfx, int delay, int dmg, boolean crit, Entity npc, damageType type) {
         requestAnim(anim, 0);
-        EventManager.getInstance().registerEvent(new Event(delay * 600) {
-
-            public void execute() {
-                if(c.disconnected || c.getCurrentHealth() < 1) {
-                    stop();
-                    return;
-                }
-                if(getId() == 3127) c.stillgfx(gfx, c.getPosition().getY(), c.getPosition().getX());
-                else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
-                else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
-                c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
-                if(getId() != 4303 && getId() != 4304 && getId() != 6610)
-                    setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
-                stop();
+        GameEventScheduler.runLaterMs(delay * 600, () -> {
+            if(c.disconnected || c.getCurrentHealth() < 1) {
+                return;
             }
+            if(getId() == 3127) c.stillgfx(gfx, c.getPosition().getY(), c.getPosition().getX());
+            else if(getId() >= 794 && getId() <= 802) c.stillgfx(gfx, c.getPosition(), getId() == 794 || getId() == 799 ? 255 : 120);
+            else c.stillgfx(gfx, getPosition().getY(), getPosition().getX());
+            c.dealDamage(dmg, crit ? Entity.hitType.CRIT : Entity.hitType.STANDARD, npc, type);
+            if(getId() != 4303 && getId() != 4304 && getId() != 6610)
+                setLastAttack(getAttackTimer() - delay < 2 ? 1 : getAttackTimer() - delay); //Atleast 1 second delay!
         });
     }
     public void sendArrow(Client target, int startGfx, int flightGfx) {

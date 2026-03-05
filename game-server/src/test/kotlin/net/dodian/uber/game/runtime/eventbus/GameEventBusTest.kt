@@ -1,4 +1,4 @@
-package net.dodian.uber.game.runtime.eventbus
+package net.dodian.uber.game.event
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
