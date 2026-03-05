@@ -19,6 +19,7 @@ object BankBoothObjects : ObjectContent {
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        client.openUpBank()
         client.skillX = position.x
         client.setSkillY(position.y)
         client.WanneBank = 1

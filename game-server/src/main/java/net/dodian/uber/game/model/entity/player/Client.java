@@ -575,6 +575,14 @@ public class Client extends Player implements Runnable {
     public int XremoveSlot = 0;
     public int XinterfaceID = 0;
     public int XremoveID = 0;
+    public int currentBankTab = 0;
+    public int previousBankTab = 0;
+    public int lastButtonActionIndex = -1;
+    public boolean bankSearchActive = false;
+    public boolean bankSearchPendingInput = false;
+    public String bankSearchQuery = "";
+    public int[] bankSlotTabs = null;
+    public int[][] bankContainerSlotMap = null;
 
     /**
      * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
@@ -1127,6 +1135,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean bankChanged = false;
+        ensureBankTabState();
         int id = GetUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
@@ -1155,6 +1164,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1211,6 +1221,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = playerItems[firstPossibleSlot];
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1270,6 +1281,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1324,6 +1336,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1414,15 +1427,30 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
-        if (moveWindow == 5382 && from >= 0 && to >= 0 && from < bankSize() && to < bankSize()) {
-            int tempI = bankItems[from];
-            int tempN = bankItemsN[from];
-            bankItems[from] = bankItems[to];
-            bankItemsN[from] = bankItemsN[to];
-            bankItems[to] = tempI;
-            bankItemsN[to] = tempN;
+        if (moveWindow == 5382 || (moveWindow >= 50300 && moveWindow <= 50310)) {
+            int actualFrom = resolveBankSlot(moveWindow, from);
+            int actualTo = resolveBankSlot(moveWindow, to);
+            if (actualFrom < 0 || actualTo < 0 || actualFrom >= bankSize() || actualTo >= bankSize()) {
+                return;
+            }
+            ensureBankTabState();
+            int tempI = bankItems[actualFrom];
+            int tempN = bankItemsN[actualFrom];
+            int tempTab = bankSlotTabs[actualFrom];
+            bankItems[actualFrom] = bankItems[actualTo];
+            bankItemsN[actualFrom] = bankItemsN[actualTo];
+            bankSlotTabs[actualFrom] = bankSlotTabs[actualTo];
+            bankItems[actualTo] = tempI;
+            bankItemsN[actualTo] = tempN;
+            bankSlotTabs[actualTo] = tempTab;
+            if (bankItems[actualFrom] <= 0 || bankItemsN[actualFrom] <= 0) {
+                bankSlotTabs[actualFrom] = 0;
+            }
+            if (bankItems[actualTo] <= 0 || bankItemsN[actualTo] <= 0) {
+                bankSlotTabs[actualTo] = 0;
+            }
             markSaveDirty(PlayerSaveSegment.BANK.getMask());
-            resetBank();
+            checkItemUpdate();
         }
     }
 
@@ -1502,9 +1530,16 @@ public class Client extends Player implements Runnable {
             return;
         }
         resetAction(true);
-        send(new SendString(takeAsNote ? "No Note" : "Note", 5389));
-        send(new SendString("Bank All", 5391));
+        send(new SendString("Withdraw as:", 5388));
+        send(new SendString("Note", 5389));
+        send(new SendString("Item", 5391));
         send(new SendString("Bank of " + getPlayerName(), 5383));
+        ensureBankTabState();
+        currentBankTab = 0;
+        previousBankTab = 0;
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
         IsBanking = true;
         checkBankInterface = false;
         checkItemUpdate();
@@ -1533,6 +1568,10 @@ public class Client extends Player implements Runnable {
             resetItems(3823);
         } else if (IsBanking || checkBankInterface) {
             resetBank();
+            if (IsBanking) {
+                refreshBankHeader();
+                send(new SendCurrentBankTab(currentBankTab));
+            }
             resetItems(5064);
             send(new InventoryInterface(5292, 5063));
         } else if (isPartyInterface) {
@@ -1543,6 +1582,217 @@ public class Client extends Player implements Runnable {
             resetItems(3322);
         }
         resetItems(3214); //Default reset!
+    }
+
+    public void applyBankSearch(String query) {
+        if (!IsBanking) {
+            return;
+        }
+        String normalized = query == null ? "" : query.trim().toLowerCase();
+        if (normalized.isEmpty()) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+            currentBankTab = Math.max(0, Math.min(9, previousBankTab));
+            checkItemUpdate();
+            return;
+        }
+        ensureBankTabState();
+        previousBankTab = currentBankTab >= 0 && currentBankTab < 10 ? currentBankTab : 0;
+        bankSearchActive = true;
+        bankSearchQuery = normalized;
+        currentBankTab = 10;
+        checkItemUpdate();
+    }
+
+    public void ensureBankTabState() {
+        int size = bankSize();
+        if (bankSlotTabs == null || bankSlotTabs.length != size) {
+            bankSlotTabs = new int[size];
+        }
+        if (bankContainerSlotMap == null || bankContainerSlotMap.length != 11 || bankContainerSlotMap[0].length != size) {
+            bankContainerSlotMap = new int[11][size];
+        }
+        for (int i = 0; i < size; i++) {
+            if (bankItems[i] <= 0 || bankItemsN[i] <= 0) {
+                bankSlotTabs[i] = 0;
+            } else if (bankSlotTabs[i] < 0 || bankSlotTabs[i] > 9) {
+                bankSlotTabs[i] = 0;
+            }
+        }
+    }
+
+    public void rebuildBankContainers() {
+        ensureBankTabState();
+        for (int tab = 0; tab < bankContainerSlotMap.length; tab++) {
+            Arrays.fill(bankContainerSlotMap[tab], -1);
+        }
+        int[] counts = new int[11];
+        int size = bankSize();
+        for (int slot = 0; slot < size; slot++) {
+            if (bankItems[slot] <= 0 || bankItemsN[slot] <= 0) {
+                bankSlotTabs[slot] = 0;
+                continue;
+            }
+            int tab = bankSlotTabs[slot];
+            if (tab < 0 || tab > 9) {
+                tab = 0;
+                bankSlotTabs[slot] = 0;
+            }
+            int tabIndex = counts[tab]++;
+            bankContainerSlotMap[tab][tabIndex] = slot;
+            if (bankSearchActive && bankMatchesSearch(slot)) {
+                int searchIndex = counts[10]++;
+                bankContainerSlotMap[10][searchIndex] = slot;
+            }
+        }
+    }
+
+    private boolean bankMatchesSearch(int slot) {
+        if (!bankSearchActive || bankSearchQuery == null || bankSearchQuery.isEmpty()) {
+            return false;
+        }
+        if (slot < 0 || slot >= bankSize() || bankItems[slot] <= 0 || bankItemsN[slot] <= 0) {
+            return false;
+        }
+        String itemName = GetItemName(bankItems[slot] - 1);
+        return itemName != null && itemName.toLowerCase().contains(bankSearchQuery);
+    }
+
+    public void sendBankContainers() {
+        rebuildBankContainers();
+        int size = bankSize();
+        for (int tab = 0; tab < 11; tab++) {
+            ArrayList<Integer> ids = new ArrayList<>(size);
+            ArrayList<Integer> amounts = new ArrayList<>(size);
+            for (int localSlot = 0; localSlot < size; localSlot++) {
+                int globalSlot = bankContainerSlotMap[tab][localSlot];
+                if (globalSlot >= 0) {
+                    ids.add(bankItems[globalSlot] - 1);
+                    amounts.add(bankItemsN[globalSlot]);
+                } else {
+                    ids.add(0);
+                    amounts.add(0);
+                }
+            }
+            send(new SendBankItems(ids, amounts, 50300 + tab));
+        }
+    }
+
+    public int resolveBankSlot(int interfaceId, int containerSlot) {
+        if (containerSlot < 0) {
+            return -1;
+        }
+        if (interfaceId == 5382) {
+            return containerSlot < bankSize() ? containerSlot : -1;
+        }
+        if (interfaceId < 50300 || interfaceId > 50310) {
+            return containerSlot;
+        }
+        rebuildBankContainers();
+        int tab = interfaceId - 50300;
+        return containerSlot < bankContainerSlotMap[tab].length ? bankContainerSlotMap[tab][containerSlot] : -1;
+    }
+
+    public int resolveBankItemId(int interfaceId, int containerSlot, int fallbackItemId) {
+        int bankSlot = resolveBankSlot(interfaceId, containerSlot);
+        if (bankSlot >= 0 && bankSlot < bankSize() && bankItems[bankSlot] > 0) {
+            return bankItems[bankSlot] - 1;
+        }
+        return fallbackItemId;
+    }
+
+    public void assignBankSlotToTab(int bankSlot, int tab) {
+        ensureBankTabState();
+        if (bankSlot < 0 || bankSlot >= bankSize()) {
+            return;
+        }
+        if (bankItems[bankSlot] <= 0 || bankItemsN[bankSlot] <= 0) {
+            return;
+        }
+        bankSlotTabs[bankSlot] = Math.max(0, Math.min(9, tab));
+        if (currentBankTab == 10) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+            currentBankTab = 0;
+        }
+        checkItemUpdate();
+    }
+
+    public void selectBankTab(int tab) {
+        ensureBankTabState();
+        if (tab > 0 && tab < 10 && !hasBankTabItems(tab)) {
+            send(new SendMessage("To create a new tab, drag an item onto this tab."));
+            return;
+        }
+        if (tab != 10 && bankSearchActive) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+        }
+        currentBankTab = Math.max(0, Math.min(10, tab));
+        if (currentBankTab >= 0 && currentBankTab < 10) {
+            previousBankTab = currentBankTab;
+        }
+        checkItemUpdate();
+    }
+
+    public void collapseBankTab(int tab) {
+        ensureBankTabState();
+        if (tab <= 0 || tab > 9) {
+            return;
+        }
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankSlotTabs[i] == tab) {
+                bankSlotTabs[i] = 0;
+            } else if (bankSlotTabs[i] > tab) {
+                bankSlotTabs[i]--;
+            }
+        }
+        if (currentBankTab == tab || currentBankTab > 9) {
+            currentBankTab = 0;
+        } else if (currentBankTab > tab) {
+            currentBankTab--;
+        }
+        if (previousBankTab == tab || previousBankTab > 9) {
+            previousBankTab = 0;
+        } else if (previousBankTab > tab) {
+            previousBankTab--;
+        }
+        bankSearchActive = false;
+        bankSearchQuery = "";
+        checkItemUpdate();
+    }
+
+    public void clearBankSearch() {
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
+        currentBankTab = Math.max(0, Math.min(9, previousBankTab));
+        checkItemUpdate();
+    }
+
+    public boolean hasBankTabItems(int tab) {
+        ensureBankTabState();
+        if (tab <= 0 || tab > 9) {
+            return tab == 0;
+        }
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankItems[i] > 0 && bankItemsN[i] > 0 && bankSlotTabs[i] == tab) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public void refreshBankHeader() {
+        int used = 0;
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankItems[i] > 0 && bankItemsN[i] > 0) {
+                used++;
+            }
+        }
+        send(new SendString(String.valueOf(used), 50053));
+        send(new SendString(String.valueOf(bankSize()), 50055));
     }
 
     public boolean addItem(int item, int amount) {

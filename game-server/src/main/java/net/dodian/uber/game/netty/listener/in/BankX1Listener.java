@@ -45,6 +45,14 @@ public class BankX1Listener implements PacketListener {
         int slot        = readSignedWordBigEndian(buf) & 0xFFFF;
         int itemId      = readSignedWordBigEndian(buf) & 0xFFFF;
 
+        if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) {
+            itemId = client.resolveBankItemId(interfaceId, slot, itemId);
+            slot = client.resolveBankSlot(interfaceId, slot);
+            if (slot < 0) {
+                return;
+            }
+        }
+
         client.XremoveSlot  = slot;
         client.XinterfaceID = interfaceId;
         client.XremoveID    = itemId;

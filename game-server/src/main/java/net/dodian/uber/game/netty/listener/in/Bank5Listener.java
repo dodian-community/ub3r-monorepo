@@ -51,6 +51,12 @@ public class Bank5Listener implements PacketListener {
         int interfaceId = buf.readInt();
         int removeId = readSignedWordBigEndianA(buf);
         int removeSlot = readSignedWordBigEndian(buf) & 0xFFFF;
+        int bankSlot = removeSlot;
+
+        if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) {
+            bankSlot = client.resolveBankSlot(interfaceId, removeSlot);
+            removeId = client.resolveBankItemId(interfaceId, removeSlot, removeId);
+        }
 
         if (client.playerRights == 2) {
             client.println_debug("Bank5: interfaceId=" + interfaceId + " itemId=" + removeId + " slot=" + removeSlot);
@@ -80,7 +86,9 @@ public class Bank5Listener implements PacketListener {
                 client.checkItemUpdate();
                 break;
             case 5382: // bank → inventory (legacy)
-                client.fromBank(removeId, removeSlot, amount);
+                if (bankSlot >= 0) {
+                    client.fromBank(removeId, bankSlot, amount);
+                }
                 break;
             case 2274: // party chest → inventory
                 Balloons.removeOfferItems(client, removeId, amount, removeSlot);
@@ -93,7 +101,9 @@ public class Bank5Listener implements PacketListener {
             default:
                 // Mystic bank tab containers: 50300-50310
                 if (interfaceId >= 50300 && interfaceId <= 50310) {
-                    client.fromBank(removeId, removeSlot, amount);
+                    if (bankSlot >= 0) {
+                        client.fromBank(removeId, bankSlot, amount);
+                    }
                 } else {
                     handleSpecialInterfaces(client, interfaceId, removeId, removeSlot);
                 }

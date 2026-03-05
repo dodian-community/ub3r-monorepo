@@ -31,6 +31,10 @@ object CloseInterfaceButtons : ButtonContent {
         var refreshItems = false
         if (client.IsBanking) {
             client.IsBanking = false
+            client.bankSearchActive = false
+            client.bankSearchPendingInput = false
+            client.bankSearchQuery = ""
+            client.currentBankTab = 0
             refreshItems = true
         }
         if (client.checkBankInterface) {

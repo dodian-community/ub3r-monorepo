@@ -34,6 +34,11 @@ public class ClickingButtonsListener implements PacketListener {
 
         ByteBuf payload = packet.getPayload();
         int actionButton = payload.readInt();
+        int actionIndex = -1;
+        if (packet.getOpcode() == 186 && payload.isReadable()) {
+            actionIndex = payload.readUnsignedByte();
+        }
+        client.lastButtonActionIndex = actionIndex;
 
         if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
             logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
