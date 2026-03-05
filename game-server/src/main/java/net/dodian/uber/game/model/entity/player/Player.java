@@ -5,8 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -35,6 +34,7 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skills.mining.MiningState;
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
@@ -52,7 +52,7 @@ public abstract class Player extends Entity {
     public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
-    public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
+    public long lastPickAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
@@ -69,8 +69,10 @@ public abstract class Player extends Entity {
     private volatile QueueTaskHandle interactionTaskHandle;
     private volatile QueueTaskHandle farmDebugTaskHandle;
     private volatile QueueTaskHandle miningTaskHandle;
+    private volatile QueueTaskHandle woodcuttingTaskHandle;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
+    private volatile WoodcuttingState woodcuttingState;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -96,7 +98,7 @@ public abstract class Player extends Entity {
     public boolean attackingPlayer = false, attackingNpc = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
-    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
+    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
     private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
@@ -338,6 +340,8 @@ public abstract class Player extends Entity {
         releaseCachedUpdateBlock();
         cancelMiningTask();
         clearMiningState();
+        cancelWoodcuttingTask();
+        clearWoodcuttingState();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;
@@ -1032,6 +1036,34 @@ public abstract class Player extends Entity {
         miningState = null;
     }
 
+    public QueueTaskHandle getWoodcuttingTaskHandle() {
+        return woodcuttingTaskHandle;
+    }
+
+    public void setWoodcuttingTaskHandle(QueueTaskHandle woodcuttingTaskHandle) {
+        this.woodcuttingTaskHandle = woodcuttingTaskHandle;
+    }
+
+    public void cancelWoodcuttingTask() {
+        QueueTaskHandle handle = woodcuttingTaskHandle;
+        woodcuttingTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
+
+    public WoodcuttingState getWoodcuttingState() {
+        return woodcuttingState;
+    }
+
+    public void setWoodcuttingState(WoodcuttingState woodcuttingState) {
+        this.woodcuttingState = woodcuttingState;
+    }
+
+    public void clearWoodcuttingState() {
+        woodcuttingState = null;
+    }
+
     public GameTaskSet<?> getPlayerTaskSet() {
         return playerTaskSet;
     }
@@ -1212,41 +1244,27 @@ public abstract class Player extends Entity {
         if(source instanceof Client && target instanceof Npc) {
             final Client p = (Client) source;
             final Npc n = (Npc) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(!n.alive) {
-                        stop();
-                        return;
-                    }
-                    n.dealDamage(p, damage, type);
-                    stop();
+            GameEventScheduler.runLaterMs(delay, () -> {
+                if(p.disconnected) {
+                    return;
                 }
-
+                if(!n.alive) {
+                    return;
+                }
+                n.dealDamage(p, damage, type);
             });
         }
         if(source instanceof Client && target instanceof Client) {
             final Client p = (Client) source;
             final Client other = (Client) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(other.disconnected || other.deathStage > 0) {
-                        stop();
-                        return;
-                    }
-                    other.receieveDamage(p, damage, type);
-                    stop();
+            GameEventScheduler.runLaterMs(delay, () -> {
+                if(p.disconnected) {
+                    return;
                 }
-
+                if(other.disconnected || other.deathStage > 0) {
+                    return;
+                }
+                other.receieveDamage(p, damage, type);
             });
         }
     }
@@ -1930,11 +1948,7 @@ public abstract class Player extends Entity {
                         currentChance += checkChance;
                 }
             }
-            c.send(new SendString("Loot from 1000 " + n.getName(), 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 " + n.getName());
             if (wealth)
                 c.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
     }
@@ -1984,11 +1998,7 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
         if(objectId == 375 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
             ArrayList<Integer> lootedItem = new ArrayList<>();
@@ -2014,11 +2024,7 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
     }
 

@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.object;
 
 import net.dodian.utilities.DbTables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -9,6 +11,8 @@ import java.sql.Statement;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class DoorHandler {
+    private static final Logger logger = LoggerFactory.getLogger(DoorHandler.class);
+
     public static int[] doorX = new int[100];
     public static int[] doorY = new int[100];
     public static int[] doorId = new int[100];
@@ -37,9 +41,9 @@ public class DoorHandler {
                 doorHeight[i] = results.getInt("doorHeight");
                 i++;
             }
-            System.out.println("Loaded " + i + " doors...");
+            logger.info("Loaded {} doors...", i);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to load door definitions.", e);
         }
     }
 

@@ -97,6 +97,8 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.MouseClicksListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.MoveItemsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.UpdateChatListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.SyntaxInputListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.BankTabCreationListener");
             
             // Register no-op handlers for unused opcodes
             repository.registerNoOp(77);  // Currently unused

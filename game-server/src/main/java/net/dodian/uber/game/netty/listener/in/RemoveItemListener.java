@@ -35,6 +35,16 @@ public class RemoveItemListener implements PacketListener {
         int interfaceID = msg.getInt();
         int removeSlot = msg.getShort(false, ValueType.ADD);
         int removeID = msg.getShort(false, ValueType.ADD);
+        int bankSlot = removeSlot;
+
+        if ((interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) && client.bankStyleViewOpen) {
+            return;
+        }
+
+        if (interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) {
+            bankSlot = client.resolveBankSlot(interfaceID, removeSlot);
+            removeID = client.resolveBankItemId(interfaceID, removeSlot, removeID);
+        }
 
         if (client.playerRights == 2) {
             client.println_debug("RemoveItem: " + removeID + " InterID: " + interfaceID + " slot: " + removeSlot);
@@ -61,7 +71,9 @@ public class RemoveItemListener implements PacketListener {
                 Balloons.offerItems(client, removeID, 1, removeSlot);
             client.checkItemUpdate();
         } else if (interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) { // bank -> bag (mystic tabs: 50300-50310)
-            client.fromBank(removeID, removeSlot, 1);
+            if (bankSlot >= 0) {
+                client.fromBank(removeID, bankSlot, 1);
+            }
         } else if (interfaceID == 2274) { // party remove
             Balloons.removeOfferItems(client, removeID, 1, removeSlot);
         } else if (interfaceID == 3322 && client.inTrade && client.canOffer) { // bag -> trade

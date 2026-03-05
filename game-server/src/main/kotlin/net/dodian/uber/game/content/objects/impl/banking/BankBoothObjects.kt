@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object BankBoothObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(2213, 2214, 3045, 5276, 6084)
+    override val objectIds: IntArray = intArrayOf(2213, 2214, 3045, 5276, 6084, 25808)
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         client.openUpBank()
@@ -19,6 +19,7 @@ object BankBoothObjects : ObjectContent {
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        client.openUpBank()
         client.skillX = position.x
         client.setSkillY(position.y)
         client.WanneBank = 1

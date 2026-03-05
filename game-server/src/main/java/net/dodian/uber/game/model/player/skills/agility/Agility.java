@@ -1,8 +1,7 @@
 package net.dodian.uber.game.model.player.skills.agility;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.npc.Npc;
@@ -10,6 +9,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Misc;
+
+import java.util.function.BooleanSupplier;
 
 public class Agility {
     final Client c;
@@ -23,6 +24,14 @@ public class Agility {
         c.triggerRandom(xp);
     }
 
+    private void runLater(int delayMs, Runnable action) {
+        GameEventScheduler.runLaterMs(delayMs, action);
+    }
+
+    private void runRepeating(int delayMs, BooleanSupplier action) {
+        GameEventScheduler.runRepeatingMs(delayMs, action);
+    }
+
     public void GnomeLog() {
         if (c.UsingAgility) {
             return;
@@ -32,14 +41,11 @@ public class Agility {
             c.setWalkAnim(762);
             int time = 4800;
             c.AddToWalkCords(0, -7, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
-                public void execute() {
-                    c.requestWeaponAnims();
-                    giveEndExperience(280);
-                    c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
-                    c.UsingAgility = false;
-                    stop();
-                }
+            runLater(time, () -> {
+                c.requestWeaponAnims();
+                giveEndExperience(280);
+                c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
+                c.UsingAgility = false;
             });
         }
     }
@@ -56,14 +62,11 @@ public class Agility {
         npc.setText("My mom is faster than you!");
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.teleportTo(2473, 3424, 1);
-                giveEndExperience(150);
-                c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.teleportTo(2473, 3424, 1);
+            giveEndExperience(150);
+            c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -77,14 +80,11 @@ public class Agility {
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
         c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.teleportTo(2473, 3420, 2);
-                giveEndExperience(50);
-                c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.teleportTo(2473, 3420, 2);
+            giveEndExperience(50);
+            c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -101,14 +101,11 @@ public class Agility {
         c.setWalkAnim(762);
         int time = 4800;
         c.AddToWalkCords(6, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
-            public void execute() {
-                c.requestWeaponAnims();
-                giveEndExperience(250);
-                c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(time, () -> {
+            c.requestWeaponAnims();
+            giveEndExperience(250);
+            c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -121,15 +118,12 @@ public class Agility {
                 npc.setText("To darn easy.");
                 c.requestAnim(828, 0);
                 c.walkBlock = System.currentTimeMillis() + 600;
-                EventManager.getInstance().registerEvent(new Event(600) {
-                    public void execute() {
-                c.teleportTo(2485, 3421, 0);
-                giveEndExperience(50);
-                c.agilityCourseStage = c.agilityCourseStage >= 4 ? 5 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
-        });
+                runLater(600, () -> {
+                    c.teleportTo(2485, 3421, 0);
+                    giveEndExperience(50);
+                    c.agilityCourseStage = c.agilityCourseStage >= 4 ? 5 : c.agilityCourseStage;
+                    c.UsingAgility = false;
+                });
     }
 
     public void GnomeNet2() {
@@ -144,14 +138,11 @@ public class Agility {
         npc.setText("net profit of zero effort.");
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.teleportTo(c.getPosition().getX(), c.getPosition().getY() + 2, 0);
-                giveEndExperience(150);
-                c.agilityCourseStage = c.agilityCourseStage >= 5 ? 6 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.teleportTo(c.getPosition().getX(), c.getPosition().getY() + 2, 0);
+            giveEndExperience(150);
+            c.agilityCourseStage = c.agilityCourseStage >= 5 ? 6 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -164,30 +155,28 @@ public class Agility {
         npc.setText("Pipe it down...You are nothing special!");
         c.setWalkAnim(746);
         c.AddToWalkCords(0, 7, 4200);
-        EventManager.getInstance().registerEvent(new Event(600) {
-            int part = 0;
-
-            public void execute() {
-                part++;
-                if (part == 7) {
-                    c.requestWeaponAnims();
-                    c.requestAnim(748, 0);
-                    if (c.agilityCourseStage == 6) {
-                        c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11));
-                        c.checkItemUpdate();
-                        c.agilityCourseStage = 0;
-                        c.send(new SendMessage("You finished a gnome lap!"));
-                        giveEndExperience(1050);
-                    } else {
-                        giveEndExperience(250);
-                    }
-                    c.UsingAgility = false;
-                    stop();
-                } else if (part == 1) {
-                    c.setWalkAnim(747);
-                    c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        final int[] part = {0};
+        runRepeating(600, () -> {
+            part[0]++;
+            if (part[0] == 7) {
+                c.requestWeaponAnims();
+                c.requestAnim(748, 0);
+                if (c.agilityCourseStage == 6) {
+                    c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11));
+                    c.checkItemUpdate();
+                    c.agilityCourseStage = 0;
+                    c.send(new SendMessage("You finished a gnome lap!"));
+                    giveEndExperience(1050);
+                } else {
+                    giveEndExperience(250);
                 }
+                c.UsingAgility = false;
+                return false;
+            } else if (part[0] == 1) {
+                c.setWalkAnim(747);
+                c.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             }
+            return true;
         });
     }
 
@@ -207,14 +196,11 @@ public class Agility {
             int distance = 3549 - c.getPosition().getY();
             c.setAgilityEmote(1501, 1501);
             c.AddToWalkCords(0, distance, (distance * -1) * 600L);
-            EventManager.getInstance().registerEvent(new Event((distance * -1) * 600) {
-                public void execute() {
-                    c.requestWeaponAnims();
-                    giveEndExperience(400);
-                    c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
-                    c.UsingAgility = false;
-                    stop();
-                }
+            runLater((distance * -1) * 600, () -> {
+                c.requestWeaponAnims();
+                giveEndExperience(400);
+                c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
+                c.UsingAgility = false;
             });
         }
     }
@@ -231,45 +217,36 @@ public class Agility {
         int time = 7200;
         if (c.getPosition().getY() == 3547 || c.getPosition().getY() == 3545) {
             c.AddToWalkCords(1, 0, time);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                int stage = 0;
-
-                public void execute() {
-                    stage++;
-                    if (stage == 1) {
-                        c.AddToWalkCords(0, c.getPosition().getY() == 3547 ? -1 : 1, time);
-                        stage++;
-                    } else if (stage > 3) {
-                        c.setWalkAnim(762);
-                        c.AddToWalkCords(-10, 0, time);
-                        EventManager.getInstance().registerEvent(new Event(time) {
-                            public void execute() {
-                                if (c.disconnected) {
-                                    stop();
-                                    return;
-                                }
-                                c.requestWeaponAnims();
-                                giveEndExperience(600);
-                                c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                                c.UsingAgility = false;
-                                stop();
-                            }
-                        });
-                        stop();
-                    }
+            final int[] stage = {0};
+            runRepeating(600, () -> {
+                stage[0]++;
+                if (stage[0] == 1) {
+                    c.AddToWalkCords(0, c.getPosition().getY() == 3547 ? -1 : 1, time);
+                    stage[0]++;
+                } else if (stage[0] > 3) {
+                    c.setWalkAnim(762);
+                    c.AddToWalkCords(-10, 0, time);
+                    runLater(time, () -> {
+                        if (c.disconnected) {
+                            return;
+                        }
+                        c.requestWeaponAnims();
+                        giveEndExperience(600);
+                        c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
+                        c.UsingAgility = false;
+                    });
+                    return false;
                 }
+                return true;
             });
         } else if (c.getPosition().getX() == 2551 && c.getPosition().getY() == 3546) {
             c.setWalkAnim(762);
             c.AddToWalkCords(-10, 0, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
-                public void execute() {
-                    c.requestWeaponAnims();
-                    giveEndExperience(600);
-                    c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                    c.UsingAgility = false;
-                    stop();
-                }
+            runLater(time, () -> {
+                c.requestWeaponAnims();
+                giveEndExperience(600);
+                c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
+                c.UsingAgility = false;
             });
         }
     }
@@ -288,14 +265,11 @@ public class Agility {
         c.UsingAgility = true;
         c.requestAnim(828, 0);
         c.walkBlock = System.currentTimeMillis() + 600;
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.teleportTo(c.getPosition().getX() - 2, c.getPosition().getY(), 1);
-                giveEndExperience(250);
-                c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.teleportTo(c.getPosition().getX() - 2, c.getPosition().getY(), 1);
+            giveEndExperience(250);
+            c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -311,14 +285,11 @@ public class Agility {
         c.setWalkAnim(756);
         int time = 2400;
         c.AddToWalkCords(-4, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
-            public void execute() {
-                c.requestWeaponAnims();
-                giveEndExperience(350);
-                c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(time, () -> {
+            c.requestWeaponAnims();
+            giveEndExperience(350);
+            c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -342,14 +313,11 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.requestWeaponAnims();
-                giveEndExperience(100);
-                c.agilityCourseStage = c.agilityCourseStage >= 4 ? 5 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.requestWeaponAnims();
+            giveEndExperience(100);
+            c.agilityCourseStage = c.agilityCourseStage >= 4 ? 5 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -367,14 +335,11 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.requestWeaponAnims();
-                giveEndExperience(100);
-                c.agilityCourseStage = c.agilityCourseStage >= 5 ? 6 : c.agilityCourseStage;
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(600, () -> {
+            c.requestWeaponAnims();
+            giveEndExperience(100);
+            c.agilityCourseStage = c.agilityCourseStage >= 5 ? 6 : c.agilityCourseStage;
+            c.UsingAgility = false;
         });
     }
 
@@ -392,21 +357,18 @@ public class Agility {
         c.UsingAgility = true;
         c.setRunAnim(840);
         c.AddToRunCords(2, 0, 1200);
-        EventManager.getInstance().registerEvent(new Event(600) {
-            public void execute() {
-                c.requestWeaponAnims();
-                if (c.agilityCourseStage == 6) {
-                    c.addItem(2996, 2 + Misc.random(c.getLevel(Skill.AGILITY) / 22));
-                    c.checkItemUpdate();
-                    giveEndExperience(1300);
-                    c.send(new SendMessage("You finished a barbarian lap!"));
-                    c.agilityCourseStage = 0;
-                } else {
-                    giveEndExperience(100);
-                }
-                c.UsingAgility = false;
-                stop();
+        runLater(600, () -> {
+            c.requestWeaponAnims();
+            if (c.agilityCourseStage == 6) {
+                c.addItem(2996, 2 + Misc.random(c.getLevel(Skill.AGILITY) / 22));
+                c.checkItemUpdate();
+                giveEndExperience(1300);
+                c.send(new SendMessage("You finished a barbarian lap!"));
+                c.agilityCourseStage = 0;
+            } else {
+                giveEndExperience(100);
             }
+            c.UsingAgility = false;
         });
     }
 
@@ -425,20 +387,18 @@ public class Agility {
                 c.requestAnim(746, 0);
                 c.setWalkAnim(747);
                 c.AddToWalkCords(0, distance, distance * 600);
-                EventManager.getInstance().registerEvent(new Event(600) {
-                    int part = 0;
-
-                    public void execute() {
-                        part++;
-                        if (part == distance - 1) {
-                            c.requestWeaponAnims();
-                            c.requestAnim(748, 1);
-                            giveEndExperience(1000);
-                            c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
-                            c.UsingAgility = false;
-                            stop();
-                        }
+                final int[] part = {0};
+                runRepeating(600, () -> {
+                    part[0]++;
+                    if (part[0] == distance - 1) {
+                        c.requestWeaponAnims();
+                        c.requestAnim(748, 1);
+                        giveEndExperience(1000);
+                        c.agilityCourseStage = c.agilityCourseStage >= 0 ? 1 : c.agilityCourseStage;
+                        c.UsingAgility = false;
+                        return false;
                     }
+                    return true;
                 });
             }
         }
@@ -457,14 +417,11 @@ public class Agility {
             int distance = 3958 - c.getPosition().getY();
             c.setWalkAnim(1501);
             c.AddToWalkCords(0, distance, distance * 600L);
-            EventManager.getInstance().registerEvent(new Event(distance * 600) {
-                public void execute() {
-                    c.requestWeaponAnims();
-                    giveEndExperience(500);
-                    c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
-                    c.UsingAgility = false;
-                    stop();
-                }
+            runLater(distance * 600, () -> {
+                c.requestWeaponAnims();
+                giveEndExperience(500);
+                c.agilityCourseStage = c.agilityCourseStage >= 1 ? 2 : c.agilityCourseStage;
+                c.UsingAgility = false;
             });
         }
     }
@@ -483,23 +440,22 @@ public class Agility {
             c.setFocus(2996, 3960);
             c.setWalkAnim(769);
             c.AddToWalkCords(-1, 0, 4200);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                int parts = 0;
-                public void execute() {
-                    parts++;
-                    if(parts > 1 && parts < 6) {
-                        c.requestAnim(769, 0);
-                        c.transport(new Position(c.getPosition().getX() - 1, c.getPosition().getY(), 0));
-                    } else if(parts > 1) {
-                        c.requestWeaponAnims();
-                        c.walkBlock = System.currentTimeMillis() + 600;
-                        c.transport(new Position(c.getPosition().getX() - 1, c.getPosition().getY(), 0));
-                        giveEndExperience(650);
-                        c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
-                        c.UsingAgility = false;
-                        stop();
-                    }
+            final int[] parts = {0};
+            runRepeating(600, () -> {
+                parts[0]++;
+                if(parts[0] > 1 && parts[0] < 6) {
+                    c.requestAnim(769, 0);
+                    c.transport(new Position(c.getPosition().getX() - 1, c.getPosition().getY(), 0));
+                } else if(parts[0] > 1) {
+                    c.requestWeaponAnims();
+                    c.walkBlock = System.currentTimeMillis() + 600;
+                    c.transport(new Position(c.getPosition().getX() - 1, c.getPosition().getY(), 0));
+                    giveEndExperience(650);
+                    c.agilityCourseStage = c.agilityCourseStage >= 2 ? 3 : c.agilityCourseStage;
+                    c.UsingAgility = false;
+                    return false;
                 }
+                return true;
             });
         }
     }
@@ -509,45 +465,36 @@ public class Agility {
         c.UsingAgility = true;
         if (c.getPosition().getY() == 3944 || c.getPosition().getY() == 3946) {
             c.AddToWalkCords(1, 0, time);
-            EventManager.getInstance().registerEvent(new Event(600) {
-                int stage = 0;
-
-                public void execute() {
-                    stage++;
-                    if (stage == 1) {
-                        c.AddToWalkCords(0, c.getPosition().getY() == 3944 ? 1 : -1, time);
-                        stage++;
-                    } else if (stage > 3) {
-                        c.setWalkAnim(762);
-                        c.AddToWalkCords(-8, 0, time);
-                        EventManager.getInstance().registerEvent(new Event(time) {
-                            public void execute() {
-                                if (c.disconnected) {
-                                    stop();
-                                    return;
-                                }
-                                c.requestWeaponAnims();
-                                giveEndExperience(650);
-                                c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
-                                c.UsingAgility = false;
-                                stop();
-                            }
-                        });
-                        stop();
-                    }
+            final int[] stage = {0};
+            runRepeating(600, () -> {
+                stage[0]++;
+                if (stage[0] == 1) {
+                    c.AddToWalkCords(0, c.getPosition().getY() == 3944 ? 1 : -1, time);
+                    stage[0]++;
+                } else if (stage[0] > 3) {
+                    c.setWalkAnim(762);
+                    c.AddToWalkCords(-8, 0, time);
+                    runLater(time, () -> {
+                        if (c.disconnected) {
+                            return;
+                        }
+                        c.requestWeaponAnims();
+                        giveEndExperience(650);
+                        c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
+                        c.UsingAgility = false;
+                    });
+                    return false;
                 }
+                return true;
             });
         } else if (c.getPosition().getX() == 3002 && c.getPosition().getY() == 3945) {
             c.setWalkAnim(762);
             c.AddToWalkCords(-8, 0, time);
-            EventManager.getInstance().registerEvent(new Event(time) {
-                public void execute() {
-                    c.requestWeaponAnims();
-                    giveEndExperience(650);
-                    c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
-                    c.UsingAgility = false;
-                    stop();
-                }
+            runLater(time, () -> {
+                c.requestWeaponAnims();
+                giveEndExperience(650);
+                c.agilityCourseStage = c.agilityCourseStage >= 3 ? 4 : c.agilityCourseStage;
+                c.UsingAgility = false;
             });
         }
     }
@@ -564,19 +511,18 @@ public class Agility {
             c.UsingAgility = true;
             c.setWalkAnim(737);
             c.AddToWalkCords(0, -4, 2400);
-            EventManager.getInstance().registerEvent(new Event(2400) { //We need this to be 3k?
-                public void execute() {
-                    c.requestWeaponAnims();
-                    if (c.agilityCourseStage == 4) {
-                        c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33));
-                        c.checkItemUpdate();
-                        c.send(new SendMessage("You finished a wilderness lap!"));
-                        giveEndExperience(2700);
-                        c.agilityCourseStage = 0;
-                    } else giveEndExperience(750);
-                    c.UsingAgility = false;
-                    stop();
+            runLater(2400, () -> {
+                c.requestWeaponAnims();
+                if (c.agilityCourseStage == 4) {
+                    c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33));
+                    c.checkItemUpdate();
+                    c.send(new SendMessage("You finished a wilderness lap!"));
+                    giveEndExperience(2700);
+                    c.agilityCourseStage = 0;
+                } else {
+                    giveEndExperience(750);
                 }
+                c.UsingAgility = false;
             });
         }
     }
@@ -591,37 +537,28 @@ public class Agility {
         }
         int time = c.getPosition().getX() == 2600 || c.getPosition().getX() == 2597 ? 1200 : c.getPosition().getY() == 9488 || c.getPosition().getY() == 9495 ? 600 : 0;
         c.AddToWalkCords(c.getPosition().getX() == 2597 ? 1 : c.getPosition().getX() == 2600 ? -1 : 0, c.getPosition().getY() == 9488 ? 1 : c.getPosition().getY() == 9495 ? -1 : 0, time);
-        EventManager.getInstance().registerEvent(new Event(time > 0 ? 600 : 0) {
-            int stage = 0;
-
-            public void execute() {
-                stage++;
-                if (time == 1200 && stage < 2) {
-                    int x = 0;
-                    int y = 0;
-                    c.AddToWalkCords(x, y, time);
-                    stage++;
-                } else {
-                    c.setWalkAnim(744);
-                    c.UsingAgility = true;
-                    int distance = c.getPosition().getY() == 9488 ? 6 : c.getPosition().getY() == 9489 ? 5 : c.getPosition().getY() == 9494 ? -5 : c.getPosition().getY() == 9495 ? -6 : 0;
-                    int time = distance == 6 || distance == -6 ? 6 * 600 : distance == 5 || distance == -5 ? 6 * 600 : 0;
-                    c.AddToWalkCords(0, distance, time);
-                    EventManager.getInstance().registerEvent(new Event(time) {
-                        public void execute() {
-                            if (c.disconnected) {
-                                stop();
-                                return;
-                            }
-                            c.requestWeaponAnims();
-                            c.requestAnim(743, 0);
-                            c.UsingAgility = false;
-                            stop();
-                        }
-                    });
-                    stop();
-                }
+        final int[] stage = {0};
+        runRepeating(time > 0 ? 600 : 0, () -> {
+            stage[0]++;
+            if (time == 1200 && stage[0] < 2) {
+                c.AddToWalkCords(0, 0, time);
+                stage[0]++;
+                return true;
             }
+            c.setWalkAnim(744);
+            c.UsingAgility = true;
+            int distance = c.getPosition().getY() == 9488 ? 6 : c.getPosition().getY() == 9489 ? 5 : c.getPosition().getY() == 9494 ? -5 : c.getPosition().getY() == 9495 ? -6 : 0;
+            int duration = distance == 6 || distance == -6 ? 6 * 600 : distance == 5 || distance == -5 ? 6 * 600 : 0;
+            c.AddToWalkCords(0, distance, duration);
+            runLater(duration, () -> {
+                if (c.disconnected) {
+                    return;
+                }
+                c.requestWeaponAnims();
+                c.requestAnim(743, 0);
+                c.UsingAgility = false;
+            });
+            return false;
         });
     }
 
@@ -641,12 +578,9 @@ public class Agility {
         c.setWalkAnim(distance == 8 ? 756 : 754);
         int time = 5400;
         c.AddToWalkCords(0, distance, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
-            public void execute() {
-                c.requestWeaponAnims();
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(time, () -> {
+            c.requestWeaponAnims();
+            c.UsingAgility = false;
         });
     }
 
@@ -663,13 +597,10 @@ public class Agility {
         c.ReplaceObject(3305, 9375, 6451, -1, 0);
         int time = 600;
         c.AddToWalkCords(distance, 0, time);
-        EventManager.getInstance().registerEvent(new Event(time) {
-            public void execute() {
-                c.ReplaceObject(3305, 9376, 6452, 0, 0);
-                c.ReplaceObject(3305, 9375, 6451, 0, 0);
-                c.UsingAgility = false;
-                stop();
-            }
+        runLater(time, () -> {
+            c.ReplaceObject(3305, 9376, 6452, 0, 0);
+            c.ReplaceObject(3305, 9375, 6451, 0, 0);
+            c.UsingAgility = false;
         });
     }
 

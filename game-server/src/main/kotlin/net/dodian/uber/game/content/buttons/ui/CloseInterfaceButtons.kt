@@ -13,6 +13,11 @@ object CloseInterfaceButtons : ButtonContent {
     )
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
+        val wasBanking = client.IsBanking
+        val wasBankPreview = client.checkBankInterface
+        val wasItemListPreview = client.bankStyleViewOpen
+        val wasPartyInterface = client.isPartyInterface
+        val wasShopping = client.isShopping()
         client.send(RemoveInterfaces())
         if (client.NpcDialogue == 1001) {
             client.clearWalkableInterface()
@@ -29,19 +34,27 @@ object CloseInterfaceButtons : ButtonContent {
             client.herbMaking = -1
         }
         var refreshItems = false
-        if (client.IsBanking) {
+        if (wasBanking) {
             client.IsBanking = false
+            client.bankSearchActive = false
+            client.bankSearchPendingInput = false
+            client.bankSearchQuery = ""
+            client.currentBankTab = 0
             refreshItems = true
         }
-        if (client.checkBankInterface) {
+        if (wasBankPreview) {
             client.checkBankInterface = false
             refreshItems = true
         }
-        if (client.isPartyInterface) {
+        if (wasItemListPreview) {
+            client.clearBankStyleView()
+            refreshItems = true
+        }
+        if (wasPartyInterface) {
             client.isPartyInterface = false
             refreshItems = true
         }
-        if (client.isShopping()) {
+        if (wasShopping) {
             client.MyShopID = -1
             refreshItems = true
         }

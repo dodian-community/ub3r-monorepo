@@ -5,8 +5,8 @@ import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.services.ObjectInteractionType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.eventbus.GameEventBus
-import net.dodian.uber.game.runtime.eventbus.events.ObjectClickEvent
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.ObjectClickEvent
 import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap

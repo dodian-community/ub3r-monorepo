@@ -1,9 +1,7 @@
 package net.dodian.uber.game.party;
 
 import net.dodian.uber.game.Server;
-
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -97,41 +95,35 @@ public class Balloons {
         Client.publicyell("<col=664400>A drop party has been started in the Partyroom! Talk to Pete or teleport with Aubury!");
         partyEventPos.clear();
         setPartyPos();
-        EventManager.getInstance().registerEvent(new Event(600) {
-            int timer = 9;
-
-            @Override
-            public void execute() {
-                /* Initiate a balloon event timer! */
-                if (timer == 0) {
-                    sendPartyTimer("PARTYYYYYYYYYYYYYYYYYYYYYYYYYY! Get popping!");
-                    spawnPartyEventBalloon();
-                    totalBalloons -= balloonIncrement;
-                    EventManager.getInstance().registerEvent(new Event(600) {
-                        int timer = 4;
-
-                        @Override
-                        public void execute() {
-                            if (totalBalloons <= 0) {
-                                eventActive = false;
-                                totalBalloons = defaultBalloons;
-                                balloonIncrement = defaultIncrement;
-                                Client.publicyell("<col=664400>The drop party in the Partyroom has just concluded!");
-                                stop();
-                            }
-                            if (timer == 0) {
-                                spawnPartyEventBalloon();
-                                totalBalloons -= balloonIncrement;
-                                timer = 4;
-                            } else
-                                timer--;
-                        }
-                    });
-                    stop();
-                } else
-                    sendPartyTimer("Partyroom drops commencing in: " + timer);
-                timer--;
+        final int[] timer = {9};
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            if (timer[0] == 0) {
+                sendPartyTimer("PARTYYYYYYYYYYYYYYYYYYYYYYYYYY! Get popping!");
+                spawnPartyEventBalloon();
+                totalBalloons -= balloonIncrement;
+                final int[] waveTimer = {4};
+                GameEventScheduler.runRepeatingMs(600, () -> {
+                    if (totalBalloons <= 0) {
+                        eventActive = false;
+                        totalBalloons = defaultBalloons;
+                        balloonIncrement = defaultIncrement;
+                        Client.publicyell("<col=664400>The drop party in the Partyroom has just concluded!");
+                        return false;
+                    }
+                    if (waveTimer[0] == 0) {
+                        spawnPartyEventBalloon();
+                        totalBalloons -= balloonIncrement;
+                        waveTimer[0] = 4;
+                    } else {
+                        waveTimer[0]--;
+                    }
+                    return true;
+                });
+                return false;
             }
+            sendPartyTimer("Partyroom drops commencing in: " + timer[0]);
+            timer[0]--;
+            return true;
         });
     }
 
@@ -171,23 +163,19 @@ public class Balloons {
                 balloons.remove(balloon);
                 c.requestAnim(794, 0);
                 c.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10);
-                EventManager.getInstance().registerEvent(new Event(600) {
-                    @Override
-                    public void execute() {
-                        if (!droppedItems.isEmpty()) {
-                            for (int i = 0; i < droppedItems.size(); i++) {
-                                if (droppedItems.get(i).getPosition().equals(pos)) {
-                                    Ground.addFloorItem(c, droppedItems.get(i).getId(), droppedItems.get(i).getAmount());
-                                    c.send(new SendMessage("<col=664400>Something odd appears on the ground."));
-                                    droppedItems.remove(i);
-                                }
+                GameEventScheduler.runLaterMs(600, () -> {
+                    if (!droppedItems.isEmpty()) {
+                        for (int i = 0; i < droppedItems.size(); i++) {
+                            if (droppedItems.get(i).getPosition().equals(pos)) {
+                                Ground.addFloorItem(c, droppedItems.get(i).getId(), droppedItems.get(i).getAmount());
+                                c.send(new SendMessage("<col=664400>Something odd appears on the ground."));
+                                droppedItems.remove(i);
                             }
-                        } else
-                            c.send(new SendMessage("<col=664400>The balloon bursts open and yields nothing."));
-                        if (inPartyRoom(pos) && !partyEventPos.contains(pos)) //Adding the spawn back to the array!
-                            partyEventPos.add(pos);
-                        stop();
-                    }
+                        }
+                    } else
+                        c.send(new SendMessage("<col=664400>The balloon bursts open and yields nothing."));
+                    if (inPartyRoom(pos) && !partyEventPos.contains(pos)) //Adding the spawn back to the array!
+                        partyEventPos.add(pos);
                 });
                 for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
                     Player p = PlayerHandler.players[slot];
@@ -195,13 +183,9 @@ public class Balloons {
                         Client person = (Client) p;
                         if (person.distanceToPoint(balloon.x, balloon.y) <= 104 && person.getPosition().getZ() == balloon.z) {
                             person.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10);
-                            EventManager.getInstance().registerEvent(new Event(1200) {
-                                @Override
-                                public void execute() { //To delete the object after 2 ticks!
-                                    person.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), -1, 0, 10);
-                                    stop();
-                                }
-                            });
+                            GameEventScheduler.runLaterMs(1200, () ->
+                                    person.ReplaceObject2(new Position(balloon.x, balloon.y, balloon.z), -1, 0, 10)
+                            );
                         }
                     }
                 }

@@ -11,9 +11,9 @@ import net.dodian.cache.obj.ObjectDefinitionParser;
 import net.dodian.cache.region.RegionManager;
 import net.dodian.cache.region.Regions;
 import net.dodian.uber.game.model.Position;
-
 import java.io.IOException;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages all of the in-game objects.
@@ -25,7 +25,7 @@ public class ObjectLoader implements LandscapeListener, ObjectDefinitionListener
     /**
      * Logger instance.
      */
-    private static final Logger logger = Logger.getLogger(ObjectLoader.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ObjectLoader.class);
 
     /**
      * The number of definitions loaded.
@@ -71,7 +71,7 @@ public class ObjectLoader implements LandscapeListener, ObjectDefinitionListener
             logger.info("Parsed landscape regions: " + parsedRegions + " (skipped " + skippedRegions + ").");
             logger.info("Loaded " + objectCount + " objects.");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to load objects", e);
         } finally {
             cache.close();
         }

@@ -2,8 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -70,20 +69,17 @@ public class MagicOnNpcListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
 
-        EventManager.getInstance().registerEvent(new Event(600) {
-            @Override
-            public void execute() {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    this.stop();
-                    return;
-                }
-                if (client.goodDistanceEntity(npc, 5)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(npc);
-                    client.setWalkToTask(null);
-                    this.stop();
-                }
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            if (client.disconnected || client.getWalkToTask() != task) {
+                return false;
             }
+            if (client.goodDistanceEntity(npc, 5)) {
+                client.resetWalkingQueue();
+                client.startAttack(npc);
+                client.setWalkToTask(null);
+                return false;
+            }
+            return true;
         });
 
         logger.debug("MagicOnNpcListener: magic {} on npc {}", magicId, npcIndex);

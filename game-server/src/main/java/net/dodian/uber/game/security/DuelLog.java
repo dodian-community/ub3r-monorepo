@@ -2,9 +2,9 @@ package net.dodian.uber.game.security;
 
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.utilities.DbTables;
-
 import java.sql.Statement;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -14,7 +14,7 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 public class DuelLog extends LogEntry {
 
-    private static final Logger logger = Logger.getLogger(DuelLog.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(DuelLog.class);
 
     public static void recordDuel(String player, String opponent, String playerStake, String opponentStake, String winner) {
         if (getGameWorldId() > 1) {
@@ -30,8 +30,7 @@ public class DuelLog extends LogEntry {
                         + winner + "', '" + getTimeStamp() + "')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record duel!");
-                e.printStackTrace();
+                logger.error("Unable to record duel", e);
                 YellSystem.alertStaff("Unable to record duels, please contact an admin.");
             }
         });

@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.eventbus.GameEventBus
-import net.dodian.uber.game.runtime.eventbus.events.NpcClickEvent
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.NpcClickEvent
 import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
 

@@ -41,6 +41,11 @@ public class BankAllListener implements PacketListener {
         int removeSlot = readUnsignedWordA(buf);
         int interfaceId = buf.readInt();
         int removeId = readUnsignedWordA(buf);
+        int bankSlot = removeSlot;
+
+        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
+            return;
+        }
 
         // Resolve the real item id from local container for bank / inventory
         int resolvedItemId = removeId;
@@ -49,8 +54,9 @@ public class BankAllListener implements PacketListener {
                 resolvedItemId = client.playerItems[removeSlot] - 1;
             }
         } else if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) { // bank tabs
-            if (removeSlot >= 0 && removeSlot < client.bankItems.length && client.bankItems[removeSlot] > 0) {
-                resolvedItemId = client.bankItems[removeSlot] - 1;
+            bankSlot = client.resolveBankSlot(interfaceId, removeSlot);
+            if (bankSlot >= 0 && bankSlot < client.bankItems.length && client.bankItems[bankSlot] > 0) {
+                resolvedItemId = client.bankItems[bankSlot] - 1;
             }
         }
 
@@ -66,7 +72,9 @@ public class BankAllListener implements PacketListener {
             }
             client.checkItemUpdate();
         } else if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) { // bank → inventory (withdraw all, mystic tabs: 50300-50310)
-            client.fromBank(resolvedItemId, removeSlot, -2);
+            if (bankSlot >= 0) {
+                client.fromBank(resolvedItemId, bankSlot, -2);
+            }
         } else if (interfaceId == 2274) { // party chest → inventory
             Balloons.removeOfferItems(client, removeId, !stack ? 8 : Integer.MAX_VALUE, removeSlot);
         } else if (interfaceId == 3322 && client.inTrade && client.canOffer) { // inventory → trade
@@ -84,13 +92,13 @@ public class BankAllListener implements PacketListener {
                 client.send(new SendFrame27());
                 client.XinterfaceID = interfaceId;
                 client.XremoveID = resolvedItemId;
-                client.XremoveSlot = removeSlot;
+                client.XremoveSlot = bankSlot;
             }
         } else if (interfaceId == 3900) { // buy 10 items from shop
             client.send(new SendFrame27());
             client.XinterfaceID = interfaceId;
             client.XremoveID = resolvedItemId;
-            client.XremoveSlot = removeSlot;
+            client.XremoveSlot = bankSlot;
         }
 
         if (client.playerRights == 2) {

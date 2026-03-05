@@ -3,8 +3,11 @@ package net.dodian.cache.object;
 import net.dodian.cache.MemoryArchive;
 import net.dodian.cache.util.ByteStream;
 import net.dodian.cache.util.ByteStreamExt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ObjectDef {
+    private static final Logger logger = LoggerFactory.getLogger(ObjectDef.class);
 
     public static ObjectDef getObjectDef(int i) {
         if (i > streamIndices.length)
@@ -70,7 +73,7 @@ public final class ObjectDef {
         for (int k = 0; k < 20; k++) {
             cache[k] = new ObjectDef();
         }
-        System.out.println("[ObjectDef] DONE LOADING OBJECT CONFIGURATION");
+        logger.info("[ObjectDef] DONE LOADING OBJECT CONFIGURATION");
     }
 
     public static byte[] getBuffer(String s) {

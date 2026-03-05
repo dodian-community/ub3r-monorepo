@@ -3,9 +3,9 @@ package net.dodian.uber.game.security;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.utilities.DbTables;
-
 import java.sql.Statement;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -15,7 +15,7 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 public class CommandLog extends LogEntry {
 
-    private static final Logger logger = Logger.getLogger(CommandLog.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CommandLog.class);
 
     public static void recordCommand(Player player, String command) {
         if (getGameWorldId() > 1 || player.playerGroup == 10) {
@@ -30,8 +30,7 @@ public class CommandLog extends LogEntry {
                         "(userId, name, time, action) VALUES ('" + player.dbId + "','" + player.getPlayerName() + "', '" + getTimeStamp() + "', '::" + sanitized + "')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record command!");
-                e.printStackTrace();
+                logger.error("Unable to record command", e);
                 YellSystem.alertStaff("Unable to record command logs, please contact an admin.");
             }
         });

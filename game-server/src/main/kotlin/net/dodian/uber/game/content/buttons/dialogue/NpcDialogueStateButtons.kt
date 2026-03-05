@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.buttons.dialogue
 
 import net.dodian.uber.game.content.buttons.ButtonContent
-import net.dodian.uber.game.content.dialogue.legacy.core.DialogueIds
+import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.model.entity.player.Client
 
 object NpcDialogueStateButtons : ButtonContent {

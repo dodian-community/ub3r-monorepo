@@ -4,8 +4,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -32,12 +31,14 @@ import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.runtime.loop.GameThreadContext;
 import net.dodian.uber.game.skills.mining.MiningService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
+import net.dodian.uber.game.content.dialogue.DialogueOptionService;
+import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
+import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
@@ -112,12 +113,10 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean woodcutting = false;
     public boolean stringing = false;
     public boolean filling = false;
     public int fillingObj = -1;
     public int boneItem = -1;
-    public int cuttingIndex = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -575,6 +574,18 @@ public class Client extends Player implements Runnable {
     public int XremoveSlot = 0;
     public int XinterfaceID = 0;
     public int XremoveID = 0;
+    public int currentBankTab = 0;
+    public int previousBankTab = 0;
+    public int lastButtonActionIndex = -1;
+    public boolean bankSearchActive = false;
+    public boolean bankSearchPendingInput = false;
+    public String bankSearchQuery = "";
+    public int[] bankSlotTabs = null;
+    public int[][] bankContainerSlotMap = null;
+    public int[][] bankStyleViewSlotMap = null;
+    public ArrayList<Integer> bankStyleViewIds = new ArrayList<>();
+    public ArrayList<Integer> bankStyleViewAmounts = new ArrayList<>();
+    public String bankStyleViewTitle = "";
 
     /**
      * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
@@ -1127,6 +1138,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean bankChanged = false;
+        ensureBankTabState();
         int id = GetUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
@@ -1155,6 +1167,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1211,6 +1224,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = playerItems[firstPossibleSlot];
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1270,6 +1284,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1324,6 +1339,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1399,6 +1415,31 @@ public class Client extends Player implements Runnable {
         send(new SendBankItems(id, amt));
     }
 
+    public void openBankStyleView(ArrayList<Integer> id, ArrayList<Integer> amt, String title) {
+        bankStyleViewIds = new ArrayList<>(id);
+        bankStyleViewAmounts = new ArrayList<>(amt);
+        bankStyleViewTitle = title;
+        bankStyleViewOpen = true;
+        IsBanking = false;
+        checkBankInterface = false;
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
+        currentBankTab = 0;
+        previousBankTab = 0;
+        sendBankStyleViewContainers();
+        resetItems(5064);
+        send(new InventoryInterface(5292, 5063));
+    }
+
+    public void clearBankStyleView() {
+        bankStyleViewOpen = false;
+        bankStyleViewIds.clear();
+        bankStyleViewAmounts.clear();
+        bankStyleViewTitle = "";
+        bankStyleViewSlotMap = null;
+    }
+
     public void sendBank(int interfaceId, ArrayList<GameItem> bank) {
         send(new ViewOtherPlayerBank(interfaceId, bank));
     }
@@ -1414,15 +1455,33 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
-        if (moveWindow == 5382 && from >= 0 && to >= 0 && from < bankSize() && to < bankSize()) {
-            int tempI = bankItems[from];
-            int tempN = bankItemsN[from];
-            bankItems[from] = bankItems[to];
-            bankItemsN[from] = bankItemsN[to];
-            bankItems[to] = tempI;
-            bankItemsN[to] = tempN;
+        if (moveWindow == 5382 || (moveWindow >= 50300 && moveWindow <= 50310)) {
+            if (bankStyleViewOpen) {
+                return;
+            }
+            int actualFrom = resolveBankSlot(moveWindow, from);
+            int actualTo = resolveBankSlot(moveWindow, to);
+            if (actualFrom < 0 || actualTo < 0 || actualFrom >= bankSize() || actualTo >= bankSize()) {
+                return;
+            }
+            ensureBankTabState();
+            int tempI = bankItems[actualFrom];
+            int tempN = bankItemsN[actualFrom];
+            int tempTab = bankSlotTabs[actualFrom];
+            bankItems[actualFrom] = bankItems[actualTo];
+            bankItemsN[actualFrom] = bankItemsN[actualTo];
+            bankSlotTabs[actualFrom] = bankSlotTabs[actualTo];
+            bankItems[actualTo] = tempI;
+            bankItemsN[actualTo] = tempN;
+            bankSlotTabs[actualTo] = tempTab;
+            if (bankItems[actualFrom] <= 0 || bankItemsN[actualFrom] <= 0) {
+                bankSlotTabs[actualFrom] = 0;
+            }
+            if (bankItems[actualTo] <= 0 || bankItemsN[actualTo] <= 0) {
+                bankSlotTabs[actualTo] = 0;
+            }
             markSaveDirty(PlayerSaveSegment.BANK.getMask());
-            resetBank();
+            checkItemUpdate();
         }
     }
 
@@ -1502,11 +1561,19 @@ public class Client extends Player implements Runnable {
             return;
         }
         resetAction(true);
-        send(new SendString(takeAsNote ? "No Note" : "Note", 5389));
-        send(new SendString("Bank All", 5391));
+        send(new SendString("Withdraw as:", 5388));
+        send(new SendString("Note", 5389));
+        send(new SendString("Item", 5391));
         send(new SendString("Bank of " + getPlayerName(), 5383));
+        ensureBankTabState();
+        currentBankTab = 0;
+        previousBankTab = 0;
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
         IsBanking = true;
         checkBankInterface = false;
+        clearBankStyleView();
         checkItemUpdate();
     }
 
@@ -1533,6 +1600,14 @@ public class Client extends Player implements Runnable {
             resetItems(3823);
         } else if (IsBanking || checkBankInterface) {
             resetBank();
+            if (IsBanking) {
+                refreshBankHeader();
+                send(new SendCurrentBankTab(currentBankTab));
+            }
+            resetItems(5064);
+            send(new InventoryInterface(5292, 5063));
+        } else if (bankStyleViewOpen) {
+            sendBankStyleViewContainers();
             resetItems(5064);
             send(new InventoryInterface(5292, 5063));
         } else if (isPartyInterface) {
@@ -1543,6 +1618,268 @@ public class Client extends Player implements Runnable {
             resetItems(3322);
         }
         resetItems(3214); //Default reset!
+    }
+
+    public void applyBankSearch(String query) {
+        if (!IsBanking || bankStyleViewOpen) {
+            return;
+        }
+        String normalized = query == null ? "" : query.trim().toLowerCase();
+        if (normalized.isEmpty()) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+            currentBankTab = Math.max(0, Math.min(9, previousBankTab));
+            checkItemUpdate();
+            return;
+        }
+        ensureBankTabState();
+        previousBankTab = currentBankTab >= 0 && currentBankTab < 10 ? currentBankTab : 0;
+        bankSearchActive = true;
+        bankSearchQuery = normalized;
+        currentBankTab = 10;
+        checkItemUpdate();
+    }
+
+    public void ensureBankTabState() {
+        int size = bankSize();
+        if (bankSlotTabs == null || bankSlotTabs.length != size) {
+            bankSlotTabs = new int[size];
+        }
+        if (bankContainerSlotMap == null || bankContainerSlotMap.length != 11 || bankContainerSlotMap[0].length != size) {
+            bankContainerSlotMap = new int[11][size];
+        }
+        for (int i = 0; i < size; i++) {
+            if (bankItems[i] <= 0 || bankItemsN[i] <= 0) {
+                bankSlotTabs[i] = 0;
+            } else if (bankSlotTabs[i] < 0 || bankSlotTabs[i] > 9) {
+                bankSlotTabs[i] = 0;
+            }
+        }
+    }
+
+    public void rebuildBankContainers() {
+        ensureBankTabState();
+        for (int tab = 0; tab < bankContainerSlotMap.length; tab++) {
+            Arrays.fill(bankContainerSlotMap[tab], -1);
+        }
+        int[] counts = new int[11];
+        int size = bankSize();
+        for (int slot = 0; slot < size; slot++) {
+            if (bankItems[slot] <= 0 || bankItemsN[slot] <= 0) {
+                bankSlotTabs[slot] = 0;
+                continue;
+            }
+            int tab = bankSlotTabs[slot];
+            if (tab < 0 || tab > 9) {
+                tab = 0;
+                bankSlotTabs[slot] = 0;
+            }
+            int tabIndex = counts[tab]++;
+            bankContainerSlotMap[tab][tabIndex] = slot;
+            if (bankSearchActive && bankMatchesSearch(slot)) {
+                int searchIndex = counts[10]++;
+                bankContainerSlotMap[10][searchIndex] = slot;
+            }
+        }
+    }
+
+    private boolean bankMatchesSearch(int slot) {
+        if (!bankSearchActive || bankSearchQuery == null || bankSearchQuery.isEmpty()) {
+            return false;
+        }
+        if (slot < 0 || slot >= bankSize() || bankItems[slot] <= 0 || bankItemsN[slot] <= 0) {
+            return false;
+        }
+        String itemName = GetItemName(bankItems[slot] - 1);
+        return itemName != null && itemName.toLowerCase().contains(bankSearchQuery);
+    }
+
+    public void sendBankContainers() {
+        rebuildBankContainers();
+        int size = bankSize();
+        for (int tab = 0; tab < 11; tab++) {
+            ArrayList<Integer> ids = new ArrayList<>(size);
+            ArrayList<Integer> amounts = new ArrayList<>(size);
+            for (int localSlot = 0; localSlot < size; localSlot++) {
+                int globalSlot = bankContainerSlotMap[tab][localSlot];
+                if (globalSlot >= 0) {
+                    ids.add(bankItems[globalSlot] - 1);
+                    amounts.add(bankItemsN[globalSlot]);
+                } else {
+                    ids.add(0);
+                    amounts.add(0);
+                }
+            }
+            send(new SendBankItems(ids, amounts, 50300 + tab));
+        }
+    }
+
+    public void sendBankStyleViewContainers() {
+        rebuildBankStyleViewContainers();
+        int size = bankSize();
+        send(new SendString(bankStyleViewTitle, 5383));
+        send(new SendCurrentBankTab(0));
+        for (int tab = 0; tab < 11; tab++) {
+            ArrayList<Integer> ids = new ArrayList<>(size);
+            ArrayList<Integer> amounts = new ArrayList<>(size);
+            for (int localSlot = 0; localSlot < size; localSlot++) {
+                int viewSlot = bankStyleViewSlotMap[tab][localSlot];
+                if (viewSlot >= 0) {
+                    ids.add(bankStyleViewIds.get(viewSlot));
+                    amounts.add(bankStyleViewAmounts.get(viewSlot));
+                } else {
+                    ids.add(0);
+                    amounts.add(0);
+                }
+            }
+            send(new SendBankItems(ids, amounts, 50300 + tab));
+        }
+    }
+
+    private void rebuildBankStyleViewContainers() {
+        int size = bankSize();
+        if (bankStyleViewSlotMap == null || bankStyleViewSlotMap.length != 11 || bankStyleViewSlotMap[0].length != size) {
+            bankStyleViewSlotMap = new int[11][size];
+        }
+        for (int tab = 0; tab < bankStyleViewSlotMap.length; tab++) {
+            Arrays.fill(bankStyleViewSlotMap[tab], -1);
+        }
+        int previewSize = Math.min(size, Math.min(bankStyleViewIds.size(), bankStyleViewAmounts.size()));
+        for (int slot = 0; slot < previewSize; slot++) {
+            bankStyleViewSlotMap[0][slot] = slot;
+        }
+    }
+
+    public int resolveBankSlot(int interfaceId, int containerSlot) {
+        if (containerSlot < 0) {
+            return -1;
+        }
+        if (bankStyleViewOpen && interfaceId >= 50300 && interfaceId <= 50310) {
+            return -1;
+        }
+        if (interfaceId == 5382) {
+            return containerSlot < bankSize() ? containerSlot : -1;
+        }
+        if (interfaceId < 50300 || interfaceId > 50310) {
+            return containerSlot;
+        }
+        rebuildBankContainers();
+        int tab = interfaceId - 50300;
+        return containerSlot < bankContainerSlotMap[tab].length ? bankContainerSlotMap[tab][containerSlot] : -1;
+    }
+
+    public int resolveBankItemId(int interfaceId, int containerSlot, int fallbackItemId) {
+        int bankSlot = resolveBankSlot(interfaceId, containerSlot);
+        if (bankSlot >= 0 && bankSlot < bankSize() && bankItems[bankSlot] > 0) {
+            return bankItems[bankSlot] - 1;
+        }
+        return fallbackItemId;
+    }
+
+    public void assignBankSlotToTab(int bankSlot, int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
+        ensureBankTabState();
+        if (bankSlot < 0 || bankSlot >= bankSize()) {
+            return;
+        }
+        if (bankItems[bankSlot] <= 0 || bankItemsN[bankSlot] <= 0) {
+            return;
+        }
+        bankSlotTabs[bankSlot] = Math.max(0, Math.min(9, tab));
+        if (currentBankTab == 10) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+            currentBankTab = 0;
+        }
+        checkItemUpdate();
+    }
+
+    public void selectBankTab(int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
+        ensureBankTabState();
+        if (tab > 0 && tab < 10 && !hasBankTabItems(tab)) {
+            send(new SendMessage("To create a new tab, drag an item onto this tab."));
+            return;
+        }
+        if (tab != 10 && bankSearchActive) {
+            bankSearchActive = false;
+            bankSearchQuery = "";
+        }
+        currentBankTab = Math.max(0, Math.min(10, tab));
+        if (currentBankTab >= 0 && currentBankTab < 10) {
+            previousBankTab = currentBankTab;
+        }
+        checkItemUpdate();
+    }
+
+    public void collapseBankTab(int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
+        ensureBankTabState();
+        if (tab <= 0 || tab > 9) {
+            return;
+        }
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankSlotTabs[i] == tab) {
+                bankSlotTabs[i] = 0;
+            } else if (bankSlotTabs[i] > tab) {
+                bankSlotTabs[i]--;
+            }
+        }
+        if (currentBankTab == tab || currentBankTab > 9) {
+            currentBankTab = 0;
+        } else if (currentBankTab > tab) {
+            currentBankTab--;
+        }
+        if (previousBankTab == tab || previousBankTab > 9) {
+            previousBankTab = 0;
+        } else if (previousBankTab > tab) {
+            previousBankTab--;
+        }
+        bankSearchActive = false;
+        bankSearchQuery = "";
+        checkItemUpdate();
+    }
+
+    public void clearBankSearch() {
+        if (bankStyleViewOpen) {
+            return;
+        }
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
+        currentBankTab = Math.max(0, Math.min(9, previousBankTab));
+        checkItemUpdate();
+    }
+
+    public boolean hasBankTabItems(int tab) {
+        ensureBankTabState();
+        if (tab <= 0 || tab > 9) {
+            return tab == 0;
+        }
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankItems[i] > 0 && bankItemsN[i] > 0 && bankSlotTabs[i] == tab) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public void refreshBankHeader() {
+        int used = 0;
+        for (int i = 0; i < bankSize(); i++) {
+            if (bankItems[i] > 0 && bankItemsN[i] > 0) {
+                used++;
+            }
+        }
+        send(new SendString(String.valueOf(used), 50053));
+        send(new SendString(String.valueOf(bankSize()), 50055));
     }
 
     public boolean addItem(int item, int amount) {
@@ -2152,18 +2489,6 @@ public class Client extends Player implements Runnable {
             } else {
                 resetAction();
                 send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            }
-        } else if (woodcutting && now - lastAction >= getWoodcuttingSpeed()) {
-            lastAction = now;
-            woodcutting(cuttingIndex);
-        } else if (woodcutting && now - lastAxeAction <= 0) { //Reapply animation every 3 tick!
-            int checkAxe = findAxe();
-            if (checkAxe >= 0) {
-                requestAnim(getWoodcuttingEmote(Utils.axes[checkAxe]), 0);
-                lastAxeAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
             }
         } else if (cooking && now - lastAction >= 1800) {
             lastAction = now;
@@ -3095,15 +3420,7 @@ public class Client extends Player implements Runnable {
         stairDistanceAdd = 0;
         resetWalkingQueue();
         final Client p = this;
-        EventManager.getInstance().registerEvent(new Event(500) {
-
-            @Override
-            public void execute() {
-                p.resetWalkingQueue();
-                stop();
-            }
-
-        });
+        GameEventScheduler.runLaterMs(500, p::resetWalkingQueue);
     }
 
     public boolean usingBow = false;
@@ -3374,96 +3691,6 @@ public class Client extends Player implements Runnable {
                 }
             }
         }
-        return false;
-    }
-
-    public boolean CheckObjectSkill(int objectID, String name) {
-        /* Do we wish to keep? */
-        if (name.contains("oak"))
-            objectID = 1281;
-        else if (name.contains("willow"))
-            objectID = 1308;
-        else if (name.contains("maple tree"))
-            objectID = 1307;
-        else if (name.contains("yew"))
-            objectID = 1309;
-        else if (name.contains("magic tree"))
-            objectID = 1306;
-        else if (name.equalsIgnoreCase("tree"))
-            objectID = 1276;
-
-        switch (objectID) {
-
-            /*
-             *
-             * WOODCUTTING
-             *
-             */
-            case 1276:
-            case 1277:
-            case 1278:
-            case 1279:
-            case 1280:
-            case 1330:
-            case 1332:
-            case 2409:
-            case 3033:
-            case 3034:
-            case 3035:
-            case 3036:
-            case 3879:
-            case 3881:
-            case 3882:
-            case 3883: // Normal Tree
-            case 1315:
-            case 1316:
-            case 1318:
-            case 1319: // Evergreen
-            case 1282:
-            case 1283:
-            case 1284:
-            case 1285:
-            case 1286:
-            case 1287:
-            case 1289:
-            case 1290:
-            case 1291:
-            case 1365:
-            case 1383:
-            case 1384:
-            case 5902:
-            case 5903:
-            case 5904: // Dead Tree
-                cuttingIndex = 0;
-                return true;
-
-            case 1281:
-            case 3037: // Oak Tree
-                cuttingIndex = 1;
-                return true;
-
-            case 1308:
-            case 5551:
-            case 5552: // Willow Tree
-                cuttingIndex = 2;
-                return true;
-
-            case 1307:
-            case 4674: // Maple Tree
-                cuttingIndex = 3;
-                return true;
-
-            case 1309: // Yew Tree
-            case 1754:
-                cuttingIndex = 4;
-                return true;
-
-            case 1306: // Magic Tree
-            case 1762:
-                cuttingIndex = 5;
-                return true;
-        }
-        cuttingIndex = -1;
         return false;
     }
 
@@ -3749,39 +3976,6 @@ public class Client extends Player implements Runnable {
         skillX = -1;
         setSkillY(-1);
         rerequestAnim();
-    }
-
-    public int getWoodcuttingEmote(int item) {
-        switch (item) {
-            case 1351: //bronze
-                return 879;
-            case 1349: //iron
-                return 877;
-            case 1353: //steel
-                return 875;
-            case 1355: // mithril
-                return 871;
-            case 1357: // addy
-                return 869;
-            case 1359: // rune
-                return 867;
-            case 6739: // dragon
-            case 20011: //3rd age
-                return 2846;
-        }
-        return -1;
-    }
-
-    public long getWoodcuttingSpeed() {
-        double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
-        double level = getLevel(Skill.WOODCUTTING) / 256D;
-        double bonus = 1 + axeBonus + level;
-        double timer = Utils.woodcuttingDelays[cuttingIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && axeBonus > 0.0 && (Utils.axes[findAxe()] == 6739 || Utils.axes[findAxe()] == 20011))
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
     }
 
     public long getFishingSpeed() {
@@ -4077,19 +4271,19 @@ public class Client extends Player implements Runnable {
 
     /* NPC Talking */
     public void UpdateNPCChat() {
-        LegacyDialogueService.updateNpcChat(this);
+        DialogueDisplayService.updateNpcChat(this);
     }
 
     public void showPlayerOption(String[] text) {
-        LegacyDialogueService.showPlayerOption(this, text);
+        DialogueDisplayService.showPlayerOption(this, text);
     }
 
     public void showNPCChat(int npcId, int emote, String[] text) {
-        LegacyDialogueService.showNpcChat(this, npcId, emote, text);
+        DialogueDisplayService.showNpcChat(this, npcId, emote, text);
     }
 
     public void showPlayerChat(String[] text, int emote) {
-        LegacyDialogueService.showPlayerChat(this, text, emote);
+        DialogueDisplayService.showPlayerChat(this, text, emote);
     }
 
     /* Equipment level checking */
@@ -5104,6 +5298,7 @@ public class Client extends Player implements Runnable {
 
     public void resetAction(boolean full) {
         MiningService.stopMiningFromReset(this, full);
+        WoodcuttingService.stopWoodcuttingFromReset(this, full);
         smelting = false;
         smelt_id = -1;
         goldCrafting = false;
@@ -5116,8 +5311,6 @@ public class Client extends Player implements Runnable {
         crafting = false;
         fishing = false;
         stringing = false;
-        woodcutting = false;
-        cuttingIndex = -1;
         resourcesGathered = 0;
         cooking = false;
         filling = false;
@@ -5994,20 +6187,20 @@ public class Client extends Player implements Runnable {
         }
         otherdbId = other.dbId;
         final Client player = this;
+        final int[] countDown = {7};
         player.requestForceChat("It is time to D-D-D-DUEL!");
-        EventManager.getInstance().registerEvent(new Event(600) {
-            int count = 7;
-
-            public void execute() {
-                count--;
-                if (count > 0 && count % 2 == 0)
-                    player.requestForceChat("" + (count / 2));
-                else if (count < 1) {
-                    player.requestForceChat("Fight!");
-                    player.canAttack = true;
-                    stop();
-                }
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            countDown[0]--;
+            if (countDown[0] > 0 && countDown[0] % 2 == 0) {
+                player.requestForceChat("" + (countDown[0] / 2));
+                return true;
             }
+            if (countDown[0] < 1) {
+                player.requestForceChat("Fight!");
+                player.canAttack = true;
+                return false;
+            }
+            return true;
         });
     }
 
@@ -6245,7 +6438,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void triggerChat(int button) {
-        LegacyDialogueOptionService.triggerChat(this, button);
+        DialogueOptionService.triggerChat(this, button);
     }
 
     public boolean smithCheck(int id) {
@@ -6258,52 +6451,6 @@ public class Client extends Player implements Runnable {
         }
         send(new SendMessage("Client hack detected!"));
         return false;
-    }
-
-    public int findAxe() {
-        int Eaxe = -1, Iaxe = -1;
-        int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        for (int i = 0; i < Utils.axes.length; i++) {
-            if (Utils.axes[i] == weapon) {
-                if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i])
-                    Eaxe = i;
-            }
-            for (int playerItem : playerItems) {
-                if (Utils.axes[i] == playerItem - 1) {
-                    if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
-        }
-        return Math.max(Eaxe, Iaxe);
-    }
-
-    /* WOODCUTTING */
-    public void woodcutting(int index) {
-        int woodcutAxe = findAxe();
-        if (woodcutAxe == -1) {
-            resetAction();
-            send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Your inventory is full!"));
-            resetAction(true);
-            return;
-        }
-        lastAction = System.currentTimeMillis();
-        send(new SendMessage("You cut some " + GetItemName(Utils.woodcuttingLogs[index]).toLowerCase()));
-        addItem(Utils.woodcuttingLogs[index], 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, Utils.woodcuttingLogs[index], 1, getPosition().copy(), "Woodcutting");
-        resourcesGathered++;
-        giveExperience(Utils.woodcuttingExp[index], Skill.WOODCUTTING);
-        triggerRandom(Utils.woodcuttingExp[index]);
-        if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        } else requestAnim(getWoodcuttingEmote(Utils.axes[woodcutAxe]), 0);
     }
 
     public void callGfxMask(int id, int height) {
@@ -6782,81 +6929,7 @@ public class Client extends Player implements Runnable {
     }
 
     private void skillActionYield() {
-        if (skillActionCount < 1) { //Count is less than 1!
-            resetAction();
-            return;
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be doing this!"));
-            return;
-        }
-
-        int itemOne = playerSkillAction.get(3), itemTwo = playerSkillAction.get(4), itemMake = playerSkillAction.get(1);
-        int amount = playerSkillAction.get(2);
-        if (itemMake == 12695) { //Super combat potion
-            if (!playerHasItem(itemOne) || (!playerHasItem(111) && !playerHasItem(269)) || !playerHasItem(2440) || !playerHasItem(2442)) {
-                resetAction();
-                String text = !playerHasItem(111) && !playerHasItem(269) ? GetItemName(269).toLowerCase() : !playerHasItem(itemOne) ? GetItemName(2436).toLowerCase() : !playerHasItem(2440) ? GetItemName(2440).toLowerCase() : GetItemName(2442).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(!playerHasItem(269) ? 111 : 269, amount); //Can use either unf torstol potion or torstol herb!
-            deleteItem(2440, amount);
-            deleteItem(2442, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake == 11730) { //Overload potion
-            if (!playerHasItem(itemOne) || !playerHasItem(2444) || !playerHasItem(12695)) {
-                resetAction();
-                String text = !playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : !playerHasItem(2444) ? GetItemName(2444).toLowerCase() : GetItemName(12695).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(2444, amount);
-            deleteItem(12695, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake >= 569 && itemMake <= 576) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo, 3)) {
-                resetAction();
-                send(new SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."));
-                return;
-            }
-            callGfxMask(itemMake == 569 ? 152 : 149 + ((itemMake - 571) / 2), 100);
-            deleteItem(itemOne, amount);
-            deleteRunes(new int[]{itemTwo}, new int[]{3});
-            addItem(itemMake, amount);
-        } else if (itemMake == 1775) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo)) {
-                resetAction();
-                send(new SendMessage("You need one bucket of sand and one soda ash"));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            addItem(1925, amount);
-            deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        } else {
-            if (!playerHasItem(itemOne) || (itemTwo != -1 && !playerHasItem(itemTwo))) {
-                resetAction();
-                send(new SendMessage("You do not have anymore " + (!playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : GetItemName(itemTwo).toLowerCase()) + "."));
-                return;
-            }
-            if (getInvAmt(itemOne) < amount || (itemTwo != -1 && getInvAmt(itemTwo) < amount)) //Incase we use 15 as amount!
-                amount = Math.min(getInvAmt(itemOne), getInvAmt(itemTwo));
-            deleteItem(itemOne, amount);
-            if (itemTwo != -1) //For gem crafting or stringing! OBS!
-                deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        }
-        checkItemUpdate();
-        requestAnim(playerSkillAction.get(6), 0);
-        int xp = playerSkillAction.get(5) * amount;
-        giveExperience(xp, Skill.getSkill(playerSkillAction.get(0)));
-        triggerRandom(xp);
-        skillActionCount--;
-        skillActionTimer = playerSkillAction.get(7);
-        if (!skillMessage.isEmpty()) send(new SendMessage(skillMessage)); //Incase we want a skill message..OBS!
+        LegacyProductionAdapter.executeLegacySkillAction(this);
     }
 
     public void guideBook() {
@@ -7112,17 +7185,19 @@ public class Client extends Player implements Runnable {
         }
         ArrayList<GameItem> otherBank = new ArrayList<>();
         IsBanking = false;
+        clearBankStyleView();
         if (PlayerHandler.getPlayer(player) != null) { //Online check
             Client other = (Client) PlayerHandler.getPlayer(player);
+            ArrayList<Integer> ids = new ArrayList<>();
+            ArrayList<Integer> amounts = new ArrayList<>();
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
-                otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
+                if (other.bankItems[i] > 0 && other.bankItemsN[i] > 0) {
+                    ids.add(other.bankItems[i] - 1);
+                    amounts.add(other.bankItemsN[i]);
+                }
             }
-            send(new SendString("Examine the bank of " + player, 5383));
-            sendBank(5382, otherBank);
-            resetItems(5064);
-            send(new InventoryInterface(5292, 5063));
+            openBankStyleView(ids, amounts, "Examine the bank of " + player);
             IsBanking = false;
-            checkBankInterface = true;
         } else {
             send(new SendMessage("Loading " + player + "'s bank..."));
             CommandDbService.submit(
@@ -7312,11 +7387,15 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("username '" + player + "' have yet to login!"));
             return;
         }
-        send(new SendString("Examine the bank of " + player, 5383));
-        sendBank(5382, result.getItems());
-        resetItems(5064);
-        send(new InventoryInterface(5292, 5063));
-        checkBankInterface = true;
+        ArrayList<Integer> ids = new ArrayList<>();
+        ArrayList<Integer> amounts = new ArrayList<>();
+        for (GameItem item : result.getItems()) {
+            if (item.getId() >= 0 && item.getAmount() > 0) {
+                ids.add(item.getId());
+                amounts.add(item.getAmount());
+            }
+        }
+        openBankStyleView(ids, amounts, "Examine the bank of " + player);
     }
 
     public void dropAllItems() {
@@ -7394,15 +7473,11 @@ public class Client extends Player implements Runnable {
                 final int pos = i;
                 varbit(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
                 travelInitiate = true;
-                EventManager.getInstance().registerEvent(new Event(1800) {
-                    @Override
-                    public void execute() {
-                        if (!disconnected) {
-                            transport(new Position(travel[pos][1], travel[pos][2], 0));
-                            send(new RemoveInterfaces());
-                            travelInitiate = false;
-                        }
-                        this.stop();
+                GameEventScheduler.runLaterMs(1800, () -> {
+                    if (!disconnected) {
+                        transport(new Position(travel[pos][1], travel[pos][2], 0));
+                        send(new RemoveInterfaces());
+                        travelInitiate = false;
                     }
                 });
             }

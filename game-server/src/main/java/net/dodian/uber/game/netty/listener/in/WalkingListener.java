@@ -177,6 +177,7 @@ public final class WalkingListener implements PacketListener {
         if (client.herbMaking != -1) client.herbMaking = -1;
         if (client.IsBanking) { client.IsBanking = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
         if (client.checkBankInterface) { client.checkBankInterface = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
+        if (client.bankStyleViewOpen) { client.clearBankStyleView(); client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
         if (client.isPartyInterface) { client.isPartyInterface = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
         if (client.isShopping()) { client.MyShopID = -1; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
 

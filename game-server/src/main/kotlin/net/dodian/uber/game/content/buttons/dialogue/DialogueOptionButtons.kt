@@ -8,8 +8,8 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetInterfaceWalkable
-import net.dodian.uber.game.runtime.eventbus.GameEventBus
-import net.dodian.uber.game.runtime.eventbus.events.DialogueOptionEvent
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.DialogueOptionEvent
 
 object DialogueOptionButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(

@@ -133,8 +133,13 @@ public class BankX2Listener implements PacketListener {
                     Balloons.offerItems(client, client.playerItems[client.XremoveSlot] - 1, enteredAmount, client.XremoveSlot);
                 client.checkItemUpdate();
             } else if (client.XinterfaceID == 5382 || (client.XinterfaceID >= 50300 && client.XinterfaceID <= 50310)) { // remove from bank (mystic tabs: 50300-50310)
-                client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount);
-                client.checkItemUpdate();
+                if ((client.XinterfaceID == 5382 || (client.XinterfaceID >= 50300 && client.XinterfaceID <= 50310)) && client.bankStyleViewOpen) {
+                    return;
+                }
+                if (client.XremoveSlot >= 0 && client.XremoveSlot < client.bankSize() && client.bankItems[client.XremoveSlot] > 0) {
+                    client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount);
+                    client.checkItemUpdate();
+                }
             } else if (client.XinterfaceID == 2274) { // remove from party
                 Balloons.removeOfferItems(client, client.offeredPartyItems.get(client.XremoveSlot).getId(), enteredAmount, client.XremoveSlot);
                 client.checkItemUpdate();
