@@ -17,7 +17,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.netty.game.GamePacket;
-import net.dodian.uber.game.persistence.CommandDbService;
+import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.event.GameEventBus;

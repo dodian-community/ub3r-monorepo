@@ -5,7 +5,7 @@ import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.persistence.WorldPollResult
+import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler

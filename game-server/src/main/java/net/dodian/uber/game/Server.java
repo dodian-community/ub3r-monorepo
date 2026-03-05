@@ -27,7 +27,7 @@ import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.security.AsyncSqlService;
 import net.dodian.uber.game.security.ChatLog;

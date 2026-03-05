@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import net.dodian.uber.comm.LoginManager
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.persistence.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.netty.listener.out.SendMessage

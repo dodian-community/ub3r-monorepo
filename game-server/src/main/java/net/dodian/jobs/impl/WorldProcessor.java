@@ -4,9 +4,9 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.persistence.WorldDbPollService;
-import net.dodian.uber.game.persistence.WorldPollInput;
-import net.dodian.uber.game.persistence.WorldPollResult;
+import net.dodian.uber.game.persistence.world.WorldDbPollService;
+import net.dodian.uber.game.persistence.world.WorldPollInput;
+import net.dodian.uber.game.persistence.world.WorldPollResult;
 
 import java.util.Arrays;
 import java.util.List;

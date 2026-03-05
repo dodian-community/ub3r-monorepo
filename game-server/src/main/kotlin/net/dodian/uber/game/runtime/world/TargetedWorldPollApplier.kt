@@ -1,7 +1,7 @@
 package net.dodian.uber.game.runtime.world
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.persistence.WorldPollResult
+import net.dodian.uber.game.persistence.world.WorldPollResult
 
 class TargetedWorldPollApplier {
     private var cachedLatestNewsId: Int? = null
