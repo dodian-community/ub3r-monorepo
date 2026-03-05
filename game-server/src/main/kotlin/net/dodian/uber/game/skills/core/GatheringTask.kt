@@ -7,9 +7,9 @@ import net.dodian.uber.game.event.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionSucceededEvent
-import net.dodian.uber.game.runtime.queue.QueueTaskHandle
-import net.dodian.uber.game.runtime.task.GameTaskRuntime
-import net.dodian.uber.game.runtime.task.TaskPriority
+import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
+import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
+import net.dodian.uber.game.runtime.tasking.TaskPriority
 
 abstract class GatheringTask(
     private val actionName: String,

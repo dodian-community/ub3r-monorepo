@@ -15,7 +15,7 @@ import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
-import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
+import net.dodian.uber.game.runtime.interaction.scheduler.InteractionExecutionResult
 import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory

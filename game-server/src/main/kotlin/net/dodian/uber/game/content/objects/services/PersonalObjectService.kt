@@ -3,8 +3,8 @@ package net.dodian.uber.game.content.objects.services
 import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.queue.QueueTask
-import net.dodian.uber.game.runtime.queue.QueueTaskService
+import net.dodian.uber.game.runtime.scheduler.QueueTask
+import net.dodian.uber.game.runtime.scheduler.QueueTaskService
 import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
 import net.dodian.utilities.queueTasksEnabled
 import net.dodian.utilities.zoneUpdateBatchingEnabled

@@ -7,9 +7,9 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.runtime.queue.QueueTaskHandle
-import net.dodian.uber.game.runtime.task.GameTaskRuntime
-import net.dodian.uber.game.runtime.task.TaskPriority
+import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
+import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
+import net.dodian.uber.game.runtime.tasking.TaskPriority
 import net.dodian.uber.game.security.ItemLog
 import net.dodian.utilities.Misc
 

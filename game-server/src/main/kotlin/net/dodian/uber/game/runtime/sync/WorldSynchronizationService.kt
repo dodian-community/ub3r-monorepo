@@ -20,7 +20,7 @@ import net.dodian.uber.game.runtime.sync.player.PlayerChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState
-import net.dodian.uber.game.runtime.sync.player.root.RootPlayerInfoService
+import net.dodian.uber.game.runtime.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.runtime.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.zone.ZoneUpdateBus

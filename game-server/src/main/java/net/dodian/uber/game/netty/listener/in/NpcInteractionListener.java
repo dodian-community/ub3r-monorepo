@@ -17,8 +17,8 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
-import net.dodian.uber.game.runtime.interaction.task.InteractionTaskScheduler;
-import net.dodian.uber.game.runtime.interaction.task.NpcInteractionTask;
+import net.dodian.uber.game.runtime.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.runtime.interaction.scheduler.NpcInteractionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

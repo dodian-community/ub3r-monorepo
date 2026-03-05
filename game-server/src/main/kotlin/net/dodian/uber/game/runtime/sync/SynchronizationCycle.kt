@@ -6,10 +6,10 @@ import net.dodian.uber.game.runtime.sync.npc.NpcChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.npc.RootNpcDeltaIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncRevisionIndex
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketBuildReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketMode
-import net.dodian.uber.game.runtime.sync.player.root.PlayerSyncRecoveryReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketSkipReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketBuildReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketMode
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerSyncRecoveryReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketSkipReason
 import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateCache
 

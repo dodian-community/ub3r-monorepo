@@ -8,8 +8,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.queue.QueueTask;
-import net.dodian.uber.game.runtime.queue.QueueTaskService;
+import net.dodian.uber.game.runtime.scheduler.QueueTask;
+import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

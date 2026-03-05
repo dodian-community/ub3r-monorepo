@@ -13,7 +13,7 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision;
-import net.dodian.uber.game.runtime.sync.player.root.RootPlayerInfoPlan;
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.RootPlayerInfoPlan;
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState;
 import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;

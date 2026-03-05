@@ -4,10 +4,10 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.runtime.sync.npc.ViewerNpcSyncState
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketBuildReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketMode
-import net.dodian.uber.game.runtime.sync.player.root.PlayerSyncRecoveryReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketSkipReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketBuildReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketMode
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerSyncRecoveryReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketSkipReason
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey
 import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot
