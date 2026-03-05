@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 
 interface ObjectContent {
     val objectIds: IntArray
@@ -35,4 +36,27 @@ interface ObjectContent {
         obj: GameObjectData?,
         spellId: Int,
     ): Boolean = false
+
+    fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ): ObjectInteractionPolicy? = null
+
+    fun itemOnObjectInteractionPolicy(
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        itemId: Int,
+        itemSlot: Int,
+        interfaceId: Int,
+    ): ObjectInteractionPolicy? = null
+
+    fun magicOnObjectInteractionPolicy(
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        spellId: Int,
+    ): ObjectInteractionPolicy? = null
 }

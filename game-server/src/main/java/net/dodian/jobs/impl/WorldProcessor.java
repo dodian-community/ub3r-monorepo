@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static net.dodian.utilities.DotEnvKt.getAsyncWorldDbEnabled;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class WorldProcessor implements Runnable {
@@ -26,13 +25,8 @@ public class WorldProcessor implements Runnable {
         try {
             WorldPollInput input = createInput();
 
-            WorldPollResult result;
-            if (getAsyncWorldDbEnabled()) {
-                WorldDbPollService.pollAsync(input);
-                result = WorldDbPollService.getLatestResult();
-            } else {
-                result = WorldDbPollService.runBlockingPoll(input);
-            }
+            WorldDbPollService.pollAsync(input);
+            WorldPollResult result = WorldDbPollService.getLatestResult();
 
             applyResult(result);
             Server.chat.clear();

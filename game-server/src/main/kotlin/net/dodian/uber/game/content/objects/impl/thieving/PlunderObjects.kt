@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.utilities.Misc
 
 object PlunderObjects : ObjectContent {
@@ -16,6 +17,22 @@ object PlunderObjects : ObjectContent {
         26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,
         26616, 26618, 26619, 26620, 26621, 26622, 26623, 26624, 26625, 26626,
     )
+
+    override fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ): ObjectInteractionPolicy? {
+        if (option != 1 && option != 2) {
+            return null
+        }
+        return ObjectInteractionPolicy(
+            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
+            requireMovementSettled = true,
+            settleTicks = 1,
+        )
+    }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when {

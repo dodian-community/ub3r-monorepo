@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DotEnvKt.getAsyncWorldDbEnabled;
 
 public final class WorldDbPollService {
 
@@ -39,12 +38,6 @@ public final class WorldDbPollService {
     public static CompletableFuture<WorldPollResult> pollAsync(WorldPollInput input) {
         if (input == null) {
             return CompletableFuture.completedFuture(LATEST_RESULT.get());
-        }
-
-        if (!getAsyncWorldDbEnabled()) {
-            WorldPollResult blocking = runBlockingPoll(input);
-            LATEST_RESULT.set(blocking);
-            return CompletableFuture.completedFuture(blocking);
         }
 
         if (!RUNNING.get()) {

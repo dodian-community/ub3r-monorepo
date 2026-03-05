@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -68,6 +69,52 @@ object ObjectContentRegistry {
             .map { it.content }
             .toList()
         return resolved.distinctBy { it::class.java.name }
+    }
+
+    @JvmStatic
+    fun resolvePolicy(
+        objectId: Int,
+        position: Position,
+        interactionType: ObjectInteractionPolicy.InteractionType,
+        option: Int = -1,
+        obj: GameObjectData? = null,
+        itemId: Int = -1,
+        itemSlot: Int = -1,
+        interfaceId: Int = -1,
+        spellId: Int = -1,
+    ): ObjectInteractionPolicy? {
+        bootstrap()
+        val bucket = byObjectId.getOrNull(objectId).orEmpty()
+        for (entry in bucket) {
+            if (!entry.binding.matcher.matches(position)) {
+                continue
+            }
+            val policy =
+                when (interactionType) {
+                    ObjectInteractionPolicy.InteractionType.CLICK ->
+                        entry.content.clickInteractionPolicy(option, objectId, position, obj)
+                    ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT ->
+                        entry.content.itemOnObjectInteractionPolicy(
+                            objectId = objectId,
+                            position = position,
+                            obj = obj,
+                            itemId = itemId,
+                            itemSlot = itemSlot,
+                            interfaceId = interfaceId,
+                        )
+                    ObjectInteractionPolicy.InteractionType.MAGIC ->
+                        entry.content.magicOnObjectInteractionPolicy(
+                            objectId = objectId,
+                            position = position,
+                            obj = obj,
+                            spellId = spellId,
+                        )
+                }
+            if (policy != null) {
+                return policy
+            }
+        }
+        return null
     }
 
     @JvmStatic

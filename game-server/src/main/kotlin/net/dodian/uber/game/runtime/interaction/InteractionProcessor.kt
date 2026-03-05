@@ -1,28 +1,35 @@
 package net.dodian.uber.game.runtime.interaction
 
 import net.dodian.uber.game.Server
+import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
+import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectContentDispatcher
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.model.`object`.GlobalObject
+import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
 import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
+import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
-    private val miningSettledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
+    private val settledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
         val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
-        if (player.didTeleport() || player.didMapRegionChange()) {
+        if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
             player.walkToTask = null
             clear(player)
             return InteractionExecutionResult.CANCELLED
@@ -104,36 +111,41 @@ object InteractionProcessor {
             return InteractionExecutionResult.CANCELLED
         }
 
+        val targetPosition = resolveTargetPosition(intent.objectPosition, player)
+        val routeSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = intent.objectData,
+                fallbackDef = intent.objectDef,
+            )
+        val policy =
+            ObjectContentRegistry.resolvePolicy(
+                objectId = intent.objectId,
+                position = targetPosition,
+                interactionType = ObjectInteractionPolicy.InteractionType.CLICK,
+                option = intent.option,
+                obj = routeSnapshot.objectData,
+            ) ?: ObjectInteractionPolicy.DEFAULT
+
         val routeStart = System.nanoTime()
         val distanceMode = resolveObjectClickDistanceMode(intent.objectId)
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
-                intent.task,
+                targetPosition,
                 intent.objectId,
-                intent.objectData,
-                intent.objectDef,
-                distanceMode,
+                routeSnapshot.objectData,
+                routeSnapshot.objectDef,
+                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.CLICK),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
-        if (distanceMode == ObjectInteractionDistance.DistanceMode.MINING) {
-            if (!isMovementSettled(player)) {
-                miningSettledSinceCycle.remove(intent)
-                return InteractionExecutionResult.WAITING
-            }
-            val settledSince = miningSettledSinceCycle[intent]
-            if (settledSince == null) {
-                miningSettledSinceCycle[intent] = PlayerHandler.cycle.toLong()
-                return InteractionExecutionResult.WAITING
-            }
-            if (PlayerHandler.cycle.toLong() <= settledSince) {
-                return InteractionExecutionResult.WAITING
-            }
-            miningSettledSinceCycle.remove(intent)
+        if (!isSettleGateSatisfied(player, intent, policy)) {
+            return InteractionExecutionResult.WAITING
         }
 
         if (intent.option == 1) {
@@ -147,8 +159,8 @@ object InteractionProcessor {
                 player.objects.add(
                     RS2Object(
                         intent.objectId,
-                        intent.objectPosition.x,
-                        intent.objectPosition.y,
+                        targetPosition.x,
+                        targetPosition.y,
                         1,
                     ),
                 )
@@ -159,10 +171,10 @@ object InteractionProcessor {
                 return InteractionExecutionResult.CANCELLED
             }
             val playerPos = player.position.copy()
-            val xDiff = kotlin.math.abs(playerPos.x - intent.objectPosition.x)
-            val yDiff = kotlin.math.abs(playerPos.y - intent.objectPosition.y)
+            val xDiff = kotlin.math.abs(playerPos.x - targetPosition.x)
+            val yDiff = kotlin.math.abs(playerPos.y - targetPosition.y)
             player.resetAction(false)
-            player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
+            player.setFocus(targetPosition.x, targetPosition.y)
             if (xDiff > 5 || yDiff > 5) {
                 player.walkToTask = null
                 clear(player)
@@ -173,8 +185,8 @@ object InteractionProcessor {
                 player.objects.add(
                     RS2Object(
                         intent.objectId,
-                        intent.objectPosition.x,
-                        intent.objectPosition.y,
+                        targetPosition.x,
+                        targetPosition.y,
                         2,
                     ),
                 )
@@ -184,9 +196,28 @@ object InteractionProcessor {
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
-            player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
+            player.setFocus(targetPosition.x, targetPosition.y)
         } else if (intent.option == 3) {
-            player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
+            player.setFocus(targetPosition.x, targetPosition.y)
+        }
+
+        val dispatchSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = routeSnapshot.objectData,
+                fallbackDef = routeSnapshot.objectDef,
+            )
+        if (intent.objectDef != null &&
+            !isObjectStillPresent(
+                objectId = intent.objectId,
+                position = targetPosition,
+                objectDef = dispatchSnapshot.objectDef,
+            )
+        ) {
+            player.walkToTask = null
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
         }
 
         val timing =
@@ -194,9 +225,9 @@ object InteractionProcessor {
                 ObjectInteractionContext.click(
                     client = player,
                     option = intent.option,
-                    objectId = intent.task.walkToId,
-                    position = intent.task.walkToPosition,
-                    obj = intent.objectData,
+                    objectId = intent.objectId,
+                    position = targetPosition,
+                    obj = dispatchSnapshot.objectData,
                 ),
             )
         player.walkToTask = null
@@ -225,31 +256,74 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
+
+        val targetPosition = resolveTargetPosition(intent.objectPosition, player)
+        val routeSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = intent.objectData,
+                fallbackDef = intent.objectDef,
+            )
+        val policy =
+            ObjectContentRegistry.resolvePolicy(
+                objectId = intent.objectId,
+                position = targetPosition,
+                interactionType = ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT,
+                obj = routeSnapshot.objectData,
+                itemId = intent.itemId,
+                itemSlot = intent.itemSlot,
+                interfaceId = intent.interfaceId,
+            ) ?: ObjectInteractionPolicy.DEFAULT
+
         val routeStart = System.nanoTime()
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
-                intent.task,
+                targetPosition,
                 intent.objectId,
-                intent.objectData,
-                intent.objectDef,
-                ObjectInteractionDistance.DistanceMode.ITEM_ON_OBJECT,
+                routeSnapshot.objectData,
+                routeSnapshot.objectDef,
+                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
+        if (!isSettleGateSatisfied(player, intent, policy)) {
+            return InteractionExecutionResult.WAITING
+        }
+
+        val dispatchSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = routeSnapshot.objectData,
+                fallbackDef = routeSnapshot.objectDef,
+            )
+        if (intent.objectDef != null &&
+            !isObjectStillPresent(
+                objectId = intent.objectId,
+                position = targetPosition,
+                objectDef = dispatchSnapshot.objectDef,
+            )
+        ) {
+            player.walkToTask = null
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
         var timing = DispatchTiming(false, 0L, 0L, null)
         if (player.playerHasItem(intent.itemId)) {
-            player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
+            player.setFocus(targetPosition.x, targetPosition.y)
             timing =
                 ObjectContentDispatcher.tryHandleTimed(
                     ObjectInteractionContext.useItem(
                         client = player,
                         objectId = intent.objectId,
-                        position = intent.task.walkToPosition,
-                        obj = intent.objectData,
+                        position = targetPosition,
+                        obj = dispatchSnapshot.objectData,
                         itemId = intent.itemId,
                         itemSlot = intent.itemSlot,
                         interfaceId = intent.interfaceId,
@@ -282,29 +356,70 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
+
+        val targetPosition = resolveTargetPosition(intent.objectPosition, player)
+        val routeSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = intent.objectData,
+                fallbackDef = intent.objectDef,
+            )
+        val policy =
+            ObjectContentRegistry.resolvePolicy(
+                objectId = intent.objectId,
+                position = targetPosition,
+                interactionType = ObjectInteractionPolicy.InteractionType.MAGIC,
+                obj = routeSnapshot.objectData,
+                spellId = intent.spellId,
+            ) ?: ObjectInteractionPolicy.DEFAULT
+
         val routeStart = System.nanoTime()
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,
-                intent.task,
+                targetPosition,
                 intent.objectId,
-                intent.objectData,
-                intent.objectDef,
-                ObjectInteractionDistance.DistanceMode.MAGIC,
+                routeSnapshot.objectData,
+                routeSnapshot.objectDef,
+                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.MAGIC),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
-        player.setFocus(intent.objectPosition.x, intent.objectPosition.y)
+        if (!isSettleGateSatisfied(player, intent, policy)) {
+            return InteractionExecutionResult.WAITING
+        }
+
+        val dispatchSnapshot =
+            resolveObjectSnapshot(
+                objectId = intent.objectId,
+                position = targetPosition,
+                fallbackData = routeSnapshot.objectData,
+                fallbackDef = routeSnapshot.objectDef,
+            )
+        if (intent.objectDef != null &&
+            !isObjectStillPresent(
+                objectId = intent.objectId,
+                position = targetPosition,
+                objectDef = dispatchSnapshot.objectDef,
+            )
+        ) {
+            player.walkToTask = null
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
+        player.setFocus(targetPosition.x, targetPosition.y)
         val timing =
             ObjectContentDispatcher.tryHandleTimed(
                 ObjectInteractionContext.magic(
                     client = player,
-                    objectId = intent.task.walkToId,
-                    position = intent.task.walkToPosition,
-                    obj = intent.objectData,
+                    objectId = intent.objectId,
+                    position = targetPosition,
+                    obj = dispatchSnapshot.objectData,
                     spellId = intent.spellId,
                 ),
             )
@@ -387,19 +502,83 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
-        player.pendingInteraction?.let { miningSettledSinceCycle.remove(it) }
+        player.pendingInteraction?.let { settledSinceCycle.remove(it) }
         player.pendingInteraction = null
         player.activeInteraction = null
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
     }
 
-    private fun resolveObjectClickDistanceMode(objectId: Int): ObjectInteractionDistance.DistanceMode {
-        return if (MiningData.rockByObjectId.containsKey(objectId)) {
-            ObjectInteractionDistance.DistanceMode.MINING
-        } else {
-            ObjectInteractionDistance.DistanceMode.CLICK
+    private fun resolveTargetPosition(objectPosition: Position, player: Client): Position {
+        return Position(objectPosition.x, objectPosition.y, player.position.z)
+    }
+
+    private fun resolveObjectSnapshot(
+        objectId: Int,
+        position: Position,
+        fallbackData: GameObjectData?,
+        fallbackDef: GameObjectDef?,
+    ): ObjectSnapshot {
+        val liveData = GameObjectData.forId(objectId) ?: fallbackData
+        val liveDef = Misc.getObject(objectId, position.x, position.y, position.z) ?: fallbackDef
+        return ObjectSnapshot(liveData, liveDef)
+    }
+
+    private fun isObjectStillPresent(
+        objectId: Int,
+        position: Position,
+        objectDef: GameObjectDef?,
+    ): Boolean {
+        if (objectDef != null) {
+            return true
         }
+        return GlobalObject.hasGlobalObject(WorldObject(objectId, position.x, position.y, position.z, 10))
+    }
+
+    private fun resolveDistanceMode(
+        distanceRule: ObjectInteractionPolicy.DistanceRule,
+        interactionType: ObjectInteractionPolicy.InteractionType,
+    ): ObjectInteractionDistance.DistanceMode {
+        return when (distanceRule) {
+            ObjectInteractionPolicy.DistanceRule.LEGACY_OBJECT_DISTANCE -> when (interactionType) {
+                ObjectInteractionPolicy.InteractionType.CLICK -> ObjectInteractionDistance.DistanceMode.CLICK
+                ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT -> ObjectInteractionDistance.DistanceMode.ITEM_ON_OBJECT
+                ObjectInteractionPolicy.InteractionType.MAGIC -> ObjectInteractionDistance.DistanceMode.MAGIC
+            }
+            ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL ->
+                ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL
+            ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_ANY ->
+                ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_ANY
+        }
+    }
+
+    private fun isSettleGateSatisfied(
+        player: Client,
+        intent: InteractionIntent,
+        policy: ObjectInteractionPolicy,
+    ): Boolean {
+        if (!policy.requireMovementSettled) {
+            settledSinceCycle.remove(intent)
+            return true
+        }
+        if (!isMovementSettled(player)) {
+            settledSinceCycle.remove(intent)
+            return false
+        }
+        if (policy.settleTicks <= 0) {
+            settledSinceCycle.remove(intent)
+            return true
+        }
+        val settledSince = settledSinceCycle[intent]
+        if (settledSince == null) {
+            settledSinceCycle[intent] = PlayerHandler.cycle.toLong()
+            return false
+        }
+        if (PlayerHandler.cycle.toLong() - settledSince < policy.settleTicks) {
+            return false
+        }
+        settledSinceCycle.remove(intent)
+        return true
     }
 
     private fun isMovementSettled(player: Client): Boolean {
@@ -443,4 +622,9 @@ object InteractionProcessor {
     }
 
     private const val NPC_ATTACK_OPTION = 5
+
+    private data class ObjectSnapshot(
+        val objectData: GameObjectData?,
+        val objectDef: GameObjectDef?,
+    )
 }

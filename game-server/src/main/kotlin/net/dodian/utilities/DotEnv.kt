@@ -36,18 +36,6 @@ val databasePoolConnectionTimeout = dotenv["DATABASE_POOL_CONNECTION_TIMEOUT"]?.
 val databasePoolIdleTimeout = dotenv["DATABASE_POOL_IDLE_TIMEOUT"]?.toLong() ?: 600000L
 val databasePoolMaxLifetime = dotenv["DATABASE_POOL_MAX_LIFETIME"]?.toLong() ?: 1800000L
 
-// Async Persistence / World SQL Settings
-// These are optional; existing .env files continue working with these defaults.
-val asyncPlayerSaveEnabled = dotenv["ASYNC_PLAYER_SAVE_ENABLED"]?.toBoolean() ?: true
-val asyncWorldDbEnabled = dotenv["ASYNC_WORLD_DB_ENABLED"]?.toBoolean() ?: true
-val databaseSaveWorkers = dotenv["DATABASE_SAVE_WORKERS"]?.toInt() ?: 2
-val databaseSaveRetryBaseMs = dotenv["DATABASE_SAVE_RETRY_BASE_MS"]?.toLong() ?: 250L
-val databaseSaveRetryMaxMs = dotenv["DATABASE_SAVE_RETRY_MAX_MS"]?.toLong() ?: 5000L
-val databaseSaveBurstAttempts = dotenv["DATABASE_SAVE_BURST_ATTEMPTS"]?.toInt() ?: 8
-val accountPersistenceEnabled = dotenv["ACCOUNT_PERSISTENCE_ENABLED"]?.toBoolean() ?: true
-val playerSaveShadowEnabled = dotenv["PLAYER_SAVE_SHADOW_ENABLED"]?.toBoolean() ?: false
-val playerSaveBatchDelayMs = dotenv["PLAYER_SAVE_BATCH_DELAY_MS"]?.toLong() ?: 100L
-val playerSaveRequestTimeoutMs = dotenv["PLAYER_SAVE_REQUEST_TIMEOUT_MS"]?.toLong() ?: 5000L
 val gameLoopEnabled = dotenv["GAME_LOOP_ENABLED"]?.toBoolean() ?: true
 val interactionPipelineEnabled = dotenv["INTERACTION_PIPELINE_ENABLED"]?.toBoolean() ?: false
 val updatePrepEnabled = dotenv["UPDATE_PREP_ENABLED"]?.toBoolean() ?: false
