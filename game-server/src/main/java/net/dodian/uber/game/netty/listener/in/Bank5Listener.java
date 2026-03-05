@@ -53,7 +53,7 @@ public class Bank5Listener implements PacketListener {
         int removeSlot = readSignedWordBigEndian(buf) & 0xFFFF;
         int bankSlot = removeSlot;
 
-        if (interfaceId == 5382 && client.itemListPreviewOpen) {
+        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
             return;
         }
 

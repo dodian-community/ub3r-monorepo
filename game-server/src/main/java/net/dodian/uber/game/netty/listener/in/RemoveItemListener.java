@@ -37,7 +37,7 @@ public class RemoveItemListener implements PacketListener {
         int removeID = msg.getShort(false, ValueType.ADD);
         int bankSlot = removeSlot;
 
-        if (interfaceID == 5382 && client.itemListPreviewOpen) {
+        if ((interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) && client.bankStyleViewOpen) {
             return;
         }
 

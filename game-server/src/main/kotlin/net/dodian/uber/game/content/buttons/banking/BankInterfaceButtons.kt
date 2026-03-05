@@ -21,7 +21,7 @@ object BankInterfaceButtons : ButtonContent {
     }.toIntArray()
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        if (!client.IsBanking) {
+        if (!client.IsBanking || client.bankStyleViewOpen) {
             return true
         }
 

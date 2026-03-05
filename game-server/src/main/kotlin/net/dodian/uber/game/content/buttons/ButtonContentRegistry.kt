@@ -123,7 +123,7 @@ object ButtonContentRegistry {
             false
         } finally {
             val elapsedMs = (System.nanoTime() - startNs) / 1_000_000L
-            if (elapsedMs >= 2L) {
+            if (elapsedMs >= 100L) {
                 logger.warn(
                     "Slow button: buttonId={} handler={} iface={} player={} {}ms",
                     buttonId,

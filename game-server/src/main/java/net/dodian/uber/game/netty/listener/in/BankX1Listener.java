@@ -45,7 +45,7 @@ public class BankX1Listener implements PacketListener {
         int slot        = readSignedWordBigEndian(buf) & 0xFFFF;
         int itemId      = readSignedWordBigEndian(buf) & 0xFFFF;
 
-        if (interfaceId == 5382 && client.itemListPreviewOpen) {
+        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
             return;
         }
 

@@ -27,7 +27,7 @@ public class BankTabCreationListener implements PacketListener {
         int dragFromSlot = buf.readUnsignedShort();
         int toTab = buf.readUnsignedByte();
 
-        if (!client.IsBanking) {
+        if (!client.IsBanking || client.bankStyleViewOpen) {
             return;
         }
         if (fromInterface < 50300 || fromInterface > 50310) {

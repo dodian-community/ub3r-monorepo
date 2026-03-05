@@ -47,7 +47,7 @@ public class Bank10Listener implements PacketListener {
         int removeSlot = readUnsignedWordA(buf);
         int bankSlot = removeSlot;
 
-        if (interfaceId == 5382 && client.itemListPreviewOpen) {
+        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
             return;
         }
 

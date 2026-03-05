@@ -15,7 +15,7 @@ object CloseInterfaceButtons : ButtonContent {
     override fun onClick(client: Client, buttonId: Int): Boolean {
         val wasBanking = client.IsBanking
         val wasBankPreview = client.checkBankInterface
-        val wasItemListPreview = client.itemListPreviewOpen
+        val wasItemListPreview = client.bankStyleViewOpen
         val wasPartyInterface = client.isPartyInterface
         val wasShopping = client.isShopping()
         client.send(RemoveInterfaces())
@@ -47,7 +47,7 @@ object CloseInterfaceButtons : ButtonContent {
             refreshItems = true
         }
         if (wasItemListPreview) {
-            client.clearItemListPreview()
+            client.clearBankStyleView()
             refreshItems = true
         }
         if (wasPartyInterface) {

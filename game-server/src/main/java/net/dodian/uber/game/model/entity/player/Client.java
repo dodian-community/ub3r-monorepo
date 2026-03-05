@@ -582,9 +582,10 @@ public class Client extends Player implements Runnable {
     public String bankSearchQuery = "";
     public int[] bankSlotTabs = null;
     public int[][] bankContainerSlotMap = null;
-    public ArrayList<Integer> itemListPreviewIds = new ArrayList<>();
-    public ArrayList<Integer> itemListPreviewAmounts = new ArrayList<>();
-    public String itemListPreviewTitle = "";
+    public int[][] bankStyleViewSlotMap = null;
+    public ArrayList<Integer> bankStyleViewIds = new ArrayList<>();
+    public ArrayList<Integer> bankStyleViewAmounts = new ArrayList<>();
+    public String bankStyleViewTitle = "";
 
     /**
      * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
@@ -1414,24 +1415,29 @@ public class Client extends Player implements Runnable {
         send(new SendBankItems(id, amt));
     }
 
-    public void sendItemListPreview(ArrayList<Integer> id, ArrayList<Integer> amt, String title) {
-        itemListPreviewIds = new ArrayList<>(id);
-        itemListPreviewAmounts = new ArrayList<>(amt);
-        itemListPreviewTitle = title;
-        itemListPreviewOpen = true;
+    public void openBankStyleView(ArrayList<Integer> id, ArrayList<Integer> amt, String title) {
+        bankStyleViewIds = new ArrayList<>(id);
+        bankStyleViewAmounts = new ArrayList<>(amt);
+        bankStyleViewTitle = title;
+        bankStyleViewOpen = true;
         IsBanking = false;
         checkBankInterface = false;
-        send(new SendString(title, 5383));
-        send(new SendBankItems(itemListPreviewIds, itemListPreviewAmounts, 5382));
+        bankSearchActive = false;
+        bankSearchPendingInput = false;
+        bankSearchQuery = "";
+        currentBankTab = 0;
+        previousBankTab = 0;
+        sendBankStyleViewContainers();
         resetItems(5064);
         send(new InventoryInterface(5292, 5063));
     }
 
-    public void clearItemListPreview() {
-        itemListPreviewOpen = false;
-        itemListPreviewIds.clear();
-        itemListPreviewAmounts.clear();
-        itemListPreviewTitle = "";
+    public void clearBankStyleView() {
+        bankStyleViewOpen = false;
+        bankStyleViewIds.clear();
+        bankStyleViewAmounts.clear();
+        bankStyleViewTitle = "";
+        bankStyleViewSlotMap = null;
     }
 
     public void sendBank(int interfaceId, ArrayList<GameItem> bank) {
@@ -1450,7 +1456,7 @@ public class Client extends Player implements Runnable {
             resetItems(moveWindow);
         }
         if (moveWindow == 5382 || (moveWindow >= 50300 && moveWindow <= 50310)) {
-            if (moveWindow == 5382 && itemListPreviewOpen) {
+            if (bankStyleViewOpen) {
                 return;
             }
             int actualFrom = resolveBankSlot(moveWindow, from);
@@ -1567,7 +1573,7 @@ public class Client extends Player implements Runnable {
         bankSearchQuery = "";
         IsBanking = true;
         checkBankInterface = false;
-        clearItemListPreview();
+        clearBankStyleView();
         checkItemUpdate();
     }
 
@@ -1600,9 +1606,8 @@ public class Client extends Player implements Runnable {
             }
             resetItems(5064);
             send(new InventoryInterface(5292, 5063));
-        } else if (itemListPreviewOpen) {
-            send(new SendString(itemListPreviewTitle, 5383));
-            send(new SendBankItems(itemListPreviewIds, itemListPreviewAmounts, 5382));
+        } else if (bankStyleViewOpen) {
+            sendBankStyleViewContainers();
             resetItems(5064);
             send(new InventoryInterface(5292, 5063));
         } else if (isPartyInterface) {
@@ -1616,7 +1621,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void applyBankSearch(String query) {
-        if (!IsBanking) {
+        if (!IsBanking || bankStyleViewOpen) {
             return;
         }
         String normalized = query == null ? "" : query.trim().toLowerCase();
@@ -1709,8 +1714,47 @@ public class Client extends Player implements Runnable {
         }
     }
 
+    public void sendBankStyleViewContainers() {
+        rebuildBankStyleViewContainers();
+        int size = bankSize();
+        send(new SendString(bankStyleViewTitle, 5383));
+        send(new SendCurrentBankTab(0));
+        for (int tab = 0; tab < 11; tab++) {
+            ArrayList<Integer> ids = new ArrayList<>(size);
+            ArrayList<Integer> amounts = new ArrayList<>(size);
+            for (int localSlot = 0; localSlot < size; localSlot++) {
+                int viewSlot = bankStyleViewSlotMap[tab][localSlot];
+                if (viewSlot >= 0) {
+                    ids.add(bankStyleViewIds.get(viewSlot));
+                    amounts.add(bankStyleViewAmounts.get(viewSlot));
+                } else {
+                    ids.add(0);
+                    amounts.add(0);
+                }
+            }
+            send(new SendBankItems(ids, amounts, 50300 + tab));
+        }
+    }
+
+    private void rebuildBankStyleViewContainers() {
+        int size = bankSize();
+        if (bankStyleViewSlotMap == null || bankStyleViewSlotMap.length != 11 || bankStyleViewSlotMap[0].length != size) {
+            bankStyleViewSlotMap = new int[11][size];
+        }
+        for (int tab = 0; tab < bankStyleViewSlotMap.length; tab++) {
+            Arrays.fill(bankStyleViewSlotMap[tab], -1);
+        }
+        int previewSize = Math.min(size, Math.min(bankStyleViewIds.size(), bankStyleViewAmounts.size()));
+        for (int slot = 0; slot < previewSize; slot++) {
+            bankStyleViewSlotMap[0][slot] = slot;
+        }
+    }
+
     public int resolveBankSlot(int interfaceId, int containerSlot) {
         if (containerSlot < 0) {
+            return -1;
+        }
+        if (bankStyleViewOpen && interfaceId >= 50300 && interfaceId <= 50310) {
             return -1;
         }
         if (interfaceId == 5382) {
@@ -1733,6 +1777,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void assignBankSlotToTab(int bankSlot, int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
         ensureBankTabState();
         if (bankSlot < 0 || bankSlot >= bankSize()) {
             return;
@@ -1750,6 +1797,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void selectBankTab(int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
         ensureBankTabState();
         if (tab > 0 && tab < 10 && !hasBankTabItems(tab)) {
             send(new SendMessage("To create a new tab, drag an item onto this tab."));
@@ -1767,6 +1817,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void collapseBankTab(int tab) {
+        if (bankStyleViewOpen) {
+            return;
+        }
         ensureBankTabState();
         if (tab <= 0 || tab > 9) {
             return;
@@ -1794,6 +1847,9 @@ public class Client extends Player implements Runnable {
     }
 
     public void clearBankSearch() {
+        if (bankStyleViewOpen) {
+            return;
+        }
         bankSearchActive = false;
         bankSearchPendingInput = false;
         bankSearchQuery = "";
@@ -7129,18 +7185,19 @@ public class Client extends Player implements Runnable {
         }
         ArrayList<GameItem> otherBank = new ArrayList<>();
         IsBanking = false;
-        clearItemListPreview();
+        clearBankStyleView();
         if (PlayerHandler.getPlayer(player) != null) { //Online check
             Client other = (Client) PlayerHandler.getPlayer(player);
+            ArrayList<Integer> ids = new ArrayList<>();
+            ArrayList<Integer> amounts = new ArrayList<>();
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
-                otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
+                if (other.bankItems[i] > 0 && other.bankItemsN[i] > 0) {
+                    ids.add(other.bankItems[i] - 1);
+                    amounts.add(other.bankItemsN[i]);
+                }
             }
-            send(new SendString("Examine the bank of " + player, 5383));
-            sendBank(5382, otherBank);
-            resetItems(5064);
-            send(new InventoryInterface(5292, 5063));
+            openBankStyleView(ids, amounts, "Examine the bank of " + player);
             IsBanking = false;
-            checkBankInterface = true;
         } else {
             send(new SendMessage("Loading " + player + "'s bank..."));
             CommandDbService.submit(
@@ -7330,12 +7387,15 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("username '" + player + "' have yet to login!"));
             return;
         }
-        send(new SendString("Examine the bank of " + player, 5383));
-        sendBank(5382, result.getItems());
-        resetItems(5064);
-        send(new InventoryInterface(5292, 5063));
-        clearItemListPreview();
-        checkBankInterface = true;
+        ArrayList<Integer> ids = new ArrayList<>();
+        ArrayList<Integer> amounts = new ArrayList<>();
+        for (GameItem item : result.getItems()) {
+            if (item.getId() >= 0 && item.getAmount() > 0) {
+                ids.add(item.getId());
+                amounts.add(item.getAmount());
+            }
+        }
+        openBankStyleView(ids, amounts, "Examine the bank of " + player);
     }
 
     public void dropAllItems() {
