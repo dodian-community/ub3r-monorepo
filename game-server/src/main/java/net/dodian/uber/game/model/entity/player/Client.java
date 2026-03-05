@@ -32,12 +32,14 @@ import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.runtime.loop.GameThreadContext;
 import net.dodian.uber.game.skills.mining.MiningService;
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.security.*;
+import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
@@ -112,12 +114,10 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean woodcutting = false;
     public boolean stringing = false;
     public boolean filling = false;
     public int fillingObj = -1;
     public int boneItem = -1;
-    public int cuttingIndex = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -2153,18 +2153,6 @@ public class Client extends Player implements Runnable {
                 resetAction();
                 send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
             }
-        } else if (woodcutting && now - lastAction >= getWoodcuttingSpeed()) {
-            lastAction = now;
-            woodcutting(cuttingIndex);
-        } else if (woodcutting && now - lastAxeAction <= 0) { //Reapply animation every 3 tick!
-            int checkAxe = findAxe();
-            if (checkAxe >= 0) {
-                requestAnim(getWoodcuttingEmote(Utils.axes[checkAxe]), 0);
-                lastAxeAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            }
         } else if (cooking && now - lastAction >= 1800) {
             lastAction = now;
             cook();
@@ -3377,96 +3365,6 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public boolean CheckObjectSkill(int objectID, String name) {
-        /* Do we wish to keep? */
-        if (name.contains("oak"))
-            objectID = 1281;
-        else if (name.contains("willow"))
-            objectID = 1308;
-        else if (name.contains("maple tree"))
-            objectID = 1307;
-        else if (name.contains("yew"))
-            objectID = 1309;
-        else if (name.contains("magic tree"))
-            objectID = 1306;
-        else if (name.equalsIgnoreCase("tree"))
-            objectID = 1276;
-
-        switch (objectID) {
-
-            /*
-             *
-             * WOODCUTTING
-             *
-             */
-            case 1276:
-            case 1277:
-            case 1278:
-            case 1279:
-            case 1280:
-            case 1330:
-            case 1332:
-            case 2409:
-            case 3033:
-            case 3034:
-            case 3035:
-            case 3036:
-            case 3879:
-            case 3881:
-            case 3882:
-            case 3883: // Normal Tree
-            case 1315:
-            case 1316:
-            case 1318:
-            case 1319: // Evergreen
-            case 1282:
-            case 1283:
-            case 1284:
-            case 1285:
-            case 1286:
-            case 1287:
-            case 1289:
-            case 1290:
-            case 1291:
-            case 1365:
-            case 1383:
-            case 1384:
-            case 5902:
-            case 5903:
-            case 5904: // Dead Tree
-                cuttingIndex = 0;
-                return true;
-
-            case 1281:
-            case 3037: // Oak Tree
-                cuttingIndex = 1;
-                return true;
-
-            case 1308:
-            case 5551:
-            case 5552: // Willow Tree
-                cuttingIndex = 2;
-                return true;
-
-            case 1307:
-            case 4674: // Maple Tree
-                cuttingIndex = 3;
-                return true;
-
-            case 1309: // Yew Tree
-            case 1754:
-                cuttingIndex = 4;
-                return true;
-
-            case 1306: // Magic Tree
-            case 1762:
-                cuttingIndex = 5;
-                return true;
-        }
-        cuttingIndex = -1;
-        return false;
-    }
-
     public int CheckSmithing(int ItemID) {
         int Type = -1;
         if (!IsItemInBag(2347)) {
@@ -3749,39 +3647,6 @@ public class Client extends Player implements Runnable {
         skillX = -1;
         setSkillY(-1);
         rerequestAnim();
-    }
-
-    public int getWoodcuttingEmote(int item) {
-        switch (item) {
-            case 1351: //bronze
-                return 879;
-            case 1349: //iron
-                return 877;
-            case 1353: //steel
-                return 875;
-            case 1355: // mithril
-                return 871;
-            case 1357: // addy
-                return 869;
-            case 1359: // rune
-                return 867;
-            case 6739: // dragon
-            case 20011: //3rd age
-                return 2846;
-        }
-        return -1;
-    }
-
-    public long getWoodcuttingSpeed() {
-        double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
-        double level = getLevel(Skill.WOODCUTTING) / 256D;
-        double bonus = 1 + axeBonus + level;
-        double timer = Utils.woodcuttingDelays[cuttingIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && axeBonus > 0.0 && (Utils.axes[findAxe()] == 6739 || Utils.axes[findAxe()] == 20011))
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
     }
 
     public long getFishingSpeed() {
@@ -5104,6 +4969,7 @@ public class Client extends Player implements Runnable {
 
     public void resetAction(boolean full) {
         MiningService.stopMiningFromReset(this, full);
+        WoodcuttingService.stopWoodcuttingFromReset(this, full);
         smelting = false;
         smelt_id = -1;
         goldCrafting = false;
@@ -5116,8 +4982,6 @@ public class Client extends Player implements Runnable {
         crafting = false;
         fishing = false;
         stringing = false;
-        woodcutting = false;
-        cuttingIndex = -1;
         resourcesGathered = 0;
         cooking = false;
         filling = false;
@@ -6260,52 +6124,6 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public int findAxe() {
-        int Eaxe = -1, Iaxe = -1;
-        int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        for (int i = 0; i < Utils.axes.length; i++) {
-            if (Utils.axes[i] == weapon) {
-                if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i])
-                    Eaxe = i;
-            }
-            for (int playerItem : playerItems) {
-                if (Utils.axes[i] == playerItem - 1) {
-                    if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
-        }
-        return Math.max(Eaxe, Iaxe);
-    }
-
-    /* WOODCUTTING */
-    public void woodcutting(int index) {
-        int woodcutAxe = findAxe();
-        if (woodcutAxe == -1) {
-            resetAction();
-            send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Your inventory is full!"));
-            resetAction(true);
-            return;
-        }
-        lastAction = System.currentTimeMillis();
-        send(new SendMessage("You cut some " + GetItemName(Utils.woodcuttingLogs[index]).toLowerCase()));
-        addItem(Utils.woodcuttingLogs[index], 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, Utils.woodcuttingLogs[index], 1, getPosition().copy(), "Woodcutting");
-        resourcesGathered++;
-        giveExperience(Utils.woodcuttingExp[index], Skill.WOODCUTTING);
-        triggerRandom(Utils.woodcuttingExp[index]);
-        if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        } else requestAnim(getWoodcuttingEmote(Utils.axes[woodcutAxe]), 0);
-    }
-
     public void callGfxMask(int id, int height) {
         setGraphic(id, height == 0 ? 65536 : 65536 * height);
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
@@ -6782,81 +6600,7 @@ public class Client extends Player implements Runnable {
     }
 
     private void skillActionYield() {
-        if (skillActionCount < 1) { //Count is less than 1!
-            resetAction();
-            return;
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be doing this!"));
-            return;
-        }
-
-        int itemOne = playerSkillAction.get(3), itemTwo = playerSkillAction.get(4), itemMake = playerSkillAction.get(1);
-        int amount = playerSkillAction.get(2);
-        if (itemMake == 12695) { //Super combat potion
-            if (!playerHasItem(itemOne) || (!playerHasItem(111) && !playerHasItem(269)) || !playerHasItem(2440) || !playerHasItem(2442)) {
-                resetAction();
-                String text = !playerHasItem(111) && !playerHasItem(269) ? GetItemName(269).toLowerCase() : !playerHasItem(itemOne) ? GetItemName(2436).toLowerCase() : !playerHasItem(2440) ? GetItemName(2440).toLowerCase() : GetItemName(2442).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(!playerHasItem(269) ? 111 : 269, amount); //Can use either unf torstol potion or torstol herb!
-            deleteItem(2440, amount);
-            deleteItem(2442, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake == 11730) { //Overload potion
-            if (!playerHasItem(itemOne) || !playerHasItem(2444) || !playerHasItem(12695)) {
-                resetAction();
-                String text = !playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : !playerHasItem(2444) ? GetItemName(2444).toLowerCase() : GetItemName(12695).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(2444, amount);
-            deleteItem(12695, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake >= 569 && itemMake <= 576) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo, 3)) {
-                resetAction();
-                send(new SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."));
-                return;
-            }
-            callGfxMask(itemMake == 569 ? 152 : 149 + ((itemMake - 571) / 2), 100);
-            deleteItem(itemOne, amount);
-            deleteRunes(new int[]{itemTwo}, new int[]{3});
-            addItem(itemMake, amount);
-        } else if (itemMake == 1775) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo)) {
-                resetAction();
-                send(new SendMessage("You need one bucket of sand and one soda ash"));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            addItem(1925, amount);
-            deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        } else {
-            if (!playerHasItem(itemOne) || (itemTwo != -1 && !playerHasItem(itemTwo))) {
-                resetAction();
-                send(new SendMessage("You do not have anymore " + (!playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : GetItemName(itemTwo).toLowerCase()) + "."));
-                return;
-            }
-            if (getInvAmt(itemOne) < amount || (itemTwo != -1 && getInvAmt(itemTwo) < amount)) //Incase we use 15 as amount!
-                amount = Math.min(getInvAmt(itemOne), getInvAmt(itemTwo));
-            deleteItem(itemOne, amount);
-            if (itemTwo != -1) //For gem crafting or stringing! OBS!
-                deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        }
-        checkItemUpdate();
-        requestAnim(playerSkillAction.get(6), 0);
-        int xp = playerSkillAction.get(5) * amount;
-        giveExperience(xp, Skill.getSkill(playerSkillAction.get(0)));
-        triggerRandom(xp);
-        skillActionCount--;
-        skillActionTimer = playerSkillAction.get(7);
-        if (!skillMessage.isEmpty()) send(new SendMessage(skillMessage)); //Incase we want a skill message..OBS!
+        LegacyProductionAdapter.executeLegacySkillAction(this);
     }
 
     public void guideBook() {

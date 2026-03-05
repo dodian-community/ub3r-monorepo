@@ -26,8 +26,6 @@ import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
 import net.dodian.utilities.runtimePhaseWarnMs
 import net.dodian.utilities.syncAppearanceCacheEnabled
-import net.dodian.utilities.syncNpcActivityIndexEnabled
-import net.dodian.utilities.syncPlayerActivityIndexEnabled
 import net.dodian.utilities.playerSynchronizationEnabled
 import net.dodian.utilities.syncPlayerTemplateCacheEnabled
 import net.dodian.utilities.syncRootBlockCacheEnabled
@@ -43,6 +41,8 @@ class WorldSynchronizationService {
     private val playerRevisionIndex = PlayerSyncRevisionIndex()
     private val npcRevisionIndex = RootNpcDeltaIndex()
     private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
+    private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
+    private val sharedNpcActivityIndex = NpcChunkActivityIndex()
     private var tick = 0L
 
     fun run() {
@@ -56,22 +56,18 @@ class WorldSynchronizationService {
                 currentActiveNpcs()
             }
         val rootCache = RootSynchronizationCache()
-        val playerActivityIndex = if (syncPlayerActivityIndexEnabled) PlayerChunkActivityIndex() else null
-        val npcActivityIndex = if (syncNpcActivityIndexEnabled) NpcChunkActivityIndex() else null
-        if (playerActivityIndex != null) {
-            playerRevisionIndex.rebuild(activePlayers, tick, playerActivityIndex)
-        }
-        if (npcActivityIndex != null) {
-            npcRevisionIndex.rebuild(relevantNpcs, tick, npcActivityIndex)
-        }
+        val playerActivityIndex = sharedPlayerActivityIndex.apply { clear() }
+        val npcActivityIndex = sharedNpcActivityIndex.apply { clear() }
+        playerRevisionIndex.rebuild(activePlayers, tick, playerActivityIndex)
+        npcRevisionIndex.rebuild(relevantNpcs, tick, npcActivityIndex)
         val cycle =
             SynchronizationCycle(
                 tick = tick,
                 rootCache = rootCache,
                 viewportIndex = viewportIndex,
-                playerRevisionIndex = if (syncPlayerActivityIndexEnabled) playerRevisionIndex else null,
+                playerRevisionIndex = playerRevisionIndex,
                 playerActivityIndex = playerActivityIndex,
-                npcRevisionIndex = if (syncNpcActivityIndexEnabled) npcRevisionIndex else null,
+                npcRevisionIndex = npcRevisionIndex,
                 npcActivityIndex = npcActivityIndex,
             )
 
@@ -195,7 +191,7 @@ class WorldSynchronizationService {
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
-        val trackActivityStamps = syncSkipEmptyNpcPacketEnabled && syncNpcActivityIndexEnabled
+        val trackActivityStamps = syncSkipEmptyNpcPacketEnabled
         activePlayers.forEach { player ->
             val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
             val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
@@ -286,7 +282,7 @@ class WorldSynchronizationService {
 
     private fun updateViewerSyncState(player: Client) {
         val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
-        val trackActivityStamps = syncPlayerActivityIndexEnabled && syncSkipEmptyPlayerPacketEnabled
+        val trackActivityStamps = syncSkipEmptyPlayerPacketEnabled
         val chunkStamp = if (trackActivityStamps) SynchronizationContext.getPlayerChunkActivityStamp(player) else 0L
         val localStamp = if (trackActivityStamps) SynchronizationContext.getPlayerLocalActivityStamp(player) else 0L
         state.lastPlayerSyncTick = tick

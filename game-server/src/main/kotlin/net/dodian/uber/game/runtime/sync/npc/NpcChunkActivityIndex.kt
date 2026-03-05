@@ -9,6 +9,11 @@ class NpcChunkActivityIndex {
     private val chunkStamps = LongLongStampMap(1024)
     private var sequence = 0L
 
+    fun clear() {
+        sequence = 0L
+        chunkStamps.clear()
+    }
+
     fun bump(position: Position?) {
         if (position == null) {
             return

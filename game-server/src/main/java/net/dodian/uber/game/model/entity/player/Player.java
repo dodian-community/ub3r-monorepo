@@ -35,6 +35,7 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skills.mining.MiningState;
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
@@ -52,7 +53,7 @@ public abstract class Player extends Entity {
     public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
-    public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
+    public long lastPickAction = 0, lastFishAction = 0;
     private int playerNpc = -1;
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
@@ -69,8 +70,10 @@ public abstract class Player extends Entity {
     private volatile QueueTaskHandle interactionTaskHandle;
     private volatile QueueTaskHandle farmDebugTaskHandle;
     private volatile QueueTaskHandle miningTaskHandle;
+    private volatile QueueTaskHandle woodcuttingTaskHandle;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
+    private volatile WoodcuttingState woodcuttingState;
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -338,6 +341,8 @@ public abstract class Player extends Entity {
         releaseCachedUpdateBlock();
         cancelMiningTask();
         clearMiningState();
+        cancelWoodcuttingTask();
+        clearWoodcuttingState();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;
@@ -1030,6 +1035,34 @@ public abstract class Player extends Entity {
 
     public void clearMiningState() {
         miningState = null;
+    }
+
+    public QueueTaskHandle getWoodcuttingTaskHandle() {
+        return woodcuttingTaskHandle;
+    }
+
+    public void setWoodcuttingTaskHandle(QueueTaskHandle woodcuttingTaskHandle) {
+        this.woodcuttingTaskHandle = woodcuttingTaskHandle;
+    }
+
+    public void cancelWoodcuttingTask() {
+        QueueTaskHandle handle = woodcuttingTaskHandle;
+        woodcuttingTaskHandle = null;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
+
+    public WoodcuttingState getWoodcuttingState() {
+        return woodcuttingState;
+    }
+
+    public void setWoodcuttingState(WoodcuttingState woodcuttingState) {
+        this.woodcuttingState = woodcuttingState;
+    }
+
+    public void clearWoodcuttingState() {
+        woodcuttingState = null;
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {
