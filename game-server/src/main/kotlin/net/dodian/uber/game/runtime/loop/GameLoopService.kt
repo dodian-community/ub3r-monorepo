@@ -82,6 +82,7 @@ class GameLoopService(
         }
         job =
             scope.launch {
+                GameThreadContext.bindCurrentThread()
                 while (isActive && running.get()) {
                     val elapsedNanos = measureNanoTime { runTick() } + excessCycleNanos
                     val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)

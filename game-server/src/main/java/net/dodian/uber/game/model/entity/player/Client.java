@@ -30,6 +30,7 @@ import net.dodian.uber.game.persistence.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
+import net.dodian.uber.game.runtime.loop.GameThreadContext;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
 import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
@@ -738,7 +739,7 @@ public class Client extends Player implements Runnable {
         }
 
         outboundDirty = true;
-        if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
+        if (GameThreadContext.isGameThread()) {
             channel.write(message);
         } else {
             channel.writeAndFlush(message);
