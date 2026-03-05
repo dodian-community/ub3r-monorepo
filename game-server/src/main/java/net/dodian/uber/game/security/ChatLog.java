@@ -14,14 +14,15 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
 
 public class ChatLog extends LogEntry {
 
-    private static final Logger logger = Logger.getLogger(ChatLog.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ChatLog.class);
     private static final BlockingQueue<ChatMessage> messageQueue = new LinkedBlockingQueue<>();
 
     private static final Object START_LOCK = new Object();
@@ -35,12 +36,14 @@ public class ChatLog extends LogEntry {
         final int type;
         final int senderId;
         final int receiverId;
+        final String senderName;
         final String message;
 
-        private ChatMessage(int type, int senderId, int receiverId, String message) {
+        private ChatMessage(int type, int senderId, int receiverId, String senderName, String message) {
             this.type = type;
             this.senderId = senderId;
             this.receiverId = receiverId;
+            this.senderName = senderName;
             this.message = message;
         }
     }
@@ -68,14 +71,7 @@ public class ChatLog extends LogEntry {
                 int queueSize = messageQueue.size();
 
                 if (queueSize > 1) {
-                    long startTime = System.currentTimeMillis();
-                    int processed = processBatch();
-                    if (processed > 0 && debugMetrics) {
-                        long duration = System.currentTimeMillis() - startTime;
-                        System.out.println("[ChatLog Metrics] Batch: Saved " + processed + " messages in " +
-                                duration + "ms | Avg: " + (duration / processed) +
-                                "ms per message | Queue Size: " + messageQueue.size());
-                    }
+                    processBatch();
                 } else {
                     ChatMessage message = messageQueue.poll(10, TimeUnit.MILLISECONDS);
                     if (message != null) {
@@ -83,18 +79,15 @@ public class ChatLog extends LogEntry {
                         saveMessage(message);
                         if (debugMetrics) {
                             long duration = System.currentTimeMillis() - startTime;
-                            System.out.println("[ChatLog Metrics] Direct: Saved message in " + duration + "ms | " +
-                                    "Type: " + message.type + " | " +
-                                    "Queue Size: " + messageQueue.size());
+                            logger.info(message.senderName + ": " + message.message + " saved in " + duration + "ms");
                         }
                     }
                 }
             } catch (InterruptedException interruptedException) {
                 Thread.currentThread().interrupt();
-                logger.warning("ChatLog processor thread interrupted");
+                logger.warn("ChatLog processor thread interrupted");
             } catch (Exception e) {
-                logger.severe("Error processing chat messages: " + e.getMessage());
-                e.printStackTrace();
+                logger.error("Error processing chat messages", e);
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException interruptedException) {
@@ -131,12 +124,12 @@ public class ChatLog extends LogEntry {
             statement.executeBatch();
             return batch.size();
         } catch (SQLException sqlException) {
-            logger.severe("Failed to save chat batch: " + sqlException.getMessage());
+            logger.error("Failed to save chat batch", sqlException);
             for (ChatMessage message : batch) {
                 try {
                     saveMessage(message);
                 } catch (Exception fallbackException) {
-                    logger.severe("Failed to save individual message: " + fallbackException.getMessage());
+                    logger.error("Failed to save individual message", fallbackException);
                 }
             }
             return batch.size();
@@ -156,8 +149,7 @@ public class ChatLog extends LogEntry {
             statement.setString(5, getTimeStamp());
             statement.executeUpdate();
         } catch (SQLException sqlException) {
-            logger.severe("Unable to record chat message! " + sqlException.getMessage());
-            sqlException.printStackTrace();
+            logger.error("Unable to record chat message", sqlException);
             if (message.type == 1 || message.type == 2) {
                 YellSystem.alertStaff("Unable to record chat, please contact an admin.");
             }
@@ -169,7 +161,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         ensureStarted();
-        messageQueue.add(new ChatMessage(1, player.dbId, -1, sanitizeMessage(message)));
+        messageQueue.add(new ChatMessage(1, player.dbId, -1, player.getPlayerName(), sanitizeMessage(message)));
     }
 
     public static void recordYellChat(Player player, String message) {
@@ -177,7 +169,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         ensureStarted();
-        messageQueue.add(new ChatMessage(2, player.dbId, -1, sanitizeMessage(message)));
+        messageQueue.add(new ChatMessage(2, player.dbId, -1, player.getPlayerName(), sanitizeMessage(message)));
     }
 
     public static void recordModChat(Player player, String message) {
@@ -185,7 +177,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         ensureStarted();
-        messageQueue.add(new ChatMessage(4, player.dbId, -1, sanitizeMessage(message)));
+        messageQueue.add(new ChatMessage(4, player.dbId, -1, player.getPlayerName(), sanitizeMessage(message)));
     }
 
     public static void recordPrivateChat(Player sender, Player receiver, String message) {
@@ -193,7 +185,7 @@ public class ChatLog extends LogEntry {
             return;
         }
         ensureStarted();
-        messageQueue.add(new ChatMessage(3, sender.dbId, receiver.dbId, sanitizeMessage(message)));
+        messageQueue.add(new ChatMessage(3, sender.dbId, receiver.dbId, sender.getPlayerName(), sanitizeMessage(message)));
     }
 
     private static String sanitizeMessage(String message) {

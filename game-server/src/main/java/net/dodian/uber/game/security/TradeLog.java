@@ -7,7 +7,8 @@ import net.dodian.utilities.DbTables;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -17,7 +18,7 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 public class TradeLog extends LogEntry {
 
-    private static final Logger logger = Logger.getLogger(TradeLog.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(TradeLog.class);
 
     public static void recordTrade(int p1,
                                    int p2,
@@ -50,8 +51,7 @@ public class TradeLog extends LogEntry {
                     }
                 }
             } catch (Exception e) {
-                logger.severe("Unable to record trade!");
-                e.printStackTrace();
+                logger.error("Unable to record trade", e);
                 YellSystem.alertStaff("Unable to record trade, please contact an admin.");
             }
         });

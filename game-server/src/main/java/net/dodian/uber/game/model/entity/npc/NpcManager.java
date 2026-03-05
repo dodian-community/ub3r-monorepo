@@ -339,7 +339,7 @@ public class NpcManager {
                 amount++;
                 data.put(results1.getInt("id"), new NpcData(results1));
             }
-            System.out.println("Loaded " + amount + " Npc Definitions");
+            logger.info("Loaded {} Npc Definitions", amount);
 
         } catch (Exception e) {
             // It's good practice to log the specific operation that failed.
@@ -361,11 +361,11 @@ public class NpcManager {
                         data.get(id).addDrop(results2.getInt("itemid"), results2.getInt("amt_min"), results2.getInt("amt_max"),
                                 results2.getDouble("percent"), results2.getBoolean("rareShout"));
                     } else {
-                        System.out.println("Invalid NPC ID for drop: " + id);
+                        logger.warn("Invalid NPC ID for drop: {}", id);
                     }
                 }
             }
-            System.out.println("Loaded " + amount + " Npc Drops");
+            logger.info("Loaded {} Npc Drops", amount);
 
         } catch (Exception e) {
             System.out.println("Error loading NPC drops: " + e);

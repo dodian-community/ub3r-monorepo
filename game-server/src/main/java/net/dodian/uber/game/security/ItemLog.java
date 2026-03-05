@@ -4,9 +4,9 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.YellSystem;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.utilities.DbTables;
-
 import java.sql.Statement;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.getGameWorldId;
@@ -16,7 +16,7 @@ import static net.dodian.utilities.DotEnvKt.getGameWorldId;
  */
 public class ItemLog extends LogEntry {
 
-    private static final Logger logger = Logger.getLogger(ItemLog.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ItemLog.class);
 
     public static void playerPickup(Player player, int userId, int itemId, int itemAmount, Position pos, boolean npc) {
         if (getGameWorldId() > 1) {
@@ -30,8 +30,7 @@ public class ItemLog extends LogEntry {
                         "'" + player.dbId + "', '1', '" + userId + "', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '" + (npc ? "npc" : "player") + "')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record player picking up items!");
-                e.printStackTrace();
+                logger.error("Unable to record player picking up items", e);
                 YellSystem.alertStaff("Unable to record player pickup of a item, please contact an admin.");
             }
         });
@@ -49,8 +48,7 @@ public class ItemLog extends LogEntry {
                         "'" + player.dbId + "', '2', '-1', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '" + (reason.isEmpty() ? "player" : reason) + "')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record player dropping items!");
-                e.printStackTrace();
+                logger.error("Unable to record player dropping items", e);
                 YellSystem.alertStaff("Unable to record player drop of a item, please contact an admin.");
             }
         });
@@ -68,8 +66,7 @@ public class ItemLog extends LogEntry {
                         "'" + player.dbId + "', '2', '" + npcId + "', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', 'npc')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record npc dropping items!");
-                e.printStackTrace();
+                logger.error("Unable to record npc dropping items", e);
                 YellSystem.alertStaff("Unable to record npc drop of a item, please contact an admin.");
             }
         });
@@ -87,8 +84,7 @@ public class ItemLog extends LogEntry {
                         "'" + player.dbId + "', '3', '-1', '" + itemId + "', '" + itemAmount + "', '" + getTimeStamp() + "', '" + pos.getX() + "', '" + pos.getY() + "', '" + pos.getZ() + "', '" + reason + "')";
                 statement.executeUpdate(query);
             } catch (Exception e) {
-                logger.severe("Unable to record player gathering items!");
-                e.printStackTrace();
+                logger.error("Unable to record player gathering items", e);
                 YellSystem.alertStaff("Unable to record player pickup of a item, please contact an admin.");
             }
         });
