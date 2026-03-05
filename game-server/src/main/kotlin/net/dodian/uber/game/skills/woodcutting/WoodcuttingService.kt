@@ -130,6 +130,7 @@ object WoodcuttingService {
                         ItemLog.playerGathering(client, activeTree.logItemId, 1, client.position.copy(), "Woodcutting")
                         client.giveExperience(activeTree.experience, Skill.WOODCUTTING)
                         client.triggerRandom(activeTree.experience)
+                        client.requestAnim(activeAxe.animationId, 0)
 
                         val gathered = state.resourcesGathered + 1
                         client.woodcuttingState = state.copy(resourcesGathered = gathered, lastSwingAnimationAtMs = now + SWING_REPEAT_DELAY_MS)
