@@ -15,6 +15,7 @@ import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.runtime.interaction.task.InteractionExecutionResult
 import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
@@ -128,6 +129,7 @@ object InteractionProcessor {
             ) ?: ObjectInteractionPolicy.DEFAULT
 
         val routeStart = System.nanoTime()
+        val distanceMode = resolveObjectClickDistanceMode(intent.objectId)
         if (
             ObjectInteractionDistance.resolveDistancePosition(
                 player,

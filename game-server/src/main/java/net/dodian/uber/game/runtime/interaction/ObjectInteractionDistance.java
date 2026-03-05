@@ -19,6 +19,7 @@ public final class ObjectInteractionDistance {
 
     public enum DistanceMode {
         CLICK,
+        MINING,
         ITEM_ON_OBJECT,
         MAGIC,
         POLICY_NEAREST_BOUNDARY_CARDINAL,
