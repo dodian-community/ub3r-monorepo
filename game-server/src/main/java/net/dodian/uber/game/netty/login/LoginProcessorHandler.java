@@ -36,7 +36,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     private static final Logger logger = LoggerFactory.getLogger(LoginProcessorHandler.class);
     private static final long LOGIN_SLOW_WARN_MS = 500L;
-    private static final long LOGIN_QUEUE_WARN_MS = 200L;
+    private static final long LOGIN_QUEUE_WARN_MS = 1_200L;
     private static final long LOGIN_INITIALIZER_WARN_MS = 100L;
     private static final AtomicLong LOGIN_SLOT_FAILURES = new AtomicLong();
     private static final AtomicLong LOGIN_LOAD_FAILURES = new AtomicLong();
