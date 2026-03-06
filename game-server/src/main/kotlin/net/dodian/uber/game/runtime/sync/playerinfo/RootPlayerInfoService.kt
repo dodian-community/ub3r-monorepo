@@ -6,6 +6,8 @@ import net.dodian.uber.game.runtime.sync.playerinfo.state.*
 
 import io.netty.buffer.ByteBuf
 import java.util.IdentityHashMap
+import java.util.LinkedHashMap
+import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerHandler
@@ -23,6 +25,11 @@ import net.dodian.utilities.syncPlayerStateValidationEnabled
 class RootPlayerInfoService {
     private val playerUpdating = PlayerUpdating.getInstance()
     private val viewerStates = IdentityHashMap<Player, ViewerPlayerInfoState>()
+    private val idleTemplateCache =
+        object : LinkedHashMap<IdlePlayerSyncTemplateKey, ByteArray>(256, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<IdlePlayerSyncTemplateKey, ByteArray>?): Boolean =
+                size > MAX_IDLE_TEMPLATE_CACHE_SIZE
+        }
     private val planner = DesiredLocalSetPlanner()
     private val admissionQueue = LocalAdmissionQueue()
     private val validator = PlayerInfoStateValidator()
@@ -278,7 +285,10 @@ class RootPlayerInfoService {
 
     private fun dispatch(viewer: Client, plan: RootPlayerInfoPlan) {
         when (plan.mode) {
-            PlayerPacketMode.SKIP -> SynchronizationContext.recordPlayerPacketSkipped(viewer.playerListSize)
+            PlayerPacketMode.SKIP -> {
+                sendIdleTemplate(viewer)
+                SynchronizationContext.recordPlayerPacketIdleTemplated(viewer.playerListSize)
+            }
             PlayerPacketMode.SELF_ONLY -> {
                 sendPacket(viewer) { out -> playerUpdating.writeSelfOnlyUpdate(viewer, out, plan) }
                 SynchronizationContext.recordPlayerPacketBuilt(viewer.playerListSize)
@@ -293,6 +303,13 @@ class RootPlayerInfoService {
             }
             PlayerPacketMode.FULL_REBUILD -> sendPacket(viewer) { out -> playerUpdating.writeFullRebuild(viewer, out, plan) }
         }
+    }
+
+    private fun sendIdleTemplate(viewer: Client) {
+        playerUpdating.sendServerUpdateIfNeeded(viewer)
+        val payload = idleTemplatePayload(viewer)
+        viewer.noteIdlePlayerSyncSent()
+        sendPacket(viewer, payload)
     }
 
     private fun sendPacket(viewer: Client, write: (ByteMessage) -> Unit) {
@@ -317,6 +334,62 @@ class RootPlayerInfoService {
                 pooledBuffer.release(pooledBuffer.refCnt())
             }
             throw e
+        }
+    }
+
+    private fun sendPacket(viewer: Client, payload: ByteArray) {
+        val capacity = maxOf(viewer.playerUpdateCapacity, payload.size)
+        val pooledBuffer: ByteBuf = viewer.channel?.let { channel ->
+            if (channel.isActive) {
+                channel.alloc().buffer(capacity)
+            } else {
+                null
+            }
+        } ?: ByteMessage.pooledBuffer(capacity)
+        var message: ByteMessage? = null
+        try {
+            message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
+            message.putBytes(payload)
+            viewer.updatePlayerUpdateCapacity(message.content().writerIndex())
+            viewer.send(message)
+        } catch (e: Exception) {
+            if (message != null) {
+                message.releaseAll()
+            } else if (pooledBuffer.refCnt() > 0) {
+                pooledBuffer.release(pooledBuffer.refCnt())
+            }
+            throw e
+        }
+    }
+
+    private fun idleTemplatePayload(viewer: Client): ByteArray {
+        val state = viewerStates.computeIfAbsent(viewer) { ViewerPlayerInfoState() }
+        val key =
+            IdlePlayerSyncTemplateKey(
+                localCount = viewer.playerListSize,
+                localSignature = state.lastIdleTemplateSignature,
+                mapRegionChange = false,
+                serverUpdateRunning = Server.updateRunning,
+            )
+        return idleTemplateCache.getOrPut(key) {
+            buildIdleTemplatePayload(key.localCount)
+        }
+    }
+
+    private fun buildIdleTemplatePayload(localCount: Int): ByteArray {
+        val stream = ByteMessage.raw(maxOf(32, localCount + 8))
+        try {
+            stream.startBitAccess()
+            stream.putBits(1, 0)
+            stream.putBits(8, localCount)
+            repeat(localCount) {
+                stream.putBits(1, 0)
+            }
+            stream.putBits(11, 2047)
+            stream.endBitAccess()
+            return stream.toByteArray()
+        } finally {
+            stream.releaseAll()
         }
     }
 
@@ -348,6 +421,7 @@ class RootPlayerInfoService {
         desiredState.needsHardRebuild = false
 
         state.lastKnownLocalCount = viewer.playerListSize
+        state.lastIdleTemplateSignature = localSignature(desiredState.currentLocalSlots, desiredState.currentLocalCount)
         state.lastKnownRegionBaseX = viewer.mapRegionX
         state.lastKnownRegionBaseY = viewer.mapRegionY
         state.lastKnownPlane = viewer.position.z
@@ -417,6 +491,14 @@ class RootPlayerInfoService {
         return count
     }
 
+    private fun localSignature(slots: IntArray, count: Int): Int {
+        var signature = 1
+        for (i in 0 until count.coerceAtMost(slots.size)) {
+            signature = 31 * signature + slots[i]
+        }
+        return signature
+    }
+
     private fun pruneViewerStates(activePlayers: List<Client>) {
         val activeSet = IdentityHashMap<Player, Boolean>(activePlayers.size)
         activePlayers.forEach { activeSet[it] = true }
@@ -439,6 +521,7 @@ class RootPlayerInfoService {
 
         private const val MAX_LOCAL_PLAYERS = 255
         private const val MAX_LOCAL_PLAYER_ADDS_PER_TICK = 15
+        private const val MAX_IDLE_TEMPLATE_CACHE_SIZE = 1024
 
         private val EMPTY_INT_ARRAY = IntArray(0)
         private val EMPTY_DIFF =
@@ -456,3 +539,10 @@ class RootPlayerInfoService {
             )
     }
 }
+
+private data class IdlePlayerSyncTemplateKey(
+    val localCount: Int,
+    val localSignature: Int,
+    val mapRegionChange: Boolean,
+    val serverUpdateRunning: Boolean,
+)

@@ -298,15 +298,17 @@ class WorldSynchronizationService {
             when (stage) {
                 SynchronizationStage.SYNC_PLAYER_ENCODE -> {
                     val built = cycle.playerPacketsBuilt + cycle.playerPacketsTemplated
+                    val idleTemplated = cycle.playerPacketsIdleTemplated
                     val skipped = cycle.playerPacketsSkipped
-                    val total = built + skipped
+                    val total = built + idleTemplated + skipped
                     val localCoverage = cycle.playerLocalScans + cycle.playerLocalsSkipped + cycle.playerTemplatedLocalCoverage
                     val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalPlayers={}",
+                        "Sync stage {} took {}ms viewersBuilt={} viewersIdleTemplated={} viewersSkipped={} avgLocalPlayers={}",
                         stage,
                         elapsedMs,
                         built,
+                        idleTemplated,
                         skipped,
                         String.format("%.2f", avgLocals),
                     )

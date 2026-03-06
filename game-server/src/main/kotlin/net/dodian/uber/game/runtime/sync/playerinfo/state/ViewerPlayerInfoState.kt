@@ -5,6 +5,7 @@ import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketMode
 data class ViewerPlayerInfoState(
     var lastKnownLocalSlots: IntArray = IntArray(0),
     var lastKnownLocalCount: Int = 0,
+    var lastIdleTemplateSignature: Int = 1,
     var lastKnownRegionBaseX: Int = Int.MIN_VALUE,
     var lastKnownRegionBaseY: Int = Int.MIN_VALUE,
     var lastKnownPlane: Int = Int.MIN_VALUE,

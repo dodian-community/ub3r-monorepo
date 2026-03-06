@@ -616,6 +616,9 @@ public class Client extends Player implements Runnable {
 
     public final java.util.concurrent.atomic.AtomicInteger timeOutCounter = new java.util.concurrent.atomic.AtomicInteger(); // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
+    private volatile long lastInboundKeepAliveAtMillis = System.currentTimeMillis();
+    private volatile long lastIdlePlayerSyncSentAtMillis = 0L;
+    private volatile String lastDisconnectReason = "unknown";
 
 
 
@@ -842,11 +845,44 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetTimeOutCounter() {
+        lastInboundKeepAliveAtMillis = System.currentTimeMillis();
         timeOutCounter.set(0);
     }
 
     public void incrementTimeOutCounter() {
         timeOutCounter.incrementAndGet();
+    }
+
+    public void noteIdlePlayerSyncSent() {
+        lastIdlePlayerSyncSentAtMillis = System.currentTimeMillis();
+    }
+
+    public long getLastInboundKeepAliveAtMillis() {
+        return lastInboundKeepAliveAtMillis;
+    }
+
+    public long getLastIdlePlayerSyncSentAtMillis() {
+        return lastIdlePlayerSyncSentAtMillis;
+    }
+
+    public String getLastDisconnectReason() {
+        return lastDisconnectReason;
+    }
+
+    public void noteDisconnectReason(String reason) {
+        if (reason != null && !reason.isEmpty()) {
+            lastDisconnectReason = reason;
+        }
+    }
+
+    public String connectionHealthSummary() {
+        long now = System.currentTimeMillis();
+        long inboundAge = lastInboundKeepAliveAtMillis <= 0L ? -1L : Math.max(0L, now - lastInboundKeepAliveAtMillis);
+        long idleSyncAge = lastIdlePlayerSyncSentAtMillis <= 0L ? -1L : Math.max(0L, now - lastIdlePlayerSyncSentAtMillis);
+        return "reason=" + lastDisconnectReason
+                + " timeoutCounter=" + timeOutCounter.get()
+                + " idleSyncAgeMs=" + idleSyncAge
+                + " inboundKeepAliveAgeMs=" + inboundAge;
     }
 
     private boolean shouldQueueOutbound() {

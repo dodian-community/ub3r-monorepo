@@ -54,6 +54,8 @@ class SynchronizationCycle(
         private set
     var playerPacketsTemplated: Int = 0
         private set
+    var playerPacketsIdleTemplated: Int = 0
+        private set
     var playerScratchReuseCount: Int = 0
         private set
     var playerAppearanceCacheHits: Int = 0
@@ -166,6 +168,11 @@ class SynchronizationCycle(
 
     fun recordPlayerPacketTemplated(localCount: Int) {
         playerPacketsTemplated++
+        playerTemplatedLocalCoverage += localCount
+    }
+
+    fun recordPlayerPacketIdleTemplated(localCount: Int) {
+        playerPacketsIdleTemplated++
         playerTemplatedLocalCoverage += localCount
     }
 

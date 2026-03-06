@@ -39,11 +39,23 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         boolean isReadTimeout = cause instanceof ReadTimeoutException;
         boolean isIgnoredMessage = IGNORED_EXCEPTIONS.contains(cause.getMessage());
+        Object activeClient = ctx.channel().attr(AttributeKey.valueOf("activeClient")).get();
+        Client client = activeClient instanceof Client ? (Client) activeClient : null;
 
         if (!isReadTimeout && !isIgnoredMessage) {
             logger.warn("[Netty] Exception from {}: {}", ctx.channel().remoteAddress(), cause.getMessage());
         } else if (isReadTimeout) {
-            logger.debug("[Netty] Read timeout for {}", ctx.channel().remoteAddress());
+            if (client != null) {
+                client.noteDisconnectReason("read-timeout");
+                logger.debug(
+                        "[Netty] Read timeout for {} player={} {}",
+                        ctx.channel().remoteAddress(),
+                        client.getPlayerName(),
+                        client.connectionHealthSummary()
+                );
+            } else {
+                logger.debug("[Netty] Read timeout for {}", ctx.channel().remoteAddress());
+            }
         }
         
         ctx.close();
@@ -52,12 +64,19 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        logger.debug("[Netty] Channel inactive {}", ctx.channel().remoteAddress());
-
         // If this channel had an active Client linked, remove it from the server.
         Object attr = ctx.channel().attr(AttributeKey.valueOf("activeClient")).getAndSet(null);
         if (attr instanceof Client) {
             Client client = (Client) attr;
+            if ("unknown".equals(client.getLastDisconnectReason())) {
+                client.noteDisconnectReason("channel-inactive");
+            }
+            logger.debug(
+                    "[Netty] Channel inactive {} player={} {}",
+                    ctx.channel().remoteAddress(),
+                    client.getPlayerName(),
+                    client.connectionHealthSummary()
+            );
             // Mark disconnected immediately (Netty thread) so the game thread stops processing this client ASAP.
             client.disconnected = true;
             // Remove the stale online entry promptly to avoid "already logged in" false-positives during relog.
@@ -71,6 +90,8 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
             GameThreadTaskQueue.submit(() -> {
                 Server.playerHandler.removePlayer(client);
             });
+        } else {
+            logger.debug("[Netty] Channel inactive {}", ctx.channel().remoteAddress());
         }
         super.channelInactive(ctx);
     }

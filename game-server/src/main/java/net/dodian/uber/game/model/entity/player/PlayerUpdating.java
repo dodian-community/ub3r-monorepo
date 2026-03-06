@@ -57,7 +57,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void update(Player player, ByteMessage stream) {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
-            writeServerUpdateIfNeeded(player);
+            sendServerUpdateIfNeeded(player);
 
             // Ensure the player is registered in the chunk index before discovery.
             player.syncChunkMembership();
@@ -134,7 +134,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void writeSelfOnlyUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan) {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
-            writeServerUpdateIfNeeded(viewer);
+            sendServerUpdateIfNeeded(viewer);
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
             appendBlockUpdate(viewer, updateBlock, UpdatePhase.UPDATE_SELF);
@@ -165,7 +165,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     private void writeIncrementalUpdate(Player viewer, ByteMessage stream, RootPlayerInfoPlan plan, boolean includeAdditions) {
         ByteMessage updateBlock = withScratchUpdateBlock();
         try {
-            writeServerUpdateIfNeeded(viewer);
+            sendServerUpdateIfNeeded(viewer);
             viewer.syncChunkMembership();
             boolean localPlayerUpdateRequired = hasUpdatesForPhase(viewer, UpdatePhase.UPDATE_SELF);
             updateLocalPlayerMovement(viewer, stream, localPlayerUpdateRequired);
@@ -909,7 +909,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         return player.getSecondaryDirection() == -1 ? 1 : 2;
     }
 
-    private void writeServerUpdateIfNeeded(Player player) {
+    public void sendServerUpdateIfNeeded(Player player) {
         if (Server.updateRunning) {
             ByteMessage updateMsg = ByteMessage.message(114, MessageType.FIXED);
             int seconds = Server.updateSeconds + ((int) (Server.updateStartTime - System.currentTimeMillis()) / 1000);

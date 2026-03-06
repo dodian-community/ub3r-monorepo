@@ -116,6 +116,11 @@ object SynchronizationContext {
     }
 
     @JvmStatic
+    fun recordPlayerPacketIdleTemplated(localCount: Int) {
+        current()?.recordPlayerPacketIdleTemplated(localCount)
+    }
+
+    @JvmStatic
     fun recordPlayerPacketMode(mode: PlayerPacketMode) {
         current()?.recordPlayerPacketMode(mode)
     }
