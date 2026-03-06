@@ -273,6 +273,11 @@ object PlayerBankService {
         if (client.bankItems[bankSlot] <= 0 || client.bankItemsN[bankSlot] <= 0) {
             return
         }
+        val itemId = client.bankItems[bankSlot] - 1
+        val currentTab = client.bankSlotTabs[bankSlot]
+        if (itemId == 995 && currentTab in 1..9 && tab in 1..9 && currentTab != tab && !hasBankTabItems(client, tab)) {
+            return
+        }
         client.bankSlotTabs[bankSlot] = clampOwnedTab(tab)
         if (client.currentBankTab == 10) {
             client.bankSearchActive = false
