@@ -11,5 +11,5 @@ data class ViewerPlayerSyncState(
     var lastKnownPlane: Int = Int.MIN_VALUE,
     var lastKnownTeleportState: Boolean = false,
     var lastChunkActivityStamp: Long = 0L,
-    var lastLocalActivityStamp: Long = 0L,
+    var lastLocalMembershipRevision: Long = 0L,
 )

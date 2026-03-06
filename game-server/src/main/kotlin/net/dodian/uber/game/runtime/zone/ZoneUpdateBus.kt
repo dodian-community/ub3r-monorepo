@@ -88,15 +88,15 @@ object ZoneUpdateBus {
     }
 
     @JvmStatic
-    fun flush(activePlayers: List<Client>) {
+    fun flush(activePlayers: List<Client>): ZoneFlushStats {
         val deltas =
             synchronized(lock) {
                 queue.drain()
             }
         if (deltas.isEmpty()) {
-            return
+            return ZoneFlushStats.EMPTY
         }
-        flushService.flush(deltas, activePlayers)
+        return flushService.flush(deltas, activePlayers)
     }
 
     private fun enqueue(delta: ZoneDelta) {
@@ -112,6 +112,8 @@ object ZoneUpdateBus {
         private val excludeDbId: Int? = null,
         private val sender: (Client) -> Unit,
     ) : ZoneDelta() {
+        private val candidateChunks = candidateChunkKeys(position, radius)
+
         override fun appliesTo(viewer: Client): Boolean {
             if (!viewer.isActive || viewer.disconnected) {
                 return false
@@ -131,5 +133,24 @@ object ZoneUpdateBus {
         override fun deliver(viewer: Client) {
             sender(viewer)
         }
+
+        override fun candidateChunkKeys(): LongArray = candidateChunks
+
+        private fun candidateChunkKeys(position: Position, radius: Int): LongArray {
+            val minChunkX = (position.x - radius) shr 3
+            val maxChunkX = (position.x + radius) shr 3
+            val minChunkY = (position.y - radius) shr 3
+            val maxChunkY = (position.y + radius) shr 3
+            val keys = LongArray((maxChunkX - minChunkX + 1) * (maxChunkY - minChunkY + 1))
+            var index = 0
+            for (chunkX in minChunkX..maxChunkX) {
+                for (chunkY in minChunkY..maxChunkY) {
+                    keys[index++] = packChunkKey(chunkX, chunkY)
+                }
+            }
+            return keys
+        }
+
+        private fun packChunkKey(chunkX: Int, chunkY: Int): Long = (chunkX.toLong() shl 32) xor (chunkY.toLong() and 0xffffffffL)
     }
 }

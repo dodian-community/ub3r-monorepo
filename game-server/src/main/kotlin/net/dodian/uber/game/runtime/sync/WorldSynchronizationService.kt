@@ -180,31 +180,63 @@ class WorldSynchronizationService {
         activePlayers.forEach { player ->
             val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
             val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
-            val localStamp = if (trackActivityStamps) SynchronizationContext.getNpcLocalActivityStamp(player) else 0L
+            val membershipRevision = if (trackActivityStamps) player.localNpcMembershipRevision else 0L
             val decision =
                 if (trackActivityStamps) {
-                    shouldSkipNpcSync(player, state, chunkStamp, localStamp)
+                    shouldSkipNpcSync(player, state, chunkStamp, membershipRevision)
                 } else {
                     NpcSyncDecision.BUILD
                 }
             if (decision == NpcSyncDecision.SKIP) {
                 SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
                 SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                updateNpcViewerSyncState(player, chunkStamp, localStamp)
+                updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
                 return@forEach
             }
             player.sendNpcSynchronization()
             SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
             SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-            updateNpcViewerSyncState(player, chunkStamp, localStamp)
+            updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
         }
     }
 
     private fun flushActivePlayers(activePlayers: List<Client>) {
-        PlayerUiDeltaProcessor.process(activePlayers)
-        ZoneUpdateBus.flush(activePlayers)
-        activePlayers.forEach { player ->
-            player.flushOutbound()
+        val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(activePlayers) }
+        val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.runtime.zone.ZoneFlushStats>(1)
+        val zoneNanos =
+            measureNanoTime {
+                zoneStatsRef[0] = ZoneUpdateBus.flush(activePlayers)
+            }
+        var flushedPlayers = 0
+        var flushedMessages = 0
+        var flushedBytes = 0
+        val netNanos =
+            measureNanoTime {
+                activePlayers.forEach { player ->
+                    val flushStats = player.flushOutbound()
+                    if (flushStats.flushedMessages > 0) {
+                        flushedPlayers++
+                        flushedMessages += flushStats.flushedMessages
+                        flushedBytes += flushStats.flushedBytes
+                    }
+                }
+            }
+        val totalMs = (uiNanos + zoneNanos + netNanos) / 1_000_000L
+        if (totalMs >= runtimePhaseWarnMs) {
+            val zoneStats = zoneStatsRef[0] ?: net.dodian.uber.game.runtime.zone.ZoneFlushStats.EMPTY
+            logger.warn(
+                "SYNC_FLUSH detail: total={}ms ui={}ms zone={}ms net={}ms playersFlushed={} messages={} bytes={} zoneDeltas={} zoneCandidates={} zoneDeliveries={}",
+                totalMs,
+                uiNanos / 1_000_000L,
+                zoneNanos / 1_000_000L,
+                netNanos / 1_000_000L,
+                flushedPlayers,
+                flushedMessages,
+                flushedBytes,
+                zoneStats.deltas,
+                zoneStats.candidateViewers,
+                zoneStats.deliveries,
+            )
         }
     }
 
@@ -219,7 +251,7 @@ class WorldSynchronizationService {
         player: Client,
         state: ViewerNpcSyncState?,
         chunkStamp: Long,
-        localStamp: Long,
+        membershipRevision: Long,
     ): NpcSyncDecision {
         state ?: run {
             SynchronizationContext.recordNpcBuildNoState()
@@ -244,14 +276,14 @@ class WorldSynchronizationService {
         }
         return if (
             state.lastChunkActivityStamp == chunkStamp &&
-            state.lastLocalNpcActivityStamp == localStamp
+            state.lastLocalNpcMembershipRevision == membershipRevision
         ) {
             NpcSyncDecision.SKIP
         } else {
             if (state.lastChunkActivityStamp != chunkStamp) {
                 SynchronizationContext.recordNpcBuildChunkActivityChanged()
             }
-            if (state.lastLocalNpcActivityStamp != localStamp) {
+            if (state.lastLocalNpcMembershipRevision != membershipRevision) {
                 SynchronizationContext.recordNpcBuildLocalActivityChanged()
             }
             NpcSyncDecision.BUILD
@@ -287,7 +319,7 @@ class WorldSynchronizationService {
                     val localCoverage = cycle.npcLocalScans + cycle.npcLocalsSkipped
                     val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, localStamp={}]",
+                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, membership={}]",
                         stage,
                         elapsedMs,
                         built,
@@ -321,7 +353,7 @@ class WorldSynchronizationService {
         val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
         val trackActivityStamps = syncSkipEmptyPlayerPacketEnabled
         val chunkStamp = if (trackActivityStamps) SynchronizationContext.getPlayerChunkActivityStamp(player) else 0L
-        val localStamp = if (trackActivityStamps) SynchronizationContext.getPlayerLocalActivityStamp(player) else 0L
+        val membershipRevision = if (trackActivityStamps) player.localPlayerMembershipRevision else 0L
         state.lastPlayerSyncTick = tick
         state.lastSelfMovementRevision = playerRevisionIndex.movementRevision(player)
         state.lastSelfBlockRevision = playerRevisionIndex.blockRevision(player)
@@ -332,7 +364,7 @@ class WorldSynchronizationService {
         state.lastKnownPlane = player.position.z
         state.lastKnownTeleportState = player.didTeleport()
         state.lastChunkActivityStamp = chunkStamp
-        state.lastLocalActivityStamp = localStamp
+        state.lastLocalMembershipRevision = membershipRevision
     }
 
     private fun sendPlayerTemplate(player: Client, payload: ByteArray) {
@@ -342,7 +374,7 @@ class WorldSynchronizationService {
         player.send(message)
     }
 
-    private fun updateNpcViewerSyncState(player: Client, chunkStamp: Long, localStamp: Long) {
+    private fun updateNpcViewerSyncState(player: Client, chunkStamp: Long, membershipRevision: Long) {
         val state: ViewerNpcSyncState = npcRevisionIndex.viewerState(player)
         state.lastNpcSyncTick = tick
         state.lastNpcViewportRevision = chunkStamp
@@ -351,6 +383,6 @@ class WorldSynchronizationService {
         state.lastKnownMapRegionY = player.mapRegionY
         state.lastKnownPlane = player.position.z
         state.lastChunkActivityStamp = chunkStamp
-        state.lastLocalNpcActivityStamp = localStamp
+        state.lastLocalNpcMembershipRevision = membershipRevision
     }
 }

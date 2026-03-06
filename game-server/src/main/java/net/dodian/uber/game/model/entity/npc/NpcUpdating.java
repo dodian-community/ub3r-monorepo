@@ -60,6 +60,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                     buf.putBits(1, 1);
                     stream.putBits(2, 3); // tells client to remove this npc from list
                     i.remove();
+                    player.bumpLocalNpcMembershipRevision();
                 }
             }
 
@@ -71,6 +72,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 boolean exceptions = removeNpc(player, npc);
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
                 if (player.getLocalNpcs().add(npc)) {
+                    player.bumpLocalNpcMembershipRevision();
                     if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
                         npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
@@ -122,6 +124,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 continue;
             }
             iterator.remove();
+            player.bumpLocalNpcMembershipRevision();
         }
     }
 

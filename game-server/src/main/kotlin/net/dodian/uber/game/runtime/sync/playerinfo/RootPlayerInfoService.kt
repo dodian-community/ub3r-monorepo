@@ -67,21 +67,16 @@ class RootPlayerInfoService {
         val selfMovementChanged = viewer.primaryDirection != -1 || viewer.secondaryDirection != -1
         val selfBlockChanged = viewer.updateFlags.isUpdateRequired
         val teleport = viewer.didTeleport()
+        val currentChunkStamp = SynchronizationContext.getPlayerChunkActivityStamp(viewer)
+        val currentMembershipRevision = viewer.localPlayerMembershipRevision
         val mapRegionChanged = viewer.didMapRegionChange() ||
             (state.lastKnownRegionBaseX != Int.MIN_VALUE &&
                 (state.lastKnownRegionBaseX != viewer.mapRegionX ||
                     state.lastKnownRegionBaseY != viewer.mapRegionY ||
                     state.lastKnownPlane != viewer.position.z))
         val buildAreaChanged = state.lastBuildAreaSignature != 0 && state.lastBuildAreaSignature != buildAreaSignature
-        val recoveryReason =
-            if (syncPlayerStateValidationEnabled && !teleport && !mapRegionChanged && !buildAreaChanged) {
-                validator.validate(viewer, state)
-            } else {
-                null
-            }
 
         val saturated = viewer.playerListSize >= MAX_LOCAL_PLAYERS
-        val currentLocalStamp = SynchronizationContext.current()?.playerRevisionIndex?.localActivityStamp(viewer) ?: 0L
 
         // Fast-skip gate: do not allocate/copy local slot arrays or run the planner when we can prove nothing changed.
         // In overcrowded saturated local lists, visible-set churn does not matter (retain-first semantics),
@@ -91,12 +86,11 @@ class RootPlayerInfoService {
             !buildAreaChanged &&
             !state.needsHardRebuild &&
             !desiredState.needsHardRebuild &&
-            recoveryReason == null &&
             desiredState.pendingAddCount == 0 &&
             !selfMovementChanged &&
             !selfBlockChanged &&
-            currentLocalStamp == state.lastLocalActivityStamp &&
-            !hasInvalidLocals(viewer)
+            currentChunkStamp == state.lastChunkActivityStamp &&
+            currentMembershipRevision == state.lastLocalMembershipRevision
         ) {
             val visibleSignature =
                 if (saturated) {
@@ -120,6 +114,13 @@ class RootPlayerInfoService {
                 )
             }
         }
+
+        val recoveryReason =
+            if (syncPlayerStateValidationEnabled && !teleport && !mapRegionChanged && !buildAreaChanged) {
+                validator.validate(viewer, state)
+            } else {
+                null
+            }
 
         // Build-required path: materialize current locals into a scratch array and plan desired locals/diffs.
         val currentLocalCount = copyCurrentLocals(viewer, desiredState.currentLocalSlots)
@@ -352,7 +353,8 @@ class RootPlayerInfoService {
         state.lastKnownPlane = viewer.position.z
         state.lastVisibleSignature = plan.visibleSignature
         state.lastBuildAreaSignature = buildAreaSignature(viewer)
-        state.lastLocalActivityStamp = SynchronizationContext.current()?.playerRevisionIndex?.localActivityStamp(viewer) ?: 0L
+        state.lastChunkActivityStamp = SynchronizationContext.getPlayerChunkActivityStamp(viewer)
+        state.lastLocalMembershipRevision = viewer.localPlayerMembershipRevision
         state.lastPacketMode = plan.mode
         state.needsHardRebuild = false
         state.buildAreaState.regionBaseX = viewer.mapRegionX
@@ -405,25 +407,6 @@ class RootPlayerInfoService {
             signature = 31 * signature + other.slot
         }
         return signature
-    }
-
-    private fun hasInvalidLocals(viewer: Client): Boolean {
-        for (i in 0 until viewer.playerListSize) {
-            val local = viewer.playerList[i] ?: return true
-            if (!local.isActive) {
-                return true
-            }
-            if (local.didTeleport()) {
-                return true
-            }
-            if (!viewer.withinDistance(local)) {
-                return true
-            }
-            if (local.invis && !viewer.invis) {
-                return true
-            }
-        }
-        return false
     }
 
     private fun copyCurrentLocals(viewer: Client, out: IntArray): Int {

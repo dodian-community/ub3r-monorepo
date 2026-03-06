@@ -30,7 +30,8 @@ import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.runtime.loop.GameThreadContext;
+import net.dodian.uber.game.runtime.net.InboundPacketMailbox;
+import net.dodian.uber.game.runtime.net.OutboundSessionQueue;
 import net.dodian.jobs.impl.EntityProcessor;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
@@ -73,8 +74,8 @@ public class Client extends Player implements Runnable {
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
 
     public Channel channel;
-    private final java.util.Queue<net.dodian.uber.game.netty.game.GamePacket> pendingInboundPackets = new java.util.concurrent.ConcurrentLinkedQueue<>();
-    private final java.util.concurrent.atomic.AtomicInteger pendingInboundPacketCount = new java.util.concurrent.atomic.AtomicInteger();
+    private final InboundPacketMailbox inboundPacketMailbox = new InboundPacketMailbox(MAX_PENDING_INBOUND_PACKETS);
+    private final OutboundSessionQueue outboundSessionQueue = new OutboundSessionQueue();
     private final java.util.concurrent.atomic.AtomicBoolean inboundReadyQueued = new java.util.concurrent.atomic.AtomicBoolean();
 
     public Farming farming = new Farming();
@@ -625,9 +626,81 @@ public class Client extends Player implements Runnable {
 
     }
 
+    public static final class InboundProcessResult {
+        private final int processedPackets;
+        private final int walkPacketsProcessed;
+        private final int mousePacketsProcessed;
+        private final int walkPacketsReplaced;
+        private final int mousePacketsReplaced;
+        private final int fifoPacketsDropped;
+
+        public InboundProcessResult(
+                int processedPackets,
+                int walkPacketsProcessed,
+                int mousePacketsProcessed,
+                int walkPacketsReplaced,
+                int mousePacketsReplaced,
+                int fifoPacketsDropped
+        ) {
+            this.processedPackets = processedPackets;
+            this.walkPacketsProcessed = walkPacketsProcessed;
+            this.mousePacketsProcessed = mousePacketsProcessed;
+            this.walkPacketsReplaced = walkPacketsReplaced;
+            this.mousePacketsReplaced = mousePacketsReplaced;
+            this.fifoPacketsDropped = fifoPacketsDropped;
+        }
+
+        public int getProcessedPackets() {
+            return processedPackets;
+        }
+
+        public int getWalkPacketsProcessed() {
+            return walkPacketsProcessed;
+        }
+
+        public int getMousePacketsProcessed() {
+            return mousePacketsProcessed;
+        }
+
+        public int getWalkPacketsReplaced() {
+            return walkPacketsReplaced;
+        }
+
+        public int getMousePacketsReplaced() {
+            return mousePacketsReplaced;
+        }
+
+        public int getFifoPacketsDropped() {
+            return fifoPacketsDropped;
+        }
+    }
+
+    public static final class OutboundFlushStats {
+        private final int flushedMessages;
+        private final int flushedBytes;
+
+        public OutboundFlushStats(int flushedMessages, int flushedBytes) {
+            this.flushedMessages = flushedMessages;
+            this.flushedBytes = flushedBytes;
+        }
+
+        public static OutboundFlushStats empty() {
+            return new OutboundFlushStats(0, 0);
+        }
+
+        public int getFlushedMessages() {
+            return flushedMessages;
+        }
+
+        public int getFlushedBytes() {
+            return flushedBytes;
+        }
+    }
+
     @Override
     public void destruct() {
         releaseQueuedInboundPackets();
+        releaseQueuedOutboundPackets();
         clearInboundReadyFlag();
         cancelFarmDebugTask();
 
@@ -662,29 +735,35 @@ public class Client extends Player implements Runnable {
         if (packet == null || disconnected) {
             return false;
         }
-        int queued = pendingInboundPacketCount.incrementAndGet();
-        if (queued > MAX_PENDING_INBOUND_PACKETS) {
-            pendingInboundPacketCount.decrementAndGet();
+        InboundPacketMailbox.EnqueueResult result = inboundPacketMailbox.enqueue(packet);
+        if (!result.accepted()) {
             return false;
         }
-        pendingInboundPackets.add(packet);
         markInboundReadyIfNeeded();
         return true;
     }
 
-    public int processQueuedPackets(int maxPacketsPerTick) {
+    public InboundProcessResult processQueuedPackets(int maxPacketsPerTick) {
         if (maxPacketsPerTick <= 0 || disconnected) {
-            return 0;
+            InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
+            return new InboundProcessResult(0, 0, 0, counters.walkReplaced(), counters.mouseReplaced(), counters.fifoDropped());
         }
 
         int processedCount = 0;
+        int walkProcessed = 0;
+        int mouseProcessed = 0;
         for (int processed = 0; processed < maxPacketsPerTick; processed++) {
-            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
-            if (packet == null) {
+            InboundPacketMailbox.PollResult next = inboundPacketMailbox.pollNext();
+            if (next == null) {
                 break;
             }
-            pendingInboundPacketCount.decrementAndGet();
+            net.dodian.uber.game.netty.game.GamePacket packet = next.packet();
             processedCount++;
+            if (next.family() == InboundPacketMailbox.Family.WALK) {
+                walkProcessed++;
+            } else if (next.family() == InboundPacketMailbox.Family.MOUSE) {
+                mouseProcessed++;
+            }
 
             try {
                 dispatchQueuedPacket(packet);
@@ -698,7 +777,15 @@ public class Client extends Player implements Runnable {
                 }
             }
         }
-        return processedCount;
+        InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
+        return new InboundProcessResult(
+                processedCount,
+                walkProcessed,
+                mouseProcessed,
+                counters.walkReplaced(),
+                counters.mouseReplaced(),
+                counters.fifoDropped()
+        );
     }
 
     private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
@@ -732,20 +819,16 @@ public class Client extends Player implements Runnable {
     }
 
     private void releaseQueuedInboundPackets() {
-        for (;;) {
-            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
-            if (packet == null) {
-                pendingInboundPacketCount.set(0);
-                break;
-            }
-            if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-                packet.getPayload().release();
-            }
-        }
+        inboundPacketMailbox.clear(this::releaseInboundPacket);
+    }
+
+    private void releaseQueuedOutboundPackets() {
+        outboundSessionQueue.releaseAll();
+        outboundDirty = false;
     }
 
     public int getPendingInboundPacketCount() {
-        return pendingInboundPacketCount.get();
+        return inboundPacketMailbox.pendingCount();
     }
 
     public void clearInboundReadyFlag() {
@@ -766,29 +849,44 @@ public class Client extends Player implements Runnable {
         timeOutCounter.incrementAndGet();
     }
 
+    private boolean shouldQueueOutbound() {
+        return isActive && loaded && !disconnected;
+    }
+
+    private void releaseInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        if (packet != null && packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
+            packet.getPayload().release();
+        }
+    }
+
     public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
         if (disconnected || channel == null || !channel.isActive()) {
             message.release();
             return;
         }
-
-        outboundDirty = true;
-        if (GameThreadContext.isGameThread()) {
-            channel.write(message);
-        } else {
-            channel.writeAndFlush(message);
+        if (shouldQueueOutbound()) {
+            outboundSessionQueue.enqueue(message);
+            outboundDirty = true;
+            return;
         }
+        channel.writeAndFlush(message);
     }
 
-    public void flushOutbound() {
+    public OutboundFlushStats flushOutbound() {
         if (disconnected || channel == null || !channel.isActive()) {
-            return;
+            return OutboundFlushStats.empty();
         }
         if (!outboundDirty) {
-            return;
+            return OutboundFlushStats.empty();
+        }
+        OutboundSessionQueue.DrainResult drain = outboundSessionQueue.drainTo(channel);
+        if (drain.messageCount() <= 0) {
+            outboundDirty = !outboundSessionQueue.isEmpty();
+            return OutboundFlushStats.empty();
         }
         channel.flush();
-        outboundDirty = false;
+        outboundDirty = !outboundSessionQueue.isEmpty();
+        return new OutboundFlushStats(drain.messageCount(), drain.byteCount());
     }
 
     public int getPlayerUpdateCapacity() {

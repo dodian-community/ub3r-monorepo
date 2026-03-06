@@ -129,6 +129,8 @@ public abstract class Player extends Entity {
     public int playerListSize = 0;
     public Set<Player> playersUpdating = new LinkedHashSet<>(255);
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
+    private long localPlayerMembershipRevision = 0L;
+    private long localNpcMembershipRevision = 0L;
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;
     public boolean loaded = false;
@@ -740,6 +742,7 @@ public abstract class Player extends Entity {
         int id = plr.getSlot();
         playerList[playerListSize++] = plr;
         playersUpdating.add(plr);
+        bumpLocalPlayerMembershipRevision();
         str.putBits(11, id);
         str.putBits(1, 1);// Requires update?
         PlayerUpdating.getInstance().appendAddLocalBlockUpdate(plr, updateBlock);
@@ -1379,6 +1382,22 @@ public abstract class Player extends Entity {
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
+    }
+
+    public long getLocalPlayerMembershipRevision() {
+        return localPlayerMembershipRevision;
+    }
+
+    public void bumpLocalPlayerMembershipRevision() {
+        localPlayerMembershipRevision++;
+    }
+
+    public long getLocalNpcMembershipRevision() {
+        return localNpcMembershipRevision;
+    }
+
+    public void bumpLocalNpcMembershipRevision() {
+        localNpcMembershipRevision++;
     }
 
     public boolean didTeleport() {

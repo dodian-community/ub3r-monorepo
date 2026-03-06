@@ -68,6 +68,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             // Handle teleportation - clear player list but continue to local player discovery
             if (player.didTeleport()) {
                 // Clear existing player list when teleporting (similar to Hyperion's approach)
+                if (player.playerListSize > 0 || !player.playersUpdating.isEmpty()) {
+                    player.bumpLocalPlayerMembershipRevision();
+                }
                 java.util.Arrays.fill(player.playerList, 0, player.playerListSize, null);
                 player.playerListSize = 0;
                 player.playersUpdating.clear();
@@ -81,6 +84,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 stream.putBits(8, player.playerListSize);
                 int size = player.playerListSize;
                 int keep = 0;
+                boolean localsChanged = false;
                 for (int i = 0; i < size; i++) {
                     Player local = player.playerList[i];
                     if (local != null && player.loaded && !local.didTeleport() && !player.didTeleport()
@@ -91,12 +95,16 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                     } else {
                         if (local != null) {
                             player.playersUpdating.remove(local);
+                            localsChanged = true;
                         }
                         stream.putBits(1, 1);
                         stream.putBits(2, 3);
                     }
                 }
                 java.util.Arrays.fill(player.playerList, keep, size, null);
+                if (keep != size || localsChanged) {
+                    player.bumpLocalPlayerMembershipRevision();
+                }
                 player.playerListSize = keep;
 
                 addLocalPlayers(player, stream, updateBlock);
@@ -170,11 +178,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 java.util.BitSet changedRetained = toBitSet(plan.getDiff().getChangedRetained(), plan.getDiff().getChangedRetainedCount());
                 int originalSize = viewer.playerListSize;
                 int keep = 0;
+                boolean localsChanged = false;
                 for (int i = 0; i < originalSize; i++) {
                     Player local = viewer.playerList[i];
                     if (local == null || removals.get(local.getSlot())) {
                         if (local != null) {
                             viewer.playersUpdating.remove(local);
+                            localsChanged = true;
                         }
                         stream.putBits(1, 1);
                         stream.putBits(2, 3);
@@ -185,6 +195,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                     viewer.playerList[keep++] = local;
                 }
                 java.util.Arrays.fill(viewer.playerList, keep, originalSize, null);
+                if (keep != originalSize || localsChanged) {
+                    viewer.bumpLocalPlayerMembershipRevision();
+                }
                 viewer.playerListSize = keep;
                 if (includeAdditions) {
                     writeLocalAdditions(viewer, stream, updateBlock, plan);
@@ -422,6 +435,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 player.playerList[i] = null;
             }
         }
+        if (keep != originalSize) {
+            player.bumpLocalPlayerMembershipRevision();
+        }
         player.playerListSize = keep;
     }
 
@@ -474,11 +490,13 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void writeLocalRemovals(Player viewer, ByteMessage stream, java.util.BitSet removals) {
         int originalSize = viewer.playerListSize;
         int keep = 0;
+        boolean localsChanged = false;
         for (int i = 0; i < originalSize; i++) {
             Player local = viewer.playerList[i];
             if (local == null || removals.get(local.getSlot())) {
                 if (local != null) {
                     viewer.playersUpdating.remove(local);
+                    localsChanged = true;
                 }
                 stream.putBits(1, 1);
                 stream.putBits(2, 3);
@@ -487,6 +505,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             viewer.playerList[keep++] = local;
         }
         java.util.Arrays.fill(viewer.playerList, keep, originalSize, null);
+        if (keep != originalSize || localsChanged) {
+            viewer.bumpLocalPlayerMembershipRevision();
+        }
         viewer.playerListSize = keep;
     }
 
@@ -552,8 +573,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 viewer.mapRegionX == viewerState.getLastKnownMapRegionX()
                         && viewer.mapRegionY == viewerState.getLastKnownMapRegionY()
                         && viewer.getPosition().getZ() == viewerState.getLastKnownPlane();
-        long localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(viewer);
-        boolean localActivityStable = localActivityStamp == viewerState.getLastLocalActivityStamp();
+        long localMembershipRevision = viewer.getLocalPlayerMembershipRevision();
+        boolean localActivityStable = localMembershipRevision == viewerState.getLastLocalMembershipRevision();
         boolean noImmediateStateChange =
                 !viewer.didTeleport()
                         && !viewer.didMapRegionChange()

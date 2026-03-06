@@ -13,6 +13,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+val syncTestSourceSet = sourceSets.create("syncTest") {
+    java.srcDirs("src/syncTest/java", "src/syncTest/kotlin")
+    resources.srcDir("src/syncTest/resources")
+    compileClasspath += sourceSets.main.get().output + configurations.testRuntimeClasspath.get()
+    runtimeClasspath += output + compileClasspath
+}
+
 tasks.jar {
 
     manifest {
@@ -69,6 +76,24 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+configurations[syncTestSourceSet.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[syncTestSourceSet.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+
+tasks.register<Test>("syncTest") {
+    description = "Runs focused synchronization and transport verification tests"
+    group = "verification"
+    testClassesDirs = syncTestSourceSet.output.classesDirs
+    classpath = syncTestSourceSet.runtimeClasspath
+    useJUnitPlatform()
+}
+
+tasks.register<JavaExec>("runSyncBenchmark") {
+    group = "verification"
+    description = "Run the synchronization pipeline benchmark harness"
+    classpath = syncTestSourceSet.runtimeClasspath
+    mainClass.set("net.dodian.uber.game.runtime.sync.SyncPipelineBenchmark")
 }
 
 // Custom task to run our validation test

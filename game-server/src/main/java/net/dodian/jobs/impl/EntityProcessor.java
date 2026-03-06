@@ -299,6 +299,11 @@ public class EntityProcessor implements Runnable {
         int readyPlayersBefore = readyPlayers.size();
         int readyPlayersProcessed = 0;
         int processedPackets = 0;
+        int processedWalkPackets = 0;
+        int processedMousePackets = 0;
+        int replacedWalkPackets = 0;
+        int replacedMousePackets = 0;
+        int droppedFifoPackets = 0;
         int totalPendingBefore = 0;
         int totalPendingAfter = 0;
         int deferredPlayers = 0;
@@ -325,7 +330,13 @@ public class EntityProcessor implements Runnable {
                 maxPendingBefore = pendingBefore;
             }
 
-            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
+            Client.InboundProcessResult result = player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
+            processedPackets += result.getProcessedPackets();
+            processedWalkPackets += result.getWalkPacketsProcessed();
+            processedMousePackets += result.getMousePacketsProcessed();
+            replacedWalkPackets += result.getWalkPacketsReplaced();
+            replacedMousePackets += result.getMousePacketsReplaced();
+            droppedFifoPackets += result.getFifoPacketsDropped();
 
             int pendingAfter = player.getPendingInboundPacketCount();
             totalPendingAfter += pendingAfter;
@@ -341,11 +352,16 @@ public class EntityProcessor implements Runnable {
         long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
         if (elapsedMs >= getRuntimePhaseWarnMs()) {
             logger.warn(
-                    "INBOUND_PACKETS slow: total={}ms readyPlayers={} processedReadyPlayers={} processedPackets={} deferredPlayers={} readyAfter={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
+                    "INBOUND_PACKETS slow: total={}ms readyPlayers={} processedReadyPlayers={} processedPackets={} walkProcessed={} mouseProcessed={} walkReplaced={} mouseReplaced={} fifoDropped={} deferredPlayers={} readyAfter={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
                     elapsedMs,
                     readyPlayersBefore,
                     readyPlayersProcessed,
                     processedPackets,
+                    processedWalkPackets,
+                    processedMousePackets,
+                    replacedWalkPackets,
+                    replacedMousePackets,
+                    droppedFifoPackets,
                     deferredPlayers,
                     READY_INBOUND_PLAYERS.size(),
                     totalPendingBefore,

@@ -8,9 +8,20 @@ internal class ZoneFlushService(
     fun flush(
         deltas: List<ZoneDelta>,
         activePlayers: List<Client>,
-    ) {
-        deltas.forEach { delta ->
-            subscriberIndex.viewersFor(delta, activePlayers).forEach(delta::deliver)
+    ): ZoneFlushStats {
+        if (deltas.isEmpty()) {
+            return ZoneFlushStats.EMPTY
         }
+        var candidateViewers = 0
+        var deliveries = 0
+        deltas.forEach { delta ->
+            val viewers = subscriberIndex.viewersFor(delta, activePlayers)
+            candidateViewers += viewers.size
+            viewers.forEach {
+                delta.deliver(it)
+                deliveries++
+            }
+        }
+        return ZoneFlushStats(deltas.size, candidateViewers, deliveries)
     }
 }

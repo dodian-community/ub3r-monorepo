@@ -8,5 +8,5 @@ data class ViewerNpcSyncState(
     var lastKnownMapRegionY: Int = Int.MIN_VALUE,
     var lastKnownPlane: Int = Int.MIN_VALUE,
     var lastChunkActivityStamp: Long = 0L,
-    var lastLocalNpcActivityStamp: Long = 0L,
+    var lastLocalNpcMembershipRevision: Long = 0L,
 )
