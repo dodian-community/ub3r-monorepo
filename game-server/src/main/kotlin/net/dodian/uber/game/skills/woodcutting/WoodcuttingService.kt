@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionDistance
-import net.dodian.uber.game.security.ItemLog
+import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.skills.core.ActionStopReason
 import net.dodian.uber.game.skills.core.GatheringTask
 import net.dodian.uber.game.skills.core.HasInventorySpaceRequirement
@@ -184,6 +184,7 @@ object WoodcuttingService {
         return (timer / bonus).toLong()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun stopWoodcuttingInternal(
         client: Client,
         reason: ActionStopReason,

@@ -19,7 +19,7 @@ object GameTaskRuntime {
         block: suspend GameTask.() -> Unit,
     ): TaskHandle {
         val taskSet =
-            (player.playerTaskSet as? PawnTaskSet<Client>)
+            playerTaskSet(player)
                 ?: PawnTaskSet(player, ::isClientTaskBlocked).also { player.playerTaskSet = it }
         return taskSet.queue(priority, block)
     }
@@ -55,7 +55,7 @@ object GameTaskRuntime {
         block: suspend GameTask.() -> Unit,
     ): TaskHandle {
         val taskSet =
-            (npc.npcTaskSet as? PawnTaskSet<Npc>)
+            npcTaskSet(npc)
                 ?: PawnTaskSet(npc).also { npc.npcTaskSet = it }
         return taskSet.queue(priority, block)
     }
@@ -70,34 +70,34 @@ object GameTaskRuntime {
     fun cycle() {
         worldTaskSet.cycle()
         PlayerHandler.snapshotActivePlayers().forEach { player ->
-            (player.playerTaskSet as? PawnTaskSet<Client>)?.cycle()
+            playerTaskSet(player)?.cycle()
         }
         Server.npcManager?.getNpcs()?.forEach { npc ->
             if (npc != null) {
-                (npc.npcTaskSet as? PawnTaskSet<Npc>)?.cycle()
+                npcTaskSet(npc)?.cycle()
             }
         }
     }
 
     @JvmStatic
     fun submitReturnValue(player: Client, key: TaskRequestKey<*>, value: Any?) {
-        (player.playerTaskSet as? PawnTaskSet<Client>)?.submitReturnValue(key, value)
+        playerTaskSet(player)?.submitReturnValue(key, value)
     }
 
     @JvmStatic
     fun submitReturnValue(npc: Npc, key: TaskRequestKey<*>, value: Any?) {
-        (npc.npcTaskSet as? PawnTaskSet<Npc>)?.submitReturnValue(key, value)
+        npcTaskSet(npc)?.submitReturnValue(key, value)
     }
 
     @JvmStatic
     fun terminatePlayerTasks(player: Client) {
-        (player.playerTaskSet as? PawnTaskSet<Client>)?.terminateTasks()
+        playerTaskSet(player)?.terminateTasks()
         player.playerTaskSet = null
     }
 
     @JvmStatic
     fun terminateNpcTasks(npc: Npc) {
-        (npc.npcTaskSet as? PawnTaskSet<Npc>)?.terminateTasks()
+        npcTaskSet(npc)?.terminateTasks()
         npc.npcTaskSet = null
     }
 
@@ -120,4 +120,10 @@ object GameTaskRuntime {
             player.NpcDialogueSend ||
             player.nextDiag > 0
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun playerTaskSet(player: Client): PawnTaskSet<Client>? = player.playerTaskSet as? PawnTaskSet<Client>
+
+    @Suppress("UNCHECKED_CAST")
+    private fun npcTaskSet(npc: Npc): PawnTaskSet<Npc>? = npc.npcTaskSet as? PawnTaskSet<Npc>
 }

@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.security.ChatLog;
+import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

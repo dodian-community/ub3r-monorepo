@@ -11,6 +11,7 @@ import net.dodian.utilities.DbTables
 import net.dodian.utilities.dbConnection
 
 object CommandDbService {
+    @Suppress("UNUSED_PARAMETER")
     @JvmStatic
     fun <T> submit(
         taskName: String,

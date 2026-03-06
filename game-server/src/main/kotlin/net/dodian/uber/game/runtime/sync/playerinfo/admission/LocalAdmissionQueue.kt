@@ -34,6 +34,7 @@ class LocalAdmissionQueue {
         return additionsCount
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun rebuildPending(
         desiredDiff: DesiredLocalSetDiff,
         currentLocalSlots: IntArray,

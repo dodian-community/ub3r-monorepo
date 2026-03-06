@@ -44,13 +44,13 @@ class FarmingJson {
             farmingCompostValues = farmJson.asJsonArray.get(0) as JsonObject
             for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 if(farmingCompostValues.get(compost.name) == null) {
-                    for(compost in FarmingData.compostBin.values()) { /* Compost default values */
+                    for(compostType in FarmingData.compostBin.values()) { /* Compost default values */
                         val farmCompost = JsonArray()
                         farmCompost.add(FarmingData.compost.NONE.toString()) //Amount
                         farmCompost.add(FarmingData.compostState.EMPTY.toString()) //State
                         farmCompost.add(0) //Timer
                         farmCompost.add(-1) //Date
-                        farmingCompostValues.add(compost.name, farmCompost)
+                        farmingCompostValues.add(compostType.name, farmCompost)
                     }
                 }
             }

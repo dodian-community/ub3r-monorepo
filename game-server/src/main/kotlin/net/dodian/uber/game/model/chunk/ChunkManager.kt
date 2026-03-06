@@ -61,7 +61,7 @@ class ChunkManager {
             EntityType.PLAYER,
             distance,
             Supplier { LinkedHashSet<Player>() },
-            Predicate { other -> other != null && other.isActive && other !== viewer },
+            Predicate { other -> other.isActive && other !== viewer },
         )
     }
 
@@ -71,7 +71,7 @@ class ChunkManager {
             EntityType.NPC,
             distance,
             Supplier { HashSet<Npc>() },
-            Predicate { npc -> npc != null && npc.isVisible },
+            Predicate { npc -> npc.isVisible },
         )
     }
 
@@ -80,7 +80,7 @@ class ChunkManager {
             viewer.position,
             EntityType.PLAYER,
             distance,
-            Predicate { other -> other != null && other.isActive && other !== viewer },
+            Predicate { other -> other.isActive && other !== viewer },
             consumer,
         )
     }

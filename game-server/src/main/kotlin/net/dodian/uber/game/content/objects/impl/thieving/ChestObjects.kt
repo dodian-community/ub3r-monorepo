@@ -11,7 +11,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.thieving.Thieving
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
-import net.dodian.uber.game.security.ItemLog
+import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Utils
 
 object ChestObjects : ObjectContent {

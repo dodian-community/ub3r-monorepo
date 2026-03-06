@@ -22,7 +22,6 @@ import net.dodian.jobs.impl.ObjectProcess
 import net.dodian.jobs.impl.OutboundPacketProcessor
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.ShopProcessor
-import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.runtime.metrics.TickPhaseTimer
 import net.dodian.uber.game.runtime.metrics.GcStallTracker
@@ -45,7 +44,6 @@ class GameLoopService(
     private val itemProcessor: ItemProcessor = ItemProcessor(),
     private val shopProcessor: ShopProcessor = ShopProcessor(),
     private val objectProcess: ObjectProcess = ObjectProcess(),
-    private val worldProcessor: WorldProcessor = WorldProcessor(),
     private val farmingProcess: FarmingProcess = FarmingProcess(),
     private val plunderDoor: PlunderDoor = PlunderDoor(),
 ) {
@@ -61,7 +59,7 @@ class GameLoopService(
     private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
-    private val worldMaintenancePhase = WorldMaintenancePhase(worldProcessor, farmingProcess, plunderDoor)
+    private val worldMaintenancePhase = WorldMaintenancePhase(farmingProcess, plunderDoor)
     private val npcMainPhase = NpcMainPhase(entityProcessor)
     private val playerMainPhase = PlayerMainPhase(entityProcessor)
     private val legacyActionPhase = LegacyActionPhase(actionProcessor, itemProcessor, shopProcessor, objectProcess)

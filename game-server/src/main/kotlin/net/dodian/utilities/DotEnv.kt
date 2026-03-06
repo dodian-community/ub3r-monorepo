@@ -62,7 +62,6 @@ val syncPlayerAllocationLightEnabled = dotenv["SYNC_PLAYER_ALLOCATION_LIGHT_ENAB
 val syncPlayerFragmentReuseEnabled = dotenv["SYNC_PLAYER_FRAGMENT_REUSE_ENABLED"]?.toBoolean() ?: false
 val syncPlayerStateValidationEnabled = dotenv["SYNC_PLAYER_STATE_VALIDATION_ENABLED"]?.toBoolean() ?: true
 val syncNpcActivityIndexEnabled = dotenv["SYNC_NPC_ACTIVITY_INDEX_ENABLED"]?.toBoolean() ?: true
-val worldMaintenanceEnabled = dotenv["WORLD_MAINTENANCE_ENABLED"]?.toBoolean() ?: true
 val farmingSchedulerEnabled = dotenv["FARMING_SCHEDULER_ENABLED"]?.toBoolean() ?: true
 val zoneUpdateBatchingEnabled = dotenv["ZONE_UPDATE_BATCHING_ENABLED"]?.toBoolean() ?: false
 val queueTasksEnabled = dotenv["QUEUE_TASKS_ENABLED"]?.toBoolean() ?: false

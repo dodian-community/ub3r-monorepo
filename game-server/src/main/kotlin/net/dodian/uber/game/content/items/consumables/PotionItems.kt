@@ -24,6 +24,7 @@ object PotionItems : ItemContent {
         2452, 2454, 2456, 2458, // Anti-fire potion
     )
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         if (!client.playerHasItem(itemId)) {
             return false

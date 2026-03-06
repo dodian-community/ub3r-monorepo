@@ -56,7 +56,7 @@ class RootPlayerInfoService {
             val plan = buildPlan(viewer, rootCycle)
             recordPlanMetrics(plan)
             dispatch(viewer, plan)
-            captureViewerState(viewer, rootCycle, plan)
+            captureViewerState(viewer, plan)
         }
     }
 
@@ -319,7 +319,7 @@ class RootPlayerInfoService {
         }
     }
 
-    private fun captureViewerState(viewer: Client, cycle: RootPlayerInfoCycle, plan: RootPlayerInfoPlan) {
+    private fun captureViewerState(viewer: Client, plan: RootPlayerInfoPlan) {
         val state = viewerStates.computeIfAbsent(viewer) { ViewerPlayerInfoState() }
         val desiredState = state.desiredLocalState
 
@@ -384,8 +384,7 @@ class RootPlayerInfoService {
         // Viewport snapshots are an optimization. If unavailable/empty during lifecycle transitions,
         // fall back to the active player list so visibility never collapses.
         return if (snapshotPlayers.isNullOrEmpty()) {
-            @Suppress("UNCHECKED_CAST")
-            cycle.viewers as List<Player>
+            cycle.viewers
         } else {
             snapshotPlayers
         }

@@ -27,6 +27,7 @@ object AccountPersistenceService {
     @JvmField
     val scope = CoroutineScope(SupervisorJob() + dispatcher)
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     @JvmStatic
     fun submitLoginLoad(
         client: Client,

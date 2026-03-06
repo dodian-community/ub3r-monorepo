@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.security.ItemLog;
+import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.utilities.DbTables;
 
 import java.sql.Connection;

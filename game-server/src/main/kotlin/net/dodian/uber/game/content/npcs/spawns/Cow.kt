@@ -4,7 +4,9 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import java.util.Date
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 internal object Cow {
     // Stats: 2805: r=30 a=1 d=1 s=1 hp=8 rg=0 mg=0
@@ -21,7 +23,7 @@ internal object Cow {
     )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        val canClaim = Date().before(Date("06/1/2024")) && !client.checkItem(7927)
+        val canClaim = LocalDate.now(ZoneOffset.UTC).isBefore(Instant.parse("2024-06-01T00:00:00Z").atZone(ZoneOffset.UTC).toLocalDate()) && !client.checkItem(7927)
         if (canClaim) {
             client.showNPCChat(npc.id, 595, arrayOf("Here take a easter ring for all your troubles.", "Enjoy your stay at Dodian."))
             client.addItem(7927, 1)

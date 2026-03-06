@@ -54,9 +54,7 @@ object ObjectContentRegistry {
     fun resolve(objectId: Int, position: Position): ObjectContent? {
         bootstrap()
         val bucket = byObjectId.getOrNull(objectId) ?: return null
-        return bucket
-            ?.firstOrNull { it.binding.matcher.matches(position) }
-            ?.content
+        return bucket.firstOrNull { it.binding.matcher.matches(position) }?.content
     }
 
     @JvmStatic

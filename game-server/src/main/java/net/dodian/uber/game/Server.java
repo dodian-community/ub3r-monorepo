@@ -29,8 +29,8 @@ import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
-import net.dodian.uber.game.security.AsyncSqlService;
-import net.dodian.uber.game.security.ChatLog;
+import net.dodian.uber.game.persistence.audit.AsyncSqlService;
+import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
@@ -169,7 +169,6 @@ public class Server {
             gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
             gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
             gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-            gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
             gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
             gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
             gameTickScheduler.start();

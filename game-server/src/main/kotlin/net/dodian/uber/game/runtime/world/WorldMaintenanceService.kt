@@ -3,7 +3,6 @@ package net.dodian.uber.game.runtime.world
 import kotlin.system.measureNanoTime
 import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
-import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
@@ -12,11 +11,9 @@ import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
 import net.dodian.utilities.farmingSchedulerEnabled
 import net.dodian.utilities.gameWorldId
 import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.worldMaintenanceEnabled
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
-    private val legacyWorldProcessor: WorldProcessor,
     private val legacyFarmingProcess: FarmingProcess,
     private val plunderDoor: PlunderDoor,
 ) {
@@ -27,17 +24,9 @@ class WorldMaintenanceService(
     private var lastPlunderRunMs = 0L
     private var worldDbDueCycle = Long.MIN_VALUE
     private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
-    private var legacyWorldDbHandledForCycle = Long.MIN_VALUE
 
     fun runWorldDbInputBuild(cycle: Long) {
         if (!isMaintenanceDue(cycle)) {
-            return
-        }
-        if (!worldMaintenanceEnabled) {
-            if (legacyWorldDbHandledForCycle != cycle) {
-                legacyWorldProcessor.run()
-                legacyWorldDbHandledForCycle = cycle
-            }
             return
         }
         playerIndex.refresh()
@@ -49,7 +38,7 @@ class WorldMaintenanceService(
     }
 
     fun runWorldDbResultRead(cycle: Long) {
-        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+        if (worldDbDueCycle != cycle) {
             return
         }
         pendingWorldPollResult =
@@ -59,7 +48,7 @@ class WorldMaintenanceService(
     }
 
     fun runWorldDbApply(cycle: Long) {
-        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+        if (worldDbDueCycle != cycle) {
             return
         }
         timed(WorldMaintenanceStage.WORLD_DB_APPLY) {
@@ -98,11 +87,12 @@ class WorldMaintenanceService(
     private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldPollSnapshot =
         WorldPollSnapshot(gameWorldId, playerIndex.playerCount(), playerIndex.dbIdsArray())
 
+    @Suppress("UNCHECKED_CAST", "VARIABLE_WITH_REDUNDANT_INITIALIZER")
     private fun <T> timed(
         stage: WorldMaintenanceStage,
         block: () -> T,
     ): T {
-        var result: T? = null
+        var result: Any? = null
         val elapsed = measureNanoTime {
             result = block()
         }

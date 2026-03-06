@@ -48,12 +48,12 @@ class ViewportIndex private constructor(
                 for (dy in -chunkRadius until chunkRadius) {
                     val repo: ChunkRepository = chunkManager.getLoaded(centerChunkX + dx, centerChunkY + dy) ?: continue
                     for (other in repo.getAll<Player>(EntityType.PLAYER)) {
-                        if (other != null && other.isActive && other.position?.z == level) {
+                        if (other.isActive && other.position?.z == level) {
                             players += other
                         }
                     }
                     for (npc in repo.getAll<Npc>(EntityType.NPC)) {
-                        if (npc != null && npc.isVisible && npc.position?.z == level) {
+                        if (npc.isVisible && npc.position?.z == level) {
                             npcs += npc
                         }
                     }
