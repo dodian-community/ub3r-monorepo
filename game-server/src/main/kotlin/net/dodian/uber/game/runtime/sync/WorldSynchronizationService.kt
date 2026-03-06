@@ -304,12 +304,13 @@ class WorldSynchronizationService {
                     val localCoverage = cycle.playerLocalScans + cycle.playerLocalsSkipped + cycle.playerTemplatedLocalCoverage
                     val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersIdleTemplated={} viewersSkipped={} avgLocalPlayers={}",
+                        "Sync stage {} took {}ms viewersBuilt={} viewersIdleTemplated={} viewersSkipped={} teleportReinserts={} avgLocalPlayers={}",
                         stage,
                         elapsedMs,
                         built,
                         idleTemplated,
                         skipped,
+                        cycle.playerTeleportReinsertCount,
                         String.format("%.2f", avgLocals),
                     )
                 }

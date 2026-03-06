@@ -171,6 +171,11 @@ object SynchronizationContext {
     }
 
     @JvmStatic
+    fun recordPlayerTeleportReinserts(total: Int, sent: Int, deferred: Int) {
+        current()?.recordPlayerTeleportReinserts(total, sent, deferred)
+    }
+
+    @JvmStatic
     fun recordPlayerRecovery(reason: PlayerSyncRecoveryReason) {
         current()?.recordPlayerRecovery(reason)
     }

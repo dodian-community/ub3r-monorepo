@@ -122,6 +122,7 @@ class GameLoopService(
         timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
         timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
+        timed(GamePhase.LOGIN_INGRESS) { LoginFinalizationQueue.drain() }
         timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
         timed(GamePhase.LEGACY_ACTIONS) { legacyActionPhase.run() }
         timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }

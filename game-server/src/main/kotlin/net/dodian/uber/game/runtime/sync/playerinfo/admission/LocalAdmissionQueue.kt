@@ -6,9 +6,9 @@ class LocalAdmissionQueue {
     fun rebuildPending(
         state: ViewerDesiredLocalState,
         desiredDiff: DesiredLocalSetDiff,
-        desiredSignature: Int,
+        queueSignature: Int,
     ): Int {
-        if (state.pendingAddSignature == desiredSignature &&
+        if (state.pendingAddSignature == queueSignature &&
             state.pendingAddCount > 0 &&
             state.pendingAddHead < state.pendingAddTail
         ) {
@@ -17,21 +17,29 @@ class LocalAdmissionQueue {
 
         val additions = desiredDiff.additions
         val additionsCount = desiredDiff.additionsCount
-        ensureCapacity(state, additionsCount)
-        if (additionsCount <= 0) {
+        val reinserts = desiredDiff.reinserts
+        val reinsertsCount = desiredDiff.reinsertsCount
+        val totalCount = reinsertsCount + additionsCount
+        ensureCapacity(state, totalCount)
+        if (totalCount <= 0) {
             state.pendingAddHead = 0
             state.pendingAddTail = 0
             state.pendingAddCount = 0
-            state.pendingAddSignature = desiredSignature
+            state.pendingAddSignature = queueSignature
             return 0
         }
 
-        System.arraycopy(additions, 0, state.pendingAddSlots, 0, additionsCount)
+        if (reinsertsCount > 0) {
+            System.arraycopy(reinserts, 0, state.pendingAddSlots, 0, reinsertsCount)
+        }
+        if (additionsCount > 0) {
+            System.arraycopy(additions, 0, state.pendingAddSlots, reinsertsCount, additionsCount)
+        }
         state.pendingAddHead = 0
-        state.pendingAddTail = additionsCount
-        state.pendingAddCount = additionsCount
-        state.pendingAddSignature = desiredSignature
-        return additionsCount
+        state.pendingAddTail = totalCount
+        state.pendingAddCount = totalCount
+        state.pendingAddSignature = queueSignature
+        return totalCount
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -39,7 +47,24 @@ class LocalAdmissionQueue {
         desiredDiff: DesiredLocalSetDiff,
         currentLocalSlots: IntArray,
     ): IntArray {
-        return desiredDiff.additions
+        val totalCount = desiredDiff.totalAdmissionsCount
+        if (totalCount <= 0) {
+            return IntArray(0)
+        }
+        val pending = IntArray(totalCount)
+        if (desiredDiff.reinsertsCount > 0) {
+            System.arraycopy(desiredDiff.reinserts, 0, pending, 0, desiredDiff.reinsertsCount)
+        }
+        if (desiredDiff.additionsCount > 0) {
+            System.arraycopy(
+                desiredDiff.additions,
+                0,
+                pending,
+                desiredDiff.reinsertsCount,
+                desiredDiff.additionsCount,
+            )
+        }
+        return pending
     }
 
     fun drainPending(

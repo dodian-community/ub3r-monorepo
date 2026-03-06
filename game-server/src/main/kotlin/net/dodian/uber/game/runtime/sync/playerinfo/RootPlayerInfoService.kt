@@ -140,15 +140,31 @@ class RootPlayerInfoService {
                 DesiredLocalSet(desiredState.currentLocalSlots, currentLocalCount, desiredState.currentLocalSlots.contentHashCode(), currentLocalCount >= MAX_LOCAL_PLAYERS)
             }
         val diff = planner.diff(desiredState.currentLocalSlots, currentLocalCount, desiredLocalSet)
+        val queueSignature = admissionQueueSignature(desiredLocalSet.signature, diff)
         val pendingCount =
             if (syncPlayerAdmissionQueueEnabled) {
-                admissionQueue.rebuildPending(desiredState, diff, desiredLocalSet.signature)
+                admissionQueue.rebuildPending(desiredState, diff, queueSignature)
             } else {
-                diff.additionsCount
+                diff.totalAdmissionsCount
             }
         val admissionBatch =
             if (syncPlayerIncrementalAddsEnabled) {
-                admissionQueue.drainPending(desiredState, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
+                if (syncPlayerAdmissionQueueEnabled) {
+                    admissionQueue.drainPending(desiredState, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
+                } else {
+                    val directAdmissions = admissionQueue.rebuildPending(diff, desiredState.currentLocalSlots)
+                    val sentCount = minOf(directAdmissions.size, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
+                    val sentSlots = if (sentCount == directAdmissions.size) directAdmissions else directAdmissions.copyOf(sentCount)
+                    LocalAdmissionBatch(
+                        sentSlots = sentSlots,
+                        pendingCount = (directAdmissions.size - sentCount).coerceAtLeast(0),
+                        progress = AdmissionProgressState(
+                            totalPending = directAdmissions.size,
+                            sentCount = sentCount,
+                            deferredCount = (directAdmissions.size - sentCount).coerceAtLeast(0),
+                        ),
+                    )
+                }
             } else {
                 LocalAdmissionBatch(EMPTY_INT_ARRAY, pendingCount, AdmissionProgressState(pendingCount, 0, pendingCount))
             }
@@ -450,6 +466,11 @@ class RootPlayerInfoService {
         cycle.recordPlayerLocalRemovalCount(plan.diff.removalsCount)
         cycle.recordPlayerLocalAdditionSent(plan.actualAdditions.size)
         cycle.recordPlayerLocalAdditionDeferred(plan.deferredAdditionCount)
+        cycle.recordPlayerTeleportReinserts(
+            total = plan.diff.reinsertsCount,
+            sent = minOf(plan.diff.reinsertsCount, plan.actualAdditions.size),
+            deferred = (plan.diff.reinsertsCount - minOf(plan.diff.reinsertsCount, plan.actualAdditions.size)).coerceAtLeast(0),
+        )
         if (plan.recoveryReason != null) {
             cycle.recordPlayerRecovery(plan.recoveryReason)
         }
@@ -499,6 +520,18 @@ class RootPlayerInfoService {
         return signature
     }
 
+    private fun admissionQueueSignature(
+        desiredSignature: Int,
+        diff: DesiredLocalSetDiff,
+    ): Int {
+        var signature = 31 * desiredSignature + diff.reinsertsCount
+        for (index in 0 until diff.reinsertsCount) {
+            signature = 31 * signature + diff.reinserts[index]
+        }
+        signature = 31 * signature + diff.additionsCount
+        return signature
+    }
+
     private fun pruneViewerStates(activePlayers: List<Client>) {
         val activeSet = IdentityHashMap<Player, Boolean>(activePlayers.size)
         activePlayers.forEach { activeSet[it] = true }
@@ -530,6 +563,8 @@ class RootPlayerInfoService {
                 removalsCount = 0,
                 retains = EMPTY_INT_ARRAY,
                 retainsCount = 0,
+                reinserts = EMPTY_INT_ARRAY,
+                reinsertsCount = 0,
                 additions = EMPTY_INT_ARRAY,
                 additionsCount = 0,
                 changedRetained = EMPTY_INT_ARRAY,

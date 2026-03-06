@@ -513,6 +513,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public void writeLocalAdditions(Player viewer, ByteMessage stream, ByteMessage updateBlock, RootPlayerInfoPlan plan) {
         int[] additions = plan.getActualAdditions();
+        // Root player sync queues teleport reinserts ahead of ordinary admissions so
+        // retained teleports are encoded as remove+readd in one packet when capacity allows.
         for (int slot : additions) {
             Player other = resolvePlayerSlot(slot);
             if (!shouldAddLocalPlayerCandidate(viewer, other)) {

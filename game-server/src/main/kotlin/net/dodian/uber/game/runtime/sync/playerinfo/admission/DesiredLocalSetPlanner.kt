@@ -103,6 +103,7 @@ class DesiredLocalSetPlanner {
 
         var removalsCount = 0
         var retainsCount = 0
+        var reinsertsCount = 0
         var changedCount = 0
         for (i in 0 until currentLocalCount) {
             val slot = currentLocalSlots[i]
@@ -112,6 +113,12 @@ class DesiredLocalSetPlanner {
             val player = PlayerHandler.players.getOrNull(slot)
             if (player == null || !scratch.isMarked(slot)) {
                 scratch.removals[removalsCount++] = slot
+                continue
+            }
+            if (player.didTeleport()) {
+                scratch.removals[removalsCount++] = slot
+                scratch.reinserts[reinsertsCount++] = slot
+                scratch.markCurrent(slot)
                 continue
             }
             scratch.retains[retainsCount++] = slot
@@ -135,6 +142,8 @@ class DesiredLocalSetPlanner {
             removalsCount = removalsCount,
             retains = scratch.retains,
             retainsCount = retainsCount,
+            reinserts = scratch.reinserts,
+            reinsertsCount = reinsertsCount,
             additions = scratch.additions,
             additionsCount = additionsCount,
             changedRetained = scratch.changedRetained,

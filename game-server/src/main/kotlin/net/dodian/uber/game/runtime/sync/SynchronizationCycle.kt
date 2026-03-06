@@ -96,6 +96,12 @@ class SynchronizationCycle(
         private set
     var playerLocalAdditionDeferredCount: Int = 0
         private set
+    var playerTeleportReinsertCount: Int = 0
+        private set
+    var playerTeleportReinsertSentCount: Int = 0
+        private set
+    var playerTeleportReinsertDeferredCount: Int = 0
+        private set
     var playerHardRebuildRecoveryCount: Int = 0
         private set
     var npcPacketsBuilt: Int = 0
@@ -272,6 +278,12 @@ class SynchronizationCycle(
 
     fun recordPlayerLocalAdditionDeferred(count: Int) {
         playerLocalAdditionDeferredCount += count
+    }
+
+    fun recordPlayerTeleportReinserts(total: Int, sent: Int, deferred: Int) {
+        playerTeleportReinsertCount += total
+        playerTeleportReinsertSentCount += sent
+        playerTeleportReinsertDeferredCount += deferred
     }
 
     fun recordPlayerRecovery(reason: PlayerSyncRecoveryReason) {
