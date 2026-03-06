@@ -5,9 +5,9 @@ import net.dodian.jobs.impl.ActionProcessor
 import net.dodian.jobs.impl.EntityProcessor
 import net.dodian.jobs.impl.ItemProcessor
 import net.dodian.jobs.impl.ObjectProcess
-import net.dodian.jobs.impl.OutboundPacketProcessor
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.ShopProcessor
+import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

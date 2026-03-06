@@ -12,7 +12,6 @@ import net.dodian.jobs.impl.ActionProcessor
 import net.dodian.jobs.impl.EntityProcessor
 import net.dodian.jobs.impl.ItemProcessor
 import net.dodian.jobs.impl.ObjectProcess
-import net.dodian.jobs.impl.OutboundPacketProcessor
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.ShopProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
@@ -22,7 +21,7 @@ import net.dodian.uber.game.runtime.phases.InboundPacketPhase
 import net.dodian.uber.game.runtime.phases.LegacyActionPhase
 import net.dodian.uber.game.runtime.phases.MovementFinalizePhase
 import net.dodian.uber.game.runtime.phases.NpcMainPhase
-import net.dodian.uber.game.runtime.phases.OutboundSyncPhase
+import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor
 import net.dodian.uber.game.runtime.phases.PlayerMainPhase
 import net.dodian.uber.game.runtime.phases.WorldMaintenancePhase
 import org.slf4j.LoggerFactory
@@ -55,8 +54,6 @@ class GameLoopService(
     private val playerMainPhase = PlayerMainPhase(entityProcessor)
     private val legacyActionPhase = LegacyActionPhase(actionProcessor, itemProcessor, shopProcessor, objectProcess)
     private val movementFinalizePhase = MovementFinalizePhase(entityProcessor)
-    private val outboundSyncPhase = OutboundSyncPhase(outboundPacketProcessor)
-
     @Volatile
     private var tickFuture: ScheduledFuture<*>? = null
     @Volatile
@@ -136,7 +133,7 @@ class GameLoopService(
         timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
         timed(GamePhase.LEGACY_ACTIONS) { legacyActionPhase.run() }
         timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }
-        timed(GamePhase.OUTBOUND_SYNC) { outboundSyncPhase.run() }
+        timed(GamePhase.OUTBOUND_SYNC) { outboundPacketProcessor.run() }
         timed(GamePhase.HOUSEKEEPING) { entityProcessor.runHousekeepingPhase(now) }
     }
 

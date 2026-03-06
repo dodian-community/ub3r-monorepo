@@ -22,6 +22,7 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
+import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
 import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
