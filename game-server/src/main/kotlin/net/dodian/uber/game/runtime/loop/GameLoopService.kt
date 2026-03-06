@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.dodian.jobs.impl.ActionProcessor
 import net.dodian.jobs.impl.EntityProcessor
-import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.ItemProcessor
 import net.dodian.jobs.impl.ObjectProcess
 import net.dodian.jobs.impl.OutboundPacketProcessor
@@ -44,7 +43,6 @@ class GameLoopService(
     private val itemProcessor: ItemProcessor = ItemProcessor(),
     private val shopProcessor: ShopProcessor = ShopProcessor(),
     private val objectProcess: ObjectProcess = ObjectProcess(),
-    private val farmingProcess: FarmingProcess = FarmingProcess(),
     private val plunderDoor: PlunderDoor = PlunderDoor(),
 ) {
     private val logger = LoggerFactory.getLogger(GameLoopService::class.java)
@@ -59,7 +57,7 @@ class GameLoopService(
     private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
-    private val worldMaintenancePhase = WorldMaintenancePhase(farmingProcess, plunderDoor)
+    private val worldMaintenancePhase = WorldMaintenancePhase(plunderDoor)
     private val npcMainPhase = NpcMainPhase(entityProcessor)
     private val playerMainPhase = PlayerMainPhase(entityProcessor)
     private val legacyActionPhase = LegacyActionPhase(actionProcessor, itemProcessor, shopProcessor, objectProcess)
@@ -114,6 +112,7 @@ class GameLoopService(
     private fun runTick() {
         currentCycle++
         val now = System.currentTimeMillis()
+        timed(GamePhase.LOGIN_INGRESS) { LoginFinalizationQueue.drain() }
         GameThreadTaskQueue.drain()
         phaseTimer.clear()
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }

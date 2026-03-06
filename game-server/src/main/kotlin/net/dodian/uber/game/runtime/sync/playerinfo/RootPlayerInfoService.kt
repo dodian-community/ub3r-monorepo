@@ -41,7 +41,7 @@ class RootPlayerInfoService {
         pruneViewerStates(activePlayers)
 
         activePlayers.forEach { viewer ->
-            if (viewer.timeOutCounter >= 84) {
+            if (viewer.timeOutCounter.get() >= 84) {
                 viewer.disconnected = true
                 viewer.println_debug("\nRemove non-responding " + viewer.playerName + " after 60 seconds of disconnect! ")
             }

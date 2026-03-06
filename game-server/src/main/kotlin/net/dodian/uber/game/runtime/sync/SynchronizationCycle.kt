@@ -104,6 +104,18 @@ class SynchronizationCycle(
         private set
     var npcLocalsSkipped: Int = 0
         private set
+    var npcBuildNoStateCount: Int = 0
+        private set
+    var npcBuildMapRegionOrTeleportCount: Int = 0
+        private set
+    var npcBuildLocalCountChangedCount: Int = 0
+        private set
+    var npcBuildPendingViewportCount: Int = 0
+        private set
+    var npcBuildChunkActivityChangedCount: Int = 0
+        private set
+    var npcBuildLocalActivityChangedCount: Int = 0
+        private set
 
     fun recordStage(stage: SynchronizationStage, durationNanos: Long) {
         stageDurationsNanos[stage] = (stageDurationsNanos[stage] ?: 0L) + durationNanos
@@ -177,6 +189,30 @@ class SynchronizationCycle(
     fun recordNpcPacketSkipped(localCount: Int) {
         npcPacketsSkipped++
         npcLocalsSkipped += localCount
+    }
+
+    fun recordNpcBuildNoState() {
+        npcBuildNoStateCount++
+    }
+
+    fun recordNpcBuildMapRegionOrTeleport() {
+        npcBuildMapRegionOrTeleportCount++
+    }
+
+    fun recordNpcBuildLocalCountChanged() {
+        npcBuildLocalCountChangedCount++
+    }
+
+    fun recordNpcBuildPendingViewport() {
+        npcBuildPendingViewportCount++
+    }
+
+    fun recordNpcBuildChunkActivityChanged() {
+        npcBuildChunkActivityChangedCount++
+    }
+
+    fun recordNpcBuildLocalActivityChanged() {
+        npcBuildLocalActivityChangedCount++
     }
 
     fun recordPlayerPacketMode(mode: PlayerPacketMode) {

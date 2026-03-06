@@ -59,6 +59,12 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         packetsInWindow++;
         logger.trace("[Netty] Queued packet opcode={} size={} for game-thread handling", packet.getOpcode(), packet.getSize());
 
+        if (packet.getOpcode() == 0) {
+            client.resetTimeOutCounter();
+            releasePacket(packet);
+            return;
+        }
+
         if (!client.queueInboundPacket(packet)) {
             logger.warn("[Netty] Inbound queue overflow for {}, closing channel", client.getPlayerName());
             releasePacket(packet);

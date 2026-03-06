@@ -4,14 +4,9 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.system.measureNanoTime
 import org.slf4j.LoggerFactory
 
-object GameThreadTaskQueue {
-    private val logger = LoggerFactory.getLogger(GameThreadTaskQueue::class.java)
+object LoginFinalizationQueue {
+    private val logger = LoggerFactory.getLogger(LoginFinalizationQueue::class.java)
     private val queue = ConcurrentLinkedQueue<QueuedTask>()
-
-    @JvmStatic
-    fun submit(task: Runnable) {
-        submit("anonymous", task)
-    }
 
     @JvmStatic
     fun submit(label: String, task: Runnable) {
@@ -20,7 +15,7 @@ object GameThreadTaskQueue {
 
     @JvmStatic
     fun drain() {
-        drain(10_000)
+        drain(2_000)
     }
 
     @JvmStatic
@@ -30,7 +25,6 @@ object GameThreadTaskQueue {
         var maxQueueWaitMs = 0L
         var slowestTaskLabel = ""
         var slowestTaskMs = 0L
-        val processedByLabel = HashMap<String, Int>()
         while (processed < maxTasks) {
             val task = queue.poll() ?: break
             val queueWaitMs = (System.nanoTime() - task.enqueuedAtNanos) / 1_000_000L
@@ -48,15 +42,14 @@ object GameThreadTaskQueue {
                     slowestTaskLabel = task.label
                 }
             } catch (exception: Throwable) {
-                logger.warn("Game thread task failed label={}", task.label, exception)
+                logger.warn("Login finalization task failed label={}", task.label, exception)
             }
-            processedByLabel[task.label] = (processedByLabel[task.label] ?: 0) + 1
             processed++
         }
         val queueSizeAfter = queue.size
         if (processed >= maxTasks && queueSizeAfter > 0) {
             logger.warn(
-                "GameThreadTaskQueue reached maxTasks={} before={} processed={} remaining={} maxQueueWait={}ms slowestTask={}({}ms) labels={}",
+                "LoginFinalizationQueue reached maxTasks={} before={} processed={} remaining={} maxQueueWait={}ms slowestTask={}({}ms)",
                 maxTasks,
                 queueSizeBefore,
                 processed,
@@ -64,19 +57,8 @@ object GameThreadTaskQueue {
                 maxQueueWaitMs,
                 if (slowestTaskLabel.isEmpty()) "n/a" else slowestTaskLabel,
                 slowestTaskMs,
-                formatTopLabels(processedByLabel),
             )
         }
-    }
-
-    private fun formatTopLabels(processedByLabel: Map<String, Int>): String {
-        if (processedByLabel.isEmpty()) {
-            return "[]"
-        }
-        return processedByLabel.entries
-            .sortedByDescending { it.value }
-            .take(3)
-            .joinToString(prefix = "[", postfix = "]") { "${it.key}=${it.value}" }
     }
 
     private data class QueuedTask(

@@ -75,6 +75,19 @@ class ChunkManager {
         )
     }
 
+    fun forEachViewableChunk(center: Position, distance: Int, consumer: Consumer<ChunkRepository>) {
+        val chunkRadius = (distance / Chunk.SIZE) + 2
+        val centerChunkX = center.chunkX
+        val centerChunkY = center.chunkY
+
+        for (dx in -chunkRadius until chunkRadius) {
+            for (dy in -chunkRadius until chunkRadius) {
+                val repo = getLoaded(centerChunkX + dx, centerChunkY + dy) ?: continue
+                consumer.accept(repo)
+            }
+        }
+    }
+
     fun forEachUpdatePlayerCandidate(viewer: Player, distance: Int, consumer: Consumer<Player>) {
         forEach(
             viewer.position,

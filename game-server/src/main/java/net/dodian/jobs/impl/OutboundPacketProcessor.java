@@ -69,7 +69,7 @@ public class OutboundPacketProcessor implements Runnable {
         }
 
         private static void updatePlayer(Client player) {
-            if (player.timeOutCounter >= 84) {
+            if (player.timeOutCounter.get() >= 84) {
                 player.disconnected = true;
                 player.println_debug("\nRemove non-responding " + player.getPlayerName() + " after 60 seconds of disconnect! ");
             }

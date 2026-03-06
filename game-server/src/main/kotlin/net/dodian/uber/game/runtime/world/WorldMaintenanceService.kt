@@ -1,20 +1,17 @@
 package net.dodian.uber.game.runtime.world
 
 import kotlin.system.measureNanoTime
-import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
-import net.dodian.utilities.farmingSchedulerEnabled
 import net.dodian.utilities.gameWorldId
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
-    private val legacyFarmingProcess: FarmingProcess,
     private val plunderDoor: PlunderDoor,
 ) {
     private val logger = LoggerFactory.getLogger(WorldMaintenanceService::class.java)
@@ -63,14 +60,23 @@ class WorldMaintenanceService(
         if (cycle % MAINTENANCE_INTERVAL_TICKS != 0L) {
             return
         }
-        if (!farmingSchedulerEnabled) {
-            legacyFarmingProcess.run()
-            return
-        }
         playerIndex.refresh()
-        farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
-        timed(WorldMaintenanceStage.FARMING_TICK) {
-            farmingScheduler.runDue(cycle)
+        val refreshStats = farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
+        val runStats: net.dodian.uber.game.runtime.world.farming.FarmingRunStats
+        val elapsed = measureNanoTime {
+            runStats = farmingScheduler.runDue(cycle)
+        }
+        val elapsedMs = elapsed / 1_000_000L
+        if (elapsedMs >= runtimePhaseWarnMs) {
+            logger.warn(
+                "World maintenance stage {} took {}ms activePlayers={} duePlayers={} processedPlayers={} maxBucketSize={}",
+                WorldMaintenanceStage.FARMING_TICK,
+                elapsedMs,
+                refreshStats.activePlayers,
+                runStats.duePlayers,
+                runStats.processedPlayers,
+                runStats.maxBucketSize,
+            )
         }
     }
 

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
@@ -37,6 +38,13 @@ public class EntityProcessor implements Runnable {
     private final LongHashSet activeNpcChunks = new LongHashSet(128);
     private final IntHashSet activeNpcSlots = new IntHashSet(256);
     private static volatile Npc[] SPAWN_ALWAYS_ACTIVE = null;
+    private static final ConcurrentLinkedQueue<Client> READY_INBOUND_PLAYERS = new ConcurrentLinkedQueue<>();
+
+    public static void enqueueInboundReady(Client player) {
+        if (player != null) {
+            READY_INBOUND_PLAYERS.add(player);
+        }
+    }
 
     @Override
     public void run() {
@@ -279,18 +287,39 @@ public class EntityProcessor implements Runnable {
     private void processInboundPackets() {
         net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.beginTick();
         long startNs = System.nanoTime();
-        int activePlayers = 0;
+        ArrayList<Client> readyPlayers = new ArrayList<>();
+        for (;;) {
+            Client player = READY_INBOUND_PLAYERS.poll();
+            if (player == null) {
+                break;
+            }
+            readyPlayers.add(player);
+        }
+
+        int readyPlayersBefore = readyPlayers.size();
+        int readyPlayersProcessed = 0;
         int processedPackets = 0;
         int totalPendingBefore = 0;
         int totalPendingAfter = 0;
-        int backlogPlayers = 0;
+        int deferredPlayers = 0;
         int maxPendingBefore = 0;
         int maxPendingAfter = 0;
 
-        for (Client player : PlayerHandler.snapshotActivePlayers()) {
-            activePlayers++;
+        for (Client player : readyPlayers) {
+            if (player == null) {
+                continue;
+            }
+            player.clearInboundReadyFlag();
+            if (player.disconnected || !player.isActive) {
+                continue;
+            }
 
             int pendingBefore = player.getPendingInboundPacketCount();
+            if (pendingBefore <= 0) {
+                continue;
+            }
+
+            readyPlayersProcessed++;
             totalPendingBefore += pendingBefore;
             if (pendingBefore > maxPendingBefore) {
                 maxPendingBefore = pendingBefore;
@@ -304,18 +333,21 @@ public class EntityProcessor implements Runnable {
                 maxPendingAfter = pendingAfter;
             }
             if (pendingAfter > 0) {
-                backlogPlayers++;
+                deferredPlayers++;
+                player.markInboundReadyIfNeeded();
             }
         }
 
         long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
         if (elapsedMs >= getRuntimePhaseWarnMs()) {
             logger.warn(
-                    "INBOUND_PACKETS slow: total={}ms activePlayers={} processedPackets={} backlogPlayers={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
+                    "INBOUND_PACKETS slow: total={}ms readyPlayers={} processedReadyPlayers={} processedPackets={} deferredPlayers={} readyAfter={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
                     elapsedMs,
-                    activePlayers,
+                    readyPlayersBefore,
+                    readyPlayersProcessed,
                     processedPackets,
-                    backlogPlayers,
+                    deferredPlayers,
+                    READY_INBOUND_PLAYERS.size(),
                     totalPendingBefore,
                     totalPendingAfter,
                     maxPendingBefore,

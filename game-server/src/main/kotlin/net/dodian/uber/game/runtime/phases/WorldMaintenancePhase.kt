@@ -1,14 +1,12 @@
 package net.dodian.uber.game.runtime.phases
 
-import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.uber.game.runtime.world.WorldMaintenanceService
 
 class WorldMaintenancePhase(
-    private val farmingProcess: FarmingProcess,
     private val plunderDoor: PlunderDoor,
 ) {
-    private val service = WorldMaintenanceService(farmingProcess, plunderDoor)
+    private val service = WorldMaintenanceService(plunderDoor)
 
     fun runWorldDbInputBuild(cycle: Long) {
         service.runWorldDbInputBuild(cycle)

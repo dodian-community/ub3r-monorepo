@@ -1,6 +1,7 @@
 package net.dodian.uber.game.runtime.loop
 
 enum class GamePhase {
+    LOGIN_INGRESS,
     INBOUND_PACKETS,
     WORLD_DB_INPUT_BUILD,
     WORLD_DB_RESULT_READ,

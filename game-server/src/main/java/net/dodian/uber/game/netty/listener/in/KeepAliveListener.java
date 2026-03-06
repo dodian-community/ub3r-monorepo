@@ -24,7 +24,6 @@ public final class KeepAliveListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         // Reset timeout counter so server knows the client is alive
-        client.timeOutCounter = 0;
-         }
+        client.resetTimeOutCounter();
     }
-
+    }

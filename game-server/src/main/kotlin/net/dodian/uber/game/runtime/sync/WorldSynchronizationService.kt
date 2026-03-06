@@ -2,7 +2,6 @@ package net.dodian.uber.game.runtime.sync
 
 import io.netty.buffer.ByteBuf
 import kotlin.system.measureNanoTime
-import java.util.IdentityHashMap
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
@@ -51,7 +50,7 @@ class WorldSynchronizationService {
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
         val relevantNpcs: Collection<Npc> =
             if (viewportIndex != null) {
-                collectRelevantNpcs(activePlayers, viewportIndex)
+                viewportIndex.relevantNpcs()
             } else {
                 currentActiveNpcs()
             }
@@ -109,20 +108,6 @@ class WorldSynchronizationService {
         return npcs
     }
 
-    private fun collectRelevantNpcs(viewers: List<Client>, viewportIndex: ViewportIndex): List<Npc> {
-        val seen = IdentityHashMap<Npc, Boolean>()
-        val out = ArrayList<Npc>()
-        viewers.forEach { viewer ->
-            val snapshot = viewportIndex.snapshotFor(viewer) ?: return@forEach
-            snapshot.npcs.forEach { npc ->
-                if (seen.put(npc, true) == null) {
-                    out += npc
-                }
-            }
-        }
-        return out
-    }
-
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
         if (!syncRootBlockCacheEnabled) {
             return
@@ -152,7 +137,7 @@ class WorldSynchronizationService {
             return
         }
         activePlayers.forEach { player ->
-            if (player.timeOutCounter >= 84) {
+            if (player.timeOutCounter.get() >= 84) {
                 player.disconnected = true
                 player.println_debug("\nRemove non-responding " + player.playerName + " after 60 seconds of disconnect! ")
             }
@@ -236,19 +221,25 @@ class WorldSynchronizationService {
         chunkStamp: Long,
         localStamp: Long,
     ): NpcSyncDecision {
-        state ?: return NpcSyncDecision.BUILD
+        state ?: run {
+            SynchronizationContext.recordNpcBuildNoState()
+            return NpcSyncDecision.BUILD
+        }
         val mapChanged =
             state.lastKnownMapRegionX != Int.MIN_VALUE &&
                 (state.lastKnownMapRegionX != player.mapRegionX || state.lastKnownMapRegionY != player.mapRegionY)
         val planeChanged = state.lastKnownPlane != Int.MIN_VALUE && state.lastKnownPlane != player.position.z
         if (mapChanged || planeChanged || player.didTeleport() || player.didMapRegionChange()) {
+            SynchronizationContext.recordNpcBuildMapRegionOrTeleport()
             return NpcSyncDecision.BUILD
         }
         if (state.lastKnownLocalNpcCount != player.localNpcs.size) {
+            SynchronizationContext.recordNpcBuildLocalCountChanged()
             return NpcSyncDecision.BUILD
         }
         val snapshot = SynchronizationContext.getViewportSnapshot(player)
         if (player.localNpcs.isEmpty() && snapshot != null && snapshot.npcs.isNotEmpty()) {
+            SynchronizationContext.recordNpcBuildPendingViewport()
             return NpcSyncDecision.BUILD
         }
         return if (
@@ -257,6 +248,12 @@ class WorldSynchronizationService {
         ) {
             NpcSyncDecision.SKIP
         } else {
+            if (state.lastChunkActivityStamp != chunkStamp) {
+                SynchronizationContext.recordNpcBuildChunkActivityChanged()
+            }
+            if (state.lastLocalNpcActivityStamp != localStamp) {
+                SynchronizationContext.recordNpcBuildLocalActivityChanged()
+            }
             NpcSyncDecision.BUILD
         }
     }
@@ -266,7 +263,47 @@ class WorldSynchronizationService {
         cycle.recordStage(stage, elapsed)
         val elapsedMs = elapsed / 1_000_000L
         if (elapsedMs >= runtimePhaseWarnMs) {
-            logger.warn("Sync stage {} took {}ms", stage, elapsedMs)
+            when (stage) {
+                SynchronizationStage.SYNC_PLAYER_ENCODE -> {
+                    val built = cycle.playerPacketsBuilt + cycle.playerPacketsTemplated
+                    val skipped = cycle.playerPacketsSkipped
+                    val total = built + skipped
+                    val localCoverage = cycle.playerLocalScans + cycle.playerLocalsSkipped + cycle.playerTemplatedLocalCoverage
+                    val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
+                    logger.warn(
+                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalPlayers={}",
+                        stage,
+                        elapsedMs,
+                        built,
+                        skipped,
+                        String.format("%.2f", avgLocals),
+                    )
+                }
+
+                SynchronizationStage.SYNC_NPC_ENCODE -> {
+                    val built = cycle.npcPacketsBuilt
+                    val skipped = cycle.npcPacketsSkipped
+                    val total = built + skipped
+                    val localCoverage = cycle.npcLocalScans + cycle.npcLocalsSkipped
+                    val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
+                    logger.warn(
+                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, localStamp={}]",
+                        stage,
+                        elapsedMs,
+                        built,
+                        skipped,
+                        String.format("%.2f", avgLocals),
+                        cycle.npcBuildNoStateCount,
+                        cycle.npcBuildMapRegionOrTeleportCount,
+                        cycle.npcBuildLocalCountChangedCount,
+                        cycle.npcBuildPendingViewportCount,
+                        cycle.npcBuildChunkActivityChangedCount,
+                        cycle.npcBuildLocalActivityChangedCount,
+                    )
+                }
+
+                else -> logger.warn("Sync stage {} took {}ms", stage, elapsedMs)
+            }
         }
     }
 

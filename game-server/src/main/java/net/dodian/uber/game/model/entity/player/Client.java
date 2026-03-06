@@ -30,6 +30,7 @@ import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.runtime.loop.GameThreadContext;
+import net.dodian.jobs.impl.EntityProcessor;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
@@ -73,6 +74,7 @@ public class Client extends Player implements Runnable {
     public Channel channel;
     private final java.util.Queue<net.dodian.uber.game.netty.game.GamePacket> pendingInboundPackets = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final java.util.concurrent.atomic.AtomicInteger pendingInboundPacketCount = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.concurrent.atomic.AtomicBoolean inboundReadyQueued = new java.util.concurrent.atomic.AtomicBoolean();
 
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
@@ -610,7 +612,7 @@ public class Client extends Player implements Runnable {
     // Legacy Stream fields removed - using pure Netty now
    // public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
 
-    public int timeOutCounter = 0; // to detect timeouts on the connection to the client
+    public final java.util.concurrent.atomic.AtomicInteger timeOutCounter = new java.util.concurrent.atomic.AtomicInteger(); // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
 
 
@@ -625,6 +627,7 @@ public class Client extends Player implements Runnable {
     @Override
     public void destruct() {
         releaseQueuedInboundPackets();
+        clearInboundReadyFlag();
         cancelFarmDebugTask();
 
         // Transport-specific shutdown
@@ -664,6 +667,7 @@ public class Client extends Player implements Runnable {
             return false;
         }
         pendingInboundPackets.add(packet);
+        markInboundReadyIfNeeded();
         return true;
     }
 
@@ -741,6 +745,24 @@ public class Client extends Player implements Runnable {
 
     public int getPendingInboundPacketCount() {
         return pendingInboundPacketCount.get();
+    }
+
+    public void clearInboundReadyFlag() {
+        inboundReadyQueued.set(false);
+    }
+
+    public void markInboundReadyIfNeeded() {
+        if (inboundReadyQueued.compareAndSet(false, true)) {
+            EntityProcessor.enqueueInboundReady(this);
+        }
+    }
+
+    public void resetTimeOutCounter() {
+        timeOutCounter.set(0);
+    }
+
+    public void incrementTimeOutCounter() {
+        timeOutCounter.incrementAndGet();
     }
 
     public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
@@ -2516,7 +2538,7 @@ public class Client extends Player implements Runnable {
             UpdateNPCChat();
         }
         /* Handle logout shiez */
-        timeOutCounter++;
+        incrementTimeOutCounter();
         if (isKicked) //Kicked muhahah!
             disconnected = true;
         else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
@@ -6360,23 +6382,19 @@ public class Client extends Player implements Runnable {
 
     public void refreshFriends() {
         for (Friend f : friends) {
-            if (PlayerHandler.playersOnline.containsKey(f.name)) {
-                boolean ignored = false;
-                for (Player p : PlayerHandler.players) {
-                    if (p != null && p.longName == f.name) {
-                        Client player = (Client) p;
-                        for (Friend ignore : player.ignores) {
-                            ignored = ignore.name == this.longName;
-                        }
-                    }
-                }
-                if (!ignored)
-                    loadpm(f.name, 1);
-                else
-                    loadpm(f.name, 0);
-            } else {
+            Client player = PlayerHandler.playersOnline.get(f.name);
+            if (player == null) {
                 loadpm(f.name, 0);
+                continue;
             }
+            boolean ignored = false;
+            for (Friend ignore : player.ignores) {
+                if (ignore.name == this.longName) {
+                    ignored = true;
+                    break;
+                }
+            }
+            loadpm(f.name, ignored ? 0 : 1);
         }
     }
 
@@ -6398,13 +6416,9 @@ public class Client extends Player implements Runnable {
             if (f.name == name) {
                 ignores.remove(f);
                 refreshFriends();
-                if (PlayerHandler.allOnline.containsKey(f.name)) {
-                    for (Player p : PlayerHandler.players) {
-                        if (p != null && p.longName == f.name) {
-                            Client player = (Client) p;
-                            player.refreshFriends();
-                        }
-                    }
+                Client player = PlayerHandler.playersOnline.get(f.name);
+                if (player != null) {
+                    player.refreshFriends();
                 }
                 break;
             }
@@ -6426,13 +6440,9 @@ public class Client extends Player implements Runnable {
         }
         if (canAdd) {
             ignores.add(new Friend(name, true));
-            if (PlayerHandler.allOnline.containsKey(name)) {
-                for (Player p : PlayerHandler.players) {
-                    if (p != null && p.longName == name) {
-                        Client player = (Client) p;
-                        player.refreshFriends();
-                    }
-                }
+            Client player = PlayerHandler.playersOnline.get(name);
+            if (player != null) {
+                player.refreshFriends();
             }
         }
     }

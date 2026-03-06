@@ -189,4 +189,34 @@ object SynchronizationContext {
     fun recordNpcPacketSkipped(localCount: Int) {
         current()?.recordNpcPacketSkipped(localCount)
     }
+
+    @JvmStatic
+    fun recordNpcBuildNoState() {
+        current()?.recordNpcBuildNoState()
+    }
+
+    @JvmStatic
+    fun recordNpcBuildMapRegionOrTeleport() {
+        current()?.recordNpcBuildMapRegionOrTeleport()
+    }
+
+    @JvmStatic
+    fun recordNpcBuildLocalCountChanged() {
+        current()?.recordNpcBuildLocalCountChanged()
+    }
+
+    @JvmStatic
+    fun recordNpcBuildPendingViewport() {
+        current()?.recordNpcBuildPendingViewport()
+    }
+
+    @JvmStatic
+    fun recordNpcBuildChunkActivityChanged() {
+        current()?.recordNpcBuildChunkActivityChanged()
+    }
+
+    @JvmStatic
+    fun recordNpcBuildLocalActivityChanged() {
+        current()?.recordNpcBuildLocalActivityChanged()
+    }
 }

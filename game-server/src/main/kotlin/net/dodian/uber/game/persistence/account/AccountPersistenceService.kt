@@ -1,7 +1,7 @@
 package net.dodian.uber.game.persistence.account
 
 import java.time.Duration
-import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import java.util.function.IntConsumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -33,19 +33,22 @@ object AccountPersistenceService {
         client: Client,
         username: String,
         password: String,
-        onComplete: IntConsumer,
+        onComplete: Consumer<LoginLoadResult>,
     ) {
         scope.launch {
-            val result =
+            val startedAt = System.nanoTime()
+            var pendingRetries = 0
+            val code =
                 try {
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalCode = 13
                     while (true) {
-                        val code = Server.loginManager.loadgame(client, username, password)
-                        if (code != LoginManager.FINAL_SAVE_PENDING_INTERNAL) {
-                            finalCode = code
+                        val loadCode = Server.loginManager.loadgame(client, username, password)
+                        if (loadCode != LoginManager.FINAL_SAVE_PENDING_INTERNAL) {
+                            finalCode = loadCode
                             break
                         }
+                        pendingRetries++
                         if (System.currentTimeMillis() >= deadline) {
                             finalCode = 5
                             break
@@ -57,8 +60,19 @@ object AccountPersistenceService {
                     logger.warn("Account load failed for {}", username, exception)
                     13
                 }
-            onComplete.accept(result)
+            val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+            onComplete.accept(LoginLoadResult(code, durationMs, pendingRetries))
         }
+    }
+
+    @JvmStatic
+    fun submitLoginLoadLegacy(
+        client: Client,
+        username: String,
+        password: String,
+        onComplete: IntConsumer,
+    ) {
+        submitLoginLoad(client, username, password) { result -> onComplete.accept(result.code) }
     }
 
     @JvmStatic
@@ -139,4 +153,10 @@ object AccountPersistenceService {
         PlayerSaveService.shutdownAndDrain(timeout)
         DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }
+
+    data class LoginLoadResult(
+        val code: Int,
+        val durationMs: Long,
+        val pendingRetries: Int,
+    )
 }
