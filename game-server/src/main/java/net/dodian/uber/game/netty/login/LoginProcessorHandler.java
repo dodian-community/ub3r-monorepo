@@ -19,8 +19,8 @@ import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketEncoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
-import net.dodian.uber.game.runtime.loop.LoginFinalizationQueue;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.runtime.loop.GameThreadIngress;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +35,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayload> {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginProcessorHandler.class);
-    private static final long LOGIN_SLOW_WARN_MS = 500L;
-    private static final long LOGIN_QUEUE_WARN_MS = 1_200L;
-    private static final long LOGIN_INITIALIZER_WARN_MS = 100L;
     private static final AtomicLong LOGIN_SLOT_FAILURES = new AtomicLong();
     private static final AtomicLong LOGIN_LOAD_FAILURES = new AtomicLong();
     private static final AtomicLong LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE = new AtomicLong();
@@ -251,7 +248,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         final io.netty.channel.Channel channel = ctx.channel();
         final int slotCopy = slot;
         final long finalizerQueuedAtNanos = System.nanoTime();
-        LoginFinalizationQueue.submit("login-finalize", () -> {
+        GameThreadIngress.submitCritical("login-finalize", () -> {
             long finalizerStartedAtNanos = System.nanoTime();
             long queueWaitMs = (finalizerStartedAtNanos - finalizerQueuedAtNanos) / 1_000_000L;
             if (!channel.isActive() || client.disconnected) {
@@ -288,7 +285,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
 
                 final PlayerInitializer postInitializer = initializer;
-                LoginFinalizationQueue.submit("login-post-init", () -> {
+                GameThreadIngress.submitDeferred("login-post-init", () -> {
                     if (!client.disconnected) {
                         postInitializer.initializeDeferredPostLoginState(client);
                     }
@@ -303,19 +300,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 );
             }
 
-            long totalDurationMs = (System.nanoTime() - acceptedAtNanos) / 1_000_000L;
-            if (totalDurationMs >= LOGIN_SLOW_WARN_MS || queueWaitMs >= LOGIN_QUEUE_WARN_MS || initializerDurationMs >= LOGIN_INITIALIZER_WARN_MS) {
-                logger.warn(
-                        "Slow login for {} total={}ms slotReserve={}ms load={}ms queueWait={}ms init={}ms pendingRetries={}",
-                        client.getPlayerName(),
-                        totalDurationMs,
-                        slotReserveDurationMs,
-                        loadResult.getDurationMs(),
-                        queueWaitMs,
-                        initializerDurationMs,
-                        loadResult.getPendingRetries()
-                );
-            }
         });
 
         loginFinished = true;

@@ -7,11 +7,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.dodian.uber.comm.LoginManager
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.DbDispatchers
+import net.dodian.uber.game.persistence.account.login.AccountLoginService
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue
@@ -43,8 +42,8 @@ object AccountPersistenceService {
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalCode = 13
                     while (true) {
-                        val loadCode = Server.loginManager.loadgame(client, username, password)
-                        if (loadCode != LoginManager.FINAL_SAVE_PENDING_INTERNAL) {
+                        val loadCode = AccountLoginService.loadGame(client, username, password)
+                        if (loadCode != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalCode = loadCode
                             break
                         }

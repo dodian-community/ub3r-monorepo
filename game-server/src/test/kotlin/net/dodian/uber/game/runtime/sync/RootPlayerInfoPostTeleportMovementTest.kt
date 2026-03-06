@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.runtime.sync.cache.RootSynchronizationCache
 import net.dodian.uber.game.runtime.sync.player.PlayerChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncRevisionIndex
+import net.dodian.uber.game.runtime.sync.playerinfo.PlayerSyncInvariantValidator
 import net.dodian.uber.game.runtime.sync.playerinfo.RootPlayerInfoService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -34,13 +35,16 @@ class RootPlayerInfoPostTeleportMovementTest {
             Server.itemManager = testItemManager()
 
             harness.sync(players)
+            PlayerSyncInvariantValidator.validateViewerLocals(viewer)
             drainOutbound(viewer)
             drainOutbound(teleporter)
 
             teleporter.transport(Position(3209, 3205, 0))
             teleporter.getNextPlayerMovement()
 
+            val beforeTeleport = PlayerSyncInvariantValidator.snapshot(viewer)
             val teleportCycle = harness.sync(players)
+            PlayerSyncInvariantValidator.validateViewerLocals(viewer, beforeTeleport)
             val teleportPacket = drainSingleOutbound(viewer)
             assertEquals(1, teleportCycle.playerTeleportReinsertCount)
             assertEquals(1, readBits(teleportPacket.toByteArray(), 9, 1))
@@ -52,7 +56,9 @@ class RootPlayerInfoPostTeleportMovementTest {
                 teleporter.addToWalkingQueue(teleporter.currentX + 1, teleporter.currentY)
                 teleporter.getNextPlayerMovement()
 
+                val previousSnapshot = PlayerSyncInvariantValidator.snapshot(viewer)
                 val cycle = harness.sync(players)
+                PlayerSyncInvariantValidator.validateViewerLocals(viewer, previousSnapshot)
                 val viewerPacket = drainSingleOutbound(viewer)
                 val payload = viewerPacket.toByteArray()
 

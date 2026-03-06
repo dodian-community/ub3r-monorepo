@@ -13,8 +13,9 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.runtime.sync.SynchronizationContext;
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncDecision;
-import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.RootPlayerInfoPlan;
 import net.dodian.uber.game.runtime.sync.player.ViewerPlayerSyncState;
+import net.dodian.uber.game.runtime.sync.playerinfo.PlayerVisibilityRules;
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.RootPlayerInfoPlan;
 import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateKey;
@@ -404,15 +405,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private boolean shouldAddLocalPlayerCandidate(Player player, Player other) {
-        if (player == other || other == null || !other.isActive) {
-            return false;
-        }
-
-        if (!player.withinDistance(other) || (!player.didTeleport() && player.playersUpdating.contains(other))) {
-            return false;
-        }
-
-        return !other.invis || player.invis;
+        return PlayerVisibilityRules.canAddLocal(player, other);
     }
 
     private void pruneLocalsToProtocolCap(Player player) {
@@ -624,13 +617,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private boolean isVisiblePlayerCandidate(Player viewer, Player other) {
-        if (viewer == other || other == null || !other.isActive) {
-            return false;
-        }
-        if (!viewer.withinDistance(other)) {
-            return false;
-        }
-        return !other.invis || viewer.invis;
+        return PlayerVisibilityRules.isVisibleTo(viewer, other);
     }
 
     private static final class PlayerVisibilitySignature {

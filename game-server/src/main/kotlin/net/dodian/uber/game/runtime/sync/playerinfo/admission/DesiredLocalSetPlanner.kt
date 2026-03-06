@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.runtime.sync.player.pool.PlayerSyncScratchPool
+import net.dodian.uber.game.runtime.sync.playerinfo.PlayerVisibilityRules
 
 class DesiredLocalSetPlanner {
     private val scratch = PlayerSyncScratchPool()
@@ -19,13 +20,7 @@ class DesiredLocalSetPlanner {
         scratch.reset()
         var visibleCandidateCount = 0
         for (other in candidates) {
-            if (other === viewer || !other.isActive) {
-                continue
-            }
-            if (!viewer.withinDistance(other)) {
-                continue
-            }
-            if (other.invis && !viewer.invis) {
+            if (!PlayerVisibilityRules.isVisibleTo(viewer, other)) {
                 continue
             }
             val slot = other.slot
@@ -43,13 +38,7 @@ class DesiredLocalSetPlanner {
                 continue
             }
             val player = PlayerHandler.players.getOrNull(slot)
-            if (player == null || !player.isActive) {
-                continue
-            }
-            if (!viewer.withinDistance(player)) {
-                continue
-            }
-            if (player.invis && !viewer.invis) {
+            if (!PlayerVisibilityRules.isVisibleTo(viewer, player)) {
                 continue
             }
             scratch.desiredSlots[desiredCount++] = slot

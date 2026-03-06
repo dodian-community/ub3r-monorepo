@@ -2,18 +2,12 @@ package net.dodian.uber.game.runtime.loop
 
 import java.time.Duration
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureNanoTime
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.dodian.jobs.impl.ActionProcessor
 import net.dodian.jobs.impl.EntityProcessor
 import net.dodian.jobs.impl.ItemProcessor
@@ -47,12 +41,11 @@ class GameLoopService(
 ) {
     private val logger = LoggerFactory.getLogger(GameLoopService::class.java)
     private val running = AtomicBoolean(false)
-    private val executor =
-        Executors.newSingleThreadExecutor(ThreadFactory { runnable ->
+    private val boundGameThread = AtomicBoolean(false)
+    private val executor: ScheduledExecutorService =
+        Executors.newSingleThreadScheduledExecutor(ThreadFactory { runnable ->
             Thread(runnable, "GameTickScheduler").apply { isDaemon = true }
         })
-    private val dispatcher = executor.asCoroutineDispatcher()
-    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val phaseTimer = TickPhaseTimer()
     private val gcTracker = GcStallTracker()
 
@@ -65,9 +58,10 @@ class GameLoopService(
     private val outboundSyncPhase = OutboundSyncPhase(outboundPacketProcessor)
 
     @Volatile
-    private var job: Job? = null
+    private var tickFuture: ScheduledFuture<*>? = null
+    @Volatile
+    private var ingressFuture: ScheduledFuture<*>? = null
     private var currentCycle = 0L
-    private var excessCycleNanos = 0L
     private var debugTick = 0
     private var accumulatedCycleTimeMs = 0L
     private var accumulatedLoggedMillis = 0L
@@ -76,45 +70,62 @@ class GameLoopService(
         if (!running.compareAndSet(false, true)) {
             return
         }
-        job =
-            scope.launch {
-                GameThreadContext.bindCurrentThread()
-                while (isActive && running.get()) {
-                    val elapsedNanos = measureNanoTime { runTick() } + excessCycleNanos
-                    val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
-                    val overdue = elapsedMillis > GAME_TICK_INTERVAL_MS
-                    val sleepTime =
-                        if (overdue) {
-                            val elapsedCycleCount = elapsedMillis / GAME_TICK_INTERVAL_MS
-                            ((elapsedCycleCount + 1) * GAME_TICK_INTERVAL_MS) - elapsedMillis
-                        } else {
-                            GAME_TICK_INTERVAL_MS - elapsedMillis
-                        }
-                    if (overdue) {
-                        logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
-                    }
-                    maybeLogCycle(elapsedMillis)
-                    excessCycleNanos = elapsedNanos - TimeUnit.MILLISECONDS.toNanos(elapsedMillis)
-                    delay(sleepTime)
-                }
-            }
+        tickFuture = executor.scheduleAtFixedRate(::runScheduledTick, 0L, GAME_TICK_INTERVAL_MS, TimeUnit.MILLISECONDS)
+        ingressFuture =
+            executor.scheduleAtFixedRate(
+                ::runIdleIngressScheduled,
+                IDLE_INGRESS_INTERVAL_MS,
+                IDLE_INGRESS_INTERVAL_MS,
+                TimeUnit.MILLISECONDS,
+            )
     }
 
     fun stop(timeout: Duration) {
         running.set(false)
-        runBlocking { job?.cancel() }
+        tickFuture?.cancel(false)
+        ingressFuture?.cancel(false)
         executor.shutdown()
         if (!executor.awaitTermination(timeout.toMillis().coerceAtLeast(1L), TimeUnit.MILLISECONDS)) {
             executor.shutdownNow()
         }
     }
 
+    private fun runScheduledTick() {
+        bindGameThread()
+        if (!running.get()) {
+            return
+        }
+        val elapsedNanos = measureNanoTime { runTick() }
+        val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
+        if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
+            logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
+        }
+        maybeLogCycle(elapsedMillis)
+    }
+
+    private fun runIdleIngressScheduled() {
+        bindGameThread()
+        if (!running.get()) {
+            return
+        }
+        runIdleIngress()
+    }
+
+    private fun runIdleIngress() {
+        GameThreadIngress.drainCritical(IDLE_INGRESS_CRITICAL_MAX)
+    }
+
+    private fun bindGameThread() {
+        if (boundGameThread.compareAndSet(false, true)) {
+            GameThreadContext.bindCurrentThread()
+        }
+    }
+
     private fun runTick() {
         currentCycle++
         val now = System.currentTimeMillis()
-        timed(GamePhase.LOGIN_INGRESS) { LoginFinalizationQueue.drain() }
-        GameThreadTaskQueue.drain()
         phaseTimer.clear()
+        timed(GamePhase.LOGIN_INGRESS) { GameThreadIngress.drainTickIngress() }
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
         timed(GamePhase.WORLD_DB_INPUT_BUILD) { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
         timed(GamePhase.WORLD_DB_RESULT_READ) { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
@@ -122,7 +133,6 @@ class GameLoopService(
         timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
         timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
-        timed(GamePhase.LOGIN_INGRESS) { LoginFinalizationQueue.drain() }
         timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
         timed(GamePhase.LEGACY_ACTIONS) { legacyActionPhase.run() }
         timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }
@@ -183,5 +193,7 @@ class GameLoopService(
     private companion object {
         private const val GAME_TICK_INTERVAL_MS = 600L
         private const val CYCLE_LOG_INTERVAL_MS = 60_000L
+        private const val IDLE_INGRESS_INTERVAL_MS = 25L
+        private const val IDLE_INGRESS_CRITICAL_MAX = 64
     }
 }

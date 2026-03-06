@@ -8,65 +8,79 @@ import net.dodian.jobs.impl.ObjectProcess
 import net.dodian.jobs.impl.OutboundPacketProcessor
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.ShopProcessor
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GameLoopServiceLoginIngressTest {
 
     @Test
-    fun `login finalization queued during npc phase drains before player main`() {
-        LoginFinalizationQueue.drain(Int.MAX_VALUE)
+    fun `idle ingress drains critical lane without running deferred jobs`() {
+        GameThreadIngress.clearForTests()
         val events = CopyOnWriteArrayList<String>()
-        val entityProcessor =
-            object : EntityProcessor() {
-                override fun runInboundPacketPhase() {
-                    events += "inbound"
-                }
-
-                override fun runNpcMainPhase(now: Long) {
-                    events += "npc"
-                    LoginFinalizationQueue.submit("test-finalize") {
-                        events += "login-finalize"
-                    }
-                }
-
-                override fun runPlayerMainPhase() {
-                    assertTrue(events.contains("login-finalize"))
-                    events += "player"
-                }
-
-                override fun runMovementFinalizePhase() {
-                    events += "movement"
-                }
-
-                override fun runHousekeepingPhase(now: Long) {
-                    events += "housekeeping"
-                }
-            }
-
-        val service =
-            GameLoopService(
-                entityProcessor = entityProcessor,
-                actionProcessor = object : ActionProcessor() { override fun run() = Unit },
-                outboundPacketProcessor = object : OutboundPacketProcessor() { override fun run() = Unit },
-                itemProcessor = object : ItemProcessor() { override fun run() = Unit },
-                shopProcessor = object : ShopProcessor() { override fun run() = Unit },
-                objectProcess = object : ObjectProcess() { override fun run() = Unit },
-                plunderDoor = object : PlunderDoor() { override fun run() = Unit },
-            )
+        val service = createService()
 
         try {
-            runSingleTick(service)
-            assertTrue(events.indexOf("npc") >= 0)
-            assertTrue(events.indexOf("login-finalize") > events.indexOf("npc"))
-            assertTrue(events.indexOf("login-finalize") < events.indexOf("player"))
+            GameThreadIngress.submitCritical("login-finalize") { events += "critical-1" }
+            GameThreadIngress.submitCritical("login-finalize") { events += "critical-2" }
+            GameThreadIngress.submitDeferred("login-post-init") { events += "deferred-1" }
+
+            invoke(service, "runIdleIngress")
+
+            assertEquals(listOf("critical-1", "critical-2"), events)
+
+            invoke(service, "runTick")
+
+            assertEquals(listOf("critical-1", "critical-2", "deferred-1"), events)
         } finally {
-            LoginFinalizationQueue.drain(Int.MAX_VALUE)
+            GameThreadIngress.clearForTests()
         }
     }
 
-    private fun runSingleTick(service: GameLoopService) {
-        val method = GameLoopService::class.java.getDeclaredMethod("runTick")
+    @Test
+    fun `tick ingress preserves ordering within critical and deferred lanes`() {
+        GameThreadIngress.clearForTests()
+        val events = CopyOnWriteArrayList<String>()
+        val service = createService()
+
+        try {
+            GameThreadIngress.submitCritical("login-finalize") { events += "critical-a" }
+            GameThreadIngress.submitCritical("login-finalize") { events += "critical-b" }
+            GameThreadIngress.submitDeferred("login-post-init") { events += "deferred-a" }
+            GameThreadIngress.submitDeferred("generic-task") { events += "deferred-b" }
+
+            invoke(service, "runTick")
+
+            assertEquals(listOf("critical-a", "critical-b", "deferred-a", "deferred-b"), events)
+            assertTrue(events.indexOf("critical-b") < events.indexOf("deferred-a"))
+        } finally {
+            GameThreadIngress.clearForTests()
+        }
+    }
+
+    private fun createService(): GameLoopService =
+        GameLoopService(
+            entityProcessor = object : EntityProcessor() {
+                override fun runInboundPacketPhase() = Unit
+
+                override fun runNpcMainPhase(now: Long) = Unit
+
+                override fun runPlayerMainPhase() = Unit
+
+                override fun runMovementFinalizePhase() = Unit
+
+                override fun runHousekeepingPhase(now: Long) = Unit
+            },
+            actionProcessor = object : ActionProcessor() { override fun run() = Unit },
+            outboundPacketProcessor = object : OutboundPacketProcessor() { override fun run() = Unit },
+            itemProcessor = object : ItemProcessor() { override fun run() = Unit },
+            shopProcessor = object : ShopProcessor() { override fun run() = Unit },
+            objectProcess = object : ObjectProcess() { override fun run() = Unit },
+            plunderDoor = object : PlunderDoor() { override fun run() = Unit },
+        )
+
+    private fun invoke(service: GameLoopService, methodName: String) {
+        val method = GameLoopService::class.java.getDeclaredMethod(methodName)
         method.isAccessible = true
         method.invoke(service)
     }

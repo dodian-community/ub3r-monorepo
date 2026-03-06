@@ -490,13 +490,7 @@ class RootPlayerInfoService {
     private fun computeVisibleSignature(viewer: Client, candidates: Iterable<Player>): Int {
         var signature = 1
         for (other in candidates) {
-            if (other === viewer || !other.isActive) {
-                continue
-            }
-            if (!viewer.withinDistance(other)) {
-                continue
-            }
-            if (other.invis && !viewer.invis) {
+            if (!PlayerVisibilityRules.isVisibleTo(viewer, other)) {
                 continue
             }
             signature = 31 * signature + other.slot

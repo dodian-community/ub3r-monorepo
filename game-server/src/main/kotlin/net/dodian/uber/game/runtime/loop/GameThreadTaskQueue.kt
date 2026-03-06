@@ -1,13 +1,6 @@
 package net.dodian.uber.game.runtime.loop
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import kotlin.system.measureNanoTime
-import org.slf4j.LoggerFactory
-
 object GameThreadTaskQueue {
-    private val logger = LoggerFactory.getLogger(GameThreadTaskQueue::class.java)
-    private val queue = ConcurrentLinkedQueue<QueuedTask>()
-
     @JvmStatic
     fun submit(task: Runnable) {
         submit("anonymous", task)
@@ -15,7 +8,7 @@ object GameThreadTaskQueue {
 
     @JvmStatic
     fun submit(label: String, task: Runnable) {
-        queue.add(QueuedTask(label, System.nanoTime(), task))
+        GameThreadIngress.submitDeferred(label, task)
     }
 
     @JvmStatic
@@ -25,63 +18,11 @@ object GameThreadTaskQueue {
 
     @JvmStatic
     fun drain(maxTasks: Int) {
-        val queueSizeBefore = queue.size
-        var processed = 0
-        var maxQueueWaitMs = 0L
-        var slowestTaskLabel = ""
-        var slowestTaskMs = 0L
-        val processedByLabel = HashMap<String, Int>()
-        while (processed < maxTasks) {
-            val task = queue.poll() ?: break
-            val queueWaitMs = (System.nanoTime() - task.enqueuedAtNanos) / 1_000_000L
-            if (queueWaitMs > maxQueueWaitMs) {
-                maxQueueWaitMs = queueWaitMs
-            }
-            try {
-                val taskElapsedNs =
-                    measureNanoTime {
-                        task.runnable.run()
-                    }
-                val taskElapsedMs = taskElapsedNs / 1_000_000L
-                if (taskElapsedMs > slowestTaskMs) {
-                    slowestTaskMs = taskElapsedMs
-                    slowestTaskLabel = task.label
-                }
-            } catch (exception: Throwable) {
-                logger.warn("Game thread task failed label={}", task.label, exception)
-            }
-            processedByLabel[task.label] = (processedByLabel[task.label] ?: 0) + 1
-            processed++
-        }
-        val queueSizeAfter = queue.size
-        if (processed >= maxTasks && queueSizeAfter > 0) {
-            logger.warn(
-                "GameThreadTaskQueue reached maxTasks={} before={} processed={} remaining={} maxQueueWait={}ms slowestTask={}({}ms) labels={}",
-                maxTasks,
-                queueSizeBefore,
-                processed,
-                queueSizeAfter,
-                maxQueueWaitMs,
-                if (slowestTaskLabel.isEmpty()) "n/a" else slowestTaskLabel,
-                slowestTaskMs,
-                formatTopLabels(processedByLabel),
-            )
-        }
+        GameThreadIngress.drainDeferred(maxTasks)
     }
 
-    private fun formatTopLabels(processedByLabel: Map<String, Int>): String {
-        if (processedByLabel.isEmpty()) {
-            return "[]"
-        }
-        return processedByLabel.entries
-            .sortedByDescending { it.value }
-            .take(3)
-            .joinToString(prefix = "[", postfix = "]") { "${it.key}=${it.value}" }
+    @JvmStatic
+    fun clearForTests() {
+        GameThreadIngress.clearForTests()
     }
-
-    private data class QueuedTask(
-        val label: String,
-        val enqueuedAtNanos: Long,
-        val runnable: Runnable,
-    )
 }

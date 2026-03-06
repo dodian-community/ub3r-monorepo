@@ -7,7 +7,6 @@ import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.GameTickScheduler;
 import net.dodian.jobs.impl.*;
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
@@ -74,7 +73,6 @@ public class Server {
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
-    public static LoginManager loginManager = null;
     public static PyramidPlunder entryObject = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map tempConns = new HashMap<>();
@@ -125,7 +123,6 @@ public class Server {
                 npc.syncChunkMembership();
             }
         }
-        loginManager = new LoginManager();
         shopHandler = new ShopHandler();
         thieving = new Thieving();
         clientHandler = new Server();
