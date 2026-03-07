@@ -16,10 +16,8 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.entity.player.PlayerInitializer;
 import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
-import net.dodian.uber.game.netty.game.GamePacketEncoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
-import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.uber.game.runtime.loop.GameThreadIngress;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
@@ -64,7 +62,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, LoginPayload payloadHolder) {
-        ByteBuf in = payloadHolder.getPayload();
+        ByteBuf in = payloadHolder.payload();
         try {
             if (!parseLogin(ctx, in)) {
                 return; // parseLogin already handled failure
@@ -185,7 +183,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         final int slotCopy = reservedSlot;
         AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
                 ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, loadResult, slotCopy, acceptedAtNanos, slotReserveDurationMs)));
-        return;
     }
 
         /**

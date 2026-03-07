@@ -134,9 +134,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (!npc.canBeSeenBy(c)) {
             return true;
         }
-        if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
-            return true;
-        return false;
+        return c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2;
     }
 
 

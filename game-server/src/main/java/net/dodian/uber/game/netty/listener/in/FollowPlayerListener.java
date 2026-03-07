@@ -28,7 +28,7 @@ public class FollowPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int followId = readSignedWordBigEndian(packet.getPayload());
+        int followId = readSignedWordBigEndian(packet.payload());
         if (client.getSlot() == followId) return; // cannot follow yourself
 
         Client player = client.getClient(followId);

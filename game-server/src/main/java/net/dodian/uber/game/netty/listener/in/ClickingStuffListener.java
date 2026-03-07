@@ -22,7 +22,7 @@ public class ClickingStuffListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         // The original handler ignored the payload (a signed byte). We just advance if present.
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.isReadable()) buf.readByte();
 
         logger.debug("ClickingStuffListener triggered for player {}", client.getPlayerName());

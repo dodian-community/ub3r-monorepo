@@ -31,7 +31,7 @@ public class MagicOnItemsListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.getPayload());
+        ByteMessage msg = ByteMessage.wrap(packet.payload());
         // decode order based on client build: slot (big), itemId (little+ADD), dummy (big), spellId (little+ADD)
         int castOnSlot = msg.getShort(true, ByteOrder.BIG, ValueType.NORMAL);
         int castOnItem = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
@@ -44,7 +44,7 @@ public class MagicOnItemsListener implements PacketListener {
             return;
         }
 
-        int value = (int) Server.itemManager.getAlchemy(castOnItem);
+        int value = Server.itemManager.getAlchemy(castOnItem);
 
         if (System.currentTimeMillis() - client.lastMagic < 1800 || !client.playerHasItem(castOnItem) || client.playerItems[castOnSlot] != castOnItem + 1) {
             client.send(new SendSideTab(6));

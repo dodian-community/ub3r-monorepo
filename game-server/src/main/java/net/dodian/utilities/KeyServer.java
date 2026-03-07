@@ -28,8 +28,8 @@ public class KeyServer extends Thread {
                     //Reading the initializer string from client (garbage string)
                     socket = serverSocket.accept();
 
-                    modulus = String.valueOf(Modulus) + "\n";
-                    exponent = String.valueOf(Exponent) + "\n";
+                    modulus = Modulus + "\n";
+                    exponent = Exponent + "\n";
 
                     // Output/Input
                     OutputStream os = socket.getOutputStream();
@@ -76,9 +76,7 @@ public class KeyServer extends Thread {
         BigInteger mod = new BigInteger(CSM);
         BigInteger exp = new BigInteger(CSE);
 
-        if ((mod.compareTo(Modulus) == 0) &&
-                (exp.compareTo(Exponent) == 0)) {
-            return true;
-        } else return false;
+        return (mod.compareTo(Modulus) == 0) &&
+                (exp.compareTo(Exponent) == 0);
     }
 }

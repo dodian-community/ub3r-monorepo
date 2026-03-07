@@ -22,7 +22,7 @@ class QueuedOutboundTransportTest {
         assertNull(channel.readOutbound<Any>())
 
         val stats = client.flushOutbound()
-        assertEquals(2, stats.flushedMessages)
+        assertEquals(2, stats.flushedMessages())
 
         release(channel.readOutbound())
         release(channel.readOutbound())

@@ -11,7 +11,6 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.persistence.audit.ChatLog;
-import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public class ChatListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         if (!client.validClient) {
             client.send(new SendMessage("Please use another client"));

@@ -24,11 +24,9 @@ import net.dodian.uber.game.runtime.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
 import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.syncAppearanceCacheEnabled
 import net.dodian.utilities.playerSynchronizationEnabled
 import net.dodian.utilities.syncPlayerTemplateCacheEnabled
 import net.dodian.utilities.syncRootBlockCacheEnabled
-import net.dodian.utilities.syncScratchBufferReuseEnabled
 import net.dodian.utilities.syncSkipEmptyPlayerPacketEnabled
 import net.dodian.utilities.syncSkipEmptyNpcPacketEnabled
 import org.slf4j.LoggerFactory
@@ -214,10 +212,10 @@ class WorldSynchronizationService {
             measureNanoTime {
                 activePlayers.forEach { player ->
                     val flushStats = player.flushOutbound()
-                    if (flushStats.flushedMessages > 0) {
+                    if (flushStats.flushedMessages() > 0) {
                         flushedPlayers++
-                        flushedMessages += flushStats.flushedMessages
-                        flushedBytes += flushStats.flushedBytes
+                        flushedMessages += flushStats.flushedMessages()
+                        flushedBytes += flushStats.flushedBytes()
                     }
                 }
             }

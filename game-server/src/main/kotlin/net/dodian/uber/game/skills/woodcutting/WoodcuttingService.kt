@@ -167,7 +167,7 @@ object WoodcuttingService {
     @JvmStatic
     fun resolveBestAxe(client: Client): AxeDef? {
         val level = client.getLevel(Skill.WOODCUTTING)
-        val equippedWeapon = client.getEquipment()[Equipment.Slot.WEAPON.id]
+        val equippedWeapon = client.equipment[Equipment.Slot.WEAPON.id]
         return WoodcuttingData.axesDescending.firstOrNull { axe ->
             level >= axe.requiredLevel && (equippedWeapon == axe.itemId || client.playerHasItem(axe.itemId))
         }

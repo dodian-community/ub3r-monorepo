@@ -14,9 +14,9 @@ object SkillGuideSubTabButtons : ButtonContent {
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
         when (buttonId) {
-            8846, 34142 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.ATTACK.getId(), 0) else client.showSkillMenu(client.currentSkill, 0)
-            8823, 34119 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.DEFENCE.getId(), 0) else client.showSkillMenu(client.currentSkill, 1)
-            8824, 34120 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.RANGED.getId(), 0) else client.showSkillMenu(client.currentSkill, 2)
+            8846, 34142 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.ATTACK.id, 0) else client.showSkillMenu(client.currentSkill, 0)
+            8823, 34119 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.DEFENCE.id, 0) else client.showSkillMenu(client.currentSkill, 1)
+            8824, 34120 -> if (client.currentSkill < 2) client.showSkillMenu(Skill.RANGED.id, 0) else client.showSkillMenu(client.currentSkill, 2)
             8827, 34123 -> if (client.currentSkill < 2) client.send(SendMessage("Coming soon!")) else client.showSkillMenu(client.currentSkill, 3)
             34133 -> client.showSkillMenu(client.currentSkill, 4)
             34136 -> client.showSkillMenu(client.currentSkill, 5)

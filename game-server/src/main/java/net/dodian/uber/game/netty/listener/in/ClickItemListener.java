@@ -27,7 +27,7 @@ public class ClickItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Faithful replication of legacy decoding order with the corrected item ID read.
         int interfaceId = buf.readUnsignedShort();
@@ -83,7 +83,6 @@ public class ClickItemListener implements PacketListener {
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate();
-            return;
         }
     }
 }

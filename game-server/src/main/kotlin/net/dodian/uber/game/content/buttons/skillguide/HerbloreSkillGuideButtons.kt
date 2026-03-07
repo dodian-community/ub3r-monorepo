@@ -8,7 +8,7 @@ object HerbloreSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.HERBLORE
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.HERBLORE.getId(), 0)
+        client.showSkillMenu(Skill.HERBLORE.id, 0)
         return true
     }
 }

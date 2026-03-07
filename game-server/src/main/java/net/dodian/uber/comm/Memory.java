@@ -67,8 +67,7 @@ public class Memory {
             sb.append("Client Names: ").append(String.join(", ", clientNames));
             for (int i = 1; i < PlayerHandler.players.length; i++) {
                 Player player = PlayerHandler.players[i];
-                if (player instanceof Client) {
-                    Client client = (Client) player;
+                if (player instanceof Client client) {
                     if (client.getPlayerName() != null) {
                         sb.append(String.format("  Slot %d : %-16s | disconnected = %-5s | isActive = %-5s",
                             i, client.getPlayerName(), client.disconnected, client.isActive));
@@ -86,8 +85,7 @@ public class Memory {
     private List<String> getClientNames() {
         List<String> names = new ArrayList<>();
         for (Player player : PlayerHandler.players) {
-            if (player instanceof Client) {
-                Client client = (Client) player;
+            if (player instanceof Client client) {
                 if (client != null && client.getPlayerName() != null) {
                     names.add(client.getPlayerName());
                 }

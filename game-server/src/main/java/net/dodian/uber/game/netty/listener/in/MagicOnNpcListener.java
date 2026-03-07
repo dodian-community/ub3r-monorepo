@@ -43,7 +43,7 @@ public class MagicOnNpcListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 4) { // 2 + 2
             return;
         }

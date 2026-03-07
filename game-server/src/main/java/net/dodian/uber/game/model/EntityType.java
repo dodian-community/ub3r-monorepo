@@ -23,5 +23,5 @@ public enum EntityType {
     /**
      * Ground item entity type.
      */
-    GROUND_ITEM;
+    GROUND_ITEM
 }

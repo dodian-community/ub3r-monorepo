@@ -32,7 +32,7 @@ public class BankAllListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Mystic sends (ItemContainerOption4):
         // short slot (writeUnsignedWordA)

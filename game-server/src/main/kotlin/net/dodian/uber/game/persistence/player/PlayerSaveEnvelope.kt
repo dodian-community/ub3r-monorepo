@@ -123,7 +123,7 @@ data class PlayerSaveEnvelope(
             if (has(PlayerSaveSegment.FARMING)) {
                 val rewards = ArrayList<String>(client.dailyReward.size)
                 rewards.addAll(client.dailyReward)
-                segments += FarmingSegmentSnapshot(farming = client.farmingJson.farmingSave(), dailyReward = rewards)
+                segments += FarmingSegmentSnapshot(farming = client.farmingJson.farmingSaveSnapshot(), dailyReward = rewards)
             }
             if (has(PlayerSaveSegment.EFFECTS)) {
                 segments += EffectsSegmentSnapshot(client.effects.toList())

@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -48,7 +47,7 @@ public class ObjectInteractionListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        switch (packet.getOpcode()) {
+        switch (packet.opcode()) {
             case 132:
                 handleClick(client, packet, 1);
                 return;
@@ -73,7 +72,7 @@ public class ObjectInteractionListener implements PacketListener {
             default:
                 logger.warn(
                     "ObjectInteractionListener got unexpected opcode={} for player={}",
-                    packet.getOpcode(),
+                    packet.opcode(),
                     client.getPlayerName()
                 );
         }
@@ -102,7 +101,7 @@ public class ObjectInteractionListener implements PacketListener {
         // OpenRune-style: tick-owned routing. The game thread will execute when in range.
         ObjectClickIntent intent =
                 new ObjectClickIntent(
-                        packet.getOpcode(),
+                        packet.opcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
                         option,
                         objectId,
@@ -115,7 +114,7 @@ public class ObjectInteractionListener implements PacketListener {
     }
 
     private void handleItemOnObject(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 12) {
             logger.warn("ItemOnObject packet too short for player={}", client.getPlayerName());
             return;
@@ -145,7 +144,7 @@ public class ObjectInteractionListener implements PacketListener {
         GameObjectDef def = Misc.getObject(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getZ());
         ItemOnObjectIntent intent =
                 new ItemOnObjectIntent(
-                        packet.getOpcode(),
+                        packet.opcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
                         interfaceId,
                         itemSlot,
@@ -160,7 +159,7 @@ public class ObjectInteractionListener implements PacketListener {
     }
 
     private void handleMagicOnObject(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 8) {
             logger.warn("MagicOnObject packet too short for player={}", client.getPlayerName());
             return;
@@ -185,7 +184,7 @@ public class ObjectInteractionListener implements PacketListener {
         }
         MagicOnObjectIntent intent =
                 new MagicOnObjectIntent(
-                        packet.getOpcode(),
+                        packet.opcode(),
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
                         spellId,
                         objectId,
@@ -331,15 +330,15 @@ public class ObjectInteractionListener implements PacketListener {
     private DecodedObjectClick decodeClickPacket(GamePacket packet, int option) {
         switch (option) {
             case 1:
-                return decodeFirstClick(packet.getPayload());
+                return decodeFirstClick(packet.payload());
             case 2:
-                return decodeSecondClick(packet.getPayload());
+                return decodeSecondClick(packet.payload());
             case 3:
-                return decodeThirdClick(packet.getPayload());
+                return decodeThirdClick(packet.payload());
             case 4:
-                return decodeFourthClick(packet.getPayload());
+                return decodeFourthClick(packet.payload());
             case 5:
-                return decodeFifthClick(packet.getPayload());
+                return decodeFifthClick(packet.payload());
             default:
                 return null;
         }
@@ -453,15 +452,6 @@ public class ObjectInteractionListener implements PacketListener {
         }
     }
 
-    private static final class DecodedObjectClick {
-        private final int objectId;
-        private final int objectX;
-        private final int objectY;
-
-        private DecodedObjectClick(int objectId, int objectX, int objectY) {
-            this.objectId = objectId;
-            this.objectX = objectX;
-            this.objectY = objectY;
-        }
+    private record DecodedObjectClick(int objectId, int objectX, int objectY) {
     }
 }

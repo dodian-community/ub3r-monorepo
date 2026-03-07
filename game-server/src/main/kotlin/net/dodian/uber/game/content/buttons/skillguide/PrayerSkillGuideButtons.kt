@@ -8,7 +8,7 @@ object PrayerSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.PRAYER
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.PRAYER.getId(), 0)
+        client.showSkillMenu(Skill.PRAYER.id, 0)
         return true
     }
 }

@@ -8,7 +8,7 @@ object MiningSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.MINING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.MINING.getId(), 0)
+        client.showSkillMenu(Skill.MINING.id, 0)
         return true
     }
 }

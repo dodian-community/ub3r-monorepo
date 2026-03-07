@@ -5,9 +5,9 @@ package net.dodian.uber.game.model;
  */
 public class WalkToTask {
 
-    private Action action;
-    private int walkToId;
-    private Position walkToPosition;
+    private final Action action;
+    private final int walkToId;
+    private final Position walkToPosition;
 
     public WalkToTask(Action action, int walkToId, Position walkToPosition) {
         this.action = action;
@@ -39,7 +39,7 @@ public class WalkToTask {
     }
 
     public enum Action {
-        OBJECT_FIRST_CLICK, OBJECT_SECOND_CLICK, OBJECT_THIRD_CLICK, OBJECT_FOURTH_CLICK, NPC_FIRST_CLICK, NPC_SECOND_CLICK, NPC_THIRD_CLICK, NPC_FOURTH_CLICK, ITEM_ON_OBJECT, ITEM_ON_NPC, ATTACK_NPC, ATTACK_PLAYER;
+        OBJECT_FIRST_CLICK, OBJECT_SECOND_CLICK, OBJECT_THIRD_CLICK, OBJECT_FOURTH_CLICK, NPC_FIRST_CLICK, NPC_SECOND_CLICK, NPC_THIRD_CLICK, NPC_FOURTH_CLICK, ITEM_ON_OBJECT, ITEM_ON_NPC, ATTACK_NPC, ATTACK_PLAYER
     }
 
 }

@@ -23,7 +23,7 @@ public class PickUpGroundItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int itemY  = buf.readUnsignedShortLE();   // little-endian as client sends
         int itemId = buf.readUnsignedShort();     // still big-endian for id
         int itemX  = buf.readUnsignedShortLE();   // little-endian

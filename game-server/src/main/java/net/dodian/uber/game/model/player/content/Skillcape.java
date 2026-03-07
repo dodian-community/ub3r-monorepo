@@ -34,8 +34,11 @@ public enum Skillcape {
     //FARMING_CAPE(9810, 9811, 4963, 825, Skill.FARMING),
     ;
 
-    private int untrimmed, trimmed, emote, gfx;
-    private Skill skill;
+    private final int untrimmed;
+    private final int trimmed;
+    private final int emote;
+    private final int gfx;
+    private final Skill skill;
 
     Skillcape(int untrimmed, int trimmed, int emote, int gfx, Skill skill) {
         this.untrimmed = untrimmed;

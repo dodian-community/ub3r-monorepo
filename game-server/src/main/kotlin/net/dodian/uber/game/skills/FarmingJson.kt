@@ -8,11 +8,18 @@ import com.google.gson.JsonParser
 class FarmingJson {
     private var farmingCompostValues = JsonObject()
     private var farmingPatchValues = JsonObject()
+    @Volatile
+    private var cachedSaveSnapshot = "[{},\n{}]"
 
     fun farmingSave() : String {
-        val jsonString = "[$farmingCompostValues,\n$farmingPatchValues]"
-        return jsonString
-        //return "[]" //Default value for test!
+        return buildSaveSnapshot()
+    }
+
+    fun farmingSaveSnapshot(): String = cachedSaveSnapshot
+
+    fun refreshSaveSnapshot(): String {
+        cachedSaveSnapshot = buildSaveSnapshot()
+        return cachedSaveSnapshot
     }
 
     fun farmingLoad(farmString : String) {
@@ -70,6 +77,7 @@ class FarmingJson {
                 }
             }
         }
+        refreshSaveSnapshot()
     }
 
     fun getCompostData() : JsonObject {
@@ -80,5 +88,7 @@ class FarmingJson {
     }
 
     val PATCHAMOUNT = 6
+
+    private fun buildSaveSnapshot(): String = "[$farmingCompostValues,\n$farmingPatchValues]"
 
 }

@@ -53,8 +53,8 @@ public class CommandsListener implements PacketListener {
      * @return The decoded command string.
      */
     private String decodeCommand(GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
-        int readable = Math.min(packet.getSize(), buf.readableBytes());
+        ByteBuf buf = packet.payload();
+        int readable = Math.min(packet.size(), buf.readableBytes());
         int startIndex = buf.readerIndex();
         int length = 0;
         while (length < readable) {
@@ -91,7 +91,7 @@ public class CommandsListener implements PacketListener {
      */
     public void executeCommand(Client client, String command) {
         String[] cmd = command.split(" ");
-        if (GameEventBus.INSTANCE.postWithResult(new CommandEvent(client, command, java.util.Arrays.asList(cmd)))) {
+        if (GameEventBus.postWithResult(new CommandEvent(client, command, java.util.Arrays.asList(cmd)))) {
             return;
         }
         CommandDispatcher.dispatch(client, command);

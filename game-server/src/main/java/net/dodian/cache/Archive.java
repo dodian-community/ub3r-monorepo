@@ -25,12 +25,12 @@ public class Archive {
     /**
      * Data buffer.
      */
-    private ByteBuffer data;
+    private final ByteBuffer data;
 
     /**
      * File map.
      */
-    private Map<Integer, ArchiveFile> namedFiles = new HashMap<Integer, ArchiveFile>();
+    private final Map<Integer, ArchiveFile> namedFiles = new HashMap<Integer, ArchiveFile>();
 
     /**
      * Creates the archive.

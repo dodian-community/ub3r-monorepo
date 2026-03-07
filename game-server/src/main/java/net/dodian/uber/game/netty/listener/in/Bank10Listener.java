@@ -39,7 +39,7 @@ public class Bank10Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Mystic sends: int interfaceId, short nodeId (WordA), short slot (WordA)
         int interfaceId = buf.readInt();

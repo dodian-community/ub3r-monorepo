@@ -19,7 +19,7 @@ object GlassCraftButtons : ButtonContent {
             44210, 44209, 44208, 44207 -> {
                 client.send(RemoveInterfaces())
                 val craftVialAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.getId(), 229, 1, 1775, -1, 80, 884, 3)
+                client.setSkill(Skill.CRAFTING.id, 229, 1, 1775, -1, 80, 884, 3)
                 client.skillActionCount = craftVialAmount[buttonId - 44207]
                 client.skillActionTimer = client.playerSkillAction[7]
                 return true
@@ -32,7 +32,7 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftCupAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.getId(), 1980, 1, 1775, -1, 120, 884, 3)
+                client.setSkill(Skill.CRAFTING.id, 1980, 1, 1775, -1, 120, 884, 3)
                 client.skillActionCount = craftCupAmount[buttonId - 48105]
                 client.skillActionTimer = client.playerSkillAction[7]
                 return true
@@ -45,7 +45,7 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftFishAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.getId(), 6667, 1, 1775, -1, 160, 884, 3)
+                client.setSkill(Skill.CRAFTING.id, 6667, 1, 1775, -1, 160, 884, 3)
                 client.skillActionCount = craftFishAmount[buttonId - 48109]
                 client.skillActionTimer = client.playerSkillAction[7]
                 return true
@@ -58,7 +58,7 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftOrbAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.getId(), 567, 1, 1775, -1, 240, 884, 3)
+                client.setSkill(Skill.CRAFTING.id, 567, 1, 1775, -1, 240, 884, 3)
                 client.skillActionCount = craftOrbAmount[buttonId - 48113]
                 client.skillActionTimer = client.playerSkillAction[7]
                 return true

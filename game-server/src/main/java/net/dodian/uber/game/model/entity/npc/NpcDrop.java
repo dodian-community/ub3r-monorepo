@@ -15,7 +15,7 @@ public class NpcDrop {
     private final int minAmount;
     private final int maxAmount;
     private final double percent;
-    private boolean rareShout;
+    private final boolean rareShout;
 
     public NpcDrop(int id, int min, int max, double percent, boolean shout) {
         this.id = id;

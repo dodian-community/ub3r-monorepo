@@ -20,8 +20,8 @@ public enum RegionSong {
             new Rectangle(2816, 9920, 90, 60)), THE_CHAOS_WARRIOR(14,
             new Rectangle(2461, 3264, 98, 73));
 
-    private int songId;
-    private Rectangle area;
+    private final int songId;
+    private final Rectangle area;
 
     RegionSong(int songId, Rectangle area) {
         this.songId = songId;

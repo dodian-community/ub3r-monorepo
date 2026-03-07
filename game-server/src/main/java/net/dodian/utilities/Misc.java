@@ -27,14 +27,14 @@ import java.util.Random;
  */
 public class Misc {
 
-    private static char[] xlateTable = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
+    private static final char[] xlateTable = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
             'y', 'f', 'g', 'p', 'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '!',
             '?', '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\', '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[',
             ']'};
 
-    private static char[] decodeBuf = new char[4096];
+    private static final char[] decodeBuf = new char[4096];
 
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     public static boolean contains(int[] array, int value) {
         for (int i : array) {
@@ -93,7 +93,7 @@ public class Misc {
 
     public static double getCurrentHP(int maxHp, int currentHp) {
         double value = (double) currentHp > 0.0 ? (double) currentHp : 0.01;
-        double max = (double) maxHp;
+        double max = maxHp;
         double x = max / value;
         return x * 100.0;
     }
@@ -156,7 +156,7 @@ public class Misc {
      */
 
     @SuppressWarnings("unused")
-    private static boolean TESTED = false;
+    private static final boolean TESTED = false;
 
     public static Position goodDistanceObject(int objectX, int objectY, int playerX, int playerY, int objectXSize,
                                               int objectYSize, int z) {
@@ -214,7 +214,7 @@ public class Misc {
         return value;
     }
 
-    public static String textUnpack(byte packedData[], int size) {
+    public static String textUnpack(byte[] packedData, int size) {
         int idx = 0, highNibble = -1;
         for (int i = 0; i < size * 2; i++) {
             int val = packedData[i / 2] >> 4 - 4 * (i % 2) & 0xf;
@@ -359,7 +359,7 @@ public class Misc {
     public static class TimestampLogger extends PrintStream {
 
         private BufferedWriter writer;
-        private DateFormat df = new SimpleDateFormat();
+        private final DateFormat df = new SimpleDateFormat();
 
         /**
          * The OutputStream to log to.
@@ -471,19 +471,17 @@ public class Misc {
         int hours = (int) (duration / 60 / 60) % 24;
         int days = (int) (duration / 60 / 60 / 24);
 
-        boolean forceShowSeconds = false;
-        if (days == 0 && hours == 0 && minutes == 0 && seconds == 0)
-            forceShowSeconds = true;
+        boolean forceShowSeconds = days == 0 && hours == 0 && minutes == 0 && seconds == 0;
 
         return displayDuration(shortened, forceShowSeconds, days, hours, minutes, seconds);
     }
 
     private static String displayDuration(boolean shortened, boolean forceShowSeconds, int days, int hours, int minutes,
                                           int seconds) {
-        return (days > 0 ? days + "" + (shortened ? "d" : " days") + " " : "")
-                + (hours > 0 ? hours + "" + (shortened ? "h" : " hours") + " " : "")
-                + (minutes > 0 ? minutes + "" + (shortened ? "m" : " minutes") + " " : "")
-                + ((seconds > 0 || forceShowSeconds) ? seconds + "" + (shortened ? "s" : " seconds") + "" : "");
+        return (days > 0 ? days + (shortened ? "d" : " days") + " " : "")
+                + (hours > 0 ? hours + (shortened ? "h" : " hours") + " " : "")
+                + (minutes > 0 ? minutes + (shortened ? "m" : " minutes") + " " : "")
+                + ((seconds > 0 || forceShowSeconds) ? seconds + (shortened ? "s" : " seconds") : "");
     }
 
     public static long ticksToSeconds(long ticks) {

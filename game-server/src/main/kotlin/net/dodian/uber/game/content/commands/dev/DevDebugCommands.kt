@@ -33,7 +33,7 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "npca" -> {
             return try {
                 val id = cmd[1].toInt()
-                Server.npcManager.getData(id).setAttackEmote(cmd[2].toInt())
+                Server.npcManager.getData(id).attackEmote = cmd[2].toInt()
                 true
             } catch (_: Exception) {
                 context.usage("Wrong usage.. ::${cmd[0]} npcid animationId")
@@ -90,29 +90,27 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     4 -> {
                         client.cancelFarmDebugTask()
                         val farmConfig = intArrayOf(0)
-                        client.setFarmDebugTaskHandle(
-                            net.dodian.uber.game.runtime.scheduler.QueueTaskHandle.from(
-                                net.dodian.uber.game.runtime.tasking.GameTaskRuntime.queuePlayerRepeating(
-                                    client,
-                                    net.dodian.uber.game.runtime.tasking.TaskPriority.STANDARD,
-                                    1,
-                                    1,
-                                ) {
-                                    if (client.disconnected || !client.isActive) {
-                                        client.setFarmDebugTaskHandle(null)
-                                        false
-                                    } else if (farmConfig[0] >= 2000) {
-                                        context.reply("Finished farming config test.")
-                                        client.setFarmDebugTaskHandle(null)
-                                        false
-                                    } else {
-                                        context.reply("config = ${farmConfig[0]}")
-                                        client.varbit(4771, farmConfig[0])
-                                        farmConfig[0]++
-                                        true
-                                    }
-                                },
-                            ),
+                        client.farmDebugTaskHandle = net.dodian.uber.game.runtime.scheduler.QueueTaskHandle.from(
+                            net.dodian.uber.game.runtime.tasking.GameTaskRuntime.queuePlayerRepeating(
+                                client,
+                                net.dodian.uber.game.runtime.tasking.TaskPriority.STANDARD,
+                                1,
+                                1,
+                            ) {
+                                if (client.disconnected || !client.isActive) {
+                                    client.farmDebugTaskHandle = null
+                                    false
+                                } else if (farmConfig[0] >= 2000) {
+                                    context.reply("Finished farming config test.")
+                                    client.farmDebugTaskHandle = null
+                                    false
+                                } else {
+                                    context.reply("config = ${farmConfig[0]}")
+                                    client.varbit(4771, farmConfig[0])
+                                    farmConfig[0]++
+                                    true
+                                }
+                            },
                         )
                     }
                     else -> gotValue = false

@@ -21,8 +21,8 @@ public class DuelRequestListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
-        int size = packet.getSize();
+        ByteBuf buf = packet.payload();
+        int size = packet.size();
         byte[] data = new byte[size];
         buf.readBytes(data);
         int pid = Utils.HexToInt(data, 0, size) / 1000;

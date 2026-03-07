@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 
 public class SendMessage implements OutgoingPacket {
 
-    private String message;
+    private final String message;
 
     public SendMessage(String message) {
         this.message = message;

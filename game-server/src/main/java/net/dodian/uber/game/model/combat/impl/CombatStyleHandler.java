@@ -51,52 +51,52 @@ public abstract class CombatStyleHandler {
         switch (tabInterface) {
             case 5855:
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.PUNCH;
-                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.DEFLECT
-                        && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.KICK;
+                    player.weaponStyle = Player.fightStyle.PUNCH;
+                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.DEFLECT
+                        && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.KICK;
                     player.fightType = 2;
                 } else {
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 1 ? 2 : player.fightType == 2 ? 1 : 0);
                 break;
             case 425:
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.POUND;
-                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.DEFLECT
-                        && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.PUMMEL;
+                    player.weaponStyle = Player.fightStyle.POUND;
+                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.DEFLECT
+                        && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.PUMMEL;
                     player.fightType = 2;
                 } else {
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 1 ? 2 : player.fightType == 2 ? 1 : 0);
                 break;
             case 8460:
                 if (player.fightType == 0) {
-                    player.weaponStyle = player.weaponStyle.JAB;
+                    player.weaponStyle = Player.fightStyle.JAB;
                     player.fightType = 3;
-                } else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.DEFLECT
-                        && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.SWIPE;
+                } else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.DEFLECT
+                        && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.SWIPE;
                     player.fightType = 2;
                 } else {
-                    player.weaponStyle = player.weaponStyle.FEND;
+                    player.weaponStyle = Player.fightStyle.FEND;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 1 ? 2 : player.fightType == 2 ? 1 : 0);
                 break;
             case 12290:
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.FLICK;
-                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.LASH;
+                    player.weaponStyle = Player.fightStyle.FLICK;
+                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.LASH;
                     player.fightType = 3;
                 } else {
-                    player.weaponStyle = player.weaponStyle.DEFLECT;
+                    player.weaponStyle = Player.fightStyle.DEFLECT;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 3 ? 1 : player.fightType == 1 ? 2 : 0);
@@ -105,52 +105,52 @@ public abstract class CombatStyleHandler {
             case 1764: // bow
             case 1749: // Crossbow
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.ACCURATE;
-                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.DEFLECT
-                        && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.RAPID;
+                    player.weaponStyle = Player.fightStyle.ACCURATE;
+                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.DEFLECT
+                        && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.RAPID;
                     player.fightType = 2;
                 } else {
-                    player.weaponStyle = player.weaponStyle.LONGRANGE;
+                    player.weaponStyle = Player.fightStyle.LONGRANGE;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 2 ? 1 : player.fightType == 1 ? 2 : 0);
                 break;
             case 2276:
-                if (player.fightType == 2 || (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE))) {
-                    player.weaponStyle = player.weaponStyle.SLASH;
+                if (player.fightType == 2 || (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT
+                        || player.weaponStyle == Player.fightStyle.BLOCK_THREE || player.weaponStyle == Player.fightStyle.LONGRANGE))) {
+                    player.weaponStyle = Player.fightStyle.SLASH;
                     player.fightType = 2;
                 } else if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.STAB;
+                    player.weaponStyle = Player.fightStyle.STAB;
                 else if (player.fightType == 1)
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 else {
-                    player.weaponStyle = player.weaponStyle.LUNGE_STR;
+                    player.weaponStyle = Player.fightStyle.LUNGE_STR;
                     player.fightType = 2;
                 }
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 2423:
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.CHOP;
+                    player.weaponStyle = Player.fightStyle.CHOP;
                 else if (player.fightType == 2)
-                    player.weaponStyle = player.weaponStyle.SLASH;
+                    player.weaponStyle = Player.fightStyle.SLASH;
                 else if (player.fightType == 3)
-                    player.weaponStyle = player.weaponStyle.CONTROLLED;
+                    player.weaponStyle = Player.fightStyle.CONTROLLED;
                 else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType == 0 ? 0 : player.fightType - 1);
                 break;
             case 3796:
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.POUND;
+                    player.weaponStyle = Player.fightStyle.POUND;
                 else if (player.fightType == 2)
-                    player.weaponStyle = player.weaponStyle.PUMMEL;
+                    player.weaponStyle = Player.fightStyle.PUMMEL;
                 else if (player.fightType == 3)
-                    player.weaponStyle = player.weaponStyle.SPIKE;
+                    player.weaponStyle = Player.fightStyle.SPIKE;
                 else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType == 0 ? 0 : player.fightType - 1);
                 break;
             /*case 7762:
@@ -166,68 +166,68 @@ public abstract class CombatStyleHandler {
                     player.fightType = fightStyle.CHOP;
                 break;*/
             case 4679:
-                if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE))
-                    player.weaponStyle = player.weaponStyle.POUND;
+                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT
+                        || player.weaponStyle == Player.fightStyle.BLOCK_THREE || player.weaponStyle == Player.fightStyle.LONGRANGE))
+                    player.weaponStyle = Player.fightStyle.POUND;
                 else if (player.fightType == 0) {
-                    player.weaponStyle = player.weaponStyle.LUNGE;
+                    player.weaponStyle = Player.fightStyle.LUNGE;
                     player.fightType = 3;
                 } else if (player.fightType == 2) {
-                    player.weaponStyle = player.weaponStyle.SWIPE;
+                    player.weaponStyle = Player.fightStyle.SWIPE;
                     player.fightType = 3;
                 } else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : 2);
                 break;
             case 1698:
-                if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.SMASH;
+                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT
+                        || player.weaponStyle == Player.fightStyle.BLOCK_THREE || player.weaponStyle == Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.SMASH;
                     player.fightType = 2;
                 } else if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.CHOP;
+                    player.weaponStyle = Player.fightStyle.CHOP;
                 else if (player.fightType == 2)
-                    player.weaponStyle = player.weaponStyle.HACK;
+                    player.weaponStyle = Player.fightStyle.HACK;
                 else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 5570:
-                if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.SMASH;
+                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT
+                        || player.weaponStyle == Player.fightStyle.BLOCK_THREE || player.weaponStyle == Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.SMASH;
                     player.fightType = 2;
                 } else if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.SPIKE;
+                    player.weaponStyle = Player.fightStyle.SPIKE;
                 else if (player.fightType == 2)
-                    player.weaponStyle = player.weaponStyle.IMPALE;
+                    player.weaponStyle = Player.fightStyle.IMPALE;
                 else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 4705:
-                if (player.fightType == 3 && (player.weaponStyle == player.weaponStyle.DEFLECT
-                        || player.weaponStyle == player.weaponStyle.BLOCK_THREE || player.weaponStyle == player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.SMASH;
+                if (player.fightType == 3 && (player.weaponStyle == Player.fightStyle.DEFLECT
+                        || player.weaponStyle == Player.fightStyle.BLOCK_THREE || player.weaponStyle == Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.SMASH;
                     player.fightType = 2;
                 } else if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.CHOP;
+                    player.weaponStyle = Player.fightStyle.CHOP;
                 else if (player.fightType == 2)
-                    player.weaponStyle = player.weaponStyle.SLASH;
+                    player.weaponStyle = Player.fightStyle.SLASH;
                 else
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                 player.varbit(43, player.fightType == 1 ? 3 : player.fightType);
                 break;
             case 328: // Staff interface
                 player.varbit(108, player.autocast_spellIndex < 0 ? 0 : 3); //TODO: Fix autocast for defensive trigger!
                 if (player.fightType == 0)
-                    player.weaponStyle = player.weaponStyle.POUND;
-                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != player.weaponStyle.DEFLECT
-                        && player.weaponStyle != player.weaponStyle.BLOCK_THREE && player.weaponStyle != player.weaponStyle.LONGRANGE)) {
-                    player.weaponStyle = player.weaponStyle.PUMMEL;
+                    player.weaponStyle = Player.fightStyle.POUND;
+                else if (player.fightType == 2 || (player.fightType == 3 && player.weaponStyle != Player.fightStyle.DEFLECT
+                        && player.weaponStyle != Player.fightStyle.BLOCK_THREE && player.weaponStyle != Player.fightStyle.LONGRANGE)) {
+                    player.weaponStyle = Player.fightStyle.PUMMEL;
                     player.fightType = 2;
                 } else {
-                    player.weaponStyle = player.weaponStyle.BLOCK;
+                    player.weaponStyle = Player.fightStyle.BLOCK;
                     player.fightType = 1;
                 }
                 player.varbit(43, player.fightType == 2 ? 1 : player.fightType == 1 ? 2 : player.fightType);

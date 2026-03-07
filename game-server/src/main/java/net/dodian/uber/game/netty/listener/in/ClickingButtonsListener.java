@@ -26,16 +26,16 @@ public class ClickingButtonsListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int packetSize = packet.getSize();
+        int packetSize = packet.size();
         if (packetSize < 4) {
             logger.warn("ClickingButtons opcode 185 with unexpected size {} from {}", packetSize, client.getPlayerName());
             return;
         }
 
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int actionButton = payload.readInt();
         int actionIndex = -1;
-        if (packet.getOpcode() == 186 && payload.isReadable()) {
+        if (packet.opcode() == 186 && payload.isReadable()) {
             actionIndex = payload.readUnsignedByte();
         }
         client.lastButtonActionIndex = actionIndex;
@@ -55,7 +55,7 @@ public class ClickingButtonsListener implements PacketListener {
             client.resetAction(false);
         }
 
-        if (GameEventBus.INSTANCE.postWithResult(new ButtonClickEvent(client, actionButton))) {
+        if (GameEventBus.postWithResult(new ButtonClickEvent(client, actionButton))) {
             return;
         }
 

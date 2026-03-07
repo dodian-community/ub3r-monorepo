@@ -8,7 +8,7 @@ object SmithingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.SMITHING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.SMITHING.getId(), 0)
+        client.showSkillMenu(Skill.SMITHING.id, 0)
         return true
     }
 }

@@ -84,7 +84,7 @@ public class ShopHandler {
             Utils.println(FileName + ": error loading file.");
             return false;
         }
-        while (EndOfFile == false && line != null) {
+        while (!EndOfFile && line != null) {
             line = line.trim();
             int spot = line.indexOf("=");
             if (spot > -1) {

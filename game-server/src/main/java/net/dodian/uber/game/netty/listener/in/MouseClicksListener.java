@@ -20,7 +20,7 @@ public class MouseClicksListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int clickId = buf.readInt(); // same as readDWord
 
         String env = System.getenv().getOrDefault("SERVER_ENV", "");

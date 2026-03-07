@@ -8,7 +8,7 @@ object SlayerSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.SLAYER
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.SLAYER.getId(), 0)
+        client.showSkillMenu(Skill.SLAYER.id, 0)
         return true
     }
 }

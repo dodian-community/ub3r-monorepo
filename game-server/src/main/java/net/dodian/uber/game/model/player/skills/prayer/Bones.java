@@ -15,7 +15,8 @@ public enum Bones {
     DAGANNOTH_BONES(6729, 1050),
     OURG_BONES(4834, 1200);
 
-    private int itemId, experience;
+    private final int itemId;
+    private final int experience;
 
     Bones(int itemId, int experience) {
         this.itemId = itemId;

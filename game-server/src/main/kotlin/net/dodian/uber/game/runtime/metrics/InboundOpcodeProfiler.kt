@@ -38,8 +38,8 @@ object InboundOpcodeProfiler {
 
         val entry = Entry(
             nanos,
-            packet.opcode,
-            packet.size,
+            packet.opcode(),
+            packet.size(),
             listener.javaClass.simpleName,
             player?.playerName ?: "?",
         )

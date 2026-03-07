@@ -4,8 +4,10 @@ import net.dodian.uber.game.model.Position;
 
 public class GameObjectDef {
 
-    private int id, type, face;
-    private Position position;
+    private final int id;
+    private final int type;
+    private final int face;
+    private final Position position;
 
     public GameObjectDef(int id, int type, int face, Position position) {
         this.id = id;

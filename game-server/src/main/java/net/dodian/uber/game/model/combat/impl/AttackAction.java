@@ -10,7 +10,7 @@ public final class AttackAction extends CombatAction {
 
     }
 
-    public static final void startAction(Entity attacker, Entity victim, CombatTypeHandler action) {
+    public static void startAction(Entity attacker, Entity victim, CombatTypeHandler action) {
         action.initiateAction(attacker, victim);
     }
 }

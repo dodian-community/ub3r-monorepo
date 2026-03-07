@@ -1,6 +1,5 @@
 package net.dodian.jobs.impl;
 
-import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
@@ -13,7 +12,6 @@ import net.dodian.uber.game.runtime.sync.util.IntHashSet;
 import net.dodian.uber.game.runtime.sync.util.LongHashSet;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.netty.NetworkConstants;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -23,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
 
 public class EntityProcessor implements Runnable {
@@ -331,12 +328,12 @@ public class EntityProcessor implements Runnable {
             }
 
             Client.InboundProcessResult result = player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
-            processedPackets += result.getProcessedPackets();
-            processedWalkPackets += result.getWalkPacketsProcessed();
-            processedMousePackets += result.getMousePacketsProcessed();
-            replacedWalkPackets += result.getWalkPacketsReplaced();
-            replacedMousePackets += result.getMousePacketsReplaced();
-            droppedFifoPackets += result.getFifoPacketsDropped();
+            processedPackets += result.processedPackets();
+            processedWalkPackets += result.walkPacketsProcessed();
+            processedMousePackets += result.mousePacketsProcessed();
+            replacedWalkPackets += result.walkPacketsReplaced();
+            replacedMousePackets += result.mousePacketsReplaced();
+            droppedFifoPackets += result.fifoPacketsDropped();
 
             int pendingAfter = player.getPendingInboundPacketCount();
             totalPendingAfter += pendingAfter;

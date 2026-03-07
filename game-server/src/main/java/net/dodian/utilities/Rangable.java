@@ -12,8 +12,8 @@ import java.util.zip.GZIPInputStream;
 public class Rangable {
 
     private static Rangable[] rangables;
-    private int id;
-    private int[][][] clips = new int[4][][];
+    private final int id;
+    private final int[][][] clips = new int[4][][];
 
     public Rangable(int id) {
         this.id = id;

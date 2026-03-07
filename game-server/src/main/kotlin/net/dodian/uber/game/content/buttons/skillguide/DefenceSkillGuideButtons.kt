@@ -8,7 +8,7 @@ object DefenceSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.DEFENCE
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.DEFENCE.getId(), 0)
+        client.showSkillMenu(Skill.DEFENCE.id, 0)
         return true
     }
 }

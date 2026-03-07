@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.codec.*;
 
 public class SetSmithing implements OutgoingPacket {
 
-    private int writeFrame;
+    private final int writeFrame;
 
     public SetSmithing(int writeFrame) {
         this.writeFrame = writeFrame;

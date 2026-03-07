@@ -9,17 +9,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
  * This replaces the legacy client.showInterface(int) implementation
  * and uses the complete Netty pipeline (ByteMessage -> ByteMessageEncoder -> GamePacketEncoder).
  */
-public class ShowInterface implements OutgoingPacket {
-
-    private final int interfaceId;
-
-    public ShowInterface(int interfaceId) {
-        this.interfaceId = interfaceId;
-    }
-
-    public int getInterfaceId() {
-        return interfaceId;
-    }
+public record ShowInterface(int interfaceId) implements OutgoingPacket {
 
     @Override
     public void send(Client client) {

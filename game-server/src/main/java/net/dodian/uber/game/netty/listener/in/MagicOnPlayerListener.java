@@ -46,7 +46,7 @@ public class MagicOnPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         int victimIndex = readSignedWordA(buf);
         int magicId = readSignedWordBigEndian(buf);

@@ -47,7 +47,7 @@ public class UseItemOnPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         readSignedWordBigEndianA(buf); // unused index? matches legacy discard
         int playerSlot = readSignedWord(buf);
         int itemId = readSignedWord(buf);

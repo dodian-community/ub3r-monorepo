@@ -149,7 +149,7 @@ public class PlayerHandler {
     }
 
     public static int getPlayerCount() {
-        return (int) playersOnline.size();
+        return playersOnline.size();
     }
 
     public static void forEachActivePlayer(Consumer<Client> consumer) {

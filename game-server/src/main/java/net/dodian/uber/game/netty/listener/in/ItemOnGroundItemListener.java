@@ -40,7 +40,7 @@ public class ItemOnGroundItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         int unknown1 = readSignedWordBigEndian(buf); // interface id of item
         int unknown2 = readUnsignedWordA(buf);       // item in bag id

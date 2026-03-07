@@ -9,9 +9,9 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
  */
 public class SongSetting implements OutgoingPacket {
 
-    private int songId;
-    private int enabled;
-    private int unlocked;
+    private final int songId;
+    private final int enabled;
+    private final int unlocked;
 
     public SongSetting(int songId, boolean enabled, boolean unlocked) {
         this.songId = songId;

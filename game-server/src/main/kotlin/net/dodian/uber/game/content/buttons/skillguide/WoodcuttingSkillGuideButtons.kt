@@ -8,7 +8,7 @@ object WoodcuttingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.WOODCUTTING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.WOODCUTTING.getId(), 0)
+        client.showSkillMenu(Skill.WOODCUTTING.id, 0)
         return true
     }
 }

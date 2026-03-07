@@ -105,7 +105,7 @@ object MiningService {
     @JvmStatic
     fun resolveBestPickaxe(client: Client): PickaxeDef? {
         val miningLevel = client.getLevel(Skill.MINING)
-        val equippedWeapon = client.getEquipment()[Equipment.Slot.WEAPON.id]
+        val equippedWeapon = client.equipment[Equipment.Slot.WEAPON.id]
         return MiningData.pickaxesDescending.firstOrNull { pickaxe ->
             miningLevel >= pickaxe.requiredLevel &&
                 (pickaxe.itemId == equippedWeapon || client.playerHasItem(pickaxe.itemId))
@@ -197,7 +197,7 @@ object MiningService {
     }
 
     internal fun resolveRandomGemChance(client: Client): Int {
-        return if (client.GetItemName(client.getEquipment()[Equipment.Slot.NECK.id]).lowercase().contains("glory")) {
+        return if (client.GetItemName(client.equipment[Equipment.Slot.NECK.id]).lowercase().contains("glory")) {
             128
         } else {
             256

@@ -36,7 +36,7 @@ public class DropItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int droppedItem = readSignedWordA(buf);
         /* interfaceId */ readUnsignedWordA(buf);
         int slot = readUnsignedWordA(buf);

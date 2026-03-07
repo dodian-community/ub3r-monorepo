@@ -19,7 +19,7 @@ object RewardLampButtons : ButtonContent {
         if (client.genie) {
             client.send(RemoveInterfaces())
             client.genie = false
-            if (client.isBusy() || client.checkBankInterface || !client.playerHasItem(2528)) {
+            if (client.isBusy || client.checkBankInterface || !client.playerHasItem(2528)) {
                 return true
             }
             for (i in buttonIds.indices) {

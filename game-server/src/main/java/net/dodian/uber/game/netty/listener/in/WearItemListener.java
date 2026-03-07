@@ -32,7 +32,7 @@ public class WearItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         int wearId  = readUnsignedWord(buf);
         int wearSlot = readUnsignedWordA(buf);

@@ -6,7 +6,6 @@ import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.game.GamePacket
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -43,7 +42,7 @@ class RuntimeNetQueueTest {
         mailbox.enqueue(firstWalk)
         mailbox.enqueue(secondWalk)
 
-        assertEquals(0, firstWalk.payload.refCnt())
+        assertEquals(0, firstWalk.payload().refCnt())
         val counters = mailbox.snapshotAndResetCounters()
         val polled = mailbox.pollNext()
 
@@ -70,7 +69,7 @@ class RuntimeNetQueueTest {
 
         assertSame(fifo, first?.packet())
         assertEquals(InboundPacketMailbox.Family.FIFO, first?.family())
-        assertEquals(0, firstMouse.payload.refCnt())
+        assertEquals(0, firstMouse.payload().refCnt())
         assertSame(secondMouse, second?.packet())
         assertEquals(InboundPacketMailbox.Family.MOUSE, second?.family())
 
@@ -109,9 +108,9 @@ class RuntimeNetQueueTest {
         mailbox.clear { packet -> release(packet) }
 
         assertEquals(0, mailbox.pendingCount())
-        assertEquals(0, fifo.payload.refCnt())
-        assertEquals(0, walk.payload.refCnt())
-        assertEquals(0, mouse.payload.refCnt())
+        assertEquals(0, fifo.payload().refCnt())
+        assertEquals(0, walk.payload().refCnt())
+        assertEquals(0, mouse.payload().refCnt())
         assertNull(mailbox.pollNext())
     }
 
@@ -186,7 +185,7 @@ class RuntimeNetQueueTest {
     }
 
     private fun release(packet: GamePacket?) {
-        val payload = packet?.payload ?: return
+        val payload = packet?.payload() ?: return
         if (payload.refCnt() > 0) {
             payload.release()
         }

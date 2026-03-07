@@ -28,7 +28,7 @@ public class FocusChangeListener implements PacketListener {
             // The payload is a single byte indicating focus state:
             // 1 = window gained focus
             // 0 = window lost focus
-            int focusState = packet.getPayload().readByte() & 0xFF;
+            int focusState = packet.payload().readByte() & 0xFF;
             
             if (logger.isDebugEnabled()) {
                 logger.debug("Client {} focus state changed to: {}", client.getPlayerName(), focusState);

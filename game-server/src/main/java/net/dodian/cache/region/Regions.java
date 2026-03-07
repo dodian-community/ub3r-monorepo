@@ -11,7 +11,7 @@ public class Regions {
     /**
      * The region coordinates.
      */
-    private RegionCoordinates coordinate;
+    private final RegionCoordinates coordinate;
 
     /**
      * Creates a region.
@@ -34,7 +34,7 @@ public class Regions {
     /**
      * A list of objects in this region.
      */
-    private List<CacheObject> objects = new LinkedList<CacheObject>();
+    private final List<CacheObject> objects = new LinkedList<CacheObject>();
 
     /**
      * Gets the list of objects.

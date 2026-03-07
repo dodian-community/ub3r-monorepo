@@ -223,10 +223,9 @@ public class Position {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Position)) {
+        if (!(o instanceof Position other)) {
             return false;
         }
-        Position other = (Position) o;
         return packed == other.packed;
     }
 

@@ -10,7 +10,7 @@ public abstract class Index {
     /**
      * The identifier.
      */
-    private int identifier;
+    private final int identifier;
 
     /**
      * Creates the index.

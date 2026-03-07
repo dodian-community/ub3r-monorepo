@@ -21,7 +21,7 @@ public class UpdateChatListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         // Legacy packet structure: [byte toggle?][byte privateChat][byte unknown]
         buf.readUnsignedByte();
         int priv = buf.readUnsignedByte();

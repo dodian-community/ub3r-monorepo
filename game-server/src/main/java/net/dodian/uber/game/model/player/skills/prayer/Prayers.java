@@ -23,7 +23,7 @@ public class Prayers {
      */
     private final Player p;
     private final Client c;
-    private long lastClicked = System.currentTimeMillis();
+    private final long lastClicked = System.currentTimeMillis();
 
     /**
      * Create a prayermanager instance for a player

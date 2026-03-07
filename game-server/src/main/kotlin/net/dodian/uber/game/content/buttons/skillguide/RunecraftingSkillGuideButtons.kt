@@ -8,7 +8,7 @@ object RunecraftingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.RUNECRAFTING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.RUNECRAFTING.getId(), 0)
+        client.showSkillMenu(Skill.RUNECRAFTING.id, 0)
         return true
     }
 }

@@ -6,8 +6,14 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 
 public class SendCamera implements OutgoingPacket {
 
-    private int x, y, z, speed, angle, sp1, sp2;
-    private String mode;
+    private final int x;
+    private final int y;
+    private final int z;
+    private int speed;
+    private int angle;
+    private int sp1;
+    private int sp2;
+    private final String mode;
 
     public SendCamera(String mode, int x, int y, int z, int speed, int angle) {
         this.mode = mode;

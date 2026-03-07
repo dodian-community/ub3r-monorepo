@@ -8,7 +8,7 @@ object FishingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.FISHING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.FISHING.getId(), 0)
+        client.showSkillMenu(Skill.FISHING.id, 0)
         return true
     }
 }

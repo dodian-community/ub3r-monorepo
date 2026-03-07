@@ -120,7 +120,7 @@ class ToolRequirement(
 ) : Requirement {
     override fun validate(client: Client): ValidationResult {
         val skillLevel = client.getLevel(skill)
-        val equippedWeapon = client.getEquipment()[Equipment.Slot.WEAPON.id]
+        val equippedWeapon = client.equipment[Equipment.Slot.WEAPON.id]
         val hasTool =
             toolIdsByTier.any { toolId ->
                 val required = requiredLevelByTool[toolId] ?: 1

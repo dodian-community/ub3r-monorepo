@@ -35,7 +35,7 @@ public class BankX1Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Mystic sends (ItemContainerOption5):
         // int   interfaceId (putInt)

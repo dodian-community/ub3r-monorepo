@@ -24,7 +24,7 @@ private val dataSource: HikariDataSource
 private fun createDataSource(): HikariDataSource {
     logger.info("Initializing MySQL connection pool...")
     val config = HikariConfig().apply {
-        jdbcUrl = net.dodian.utilities.jdbcUrl
+        jdbcUrl = jdbcUrl
         username = databaseUsername
         password = databasePassword
         driverClassName = "com.mysql.cj.jdbc.Driver"

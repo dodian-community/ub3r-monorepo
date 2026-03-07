@@ -133,7 +133,7 @@ data class PlayerSaveSnapshot(
                     ", x = ${client.position.x}" +
                     ", y = ${client.position.y}" +
                     ", lastlogin = '${System.currentTimeMillis()}', Monster_Log='$monsterLog'" +
-                    ", farming = '${client.farmingJson.farmingSave()}', dailyReward = '$dailyReward'" +
+                    ", farming = '${client.farmingJson.farmingSaveSnapshot()}', dailyReward = '$dailyReward'" +
                     ",Boss_Log='$bossLog'" +
                     ", songUnlocked='${client.songUnlockedSaveText}'" +
                     ", travel='${client.saveTravelAsString()}'" +

@@ -71,17 +71,17 @@ fun Client.attackTarget(): Boolean {
             return false
         }
         if (!(duelFight && duel_with == target.slot) && !Server.pking) {
-            send(SendMessage("Pking has been disabled"));
+            send(SendMessage("Pking has been disabled"))
             resetAttack()
             return false
         }
         if (!canAttack) {
-            send(SendMessage("You cannot attack your oppenent yet!"));
+            send(SendMessage("You cannot attack your oppenent yet!"))
             resetAttack()
             return false
         }
         if (!(duelFight && duel_with == target.slot) && (!player.inWildy() || !inWildy())) {
-            send(SendMessage("You can't attack that player!"));
+            send(SendMessage("You can't attack that player!"))
             resetAttack()
             return false
         }

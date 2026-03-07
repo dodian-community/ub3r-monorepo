@@ -124,7 +124,7 @@ public class Cache implements Closeable {
             throw new IOException("File does not exist.");
         }
 
-        ByteBuffer index = indexFile.getChannel().map(MapMode.READ_ONLY, INDEX_SIZE * file, INDEX_SIZE);
+        ByteBuffer index = indexFile.getChannel().map(MapMode.READ_ONLY, (long) INDEX_SIZE * file, INDEX_SIZE);
         int fileSize = (index.get() & 0xFF) << 16 | (index.get() & 0xFF) << 8 | index.get() & 0xFF;
         int fileBlock = (index.get() & 0xFF) << 16 | (index.get() & 0xFF) << 8 | index.get() & 0xFF;
 
@@ -142,7 +142,7 @@ public class Cache implements Closeable {
                 size = rem;
             }
 
-            ByteBuffer block = dataFile.getChannel().map(MapMode.READ_ONLY, currentBlock * DATA_SIZE, size);
+            ByteBuffer block = dataFile.getChannel().map(MapMode.READ_ONLY, (long) currentBlock * DATA_SIZE, size);
             int nextFileId = block.getShort() & 0xFFFF;
             int currentPartId = block.getShort() & 0xFFFF;
             int nextBlockId = (block.get() & 0xFF) << 16 | (block.get() & 0xFF) << 8 | block.get() & 0xFF;
@@ -178,7 +178,7 @@ public class Cache implements Closeable {
             cycles++;
             currentBlock = nextBlockId;
         }
-        return new CacheFile(cache, file, (ByteBuffer) fileBuffer.flip());
+        return new CacheFile(cache, file, fileBuffer.flip());
     }
 
     /**

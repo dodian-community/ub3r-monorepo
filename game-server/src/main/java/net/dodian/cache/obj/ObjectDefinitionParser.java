@@ -20,17 +20,17 @@ public class ObjectDefinitionParser {
     /**
      * The cache.
      */
-    private Cache cache;
+    private final Cache cache;
 
     /**
      * The index.
      */
-    private StandardIndex[] indices;
+    private final StandardIndex[] indices;
 
     /**
      * The listener.
      */
-    private ObjectDefinitionListener listener;
+    private final ObjectDefinitionListener listener;
 
     private boolean boolean64 = true;
 
@@ -209,14 +209,14 @@ public class ObjectDefinitionParser {
                     } while (configCode != 77);
 
                     if (buf.remaining() < 5) {
-                        break outer_loop;
+                        break;
                     }
                     buf.getShort();
                     buf.getShort();
 
                     int counter = buf.get() & 0xFF;
                     if (buf.remaining() < (counter + 1) * 2) {
-                        break outer_loop;
+                        break;
                     }
                     for (int i = 0; i <= counter; i++) {
                         buf.getShort();

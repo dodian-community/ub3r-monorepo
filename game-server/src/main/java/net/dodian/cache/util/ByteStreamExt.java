@@ -6,7 +6,7 @@ public final class ByteStreamExt {
         currentOffset += length;
     }
 
-    public ByteStreamExt(byte abyte0[]) {
+    public ByteStreamExt(byte[] abyte0) {
         buffer = abyte0;
         currentOffset = 0;
     }
@@ -60,7 +60,6 @@ public final class ByteStreamExt {
     public String readString() {
         int i = currentOffset;
         while (buffer[currentOffset++] != 10) {
-            ;
         }
         return new String(buffer, i, currentOffset - i - 1);
     }
@@ -68,7 +67,6 @@ public final class ByteStreamExt {
     public String readNewString() {
         int i = currentOffset;
         while (buffer[currentOffset++] != 0) {
-            ;
         }
         return new String(buffer, i, currentOffset - i - 1);
     }
@@ -76,20 +74,19 @@ public final class ByteStreamExt {
     public byte[] readBytes() {
         int i = currentOffset;
         while (buffer[currentOffset++] != 10) {
-            ;
         }
-        byte abyte0[] = new byte[currentOffset - i - 1];
-        System.arraycopy(buffer, i, abyte0, i - i, currentOffset - 1 - i);
+        byte[] abyte0 = new byte[currentOffset - i - 1];
+        System.arraycopy(buffer, i, abyte0, 0, currentOffset - 1 - i);
         return abyte0;
     }
 
-    public void readBytes(int i, int j, byte abyte0[]) {
+    public void readBytes(int i, int j, byte[] abyte0) {
         for (int l = j; l < j + i; l++) {
             abyte0[l] = buffer[currentOffset++];
         }
     }
 
-    public byte buffer[];
+    public byte[] buffer;
     public int currentOffset;
 
     // removed useless static initializer

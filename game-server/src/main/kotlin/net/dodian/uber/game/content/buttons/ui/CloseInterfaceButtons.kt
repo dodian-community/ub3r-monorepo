@@ -17,7 +17,7 @@ object CloseInterfaceButtons : ButtonContent {
         val wasBankPreview = client.checkBankInterface
         val wasItemListPreview = client.bankStyleViewOpen
         val wasPartyInterface = client.isPartyInterface
-        val wasShopping = client.isShopping()
+        val wasShopping = client.isShopping
         client.send(RemoveInterfaces())
         if (client.NpcDialogue == 1001) {
             client.clearWalkableInterface()

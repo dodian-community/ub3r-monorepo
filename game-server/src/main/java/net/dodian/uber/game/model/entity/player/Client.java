@@ -10,7 +10,6 @@ import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
-import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
@@ -18,10 +17,8 @@ import net.dodian.uber.game.model.player.content.Skillcape;
 import net.dodian.uber.game.model.player.bank.PlayerBankService;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.model.player.quests.QuestSend;
-import net.dodian.uber.game.model.player.skills.agility.Agility;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.agility.DesertCarpet;
 import net.dodian.uber.game.model.player.skills.fletching.Fletching;
 import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
@@ -38,18 +35,15 @@ import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -95,7 +89,7 @@ public class Client extends Player implements Runnable {
     public int maxQuests = QuestSend.values().length;
     public int[] quests = new int[maxQuests];
     public int[] playerBonus = new int[12];
-    private Map<Integer, String> uiTextCache = new HashMap<>();
+    private final Map<Integer, String> uiTextCache = new HashMap<>();
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
     private int currentWalkableInterface = -1;
@@ -629,76 +623,16 @@ public class Client extends Player implements Runnable {
 
     }
 
-    public static final class InboundProcessResult {
-        private final int processedPackets;
-        private final int walkPacketsProcessed;
-        private final int mousePacketsProcessed;
-        private final int walkPacketsReplaced;
-        private final int mousePacketsReplaced;
-        private final int fifoPacketsDropped;
-
-        public InboundProcessResult(
-                int processedPackets,
-                int walkPacketsProcessed,
-                int mousePacketsProcessed,
-                int walkPacketsReplaced,
-                int mousePacketsReplaced,
-                int fifoPacketsDropped
-        ) {
-            this.processedPackets = processedPackets;
-            this.walkPacketsProcessed = walkPacketsProcessed;
-            this.mousePacketsProcessed = mousePacketsProcessed;
-            this.walkPacketsReplaced = walkPacketsReplaced;
-            this.mousePacketsReplaced = mousePacketsReplaced;
-            this.fifoPacketsDropped = fifoPacketsDropped;
-        }
-
-        public int getProcessedPackets() {
-            return processedPackets;
-        }
-
-        public int getWalkPacketsProcessed() {
-            return walkPacketsProcessed;
-        }
-
-        public int getMousePacketsProcessed() {
-            return mousePacketsProcessed;
-        }
-
-        public int getWalkPacketsReplaced() {
-            return walkPacketsReplaced;
-        }
-
-        public int getMousePacketsReplaced() {
-            return mousePacketsReplaced;
-        }
-
-        public int getFifoPacketsDropped() {
-            return fifoPacketsDropped;
-        }
+    public record InboundProcessResult(int processedPackets, int walkPacketsProcessed, int mousePacketsProcessed,
+                                       int walkPacketsReplaced, int mousePacketsReplaced, int fifoPacketsDropped) {
     }
 
-    public static final class OutboundFlushStats {
-        private final int flushedMessages;
-        private final int flushedBytes;
-
-        public OutboundFlushStats(int flushedMessages, int flushedBytes) {
-            this.flushedMessages = flushedMessages;
-            this.flushedBytes = flushedBytes;
-        }
+    public record OutboundFlushStats(int flushedMessages, int flushedBytes) {
 
         public static OutboundFlushStats empty() {
-            return new OutboundFlushStats(0, 0);
+                return new OutboundFlushStats(0, 0);
+            }
         }
-
-        public int getFlushedMessages() {
-            return flushedMessages;
-        }
-
-        public int getFlushedBytes() {
-            return flushedBytes;
-        }
-    }
 
     @Override
     public void destruct() {
@@ -772,11 +706,11 @@ public class Client extends Player implements Runnable {
                 dispatchQueuedPacket(packet);
             } catch (Exception ex) {
                 disconnected = true;
-                println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
+                println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
                 break;
             } finally {
-                if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-                    packet.getPayload().release();
+                if (packet.payload() != null && packet.payload().refCnt() > 0) {
+                    packet.payload().release();
                 }
             }
         }
@@ -793,7 +727,7 @@ public class Client extends Player implements Runnable {
 
     private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
         net.dodian.uber.game.netty.listener.PacketListener listener =
-                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
+                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
             boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
             if (sample || getInboundOpcodeProfilingEnabled()) {
@@ -807,8 +741,8 @@ public class Client extends Player implements Runnable {
                     long elapsedMs = elapsedNs / 1_000_000L;
                     if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
                         println_debug(
-                                "Slow inbound opcode " + packet.getOpcode() +
-                                        " size=" + packet.getSize() +
+                                "Slow inbound opcode " + packet.opcode() +
+                                        " size=" + packet.size() +
                                         " player=" + getPlayerName() +
                                         " listener=" + listener.getClass().getSimpleName() +
                                         " took=" + elapsedMs + "ms"
@@ -890,8 +824,8 @@ public class Client extends Player implements Runnable {
     }
 
     private void releaseInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
-        if (packet != null && packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-            packet.getPayload().release();
+        if (packet != null && packet.payload() != null && packet.payload().refCnt() > 0) {
+            packet.payload().release();
         }
     }
 
@@ -953,13 +887,13 @@ public class Client extends Player implements Runnable {
         String openedVia = null;
 
         if (packet instanceof ShowInterface) {
-            openedInterfaceId = ((ShowInterface) packet).getInterfaceId();
+            openedInterfaceId = ((ShowInterface) packet).interfaceId();
             openedVia = "ShowInterface";
         } else if (packet instanceof InventoryInterface) {
             openedInterfaceId = ((InventoryInterface) packet).getInterfaceId();
             openedVia = "InventoryInterface";
         } else if (packet instanceof SendFrame164) {
-            openedInterfaceId = ((SendFrame164) packet).getFrame();
+            openedInterfaceId = ((SendFrame164) packet).frame();
             openedVia = "Frame164";
         } else if (packet instanceof RemoveInterfaces) {
             activeInterfaceId = -1;
@@ -1596,7 +1530,6 @@ public class Client extends Player implements Runnable {
             resetItems(moveWindow);
         }
         if (PlayerBankService.moveBankItems(this, from, to, moveWindow)) {
-            return;
         }
     }
 

@@ -54,7 +54,7 @@ class RootPlayerInfoService {
             }
             if (viewer.disconnected) {
                 viewer.println_debug("\nRemove disconnected player " + viewer.playerName)
-                net.dodian.uber.game.Server.playerHandler.removePlayer(viewer)
+                Server.playerHandler.removePlayer(viewer)
                 viewer.disconnected = false
                 PlayerHandler.players[viewer.slot] = null
                 return@forEach

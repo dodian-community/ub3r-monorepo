@@ -42,7 +42,7 @@ public class ClickItem3Listener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         int interfaceId = readSignedWord(buf);
         int itemSlot = readUnsignedWordBigEndian(buf);
@@ -60,7 +60,6 @@ public class ClickItem3Listener implements PacketListener {
         if (client.randomed || client.UsingAgility) return;
 
         if (ItemDispatcher.tryHandle(client, 3, itemId, itemSlot, interfaceId)) {
-            return;
         }
     }
 }

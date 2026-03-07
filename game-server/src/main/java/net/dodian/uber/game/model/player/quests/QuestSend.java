@@ -14,8 +14,11 @@ public enum QuestSend {
             ""), EMPTY_11(11, 7337, -1, 10, ""), EMPTY_12(12, 7343, -1, 10, ""), EMPTY_13(13, 7335, -1, 10, ""), EMPTY_14(14,
             7344, -1, 10, ""), EMPTY_15(15, 7345, -1, 10, ""), EMPTY_16(16, 7347, -1, 10, ""), EMPTY_17(17, 7348, -1, 10, "");
 
-    private int id, config, clickId, end;
-    private String name;
+    private final int id;
+    private final int config;
+    private final int clickId;
+    private final int end;
+    private final String name;
     private static final QuestSend[] QUEST_SEND_VALUES = values();
     private static final ThreadLocal<DecimalFormat> HOURS_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("0.000"));
     private static long cachedUptimeMinutes = Long.MIN_VALUE;
@@ -198,7 +201,7 @@ public enum QuestSend {
                      c.showInterface(8134);
                      return true;
                  case 7338: //Account service
-                     c.openPage(c, "https://dodian.net/forumdisplay.php?f=83");
+                     Player.openPage(c, "https://dodian.net/forumdisplay.php?f=83");
                      return true;
                  case 7340: //Discord
                      c.discord = true;

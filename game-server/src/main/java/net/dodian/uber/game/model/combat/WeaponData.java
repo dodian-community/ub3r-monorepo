@@ -21,9 +21,9 @@ public enum WeaponData {
     MACE(new String[]{"mace", "flail"}, 3796, new MaceHandler()),
     HAMMERS(new String[]{"hammer", "maul", "chicken", "tzhaar-ket-om", "tzhaar-ket-em"}, 425, new HammerHandler());
 
-    private String name[];
-    private int combatInterface;
-    private CombatStyleHandler style;
+    private final String[] name;
+    private final int combatInterface;
+    private final CombatStyleHandler style;
 
     WeaponData(String[] name, int combatInterface, CombatStyleHandler style) {
         this.name = name;
@@ -31,7 +31,7 @@ public enum WeaponData {
         this.style = style;
     }
 
-    public String getName()[] {
+    public String[] getName() {
         return name;
     }
 

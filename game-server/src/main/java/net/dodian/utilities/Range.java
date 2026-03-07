@@ -5,7 +5,8 @@ package net.dodian.utilities;
  */
 public class Range {
 
-    private int floor, ceiling;
+    private final int floor;
+    private final int ceiling;
 
     public Range(int floor, int ceiling) {
         this.floor = floor;

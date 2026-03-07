@@ -2,11 +2,10 @@ package net.dodian.utilities;
 
 public class ISAACCipher {
 
-    public ISAACCipher(int ai[]) {
+    public ISAACCipher(int[] ai) {
         cryptArray = new int[256];
         keySetArray = new int[256];
-        for (int i = 0; i < ai.length; i++)
-            keySetArray[i] = ai[i];
+        System.arraycopy(ai, 0, keySetArray, 0, ai.length);
 
         initializeKeySet();
     }
@@ -166,8 +165,8 @@ public class ISAACCipher {
     }
 
     public int keyArrayIdx = 0;
-    public int keySetArray[] = null;
-    public int cryptArray[] = null;
+    public int[] keySetArray = null;
+    public int[] cryptArray = null;
     public int cryptVar1 = 0;
     public int cryptVar2 = 0;
     public int cryptVar3 = 0;

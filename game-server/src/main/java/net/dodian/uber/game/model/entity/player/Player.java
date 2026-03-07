@@ -1244,9 +1244,7 @@ public abstract class Player extends Entity {
     }
 
     private void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
-        if(source instanceof Client && target instanceof Npc) {
-            final Client p = (Client) source;
-            final Npc n = (Npc) target;
+        if(source instanceof Client p && target instanceof Npc n) {
             GameEventScheduler.runLaterMs(delay, () -> {
                 if(p.disconnected) {
                     return;
@@ -1257,9 +1255,7 @@ public abstract class Player extends Entity {
                 n.dealDamage(p, damage, type);
             });
         }
-        if(source instanceof Client && target instanceof Client) {
-            final Client p = (Client) source;
-            final Client other = (Client) target;
+        if(source instanceof Client p && target instanceof Client other) {
             GameEventScheduler.runLaterMs(delay, () -> {
                 if(p.disconnected) {
                     return;

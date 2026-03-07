@@ -19,7 +19,7 @@ public class SendPrivateMessageListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.getPayload());
+        ByteMessage msg = ByteMessage.wrap(packet.payload());
         long friend = msg.getLong();
         int remaining = msg.getBuffer().readableBytes();
         byte[] text = msg.getBytes(remaining);

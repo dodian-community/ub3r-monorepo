@@ -97,7 +97,7 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
         if (packet == null) {
             return EnqueueResult.of(false, Family.FIFO)
         }
-        val family = familyOf(packet.opcode)
+        val family = familyOf(packet.opcode())
         val sequenced = SequencedPacket(++nextSequence, family, packet)
         return when (family) {
             Family.WALK -> {
@@ -193,7 +193,7 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
     }
 
     private fun release(packet: GamePacket?) {
-        val payload = packet?.payload ?: return
+        val payload = packet?.payload() ?: return
         if (payload.refCnt() > 0) {
             payload.release()
         }

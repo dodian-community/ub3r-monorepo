@@ -43,7 +43,7 @@ public class ItemOnItemListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
 
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         int usedWithSlot = buf.readUnsignedShort(); // readUnsignedWord()
         int itemUsedSlot = readUnsignedWordA(buf);  // readUnsignedWordA()

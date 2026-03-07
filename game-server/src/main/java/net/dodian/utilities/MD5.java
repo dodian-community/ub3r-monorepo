@@ -7,7 +7,7 @@ import java.security.MessageDigest;
  *
  */
 public class MD5 {
-    private String inStr;
+    private final String inStr;
     private MessageDigest md5;
 
     /**
@@ -20,7 +20,7 @@ public class MD5 {
         try {
             this.md5 = MessageDigest.getInstance("MD5");
         } catch (Exception e) {
-            System.out.println(e.toString());
+            System.out.println(e);
             e.printStackTrace();
         }
     }

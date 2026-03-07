@@ -65,13 +65,13 @@ public class Utils {
     public static int[] orbLevel = {51, 56, 61, 66};
     public static int[] orbXp = {450, 500, 550, 600};
 
-    public static final char playerNameXlateTable[] = {'_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+    public static final char[] playerNameXlateTable = {'_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
             'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9'};
 
     public static String longToPlayerName(long l) {
         int i = 0;
-        char ac[] = new char[12];
+        char[] ac = new char[12];
         while (l != 0L) {
             long l1 = l;
             l /= 37L;
@@ -84,7 +84,7 @@ public class Utils {
         System.out.println(str);
     }
 
-    public static String Hex(byte data[], int offset, int len) {
+    public static String Hex(byte[] data, int offset, int len) {
         String temp = "";
         for (int cntr = 0; cntr < len; cntr++) {
             int num = data[offset + cntr] & 0xFF;
@@ -98,12 +98,12 @@ public class Utils {
         return temp.toUpperCase().trim();
     }
 
-    public static int HexToInt(byte data[], int offset, int len) {
+    public static int HexToInt(byte[] data, int offset, int len) {
         int temp = 0;
         int i = 1000;
         for (int cntr = 0; cntr < len; cntr++) {
             int num = (data[offset + cntr] & 0xFF) * i;
-            temp += (int) num;
+            temp += num;
             if (i > 1)
                 i = i / 1000;
         }
@@ -132,7 +132,7 @@ public class Utils {
 
     public static String longToName(long l) {
         int i = 0;
-        char ac[] = new char[99];
+        char[] ac = new char[99];
         while (l != 0L) {
             long l1 = l;
             l /= 37L;
@@ -175,9 +175,9 @@ public class Utils {
         return l;
     }
 
-    private static char decodeBuf[] = new char[4096];
+    private static final char[] decodeBuf = new char[4096];
 
-    public static String textUnpack(byte packedData[], int size) {
+    public static String textUnpack(byte[] packedData, int size) {
         int idx = 0, highNibble = -1;
         for (int i = 0; i < size * 2; i++) {
             int val = packedData[i / 2] >> (4 - 4 * (i % 2)) & 0xf;
@@ -195,7 +195,7 @@ public class Utils {
         return new String(decodeBuf, 0, idx);
     }
 
-    public static char xlateTable[] = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
+    public static char[] xlateTable = {' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r', 'd', 'l', 'u', 'm', 'w', 'c',
             'y', 'f', 'g', 'p', 'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '!',
             '?', '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\', '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[',
             ']'};
@@ -311,11 +311,11 @@ public class Utils {
         return ((int) Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)));
     }
 
-    public static byte directionDeltaX[] = new byte[]{0, 1, 1, 1, 0, -1, -1, -1};
-    public static byte directionDeltaY[] = new byte[]{1, 1, 0, -1, -1, -1, 0, 1};
+    public static byte[] directionDeltaX = new byte[]{0, 1, 1, 1, 0, -1, -1, -1};
+    public static byte[] directionDeltaY = new byte[]{1, 1, 0, -1, -1, -1, 0, 1};
 
     // translates our direction convention to the one used in the protocol
-    public static byte xlateDirectionToClient[] = new byte[]{1, 2, 4, 7, 6, 5, 3, 0};
+    public static byte[] xlateDirectionToClient = new byte[]{1, 2, 4, 7, 6, 5, 3, 0};
 
 	public static void println_debug(String message) {
 		if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()

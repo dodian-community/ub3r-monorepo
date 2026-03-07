@@ -8,8 +8,8 @@ import net.dodian.uber.game.netty.codec.*;
 
 public class CreateGroundItem implements OutgoingPacket {
 
-    private GameItem item;
-    private Position position;
+    private final GameItem item;
+    private final Position position;
 
     public CreateGroundItem(GameItem item, Position position) {
         this.item = item;

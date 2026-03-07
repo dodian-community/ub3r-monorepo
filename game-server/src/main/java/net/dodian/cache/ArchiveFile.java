@@ -10,22 +10,22 @@ public class ArchiveFile {
     /**
      * The name hash.
      */
-    private int hash;
+    private final int hash;
 
     /**
      * The uncompressed size.
      */
-    private int uncompressedSize;
+    private final int uncompressedSize;
 
     /**
      * The compressed size.
      */
-    private int compressedSize;
+    private final int compressedSize;
 
     /**
      * The offset in the named cache.
      */
-    private int offset;
+    private final int offset;
 
     /**
      * Creates an archived file.

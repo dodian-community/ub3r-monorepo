@@ -46,8 +46,8 @@ public final class WalkingListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int opcode = packet.getOpcode();
-        int size   = packet.getSize();
+        int opcode = packet.opcode();
+        int size   = packet.size();
         long now   = System.currentTimeMillis();
 
         if (client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient
@@ -83,7 +83,7 @@ public final class WalkingListener implements PacketListener {
             client.attemptGround = null;
         }
 
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int effectiveSize = resolveEffectiveSize(opcode, size);
         if (effectiveSize < MIN_WALK_PACKET_SIZE) {
             rejectMalformedWalkPacket(client, opcode, size, -1, -1, "effective size below minimum");

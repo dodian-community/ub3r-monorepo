@@ -42,7 +42,7 @@ public class NpcInteractionListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        switch (packet.getOpcode()) {
+        switch (packet.opcode()) {
             case 155:
                 handleNpcClick1(client, packet);
                 return;
@@ -59,12 +59,12 @@ public class NpcInteractionListener implements PacketListener {
                 handleNpcAttack(client, packet);
                 return;
             default:
-                logger.warn("NpcInteractionListener got unexpected opcode={} for player={}", packet.getOpcode(), client.getPlayerName());
+                logger.warn("NpcInteractionListener got unexpected opcode={} for player={}", packet.opcode(), client.getPlayerName());
         }
     }
 
     private void handleNpcClick1(Client client, GamePacket packet) {
-        ByteMessage message = ByteMessage.wrap(packet.getPayload());
+        ByteMessage message = ByteMessage.wrap(packet.payload());
         int npcIndex = message.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
@@ -83,7 +83,7 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         // OpenRune-style: tick-owned routing. The game thread will execute when in range.
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 1);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
@@ -108,7 +108,7 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcClick2(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int npcIndex = readSignedWordBigEndianA(payload);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
@@ -116,7 +116,7 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Npc click2 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+            logger.trace("Npc click2 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
 
         int npcId = tempNpc.getId();
@@ -130,7 +130,7 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 2);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
@@ -155,7 +155,7 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcClick3(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int npcIndex = readSignedWord(payload);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
@@ -163,7 +163,7 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Npc click3 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+            logger.trace("Npc click3 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
 
         int npcId = tempNpc.getId();
@@ -177,7 +177,7 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 3);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
@@ -200,7 +200,7 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcClick4(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int npcIndex = readSignedWordBigEndian(payload);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
@@ -208,7 +208,7 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Npc click4 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
+            logger.trace("Npc click4 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
 
         int npcId = tempNpc.getId();
@@ -222,7 +222,7 @@ public class NpcInteractionListener implements PacketListener {
             client.playerPotato.clear();
         }
 
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 4);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
@@ -243,10 +243,10 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcAttack(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int npcIndex = readUnsignedWordA(payload);
 
-        logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.getOpcode(), npcIndex, client.getPlayerName());
+        logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.opcode(), npcIndex, client.getPlayerName());
         if (client.magicId >= 0) {
             client.magicId = -1;
         }
@@ -274,7 +274,7 @@ public class NpcInteractionListener implements PacketListener {
 
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
         client.setWalkToTask(task);
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5);
+        NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 5);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 

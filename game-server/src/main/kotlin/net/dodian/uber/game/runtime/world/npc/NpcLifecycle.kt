@@ -14,7 +14,7 @@ import net.dodian.utilities.Misc
 object NpcLifecycle {
     @JvmStatic
     fun processDeathFloor(npc: Npc) {
-        npc.setVisible(false)
+        npc.isVisible = false
         npc.drop()
         val player = npc.getTarget(false)
         npc.removeEnemy(player)

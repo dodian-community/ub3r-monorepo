@@ -12,6 +12,6 @@ public class ActionProcessor implements Runnable {
     @Override
     public void run() {
         QueueTaskService.processDue();
-        GameEventBus.INSTANCE.post(new WorldTickEvent(PlayerHandler.cycle));
+        GameEventBus.post(new WorldTickEvent(PlayerHandler.cycle));
     }
 }

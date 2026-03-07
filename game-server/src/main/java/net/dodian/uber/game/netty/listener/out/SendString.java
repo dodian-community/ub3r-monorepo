@@ -6,8 +6,8 @@ import net.dodian.uber.game.netty.codec.*;
 
 public class SendString implements OutgoingPacket {
 
-    private String string;
-    private int lineId;
+    private final String string;
+    private final int lineId;
 
     public SendString(String string, int lineId) {
         this.string = string;

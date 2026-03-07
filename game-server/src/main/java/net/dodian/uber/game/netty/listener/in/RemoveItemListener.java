@@ -4,7 +4,6 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
@@ -30,7 +29,7 @@ public class RemoveItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.getPayload());
+        ByteMessage msg = ByteMessage.wrap(packet.payload());
         // mystic client sends: int interfaceId, then two unsigned shorts with ADD transform
         int interfaceID = msg.getInt();
         int removeSlot = msg.getShort(false, ValueType.ADD);

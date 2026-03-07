@@ -14,7 +14,7 @@ public enum HeadIcon {
      *
      * @param headIconId The id to set
      */
-    private HeadIcon(int headIconId) {
+    HeadIcon(int headIconId) {
         this.headIconId = headIconId;
     }
 

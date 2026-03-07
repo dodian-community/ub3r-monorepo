@@ -19,7 +19,7 @@ public class RegionManager {
     /**
      * The active (loaded) region map.
      */
-    private static Map<RegionCoordinates, Regions> activeRegions = new HashMap<RegionCoordinates, Regions>();
+    private static final Map<RegionCoordinates, Regions> activeRegions = new HashMap<RegionCoordinates, Regions>();
 
     /**
      * Gets a region by its x and y coordinates.

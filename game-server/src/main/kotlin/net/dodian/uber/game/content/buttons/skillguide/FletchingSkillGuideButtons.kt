@@ -8,7 +8,7 @@ object FletchingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.FLETCHING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.FLETCHING.getId(), 0)
+        client.showSkillMenu(Skill.FLETCHING.id, 0)
         return true
     }
 }

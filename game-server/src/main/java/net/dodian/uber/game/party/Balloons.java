@@ -18,14 +18,14 @@ import java.util.ArrayList;
 
 public class Balloons {
 
-    private static ArrayList<Object> balloons = new ArrayList<Object>();
-    private static ArrayList<Position> partyEventPos = new ArrayList<Position>();
-    private static ArrayList<RewardItem> partyItems = new ArrayList<RewardItem>();
-    private static ArrayList<RewardItem> droppedItems = new ArrayList<RewardItem>();
+    private static final ArrayList<Object> balloons = new ArrayList<Object>();
+    private static final ArrayList<Position> partyEventPos = new ArrayList<Position>();
+    private static final ArrayList<RewardItem> partyItems = new ArrayList<RewardItem>();
+    private static final ArrayList<RewardItem> droppedItems = new ArrayList<RewardItem>();
     private static boolean eventActive = false;
-    private static int defaultBalloons = 63;
-    private static int defaultIncrement = 9;
-    private static int MAX_LENGTH = 200;
+    private static final int defaultBalloons = 63;
+    private static final int defaultIncrement = 9;
+    private static final int MAX_LENGTH = 200;
     private static int totalBalloons = defaultBalloons;
     private static int balloonIncrement = defaultIncrement;
 

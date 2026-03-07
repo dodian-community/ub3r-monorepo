@@ -35,7 +35,7 @@ public class AttackPlayerListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int victimSlot = readSignedWordBigEndian(packet.getPayload());
+        int victimSlot = readSignedWordBigEndian(packet.payload());
 
         if (logger.isTraceEnabled()) {
             logger.trace("AttackPlayer from={} victimSlot={}", client.getPlayerName(), victimSlot);
@@ -58,7 +58,7 @@ public class AttackPlayerListener implements PacketListener {
         WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victimSlot, plr.getPosition());
         client.setWalkToTask(task);
         if (getQueueTasksEnabled()) {
-            QueueTaskService.schedule(1, 1, (QueueTask) () -> {
+            QueueTaskService.schedule(1, 1, () -> {
                 if (client.disconnected || plr.disconnected || client.getWalkToTask() != task) {
                     return false;
                 }

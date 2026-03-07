@@ -21,14 +21,14 @@ class InboundPacketMailboxTest {
         assertTrue(mailbox.enqueue(button).accepted())
         assertTrue(mailbox.enqueue(walkB).accepted())
 
-        assertEquals(0, walkA.payload.refCnt(), "superseded walk packet should be released")
+        assertEquals(0, walkA.payload().refCnt(), "superseded walk packet should be released")
 
         val first = mailbox.pollNext()
         val second = mailbox.pollNext()
 
-        assertEquals(185, first!!.packet().opcode)
+        assertEquals(185, first!!.packet().opcode())
         assertEquals(InboundPacketMailbox.Family.FIFO, first.family())
-        assertEquals(164, second!!.packet().opcode)
+        assertEquals(164, second!!.packet().opcode())
         assertEquals(InboundPacketMailbox.Family.WALK, second.family())
         assertNull(mailbox.pollNext())
 
@@ -68,8 +68,8 @@ class InboundPacketMailboxTest {
     }
 
     private fun release(packet: GamePacket) {
-        if (packet.payload.refCnt() > 0) {
-            packet.payload.release(packet.payload.refCnt())
+        if (packet.payload().refCnt() > 0) {
+            packet.payload().release(packet.payload().refCnt())
         }
     }
 }

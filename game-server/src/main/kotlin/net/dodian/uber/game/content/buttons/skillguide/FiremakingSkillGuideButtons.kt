@@ -8,7 +8,7 @@ object FiremakingSkillGuideButtons : ButtonContent {
     override val buttonIds: IntArray = SkillGuideButtonIds.FIREMAKING
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        client.showSkillMenu(Skill.FIREMAKING.getId(), 0)
+        client.showSkillMenu(Skill.FIREMAKING.id, 0)
         return true
     }
 }

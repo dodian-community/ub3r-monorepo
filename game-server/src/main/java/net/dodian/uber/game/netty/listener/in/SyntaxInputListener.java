@@ -21,7 +21,7 @@ public class SyntaxInputListener implements PacketListener {
             return;
         }
 
-        String input = readTerminatedString(packet.getPayload()).trim();
+        String input = readTerminatedString(packet.payload()).trim();
         client.bankSearchPendingInput = false;
 
         if (!client.IsBanking) {

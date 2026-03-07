@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 
 public class SetInterfaceWalkable implements OutgoingPacket {
 
-    private int id;
+    private final int id;
 
     public SetInterfaceWalkable(int id) {
         this.id = id;

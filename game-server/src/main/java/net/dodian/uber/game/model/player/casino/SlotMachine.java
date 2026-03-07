@@ -195,8 +195,8 @@ public class SlotMachine {
             client.send(new SendString("PETE'S SLOTS CO - JACKPOT: Manual play", 13896));
         }
         client.deleteItem(995, 3000);
-        peteBalance += peteBalance + 3000 < Integer.MAX_VALUE ? (double) (3000 * 0.15) : 0;
-        slotsJackpot += slotsJackpot + 3000 < Integer.MAX_VALUE ? (double) (3000 * 0.50) : 0;
+        peteBalance += peteBalance + 3000 < Integer.MAX_VALUE ? (3000 * 0.15) : 0;
+        slotsJackpot += slotsJackpot + 3000 < Integer.MAX_VALUE ? (3000 * 0.50) : 0;
         //client.send(new SendMessage("Debug: PBAL: " + peteBalance + ", JPOT: " + slotsJackpot + ""));
         Spin s = spin();
         int win = s.getWinnings();

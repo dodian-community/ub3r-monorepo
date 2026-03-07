@@ -24,7 +24,7 @@ public class DialogueListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        if (GameEventBus.INSTANCE.postWithResult(new DialogueContinueEvent(client))) {
+        if (GameEventBus.postWithResult(new DialogueContinueEvent(client))) {
             return;
         }
 
@@ -33,7 +33,7 @@ public class DialogueListener implements PacketListener {
         }
 
         // No fields to decode; just replicate legacy behaviour
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.isReadable()) {
             buf.skipBytes(buf.readableBytes()); // discard if any
         }
