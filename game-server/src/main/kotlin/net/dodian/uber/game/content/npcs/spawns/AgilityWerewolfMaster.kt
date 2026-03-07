@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.player.skills.agility.Werewolf
+import net.dodian.uber.game.skills.agility.Werewolf
 
 internal object AgilityWerewolfMaster {
     val npcIds: IntArray = intArrayOf(5927)

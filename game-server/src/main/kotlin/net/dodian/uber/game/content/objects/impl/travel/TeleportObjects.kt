@@ -358,7 +358,7 @@ object TeleportObjects : ObjectContent {
                     (objectId == 6452 && client.position.y == 9376)
                 ) {
                     if (client.position.x == 3305) {
-                        val agi = net.dodian.uber.game.model.player.skills.agility.Agility(client)
+                        val agi = net.dodian.uber.game.skills.agility.Agility(client)
                         agi.kbdEntrance()
                     } else {
                         client.NpcDialogue = 536

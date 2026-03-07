@@ -3,8 +3,13 @@ package net.dodian.utilities
 import io.github.cdimascio.dotenv.dotenv
 
 private val dotenv = dotenv()
-private fun requiredEnv(key: String): String = dotenv[key]
-    ?: throw IllegalStateException("Missing required environment variable: $key")
+private fun requiredEnv(key: String): String =
+    dotenv[key]
+        ?: throw IllegalStateException("Missing required environment variable: $key")
+
+private fun requiredNonBlankEnv(key: String): String =
+    requiredEnv(key).takeIf { it.isNotBlank() }
+        ?: throw IllegalStateException("Missing required environment variable: $key")
 
 // Server Settings
 val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
@@ -14,12 +19,12 @@ val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
 val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
 
 // Database Settings
-val databaseHost = requiredEnv("DATABASE_HOST")
+val databaseHost = requiredNonBlankEnv("DATABASE_HOST")
 val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
-val databaseName = requiredEnv("DATABASE_NAME")
+val databaseName = requiredNonBlankEnv("DATABASE_NAME")
 val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
-val databaseUsername = requiredEnv("DATABASE_USERNAME")
-val databasePassword = requiredEnv("DATABASE_PASSWORD")
+val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
+val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 // Game Settings - Various

@@ -4,8 +4,8 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.agility.Agility
-import net.dodian.uber.game.model.player.skills.agility.DesertCarpet
+import net.dodian.uber.game.skills.agility.Agility
+import net.dodian.uber.game.skills.agility.DesertCarpet
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
