@@ -152,6 +152,7 @@ class Agility(private val c: Client) {
         if (isBusy()) {
             return
         }
+        c.resetWalkingQueue()
         c.UsingAgility = true
         npc.text = "Pipe it down...You are nothing special!"
         c.setWalkAnim(746)
@@ -160,9 +161,10 @@ class Agility(private val c: Client) {
         runRepeating(600) {
             part++
             when {
-                part == 7 -> {
+                part > 0 && isMovementSettled() -> {
                     c.requestWeaponAnims()
                     c.requestAnim(748, 0)
+                    c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
                     if (c.agilityCourseStage == 6) {
                         c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11))
                         c.checkItemUpdate()
@@ -183,6 +185,12 @@ class Agility(private val c: Client) {
                 else -> true
             }
         }
+    }
+
+    private fun isMovementSettled(): Boolean {
+        return c.primaryDirection == -1 &&
+            c.secondaryDirection == -1 &&
+            c.wQueueReadPtr == c.wQueueWritePtr
     }
 
     fun BarbRope() {
