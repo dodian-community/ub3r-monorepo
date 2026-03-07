@@ -16,11 +16,8 @@ object TeleportObjects : ObjectContent {
         410,
         1294,
         1591,
-        17122,
         2352,
         2492,
-        2796, 2797,
-        2833,
         5960,
         9368, 9369,
         11833, 11834,
@@ -29,14 +26,11 @@ object TeleportObjects : ObjectContent {
         14914,
         14847,
         16519, 16520,
-        16665,
-        16675, 16677,
-        16680, 16681, 16683,
+        16680,
         17384, 17385, 17387,
         2156, 2158,
         20877,
         5553, 6702,
-        25938, 25939,
         6451, 6452,
     )
 
@@ -94,72 +88,6 @@ object TeleportObjects : ObjectContent {
             17387 -> {
                 if (position.x == 2892 && position.y == 9907) {
                     client.transport(Position(2893, 3507, 0))
-                    true
-                } else {
-                    false
-                }
-            }
-            25939 -> {
-                if (position.x == 2715 && position.y == 3470) {
-                    client.transport(Position(2715, 3471, 0))
-                    true
-                } else {
-                    false
-                }
-            }
-            25938 -> {
-                if (position.x == 2715 && position.y == 3470) {
-                    client.transport(Position(2714, 3470, 1))
-                    true
-                } else {
-                    false
-                }
-            }
-            16675 -> {
-                when {
-                    position.x == 2488 && position.y == 3407 -> client.transport(Position(2489, 3409, 1))
-                    position.x == 2485 && position.y == 3402 -> client.transport(Position(2485, 3401, 1))
-                    position.x == 2445 && position.y == 3434 -> client.transport(Position(2445, 3433, 1))
-                    position.x == 2444 && position.y == 3414 -> client.transport(Position(2445, 3416, 1))
-                    else -> return false
-                }
-                true
-            }
-            16677 -> {
-                when {
-                    position.x == 2489 && position.y == 3408 -> client.transport(Position(2488, 3406, 0))
-                    position.x == 2485 && position.y == 3402 -> client.transport(Position(2485, 3404, 0))
-                    position.x == 2445 && position.y == 3434 -> client.transport(Position(2446, 3436, 0))
-                    position.x == 2445 && position.y == 3415 -> client.transport(Position(2444, 3413, 0))
-                    else -> return false
-                }
-                true
-            }
-            16665 -> {
-                when {
-                    position.x == 2724 && position.y == 9774 -> {
-                        if (!client.premium) {
-                            client.resetPos()
-                        }
-                        client.transport(Position(2723, 3375, 0))
-                    }
-                    position.x == 2603 && position.y == 9478 -> client.transport(Position(2606, 3079, 0))
-                    position.x == 2569 && position.y == 9522 -> client.transport(Position(2570, 3121, 0))
-                    else -> return false
-                }
-                true
-            }
-            16683 -> {
-                if (position.x == 2597 && position.y == 3107) {
-                    client.transport(Position(2597, 3106, 1))
-                    true
-                } else {
-                    false
-                }
-            }
-            16681 -> {
-                if (position.x == 2597 && position.y == 3107) {
-                    client.transport(Position(2597, 3106, 0))
                     true
                 } else {
                     false
@@ -302,35 +230,11 @@ object TeleportObjects : ObjectContent {
                     true
                 }
             }
-            2833 -> {
-                if (position.x == 2544 && position.y == 3111) {
-                    client.transport(Position(2544, 3112, 1))
-                }
-                true
-            }
             12260 -> {
                 if (position.x == 2459 && position.y == 4354) {
                     client.transport(Position(2941, 4691, 0))
                 } else {
                     client.transport(Position(2462, 4359, 0))
-                }
-                true
-            }
-            17122 -> {
-                if (position.x == 2544 && position.y == 3111) {
-                    client.transport(Position(2544, 3112, 0))
-                }
-                true
-            }
-            2796 -> {
-                if (position.x == 2549 && position.y == 3111) {
-                    client.transport(Position(2549, 3112, 2))
-                }
-                true
-            }
-            2797 -> {
-                if (position.x == 2549 && position.y == 3111) {
-                    client.transport(Position(2549, 3112, 1))
                 }
                 true
             }

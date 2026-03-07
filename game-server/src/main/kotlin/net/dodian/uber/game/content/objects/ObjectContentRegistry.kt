@@ -213,6 +213,7 @@ object ObjectContentRegistry {
             "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
             "StallObjects" to net.dodian.uber.game.content.objects.impl.thieving.StallObjects,
             "TeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.TeleportObjects,
+            "VerticalTeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.VerticalTeleportObjects,
             "WebObstacleObjects" to net.dodian.uber.game.content.objects.impl.travel.WebObstacleObjects,
             "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WerewolfCourseObjects,
             "WildernessCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WildernessCourseObjects,

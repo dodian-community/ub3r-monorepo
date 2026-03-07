@@ -55,6 +55,10 @@ public final class WalkingListener implements PacketListener {
             return;
         }
         if (client.doingTeleport() || client.getPlunder.looting) return;
+        if (client.isVerticalTransitionActive()) {
+            client.resetWalkingQueue();
+            return;
+        }
         if (opcode != 98) client.setWalkToTask(null);
 
         // Auto-decline trade/duel when walking

@@ -17,7 +17,6 @@ public abstract class Entity {
 
     private final Position position;
     private final Position originalPosition;
-    private final Position facePosition;
     private final int slot;
     private int gfxId, gfxHeight;
     private final Type type;
@@ -29,13 +28,14 @@ public abstract class Entity {
     private int animationDelay;
     private int animationId;
     private String text;
+    private int faceCoordinateX = 1;
+    private int faceCoordinateY = 1;
 
     private final Map<Entity, Integer> damage = new HashMap<>();
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
         this.originalPosition = position.copy();
-        this.facePosition = new Position(0, 0);
         this.updateFlags = new UpdateFlags();
         this.slot = slot;
         this.type = type;
@@ -77,12 +77,28 @@ public abstract class Entity {
     }
 
     public void setFocus(int focusPointX, int focusPointY) {
-        facePosition.moveTo(2 * focusPointX + 1, 2 * focusPointY + 1);
+        faceCoordinateX = encodeFaceCoordinate(focusPointX);
+        faceCoordinateY = encodeFaceCoordinate(focusPointY);
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 
-    public Position getFacePosition() {
-        return this.facePosition;
+    public int getFaceCoordinateX() {
+        return faceCoordinateX;
+    }
+
+    public int getFaceCoordinateY() {
+        return faceCoordinateY;
+    }
+
+    private int encodeFaceCoordinate(int value) {
+        long encoded = (2L * value) + 1L;
+        if (encoded < 0L) {
+            return 0;
+        }
+        if (encoded > 0xFFFFL) {
+            return 0xFFFF;
+        }
+        return (int) encoded;
     }
 
     public int getAnimationDelay() {

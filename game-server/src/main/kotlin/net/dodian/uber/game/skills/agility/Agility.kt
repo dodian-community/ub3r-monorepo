@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.loop.GameThreadTimers
 import net.dodian.utilities.Misc
 
 class Agility(private val c: Client) {
@@ -24,6 +25,28 @@ class Agility(private val c: Client) {
     }
 
     private fun isBusy(): Boolean = c.UsingAgility
+
+    private fun scheduleVerticalMove(
+        destination: Position,
+        delayMs: Long = 600L,
+        onComplete: () -> Unit,
+    ) {
+        val token = c.beginVerticalTransition(delayMs)
+        c.walkBlock = System.currentTimeMillis() + delayMs
+        GameThreadTimers.schedule(
+            "agility-vertical",
+            delayMs,
+            "player=${c.playerName} destination=$destination pos=${c.position}",
+        ) {
+            if (c.disconnected) {
+                c.clearVerticalTransition()
+                c.UsingAgility = false
+                return@schedule
+            }
+            c.finishVerticalTransition(token, destination)
+            onComplete()
+        }
+    }
 
     private fun requireAgilityLevel(level: Int): Boolean {
         if (c.getLevel(Skill.AGILITY) >= level) {
@@ -62,9 +85,7 @@ class Agility(private val c: Client) {
         c.UsingAgility = true
         npc.text = "My mom is faster than you!"
         c.requestAnim(828, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
-        runLater(600) {
-            c.teleportTo(2473, 3424, 1)
+        scheduleVerticalMove(Position(2473, 3424, 1)) {
             giveEndExperience(150)
             c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
             c.UsingAgility = false
@@ -79,10 +100,8 @@ class Agility(private val c: Client) {
         c.UsingAgility = true
         npc.text = "Haha you suck at this simple obstacle!"
         c.requestAnim(828, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
         c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
-        runLater(600) {
-            c.teleportTo(2473, 3420, 2)
+        scheduleVerticalMove(Position(2473, 3420, 2)) {
             giveEndExperience(50)
             c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
             c.UsingAgility = false
@@ -118,9 +137,7 @@ class Agility(private val c: Client) {
         c.UsingAgility = true
         npc.text = "To darn easy."
         c.requestAnim(828, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
-        runLater(600) {
-            c.teleportTo(2485, 3421, 0)
+        scheduleVerticalMove(Position(2485, 3421, 0)) {
             giveEndExperience(50)
             c.agilityCourseStage = if (c.agilityCourseStage >= 4) 5 else c.agilityCourseStage
             c.UsingAgility = false

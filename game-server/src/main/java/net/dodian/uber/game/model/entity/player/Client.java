@@ -595,6 +595,9 @@ public class Client extends Player implements Runnable {
     public int stairs = 0;
     public int stairDistance = 1;
     public int stairDistanceAdd = 0;
+    private long verticalTransitionSequence = 0L;
+    private long activeVerticalTransitionToken = 0L;
+    private long verticalTransitionUntilMillis = 0L;
     public int[] smithing = {0, 0, 0, -1, -1, 0};
 
     public int skillX = -1;
@@ -636,6 +639,7 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        clearVerticalTravelState();
         releaseQueuedInboundPackets();
         releaseQueuedOutboundPackets();
         clearInboundReadyFlag();
@@ -3123,20 +3127,6 @@ public class Client extends Player implements Runnable {
                     }
                 }
             }
-            if (stairs == "legendsUp".hashCode()) {
-                if (skillX == 2732 && skillY == 3377) {
-                    transport(new Position(2732, 3380, 1));
-                    resetStairs();
-                    return;
-                }
-            }
-            if (stairs == "legendsDown".hashCode()) {
-                if (skillX == 2732 && skillY == 3378) {
-                    transport(new Position(2732, 3376, 0));
-                    resetStairs();
-                    return;
-                }
-            }
             if (stairs == 1) {
                 getPosition().setZ(getPosition().getZ() + 1);
             } else if (stairs == 2) {
@@ -3216,6 +3206,173 @@ public class Client extends Player implements Runnable {
         resetWalkingQueue();
         final Client p = this;
         GameEventScheduler.runLaterMs(500, p::resetWalkingQueue);
+    }
+
+    public long beginVerticalTransition(long delayMs) {
+        resetWalkingQueue();
+        long now = System.currentTimeMillis();
+        activeVerticalTransitionToken = ++verticalTransitionSequence;
+        verticalTransitionUntilMillis = now + Math.max(delayMs, 0L);
+        walkBlock = Math.max(walkBlock, verticalTransitionUntilMillis);
+        return activeVerticalTransitionToken;
+    }
+
+    public boolean isVerticalTransitionActive() {
+        return activeVerticalTransitionToken != 0L && verticalTransitionUntilMillis > System.currentTimeMillis();
+    }
+
+    public void clearVerticalTransition() {
+        activeVerticalTransitionToken = 0L;
+        verticalTransitionUntilMillis = 0L;
+    }
+
+    public void clearVerticalTravelState() {
+        clearVerticalTransition();
+        clearLegacyStairState();
+    }
+
+    public String verticalTransitionDebugSummary() {
+        return "token=" + activeVerticalTransitionToken +
+                ",until=" + verticalTransitionUntilMillis +
+                ",tele=(" + teleportToX + "," + teleportToY + "," + teleportToZ + ")" +
+                ",stairs=" + stairs +
+                ",isStair=" + IsStair +
+                ",skill=(" + skillX + "," + skillY + ")" +
+                ",distance=" + stairDistance +
+                ",distanceAdd=" + stairDistanceAdd +
+                ",stairBlock=" + stairBlock +
+                ",pos=" + getPosition();
+    }
+
+    public void queueTransport(Position pos) {
+        resetActionTeleport();
+        teleportToX = pos.getX();
+        teleportToY = pos.getY();
+        teleportToZ = pos.getZ();
+    }
+
+    public void finishVerticalTransition(long token, Position destination) {
+        if (activeVerticalTransitionToken != token || disconnected) {
+            return;
+        }
+        clearLegacyStairState();
+        queueTransport(destination);
+        clearVerticalTransition();
+    }
+
+    public void finishVerticalTransition(
+            long token,
+            int stairs,
+            int skillX,
+            int skillY,
+            int stairDistance,
+            int stairDistanceAdd
+    ) {
+        if (activeVerticalTransitionToken != token || disconnected) {
+            return;
+        }
+        clearLegacyStairState();
+        applyLegacyVerticalTransition(stairs, skillX, skillY, stairDistance, stairDistanceAdd);
+        clearVerticalTransition();
+    }
+
+    public void applyLegacyVerticalTransition(int stairs, int skillX, int skillY, int stairDistance, int stairDistanceAdd) {
+        this.skillX = skillX;
+        setSkillY(skillY);
+        this.stairDistance = stairDistance;
+        this.stairDistanceAdd = stairDistanceAdd;
+        int teleX = getPosition().getX();
+        int teleY = getPosition().getY();
+        if (stairs == 1) {
+            if (skillX == 2715 && skillY == 3470) {
+                if (getPosition().getY() < 3470 || getPosition().getX() < 2715) {
+                    clearLegacyStairState();
+                    return;
+                } else {
+                    queueTransport(new Position(teleX, teleY, 1));
+                    clearLegacyStairState();
+                    return;
+                }
+            }
+        }
+        if (stairs == 1) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ() + 1));
+        } else if (stairs == 2) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ() - 1));
+        } else if (stairs == 21) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY() + (stairDistance + stairDistanceAdd), getPosition().getZ() + 1));
+        } else if (stairs == 22) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY() - (stairDistance + stairDistanceAdd), getPosition().getZ() - 1));
+        } else if (stairs == 69) {
+            queueTransport(new Position(teleX, teleY, getPosition().getZ() + 1));
+            teleportToY = stairDistanceAdd;
+            teleportToX = stairDistance;
+        }
+        if (stairs == 3 || stairs == 5 || stairs == 9) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY() + 6400, getPosition().getZ()));
+        } else if (stairs == 4 || stairs == 6 || stairs == 10) {
+            queueTransport(new Position(getPosition().getX(), getPosition().getY() - 6400, getPosition().getZ()));
+        } else if (stairs == 7) {
+            queueTransport(new Position(3104, 9576, getPosition().getZ()));
+        } else if (stairs == 8) {
+            queueTransport(new Position(3105, 3162, getPosition().getZ()));
+        } else if (stairs == 11) {
+            queueTransport(new Position(2856, 9570, getPosition().getZ()));
+        } else if (stairs == 12) {
+            queueTransport(new Position(2857, 3167, getPosition().getZ()));
+        } else if (stairs == 13) {
+            queueTransport(new Position(skillX, skillY, getPosition().getZ() + 3));
+        } else if (stairs == 15) {
+            teleportToX = getPosition().getX();
+            teleportToY = getPosition().getY() + (6400 - (stairDistance + stairDistanceAdd));
+            teleportToZ = getPosition().getZ();
+        } else if (stairs == 14) {
+            teleportToX = getPosition().getX();
+            teleportToY = getPosition().getY() - (6400 - (stairDistance + stairDistanceAdd));
+            teleportToZ = getPosition().getZ();
+        } else if (stairs == 16) {
+            queueTransport(new Position(2828, 9772, getPosition().getZ()));
+        } else if (stairs == 17) {
+            queueTransport(new Position(3494, 3465, getPosition().getZ()));
+        } else if (stairs == 18) {
+            queueTransport(new Position(3477, 9845, getPosition().getZ()));
+        } else if (stairs == 19) {
+            queueTransport(new Position(3543, 3463, getPosition().getZ()));
+        } else if (stairs == 20) {
+            queueTransport(new Position(3549, 9865, getPosition().getZ()));
+        } else if (stairs == 23) {
+            queueTransport(new Position(2480, 5175, getPosition().getZ()));
+        } else if (stairs == 24) {
+            queueTransport(new Position(2862, 9572, getPosition().getZ()));
+        } else if (stairs == 25) {
+            int Essence = Misc.random(EssenceMineRX.length - 1);
+            queueTransport(new Position(EssenceMineRX[Essence], EssenceMineRY[Essence], 0));
+        } else if (stairs == 26) {
+            int Essence = Misc.random(EssenceMineX.length - 1);
+            queueTransport(new Position(EssenceMineX[Essence], EssenceMineY[Essence], 0));
+        } else if (stairs == 27) {
+            queueTransport(new Position(2453, 4468, getPosition().getZ()));
+        } else if (stairs == 28) {
+            queueTransport(new Position(3201, 3169, getPosition().getZ()));
+        }
+        if (stairs == 5 || stairs == 10) {
+            queueTransport(new Position(getPosition().getX() + (stairDistance + stairDistanceAdd), getPosition().getY() - 6400, 0));
+        }
+        if (stairs == 6 || stairs == 9) {
+            int deltaY = stairs == 6 ? -6400 : 6400;
+            queueTransport(new Position(getPosition().getX() - (stairDistance - stairDistanceAdd), getPosition().getY() + deltaY, 0));
+        }
+        clearLegacyStairState();
+    }
+
+    private void clearLegacyStairState() {
+        stairs = 0;
+        IsStair = false;
+        skillX = -1;
+        setSkillY(-1);
+        stairDistance = 1;
+        stairDistanceAdd = 0;
+        stairBlock = 0L;
     }
 
     public boolean usingBow = false;

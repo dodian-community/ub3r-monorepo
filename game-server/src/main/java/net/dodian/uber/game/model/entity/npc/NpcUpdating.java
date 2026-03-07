@@ -265,8 +265,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getFacePosition().getX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getFacePosition().getY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateX(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override

@@ -62,6 +62,10 @@ class GameLoopService(
     private var debugTick = 0
     private var accumulatedCycleTimeMs = 0L
     private var accumulatedLoggedMillis = 0L
+    @Volatile
+    private var lastLoopFailureSignature = ""
+    @Volatile
+    private var lastLoopFailureCount = 0
 
     fun start() {
         if (!running.compareAndSet(false, true)) {
@@ -92,12 +96,16 @@ class GameLoopService(
         if (!running.get()) {
             return
         }
-        val elapsedNanos = measureNanoTime { runTick() }
-        val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
-        if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
-            logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
+        try {
+            val elapsedNanos = measureNanoTime { runTick() }
+            val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
+            if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
+                logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
+            }
+            maybeLogCycle(elapsedMillis)
+        } catch (exception: Throwable) {
+            logLoopFailure("tick", exception)
         }
-        maybeLogCycle(elapsedMillis)
     }
 
     private fun runIdleIngressScheduled() {
@@ -105,11 +113,16 @@ class GameLoopService(
         if (!running.get()) {
             return
         }
-        runIdleIngress()
+        try {
+            runIdleIngress()
+        } catch (exception: Throwable) {
+            logLoopFailure("idle-ingress", exception)
+        }
     }
 
     private fun runIdleIngress() {
         GameThreadIngress.drainCritical(IDLE_INGRESS_CRITICAL_MAX)
+        GameThreadTimers.drainDue()
     }
 
     private fun bindGameThread() {
@@ -122,6 +135,7 @@ class GameLoopService(
         currentCycle++
         val now = System.currentTimeMillis()
         phaseTimer.clear()
+        GameThreadTimers.drainDue()
         timed(GamePhase.LOGIN_INGRESS) { GameThreadIngress.drainTickIngress() }
         timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
         timed(GamePhase.WORLD_DB_INPUT_BUILD) { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
@@ -135,6 +149,7 @@ class GameLoopService(
         timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }
         timed(GamePhase.OUTBOUND_SYNC) { outboundPacketProcessor.run() }
         timed(GamePhase.HOUSEKEEPING) { entityProcessor.runHousekeepingPhase(now) }
+        GameThreadTimers.drainDue()
     }
 
     private fun timed(phase: GamePhase, block: () -> Unit) {
@@ -185,6 +200,25 @@ class GameLoopService(
         debugTick = 0
         accumulatedCycleTimeMs = 0L
         accumulatedLoggedMillis = 0L
+    }
+
+    private fun logLoopFailure(scope: String, exception: Throwable) {
+        val signature = "$scope:${exception::class.java.name}:${exception.message ?: ""}"
+        if (signature == lastLoopFailureSignature) {
+            lastLoopFailureCount++
+            if (lastLoopFailureCount <= 3 || lastLoopFailureCount % 50 == 0) {
+                logger.error(
+                    "Game loop {} failure repeated {} times; latest error: {}",
+                    scope,
+                    lastLoopFailureCount,
+                    exception.message ?: exception::class.java.simpleName,
+                )
+            }
+            return
+        }
+        lastLoopFailureSignature = signature
+        lastLoopFailureCount = 1
+        logger.error("Game loop {} encountered an unexpected error but will keep running.", scope, exception)
     }
 
     private companion object {
