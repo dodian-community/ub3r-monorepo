@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.items
 
-import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.items.combination.CraftingItemCombinationHandler
+import net.dodian.uber.game.content.items.combination.DialogueGateItemCombinationHandler
 import net.dodian.uber.game.content.items.combination.EquipmentAssemblyItemCombinationHandler
 import net.dodian.uber.game.content.items.combination.FiremakingItemCombinationHandler
 import net.dodian.uber.game.content.items.combination.FletchingItemCombinationHandler
@@ -38,17 +38,15 @@ object ItemCombinationService {
         )
 
         if (useWith == 5733 || itemUsed == 5733) {
-            client.playerPotato.clear()
-            client.playerPotato.add(0, 4)
-            client.playerPotato.add(1, if (useWith == 5733) itemUsedSlot else usedWithSlot)
-            client.playerPotato.add(2, if (useWith == 5733) itemUsed else useWith)
-            client.playerPotato.add(3, 1)
+            PotatoInteractionState.beginItemOnItem(
+                client,
+                if (useWith == 5733) itemUsedSlot else usedWithSlot,
+                if (useWith == 5733) itemUsed else useWith,
+            )
             return
         }
 
-        with(client.farming) {
-            client.saplingMaking(useWith, usedWithSlot, itemUsed, itemUsedSlot)
-        }
+        SaplingItemCombinationHandler.handle(client, useWith, usedWithSlot, itemUsed, itemUsedSlot)
 
         val otherItem = client.playerItems[usedWithSlot] - 1
         val knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605)
@@ -57,9 +55,7 @@ object ItemCombinationService {
             return
         }
 
-        if (itemUsed in 6157..6161 && useWith in 6157..6161) {
-            DialogueService.setDialogueSent(client, false)
-            DialogueService.setDialogueId(client, 10000)
+        if (DialogueGateItemCombinationHandler.handle(client, itemUsed, useWith)) {
             return
         }
 
