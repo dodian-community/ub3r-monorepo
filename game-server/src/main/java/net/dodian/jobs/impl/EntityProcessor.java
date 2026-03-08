@@ -10,6 +10,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.uber.game.runtime.loop.GameCycleClock;
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
+import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
 import net.dodian.uber.game.runtime.sync.util.IntHashSet;
 import net.dodian.uber.game.runtime.sync.util.LongHashSet;
 import net.dodian.uber.game.runtime.tasking.GameTaskRuntime;
@@ -510,11 +512,27 @@ public class EntityProcessor implements Runnable {
             player.initialized = true;
         }
         player.setCurrentGameCycle(GameCycleClock.currentCycle());
+        int startingHealth = player.getCurrentHealth();
+        int startingPrayer = player.getCurrentPrayer();
+        int startingX = player.getPosition().getX();
+        int startingY = player.getPosition().getY();
+        int startingZ = player.getPosition().getZ();
         player.process();
         player.setProcessedGameCycle(player.getCurrentGameCycle());
         player.setLastProcessedCycle(player.getProcessedGameCycle());
         GameTaskRuntime.cyclePlayer(player);
         LegacyDialogueTickBridge.flushIfNeeded(player);
+        CombatRuntimeService.process(player, player.getProcessedGameCycle());
+        PlayerAnimationService.flush(player, player.getProcessedGameCycle());
+
+        if (startingHealth != player.getCurrentHealth() || startingPrayer != player.getCurrentPrayer()) {
+            player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.STATS.getMask()
+                    | net.dodian.uber.game.persistence.player.PlayerSaveSegment.EFFECTS.getMask()
+                    | net.dodian.uber.game.persistence.player.PlayerSaveSegment.META.getMask());
+        }
+        if (startingX != player.getPosition().getX() || startingY != player.getPosition().getY() || startingZ != player.getPosition().getZ()) {
+            player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.POSITION.getMask());
+        }
 
         player.postProcessing();
         player.getNextPlayerMovement();

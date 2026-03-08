@@ -14,6 +14,8 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Utils;
 
@@ -62,6 +64,7 @@ public class ItemOnItemListener implements PacketListener {
             client.disconnected = true;
             return;
         }
+        PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.ITEM_INTERACTION, false, false, false, true);
         if (useWith == 5733 || itemUsed == 5733) { // Potato
             client.playerPotato.clear();
             client.playerPotato.add(0, 4);

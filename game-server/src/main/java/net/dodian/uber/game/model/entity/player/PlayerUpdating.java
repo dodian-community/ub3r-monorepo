@@ -592,8 +592,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                 viewer.mapRegionX == viewerState.getLastKnownMapRegionX()
                         && viewer.mapRegionY == viewerState.getLastKnownMapRegionY()
                         && viewer.getPosition().getZ() == viewerState.getLastKnownPlane();
+        long localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(viewer);
         long localMembershipRevision = viewer.getLocalPlayerMembershipRevision();
-        boolean localActivityStable = localMembershipRevision == viewerState.getLastLocalMembershipRevision();
+        boolean localActivityStable =
+                localActivityStamp == viewerState.getLastLocalActivityStamp()
+                        && localMembershipRevision == viewerState.getLastLocalMembershipRevision();
         boolean noImmediateStateChange =
                 !viewer.didTeleport()
                         && !viewer.didMapRegionChange()

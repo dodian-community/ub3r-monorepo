@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
+import net.dodian.uber.game.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -9,6 +10,7 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.combat.CombatDefenderReaction;
 import net.dodian.utilities.Misc;
 
 class PlayerCombatState {
@@ -42,28 +44,8 @@ class PlayerCombatState {
                 player.send(new SendMessage("<col=FFD700>You neglected " + (amt == 0 ? "all" : "some") + " of the damage!"));
             }
         }
-        appendHit(amt, type);
-        owner.setCurrentHealth(Math.max(owner.getCurrentHealth() - amt, 0));
-        player.refreshSkill(Skill.HITPOINTS);
-        player.debug("Dealing " + amt + " damage to you (hp=" + owner.currentHealth + ")");
-        if (attacker instanceof Player) {
-            int totalDamage;
-            if (owner.getDamage().containsKey(attacker)) {
-                totalDamage = owner.getDamage().get(attacker) + amt;
-                owner.getDamage().remove(attacker);
-            } else {
-                totalDamage = amt;
-            }
-            owner.getDamage().put(attacker, totalDamage);
-        }
-        boolean veracEffect = Misc.chance(8) == 1 && owner.armourSet("verac");
-        if (veracEffect && amt > 0 && owner.getCurrentHealth() > 0 && attacker instanceof Player) {
-            player.stillgfx(1041, attacker.getPosition(), 100);
-            ((Player) attacker).dealDamage(player, amt, type);
-        } else if (veracEffect && amt > 0 && owner.getCurrentHealth() > 0 && attacker instanceof Npc) {
-            player.stillgfx(1041, attacker.getPosition(), 100);
-            ((Npc) attacker).dealDamage(player, amt, type);
-        }
+        maybePlayDefenderReaction(amt, inferDamageType(attacker));
+        applyDamage(attacker, amt, type);
     }
 
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
@@ -93,7 +75,34 @@ class PlayerCombatState {
         } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) {
             amt = 0;
         }
-        dealDamage(attacker, amt, type);
+        maybePlayDefenderReaction(amt, damageType);
+        applyDamage(attacker, amt, type);
+    }
+
+    private void applyDamage(Entity attacker, int amt, Entity.hitType type) {
+        Client player = (Client) owner;
+        appendHit(amt, type);
+        owner.setCurrentHealth(Math.max(owner.getCurrentHealth() - amt, 0));
+        player.refreshSkill(Skill.HITPOINTS);
+        player.debug("Dealing " + amt + " damage to you (hp=" + owner.currentHealth + ")");
+        if (attacker instanceof Player) {
+            int totalDamage;
+            if (owner.getDamage().containsKey(attacker)) {
+                totalDamage = owner.getDamage().get(attacker) + amt;
+                owner.getDamage().remove(attacker);
+            } else {
+                totalDamage = amt;
+            }
+            owner.getDamage().put(attacker, totalDamage);
+        }
+        boolean veracEffect = Misc.chance(8) == 1 && owner.armourSet("verac");
+        if (veracEffect && amt > 0 && owner.getCurrentHealth() > 0 && attacker instanceof Player) {
+            player.stillgfx(1041, attacker.getPosition(), 100);
+            ((Player) attacker).dealDamage(player, amt, type);
+        } else if (veracEffect && amt > 0 && owner.getCurrentHealth() > 0 && attacker instanceof Npc) {
+            player.stillgfx(1041, attacker.getPosition(), 100);
+            ((Npc) attacker).dealDamage(player, amt, type);
+        }
     }
 
     boolean isInCombat() {
@@ -189,5 +198,23 @@ class PlayerCombatState {
                 other.receieveDamage(player, damage, type);
             });
         }
+    }
+
+    private void maybePlayDefenderReaction(int damage, Entity.damageType damageType) {
+        CombatDefenderReaction.playBlockAnimation((Client) owner, damage, damageType);
+    }
+
+    private Entity.damageType inferDamageType(Entity attacker) {
+        if (attacker instanceof Client player) {
+            int style = PlayerAttackCombatKt.getAttackStyle(player);
+            if (style == 1) {
+                return Entity.damageType.RANGED;
+            }
+            if (style == 2) {
+                return Entity.damageType.MAGIC;
+            }
+            return Entity.damageType.MELEE;
+        }
+        return null;
     }
 }

@@ -19,25 +19,37 @@ class PlayerActionContext internal constructor(
 
     fun currentCycle(): Long = task.currentCycle()
 
-    fun shouldCancel(): Boolean {
-        if (!player.isActive || player.disconnected || player.deathStage > 0) {
-            return true
+    fun cancellationReason(): PlayerActionCancelReason? {
+        player.activeActionCancelReason?.let { return it }
+        if (!player.isActive || (policy.cancelOnDisconnect && player.disconnected)) {
+            return PlayerActionCancelReason.DISCONNECTED
         }
-        if (policy.cancelOnCombat && player.isInCombat()) {
-            return true
+        if (policy.cancelOnLogout && player.isLoggingOut) {
+            return PlayerActionCancelReason.LOGOUT
         }
-        if (policy.cancelOnDialogue &&
+        if (policy.cancelOnDeath && player.deathStage > 0) {
+            return PlayerActionCancelReason.DEATH
+        }
+        if (policy.cancelOnTeleport && player.doingTeleport() && player.activeActionType != PlayerActionType.TELEPORT) {
+            return PlayerActionCancelReason.TELEPORT
+        }
+        if (policy.cancelOnCombatEntry && player.isInCombat()) {
+            return PlayerActionCancelReason.COMBAT_INTERRUPTED
+        }
+        if (policy.cancelOnDialogueOpen &&
             (DialogueService.hasActiveSession(player) || player.NpcDialogue != 0 || player.NpcDialogueSend || player.nextDiag > 0)
         ) {
-            return true
+            return PlayerActionCancelReason.DIALOGUE_OPENED
         }
-        if (policy.cancelOnMove && hasMovedSinceLastProcess(player)) {
-            return true
+        if (policy.cancelOnMovement && hasMovedSinceLastProcess(player)) {
+            return PlayerActionCancelReason.MOVEMENT
         }
-        return false
+        return null
     }
 
-    fun isActive(): Boolean = !shouldCancel()
+    fun shouldCancel(): Boolean = cancellationReason() != null
+
+    fun isActive(): Boolean = cancellationReason() == null
 
     companion object {
         private fun hasMovedSinceLastProcess(player: Client): Boolean {

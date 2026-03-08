@@ -15,7 +15,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SMELTING,
-            onStop = { it.smelting = false },
+            onStop = { player, _ -> player.smelting = false },
         ) {
             while (player.smelting && player.smeltCount > 0) {
                 if (!isActive()) {
@@ -35,7 +35,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.GOLD_CRAFTING,
-            onStop = { it.goldCrafting = false },
+            onStop = { player, _ -> player.goldCrafting = false },
         ) {
             while (player.goldCrafting && player.goldCraftingCount > 0) {
                 if (!isActive()) {
@@ -55,7 +55,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SHAFTING,
-            onStop = { it.shafting = false },
+            onStop = { player, _ -> player.shafting = false },
         ) {
             while (player.shafting) {
                 if (!isActive()) {
@@ -75,7 +75,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.FLETCHING,
-            onStop = { it.fletchings = false },
+            onStop = { player, _ -> player.fletchings = false },
         ) {
             while (player.fletchings && player.fletchAmount > 0) {
                 if (!isActive()) {
@@ -95,7 +95,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SPINNING,
-            onStop = { it.spinning = false },
+            onStop = { player, _ -> player.spinning = false },
         ) {
             while (player.spinning) {
                 if (!isActive()) {
@@ -115,7 +115,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.CRAFTING,
-            onStop = { it.setCrafting(false) },
+            onStop = { player, _ -> player.setCrafting(false) },
         ) {
             while (player.isCrafting() && player.getCAmount() > 0) {
                 if (!isActive()) {
@@ -135,9 +135,9 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.FISHING,
-            onStop = {
-                it.setFishing(false)
-                it.lastFishAction = 0
+            onStop = { player, _ ->
+                player.setFishing(false)
+                player.lastFishAction = 0
             },
         ) {
             var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
@@ -172,7 +172,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.COOKING,
-            onStop = { it.cooking = false },
+            onStop = { player, _ -> player.cooking = false },
         ) {
             while (player.cooking && player.cookAmount > 0) {
                 if (!isActive()) {
@@ -192,7 +192,7 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.LEGACY_PRODUCTION,
-            onStop = { it.skillActionTimer = -1 },
+            onStop = { player, _ -> player.skillActionTimer = -1 },
         ) {
             while (player.skillActionCount > 0 && player.playerSkillAction.size >= 8) {
                 if (!isActive()) {
@@ -212,9 +212,9 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.ALTAR_BONES,
-            onStop = {
-                it.prayerAction = -1
-                it.boneItem = -1
+            onStop = { player, _ ->
+                player.prayerAction = -1
+                player.boneItem = -1
             },
         ) {
             while (player.boneItem > 0) {

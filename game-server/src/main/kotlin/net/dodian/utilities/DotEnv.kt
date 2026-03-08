@@ -78,6 +78,7 @@ val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 300L
 val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
 val clientUiTraceEnabled = dotenv["CLIENT_UI_TRACE_ENABLED"]?.toBoolean() ?: false
 val clientPacketTraceEnabled = dotenv["CLIENT_PACKET_TRACE_ENABLED"]?.toBoolean() ?: false
+val combatReactionDebugEnabled = dotenv["COMBAT_REACTION_DEBUG_ENABLED"]?.toBoolean() ?: false
 val buttonTraceEnabled = dotenv["BUTTON_TRACE_ENABLED"]?.toBoolean() ?: false
 
 // Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)

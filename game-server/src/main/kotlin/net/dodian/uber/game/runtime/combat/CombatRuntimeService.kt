@@ -1,0 +1,181 @@
+package net.dodian.uber.game.runtime.combat
+
+import net.dodian.uber.game.combat.attackTarget
+import net.dodian.uber.game.combat.getAttackStyle
+import net.dodian.uber.game.model.WalkToTask
+import net.dodian.uber.game.model.entity.Entity
+import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.Player
+
+object CombatRuntimeService {
+    @JvmStatic
+    fun process(
+        player: Client,
+        cycleNow: Long,
+    ) {
+        if (!hasActiveCombat(player)) {
+            return
+        }
+        if (player.disconnected) {
+            cancel(player, CombatCancellationReason.DISCONNECTED)
+            return
+        }
+        if (player.isLoggingOut) {
+            cancel(player, CombatCancellationReason.LOGOUT)
+            return
+        }
+        if (player.deathStage > 0 || player.currentHealth < 1) {
+            cancel(player, CombatCancellationReason.DEATH)
+            return
+        }
+
+        val target = player.target ?: run {
+            cancel(player, CombatCancellationReason.TARGET_INVALID)
+            return
+        }
+        if (!isValidTarget(target)) {
+            cancel(player, CombatCancellationReason.TARGET_INVALID)
+            return
+        }
+
+        var state = player.combatTargetState ?: createCompatibilityState(player, target, cycleNow)
+        if (state.targetType != target.type || state.targetSlot != target.slot) {
+            state =
+                state.copy(
+                    targetType = target.type,
+                    targetSlot = target.slot,
+                    startedCycle = cycleNow,
+                    nextAttackCycle = cycleNow,
+                    lastInRangeConfirmationCycle = cycleNow,
+                    initialSwingConsumed = false,
+                    lastFollowTargetX = target.position.x,
+                    lastFollowTargetY = target.position.y,
+                )
+            player.combatTargetState = state
+        }
+
+        val policy = CombatStartService.policyFor(player, state.intent)
+        if (!player.goodDistanceEntity(target, policy.attackDistance)) {
+            followTarget(player, target, state, cycleNow)
+            return
+        }
+
+        player.walkToTask = null
+        player.resetWalkingQueue()
+        if (cycleNow < state.nextAttackCycle) {
+            return
+        }
+        if (!CombatStartService.canPerformAttackTick(player)) {
+            return
+        }
+
+        val attacked = player.attackTarget()
+        if (!attacked) {
+            if (player.target == null || (!player.attackingNpc && !player.attackingPlayer)) {
+                return
+            }
+            return
+        }
+
+        val nextDelay = maxOf(player.combatTimer, 1)
+        player.combatTargetState =
+            (player.combatTargetState ?: state).copy(
+                nextAttackCycle = cycleNow + nextDelay,
+                lastInRangeConfirmationCycle = cycleNow,
+                autoFollowEnabled = true,
+                lastFollowTargetX = target.position.x,
+                lastFollowTargetY = target.position.y,
+            )
+    }
+
+    @JvmStatic
+    fun cancel(
+        player: Client,
+        reason: CombatCancellationReason,
+    ) {
+        player.combatCancellationReason = reason
+        player.walkToTask = null
+        player.resetWalkingQueue()
+        player.resetAttack()
+    }
+
+    private fun hasActiveCombat(player: Client): Boolean =
+        player.target != null || player.attackingNpc || player.attackingPlayer || player.combatTargetState != null
+
+    private fun createCompatibilityState(
+        player: Client,
+        target: Entity,
+        cycleNow: Long,
+    ): CombatTargetState {
+        val intent =
+            when {
+                target is Npc && player.getAttackStyle() == 2 -> CombatIntent.MAGIC_ON_NPC
+                target is Player && player.getAttackStyle() == 2 -> CombatIntent.MAGIC_ON_PLAYER
+                target is Npc -> CombatIntent.ATTACK_NPC
+                else -> CombatIntent.ATTACK_PLAYER
+            }
+        return CombatTargetState(
+            intent = intent,
+            targetType = target.type,
+            targetSlot = target.slot,
+            startedCycle = cycleNow,
+            lastInRangeConfirmationCycle = cycleNow,
+            attackStyleAtStart = player.getAttackStyle(),
+            initialSwingConsumed = false,
+            nextAttackCycle = cycleNow,
+            autoFollowEnabled = true,
+            lastFollowCycle = 0L,
+            lastFollowTargetX = target.position.x,
+            lastFollowTargetY = target.position.y,
+        ).also {
+            player.combatTargetState = it
+        }
+    }
+
+    private fun isValidTarget(target: Entity): Boolean =
+        when (target) {
+            is Client -> !target.disconnected && target.currentHealth > 0 && target.deathStage == 0
+            is Npc -> target.alive && target.currentHealth > 0
+            else -> false
+        }
+
+    private fun followTarget(
+        player: Client,
+        target: Entity,
+        state: CombatTargetState,
+        cycleNow: Long,
+    ) {
+        val refreshed =
+            state.lastFollowCycle != cycleNow &&
+                (state.lastFollowTargetX != target.position.x ||
+                    state.lastFollowTargetY != target.position.y ||
+                    player.walkToTask == null)
+
+        if (!state.autoFollowEnabled) {
+            cancel(player, CombatCancellationReason.OUT_OF_RANGE)
+            return
+        }
+
+        if (refreshed) {
+            player.AddToRunCords(target.position.x, target.position.y, 0)
+            player.walkToTask =
+                WalkToTask(
+                    if (target is Npc) WalkToTask.Action.ATTACK_NPC else WalkToTask.Action.ATTACK_PLAYER,
+                    target.slot,
+                    target.position,
+                )
+        }
+        if (target is Npc) {
+            player.faceNpc(target.slot)
+        } else {
+            player.facePlayer(target.slot)
+        }
+        player.combatTargetState =
+            state.copy(
+                lastFollowCycle = cycleNow,
+                lastFollowTargetX = target.position.x,
+                lastFollowTargetY = target.position.y,
+            )
+    }
+}

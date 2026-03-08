@@ -34,7 +34,9 @@ import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
@@ -966,6 +968,34 @@ public abstract class Player extends Entity {
         interactionState.cancelActiveAction();
     }
 
+    public void clearActiveActionState() {
+        interactionState.clearActiveActionState();
+    }
+
+    public PlayerActionCancelReason getActiveActionCancelReason() {
+        return interactionState.getActiveActionCancelReason();
+    }
+
+    public void setActiveActionCancelReason(PlayerActionCancelReason activeActionCancelReason) {
+        interactionState.setActiveActionCancelReason(activeActionCancelReason);
+    }
+
+    public PlayerActionCancelReason getLastActionCancelReason() {
+        return interactionState.getLastActionCancelReason();
+    }
+
+    public void setLastActionCancelReason(PlayerActionCancelReason lastActionCancelReason) {
+        interactionState.setLastActionCancelReason(lastActionCancelReason);
+    }
+
+    public long getLastActionCancelCycle() {
+        return interactionState.getLastActionCancelCycle();
+    }
+
+    public void setLastActionCancelCycle(long lastActionCancelCycle) {
+        interactionState.setLastActionCancelCycle(lastActionCancelCycle);
+    }
+
     public CombatTargetState getCombatTargetState() {
         return interactionState.getCombatTargetState();
     }
@@ -976,6 +1006,26 @@ public abstract class Player extends Entity {
 
     public void clearCombatTargetState() {
         interactionState.clearCombatTargetState();
+    }
+
+    public CombatCancellationReason getCombatCancellationReason() {
+        return interactionState.getCombatCancellationReason();
+    }
+
+    public void setCombatCancellationReason(CombatCancellationReason combatCancellationReason) {
+        interactionState.setCombatCancellationReason(combatCancellationReason);
+    }
+
+    public void clearCombatCancellationReason() {
+        interactionState.clearCombatCancellationReason();
+    }
+
+    public long getLastBlockAnimationCycle() {
+        return interactionState.getLastBlockAnimationCycle();
+    }
+
+    public void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
+        interactionState.setLastBlockAnimationCycle(lastBlockAnimationCycle);
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {

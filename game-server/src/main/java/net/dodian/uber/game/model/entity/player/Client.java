@@ -38,8 +38,11 @@ import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.action.SmithingActionService;
 import net.dodian.uber.game.runtime.action.TeleportActionService;
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
 import net.dodian.uber.game.runtime.combat.CombatStartService;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
@@ -523,7 +526,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void rerequestAnim() {
-        requestAnim(-1, 0);
+        PlayerAnimationService.requestResetClear(this);
     }
 
     public void sendFrame200(int MainFrame, int SubFrame) {
@@ -938,6 +941,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         isLoggingOut = true;
+        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.LOGOUT, false, false, false, true);
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
@@ -2087,29 +2091,9 @@ public class Client extends Player implements Runnable {
         if (disconnected || isLoggingOut) {
             return;
         }
-        int startingHealth = getCurrentHealth();
-        int startingPrayer = getCurrentPrayer();
-        int startingX = getPosition().getX();
-        int startingY = getPosition().getY();
-        int startingZ = getPosition().getZ();
         long now = System.currentTimeMillis();
         PlayerLifecycleTickService.processBeforeCombat(this, now);
-        // Attacking in wilderness
-        if (attackingPlayer && deathStage == 0) {
-            attackTarget(this);
-        }
-        // Attacking an NPC
-        else if (attackingNpc && deathStage == 0) {
-            attackTarget(this);
-        }
         PlayerLifecycleTickService.processAfterCombat(this, now);
-
-        if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
-            markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
-        }
-        if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
-            markSaveDirty(PlayerSaveSegment.POSITION.getMask());
-        }
         // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
         // and always on final save/logout.
         if (!effects.isEmpty()) {
@@ -4796,42 +4780,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetAction(boolean full) {
-        cancelActiveAction();
-        MiningService.stopMiningFromReset(this, full);
-        WoodcuttingService.stopWoodcuttingFromReset(this, full);
-        smelting = false;
-        smelt_id = -1;
-        goldCrafting = false;
-        goldIndex = -1;
-        goldSlot = -1;
-        boneItem = -1;
-        shafting = false;
-        fletchings = false;
-        spinning = false;
-        crafting = false;
-        fishing = false;
-        stringing = false;
-        resourcesGathered = 0;
-        cooking = false;
-        filling = false;
-        // smithing check
-        if (IsAnvil) {
-            resetSM();
-            send(new RemoveInterfaces());
-        }
-        /* I send shiez for single skill Action */
-        skillActionTimer = -1;
-        skillActionCount = 0;
-        skillMessage = "";
-        if (!playerSkillAction.isEmpty()) playerSkillAction.clear(); //Need to clear if you reset any type of action!
-        /* Prayer action */
-        prayerAction = -1;
-        boneItem = -1;
-        /* dialogue! */
-        NpcWanneTalk = 0;
-        nextDiag = -1;
-        /* Animation shiez?! */
-        if (full) rerequestAnim();
+        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.MANUAL_RESET, full, false, false, true);
     }
 
     public void resetAction() {

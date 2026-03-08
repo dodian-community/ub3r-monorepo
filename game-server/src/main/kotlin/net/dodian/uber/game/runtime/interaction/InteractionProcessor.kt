@@ -17,6 +17,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
 import net.dodian.uber.game.runtime.combat.CombatIntent
 import net.dodian.uber.game.runtime.combat.CombatStartService
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.uber.game.runtime.interaction.scheduler.InteractionExecutionResult
 import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
@@ -170,7 +172,7 @@ object InteractionProcessor {
             val playerPos = player.position.copy()
             val xDiff = kotlin.math.abs(playerPos.x - targetPosition.x)
             val yDiff = kotlin.math.abs(playerPos.y - targetPosition.y)
-            player.resetAction(false)
+            PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.OBJECT_INTERACTION, false, false, false, true)
             player.setFocus(targetPosition.x, targetPosition.y)
             if (xDiff > 5 || yDiff > 5) {
                 clear(player)
@@ -433,7 +435,7 @@ object InteractionProcessor {
             player.send(SendMessage("That monster has been killed!"))
             return DispatchTiming(false, 0L, 0L, null)
         }
-        player.resetAction()
+        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
@@ -446,7 +448,7 @@ object InteractionProcessor {
             player.send(SendMessage("That monster has been killed!"))
             return DispatchTiming(false, 0L, 0L, null)
         }
-        player.resetAction()
+        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
@@ -458,7 +460,7 @@ object InteractionProcessor {
         if (player.isBusy) {
             return DispatchTiming(false, 0L, 0L, null)
         }
-        player.resetAction()
+        PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)

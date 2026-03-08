@@ -83,6 +83,7 @@ object CombatStartService {
         val cycle = GameCycleClock.currentCycle()
         val current = client.combatTargetState
         val style = client.getAttackStyle()
+        client.clearCombatCancellationReason()
 
         if (current != null &&
             current.targetType == target.type &&
@@ -91,11 +92,20 @@ object CombatStartService {
             current.startedCycle == cycle
         ) {
             client.resetWalkingQueue()
-            client.combatTargetState = current.copy(lastInRangeConfirmationCycle = cycle)
+            client.combatTargetState =
+                current.copy(
+                    lastInRangeConfirmationCycle = cycle,
+                    nextAttackCycle = cycle,
+                    autoFollowEnabled = true,
+                    lastFollowCycle = cycle,
+                    lastFollowTargetX = target.position.x,
+                    lastFollowTargetY = target.position.y,
+                )
             return true
         }
 
         client.resetWalkingQueue()
+        client.walkToTask = null
         client.startAttack(target)
         client.combatTargetState =
             CombatTargetState(
@@ -106,6 +116,11 @@ object CombatStartService {
                 lastInRangeConfirmationCycle = cycle,
                 attackStyleAtStart = style,
                 initialSwingConsumed = false,
+                nextAttackCycle = cycle,
+                autoFollowEnabled = true,
+                lastFollowCycle = cycle,
+                lastFollowTargetX = target.position.x,
+                lastFollowTargetY = target.position.y,
             )
         return true
     }

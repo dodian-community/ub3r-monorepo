@@ -8,9 +8,12 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.runtime.loop.GameCycleClock
-import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
-import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
-import net.dodian.uber.game.runtime.tasking.TaskPriority
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionController
+import net.dodian.uber.game.runtime.action.PlayerActionInterruptPolicy
+import net.dodian.uber.game.runtime.action.PlayerActionStopResult
+import net.dodian.uber.game.runtime.action.PlayerActionType
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Misc
 
@@ -48,7 +51,7 @@ object MiningService {
 
     @JvmStatic
     fun startMining(client: Client, rock: MiningRockDef, position: Position): Boolean {
-        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = false)
+        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT)
 
         if (client.fletchings || client.isFiremaking || client.shafting) {
             client.resetAction()
@@ -79,29 +82,40 @@ object MiningService {
             )
         client.requestAnim(pickaxe.animationId, 0)
         client.send(SendMessage("You swing your pick at the rock..."))
-
-        val handle =
-            GameTaskRuntime.queuePlayer(client, TaskPriority.WEAK) {
-                while (true) {
-                    if (!advanceMining(client)) {
-                        return@queuePlayer
-                    }
-                    wait(1)
-                }
-            }
-        client.miningTaskHandle = QueueTaskHandle.from(handle)
         GameEventBus.post(MiningStartedEvent(client, rock, position.copy(), pickaxe))
+        PlayerActionController.start(
+            player = client,
+            type = PlayerActionType.MINING,
+            interruptPolicy = PlayerActionInterruptPolicy(cancelOnMovement = true),
+            onStop = { player, result ->
+                stopMiningInternal(player, mapStopReason(result))
+            },
+        ) {
+            while (true) {
+                cancellationReason()?.let { return@start }
+                if (!advanceMining(player)) {
+                    return@start
+                }
+                wait(1)
+            }
+        }
         return true
     }
 
     @JvmStatic
     fun stopMining(client: Client, fullReset: Boolean) {
-        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = fullReset)
+        PlayerActionCancellationService.cancel(
+            player = client,
+            reason = PlayerActionCancelReason.MANUAL_RESET,
+            fullResetAnimation = fullReset,
+            resetLegacyState = false,
+        )
+        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT)
     }
 
     @JvmStatic
     fun stopMiningFromReset(client: Client, fullReset: Boolean) {
-        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = fullReset)
+        stopMiningInternal(client, MiningStopReason.USER_INTERRUPT)
     }
 
     @JvmStatic
@@ -143,17 +157,17 @@ object MiningService {
     fun performMiningCycle(client: Client): Boolean {
         val state = client.miningState ?: return false
         val rock = MiningData.rockByObjectId[state.rockObjectId]
-            ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK, invokeResetAction = false, fullReset = false)
+            ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
         val pickaxe =
             resolveBestPickaxe(client)
                 ?: run {
                     client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
-                    return stopMiningInternal(client, MiningStopReason.NO_PICKAXE, invokeResetAction = true, fullReset = true)
+                    return stopMiningInternal(client, MiningStopReason.NO_PICKAXE)
                 }
 
         if (!client.playerHasItem(-1)) {
             client.send(SendMessage("Your inventory is full!"))
-            return stopMiningInternal(client, MiningStopReason.FULL_INVENTORY, invokeResetAction = true, fullReset = true)
+            return stopMiningInternal(client, MiningStopReason.FULL_INVENTORY)
         }
 
         if (rock.oreItemId != 1436) {
@@ -180,7 +194,7 @@ object MiningService {
 
         if (updatedState.resourcesGathered >= rock.restThreshold && Misc.chance(20) == 1) {
             client.send(SendMessage("You take a rest after gathering ${updatedState.resourcesGathered} resources."))
-            return stopMiningInternal(client, MiningStopReason.RESTED, invokeResetAction = true, fullReset = true)
+            return stopMiningInternal(client, MiningStopReason.RESTED)
         }
 
         client.requestAnim(pickaxe.animationId, 0)
@@ -194,7 +208,7 @@ object MiningService {
             resolveBestPickaxe(client)
                 ?: run {
                     client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
-                    return stopMiningInternal(client, MiningStopReason.NO_PICKAXE, invokeResetAction = true, fullReset = true)
+                    return stopMiningInternal(client, MiningStopReason.NO_PICKAXE)
                 }
 
         client.requestAnim(pickaxe.animationId, 0)
@@ -239,21 +253,18 @@ object MiningService {
     private fun advanceMining(client: Client): Boolean {
         val state = client.miningState ?: return false
         MiningData.rockByObjectId[state.rockObjectId]
-            ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK, invokeResetAction = false, fullReset = false)
+            ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
 
-        if (client.disconnected || !client.isActive) {
-            return stopMiningInternal(client, MiningStopReason.DISCONNECTED, invokeResetAction = false, fullReset = false)
-        }
         if (client.isBusy) {
-            return stopMiningInternal(client, MiningStopReason.BUSY, invokeResetAction = true, fullReset = true)
+            return stopMiningInternal(client, MiningStopReason.BUSY)
         }
         if (!isNearRock(client, state.rockPosition)) {
-            return stopMiningInternal(client, MiningStopReason.MOVED_AWAY, invokeResetAction = false, fullReset = false)
+            return stopMiningInternal(client, MiningStopReason.MOVED_AWAY)
         }
 
         if (resolveBestPickaxe(client) == null) {
             client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
-            return stopMiningInternal(client, MiningStopReason.NO_PICKAXE, invokeResetAction = true, fullReset = true)
+            return stopMiningInternal(client, MiningStopReason.NO_PICKAXE)
         }
 
         val cycle = GameCycleClock.currentCycle()
@@ -269,25 +280,30 @@ object MiningService {
     private fun stopMiningInternal(
         client: Client,
         reason: MiningStopReason,
-        invokeResetAction: Boolean,
-        fullReset: Boolean,
     ): Boolean {
         val state = client.miningState
         val rock = state?.let { MiningData.rockByObjectId[it.rockObjectId] }
         val position = state?.rockPosition?.copy()
-        val hadMining = state != null || client.miningTaskHandle != null
+        val hadMining = state != null || client.activeActionType == PlayerActionType.MINING
 
-        client.cancelMiningTask()
         client.clearMiningState()
 
         if (hadMining) {
             GameEventBus.post(MiningStoppedEvent(client, rock, position, reason))
         }
-        if (invokeResetAction) {
-            client.resetAction(fullReset)
-        }
         return false
     }
+
+    private fun mapStopReason(result: PlayerActionStopResult): MiningStopReason =
+        when (result) {
+            PlayerActionStopResult.Completed -> MiningStopReason.USER_INTERRUPT
+            is PlayerActionStopResult.Cancelled ->
+                when (result.reason) {
+                    PlayerActionCancelReason.DISCONNECTED -> MiningStopReason.DISCONNECTED
+                    PlayerActionCancelReason.MOVEMENT -> MiningStopReason.MOVED_AWAY
+                    else -> MiningStopReason.USER_INTERRUPT
+                }
+        }
 
     private fun isNearRock(client: Client, rockPosition: Position): Boolean {
         if (client.position.z != rockPosition.z) {

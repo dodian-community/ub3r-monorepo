@@ -385,6 +385,7 @@ class WorldSynchronizationService {
         val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
         val trackActivityStamps = syncSkipEmptyPlayerPacketEnabled
         val chunkStamp = if (trackActivityStamps) SynchronizationContext.getPlayerChunkActivityStamp(player) else 0L
+        val localActivityStamp = if (trackActivityStamps) SynchronizationContext.getPlayerLocalActivityStamp(player) else 0L
         val membershipRevision = if (trackActivityStamps) player.localPlayerMembershipRevision else 0L
         state.lastPlayerSyncTick = tick
         state.lastSelfMovementRevision = playerRevisionIndex.movementRevision(player)
@@ -396,6 +397,7 @@ class WorldSynchronizationService {
         state.lastKnownPlane = player.position.z
         state.lastKnownTeleportState = player.didTeleport()
         state.lastChunkActivityStamp = chunkStamp
+        state.lastLocalActivityStamp = localActivityStamp
         state.lastLocalMembershipRevision = membershipRevision
     }
 

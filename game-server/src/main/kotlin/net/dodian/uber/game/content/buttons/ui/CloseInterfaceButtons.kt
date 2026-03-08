@@ -3,6 +3,8 @@ package net.dodian.uber.game.content.buttons.ui
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 
 object CloseInterfaceButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -18,6 +20,12 @@ object CloseInterfaceButtons : ButtonContent {
         val wasItemListPreview = client.bankStyleViewOpen
         val wasPartyInterface = client.isPartyInterface
         val wasShopping = client.isShopping
+        PlayerActionCancellationService.cancel(
+            player = client,
+            reason = PlayerActionCancelReason.INTERFACE_CLOSED,
+            fullResetAnimation = false,
+            resetLegacyState = true,
+        )
         client.send(RemoveInterfaces())
         if (client.NpcDialogue == 1001) {
             client.clearWalkableInterface()

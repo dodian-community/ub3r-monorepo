@@ -2,6 +2,8 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
@@ -20,7 +22,12 @@ final class PlayerInteractionState {
     private volatile QueueTaskHandle activeActionHandle;
     private volatile PlayerActionType activeActionType;
     private volatile long actionStartedCycle = 0L;
+    private volatile PlayerActionCancelReason activeActionCancelReason;
+    private volatile PlayerActionCancelReason lastActionCancelReason;
+    private volatile long lastActionCancelCycle = 0L;
     private volatile CombatTargetState combatTargetState;
+    private volatile CombatCancellationReason combatCancellationReason;
+    private volatile long lastBlockAnimationCycle = -1L;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
@@ -163,12 +170,40 @@ final class PlayerInteractionState {
 
     void cancelActiveAction() {
         QueueTaskHandle handle = activeActionHandle;
-        activeActionHandle = null;
-        activeActionType = null;
-        actionStartedCycle = 0L;
         if (handle != null) {
             handle.cancel();
         }
+    }
+
+    void clearActiveActionState() {
+        activeActionHandle = null;
+        activeActionType = null;
+        actionStartedCycle = 0L;
+        activeActionCancelReason = null;
+    }
+
+    PlayerActionCancelReason getActiveActionCancelReason() {
+        return activeActionCancelReason;
+    }
+
+    void setActiveActionCancelReason(PlayerActionCancelReason activeActionCancelReason) {
+        this.activeActionCancelReason = activeActionCancelReason;
+    }
+
+    PlayerActionCancelReason getLastActionCancelReason() {
+        return lastActionCancelReason;
+    }
+
+    void setLastActionCancelReason(PlayerActionCancelReason lastActionCancelReason) {
+        this.lastActionCancelReason = lastActionCancelReason;
+    }
+
+    long getLastActionCancelCycle() {
+        return lastActionCancelCycle;
+    }
+
+    void setLastActionCancelCycle(long lastActionCancelCycle) {
+        this.lastActionCancelCycle = lastActionCancelCycle;
     }
 
     CombatTargetState getCombatTargetState() {
@@ -183,6 +218,26 @@ final class PlayerInteractionState {
         combatTargetState = null;
     }
 
+    CombatCancellationReason getCombatCancellationReason() {
+        return combatCancellationReason;
+    }
+
+    void setCombatCancellationReason(CombatCancellationReason combatCancellationReason) {
+        this.combatCancellationReason = combatCancellationReason;
+    }
+
+    void clearCombatCancellationReason() {
+        combatCancellationReason = null;
+    }
+
+    long getLastBlockAnimationCycle() {
+        return lastBlockAnimationCycle;
+    }
+
+    void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
+        this.lastBlockAnimationCycle = lastBlockAnimationCycle;
+    }
+
     GameTaskSet<?> getPlayerTaskSet() {
         return playerTaskSet;
     }
@@ -193,6 +248,7 @@ final class PlayerInteractionState {
 
     void terminatePlayerTasks() {
         cancelActiveAction();
+        clearActiveActionState();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;

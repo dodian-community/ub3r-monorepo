@@ -4,6 +4,8 @@ import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import java.util.ArrayDeque
 import java.util.Collections
 import java.util.WeakHashMap
@@ -29,6 +31,12 @@ object DialogueService {
 
     @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
+        PlayerActionCancellationService.cancel(
+            player = client,
+            reason = PlayerActionCancelReason.DIALOGUE_OPENED,
+            fullResetAnimation = false,
+            resetLegacyState = true,
+        )
         clear(client, closeInterfaces = false)
         clearLegacyDialogueState(client)
 

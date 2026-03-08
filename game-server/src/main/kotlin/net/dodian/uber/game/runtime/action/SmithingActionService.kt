@@ -16,7 +16,7 @@ object SmithingActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SMITHING,
-            onStop = { stop(it) },
+            onStop = { player, _ -> stop(player) },
         ) {
             if (resolveSpec(player) == null) {
                 return@start

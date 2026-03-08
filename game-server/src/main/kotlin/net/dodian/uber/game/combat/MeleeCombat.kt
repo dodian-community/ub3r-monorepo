@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
@@ -224,7 +225,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
     val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
     val chance = Range(1, 8).value
     if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
-        sendAnimation(emote)
+        PlayerAnimationService.requestAttack(this, emote)
     } else if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         when (equipment[Equipment.Slot.WEAPON.id]) {
@@ -232,7 +233,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
                 callGfxMask(252, 100)
-                sendAnimation(1062)
+                PlayerAnimationService.requestAttack(this, 1062)
                 /* Damage portion! */
                 if(hit >= npc.currentHealth) hit = npc.currentHealth
                     npc.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
@@ -240,7 +241,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                     npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
                 return true
             }
-            else -> sendAnimation(emote)
+            else -> PlayerAnimationService.requestAttack(this, emote)
         }
     } else if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)
@@ -249,7 +250,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
                 callGfxMask(252, 100)
-                sendAnimation(1062)
+                PlayerAnimationService.requestAttack(this, 1062)
                 /* Damage portion! */
                 if(hit >= player.currentHealth) hit = player.currentHealth
                     player.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
@@ -257,7 +258,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                     player.dealDamage(this, hit2, Entity.hitType.STANDARD)
                 return true
             }
-            else ->  sendAnimation(emote)
+            else ->  PlayerAnimationService.requestAttack(this, emote)
         }
     }
     return false

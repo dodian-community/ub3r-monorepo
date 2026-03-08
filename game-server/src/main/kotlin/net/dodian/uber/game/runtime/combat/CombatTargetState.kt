@@ -10,4 +10,9 @@ data class CombatTargetState(
     val lastInRangeConfirmationCycle: Long,
     val attackStyleAtStart: Int,
     val initialSwingConsumed: Boolean,
+    val nextAttackCycle: Long,
+    val autoFollowEnabled: Boolean,
+    val lastFollowCycle: Long,
+    val lastFollowTargetX: Int,
+    val lastFollowTargetY: Int,
 )

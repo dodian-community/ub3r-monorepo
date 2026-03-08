@@ -10,6 +10,9 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameCycleClock
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.runtime.combat.CombatCancellationReason
 import net.dodian.utilities.Misc
 
 object PlayerDeathTickService {
@@ -31,6 +34,13 @@ object PlayerDeathTickService {
     }
 
     private fun beginDeath(player: Client, wallClockNow: Long) {
+        PlayerActionCancellationService.cancel(
+            player = player,
+            reason = PlayerActionCancelReason.DEATH,
+            fullResetAnimation = false,
+            resetLegacyState = true,
+        )
+        player.combatCancellationReason = CombatCancellationReason.DEATH
         player.resetAttack()
         if (player.target is Npc) {
             val npc = Server.npcManager.getNpc(player.target.slot)

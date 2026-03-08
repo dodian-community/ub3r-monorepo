@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
@@ -49,7 +50,7 @@ fun Client.handleMagicAttack(): Int {
     setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
     checkItemUpdate()
-    sendAnimation(1979)
+    PlayerAnimationService.requestAttack(this, 1979)
     var maxHit = baseDamage[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)

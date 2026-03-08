@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
@@ -54,15 +55,15 @@ fun Client.handleRangedAttack(): Int {
         if(target is Npc) {
             val offsetX = (position.y - target.position.y) * 1
             val offsetY = (position.x - target.position.x) * 1
-            requestAnim(-1, 0)
-            sendAnimation(emote)
+            PlayerAnimationService.requestResetClear(this)
+            PlayerAnimationService.requestAttack(this, emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, target.slot + 1, 51, 16)
         } else {
             val offsetX = (position.y - target.position.y) * -1
             val offsetY = (position.x - target.position.x) * -1
-            requestAnim(-1, 0)
-            sendAnimation(emote)
+            PlayerAnimationService.requestResetClear(this)
+            PlayerAnimationService.requestAttack(this, emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
         }

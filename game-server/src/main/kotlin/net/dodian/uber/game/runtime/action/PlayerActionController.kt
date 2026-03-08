@@ -5,29 +5,42 @@ import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
 import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
 import net.dodian.uber.game.runtime.tasking.TaskPriority
+import java.util.concurrent.atomic.AtomicBoolean
 
 object PlayerActionController {
     @JvmStatic
     fun start(
         player: Client,
         type: PlayerActionType,
+        replaceReason: PlayerActionCancelReason = PlayerActionCancelReason.NEW_ACTION,
         interruptPolicy: PlayerActionInterruptPolicy = PlayerActionInterruptPolicy.DEFAULT,
-        onStop: (Client) -> Unit = {},
+        onStop: (Client, PlayerActionStopResult) -> Unit = { _, _ -> },
         block: suspend PlayerActionContext.() -> Unit,
     ): QueueTaskHandle {
-        cancel(player)
+        cancel(player, replaceReason)
         val startedCycle = GameCycleClock.currentCycle()
+        player.activeActionCancelReason = null
+        val resolved = AtomicBoolean(false)
+        fun resolve(result: PlayerActionStopResult) {
+            if (!resolved.compareAndSet(false, true)) {
+                return
+            }
+            if (result is PlayerActionStopResult.Cancelled) {
+                player.lastActionCancelReason = result.reason
+                player.lastActionCancelCycle = GameCycleClock.currentCycle()
+            }
+            onStop(player, result)
+            clearIfOwned(player, startedCycle)
+        }
         val handle =
             GameTaskRuntime.queuePlayer(player, TaskPriority.STRONG) {
                 onTerminate {
-                    onStop(player)
-                    clearIfOwned(player, startedCycle)
+                    resolve(stopResult(player, startedCycle))
                 }
                 try {
                     PlayerActionContext(player, this, interruptPolicy).block()
                 } finally {
-                    onStop(player)
-                    clearIfOwned(player, startedCycle)
+                    resolve(stopResult(player, startedCycle))
                 }
             }
         val queueHandle = QueueTaskHandle.from(handle)
@@ -38,7 +51,11 @@ object PlayerActionController {
     }
 
     @JvmStatic
-    fun cancel(player: Client) {
+    fun cancel(player: Client, reason: PlayerActionCancelReason = PlayerActionCancelReason.MANUAL_RESET) {
+        if (player.activeActionHandle == null) {
+            return
+        }
+        player.activeActionCancelReason = reason
         player.cancelActiveAction()
     }
 
@@ -54,14 +71,21 @@ object PlayerActionController {
 
     @JvmStatic
     fun clear(player: Client) {
-        player.activeActionHandle = null
-        player.activeActionType = null
-        player.actionStartedCycle = 0L
+        player.clearActiveActionState()
     }
 
     private fun clearIfOwned(player: Client, startedCycle: Long) {
         if (player.actionStartedCycle == startedCycle) {
             clear(player)
+        }
+    }
+
+    private fun stopResult(player: Client, startedCycle: Long): PlayerActionStopResult {
+        val cancelled = player.actionStartedCycle == startedCycle && player.activeActionCancelReason != null
+        return if (cancelled) {
+            PlayerActionStopResult.Cancelled(player.activeActionCancelReason!!)
+        } else {
+            PlayerActionStopResult.Completed
         }
     }
 }

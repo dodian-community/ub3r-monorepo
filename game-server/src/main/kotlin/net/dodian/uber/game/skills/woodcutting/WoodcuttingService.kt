@@ -6,15 +6,21 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.skilling.SkillingActionCycleEvent
+import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
+import net.dodian.uber.game.event.events.skilling.SkillingActionStoppedEvent
+import net.dodian.uber.game.event.events.skilling.SkillingActionSucceededEvent
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionController
+import net.dodian.uber.game.runtime.action.PlayerActionInterruptPolicy
+import net.dodian.uber.game.runtime.action.PlayerActionStopResult
+import net.dodian.uber.game.runtime.action.PlayerActionType
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.skills.core.ActionStopReason
-import net.dodian.uber.game.skills.core.GatheringTask
-import net.dodian.uber.game.skills.core.HasInventorySpaceRequirement
-import net.dodian.uber.game.skills.core.HasLevelRequirement
-import net.dodian.uber.game.skills.core.Requirement
-import net.dodian.uber.game.skills.core.ToolRequirement
 import net.dodian.utilities.Misc
 
 object WoodcuttingService {
@@ -31,7 +37,7 @@ object WoodcuttingService {
         obj: GameObjectData?,
     ): Boolean {
         val tree = WoodcuttingData.treeByObjectId[objectId] ?: return false
-        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = false)
+        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT)
 
         if (client.fletchings || client.isFiremaking || client.shafting) {
             client.resetAction()
@@ -43,131 +49,65 @@ object WoodcuttingService {
             client.resetAction()
             return true
         }
-
-        val requirements =
-            listOf<Requirement>(
-                HasLevelRequirement(Skill.WOODCUTTING, tree.requiredLevel, "You need a woodcutting level of ${tree.requiredLevel} to cut this tree."),
-                HasInventorySpaceRequirement(1, "You got full inventory!"),
-                ToolRequirement(
-                    skill = Skill.WOODCUTTING,
-                    toolIdsByTier = WoodcuttingData.axesDescending.map { it.itemId },
-                    requiredLevelByTool = WoodcuttingData.axesDescending.associate { it.itemId to it.requiredLevel },
-                    missingToolMessage = "You need an axe in which you got the required woodcutting level for.",
-                ),
-            )
+        if (client.getLevel(Skill.WOODCUTTING) < tree.requiredLevel) {
+            client.send(SendMessage("You need a woodcutting level of ${tree.requiredLevel} to cut this tree."))
+            return true
+        }
+        if (!client.playerHasItem(-1)) {
+            client.send(SendMessage("You got full inventory!"))
+            return true
+        }
         if (!isWithinTreeBoundaryDistance(client, objectId, position, obj)) {
             client.send(SendMessage("You moved too far away from the tree."))
             return true
         }
-
-        val task =
-            object : GatheringTask(
-                actionName = "Woodcutting",
-                client = client,
-                cycleDelayTicks = 1,
-                requirements = requirements,
-            ) {
-                override fun onStart() {
-                    val startedCycle = GameCycleClock.currentCycle()
-                    client.woodcuttingState =
-                        WoodcuttingState(
-                            treeObjectId = objectId,
-                            treePosition = position.copy(),
-                            objectData = obj,
-                            startedCycle = startedCycle,
-                            nextSwingAnimationCycle = startedCycle + GameCycleClock.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
-                            nextResourceCycle = startedCycle + computeInitialWoodcuttingDelayTicks(client, tree, axe),
-                            resourcesGathered = 0,
-                        )
-                    client.requestAnim(axe.animationId, 0)
-                    client.send(SendMessage("You swing your axe at the tree..."))
+        val startedCycle = GameCycleClock.currentCycle()
+        client.woodcuttingState =
+            WoodcuttingState(
+                treeObjectId = objectId,
+                treePosition = position.copy(),
+                objectData = obj,
+                startedCycle = startedCycle,
+                nextSwingAnimationCycle = startedCycle + GameCycleClock.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
+                nextResourceCycle = startedCycle + computeInitialWoodcuttingDelayTicks(client, tree, axe),
+                resourcesGathered = 0,
+            )
+        client.requestAnim(axe.animationId, 0)
+        client.send(SendMessage("You swing your axe at the tree..."))
+        GameEventBus.post(SkillingActionStartedEvent(client, "Woodcutting"))
+        PlayerActionController.start(
+            player = client,
+            type = PlayerActionType.WOODCUTTING,
+            interruptPolicy = PlayerActionInterruptPolicy(cancelOnMovement = true),
+            onStop = { player, result ->
+                stopWoodcuttingInternal(player, mapStopReason(result))
+            },
+        ) {
+            while (true) {
+                cancellationReason()?.let { return@start }
+                if (!advanceWoodcutting(player)) {
+                    return@start
                 }
-
-                override fun onTick(): Boolean {
-                    val state = client.woodcuttingState
-                        ?: run {
-                            stop(ActionStopReason.INVALID_TARGET)
-                            return false
-                        }
-                    val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId]
-                        ?: run {
-                            stop(ActionStopReason.INVALID_TARGET)
-                            return false
-                        }
-                    if (client.isBusy) {
-                        stop(ActionStopReason.BUSY)
-                        return false
-                    }
-                    if (!isWithinTreeBoundaryDistance(client, state.treeObjectId, state.treePosition, state.objectData)) {
-                        client.send(SendMessage("You moved too far away from the tree."))
-                        stop(ActionStopReason.MOVED_AWAY)
-                        return false
-                    }
-
-                    val activeAxe = resolveBestAxe(client)
-                    if (activeAxe == null) {
-                        client.send(SendMessage("You need an axe in which you got the required woodcutting level for."))
-                        stop(ActionStopReason.MISSING_TOOL)
-                        return false
-                    }
-
-                    val cycle = GameCycleClock.currentCycle()
-                    if (cycle >= state.nextSwingAnimationCycle) {
-                        client.requestAnim(activeAxe.animationId, 0)
-                        client.woodcuttingState =
-                            state.copy(nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
-                    }
-
-                    if (cycle >= state.nextResourceCycle) {
-                        if (!client.playerHasItem(-1)) {
-                            client.send(SendMessage("Your inventory is full!"))
-                            stop(ActionStopReason.FULL_INVENTORY)
-                            return false
-                        }
-
-                        client.send(SendMessage("You cut some ${client.GetItemName(activeTree.logItemId).lowercase()}"))
-                        client.addItem(activeTree.logItemId, 1)
-                        client.checkItemUpdate()
-                        ItemLog.playerGathering(client, activeTree.logItemId, 1, client.position.copy(), "Woodcutting")
-                        client.giveExperience(activeTree.experience, Skill.WOODCUTTING)
-                        client.triggerRandom(activeTree.experience)
-                        client.requestAnim(activeAxe.animationId, 0)
-
-                        val gathered = state.resourcesGathered + 1
-                        client.woodcuttingState =
-                            state.copy(
-                                resourcesGathered = gathered,
-                                nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
-                                nextResourceCycle = cycle + computeWoodcuttingDelayTicks(client, activeTree, activeAxe),
-                            )
-                        succeedCycle()
-
-                        if (gathered >= 4 && Misc.chance(20) == 1) {
-                            client.send(SendMessage("You take a rest after gathering $gathered resources."))
-                            stop(ActionStopReason.COMPLETED)
-                            return false
-                        }
-                    }
-
-                    return true
-                }
-
-                override fun onStop(reason: ActionStopReason) {
-                    stopWoodcuttingInternal(client, reason, invokeResetAction = reason == ActionStopReason.BUSY || reason == ActionStopReason.FULL_INVENTORY || reason == ActionStopReason.COMPLETED, fullReset = true)
-                }
+                wait(1)
             }
-
-        return task.start(onHandle = { client.woodcuttingTaskHandle = it })
+        }
+        return true
     }
 
     @JvmStatic
     fun stopWoodcutting(client: Client, fullReset: Boolean) {
-        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = fullReset)
+        PlayerActionCancellationService.cancel(
+            player = client,
+            reason = PlayerActionCancelReason.MANUAL_RESET,
+            fullResetAnimation = fullReset,
+            resetLegacyState = false,
+        )
+        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT)
     }
 
     @JvmStatic
     fun stopWoodcuttingFromReset(client: Client, fullReset: Boolean) {
-        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT, invokeResetAction = false, fullReset = fullReset)
+        stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT)
     }
 
     @JvmStatic
@@ -199,15 +139,86 @@ object WoodcuttingService {
     private fun stopWoodcuttingInternal(
         client: Client,
         reason: ActionStopReason,
-        invokeResetAction: Boolean,
-        fullReset: Boolean,
     ) {
-        client.cancelWoodcuttingTask()
+        val hadWoodcutting = client.woodcuttingState != null || client.activeActionType == PlayerActionType.WOODCUTTING
         client.clearWoodcuttingState()
-        if (invokeResetAction) {
-            client.resetAction(fullReset)
+        if (hadWoodcutting) {
+            GameEventBus.post(SkillingActionStoppedEvent(client, "Woodcutting", reason))
         }
     }
+
+    private fun advanceWoodcutting(client: Client): Boolean {
+        val state = client.woodcuttingState ?: return false
+        val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId] ?: return stopWoodcuttingInternal(client, ActionStopReason.INVALID_TARGET).let { false }
+        if (client.isBusy) {
+            return stopWoodcuttingInternal(client, ActionStopReason.BUSY).let { false }
+        }
+        if (!isWithinTreeBoundaryDistance(client, state.treeObjectId, state.treePosition, state.objectData)) {
+            client.send(SendMessage("You moved too far away from the tree."))
+            return stopWoodcuttingInternal(client, ActionStopReason.MOVED_AWAY).let { false }
+        }
+
+        val activeAxe = resolveBestAxe(client)
+        if (activeAxe == null) {
+            client.send(SendMessage("You need an axe in which you got the required woodcutting level for."))
+            return stopWoodcuttingInternal(client, ActionStopReason.MISSING_TOOL).let { false }
+        }
+
+        if (client.getLevel(Skill.WOODCUTTING) < activeTree.requiredLevel) {
+            client.send(SendMessage("You need a woodcutting level of ${activeTree.requiredLevel} to cut this tree."))
+            return stopWoodcuttingInternal(client, ActionStopReason.REQUIREMENT_FAILED).let { false }
+        }
+
+        val cycle = GameCycleClock.currentCycle()
+        if (cycle >= state.nextSwingAnimationCycle) {
+            client.requestAnim(activeAxe.animationId, 0)
+            client.woodcuttingState =
+                state.copy(nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
+        }
+
+        if (cycle >= state.nextResourceCycle) {
+            if (!client.playerHasItem(-1)) {
+                client.send(SendMessage("Your inventory is full!"))
+                return stopWoodcuttingInternal(client, ActionStopReason.FULL_INVENTORY).let { false }
+            }
+
+            client.send(SendMessage("You cut some ${client.GetItemName(activeTree.logItemId).lowercase()}"))
+            client.addItem(activeTree.logItemId, 1)
+            client.checkItemUpdate()
+            ItemLog.playerGathering(client, activeTree.logItemId, 1, client.position.copy(), "Woodcutting")
+            client.giveExperience(activeTree.experience, Skill.WOODCUTTING)
+            client.triggerRandom(activeTree.experience)
+            client.requestAnim(activeAxe.animationId, 0)
+
+            val gathered = state.resourcesGathered + 1
+            client.woodcuttingState =
+                state.copy(
+                    resourcesGathered = gathered,
+                    nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
+                    nextResourceCycle = cycle + computeWoodcuttingDelayTicks(client, activeTree, activeAxe),
+                )
+            GameEventBus.post(SkillingActionCycleEvent(client, "Woodcutting"))
+            GameEventBus.post(SkillingActionSucceededEvent(client, "Woodcutting"))
+
+            if (gathered >= 4 && Misc.chance(20) == 1) {
+                client.send(SendMessage("You take a rest after gathering $gathered resources."))
+                return stopWoodcuttingInternal(client, ActionStopReason.COMPLETED).let { false }
+            }
+        }
+
+        return true
+    }
+
+    private fun mapStopReason(result: PlayerActionStopResult): ActionStopReason =
+        when (result) {
+            PlayerActionStopResult.Completed -> ActionStopReason.USER_INTERRUPT
+            is PlayerActionStopResult.Cancelled ->
+                when (result.reason) {
+                    PlayerActionCancelReason.DISCONNECTED -> ActionStopReason.DISCONNECTED
+                    PlayerActionCancelReason.MOVEMENT -> ActionStopReason.MOVED_AWAY
+                    else -> ActionStopReason.USER_INTERRUPT
+                }
+        }
 
     private fun isWithinTreeBoundaryDistance(
         client: Client,

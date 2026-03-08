@@ -6,12 +6,17 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player.positions
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.utilities.Misc
 
 object PlayerLifecycleTickService {
 
     @JvmStatic
     fun processBeforeCombat(player: Client, wallClockNow: Long) {
+        if (player.disconnected) {
+            PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
+        }
         player.lastCombat = maxOf(player.lastCombat - 1, 0)
         player.combatTimer = maxOf(player.combatTimer - 1, 0)
         player.stunTimer = maxOf(player.stunTimer - 1, 0)

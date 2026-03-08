@@ -13,12 +13,19 @@ object TeleportActionService {
         targetHeight: Int,
         emote: Int,
     ) {
+        PlayerActionCancellationService.cancel(
+            player = client,
+            reason = PlayerActionCancelReason.TELEPORT,
+            fullResetAnimation = false,
+            resetLegacyState = true,
+        )
         client.setTeleportStage(1)
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.TELEPORT,
+            replaceReason = PlayerActionCancelReason.NEW_ACTION,
             interruptPolicy = PlayerActionInterruptPolicy.TELEPORT,
-            onStop = { player ->
+            onStop = { player, _ ->
                 player.setTeleportStage(0)
                 player.UsingAgility = false
             },
