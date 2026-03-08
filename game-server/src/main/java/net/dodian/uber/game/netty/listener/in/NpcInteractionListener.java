@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -63,8 +63,11 @@ public class NpcInteractionListener implements PacketListener {
     }
 
     private void handleNpcClick1(Client client, GamePacket packet) {
-        ByteMessage message = ByteMessage.wrap(packet.payload());
-        int npcIndex = message.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -104,7 +107,10 @@ public class NpcInteractionListener implements PacketListener {
 
     private void handleNpcClick2(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
-        int npcIndex = readSignedWordBigEndianA(payload);
+        if (payload.readableBytes() < 2) {
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.ADD);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -147,7 +153,10 @@ public class NpcInteractionListener implements PacketListener {
 
     private void handleNpcClick3(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
-        int npcIndex = readSignedWord(payload);
+        if (payload.readableBytes() < 2) {
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.BIG, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -188,7 +197,10 @@ public class NpcInteractionListener implements PacketListener {
 
     private void handleNpcClick4(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
-        int npcIndex = readSignedWordBigEndian(payload);
+        if (payload.readableBytes() < 2) {
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -227,7 +239,10 @@ public class NpcInteractionListener implements PacketListener {
 
     private void handleNpcAttack(Client client, GamePacket packet) {
         ByteBuf payload = packet.payload();
-        int npcIndex = readUnsignedWordA(payload);
+        if (payload.readableBytes() < 2) {
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.ADD);
 
         logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.opcode(), npcIndex, client.getPlayerName());
         if (client.magicId >= 0) {
@@ -259,39 +274,4 @@ public class NpcInteractionListener implements PacketListener {
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
-        }
-        return value;
-    }
-
-    private static int readSignedWord(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
-        }
-        return value;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
-        }
-        return value;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
 }

@@ -117,8 +117,8 @@ public final class WalkingListener implements PacketListener {
         int firstStepX = firstStepXAbs - client.mapRegionX * 8;
 
         for (int i = 1; i < client.newWalkCmdSteps; i++) {
-            client.newWalkCmdX[i] = readSignedByte(buf);
-            client.newWalkCmdY[i] = readSignedByte(buf);
+            client.newWalkCmdX[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
+            client.newWalkCmdY[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
             client.tmpNWCX[i] = client.newWalkCmdX[i];
             client.tmpNWCY[i] = client.newWalkCmdY[i];
         }
@@ -129,7 +129,7 @@ public final class WalkingListener implements PacketListener {
             rejectMalformedWalkPacket(client, opcode, size, firstStepXAbs, firstStepYAbs, "first step out of world bounds");
             return;
         }
-        client.newWalkCmdIsRunning = (readSignedByteC(buf) == 1);
+        client.newWalkCmdIsRunning = (ByteBufReader.readSignedByte(buf, ValueType.NEGATE) == 1);
 
         client.newWalkCmdX[0] = client.newWalkCmdY[0] = client.tmpNWCX[0] = client.tmpNWCY[0] = 0;
 
@@ -185,31 +185,6 @@ public final class WalkingListener implements PacketListener {
         if (client.isShopping()) { client.MyShopID = -1; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
 
         // done – movement queue will be processed in Client.process()
-    }
-
-    /* ------------- Helpers replicating Stream methods ------------- */
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low  = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int val  = (high << 8) | low;
-        if (val > 32767) val -= 65536;
-        return val;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low  = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int val  = (high << 8) | low;
-        if (val > 32767) val -= 65536;
-        return val;
-    }
-
-    private static int readSignedByte(ByteBuf buf) {
-        return buf.readByte();
-    }
-
-    private static int readSignedByteC(ByteBuf buf) {
-        return -buf.readByte();
     }
 
     private static void safeRegister(int opcode, WalkingListener handler) {

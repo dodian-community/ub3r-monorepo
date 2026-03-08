@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -33,20 +36,18 @@ public class ItemOnItemListener implements PacketListener {
         PacketListenerManager.register(53, new ItemOnItemListener());
     }
 
-    // Helper to mimic Stream#readUnsignedWordA (high byte, low byte – 128)
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
 
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         int usedWithSlot = buf.readUnsignedShort(); // readUnsignedWord()
-        int itemUsedSlot = readUnsignedWordA(buf);  // readUnsignedWordA()
+        int itemUsedSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         buf.readUnsignedShort();                    // skip unused
         buf.readUnsignedShort();                    // skip unused
 

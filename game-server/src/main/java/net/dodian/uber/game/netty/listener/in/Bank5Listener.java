@@ -3,6 +3,9 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -23,34 +26,22 @@ public class Bank5Listener implements PacketListener {
     static { PacketListenerManager.register(117, new Bank5Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(Bank5Listener.class);
-
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         // Mystic sends (ItemContainerOption2):
         // int interfaceId (putInt)
         // short nodeId (writeSignedBigEndian)
         // short slot   (writeUnsignedWordBigEndian)
-        int interfaceId = buf.readInt();
-        int removeId = readSignedWordBigEndianA(buf);
-        int removeSlot = readSignedWordBigEndian(buf) & 0xFFFF;
+        int interfaceId = ByteBufReader.readInt(buf);
+        int removeId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         int bankSlot = removeSlot;
 
         if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {

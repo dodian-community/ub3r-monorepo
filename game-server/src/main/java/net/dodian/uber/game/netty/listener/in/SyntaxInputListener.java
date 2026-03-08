@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -21,7 +22,12 @@ public class SyntaxInputListener implements PacketListener {
             return;
         }
 
-        String input = readTerminatedString(packet.payload()).trim();
+        ByteBuf buf = packet.payload();
+        if (!buf.isReadable()) {
+            return;
+        }
+
+        String input = ByteBufReader.readTerminatedString(buf, 256).trim();
         client.bankSearchPendingInput = false;
 
         if (!client.IsBanking) {
@@ -29,17 +35,5 @@ public class SyntaxInputListener implements PacketListener {
         }
 
         client.applyBankSearch(input);
-    }
-
-    private String readTerminatedString(ByteBuf buf) {
-        StringBuilder sb = new StringBuilder();
-        while (buf.isReadable()) {
-            byte b = buf.readByte();
-            if (b == 10 || b == 0) {
-                break;
-            }
-            sb.append((char) b);
-        }
-        return sb.toString();
     }
 }

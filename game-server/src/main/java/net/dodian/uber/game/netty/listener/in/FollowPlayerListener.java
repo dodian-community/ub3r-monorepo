@@ -3,6 +3,9 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -18,17 +21,13 @@ public class FollowPlayerListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(FollowPlayerListener.class);
 
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
-        int followId = readSignedWordBigEndian(packet.payload());
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < 2) {
+            return;
+        }
+        int followId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         if (client.getSlot() == followId) return; // cannot follow yourself
 
         Client player = client.getClient(followId);

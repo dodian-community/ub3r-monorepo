@@ -1,12 +1,13 @@
 package net.dodian.uber.game.netty.listener.in;
 
+import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -28,15 +29,19 @@ public class MagicOnItemsListener implements PacketListener {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(MagicOnItemsListener.class);
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.payload());
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
         // decode order based on client build: slot (big), itemId (little+ADD), dummy (big), spellId (little+ADD)
-        int castOnSlot = msg.getShort(true, ByteOrder.BIG, ValueType.NORMAL);
-        int castOnItem = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
-        msg.getShort(true, ByteOrder.BIG, ValueType.NORMAL); // unused / interface id
-        int castSpell = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
+        int castOnSlot = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int castOnItem = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL); // unused / interface id
+        int castSpell = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
         // quick sanity
         if (castOnSlot < 0 || castOnSlot > 28) {

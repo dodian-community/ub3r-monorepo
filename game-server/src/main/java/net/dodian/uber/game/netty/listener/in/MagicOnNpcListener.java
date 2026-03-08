@@ -6,6 +6,9 @@ import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -22,25 +25,6 @@ public class MagicOnNpcListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MagicOnNpcListener.class);
 
-    // --- helper readers ---
-    // little-endian signed short with ADD transform (low byte − 128)
-    private static int readSignedWordLEA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int val = (high << 8) | low;
-        if (val > 32767) val -= 0x10000;
-        return val;
-    }
-
-    // big-endian signed short with ADD transform (low byte − 128)
-    private static int readSignedWordBEA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int val = (high << 8) | low;
-        if (val > 32767) val -= 0x10000;
-        return val;
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
@@ -48,8 +32,8 @@ public class MagicOnNpcListener implements PacketListener {
             return;
         }
 
-        int npcIndex = readSignedWordLEA(buf);
-        int magicId  = readSignedWordBEA(buf);
+        int npcIndex = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int magicId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
         client.magicId = magicId;
 
         if (client.deathStage >= 1) return;

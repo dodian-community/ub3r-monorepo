@@ -1,9 +1,11 @@
 package net.dodian.uber.game.netty.listener.in;
 
+import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
@@ -26,14 +28,18 @@ public class RemoveItemListener implements PacketListener {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveItemListener.class);
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.payload());
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
         // mystic client sends: int interfaceId, then two unsigned shorts with ADD transform
-        int interfaceID = msg.getInt();
-        int removeSlot = msg.getShort(false, ValueType.ADD);
-        int removeID = msg.getShort(false, ValueType.ADD);
+        int interfaceID = ByteBufReader.readInt(buf);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int removeID = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int bankSlot = removeSlot;
 
         if ((interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) && client.bankStyleViewOpen) {

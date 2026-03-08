@@ -439,10 +439,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         /* Noob! */
         if(player.didMapRegionChange()) {
             // Send map region change as separate packet (73)
-            ByteMessage mapMsg = ByteMessage.message(73, MessageType.FIXED);
-            mapMsg.putShort(player.mapRegionX + 6, ByteOrder.BIG, ValueType.ADD); // writeWordA
-            mapMsg.putShort(player.mapRegionY + 6, ByteOrder.BIG); // writeWord
-            ((Client) player).send(mapMsg);
+            ((Client) player).send(new net.dodian.uber.game.netty.listener.out.MapRegionUpdate(player.mapRegionX, player.mapRegionY));
             ((Client) player).updateGroundItems();
         }
         // This should match the original: createFrameVarSizeWord(81) + initBitAccess()
@@ -920,10 +917,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     public void sendServerUpdateIfNeeded(Player player) {
         if (Server.updateRunning) {
-            ByteMessage updateMsg = ByteMessage.message(114, MessageType.FIXED);
             int seconds = Server.updateSeconds + ((int) (Server.updateStartTime - System.currentTimeMillis()) / 1000);
-            updateMsg.putShort(seconds * 50 / 30, ByteOrder.BIG);
-            ((Client) player).send(updateMsg);
+            ((Client) player).send(new net.dodian.uber.game.netty.listener.out.SystemUpdateTimer(seconds * 50 / 30));
         }
     }
 

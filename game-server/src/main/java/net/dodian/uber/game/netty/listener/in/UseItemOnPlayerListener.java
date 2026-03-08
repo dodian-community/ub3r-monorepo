@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -20,38 +23,18 @@ public class UseItemOnPlayerListener implements PacketListener {
     static { PacketListenerManager.register(14, new UseItemOnPlayerListener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(UseItemOnPlayerListener.class);
-
-    private static int readSignedWord(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        readSignedWordBigEndianA(buf); // unused index? matches legacy discard
-        int playerSlot = readSignedWord(buf);
-        int itemId = readSignedWord(buf);
-        int crackerSlot = readSignedWordBigEndian(buf);
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
+        ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD); // unused index? matches legacy discard
+        int playerSlot = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int itemId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int crackerSlot = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
         Client player = (playerSlot >= 0 && playerSlot < Constants.maxPlayers) ? ((Client) PlayerHandler.players[playerSlot]) : null;
         if (player == null || !client.playerHasItem(itemId)) return;

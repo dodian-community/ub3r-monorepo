@@ -5,7 +5,9 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
-
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -25,31 +27,15 @@ public class MagicOnPlayerListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MagicOnPlayerListener.class);
 
-    // --- helper readers ----------------------------------------------------
-    // readSignedWordA: big-endian, low byte minus 128, signed short (matches Stream.readSignedWordA)
-    private static int readSignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 0x10000;
-        return value;
-    }
-
-    // readSignedWordBigEndian: little-endian order (low byte first) like Stream.readSignedWordBigEndian
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 0x10000;
-        return value;
-    }
-
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < 4) {
+            return;
+        }
 
-        int victimIndex = readSignedWordA(buf);
-        int magicId = readSignedWordBigEndian(buf);
+        int victimIndex = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int magicId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         client.magicId = magicId;
 
         logger.debug("MagicOnPlayerListener: victim {} spell {}", victimIndex, magicId);

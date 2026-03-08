@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public class ChatListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatListener.class);
+    private static final int MIN_PAYLOAD_BYTES = 3;
 
     static {
         // Ensure we beat LegacyBridge registration
@@ -31,6 +33,9 @@ public class ChatListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         if (!client.validClient) {
             client.send(new SendMessage("Please use another client"));
@@ -51,7 +56,7 @@ public class ChatListener implements PacketListener {
         client.setChatTextEffects(effects);
         client.setChatTextColor(color);
 
-        String chat = readTerminatedString(buf);
+        String chat = ByteBufReader.readTerminatedString(buf, 256);
         byte[] chatBytes = chat.getBytes();
         int copyLen = Math.min(chatBytes.length, client.getChatText().length);
         client.setChatTextSize(copyLen);
@@ -71,17 +76,5 @@ public class ChatListener implements PacketListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Chat from {}: {}", client.getPlayerName(), chat);
         }
-    }
-
-    private String readTerminatedString(ByteBuf buf) {
-        StringBuilder sb = new StringBuilder();
-        while (buf.isReadable()) {
-            byte b = buf.readByte();
-            if (b == 10 || b == 0) {
-                break;
-            }
-            sb.append((char) b);
-        }
-        return sb.toString();
     }
 }

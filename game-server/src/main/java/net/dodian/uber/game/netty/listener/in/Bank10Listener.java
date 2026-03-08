@@ -3,6 +3,9 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -24,27 +27,19 @@ public class Bank10Listener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(Bank10Listener.class);
 
-    /* ---------------- Stream helper equivalence ---------------- */
-    private static int readUnsignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();  // first byte (low)
-        int high = buf.readUnsignedByte(); // second byte (high)
-        return (high << 8) | low;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         // Mystic sends: int interfaceId, short nodeId (WordA), short slot (WordA)
-        int interfaceId = buf.readInt();
-        int removeId = readUnsignedWordA(buf);
-        int removeSlot = readUnsignedWordA(buf);
+        int interfaceId = ByteBufReader.readInt(buf);
+        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int bankSlot = removeSlot;
 
         if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {

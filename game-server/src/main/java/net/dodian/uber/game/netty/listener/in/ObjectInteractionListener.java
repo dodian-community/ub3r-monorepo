@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -156,10 +156,10 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        final int objectX = readSignedWordBigEndian(buf);
-        final int spellId = readSignedWordBigEndianA(buf);
-        final int objectY = readSignedWordBigEndianA(buf);
-        final int objectId = readUnsignedWordLEA(buf) - 128;
+        final int objectX = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        final int spellId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        final int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        final int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD) - 128;
 
         final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
         final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
@@ -202,31 +202,29 @@ public class ObjectInteractionListener implements PacketListener {
         if (buf.readableBytes() < 6) {
             return null;
         }
-        int objectX = readSignedWordBigEndianA(buf);
+        int objectX = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int objectID = buf.readUnsignedShort();
-        int objectY = readUnsignedWordA(buf);
+        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         return new DecodedObjectClick(objectID, objectX, objectY);
     }
 
-    private DecodedObjectClick decodeSecondClick(ByteBuf payload) {
-        ByteMessage msg = ByteMessage.wrap(payload);
-        if (msg.getBuffer().readableBytes() < 6) {
+    private DecodedObjectClick decodeSecondClick(ByteBuf buf) {
+        if (buf.readableBytes() < 6) {
             return null;
         }
-        int objectID = msg.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
-        int objectY = msg.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
-        int objectX = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
+        int objectID = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         return new DecodedObjectClick(objectID, objectX, objectY);
     }
 
-    private DecodedObjectClick decodeThirdClick(ByteBuf payload) {
-        ByteMessage msg = ByteMessage.wrap(payload);
-        if (msg.getBuffer().readableBytes() < 6) {
+    private DecodedObjectClick decodeThirdClick(ByteBuf buf) {
+        if (buf.readableBytes() < 6) {
             return null;
         }
-        int objectX = msg.getShort(false, ByteOrder.LITTLE, ValueType.NORMAL);
-        int objectY = msg.getShort(false, ByteOrder.BIG, ValueType.NORMAL);
-        int objectID = msg.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
+        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
+        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int objectID = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         return new DecodedObjectClick(objectID, objectX, objectY);
     }
 
@@ -234,9 +232,9 @@ public class ObjectInteractionListener implements PacketListener {
         if (buf.readableBytes() < 6) {
             return null;
         }
-        int objectX = readUnsignedWordBigEndianA(buf);
-        int objectId = readUnsignedWordA(buf);
-        int objectY = readUnsignedWordBigEndianA(buf);
+        int objectX = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int objectY = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         return new DecodedObjectClick(objectId, objectX, objectY);
     }
 
@@ -244,35 +242,10 @@ public class ObjectInteractionListener implements PacketListener {
         if (buf.readableBytes() < 6) {
             return null;
         }
-        int objectId = readShortA(buf);
-        int objectY = readShortA(buf);
+        int objectId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
         int objectX = buf.readShort();
         return new DecodedObjectClick(objectId, objectX, objectY);
-    }
-
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readByte() & 0xFF;
-        int val = (high << 8) | low;
-        return val > 32767 ? val - 65536 : val;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
-
-    private static int readUnsignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        return (high << 8) | low;
-    }
-
-    private static int readShortA(ByteBuf buf) {
-        int high = buf.readByte() << 8;
-        int low = (buf.readByte() - 128) & 0xFF;
-        return high | low;
     }
 
     private static int readLEShort(ByteBuf buf) {
@@ -283,19 +256,6 @@ public class ObjectInteractionListener implements PacketListener {
         int low = (buf.readUnsignedByte() - 128) & 0xFF;
         int high = buf.readUnsignedByte();
         return (high << 8) | low;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int val = (high << 8) | low;
-        return val > 32767 ? val - 0x10000 : val;
-    }
-
-    private static int readUnsignedWordLEA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        return ((high << 8) | low) & 0xFFFF;
     }
 
     private static void safeRegister(int opcode, PacketListener listener) {

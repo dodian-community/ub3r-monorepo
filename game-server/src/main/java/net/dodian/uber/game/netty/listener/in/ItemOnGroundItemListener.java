@@ -2,6 +2,9 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -18,35 +21,20 @@ public class ItemOnGroundItemListener implements PacketListener {
     static { PacketListenerManager.register(25, new ItemOnGroundItemListener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(ItemOnGroundItemListener.class);
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int value = ((buf.readUnsignedByte() - 128) & 0xFF) | (buf.readUnsignedByte() << 8);
-        return value & 0xFFFF;
-    }
-
-    private static int readUnsignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        return ((high << 8) | low) & 0xFFFF;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 9;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
-        int unknown1 = readSignedWordBigEndian(buf); // interface id of item
-        int unknown2 = readUnsignedWordA(buf);       // item in bag id
+        int unknown1 = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL); // interface id of item
+        int unknown2 = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);   // item in bag id
         int floorID = buf.readUnsignedByte();
-        int floorY = readUnsignedWordA(buf);
-        int unknown3 = readUnsignedWordBigEndianA(buf);
+        int floorY = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int unknown3 = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int floorX = buf.readUnsignedByte();
 
         if (logger.isTraceEnabled()) {
