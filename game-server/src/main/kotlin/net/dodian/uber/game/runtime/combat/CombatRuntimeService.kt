@@ -1,12 +1,10 @@
 package net.dodian.uber.game.runtime.combat
 
 import net.dodian.uber.game.combat.attackTarget
-import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.model.WalkToTask
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 
 object CombatRuntimeService {
@@ -40,7 +38,11 @@ object CombatRuntimeService {
             return
         }
 
-        var state = player.combatTargetState ?: createCompatibilityState(player, target, cycleNow)
+        var state = player.combatTargetState
+        if (state == null) {
+            cancel(player, CombatCancellationReason.TARGET_INVALID)
+            return
+        }
         if (state.targetType != target.type || state.targetSlot != target.slot) {
             state =
                 state.copy(
@@ -73,7 +75,7 @@ object CombatRuntimeService {
 
         val attacked = player.attackTarget()
         if (!attacked) {
-            if (player.target == null || (!player.attackingNpc && !player.attackingPlayer)) {
+            if (player.target == null || player.combatTargetState == null) {
                 return
             }
             return
@@ -131,37 +133,21 @@ object CombatRuntimeService {
         player.resetAttack()
     }
 
-    private fun hasActiveCombat(player: Client): Boolean =
+    @JvmStatic
+    fun hasActiveCombat(player: Client): Boolean =
         player.target != null || player.combatTargetState != null
 
-    private fun createCompatibilityState(
+    @JvmStatic
+    fun isTargetingNpc(
         player: Client,
-        target: Entity,
-        cycleNow: Long,
-    ): CombatTargetState {
-        val intent =
-            when {
-                target is Npc && player.getAttackStyle() == 2 -> CombatIntent.MAGIC_ON_NPC
-                target is Player && player.getAttackStyle() == 2 -> CombatIntent.MAGIC_ON_PLAYER
-                target is Npc -> CombatIntent.ATTACK_NPC
-                else -> CombatIntent.ATTACK_PLAYER
-            }
-        return CombatTargetState(
-            intent = intent,
-            targetType = target.type,
-            targetSlot = target.slot,
-            startedCycle = cycleNow,
-            lastInRangeConfirmationCycle = cycleNow,
-            attackStyleAtStart = player.getAttackStyle(),
-            initialSwingConsumed = false,
-            nextAttackCycle = cycleNow,
-            autoFollowEnabled = true,
-            lastFollowCycle = 0L,
-            lastFollowTargetX = target.position.x,
-            lastFollowTargetY = target.position.y,
-        ).also {
-            player.combatTargetState = it
+        npc: Npc,
+    ): Boolean {
+        val target = player.target
+        if (target === npc) {
+            return true
         }
+        val state = player.combatTargetState ?: return false
+        return state.targetType == Entity.Type.NPC && state.targetSlot == npc.slot
     }
 
     private fun isValidTarget(target: Entity): Boolean =

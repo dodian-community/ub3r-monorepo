@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.content.Skillcape;
@@ -64,7 +65,7 @@ public class UseItemOnNpcListener implements PacketListener {
             client.playerPotato.add(3, 1);
             client.showPlayerOption(new String[]{
                     "What do you wish to do?", "Remove spawn", "Check drops", "Reload drops", "Check config", "Reload config!"});
-            client.NpcDialogueSend = true;
+            DialogueService.setDialogueSent(client, true);
             return;
         }
 

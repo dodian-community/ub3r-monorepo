@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -82,8 +83,8 @@ public class ItemOnItemListener implements PacketListener {
             }
         }
         if (itemUsed >= 6157 && itemUsed <= 6161 && useWith >= 6157 && useWith <= 6161) {
-            client.NpcDialogueSend = false;
-            client.NpcDialogue = 10000;
+            DialogueService.setDialogueSent(client, false);
+            DialogueService.setLegacyDialogueId(client, 10000);
         }
         /* Unfinished potions */
         for (int h = 0; h < Utils.herbs.length; h++) {

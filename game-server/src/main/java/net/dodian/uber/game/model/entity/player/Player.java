@@ -27,6 +27,7 @@ import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
@@ -81,7 +82,6 @@ public abstract class Player extends Entity {
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
     public PyramidPlunder getPlunder = new PyramidPlunder(((Client) this));
-    public boolean attackingPlayer = false, attackingNpc = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
@@ -1884,7 +1884,7 @@ public abstract class Player extends Entity {
         Client c = ((Client) this);
         if(herbOptions.isEmpty()) {
             herbMaking = -1;
-            c.nextDiag = -1;
+            DialogueService.setLegacyNextDialogueId(c, -1);
             return;
         }
         int slot = herbMaking;

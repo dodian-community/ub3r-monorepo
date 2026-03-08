@@ -17,6 +17,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
+import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -165,7 +166,7 @@ public final class WalkingListener implements PacketListener {
             client.discord = false;
             client.playerSkillAction.clear();
             if (client.checkInv) { client.checkInv = false; client.resetItems(3214);}            
-            if (opcode != 98 && (client.attackingNpc || client.attackingPlayer)) {
+            if (opcode != 98 && CombatRuntimeService.hasActiveCombat(client)) {
                 client.setCombatCancellationReason(CombatCancellationReason.MOVEMENT_INTERRUPTED);
                 client.resetAttack();
             }

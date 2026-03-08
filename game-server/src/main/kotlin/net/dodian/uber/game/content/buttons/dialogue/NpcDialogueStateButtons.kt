@@ -12,12 +12,12 @@ object NpcDialogueStateButtons : ButtonContent {
         when (buttonId) {
             150 -> {
                 DialogueService.setLegacyDialogueId(client, DialogueIds.Legacy.TOGGLE_SPECIALS)
-                DialogueService.setLegacyDialogueSent(client, false)
+                DialogueService.setDialogueSent(client, false)
             }
 
             151 -> {
                 DialogueService.setLegacyDialogueId(client, DialogueIds.Legacy.TOGGLE_BOSS_YELL)
-                DialogueService.setLegacyDialogueSent(client, false)
+                DialogueService.setDialogueSent(client, false)
             }
 
             else -> return false

@@ -106,7 +106,12 @@ object CombatStartService {
 
         client.resetWalkingQueue()
         client.walkToTask = null
-        client.startAttack(target)
+        client.target = target
+        if (target is Npc) {
+            client.faceNpc(target.slot)
+        } else {
+            client.facePlayer(target.slot)
+        }
         client.combatTargetState =
             CombatTargetState(
                 intent = intent,

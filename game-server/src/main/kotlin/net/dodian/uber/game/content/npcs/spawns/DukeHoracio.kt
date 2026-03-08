@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.npcs.spawns
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
@@ -17,22 +18,24 @@ internal object DukeHoracio {
 
     fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Misc.HOLIDAY_GREETING) { c ->
-            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Happy Holidays adventurer!"))
-            c.nextDiag = DialogueIds.Misc.HOLIDAY_INFO
-            c.NpcDialogueSend = true
+            DialogueService.showNpcChat(c, DialogueService.legacyNpcTalkTo(c), 591, arrayOf("Happy Holidays adventurer!"), DialogueIds.Misc.HOLIDAY_INFO)
             true
         }
 
         builder.handle(DialogueIds.Misc.HOLIDAY_INFO) { c ->
-            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("The monsters are trying to ruin the new year!", "You must slay them to take back your gifts and", "save the spirit of 2021!"))
-            c.nextDiag = DialogueIds.Misc.HOLIDAY_OPTIONS
-            c.NpcDialogueSend = true
+            DialogueService.showNpcChat(
+                c,
+                DialogueService.legacyNpcTalkTo(c),
+                591,
+                arrayOf("The monsters are trying to ruin the new year!", "You must slay them to take back your gifts and", "save the spirit of 2021!"),
+                DialogueIds.Misc.HOLIDAY_OPTIONS,
+            )
             true
         }
 
         builder.handle(DialogueIds.Misc.HOLIDAY_OPTIONS) { c ->
             DialogueUi.showPlayerOption(c, arrayOf("Select a option", "I'd like to see your shop.", "I'll just be on my way."))
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }

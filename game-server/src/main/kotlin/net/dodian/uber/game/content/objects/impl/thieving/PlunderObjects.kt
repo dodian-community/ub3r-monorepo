@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects.impl.thieving
 
 import net.dodian.uber.game.Server
 import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.Entity
@@ -80,7 +81,8 @@ object PlunderObjects : ObjectContent {
                 true
             }
             objectId == 20931 -> {
-                client.NpcDialogue = 20931
+                DialogueService.setLegacyDialogueId(client, 20931)
+                DialogueService.setDialogueSent(client, false)
                 true
             }
             objectId == 26616 || objectId == 26626 -> {

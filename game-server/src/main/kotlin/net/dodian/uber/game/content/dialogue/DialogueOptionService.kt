@@ -20,13 +20,17 @@ object DialogueOptionService {
 
     @JvmStatic
     fun triggerChat(c: net.dodian.uber.game.model.entity.player.Client, button: Int) {
+        fun setNextDialogue(id: Int) = DialogueService.setLegacyNextDialogueId(c, id)
+        fun setDialogue(id: Int) = DialogueService.setLegacyDialogueId(c, id)
+        fun setDialogueSent(sent: Boolean) = DialogueService.setDialogueSent(c, sent)
+        fun resetDialogue() = DialogueService.resetLegacyDialogue(c)
+
         if (c.playerPotato.isNotEmpty()) {
             if (c.playerPotato[0] == 2 && c.playerPotato[3] == 1) {
                 c.send(RemoveInterfaces())
                 val tempNpc: Npc = Server.npcManager.getNpc(c.playerPotato[1])
                 val npcId = c.playerPotato[2]
-                c.NpcDialogue = -1
-                c.NpcDialogueSend = false
+                resetDialogue()
 
                 if (button == 1) {
                     c.send(SendMessage("NPC spawn DB deletion is disabled after hard cutover."))
@@ -105,19 +109,22 @@ object DialogueOptionService {
             }
         }
 
+        val dialogueId = DialogueService.legacyDialogueId(c)
+        val npcTalkTo = DialogueService.legacyNpcTalkTo(c)
+
         if (c.convoId == 0) {
             if (button == 1) {
                 c.openUpBank()
             } else {
-                c.nextDiag = 8
+                setNextDialogue(8)
             }
         }
 
-        if (c.NpcDialogue == 12) {
-            c.nextDiag = if (button == 1) 13 else if (button == 2) 31 else if (button == 4) 14 else 34
+        if (dialogueId == 12) {
+            setNextDialogue(if (button == 1) 13 else if (button == 2) 31 else if (button == 4) 14 else 34)
         }
 
-        if (c.NpcDialogue == 16) {
+        if (dialogueId == 16) {
             if (button == 1) {
                 val checkTask = SlayerTask.slayerTasks.getTask(c.slayerData[1])
                 if (checkTask != null) {
@@ -134,7 +141,7 @@ object DialogueOptionService {
             c.send(RemoveInterfaces())
         }
 
-        if (c.NpcDialogue == 20) {
+        if (dialogueId == 20) {
             c.faceNpc(-1)
             var missing = 5000
             val amount = c.getInvAmt(995).toLong() + c.getBankAmt(995)
@@ -155,29 +162,29 @@ object DialogueOptionService {
             if (button >= 4) {
                 c.showPlayerChat(arrayOf("No, thank you."), 614)
             } else if (amount < 5000) {
-                c.showNPCChat(c.NpcTalkTo, 594, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - amount) + " coins."))
-            } else if (c.NpcTalkTo == 17) {
+                DialogueService.showNpcChat(c, npcTalkTo, 594, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - amount) + " coins."))
+            } else if (npcTalkTo == 17) {
                 carpet.sophanem(button - 1)
-            } else if (c.NpcTalkTo == 19) {
+            } else if (npcTalkTo == 19) {
                 carpet.bedabinCamp(button - 1)
-            } else if (c.NpcTalkTo == 20) {
+            } else if (npcTalkTo == 20) {
                 carpet.pollnivneach(button - 1)
-            } else if (c.NpcTalkTo == 22) {
+            } else if (npcTalkTo == 22) {
                 carpet.nardah(button - 1)
             }
         }
 
-        if (c.NpcDialogue == 32) {
+        if (dialogueId == 32) {
             if (button == 1) {
-                c.nextDiag = 33
+                setNextDialogue(33)
             } else {
                 c.send(RemoveInterfaces())
             }
         }
 
-        if (c.NpcDialogue == 35) {
+        if (dialogueId == 35) {
             if (button == 1) {
-                c.nextDiag = 36
+                setNextDialogue(36)
             } else {
                 c.showPlayerChat(arrayOf("No, thank you."), 614)
             }
@@ -199,13 +206,13 @@ object DialogueOptionService {
             }
         }
 
-        if (c.NpcDialogue == 163) {
+        if (dialogueId == 163) {
             if (button == 1) {
                 c.spendTickets()
             } else {
-                c.nextDiag = 164
+                setNextDialogue(164)
             }
-        } else if (c.NpcDialogue == 164) {
+        } else if (dialogueId == 164) {
             val type = if (c.skillX == 3002 && c.skillY == 3931) 3 else if (c.skillX == 2547 && c.skillY == 3554) 2 else 1
             if (button == 1) {
                 c.teleportTo(if (type == 1) 2547 else 2474, if (type == 1) 3553 else 3438, 0)
@@ -213,17 +220,16 @@ object DialogueOptionService {
                 c.teleportTo(if (type == 3) 2547 else 3002, if (type == 3) 3553 else 3932, 0)
             }
             c.send(RemoveInterfaces())
-        } else if (c.NpcDialogue == 3649) {
+        } else if (dialogueId == 3649) {
             if (button == 1) {
                 c.setTravelMenu()
             } else if (button == 2) {
                 c.showPlayerChat(arrayOf("No thank you."), 614)
             }
-            c.NpcDialogueSend = false
-            c.NpcDialogue = -1
-        } else if (c.NpcDialogue == 2346) {
+            resetDialogue()
+        } else if (dialogueId == 2346) {
             if (button == 1) {
-                c.nextDiag = 2347
+                setNextDialogue(2347)
             } else if (button == 2) {
                 if (!c.checkUnlock(0)) {
                     val maximumTickets = 10
@@ -231,7 +237,7 @@ object DialogueOptionService {
                     val ticketValue = 300_000
                     var missing = (maximumTickets - minimumTicket) * ticketValue
                     if (!c.playerHasItem(621, minimumTicket)) {
-                        c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
+                        DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
                         return
                     }
                     missing -= (c.getInvAmt(621) - minimumTicket) * ticketValue
@@ -240,14 +246,14 @@ object DialogueOptionService {
                             c.deleteItem(621, min(c.getInvAmt(621), maximumTickets))
                             c.deleteItem(995, missing)
                             c.addUnlocks(0, c.checkUnlockPaid(0).toString(), "1")
-                            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Thank you for the payment.", "You may enter freely into my dungeon."))
+                            DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("Thank you for the payment.", "You may enter freely into my dungeon."))
                         } else {
-                            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - c.getInvAmt(995)) + " coins or", ceil((missing - c.getInvAmt(995)) / 300_000.0).toInt().toString() + " ship tickets."))
+                            DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - c.getInvAmt(995)) + " coins or", ceil((missing - c.getInvAmt(995)) / 300_000.0).toInt().toString() + " ship tickets."))
                         }
                     } else {
                         c.deleteItem(621, maximumTickets)
                         c.addUnlocks(0, c.checkUnlockPaid(0).toString(), "1")
-                        c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Thank you for the ship tickets.", "You may enter freely into my dungeon."))
+                        DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("Thank you for the ship tickets.", "You may enter freely into my dungeon."))
                     }
                     c.checkItemUpdate()
                 }
@@ -256,9 +262,9 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 2347) {
+        } else if (dialogueId == 2347) {
             if (c.checkUnlockPaid(0) > 0 || c.checkUnlock(0)) {
-                c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You have already paid me.", "Please step into my dungeon."))
+                DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You have already paid me.", "Please step into my dungeon."))
             } else if (button == 1) {
                 if (c.getInvAmt(621) > 0 || c.getBankAmt(621) > 0) {
                     c.addUnlocks(0, "1", if (c.checkUnlock(0)) "1" else "0")
@@ -268,9 +274,9 @@ object DialogueOptionService {
                         c.deleteItemBank(621, 1)
                     }
                     c.checkItemUpdate()
-                    c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You can now step into the dungeon."))
+                    DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You can now step into the dungeon."))
                 } else {
-                    c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You need a ship ticket to enter my dungeon!"))
+                    DialogueService.showNpcChat(c, npcTalkTo, 596, arrayOf("You need a ship ticket to enter my dungeon!"))
                 }
             } else if (button == 2) {
                 val amount = c.getInvAmt(995).toLong() + c.getBankAmt(995)
@@ -282,14 +288,14 @@ object DialogueOptionService {
                     if (remain > 0) {
                         c.deleteItemBank(995, remain)
                     }
-                    c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You can now step into the dungeon."))
+                    DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You can now step into the dungeon."))
                 } else {
-                    c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You need atleast " + (300_000 - amount) + " more coins to enter my dungeon!"))
+                    DialogueService.showNpcChat(c, npcTalkTo, 596, arrayOf("You need atleast " + (300_000 - amount) + " more coins to enter my dungeon!"))
                 }
             }
-        } else if (c.NpcDialogue == 2181) {
+        } else if (dialogueId == 2181) {
             if (button == 1) {
-                c.nextDiag = 2182
+                setNextDialogue(2182)
             } else if (button == 2) {
                 if (!c.checkUnlock(1)) {
                     val maximumTickets = 20
@@ -297,7 +303,7 @@ object DialogueOptionService {
                     val ticketValue = 300_000
                     var missing = (maximumTickets - minimumTicket) * ticketValue
                     if (!c.playerHasItem(621, minimumTicket)) {
-                        c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
+                        DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
                         return
                     }
                     missing -= (c.getInvAmt(621) - minimumTicket) * ticketValue
@@ -307,15 +313,15 @@ object DialogueOptionService {
                             c.deleteItem(995, missing)
                             c.checkItemUpdate()
                             c.addUnlocks(1, c.checkUnlockPaid(1).toString(), "1")
-                            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Thank you for the payment.", "You may enter freely into my cave."))
+                            DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("Thank you for the payment.", "You may enter freely into my cave."))
                         } else {
-                            c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - c.getInvAmt(995)) + " coins or", ceil((missing - c.getInvAmt(995)) / 300_000.0).toInt().toString() + " ship tickets."))
+                            DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You do not have enough coins to do this!", "You are currently missing " + (missing - c.getInvAmt(995)) + " coins or", ceil((missing - c.getInvAmt(995)) / 300_000.0).toInt().toString() + " ship tickets."))
                         }
                     } else {
                         c.deleteItem(621, maximumTickets)
                         c.checkItemUpdate()
                         c.addUnlocks(1, c.checkUnlockPaid(1).toString(), "1")
-                        c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Thank you for the ship tickets.", "You may enter freely into my cave."))
+                        DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("Thank you for the ship tickets.", "You may enter freely into my cave."))
                     }
                 }
             } else if (button == 3) {
@@ -323,9 +329,9 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 2182) {
+        } else if (dialogueId == 2182) {
             if (c.checkUnlockPaid(1) > 0 || c.checkUnlock(1)) {
-                c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You have already paid me.", "Please step into my cave."))
+                DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You have already paid me.", "Please step into my cave."))
             } else if (button == 1) {
                 if (c.getInvAmt(621) > 0 || c.getBankAmt(621) > 0) {
                     c.addUnlocks(1, "1", if (c.checkUnlock(1)) "1" else "0")
@@ -335,9 +341,9 @@ object DialogueOptionService {
                         c.deleteItemBank(621, 1)
                     }
                     c.checkItemUpdate()
-                    c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You can now step into the cave."))
+                    DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You can now step into the cave."))
                 } else {
-                    c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You need a ship ticket to enter my cave!"))
+                    DialogueService.showNpcChat(c, npcTalkTo, 596, arrayOf("You need a ship ticket to enter my cave!"))
                 }
             } else if (button == 2) {
                 val amount = c.getInvAmt(995).toLong() + c.getBankAmt(995)
@@ -350,36 +356,36 @@ object DialogueOptionService {
                         c.deleteItemBank(995, remain)
                     }
                     c.checkItemUpdate()
-                    c.showNPCChat(c.NpcTalkTo, 591, arrayOf("You can now step into the cave."))
+                    DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("You can now step into the cave."))
                 } else {
-                    c.showNPCChat(c.NpcTalkTo, 596, arrayOf("You need atleast " + (300_000 - amount) + " more coins to enter my cave!"))
+                    DialogueService.showNpcChat(c, npcTalkTo, 596, arrayOf("You need atleast " + (300_000 - amount) + " more coins to enter my cave!"))
                 }
             }
-        } else if (c.NpcDialogue == 4759) {
+        } else if (dialogueId == 4759) {
             if (button == 1) {
                 c.send(RemoveInterfaces())
                 c.openUpShop(39)
             } else if (button == 2) {
-                c.nextDiag = 4756
+                setNextDialogue(4756)
             } else if (button == 3) {
-                c.nextDiag = 4757
+                setNextDialogue(4757)
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 6483) {
+        } else if (dialogueId == 6483) {
             if (button == 1) {
-                c.nextDiag = c.NpcDialogue + 1
+                setNextDialogue(dialogueId + 1)
             } else if (button == 2) {
                 c.showPlayerChat(arrayOf("No thank you."), 614)
             }
-        } else if (c.NpcDialogue == 8053) {
+        } else if (dialogueId == 8053) {
             if (button == 1) {
                 c.send(RemoveInterfaces())
                 c.openUpShop(55)
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 10000) {
+        } else if (dialogueId == 10000) {
             if (button == 1) {
                 if (c.playerHasItem(6161) && c.playerHasItem(6159)) {
                     c.deleteItem(6159, 1)
@@ -432,8 +438,8 @@ object DialogueOptionService {
                     c.showPlayerChat(arrayOf("I need two of " + c.GetItemName(6161)), 614)
                 }
             }
-            c.NpcDialogueSend = true
-        } else if (c.NpcDialogue == 536) {
+            setDialogueSent(true)
+        } else if (dialogueId == 536) {
             if (button == 1) {
                 val amount = c.getInvAmt(536).toLong() + c.getInvAmt(537) + c.getBankAmt(536)
                 var amt = 5
@@ -473,7 +479,7 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 3838) {
+        } else if (dialogueId == 3838) {
             if (button == 1) {
                 c.send(RemoveInterfaces())
                 c.XinterfaceID = 3838
@@ -481,22 +487,21 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
             }
-        } else if (c.NpcDialogue == 1177) {
+        } else if (dialogueId == 1177) {
             if (button == 1) {
                 c.send(RemoveInterfaces())
                 c.openUpShopRouted(19)
             } else if (button == 2) {
-                c.nextDiag = 1178
+                setNextDialogue(1178)
             } else {
                 c.showPlayerChat(arrayOf("Nevermind, I do not need anything."), 614)
             }
-        } else if (c.NpcDialogue == 1178) {
+        } else if (dialogueId == 1178) {
             if (button >= 5) {
                 c.showPlayerChat(arrayOf("Nevermind, I do not need anything."), 614)
             } else {
                 c.send(RemoveInterfaces())
-                c.NpcDialogue = -1
-                c.NpcDialogueSend = false
+                resetDialogue()
                 val amount = LongArray(Utils.pot_4_dose.size)
                 val vials = LongArray(Utils.pot_4_dose.size)
                 for (i in Utils.pot_4_dose.indices) {
@@ -562,14 +567,14 @@ object DialogueOptionService {
                     }
                 }
                 c.checkItemUpdate()
-                c.showNPCChat(c.NpcTalkTo, 591, arrayOf("Enjoy your decanted potions " + c.playerName))
+                DialogueService.showNpcChat(c, npcTalkTo, 591, arrayOf("Enjoy your decanted potions " + c.playerName))
             }
-        } else if (c.NpcDialogue == 20931) {
+        } else if (dialogueId == 20931) {
             if (button == 1) {
                 c.getPlunder.resetPlunder()
             }
             c.send(RemoveInterfaces())
-        } else if (c.NpcDialogue == 48054) {
+        } else if (dialogueId == 48054) {
             if (c.getInvAmt(621) < 1) {
                 c.send(SendMessage("You need a ship ticket to unlock this travel!"))
             } else if (button == 1) {
@@ -583,15 +588,15 @@ object DialogueOptionService {
                     c.send(SendMessage("You have now unlocked the travel!"))
                 }
             }
-            c.NpcDialogueSend = false
-            c.NpcDialogue = -1
+            resetDialogue()
             c.setTravelMenu()
         }
 
-        if (c.nextDiag > 0) {
-            c.NpcDialogue = c.nextDiag
-            c.NpcDialogueSend = false
-            c.nextDiag = -1
+        val nextDialogueId = DialogueService.legacyNextDialogueId(c)
+        if (nextDialogueId > 0) {
+            setDialogue(nextDialogueId)
+            setDialogueSent(false)
+            setNextDialogue(-1)
         }
     }
 }

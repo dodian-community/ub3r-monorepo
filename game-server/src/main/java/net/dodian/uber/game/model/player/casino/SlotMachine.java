@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.player.casino;
 
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -68,7 +69,7 @@ public class SlotMachine {
 
     public void rollDice(Client c, int amt) {
         if (amt > 50000000 || amt < 100000) {
-            c.NpcDialogueSend = true;
+            DialogueService.setDialogueSent(c, true);
             c.convoId = -1;
             c.send(new RemoveInterfaces());
             c.clearWalkableInterface();
@@ -79,14 +80,14 @@ public class SlotMachine {
             return;
         }
         if (c.playerHasItem(995, 2000000000)) {
-            c.NpcDialogueSend = true;
+            DialogueService.setDialogueSent(c, true);
             c.convoId = -1;
             c.send(new RemoveInterfaces());
             c.send(new SendMessage("You can't bet with more then 2b cash in your inventory!"));
             return;
         }
         if (!c.playerHasItem(995, amt)) {
-            c.NpcDialogueSend = true;
+            DialogueService.setDialogueSent(c, true);
             c.convoId = -1;
             c.send(new RemoveInterfaces());
             c.send(new SendMessage("You do not have enough cash!"));

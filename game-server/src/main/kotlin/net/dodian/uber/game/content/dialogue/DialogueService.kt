@@ -4,8 +4,10 @@ import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService
 import java.util.ArrayDeque
 import java.util.Collections
 import java.util.WeakHashMap
@@ -39,7 +41,6 @@ object DialogueService {
 
     @JvmStatic
     fun hasBlockingDialogue(client: Client): Boolean {
-        syncLegacyStateFromClient(client)
         return hasActiveSession(client) ||
             DialoguePagingService.hasActivePaging(client) ||
             hasActiveLegacyDialogue(client)
@@ -50,7 +51,6 @@ object DialogueService {
         if (hasActiveSession(client)) {
             return
         }
-        syncLegacyStateFromClient(client)
         if (legacyDialogueId(client) > 0 && !isLegacyDialogueSent(client)) {
             DialogueDisplayService.updateNpcChat(client)
         }
@@ -58,6 +58,10 @@ object DialogueService {
 
     @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
+        if (!PlayerInteractionGuardService.canStartDialogue(client)) {
+            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            return
+        }
         PlayerActionCancellationService.cancel(
             player = client,
             reason = PlayerActionCancelReason.DIALOGUE_OPENED,
@@ -99,19 +103,75 @@ object DialogueService {
 
     @JvmStatic
     fun startLegacy(client: Client, dialogueId: Int, npcId: Int) {
+        if (!PlayerInteractionGuardService.canStartDialogue(client)) {
+            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            return
+        }
         sessions.remove(client)
         DialoguePagingService.clear(client)
         setLegacyDialogueId(client, dialogueId)
         setLegacyNpcTalkTo(client, npcId)
-        setLegacyDialogueSent(client, false)
+        setDialogueSent(client, false)
         setLegacyNextDialogueId(client, -1)
         DialogueDisplayService.updateNpcChat(client)
     }
 
     @JvmStatic
-    fun captureLegacyBridgeState(client: Client) {
-        syncLegacyStateFromClient(client)
+    fun showNpcChat(
+        client: Client,
+        npcId: Int,
+        emote: Int,
+        text: Array<String>,
+        nextDialogueId: Int? = null,
+    ) {
+        setLegacyNpcTalkTo(client, npcId)
+        client.showNPCChat(npcId, emote, text)
+        setDialogueSent(client, true)
+        if (nextDialogueId != null) {
+            setLegacyNextDialogueId(client, nextDialogueId)
+        }
     }
+
+    @JvmStatic
+    fun showPlayerChat(
+        client: Client,
+        text: Array<String>,
+        emote: Int,
+        nextDialogueId: Int? = null,
+    ) {
+        client.showPlayerChat(text, emote)
+        setDialogueSent(client, true)
+        if (nextDialogueId != null) {
+            setLegacyNextDialogueId(client, nextDialogueId)
+        }
+    }
+
+    @JvmStatic
+    fun resetLegacyDialogue(client: Client) {
+        setLegacyDialogueId(client, -1)
+        setDialogueSent(client, false)
+        setLegacyNextDialogueId(client, -1)
+    }
+
+    @JvmStatic
+    fun showLegacyNpcChat(
+        client: Client,
+        npcId: Int,
+        emote: Int,
+        text: Array<String>,
+        nextDialogueId: Int? = null,
+    ) = showNpcChat(client, npcId, emote, text, nextDialogueId)
+
+    @JvmStatic
+    fun showLegacyPlayerChat(
+        client: Client,
+        text: Array<String>,
+        emote: Int,
+        nextDialogueId: Int? = null,
+    ) = showPlayerChat(client, text, emote, nextDialogueId)
+
+    @JvmStatic
+    fun captureLegacyBridgeState(client: Client) = Unit
 
     /**
      * @return true if the continue click was consumed (paging or active session).
@@ -132,7 +192,6 @@ object DialogueService {
 
     @JvmStatic
     fun onLegacyContinue(client: Client): Boolean {
-        syncLegacyStateFromClient(client)
         val dialogueId = legacyDialogueId(client)
         if (dialogueId <= 0 && legacyNextDialogueId(client) <= 0) {
             return false
@@ -141,7 +200,7 @@ object DialogueService {
         when (dialogueId) {
             1, 3, 5, 21 -> {
                 setLegacyDialogueId(client, dialogueId + 1)
-                setLegacyDialogueSent(client, false)
+                setDialogueSent(client, false)
             }
 
             6, 7 -> {
@@ -151,14 +210,14 @@ object DialogueService {
 
             23 -> {
                 setLegacyDialogueId(client, dialogueId + 2)
-                setLegacyDialogueSent(client, false)
+                setDialogueSent(client, false)
             }
 
             else -> {
                 val nextDialogueId = legacyNextDialogueId(client)
                 if (nextDialogueId > 0) {
                     setLegacyDialogueId(client, nextDialogueId)
-                    setLegacyDialogueSent(client, false)
+                    setDialogueSent(client, false)
                     setLegacyNextDialogueId(client, -1)
                 } else if (dialogueId != 48054) {
                     clearLegacyDialogueState(client)
@@ -249,7 +308,6 @@ object DialogueService {
 
     @JvmStatic
     fun legacyDialogueId(client: Client): Int {
-        syncLegacyStateFromClient(client)
         return legacyStates[client]?.dialogueId ?: 0
     }
 
@@ -261,7 +319,6 @@ object DialogueService {
 
     @JvmStatic
     fun legacyNpcTalkTo(client: Client): Int {
-        syncLegacyStateFromClient(client)
         return legacyStates[client]?.npcId ?: 0
     }
 
@@ -273,7 +330,6 @@ object DialogueService {
 
     @JvmStatic
     fun legacyNextDialogueId(client: Client): Int {
-        syncLegacyStateFromClient(client)
         return legacyStates[client]?.nextDialogueId ?: -1
     }
 
@@ -285,19 +341,20 @@ object DialogueService {
 
     @JvmStatic
     fun isLegacyDialogueSent(client: Client): Boolean {
-        syncLegacyStateFromClient(client)
         return legacyStates[client]?.sent == true
     }
 
     @JvmStatic
-    fun setLegacyDialogueSent(client: Client, sent: Boolean) {
+    fun setDialogueSent(client: Client, sent: Boolean) {
         legacyState(client).sent = sent
         client.NpcDialogueSend = sent
     }
 
     @JvmStatic
+    fun setLegacyDialogueSent(client: Client, sent: Boolean) = setDialogueSent(client, sent)
+
+    @JvmStatic
     fun hasActiveLegacyDialogue(client: Client): Boolean {
-        syncLegacyStateFromClient(client)
         val state = legacyStates[client] ?: return false
         return state.dialogueId > 0 || state.nextDialogueId > 0 || state.sent
     }
@@ -311,31 +368,7 @@ object DialogueService {
     }
 
     private fun legacyState(client: Client): LegacyDialogueState {
-        syncLegacyStateFromClient(client)
         return legacyStates.getOrPut(client) { LegacyDialogueState() }
-    }
-
-    private fun syncLegacyStateFromClient(client: Client) {
-        val hasClientState =
-            client.NpcDialogue != 0 ||
-                client.NpcTalkTo != 0 ||
-                client.nextDiag != -1 ||
-                client.NpcDialogueSend
-        if (!hasClientState) {
-            if ((legacyStates[client]?.dialogueId ?: 0) == 0 &&
-                (legacyStates[client]?.nextDialogueId ?: -1) <= 0 &&
-                legacyStates[client]?.sent != true
-            ) {
-                legacyStates.remove(client)
-            }
-            return
-        }
-
-        val state = legacyStates.getOrPut(client) { LegacyDialogueState() }
-        state.dialogueId = client.NpcDialogue
-        state.npcId = client.NpcTalkTo
-        state.nextDialogueId = client.nextDiag
-        state.sent = client.NpcDialogueSend
     }
 }
 

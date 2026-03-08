@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.dialogue.modules
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueRenderModule
@@ -9,7 +10,7 @@ object BrimhavenEntryDialogueModule : DialogueRenderModule {
     override fun register(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Misc.BRIMHAVEN_ENTRY) { c ->
             DialogueUi.showPlayerOption(c, arrayOf("Do you wish to enter?", "Sacrifice 5 dragon bones", "Stay here"))
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }

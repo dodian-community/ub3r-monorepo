@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.party.Balloons
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
+import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService
 import java.util.ArrayList
 import java.util.Arrays
 
@@ -105,6 +106,12 @@ object PlayerBankService {
     fun openUpBank(client: Client) {
         if (!Server.banking) {
             client.send(SendMessage("Banking have been disabled!"))
+            return
+        }
+        if (!PlayerInteractionGuardService.canOpenBank(client)) {
+            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let {
+                client.send(SendMessage(it))
+            }
             return
         }
         client.resetAction(true)

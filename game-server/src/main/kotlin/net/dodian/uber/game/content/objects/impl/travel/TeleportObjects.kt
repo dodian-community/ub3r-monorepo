@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.objects.impl.travel
 
 import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -157,11 +158,11 @@ object TeleportObjects : ObjectContent {
             20877 -> {
                 if (position.x == 2743 && position.y == 3153) {
                     if (!client.checkUnlock(0) && client.checkUnlockPaid(0) != 1) {
-                        client.showNPCChat(2345, 596, arrayOf("You have not paid yet to enter my dungeon."))
+                        DialogueService.showNpcChat(client, 2345, 596, arrayOf("You have not paid yet to enter my dungeon."))
                         true
                     } else {
                         client.addUnlocks(0, "0", if (client.checkUnlock(0)) "1" else "0")
-                        client.showNPCChat(2345, 592, arrayOf("Welcome to my dungeon."))
+                        DialogueService.showNpcChat(client, 2345, 592, arrayOf("Welcome to my dungeon."))
                         client.transport(Position(3748, 9373 + Misc.random(1), 0))
                         true
                     }
@@ -171,7 +172,7 @@ object TeleportObjects : ObjectContent {
             }
             5553 -> {
                 if (position.x == 3749 && position.y == 9373) {
-                    client.showNPCChat(2345, 593, arrayOf("Welcome back out from my dungeon."))
+                    DialogueService.showNpcChat(client, 2345, 593, arrayOf("Welcome back out from my dungeon."))
                     client.transport(Position(2744 + Misc.random(1), 3153, 0))
                     true
                 } else {
@@ -264,7 +265,8 @@ object TeleportObjects : ObjectContent {
                         val agi = net.dodian.uber.game.skills.agility.Agility(client)
                         agi.kbdEntrance()
                     } else {
-                        client.NpcDialogue = 536
+                        DialogueService.setLegacyDialogueId(client, 536)
+                        DialogueService.setDialogueSent(client, false)
                     }
                     true
                 } else {

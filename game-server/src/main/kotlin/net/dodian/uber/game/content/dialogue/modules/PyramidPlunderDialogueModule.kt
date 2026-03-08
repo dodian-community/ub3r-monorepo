@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.dialogue.modules
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueRenderModule
@@ -9,7 +10,7 @@ object PyramidPlunderDialogueModule : DialogueRenderModule {
     override fun register(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Misc.PYRAMID_EXIT) { c ->
             DialogueUi.showPlayerOption(c, arrayOf("Exit pyramid plunder?", "Yes", "No"))
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }

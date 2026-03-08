@@ -19,11 +19,7 @@ object PlayerActionCancellationService {
             player.send(RemoveInterfaces())
         }
         if (clearDialogue) {
-            DialogueService.clear(player, closeInterfaces = false)
-            player.NpcDialogue = 0
-            player.NpcTalkTo = 0
-            player.NpcDialogueSend = false
-            player.nextDiag = -1
+            DialogueService.closeBlockingDialogue(player, closeInterfaces = false)
         }
         PlayerActionController.cancel(player, reason)
         if (resetLegacyState) {
@@ -66,7 +62,6 @@ object PlayerActionCancellationService {
         player.prayerAction = -1
         player.boneItem = -1
         player.NpcWanneTalk = 0
-        player.nextDiag = -1
         if (fullResetAnimation) {
             player.rerequestAnim()
         }

@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.npcs.spawns
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.netty.listener.out.NpcDialogueHead
@@ -15,7 +16,7 @@ internal object Watcher {
             c.send(SendString(c.dMsg, 4885))
             c.send(NpcDialogueHead(804, 4883))
             c.sendFrame164(4882)
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }

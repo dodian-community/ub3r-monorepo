@@ -40,12 +40,14 @@ import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.action.ProductionActionService;
 import net.dodian.uber.game.runtime.action.SkillingActionService;
 import net.dodian.uber.game.runtime.action.SmithingActionService;
 import net.dodian.uber.game.runtime.action.TeleportActionService;
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
 import net.dodian.uber.game.runtime.combat.CombatStartService;
+import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.utilities.*;
 
@@ -165,7 +167,7 @@ public class Client extends Player implements Runnable {
     int fishIndex;
     boolean fishing = false;
     // Dodian: teleports
-    private int tX = 0, tY = 0, tStage = 0, tH = 0, tEmote = 0;
+    private int tH = 0;
     // Dodian: crafting
     boolean crafting = false;
     int cItem = -1;
@@ -1619,6 +1621,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void openUpShop(int ShopID) {
+        String blockMessage = PlayerInteractionGuardService.blockingInteractionMessage(this);
+        if (blockMessage != null && !PlayerInteractionGuardService.canOpenShop(this)) {
+            send(new SendMessage(blockMessage));
+            return;
+        }
         if (!Server.shopping) {
             send(new SendMessage("Shopping have been disabled!"));
             return;
@@ -1641,12 +1648,17 @@ public class Client extends Player implements Runnable {
     }
 
     public void startNpcDialogue(int dialogueId, int npcId) {
+        String blockMessage = PlayerInteractionGuardService.blockingInteractionMessage(this);
+        if (blockMessage != null && !PlayerInteractionGuardService.canStartDialogue(this)) {
+            send(new SendMessage(blockMessage));
+            return;
+        }
         NpcWanneTalk = 0;
         DialogueService.startLegacy(this, dialogueId, npcId);
     }
 
     public void setTeleportStage(int stage) {
-        tStage = stage;
+        // Legacy no-op bridge retained for untouched callers during teleport cutover.
     }
 
     public int getTeleportHeight() {
@@ -3398,8 +3410,9 @@ public class Client extends Player implements Runnable {
             if (getLevel(Skill.SMITHING) >= smithing[1]) {
                 if (AreXItemsInBag(barid, bars)) {
                     int[] barLevelRequired = {1, 15, 30, 55, 70, 85};
-                    if (System.currentTimeMillis() - lastAction >= 600 && !IsAnvil) {
-                        lastAction = System.currentTimeMillis();
+                    long currentCycle = net.dodian.uber.game.runtime.loop.GameCycleClock.currentCycle();
+                    if (currentCycle - lastAction >= 1 && !IsAnvil) {
+                        lastAction = currentCycle;
                         setFocus(skillX, skillY);
                         send(new SendMessage("You start hammering the bar..."));
                         requestAnim(0x382, 0);
@@ -3407,8 +3420,8 @@ public class Client extends Player implements Runnable {
                         int diff = getLevel(Skill.SMITHING) - barLevelRequired[CheckSmithing(smithing[3]) - 1];
                         smithing[0] = 5 - (diff >= 14 ? 2 : diff >= 7 ? 1 : 0);
                     }
-                    if (System.currentTimeMillis() - lastAction >= (smithing[0] * 600L) && IsAnvil) {
-                        lastAction = System.currentTimeMillis();
+                    if (currentCycle - lastAction >= smithing[0] && IsAnvil) {
+                        lastAction = currentCycle;
                         for (int i = 0; i < bars; i++) {
                             deleteItem(barid, GetItemSlot(barid), playerItemsN[GetItemSlot(barid)]);
                         }
@@ -5058,10 +5071,7 @@ public class Client extends Player implements Runnable {
         resetAction(false);
         resetWalkingQueue();
         UsingAgility = true;
-        tX = x;
-        tY = y;
         tH = height;
-        tEmote = emote;
         addEffectTime(0, -1); //If we teleport, reset desert shiez!
         TeleportActionService.startTeleport(this, x, y, height, emote);
     }
@@ -5971,18 +5981,14 @@ public class Client extends Player implements Runnable {
     public void startAttack(Entity enemy) {
         target = enemy;
         if (target instanceof Npc) {
-            attackingNpc = true;
             faceNpc(target.getSlot());
         } else {
-            attackingPlayer = true;
             facePlayer(target.getSlot());
         }
     }
 
     public void resetAttack() {
         //rerequestAnim();
-        attackingNpc = false;
-        attackingPlayer = false;
         magicId = -1;
         target = null;
         CombatStartService.clearCombatTarget(this);
@@ -6880,7 +6886,8 @@ public class Client extends Player implements Runnable {
                     return;
                 }
                 if (i > 0 && !getTravel(i - 1)) {
-                    NpcDialogue = 48054;
+                    DialogueService.setLegacyDialogueId(this, 48054);
+                    DialogueService.setDialogueSent(this, false);
                     return;
                 }
                 /* Set configs! */
@@ -6985,7 +6992,7 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean doingTeleport() {
-        return tStage > 0;
+        return getActiveActionType() == PlayerActionType.TELEPORT;
     }
 
     public boolean isWindowFocused() {

@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.npcs.spawns
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -21,13 +22,13 @@ internal object PartyPete {
     fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Legacy.GAMBLER_GREETING) { c ->
             c.sendFrame200(4883, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo).replace("_", " "), 4884))
+            c.send(SendString(c.GetNpcName(DialogueService.legacyNpcTalkTo(c)).replace("_", " "), 4884))
             c.send(SendString("Hi there, what would you like to do?", 4885))
             c.send(SendString("Click here to continue", 4886))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
+            c.send(NpcDialogueHead(DialogueService.legacyNpcTalkTo(c), 4883))
             c.sendFrame164(4882)
-            c.NpcDialogueSend = true
-            c.nextDiag = DialogueIds.Legacy.GAMBLER_OPTIONS
+            DialogueService.setDialogueSent(c, true)
+            DialogueService.setLegacyNextDialogueId(c, DialogueIds.Legacy.GAMBLER_OPTIONS)
             true
         }
 
@@ -38,18 +39,18 @@ internal object PartyPete {
             c.send(SendString("Gamble", 2461))
             c.send(SendString("Nothing", 2462))
             c.sendFrame164(2459)
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
 
         builder.handle(DialogueIds.Legacy.GAMBLER_BUSY) { c ->
             c.sendFrame200(4883, c.npcFace)
-            c.send(SendString(c.GetNpcName(c.NpcTalkTo).replace("_", " "), 4884))
+            c.send(SendString(c.GetNpcName(DialogueService.legacyNpcTalkTo(c)).replace("_", " "), 4884))
             c.send(SendString("Cant talk right now!", 4885))
             c.send(SendString("Click here to continue", 4886))
-            c.send(NpcDialogueHead(c.NpcTalkTo, 4883))
+            c.send(NpcDialogueHead(DialogueService.legacyNpcTalkTo(c), 4883))
             c.sendFrame164(4882)
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }

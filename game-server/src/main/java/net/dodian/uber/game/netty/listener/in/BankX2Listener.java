@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.content.npcs.spawns.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -49,6 +50,8 @@ public class BankX2Listener implements PacketListener {
                 client.send(new RemoveInterfaces());
                 int slot = client.XremoveSlot - 1;
                 int id = client.herbOptions.get(slot).getId();
+                int legacyNpcId = DialogueService.legacyNpcTalkTo(client);
+                int npcId = legacyNpcId > 0 ? legacyNpcId : 4753;
                 boolean grimy = client.GetItemName(id).toLowerCase().contains("grimy");
                 int coins = client.getInvAmt(995);
                 if (grimy) {
@@ -64,13 +67,12 @@ public class BankX2Listener implements PacketListener {
                         client.deleteItem(id, enteredAmount);
                         client.addItem(otherHerb, enteredAmount);
                         client.checkItemUpdate();
-                        int npcId = client.NpcTalkTo > 0 ? client.NpcTalkTo : 4753;
                         HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
                     } else {
-                        client.showNPCChat(client.NpcTalkTo, 605, new String[]{"You need 1 herb and 200 coins", "for me to grind it for you."});
+                        client.showNPCChat(npcId, 605, new String[]{"You need 1 herb and 200 coins", "for me to grind it for you."});
                     }
                 } else if (!client.playerHasItem(228))
-                    client.showNPCChat(client.NpcTalkTo, 605, new String[]{"You need noted vial of water for me to do that!"});
+                    client.showNPCChat(npcId, 605, new String[]{"You need noted vial of water for me to do that!"});
                 else { // Make unfinished potions!
                     int otherHerb = -1;
                     for (int h = 0; h < Utils.herb_unf.length && otherHerb == -1; h++)
@@ -87,10 +89,9 @@ public class BankX2Listener implements PacketListener {
                         client.deleteItem(otherHerb, enteredAmount);
                         client.addItem(id, enteredAmount);
                         client.checkItemUpdate();
-                        int npcId = client.NpcTalkTo > 0 ? client.NpcTalkTo : 4753;
                         HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
                     } else {
-                        client.showNPCChat(client.NpcTalkTo, 605, new String[]{"You need atleast 1 herb, 1 vial of water and 1000 coins", "for me to turn it into a unfinish potion."});
+                        client.showNPCChat(npcId, 605, new String[]{"You need atleast 1 herb, 1 vial of water and 1000 coins", "for me to turn it into a unfinish potion."});
                     }
                 }
                 client.XinterfaceID = -1;

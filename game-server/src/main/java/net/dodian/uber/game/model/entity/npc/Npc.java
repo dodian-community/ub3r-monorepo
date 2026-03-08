@@ -434,7 +434,7 @@ public class Npc extends Entity {
                     if (e instanceof Player) {
                         if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
                             continue;
-                        if(((Client) e).attackingNpc) {
+                        if(isActivelyTargetingThisNpc((Client) e)) {
                             enemy = Server.playerHandler.getClient(e.getSlot());
                             int hitDiff = 0;
                             if (type == 1) {
@@ -466,16 +466,16 @@ public class Npc extends Entity {
                 //278 = start gfx!, 288 = range gfx!
                 if(!landRanged) {
                     requestAnim(data.getAttackEmote(), 0);
-                    if(target != null && target.attackingNpc)
+                    if(target != null && isActivelyTargetingThisNpc(target))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    if(enemy != null && enemy.attackingNpc)
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy))
                         enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                 } else { //Ranged!
-                    if(target != null && target.attackingNpc) {
+                    if(target != null && isActivelyTargetingThisNpc(target)) {
                         sendArrow(target, -1, 288);
                         delayGfx(target, 6240, -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && enemy.attackingNpc) {
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
                         sendArrow(target, -1, 288);
                         delayGfx(target, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
@@ -488,20 +488,20 @@ public class Npc extends Entity {
                 boolean landMagic = Misc.chance(6) == 1;
                 //279 = start gfx!, 289 = range gfx!, 280 = magic gfx!
                 if(!landMagic) {
-                    if(target != null && target.attackingNpc) {
+                    if(target != null && isActivelyTargetingThisNpc(target)) {
                         sendArrow(target, -1, 289);
                         delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), landHit(target, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
                     }
-                    if(enemy != null && enemy.attackingNpc) {
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
                         sendArrow(enemy, -1, 289);
                         delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), landHit(enemy, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
                     }
                 } else { //Magic!
-                    if(target != null && target.attackingNpc) {
+                    if(target != null && isActivelyTargetingThisNpc(target)) {
                         sendArrow(target, 279, 280);
                         delayGfx(target, 6234, 281, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && enemy.attackingNpc) {
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
                         sendArrow(target, 279, 280);
                         delayGfx(target, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
@@ -514,19 +514,19 @@ public class Npc extends Entity {
                 boolean landMelee = Misc.chance(6) == 1;
                 //magic earth wave or surge gfx's
                 if(!landMelee) {
-                    if(target != null && target.attackingNpc) {
+                    if(target != null && isActivelyTargetingThisNpc(target)) {
                         sendArrow(target, 164, 165);
                         delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && enemy.attackingNpc) {
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
                         sendArrow(enemy, 164, 165);
                         delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 } else { //Melee!
                     requestAnim(5327, 0);
-                    if(target != null && target.attackingNpc)
+                    if(target != null && isActivelyTargetingThisNpc(target))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    if(enemy != null && enemy.attackingNpc)
+                    if(enemy != null && isActivelyTargetingThisNpc(enemy))
                         enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                 }
             }
@@ -554,6 +554,10 @@ public class Npc extends Entity {
         double chance = Misc.chance(100000) / 1000D;
         p.debug("Npc Accuracy Hit: " + (NpcHitChance*100) + "% out of " + chance + "%");
         return chance < (NpcHitChance*100);
+    }
+
+    private boolean isActivelyTargetingThisNpc(Client player) {
+        return CombatRuntimeService.isTargetingNpc(player, this);
     }
 
     public void addBossCount(Player p) {

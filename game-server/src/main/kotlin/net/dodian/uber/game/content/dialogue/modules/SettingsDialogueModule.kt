@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.dialogue.modules
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueRenderModule
@@ -15,7 +16,7 @@ object SettingsDialogueModule : DialogueRenderModule {
             c.send(SendString("Enable specials", 2461))
             c.send(SendString("Disable specials", 2462))
             c.sendFrame164(2459)
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
 
@@ -26,7 +27,7 @@ object SettingsDialogueModule : DialogueRenderModule {
             c.send(SendString("Enable boss yell messages", 2461))
             c.send(SendString("Disable boss yell messages", 2462))
             c.sendFrame164(2459)
-            c.NpcDialogueSend = true
+            DialogueService.setDialogueSent(c, true)
             true
         }
     }
