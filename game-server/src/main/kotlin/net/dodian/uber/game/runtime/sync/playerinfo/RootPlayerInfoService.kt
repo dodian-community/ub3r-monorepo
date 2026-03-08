@@ -21,8 +21,10 @@ import net.dodian.utilities.syncPlayerIncrementalAddsEnabled
 import net.dodian.utilities.syncPlayerFragmentReuseEnabled
 import net.dodian.utilities.syncPlayerSelfOnlyEnabled
 import net.dodian.utilities.syncPlayerStateValidationEnabled
+import org.slf4j.LoggerFactory
 
 class RootPlayerInfoService {
+    private val logger = LoggerFactory.getLogger(RootPlayerInfoService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val viewerStates = IdentityHashMap<Player, ViewerPlayerInfoState>()
     private val idleTemplateCache =
@@ -48,22 +50,33 @@ class RootPlayerInfoService {
         pruneViewerStates(activePlayers)
 
         activePlayers.forEach { viewer ->
-            if (viewer.timeOutCounter.get() >= 84) {
-                viewer.disconnected = true
-                viewer.println_debug("\nRemove non-responding " + viewer.playerName + " after 60 seconds of disconnect! ")
-            }
-            if (viewer.disconnected) {
-                viewer.println_debug("\nRemove disconnected player " + viewer.playerName)
-                Server.playerHandler.removePlayer(viewer)
-                viewer.disconnected = false
-                PlayerHandler.players[viewer.slot] = null
-                return@forEach
-            }
+            try {
+                if (viewer.timeOutCounter.get() >= 84) {
+                    viewer.disconnected = true
+                    viewer.println_debug("\nRemove non-responding " + viewer.playerName + " after 60 seconds of disconnect! ")
+                }
+                if (viewer.disconnected) {
+                    viewer.println_debug("\nRemove disconnected player " + viewer.playerName)
+                    Server.playerHandler.removePlayer(viewer)
+                    viewer.disconnected = false
+                    PlayerHandler.players[viewer.slot] = null
+                    return@forEach
+                }
 
-            val plan = buildPlan(viewer, rootCycle)
-            recordPlanMetrics(plan)
-            dispatch(viewer, plan)
-            captureViewerState(viewer, plan)
+                val plan = buildPlan(viewer, rootCycle)
+                recordPlanMetrics(plan)
+                dispatch(viewer, plan)
+                captureViewerState(viewer, plan)
+            } catch (throwable: Throwable) {
+                logger.error(
+                    "Root player sync failed viewer={} slot={} pos={}",
+                    viewer.playerName,
+                    viewer.slot,
+                    viewer.position,
+                    throwable,
+                )
+                viewer.disconnected = true
+            }
         }
     }
 

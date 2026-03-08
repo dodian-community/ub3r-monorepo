@@ -15,7 +15,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
                     position.x == 2444 && position.y == 3414 -> Position(2445, 3416, 1)
                     else -> return@firstClick false
                 }
-            VerticalTravel.start(client, VerticalTravelCompletion.QueuedDestination(destination), VerticalTravelStyles.STAIRS)
+            VerticalTravel.start(client, destination, VerticalTravelStyles.STAIRS)
         }
         firstClick(16677) { client, _, position, _ ->
             val destination =
@@ -26,7 +26,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
                     position.x == 2445 && position.y == 3415 -> Position(2444, 3413, 0)
                     else -> return@firstClick false
                 }
-            VerticalTravel.start(client, VerticalTravelCompletion.QueuedDestination(destination), VerticalTravelStyles.STAIRS)
+            VerticalTravel.start(client, destination, VerticalTravelStyles.STAIRS)
         }
         firstClick(16665) { client, _, position, _ ->
             val destination =
@@ -41,7 +41,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
                     position.x == 2569 && position.y == 9522 -> Position(2570, 3121, 0)
                     else -> return@firstClick false
                 }
-            VerticalTravel.start(client, VerticalTravelCompletion.QueuedDestination(destination), VerticalTravelStyles.STAIRS)
+            VerticalTravel.start(client, destination, VerticalTravelStyles.STAIRS)
         }
         firstClick(16683) { client, _, position, _ ->
             if (position.x != 2597 || position.y != 3107) {
@@ -49,7 +49,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2597, 3106, 1)),
+                Position(2597, 3106, 1),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -59,7 +59,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2597, 3106, 0)),
+                Position(2597, 3106, 0),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -69,7 +69,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2714, 3470, 1)),
+                Position(2714, 3470, 1),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -79,7 +79,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2715, 3471, 0)),
+                Position(2715, 3471, 0),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -89,7 +89,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2544, 3112, 1)),
+                Position(2544, 3112, 1),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -99,7 +99,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2544, 3112, 0)),
+                Position(2544, 3112, 0),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -109,7 +109,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2549, 3112, 2)),
+                Position(2549, 3112, 2),
                 VerticalTravelStyles.STAIRS,
             )
         }
@@ -119,7 +119,7 @@ object VerticalTeleportObjects : VerticalTravelDslObjectContent(
             }
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(2549, 3112, 1)),
+                Position(2549, 3112, 1),
                 VerticalTravelStyles.STAIRS,
             )
         }

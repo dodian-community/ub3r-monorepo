@@ -72,9 +72,19 @@ public class EntityProcessor implements Runnable {
         long collectNs = System.nanoTime() - collectNsStart;
         long npcLoopNsStart = System.nanoTime();
         for (Npc npc : activeNpcs) {
-            processNpc(now, npc, activeNpcChunks);
-            // Keep chunk membership current for active NPCs; avoids full-world chunk-sync scans.
-            npc.syncChunkMembership();
+            try {
+                processNpc(now, npc, activeNpcChunks);
+                // Keep chunk membership current for active NPCs; avoids full-world chunk-sync scans.
+                npc.syncChunkMembership();
+            } catch (Throwable throwable) {
+                logger.error(
+                        "NPC_MAIN actor failed slot={} id={} pos={}",
+                        npc != null ? npc.getSlot() : -1,
+                        npc != null ? npc.getId() : -1,
+                        npc != null ? npc.getPosition() : null,
+                        throwable
+                );
+            }
         }
         long npcLoopNs = System.nanoTime() - npcLoopNsStart;
 

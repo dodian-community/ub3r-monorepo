@@ -45,7 +45,7 @@ class VerticalTravelObjectsTest {
         val started =
             VerticalTravel.start(
                 client,
-                VerticalTravelCompletion.QueuedDestination(Position(3000, 3001, 1)),
+                Position(3000, 3001, 1),
                 VerticalTravelStyle(animationId = -1, delayMs = 0L),
             )
 
@@ -66,7 +66,7 @@ class VerticalTravelObjectsTest {
     }
 
     @Test
-    fun `legends up no longer arms legacy stairs`() {
+    fun `legends up uses staged vertical destination`() {
         val client = Client(EmbeddedChannel(), 1)
         client.premium = true
         client.moveTo(2732, 3377, 0)
@@ -74,7 +74,6 @@ class VerticalTravelObjectsTest {
         val handled = StaircaseObjects.onFirstClick(client, 1725, Position(2732, 3377, 0), null)
 
         assertTrue(handled)
-        assertEquals(0, client.stairs)
         assertTrue(client.isVerticalTransitionActive())
         (client.channel as EmbeddedChannel).finishAndReleaseAll()
     }
@@ -95,38 +94,14 @@ class VerticalTravelObjectsTest {
     }
 
     @Test
-    fun `clear vertical travel state resets legacy stair residue`() {
+    fun `clear vertical travel state resets staged transition only`() {
         val client = Client(EmbeddedChannel(), 1)
         client.moveTo(2732, 3377, 0)
-        client.stairs = 22
-        client.skillX = 2732
-        client.skillY = 3377
-        client.stairDistance = 2
-        client.stairDistanceAdd = 1
-        setIsStair(client, true)
         client.beginVerticalTransition(250L)
 
         client.clearVerticalTravelState()
 
         assertFalse(client.isVerticalTransitionActive())
-        assertEquals(0, client.stairs)
-        assertEquals(-1, client.skillX)
-        assertEquals(-1, client.skillY)
-        assertEquals(1, client.stairDistance)
-        assertEquals(0, client.stairDistanceAdd)
-        assertFalse(getIsStair(client))
         (client.channel as EmbeddedChannel).finishAndReleaseAll()
-    }
-
-    private fun setIsStair(client: Client, value: Boolean) {
-        val field = client.javaClass.superclass.getDeclaredField("IsStair")
-        field.isAccessible = true
-        field.setBoolean(client, value)
-    }
-
-    private fun getIsStair(client: Client): Boolean {
-        val field = client.javaClass.superclass.getDeclaredField("IsStair")
-        field.isAccessible = true
-        return field.getBoolean(client)
     }
 }

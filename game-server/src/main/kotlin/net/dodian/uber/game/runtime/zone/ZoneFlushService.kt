@@ -1,10 +1,13 @@
 package net.dodian.uber.game.runtime.zone
 
 import net.dodian.uber.game.model.entity.player.Client
+import org.slf4j.LoggerFactory
 
 internal class ZoneFlushService(
     private val subscriberIndex: ZoneSubscriberIndex = ZoneSubscriberIndex(),
 ) {
+    private val logger = LoggerFactory.getLogger(ZoneFlushService::class.java)
+
     fun flush(
         deltas: List<ZoneDelta>,
         activePlayers: List<Client>,
@@ -17,9 +20,20 @@ internal class ZoneFlushService(
         deltas.forEach { delta ->
             val viewers = subscriberIndex.viewersFor(delta, activePlayers)
             candidateViewers += viewers.size
-            viewers.forEach {
-                delta.deliver(it)
-                deliveries++
+            viewers.forEach { viewer ->
+                try {
+                    delta.deliver(viewer)
+                    deliveries++
+                } catch (throwable: Throwable) {
+                    logger.error(
+                        "Zone delta delivery failed player={} slot={} delta={}",
+                        viewer.playerName,
+                        viewer.slot,
+                        delta.javaClass.simpleName,
+                        throwable,
+                    )
+                    viewer.disconnected = true
+                }
             }
         }
         return ZoneFlushStats(deltas.size, candidateViewers, deliveries)

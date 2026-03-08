@@ -720,19 +720,50 @@ public abstract class Player extends Entity {
                 str.putBits(1, 0);
         } else if (secondaryDirection == -1) {
             // send "walking packet"
+            int translatedPrimary = translateDirectionToClient(primaryDirection, "local-primary");
+            if (translatedPrimary == -1) {
+                if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
+                    str.putBits(1, 1);
+                    str.putBits(2, 0);
+                } else {
+                    str.putBits(1, 0);
+                }
+                return;
+            }
             str.putBits(1, 1);
             str.putBits(2, 1);
-            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
+            str.putBits(3, translatedPrimary);
             str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         } else {
             // send "running packet"
+            int translatedPrimary = translateDirectionToClient(primaryDirection, "local-primary");
+            int translatedSecondary = translateDirectionToClient(secondaryDirection, "local-secondary");
+            if (translatedPrimary == -1) {
+                if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
+                    str.putBits(1, 1);
+                    str.putBits(2, 0);
+                } else {
+                    str.putBits(1, 0);
+                }
+                return;
+            }
             str.putBits(1, 1);
-            str.putBits(2, 2);
-            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
-            str.putBits(3, Utils.xlateDirectionToClient[secondaryDirection]);
+            str.putBits(2, translatedSecondary == -1 ? 1 : 2);
+            str.putBits(3, translatedPrimary);
+            if (translatedSecondary != -1) {
+                str.putBits(3, translatedSecondary);
+            }
             str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         }
 
+    }
+
+    private int translateDirectionToClient(int direction, String phase) {
+        if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
+            logger.warn("Invalid player direction {} for {} during {}", direction, getPlayerName(), phase);
+            return -1;
+        }
+        return Utils.xlateDirectionToClient[direction];
     }
 
     public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
@@ -881,7 +912,6 @@ public abstract class Player extends Entity {
     }
 
     public void clearUpdateFlags() {
-        IsStair = false; //What is this?!
         faceTarget(-1);
         getUpdateFlags().clear();
         
@@ -1154,7 +1184,6 @@ public abstract class Player extends Entity {
     public boolean buttonOnRun = true;
 
     private int damageDealt = 0, damageDealt2;
-    protected boolean IsStair = false;
     public int deathStage = 0;
     public long deathTimer = 0;
 

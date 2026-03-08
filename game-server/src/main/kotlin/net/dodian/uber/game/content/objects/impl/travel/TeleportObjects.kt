@@ -210,8 +210,7 @@ object TeleportObjects : ObjectContent {
                 }
             }
             2492 -> {
-                client.transport(Position(2591, 3087, 0))
-                true
+                EssenceMineTravel.returnFromEssenceMine(client)
             }
             2158, 2156 -> {
                 client.triggerTele(2921, 4844, 0, false)

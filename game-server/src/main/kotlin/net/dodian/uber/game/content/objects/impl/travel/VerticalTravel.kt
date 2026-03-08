@@ -4,20 +4,6 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.loop.GameThreadTimers
 
-sealed interface VerticalTravelCompletion {
-    data class QueuedDestination(
-        val destination: Position,
-    ) : VerticalTravelCompletion
-
-    data class LegacyStair(
-        val stairs: Int,
-        val skillX: Int,
-        val skillY: Int,
-        val stairDistance: Int,
-        val stairDistanceAdd: Int = 0,
-    ) : VerticalTravelCompletion
-}
-
 data class VerticalTravelStyle(
     val animationId: Int = -1,
     val delayMs: Long,
@@ -36,7 +22,7 @@ object VerticalTravelStyles {
 
 object VerticalTravel {
     @JvmStatic
-    fun start(client: Client, completion: VerticalTravelCompletion, style: VerticalTravelStyle): Boolean {
+    fun start(client: Client, destination: Position, style: VerticalTravelStyle): Boolean {
         if (client.disconnected || client.isVerticalTransitionActive()) {
             return true
         }
@@ -46,22 +32,9 @@ object VerticalTravel {
         }
         val token = client.beginVerticalTransition(style.delayMs)
         val debugContext =
-            "player=${client.playerName} token=$token completion=$completion state=${client.verticalTransitionDebugSummary()}"
+            "player=${client.playerName} token=$token destination=$destination state=${client.verticalTransitionDebugSummary()}"
         GameThreadTimers.schedule("vertical-travel", style.delayMs, debugContext) {
-            when (completion) {
-                is VerticalTravelCompletion.QueuedDestination ->
-                    client.finishVerticalTransition(token, completion.destination)
-
-                is VerticalTravelCompletion.LegacyStair ->
-                    client.finishVerticalTransition(
-                        token,
-                        completion.stairs,
-                        completion.skillX,
-                        completion.skillY,
-                        completion.stairDistance,
-                        completion.stairDistanceAdd,
-                    )
-            }
+            client.finishVerticalTransition(token, destination)
         }
         return true
     }

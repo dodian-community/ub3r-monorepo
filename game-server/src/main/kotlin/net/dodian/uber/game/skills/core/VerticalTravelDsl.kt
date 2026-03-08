@@ -2,6 +2,9 @@ package net.dodian.uber.game.skills.core
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.objects.impl.travel.VerticalTravel
+import net.dodian.uber.game.content.objects.impl.travel.VerticalTravelStyle
+import net.dodian.uber.game.content.objects.impl.travel.VerticalTravelStyles
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
@@ -33,6 +36,95 @@ class VerticalTravelActionBuilder internal constructor() {
         policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         handler: (Client, Int, Position, GameObjectData?) -> Boolean,
     ) = action(3, objectIds, policy, handler)
+
+    fun verticalLink(
+        vararg objectIds: Int,
+        option: Int = 1,
+        style: VerticalTravelStyle,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = action(option, objectIds, policy) { client, objectId, position, obj ->
+        val resolved = destination(client, objectId, position, obj) ?: return@action false
+        VerticalTravel.start(client, resolved, style)
+    }
+
+    fun verticalLink(
+        vararg objectIds: Int,
+        option: Int = 1,
+        style: VerticalTravelStyle,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = style, policy = policy) { _, _, _, _ -> destination }
+
+    fun ladderUp(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
+
+    fun ladderUp(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
+
+    fun ladderDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
+
+    fun ladderDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
+
+    fun stairsUp(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
+
+    fun stairsUp(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
+
+    fun stairsDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
+
+    fun stairsDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
+
+    fun trapdoorDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: (Client, Int, Position, GameObjectData?) -> Position?,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.TRAPDOOR, policy = policy, destination = destination)
+
+    fun trapdoorDown(
+        vararg objectIds: Int,
+        option: Int = 1,
+        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        destination: Position,
+    ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.TRAPDOOR, policy = policy, destination = destination)
 
     private fun action(
         option: Int,

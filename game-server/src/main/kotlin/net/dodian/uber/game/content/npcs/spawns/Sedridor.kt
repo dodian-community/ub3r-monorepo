@@ -4,6 +4,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.objects.impl.travel.EssenceMineTravel
 
 internal object Sedridor {
     // Stats: 5034: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -14,9 +15,5 @@ internal object Sedridor {
     val npcIds: IntArray = npcIdsFromEntries(entries)
 
     @Suppress("UNUSED_PARAMETER")
-    fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.stairs = 26
-        client.stairDistance = 1
-        return true
-    }
+    fun onSecondClick(client: Client, npc: Npc): Boolean = EssenceMineTravel.sendToEssenceMine(client)
 }

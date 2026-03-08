@@ -467,17 +467,44 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
         } else
         if (player.getSecondaryDirection() == -1) {
+            int primaryDirection = translateDirectionToClient(player.getPrimaryDirection(), player.getPlayerName(), "self-primary");
+            if (primaryDirection == -1) {
+                stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
+                if (localPlayerUpdateRequired) {
+                    stream.putBits(2, 0);
+                }
+                return;
+            }
             stream.putBits(1, 1);
             stream.putBits(2, 1);
-            stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
+            stream.putBits(3, primaryDirection);
             stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
         } else {
+            int primaryDirection = translateDirectionToClient(player.getPrimaryDirection(), player.getPlayerName(), "self-primary");
+            int secondaryDirection = translateDirectionToClient(player.getSecondaryDirection(), player.getPlayerName(), "self-secondary");
+            if (primaryDirection == -1) {
+                stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
+                if (localPlayerUpdateRequired) {
+                    stream.putBits(2, 0);
+                }
+                return;
+            }
             stream.putBits(1, 1);
-            stream.putBits(2, 2);
-            stream.putBits(3, Utils.xlateDirectionToClient[player.getPrimaryDirection()]);
-            stream.putBits(3, Utils.xlateDirectionToClient[player.getSecondaryDirection()]);
+            stream.putBits(2, secondaryDirection == -1 ? 1 : 2);
+            stream.putBits(3, primaryDirection);
+            if (secondaryDirection != -1) {
+                stream.putBits(3, secondaryDirection);
+            }
             stream.putBits(1, localPlayerUpdateRequired ? 1 : 0);
         }
+    }
+
+    private static int translateDirectionToClient(int direction, String playerName, String phase) {
+        if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
+            logger.warn("Invalid player direction {} for {} during {}", direction, playerName, phase);
+            return -1;
+        }
+        return Utils.xlateDirectionToClient[direction];
     }
 
     public void writeLocalRemovals(Player viewer, ByteMessage stream, java.util.BitSet removals) {

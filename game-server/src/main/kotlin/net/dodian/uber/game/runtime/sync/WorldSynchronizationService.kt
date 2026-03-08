@@ -135,66 +135,74 @@ class WorldSynchronizationService {
             return
         }
         activePlayers.forEach { player ->
-            if (player.timeOutCounter.get() >= 84) {
-                player.disconnected = true
-                player.println_debug("\nRemove non-responding " + player.playerName + " after 60 seconds of disconnect! ")
-            }
+            try {
+                if (player.timeOutCounter.get() >= 84) {
+                    player.disconnected = true
+                    player.println_debug("\nRemove non-responding " + player.playerName + " after 60 seconds of disconnect! ")
+                }
 
-            if (player.disconnected) {
-                player.println_debug("\nRemove disconnected player " + player.playerName)
-                Server.playerHandler.removePlayer(player)
-                player.disconnected = false
-                PlayerHandler.players[player.slot] = null
-                return@forEach
-            }
-
-            val decision = playerUpdating.shouldSkipPlayerSync(player)
-            if (decision == PlayerSyncDecision.SKIP) {
-                if (syncSkipEmptyPlayerPacketEnabled) {
-                    SynchronizationContext.recordPlayerPacketSkipped(player.playerListSize)
-                    updateViewerSyncState(player)
+                if (player.disconnected) {
+                    player.println_debug("\nRemove disconnected player " + player.playerName)
+                    Server.playerHandler.removePlayer(player)
+                    player.disconnected = false
+                    PlayerHandler.players[player.slot] = null
                     return@forEach
                 }
-                if (syncPlayerTemplateCacheEnabled) {
-                    val key = playerUpdating.buildPlayerSyncTemplateKey(player)
-                    val template =
-                        SynchronizationContext.getPlayerTemplate(key)
-                            ?: playerUpdating.buildPlayerSyncTemplate(player).also {
-                                SynchronizationContext.putPlayerTemplate(key, it)
-                            }
-                    sendPlayerTemplate(player, template.payload)
-                    SynchronizationContext.recordPlayerPacketTemplated(player.playerListSize)
-                    updateViewerSyncState(player)
-                    return@forEach
+
+                val decision = playerUpdating.shouldSkipPlayerSync(player)
+                if (decision == PlayerSyncDecision.SKIP) {
+                    if (syncSkipEmptyPlayerPacketEnabled) {
+                        SynchronizationContext.recordPlayerPacketSkipped(player.playerListSize)
+                        updateViewerSyncState(player)
+                        return@forEach
+                    }
+                    if (syncPlayerTemplateCacheEnabled) {
+                        val key = playerUpdating.buildPlayerSyncTemplateKey(player)
+                        val template =
+                            SynchronizationContext.getPlayerTemplate(key)
+                                ?: playerUpdating.buildPlayerSyncTemplate(player).also {
+                                    SynchronizationContext.putPlayerTemplate(key, it)
+                                }
+                        sendPlayerTemplate(player, template.payload)
+                        SynchronizationContext.recordPlayerPacketTemplated(player.playerListSize)
+                        updateViewerSyncState(player)
+                        return@forEach
+                    }
                 }
+                player.sendPlayerSynchronization()
+                updateViewerSyncState(player)
+            } catch (throwable: Throwable) {
+                handleViewerSyncFailure("legacy-player-sync", player, throwable)
             }
-            player.sendPlayerSynchronization()
-            updateViewerSyncState(player)
         }
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
         val trackActivityStamps = syncSkipEmptyNpcPacketEnabled
         activePlayers.forEach { player ->
-            val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
-            val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
-            val membershipRevision = if (trackActivityStamps) player.localNpcMembershipRevision else 0L
-            val decision =
-                if (trackActivityStamps) {
-                    shouldSkipNpcSync(player, state, chunkStamp, membershipRevision)
-                } else {
-                    NpcSyncDecision.BUILD
+            try {
+                val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
+                val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
+                val membershipRevision = if (trackActivityStamps) player.localNpcMembershipRevision else 0L
+                val decision =
+                    if (trackActivityStamps) {
+                        shouldSkipNpcSync(player, state, chunkStamp, membershipRevision)
+                    } else {
+                        NpcSyncDecision.BUILD
+                    }
+                if (decision == NpcSyncDecision.SKIP) {
+                    SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
+                    SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
+                    updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
+                    return@forEach
                 }
-            if (decision == NpcSyncDecision.SKIP) {
-                SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
+                player.sendNpcSynchronization()
+                SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
                 SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
                 updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
-                return@forEach
+            } catch (throwable: Throwable) {
+                handleViewerSyncFailure("npc-sync", player, throwable)
             }
-            player.sendNpcSynchronization()
-            SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
-            SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-            updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
         }
     }
 
@@ -211,11 +219,15 @@ class WorldSynchronizationService {
         val netNanos =
             measureNanoTime {
                 activePlayers.forEach { player ->
-                    val flushStats = player.flushOutbound()
-                    if (flushStats.flushedMessages() > 0) {
-                        flushedPlayers++
-                        flushedMessages += flushStats.flushedMessages()
-                        flushedBytes += flushStats.flushedBytes()
+                    try {
+                        val flushStats = player.flushOutbound()
+                        if (flushStats.flushedMessages() > 0) {
+                            flushedPlayers++
+                            flushedMessages += flushStats.flushedMessages()
+                            flushedBytes += flushStats.flushedBytes()
+                        }
+                    } catch (throwable: Throwable) {
+                        handleViewerSyncFailure("outbound-flush", player, throwable)
                     }
                 }
             }
@@ -243,6 +255,18 @@ class WorldSynchronizationService {
             npc?.clearUpdateFlags()
         }
         activePlayers.forEach(Client::clearUpdateFlags)
+    }
+
+    private fun handleViewerSyncFailure(stage: String, player: Client, throwable: Throwable) {
+        logger.error(
+            "World sync viewer failure stage={} player={} slot={} pos={}",
+            stage,
+            player.playerName,
+            player.slot,
+            player.position,
+            throwable,
+        )
+        player.disconnected = true
     }
 
     private fun shouldSkipNpcSync(

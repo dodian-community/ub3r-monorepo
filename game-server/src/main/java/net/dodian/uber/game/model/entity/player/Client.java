@@ -592,9 +592,6 @@ public class Client extends Player implements Runnable {
      */
     public int activeInterfaceId = -1;
 
-    public int stairs = 0;
-    public int stairDistance = 1;
-    public int stairDistanceAdd = 0;
     private long verticalTransitionSequence = 0L;
     private long activeVerticalTransitionToken = 0L;
     private long verticalTransitionUntilMillis = 0L;
@@ -2173,12 +2170,6 @@ public class Client extends Player implements Runnable {
             saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
             lastProgressSave = now;
         }
-        // check stairs
-        if (stairs > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), stairDistance)) {
-                stairs(stairs, getPosition().getX(), getPosition().getY());
-            }
-        }
         // check banking
         if (WanneBank > 0) {
             if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), WanneBank)) {
@@ -3090,124 +3081,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public int[] EssenceMineX = {2899, 2912, 2921, 2912, 2922, 2909, 2899, 2909};
-    public int[] EssenceMineY = {4843, 4834, 4846, 4830, 4820, 4830, 4820, 4834};
-
-    /*
-     * [0] North West [1] North East [2] Center [3] South East [4] South West
-     */
-    public int[] EssenceMineRX = {3253, 3105, 2681, 2591};
-    public int[] EssenceMineRY = {3401, 9571, 3325, 3086};
-
-    /*
-     * [0] Varrock [1] Wizard Tower [2] Ardougne [3] Magic Guild
-     */
-    private long stairBlock = 0;
-
-    public void stairs(int stairs, int teleX, int teleY) {
-        if (stairBlock > System.currentTimeMillis()) {
-            resetStairs();
-            if (getClientPacketTraceEnabled()) {
-                logger.debug("{} stair blocked!", getPlayerName());
-            }
-            return;
-        }
-        stairBlock = System.currentTimeMillis() + 1000;
-        if (!IsStair) {
-            IsStair = true;
-            if (stairs == 1) {
-                if (skillX == 2715 && skillY == 3470) {
-                    if (getPosition().getY() < 3470 || getPosition().getX() < 2715) {
-                        // resetStairs();
-                        return;
-                    } else {
-                        transport(new Position(teleX, teleY, 1));
-                        resetStairs();
-                        return;
-                    }
-                }
-            }
-            if (stairs == 1) {
-                getPosition().setZ(getPosition().getZ() + 1);
-            } else if (stairs == 2) {
-                getPosition().setZ(getPosition().getZ() - 1);
-            } else if (stairs == 21) {
-                getPosition().setZ(getPosition().getZ() + 1);
-            } else if (stairs == 22) {
-                getPosition().setZ(getPosition().getZ() - 1);
-            } else if (stairs == 69)
-                transport(new Position(teleX, teleY, getPosition().getZ() + 1)); //Unsure what height!
-            if (stairs == 3 || stairs == 5 || stairs == 9) {
-                transport(new Position(getPosition().getX(), getPosition().getY() + 6400, getPosition().getZ()));
-            } else if (stairs == 4 || stairs == 6 || stairs == 10) {
-                transport(new Position(getPosition().getX(), getPosition().getY() - 6400, getPosition().getZ())); //Unsure if this is good!
-            } else if (stairs == 7) {
-                transport(new Position(3104, 9576, getPosition().getZ()));
-            } else if (stairs == 8) {
-                transport(new Position(3105, 3162, getPosition().getZ()));
-            } else if (stairs == 11) {
-                transport(new Position(2856, 9570, getPosition().getZ()));
-            } else if (stairs == 12) {
-                transport(new Position(2857, 3167, getPosition().getZ()));
-            } else if (stairs == 13) {
-                transport(new Position(skillX, skillY, getPosition().getZ() + 3));
-            } else if (stairs == 15) {
-                teleportToY += (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
-            } else if (stairs == 14) {
-                teleportToY -= (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
-            } else if (stairs == 16) {
-                transport(new Position(2828, 9772, getPosition().getZ()));
-            } else if (stairs == 17) {
-                transport(new Position(3494, 3465, getPosition().getZ()));
-            } else if (stairs == 18) {
-                transport(new Position(3477, 9845, getPosition().getZ()));
-            } else if (stairs == 19) {
-                transport(new Position(3543, 3463, getPosition().getZ()));
-            } else if (stairs == 20) {
-                transport(new Position(3549, 9865, getPosition().getZ()));
-            } else if (stairs == 21) {
-                teleportToY += (stairDistance + stairDistanceAdd); //Shiet system!
-            } else if (stairs == 69) {
-                teleportToY = stairDistanceAdd;
-                teleportToX = stairDistance;
-            } else if (stairs == 22) {
-                teleportToY -= (stairDistance + stairDistanceAdd);
-            } else if (stairs == 23) {
-                transport(new Position(2480, 5175, getPosition().getZ()));
-            } else if (stairs == 24) {
-                transport(new Position(2862, 9572, getPosition().getZ()));
-            } else if (stairs == 25) {
-                int Essence = Misc.random(EssenceMineRX.length - 1);
-                transport(new Position(EssenceMineRX[Essence], EssenceMineRY[Essence], 0));
-            } else if (stairs == 26) {
-                int Essence = Misc.random(EssenceMineX.length - 1);
-                transport(new Position(EssenceMineX[Essence], EssenceMineY[Essence], 0));
-            } else if (stairs == 27) {
-                transport(new Position(2453, 4468, getPosition().getZ()));
-            } else if (stairs == 28) {
-                transport(new Position(3201, 3169, getPosition().getZ()));
-            }
-            if (stairs == 5 || stairs == 10) {
-                transport(new Position(getPosition().getX() + (stairDistance + stairDistanceAdd), getPosition().getY(), 0));
-            }
-            if (stairs == 6 || stairs == 9) {
-                transport(new Position(getPosition().getX() - (stairDistance - stairDistanceAdd), getPosition().getY(), 0));
-            }
-        }
-        resetStairs();
-    }
-
-    public void resetStairs() {
-        stairs = 0;
-        skillX = -1;
-        setSkillY(-1);
-        stairDistance = 1;
-        stairDistanceAdd = 0;
-        resetWalkingQueue();
-        final Client p = this;
-        GameEventScheduler.runLaterMs(500, p::resetWalkingQueue);
-    }
-
     public long beginVerticalTransition(long delayMs) {
         resetWalkingQueue();
         long now = System.currentTimeMillis();
@@ -3228,19 +3101,12 @@ public class Client extends Player implements Runnable {
 
     public void clearVerticalTravelState() {
         clearVerticalTransition();
-        clearLegacyStairState();
     }
 
     public String verticalTransitionDebugSummary() {
         return "token=" + activeVerticalTransitionToken +
                 ",until=" + verticalTransitionUntilMillis +
                 ",tele=(" + teleportToX + "," + teleportToY + "," + teleportToZ + ")" +
-                ",stairs=" + stairs +
-                ",isStair=" + IsStair +
-                ",skill=(" + skillX + "," + skillY + ")" +
-                ",distance=" + stairDistance +
-                ",distanceAdd=" + stairDistanceAdd +
-                ",stairBlock=" + stairBlock +
                 ",pos=" + getPosition();
     }
 
@@ -3255,124 +3121,8 @@ public class Client extends Player implements Runnable {
         if (activeVerticalTransitionToken != token || disconnected) {
             return;
         }
-        clearLegacyStairState();
         queueTransport(destination);
         clearVerticalTransition();
-    }
-
-    public void finishVerticalTransition(
-            long token,
-            int stairs,
-            int skillX,
-            int skillY,
-            int stairDistance,
-            int stairDistanceAdd
-    ) {
-        if (activeVerticalTransitionToken != token || disconnected) {
-            return;
-        }
-        clearLegacyStairState();
-        applyLegacyVerticalTransition(stairs, skillX, skillY, stairDistance, stairDistanceAdd);
-        clearVerticalTransition();
-    }
-
-    public void applyLegacyVerticalTransition(int stairs, int skillX, int skillY, int stairDistance, int stairDistanceAdd) {
-        this.skillX = skillX;
-        setSkillY(skillY);
-        this.stairDistance = stairDistance;
-        this.stairDistanceAdd = stairDistanceAdd;
-        int teleX = getPosition().getX();
-        int teleY = getPosition().getY();
-        if (stairs == 1) {
-            if (skillX == 2715 && skillY == 3470) {
-                if (getPosition().getY() < 3470 || getPosition().getX() < 2715) {
-                    clearLegacyStairState();
-                    return;
-                } else {
-                    queueTransport(new Position(teleX, teleY, 1));
-                    clearLegacyStairState();
-                    return;
-                }
-            }
-        }
-        if (stairs == 1) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ() + 1));
-        } else if (stairs == 2) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ() - 1));
-        } else if (stairs == 21) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY() + (stairDistance + stairDistanceAdd), getPosition().getZ() + 1));
-        } else if (stairs == 22) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY() - (stairDistance + stairDistanceAdd), getPosition().getZ() - 1));
-        } else if (stairs == 69) {
-            queueTransport(new Position(teleX, teleY, getPosition().getZ() + 1));
-            teleportToY = stairDistanceAdd;
-            teleportToX = stairDistance;
-        }
-        if (stairs == 3 || stairs == 5 || stairs == 9) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY() + 6400, getPosition().getZ()));
-        } else if (stairs == 4 || stairs == 6 || stairs == 10) {
-            queueTransport(new Position(getPosition().getX(), getPosition().getY() - 6400, getPosition().getZ()));
-        } else if (stairs == 7) {
-            queueTransport(new Position(3104, 9576, getPosition().getZ()));
-        } else if (stairs == 8) {
-            queueTransport(new Position(3105, 3162, getPosition().getZ()));
-        } else if (stairs == 11) {
-            queueTransport(new Position(2856, 9570, getPosition().getZ()));
-        } else if (stairs == 12) {
-            queueTransport(new Position(2857, 3167, getPosition().getZ()));
-        } else if (stairs == 13) {
-            queueTransport(new Position(skillX, skillY, getPosition().getZ() + 3));
-        } else if (stairs == 15) {
-            teleportToX = getPosition().getX();
-            teleportToY = getPosition().getY() + (6400 - (stairDistance + stairDistanceAdd));
-            teleportToZ = getPosition().getZ();
-        } else if (stairs == 14) {
-            teleportToX = getPosition().getX();
-            teleportToY = getPosition().getY() - (6400 - (stairDistance + stairDistanceAdd));
-            teleportToZ = getPosition().getZ();
-        } else if (stairs == 16) {
-            queueTransport(new Position(2828, 9772, getPosition().getZ()));
-        } else if (stairs == 17) {
-            queueTransport(new Position(3494, 3465, getPosition().getZ()));
-        } else if (stairs == 18) {
-            queueTransport(new Position(3477, 9845, getPosition().getZ()));
-        } else if (stairs == 19) {
-            queueTransport(new Position(3543, 3463, getPosition().getZ()));
-        } else if (stairs == 20) {
-            queueTransport(new Position(3549, 9865, getPosition().getZ()));
-        } else if (stairs == 23) {
-            queueTransport(new Position(2480, 5175, getPosition().getZ()));
-        } else if (stairs == 24) {
-            queueTransport(new Position(2862, 9572, getPosition().getZ()));
-        } else if (stairs == 25) {
-            int Essence = Misc.random(EssenceMineRX.length - 1);
-            queueTransport(new Position(EssenceMineRX[Essence], EssenceMineRY[Essence], 0));
-        } else if (stairs == 26) {
-            int Essence = Misc.random(EssenceMineX.length - 1);
-            queueTransport(new Position(EssenceMineX[Essence], EssenceMineY[Essence], 0));
-        } else if (stairs == 27) {
-            queueTransport(new Position(2453, 4468, getPosition().getZ()));
-        } else if (stairs == 28) {
-            queueTransport(new Position(3201, 3169, getPosition().getZ()));
-        }
-        if (stairs == 5 || stairs == 10) {
-            queueTransport(new Position(getPosition().getX() + (stairDistance + stairDistanceAdd), getPosition().getY() - 6400, 0));
-        }
-        if (stairs == 6 || stairs == 9) {
-            int deltaY = stairs == 6 ? -6400 : 6400;
-            queueTransport(new Position(getPosition().getX() - (stairDistance - stairDistanceAdd), getPosition().getY() + deltaY, 0));
-        }
-        clearLegacyStairState();
-    }
-
-    private void clearLegacyStairState() {
-        stairs = 0;
-        IsStair = false;
-        skillX = -1;
-        setSkillY(-1);
-        stairDistance = 1;
-        stairDistanceAdd = 0;
-        stairBlock = 0L;
     }
 
     public boolean usingBow = false;

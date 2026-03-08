@@ -1,68 +1,50 @@
 package net.dodian.uber.game.content.objects.impl.travel
 
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skills.core.VerticalTravelDslObjectContent
 import net.dodian.uber.game.skills.core.verticalTravelActions
 
-private fun startLadderLegacy(
-    client: Client,
-    position: Position,
-    stairs: Int,
-    distance: Int,
-    distanceAdd: Int = 0,
-): Boolean =
-    VerticalTravel.start(
-        client,
-        VerticalTravelCompletion.LegacyStair(
-            stairs = stairs,
-            skillX = position.x,
-            skillY = position.y,
-            stairDistance = distance,
-            stairDistanceAdd = distanceAdd,
-        ),
-        VerticalTravelStyles.LADDER,
-    )
+private fun Position.offset(dx: Int = 0, dy: Int = 0, dz: Int = 0): Position = Position(x + dx, y + dy, z + dz)
 
 object LadderObjects : VerticalTravelDslObjectContent(
     verticalTravelActions {
-        firstClick(1747) { client, _, position, _ -> startLadderLegacy(client, position, 1, 1) }
-        firstClick(1738) { client, _, position, _ -> startLadderLegacy(client, position, 1, 2) }
-        firstClick(1734) { client, _, position, _ -> startLadderLegacy(client, position, 10, 3, 1) }
-        firstClick(1755, 5946, 1757) { client, _, position, _ -> startLadderLegacy(client, position, 4, 2) }
-        firstClick(1764) { client, _, position, _ -> startLadderLegacy(client, position, 12, 1) }
-        firstClick(2148) { client, _, position, _ -> startLadderLegacy(client, position, 8, 1) }
-        firstClick(2408) { client, _, position, _ -> startLadderLegacy(client, position, 16, 1) }
-        firstClick(5055) { client, _, position, _ -> startLadderLegacy(client, position, 18, 1) }
-        firstClick(5131) { client, _, position, _ -> startLadderLegacy(client, position, 20, 1) }
-        firstClick(9359) { client, _, position, _ -> startLadderLegacy(client, position, 24, 1) }
+        ladderUp(1747) { _, _, position, _ -> position.offset(dz = 1) }
+        ladderUp(1738) { _, _, position, _ -> position.offset(dz = 1) }
+        ladderUp(1734) { _, _, position, _ -> Position(position.x + 4, position.y - 6400, 0) }
+        ladderUp(1755, 5946, 1757) { _, _, position, _ -> position.offset(dy = -6400) }
+        ladderUp(1764) { _, _, position, _ -> Position(2857, 3167, position.z) }
+        ladderUp(2148) { _, _, position, _ -> Position(3105, 3162, position.z) }
+        ladderUp(2408) { _, _, position, _ -> Position(2828, 9772, position.z) }
+        ladderUp(5055) { _, _, position, _ -> Position(3477, 9845, position.z) }
+        ladderUp(5131) { _, _, position, _ -> Position(3549, 9865, position.z) }
+        ladderUp(9359) { _, _, position, _ -> Position(2862, 9572, position.z) }
         firstClick(2406) { client, _, position, _ ->
             if (client.equipment[Equipment.Slot.WEAPON.id] != 772) {
                 return@firstClick false
             }
-            startLadderLegacy(client, position, 27, 1)
+            VerticalTravel.start(client, Position(2453, 4468, position.z), VerticalTravelStyles.LADDER)
         }
-        firstClick(1746, 1749, 1740) { client, _, position, _ -> startLadderLegacy(client, position, 2, 1) }
-        firstClick(5947, 6434) { client, _, position, _ -> startLadderLegacy(client, position, 3, 1) }
+        ladderDown(1746, 1749, 1740) { _, _, position, _ -> position.offset(dz = -1) }
+        ladderDown(5947, 6434) { _, _, position, _ -> position.offset(dy = 6400) }
         firstClick(2113) { client, _, position, _ ->
             if (client.getLevel(Skill.MINING) < 60) {
                 client.send(SendMessage("You need 60 mining to enter the mining guild."))
                 return@firstClick true
             }
-            startLadderLegacy(client, position, 3, 1)
+            VerticalTravel.start(client, position.offset(dy = 6400), VerticalTravelStyles.LADDER)
         }
-        firstClick(492) { client, _, position, _ -> startLadderLegacy(client, position, 11, 2) }
-        firstClick(2147) { client, _, position, _ -> startLadderLegacy(client, position, 7, 1) }
-        firstClick(5054) { client, _, position, _ -> startLadderLegacy(client, position, 17, 1) }
-        firstClick(5130) { client, _, position, _ -> startLadderLegacy(client, position, 19, 1) }
-        firstClick(9358) { client, _, position, _ -> startLadderLegacy(client, position, 23, 1) }
-        firstClick(5488) { client, _, position, _ -> startLadderLegacy(client, position, 28, 1) }
+        ladderDown(492) { _, _, position, _ -> Position(2856, 9570, position.z) }
+        ladderDown(2147) { _, _, position, _ -> Position(3104, 9576, position.z) }
+        ladderDown(5054) { _, _, position, _ -> Position(3494, 3465, position.z) }
+        ladderDown(5130) { _, _, position, _ -> Position(3543, 3463, position.z) }
+        ladderDown(9358) { _, _, position, _ -> Position(2480, 5175, position.z) }
+        ladderDown(5488) { _, _, position, _ -> Position(3201, 3169, position.z) }
         firstClick(9294) { _, _, position, _ ->
             position.x == 2879 && position.y == 9813
         }
-        thirdClick(1739) { client, _, position, _ -> startLadderLegacy(client, position, 2, 1) }
+        ladderDown(1739, option = 3) { _, _, position, _ -> position.offset(dz = -1) }
     },
 )

@@ -168,7 +168,6 @@ public final class WalkingListener implements PacketListener {
         }
 
         if (client.chestEventOccur && opcode != 98) client.chestEventOccur = false;
-        if (client.stairs > 0) client.resetStairs();
         if (client.NpcDialogue == 1001) client.clearWalkableInterface();
         client.convoId = -1;
         if (client.NpcDialogue > 0) {
