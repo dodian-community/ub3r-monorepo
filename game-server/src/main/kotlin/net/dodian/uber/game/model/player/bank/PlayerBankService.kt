@@ -14,6 +14,33 @@ import java.util.Arrays
 
 object PlayerBankService {
     @JvmStatic
+    fun replaceBankContentsWithItemIds(client: Client, itemIds: List<Int>, amount: Int): Int? {
+        val bankSize = client.bankSize()
+        if (itemIds.size > bankSize) {
+            return null
+        }
+        Arrays.fill(client.bankItems, 0)
+        Arrays.fill(client.bankItemsN, 0)
+        client.bankSlotTabs = IntArray(bankSize)
+        client.bankContainerSlotMap = Array(11) { IntArray(bankSize) }
+        client.currentBankTab = 0
+        client.previousBankTab = 0
+        client.bankSearchActive = false
+        client.bankSearchPendingInput = false
+        client.bankSearchQuery = ""
+        clearBankStyleView(client)
+
+        itemIds.forEachIndexed { index, itemId ->
+            client.bankItems[index] = itemId + 1
+            client.bankItemsN[index] = amount
+        }
+
+        client.markSaveDirty(PlayerSaveSegment.BANK.mask)
+        checkItemUpdate(client)
+        return itemIds.size
+    }
+
+    @JvmStatic
     fun openBankStyleView(client: Client, ids: ArrayList<Int>, amounts: ArrayList<Int>, title: String) {
         client.bankStyleViewIds = ArrayList(ids)
         client.bankStyleViewAmounts = ArrayList(amounts)

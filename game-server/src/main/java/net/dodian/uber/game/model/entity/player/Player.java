@@ -95,7 +95,7 @@ public abstract class Player extends Entity {
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
-    public int playerBankSize = 800;
+    public int playerBankSize = 1300;
     public int[] bankItems = new int[playerBankSize];
     public int[] bankItemsN = new int[playerBankSize];
     public int pHairC, pTorsoC, pLegsC, pFeetC, pSkinC;

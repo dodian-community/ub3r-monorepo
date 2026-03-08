@@ -13,7 +13,11 @@ import net.dodian.utilities.gameWorldId
 object BetaOnlyCommands : CommandContent {
     override fun definitions() =
         commands {
-            command("rehp", "debug", "boost", "tool", "potato", "pnpc", "item", "bank", "b", "perk", "plunder", "p_start", "p_tele", "p_next", "barrows", "setup") {
+            command(
+                "rehp", "debug", "boost", "tool", "potato", "pnpc", "item", "bank", "b", "perk",
+                "plunder", "p_start", "p_tele", "p_next", "barrows", "setup",
+                "skillbank", "skillingbank", "skilltools", "skillset", "farmtest", "slayertest", "skillbook",
+            ) {
                 handleBeta(this)
             }
         }
@@ -158,6 +162,27 @@ private fun handleBeta(context: CommandContext): Boolean {
             client.checkItemUpdate()
             context.reply("Your setup is done!")
             return true
+        }
+        context.alias == "skillbank" || context.alias == "skillingbank" -> {
+            return handleSkillBank(context)
+        }
+        context.alias == "skillbook" -> {
+            if (!context.hasArgs(1)) {
+                return context.usage("Usage: ::skillbook <skill>")
+            }
+            return handleSkillBank(context, context.parts[1])
+        }
+        context.alias == "skilltools" -> {
+            return handleSkillTools(context)
+        }
+        context.alias == "skillset" -> {
+            return handleSkillSet(context)
+        }
+        context.alias == "farmtest" -> {
+            return handleFarmTest(context)
+        }
+        context.alias == "slayertest" -> {
+            return handleSlayerTest(context)
         }
     }
     return false
