@@ -31,21 +31,25 @@ public class SendInventory implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        // interface id as int to match client.readInt()
         msg.putInt(interfaceId);
-        // number of items as short
         msg.putShort(items.size(), ByteOrder.BIG);
 
+        StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             int amount = item.getAmount();
-            // Client ALWAYS reads amount as int (4 bytes)
             msg.putInt(amount, ByteOrder.BIG);
 
-            // Client only reads item ID if amount != 0
             if (amount != 0) {
-                msg.putShort(item.getId(), ByteOrder.BIG);
+                msg.putShort(item.getId() + 1, ByteOrder.BIG);
+            }
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item.getId()).append('x').append(amount);
             }
         }
+        ItemContainerTrace.log(client, "SendInventory", interfaceId, items.size(), preview.toString());
         client.send(msg);
     }
 }

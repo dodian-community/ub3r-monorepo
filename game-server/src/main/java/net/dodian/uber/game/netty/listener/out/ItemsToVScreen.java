@@ -38,13 +38,21 @@ public class ItemsToVScreen implements OutgoingPacket {
         message.putInt(6822);
         message.putShort(items.size());
 
+        StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             message.putInt(item.getAmount());
             if (item.getAmount() != 0) {
                 message.putShort(item.getId() + 1);
             }
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item.getId()).append('x').append(item.getAmount());
+            }
         }
 
+        ItemContainerTrace.log(client, "ItemsToVScreen", 6822, items.size(), preview.toString());
         client.send(message);
     }
 }

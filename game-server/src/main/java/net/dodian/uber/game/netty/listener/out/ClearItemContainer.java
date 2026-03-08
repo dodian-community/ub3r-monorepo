@@ -1,23 +1,21 @@
 package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 /**
  * Clears an item container interface by sending empty slots.
  * This replaces legacy methods that manually clear item containers.
  * 
- * Packet structure:
+ * Packet structure (must match Mystic's SEND_UPDATE_ITEMS handler):
  * - Opcode: 53 (variable size word)
- * - Interface ID: 2 bytes
+ * - Interface ID: 4 bytes (int)
  * - Item count: 2 bytes (number of slots to clear)
  * - For each slot:
- *   - Amount: 1 byte (0)
- *   - Item ID: 2 bytes (0, with writeWordBigEndianA transformation)
+ *   - Amount: 4 bytes (0)
+ *   - No item ID is written when amount is 0
  */
 public class ClearItemContainer implements OutgoingPacket {
 
@@ -38,19 +36,15 @@ public class ClearItemContainer implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        
-        // Write interface ID
-        message.putShort(interfaceId);
-        
-        // Write item count
+
+        message.putInt(interfaceId);
         message.putShort(slotCount);
-        
-        // Clear all slots
+
         for (int i = 0; i < slotCount; i++) {
-            message.put(0); // amount
-            message.putShort(0, ByteOrder.LITTLE, ValueType.ADD); // item ID (writeWordBigEndianA with 0)
+            message.putInt(0);
         }
-        
+
+        ItemContainerTrace.log(client, "ClearItemContainer", interfaceId, slotCount, "all-zero");
         client.send(message);
     }
 }

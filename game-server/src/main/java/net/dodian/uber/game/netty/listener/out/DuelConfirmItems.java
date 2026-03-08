@@ -74,14 +74,22 @@ public class DuelConfirmItems implements OutgoingPacket {
         message.putInt(interfaceId);
         message.putShort(itemsToSend.size());
 
+        StringBuilder preview = new StringBuilder();
         for (GameItem item : itemsToSend) {
             int amount = item.getAmount();
             message.putInt(amount);
             if (amount != 0) {
                 message.putShort(item.getId() + 1);
             }
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item.getId()).append('x').append(amount);
+            }
         }
 
+        ItemContainerTrace.log(client, "DuelConfirmItems", interfaceId, itemsToSend.size(), preview.toString());
         client.send(message);
     }
 }
