@@ -15,7 +15,7 @@ internal object Shantay {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 36
+        client.openUpShopRouted(36)
         return true
     }
 }

@@ -1,6 +1,7 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.dialogue.LegacyDialogueTickBridge;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.chunk.ChunkRepository;
@@ -8,8 +9,10 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.runtime.loop.GameCycleClock;
 import net.dodian.uber.game.runtime.sync.util.IntHashSet;
 import net.dodian.uber.game.runtime.sync.util.LongHashSet;
+import net.dodian.uber.game.runtime.tasking.GameTaskRuntime;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.party.Balloons;
@@ -45,6 +48,7 @@ public class EntityProcessor implements Runnable {
 
     @Override
     public void run() {
+        GameCycleClock.advance();
         long now = System.currentTimeMillis();
         GameThreadTaskQueue.drain();
         runInboundPacketPhase();
@@ -124,6 +128,7 @@ public class EntityProcessor implements Runnable {
         if (!shouldProcessNpc(npc, activeNpcChunks)) {
             return;
         }
+        npc.setCurrentGameCycle(GameCycleClock.currentCycle());
 
         // Keep static NPCs facing their configured spawn direction, but do not
         // force roaming NPCs back to spawn-facing every tick.
@@ -143,6 +148,8 @@ public class EntityProcessor implements Runnable {
         handleNpcRoaming(npc);
         npc.effectChange();
         handleNpcRandomActions(npc);
+        npc.setProcessedGameCycle(npc.getCurrentGameCycle());
+        GameTaskRuntime.cycleNpc(npc);
     }
 
     private boolean shouldProcessNpc(Npc npc, LongHashSet activeNpcChunks) {
@@ -487,17 +494,14 @@ public class EntityProcessor implements Runnable {
     }
 
     private void handleServerCycles() {
-        if (PlayerHandler.cycle % 10 == 0) {
+        long cycle = GameCycleClock.currentCycle();
+        if (cycle % 10 == 0) {
             Server.connections.clear();
             Server.nullConnections = 0;
         }
-        if (PlayerHandler.cycle % 100 == 0) {
+        if (cycle % 100 == 0) {
             Server.banned.clear();
         }
-        if (PlayerHandler.cycle > 10000) {
-            PlayerHandler.cycle = 0;
-        }
-        PlayerHandler.cycle++;
     }
 
     private void processPlayer(Client player) {
@@ -505,8 +509,12 @@ public class EntityProcessor implements Runnable {
             player.initialize();
             player.initialized = true;
         }
-        player.setLastProcessedCycle(PlayerHandler.cycle);
+        player.setCurrentGameCycle(GameCycleClock.currentCycle());
         player.process();
+        player.setProcessedGameCycle(player.getCurrentGameCycle());
+        player.setLastProcessedCycle(player.getProcessedGameCycle());
+        GameTaskRuntime.cyclePlayer(player);
+        LegacyDialogueTickBridge.flushIfNeeded(player);
 
         player.postProcessing();
         player.getNextPlayerMovement();

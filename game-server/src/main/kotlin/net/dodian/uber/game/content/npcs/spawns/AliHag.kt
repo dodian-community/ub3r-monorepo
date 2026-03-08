@@ -15,7 +15,7 @@ internal object AliHag {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 35
+        client.openUpShopRouted(35)
         return true
     }
 }

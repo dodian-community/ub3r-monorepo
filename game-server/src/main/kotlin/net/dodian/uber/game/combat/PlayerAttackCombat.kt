@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.combat.CombatStartService
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
     if(npcId == 6610 && getAttackStyle() != 2) {
@@ -45,6 +46,9 @@ fun Client.getAttackStyle() : Int {
 
 fun Client.attackTarget(): Boolean {
     var attackStyle = getAttackStyle()
+    if (!CombatStartService.canPerformAttackTick(this)) {
+        return true
+    }
     /* Do checks each tick for player + npc */
     if(target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)

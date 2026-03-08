@@ -32,7 +32,7 @@ internal object Duradel {
 
     @Suppress("UNUSED_PARAMETER")
     fun onThirdClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 15
+        client.openUpShopRouted(15)
         return true
     }
 }

@@ -8,7 +8,7 @@ internal object Turael {
 
     @Suppress("UNUSED_PARAMETER")
     fun onThirdClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 2
+        client.openUpShopRouted(2)
         return true
     }
 }

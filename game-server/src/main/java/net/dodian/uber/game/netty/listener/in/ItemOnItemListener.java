@@ -13,6 +13,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Utils;
 
@@ -353,6 +354,7 @@ public class ItemOnItemListener implements PacketListener {
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();
             client.shafting = true;
+            LegacyPlayerActionService.startShafting(client);
         }
         /* Leather crafting UI */
         if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == 1741 || otherItem == 1741)) {

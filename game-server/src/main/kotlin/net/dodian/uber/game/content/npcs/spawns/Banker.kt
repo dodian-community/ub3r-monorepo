@@ -32,7 +32,7 @@ internal object Banker {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneBank = 1
+        client.openUpBankRouted()
         return true
     }
 }

@@ -4,6 +4,7 @@ import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
@@ -12,10 +13,7 @@ import net.dodian.utilities.Misc;
 
 class PlayerCombatState {
     private final Player owner;
-    private int damageDealt = 0;
-    private int damageDealt2 = 0;
-    private Entity.hitType hitType;
-    private Entity.hitType hitType2 = Entity.hitType.STANDARD;
+    private final PendingHitBuffer pendingHits = new PendingHitBuffer();
 
     PlayerCombatState(Player owner) {
         this.owner = owner;
@@ -44,15 +42,7 @@ class PlayerCombatState {
                 player.send(new SendMessage("<col=FFD700>You neglected " + (amt == 0 ? "all" : "some") + " of the damage!"));
             }
         }
-        if (!owner.getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
-            this.hitType2 = type;
-            damageDealt2 = amt;
-            owner.getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
-        } else if (!owner.getUpdateFlags().isRequired(UpdateFlag.HIT)) {
-            this.hitType = type;
-            damageDealt = amt;
-            owner.getUpdateFlags().setRequired(UpdateFlag.HIT, true);
-        }
+        appendHit(amt, type);
         owner.setCurrentHealth(Math.max(owner.getCurrentHealth() - amt, 0));
         player.refreshSkill(Skill.HITPOINTS);
         player.debug("Dealing " + amt + " damage to you (hp=" + owner.currentHealth + ")");
@@ -143,23 +133,37 @@ class PlayerCombatState {
     }
 
     int getDamageDealt() {
-        return damageDealt;
+        return pendingHits.getPrimaryDamage();
     }
 
     int getDamageDealt2() {
-        return damageDealt2;
+        return pendingHits.getSecondaryDamage();
     }
 
     Entity.hitType getHitType() {
-        return hitType;
+        return pendingHits.getPrimaryType();
     }
 
     Entity.hitType getHitType2() {
-        return hitType2;
+        return pendingHits.getSecondaryType();
+    }
+
+    void clearPendingHits() {
+        pendingHits.clear();
     }
 
     boolean isDeadOrDying() {
         return owner.deathStage > 0 || owner.deathTimer > 0 || owner.getCurrentHealth() < 1;
+    }
+
+    private PendingHitBuffer.AppendResult appendHit(int damage, Entity.hitType type) {
+        PendingHitBuffer.AppendResult result = pendingHits.appendHit(damage, type);
+        if (result == PendingHitBuffer.AppendResult.PRIMARY) {
+            owner.getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        } else if (result == PendingHitBuffer.AppendResult.SECONDARY) {
+            owner.getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
+        }
+        return result;
     }
 
     void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {

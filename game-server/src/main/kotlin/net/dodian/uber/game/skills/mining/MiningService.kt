@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
 import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
 import net.dodian.uber.game.runtime.tasking.TaskPriority
@@ -65,14 +66,15 @@ object MiningService {
         }
 
         val pickaxe = resolveBestPickaxe(client) ?: return true
-        val now = System.currentTimeMillis()
-        client.lastAction = now - INITIAL_SWING_DELAY_MS
+        val startedCycle = GameCycleClock.currentCycle()
+        val initialDelayTicks = computeInitialMiningDelayTicks(client, rock, pickaxe)
         client.miningState =
             MiningState(
                 rockObjectId = rock.objectIds.first(),
                 rockPosition = position.copy(),
-                startedAtMs = now,
-                lastSwingAnimationAtMs = now + INITIAL_SWING_DELAY_MS,
+                startedCycle = startedCycle,
+                nextSwingAnimationCycle = startedCycle + GameCycleClock.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
+                nextResourceCycle = startedCycle + initialDelayTicks,
                 resourcesGathered = 0,
             )
         client.requestAnim(pickaxe.animationId, 0)
@@ -117,6 +119,11 @@ object MiningService {
         return computeMiningDelayMs(client, rock, pickaxe, Misc.chance(DRAGON_BOOST_ROLL))
     }
 
+    @JvmStatic
+    fun computeMiningDelayTicks(client: Client, rock: MiningRockDef, pickaxe: PickaxeDef): Int {
+        return GameCycleClock.ticksForDurationMs(computeMiningDelayMs(client, rock, pickaxe))
+    }
+
     internal fun computeMiningDelayMs(
         client: Client,
         rock: MiningRockDef,
@@ -152,7 +159,6 @@ object MiningService {
         if (rock.oreItemId != 1436) {
             client.send(SendMessage("You mine some ${client.GetItemName(rock.oreItemId).lowercase()}"))
         }
-        client.lastAction = System.currentTimeMillis()
         client.addItem(rock.oreItemId, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, rock.oreItemId, 1, client.position.copy(), "Mining")
@@ -162,7 +168,13 @@ object MiningService {
             tryAwardRandomGem(client)
         }
 
-        val updatedState = state.copy(resourcesGathered = state.resourcesGathered + 1)
+        val cycle = GameCycleClock.currentCycle()
+        val updatedState =
+            state.copy(
+                resourcesGathered = state.resourcesGathered + 1,
+                nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
+                nextResourceCycle = cycle + computeMiningDelayTicks(client, rock, pickaxe),
+            )
         client.miningState = updatedState
         GameEventBus.post(MiningSuccessEvent(client, rock, rock.oreItemId, rock.experience, client.position.copy()))
 
@@ -172,7 +184,6 @@ object MiningService {
         }
 
         client.requestAnim(pickaxe.animationId, 0)
-        client.miningState = updatedState.copy(lastSwingAnimationAtMs = System.currentTimeMillis() + SWING_REPEAT_DELAY_MS)
         return true
     }
 
@@ -187,7 +198,8 @@ object MiningService {
                 }
 
         client.requestAnim(pickaxe.animationId, 0)
-        client.miningState = state.copy(lastSwingAnimationAtMs = System.currentTimeMillis() + SWING_REPEAT_DELAY_MS)
+        client.miningState =
+            state.copy(nextSwingAnimationCycle = GameCycleClock.currentCycle() + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
         return true
     }
 
@@ -226,7 +238,7 @@ object MiningService {
 
     private fun advanceMining(client: Client): Boolean {
         val state = client.miningState ?: return false
-        val rock = MiningData.rockByObjectId[state.rockObjectId]
+        MiningData.rockByObjectId[state.rockObjectId]
             ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK, invokeResetAction = false, fullReset = false)
 
         if (client.disconnected || !client.isActive) {
@@ -239,18 +251,16 @@ object MiningService {
             return stopMiningInternal(client, MiningStopReason.MOVED_AWAY, invokeResetAction = false, fullReset = false)
         }
 
-        val pickaxe =
-            resolveBestPickaxe(client)
-                ?: run {
-                    client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
-                    return stopMiningInternal(client, MiningStopReason.NO_PICKAXE, invokeResetAction = true, fullReset = true)
-                }
+        if (resolveBestPickaxe(client) == null) {
+            client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
+            return stopMiningInternal(client, MiningStopReason.NO_PICKAXE, invokeResetAction = true, fullReset = true)
+        }
 
-        val now = System.currentTimeMillis()
-        if (now >= state.lastSwingAnimationAtMs && !reapplyMiningAnimation(client)) {
+        val cycle = GameCycleClock.currentCycle()
+        if (cycle >= state.nextSwingAnimationCycle && !reapplyMiningAnimation(client)) {
             return false
         }
-        if (now - client.lastAction >= computeMiningDelayMs(client, rock, pickaxe)) {
+        if (cycle >= state.nextResourceCycle) {
             return performMiningCycle(client)
         }
         return true
@@ -286,6 +296,15 @@ object MiningService {
         val deltaX = kotlin.math.abs(client.position.x - rockPosition.x)
         val deltaY = kotlin.math.abs(client.position.y - rockPosition.y)
         return (deltaX + deltaY) == 1
+    }
+
+    private fun computeInitialMiningDelayTicks(
+        client: Client,
+        rock: MiningRockDef,
+        pickaxe: PickaxeDef,
+    ): Int {
+        val remainingDelayMs = computeMiningDelayMs(client, rock, pickaxe) - INITIAL_SWING_DELAY_MS
+        return if (remainingDelayMs <= 0L) 0 else GameCycleClock.ticksForDurationMs(remainingDelayMs)
     }
 
 }

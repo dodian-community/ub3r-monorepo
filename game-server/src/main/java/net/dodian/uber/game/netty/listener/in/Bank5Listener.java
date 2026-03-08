@@ -116,10 +116,7 @@ public class Bank5Listener implements PacketListener {
             client.buyItem(removeId, removeSlot, 1);
         } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing
             if (client.smithing[2] > 0) {
-                client.smithing[4] = removeId;
-                client.smithing[0] = 1;
-                client.smithing[5] = amount;
-                client.send(new RemoveInterfaces());
+                client.startSmithing(removeId, amount);
             } else {
                 client.send(new SendMessage("Illigal Smithing !"));
                 logger.debug("Illegal Smith attempt by {}", client.getPlayerName());

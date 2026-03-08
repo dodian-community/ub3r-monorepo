@@ -57,7 +57,7 @@ internal object BabaYaga {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 33
+        client.openUpShopRouted(33)
         return true
     }
 }

@@ -26,7 +26,7 @@ internal object Zahur {
             options(
                 title = "Select an option",
                 DialogueOption("Visit the store") {
-                    action { c -> c.WanneShop = 22 }
+                    action { c -> c.openUpShopRouted(22) }
                     finish()
                 },
                 DialogueOption("Clean herbs") {
@@ -44,7 +44,7 @@ internal object Zahur {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 39
+        client.openUpShopRouted(39)
         return true
     }
 

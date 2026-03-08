@@ -15,7 +15,7 @@ internal object ThievingSkillcapeShop {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 4
+        client.openUpShopRouted(4)
         return true
     }
 }

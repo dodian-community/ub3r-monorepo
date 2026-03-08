@@ -15,7 +15,7 @@ internal object BowArrowSalesman {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 11
+        client.openUpShopRouted(11)
         return true
     }
 }

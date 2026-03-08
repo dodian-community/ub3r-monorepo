@@ -34,6 +34,8 @@ import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.combat.CombatTargetState;
+import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
 import net.dodian.utilities.Misc;
@@ -782,6 +784,7 @@ public abstract class Player extends Entity {
 
     public void clearUpdateFlags() {
         updateState.clearUpdateFlags();
+        combatState.clearPendingHits();
     }
 
     public void faceTarget(int index) {
@@ -935,6 +938,46 @@ public abstract class Player extends Entity {
         interactionState.clearWoodcuttingState();
     }
 
+    public QueueTaskHandle getActiveActionHandle() {
+        return interactionState.getActiveActionHandle();
+    }
+
+    public void setActiveActionHandle(QueueTaskHandle activeActionHandle) {
+        interactionState.setActiveActionHandle(activeActionHandle);
+    }
+
+    public PlayerActionType getActiveActionType() {
+        return interactionState.getActiveActionType();
+    }
+
+    public void setActiveActionType(PlayerActionType activeActionType) {
+        interactionState.setActiveActionType(activeActionType);
+    }
+
+    public long getActionStartedCycle() {
+        return interactionState.getActionStartedCycle();
+    }
+
+    public void setActionStartedCycle(long actionStartedCycle) {
+        interactionState.setActionStartedCycle(actionStartedCycle);
+    }
+
+    public void cancelActiveAction() {
+        interactionState.cancelActiveAction();
+    }
+
+    public CombatTargetState getCombatTargetState() {
+        return interactionState.getCombatTargetState();
+    }
+
+    public void setCombatTargetState(CombatTargetState combatTargetState) {
+        interactionState.setCombatTargetState(combatTargetState);
+    }
+
+    public void clearCombatTargetState() {
+        interactionState.clearCombatTargetState();
+    }
+
     public GameTaskSet<?> getPlayerTaskSet() {
         return interactionState.getPlayerTaskSet();
     }
@@ -950,6 +993,7 @@ public abstract class Player extends Entity {
 
     public int deathStage = 0;
     public long deathTimer = 0;
+    public long deathStartedCycle = 0;
 
     public void appendMask400Update(ByteMessage buf) { // Forcemovement mask!
         updateState.appendMask400Update(buf);

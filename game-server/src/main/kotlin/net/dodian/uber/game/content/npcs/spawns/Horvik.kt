@@ -15,7 +15,7 @@ internal object Horvik {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 10
+        client.openUpShopRouted(10)
         return true
     }
 }

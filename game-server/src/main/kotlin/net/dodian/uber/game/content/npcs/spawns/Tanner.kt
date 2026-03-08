@@ -21,7 +21,7 @@ internal object Tanner {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 18
+        client.openUpShopRouted(18)
         return true
     }
 }

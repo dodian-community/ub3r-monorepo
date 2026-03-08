@@ -4,8 +4,10 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService
 
 object AltarObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(409, 20377)
@@ -32,13 +34,14 @@ object AltarObjects : ObjectContent {
         if (objectId != 409) {
             return false
         }
-        if (!Prayer.altarBones(client, itemId)) {
+        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.randomed) {
+            client.resetAction()
             return false
         }
         client.skillX = position.x
         client.setSkillY(position.y)
         client.boneItem = itemId
-        Prayer.altarBones(client, client.boneItem)
+        LegacyPlayerActionService.startAltarBones(client)
         return true
     }
 }

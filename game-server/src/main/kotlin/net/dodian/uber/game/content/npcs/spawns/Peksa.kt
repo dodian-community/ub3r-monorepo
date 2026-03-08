@@ -8,7 +8,7 @@ internal object Peksa {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 6
+        client.openUpShopRouted(6)
         return true
     }
 }

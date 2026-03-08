@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService
 
 object GlassCraftButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -22,6 +23,7 @@ object GlassCraftButtons : ButtonContent {
                 client.setSkill(Skill.CRAFTING.id, 229, 1, 1775, -1, 80, 884, 3)
                 client.skillActionCount = craftVialAmount[buttonId - 44207]
                 client.skillActionTimer = client.playerSkillAction[7]
+                LegacyPlayerActionService.startLegacyProduction(client)
                 return true
             }
 
@@ -35,6 +37,7 @@ object GlassCraftButtons : ButtonContent {
                 client.setSkill(Skill.CRAFTING.id, 1980, 1, 1775, -1, 120, 884, 3)
                 client.skillActionCount = craftCupAmount[buttonId - 48105]
                 client.skillActionTimer = client.playerSkillAction[7]
+                LegacyPlayerActionService.startLegacyProduction(client)
                 return true
             }
 
@@ -48,6 +51,7 @@ object GlassCraftButtons : ButtonContent {
                 client.setSkill(Skill.CRAFTING.id, 6667, 1, 1775, -1, 160, 884, 3)
                 client.skillActionCount = craftFishAmount[buttonId - 48109]
                 client.skillActionTimer = client.playerSkillAction[7]
+                LegacyPlayerActionService.startLegacyProduction(client)
                 return true
             }
 
@@ -61,10 +65,10 @@ object GlassCraftButtons : ButtonContent {
                 client.setSkill(Skill.CRAFTING.id, 567, 1, 1775, -1, 240, 884, 3)
                 client.skillActionCount = craftOrbAmount[buttonId - 48113]
                 client.skillActionTimer = client.playerSkillAction[7]
+                LegacyPlayerActionService.startLegacyProduction(client)
                 return true
             }
         }
         return false
     }
 }
-

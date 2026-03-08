@@ -132,7 +132,7 @@ class GameLoopService(
     }
 
     private fun runTick() {
-        currentCycle++
+        currentCycle = GameCycleClock.advance()
         val now = System.currentTimeMillis()
         phaseTimer.clear()
         GameThreadTimers.drainDue()

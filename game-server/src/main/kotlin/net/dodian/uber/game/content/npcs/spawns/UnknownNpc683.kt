@@ -8,7 +8,7 @@ internal object UnknownNpc683 {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 11
+        client.openUpShopRouted(11)
         return true
     }
 }

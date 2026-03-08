@@ -11,7 +11,7 @@ internal object DukeHoracio {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.NpcWanneTalk = 8051
+        client.startNpcDialogue(8051, npc.id)
         return true
     }
 

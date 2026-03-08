@@ -1,7 +1,7 @@
 package net.dodian.uber.game.runtime.interaction.scheduler
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.interaction.InteractionIntent
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle
 import net.dodian.uber.game.runtime.tasking.GameTaskRuntime
@@ -13,10 +13,9 @@ object InteractionTaskScheduler {
         player.cancelInteractionTask()
         player.pendingInteraction = intent
         player.activeInteraction = null
-        player.interactionEarliestCycle = PlayerHandler.cycle + 1L
+        player.interactionEarliestCycle = GameCycleClock.currentCycle()
         val handle =
             GameTaskRuntime.queuePlayer(player, TaskPriority.STANDARD) {
-                wait(1)
                 while (task.execute()) {
                     wait(1)
                 }

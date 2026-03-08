@@ -124,6 +124,8 @@ class SynchronizationCycle(
         private set
     var npcBuildLocalActivityChangedCount: Int = 0
         private set
+    var npcBuildLocalMembershipChangedCount: Int = 0
+        private set
 
     fun recordStage(stage: SynchronizationStage, durationNanos: Long) {
         stageDurationsNanos[stage] = (stageDurationsNanos[stage] ?: 0L) + durationNanos
@@ -226,6 +228,10 @@ class SynchronizationCycle(
 
     fun recordNpcBuildLocalActivityChanged() {
         npcBuildLocalActivityChangedCount++
+    }
+
+    fun recordNpcBuildLocalMembershipChanged() {
+        npcBuildLocalMembershipChangedCount++
     }
 
     fun recordPlayerPacketMode(mode: PlayerPacketMode) {

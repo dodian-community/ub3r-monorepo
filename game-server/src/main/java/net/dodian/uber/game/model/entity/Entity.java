@@ -30,6 +30,8 @@ public abstract class Entity {
     private String text;
     private int faceCoordinateX = 1;
     private int faceCoordinateY = 1;
+    private volatile long currentGameCycle = 0L;
+    private volatile long processedGameCycle = 0L;
 
     private final Map<Entity, Integer> damage = new HashMap<>();
 
@@ -88,6 +90,22 @@ public abstract class Entity {
 
     public int getFaceCoordinateY() {
         return faceCoordinateY;
+    }
+
+    public long getCurrentGameCycle() {
+        return currentGameCycle;
+    }
+
+    public void setCurrentGameCycle(long currentGameCycle) {
+        this.currentGameCycle = currentGameCycle;
+    }
+
+    public long getProcessedGameCycle() {
+        return processedGameCycle;
+    }
+
+    public void setProcessedGameCycle(long processedGameCycle) {
+        this.processedGameCycle = processedGameCycle;
     }
 
     private int encodeFaceCoordinate(int value) {

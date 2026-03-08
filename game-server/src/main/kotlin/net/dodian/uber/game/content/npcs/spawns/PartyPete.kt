@@ -13,7 +13,7 @@ internal object PartyPete {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.NpcWanneTalk = 1000
+        client.startNpcDialogue(1000, npc.id)
         client.convoId = 1001
         return true
     }

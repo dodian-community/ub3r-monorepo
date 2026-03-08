@@ -13,6 +13,8 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.runtime.scheduler.QueueTask;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
+import net.dodian.uber.game.runtime.combat.CombatIntent;
+import net.dodian.uber.game.runtime.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,41 +49,6 @@ public class AttackPlayerListener implements PacketListener {
         if (client.randomed || client.UsingAgility) return;
 
         boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
-        if ((rangedAttack && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
-            client.resetWalkingQueue();
-            client.startAttack(plr);
-            return;
-        }
-
-        // Need to walk closer first
-        WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victimSlot, plr.getPosition());
-        client.setWalkToTask(task);
-        if (getQueueTasksEnabled()) {
-            QueueTaskService.schedule(1, 1, () -> {
-                if (client.disconnected || plr.disconnected || client.getWalkToTask() != task) {
-                    return false;
-                }
-                if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(plr);
-                    client.setWalkToTask(null);
-                    return false;
-                }
-                return true;
-            });
-            return;
-        }
-        GameEventScheduler.runRepeatingMs(600, () -> {
-            if (client.disconnected || client.getWalkToTask() != task) {
-                return false;
-            }
-            if ((PlayerAttackCombatKt.getAttackStyle(client) != 0 && client.goodDistanceEntity(plr, 5)) || client.goodDistanceEntity(plr, 1)) {
-                client.resetWalkingQueue();
-                client.startAttack(plr);
-                client.setWalkToTask(null);
-                return false;
-            }
-            return true;
-        });
+        CombatStartService.startPlayerAttack(client, plr, CombatIntent.ATTACK_PLAYER);
     }
 }

@@ -15,7 +15,7 @@ internal object PremiumStore {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 31
+        client.openUpShopRouted(31)
         return true
     }
 }

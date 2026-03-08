@@ -29,6 +29,6 @@ object QueueTaskService {
 
     @JvmStatic
     fun processDue() {
-        GameTaskRuntime.cycle()
+        GameTaskRuntime.cycleWorld()
     }
 }

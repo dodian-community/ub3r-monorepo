@@ -5,6 +5,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.tasking.suspension.PredicateCondition
 import net.dodian.uber.game.runtime.tasking.suspension.TaskStep
 import net.dodian.uber.game.runtime.tasking.suspension.WaitCondition
@@ -87,6 +88,11 @@ class GameTask internal constructor(
             require(maxTicks > minTicks) { "maxTicks must be greater than minTicks." }
             nextStep = TaskStep(WaitCondition((minTicks..maxTicks).random()), continuation)
         }
+
+    suspend fun waitUntilCycle(targetCycle: Long): Unit =
+        waitUntil { GameCycleClock.currentCycle() >= targetCycle }
+
+    fun currentCycle(): Long = GameCycleClock.currentCycle()
 
     suspend fun waitUntil(predicate: () -> Boolean): Unit =
         suspendCoroutine { continuation ->

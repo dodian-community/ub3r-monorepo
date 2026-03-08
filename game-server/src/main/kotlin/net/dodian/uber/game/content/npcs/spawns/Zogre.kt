@@ -25,7 +25,7 @@ internal object Zogre {
         if (npc.id != 2053) {
             return false
         }
-        client.WanneShop = 32
+        client.openUpShopRouted(32)
         return true
     }
 }

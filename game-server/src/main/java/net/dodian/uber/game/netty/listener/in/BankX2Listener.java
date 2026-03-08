@@ -11,6 +11,7 @@ import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.netty.listener.out.InventoryInterface;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +124,7 @@ public class BankX2Listener implements PacketListener {
                     client.cookAmount = enteredAmount;
                     client.enterAmountId = 0;
                     client.cooking = true;
+                    LegacyPlayerActionService.startCooking(client);
                     return;
                 }
             }

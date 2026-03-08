@@ -17,7 +17,7 @@ internal object Gerrant {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 16
+        client.openUpShopRouted(16)
         return true
     }
 }

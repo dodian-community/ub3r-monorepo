@@ -8,7 +8,7 @@ internal object ShopAssistant {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 3
+        client.openUpShopRouted(3)
         return true
     }
 }

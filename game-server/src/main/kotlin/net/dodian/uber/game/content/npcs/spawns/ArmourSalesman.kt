@@ -15,7 +15,7 @@ internal object ArmourSalesman {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 30
+        client.openUpShopRouted(30)
         return true
     }
 }

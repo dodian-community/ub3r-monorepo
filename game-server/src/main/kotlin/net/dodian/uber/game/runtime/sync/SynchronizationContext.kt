@@ -229,4 +229,9 @@ object SynchronizationContext {
     fun recordNpcBuildLocalActivityChanged() {
         current()?.recordNpcBuildLocalActivityChanged()
     }
+
+    @JvmStatic
+    fun recordNpcBuildLocalMembershipChanged() {
+        current()?.recordNpcBuildLocalMembershipChanged()
+    }
 }

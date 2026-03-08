@@ -122,9 +122,7 @@ public class RemoveItemListener implements PacketListener {
             client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
         } else if (interfaceID >= 1119 && interfaceID <= 1123) { // smithing selection
             if (client.smithing[2] > 0) {
-                client.smithing[4] = removeID;
-                client.smithing[5] = 1;
-                client.send(new RemoveInterfaces());
+                client.startSmithing(removeID, 1);
             } else {
                 client.send(new SendMessage("Illigal Smithing !"));
             }

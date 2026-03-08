@@ -37,6 +37,11 @@ import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
+import net.dodian.uber.game.runtime.action.SmithingActionService;
+import net.dodian.uber.game.runtime.action.TeleportActionService;
+import net.dodian.uber.game.runtime.combat.CombatStartService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
 import net.dodian.utilities.*;
 
@@ -1602,6 +1607,12 @@ public class Client extends Player implements Runnable {
         PlayerBankService.openUpBank(this);
     }
 
+    public void openUpBankRouted() {
+        WanneBank = 0;
+        WanneShop = -1;
+        openUpBank();
+    }
+
     public void openUpShop(int ShopID) {
         if (!Server.shopping) {
             send(new SendMessage("Shopping have been disabled!"));
@@ -1617,6 +1628,51 @@ public class Client extends Player implements Runnable {
         checkItemUpdate();
         send(new SendString(ShopHandler.ShopName[ShopID], 3901));
         send(new InventoryInterface(3824, 3822));
+    }
+
+    public void openUpShopRouted(int shopId) {
+        WanneShop = 0;
+        openUpShop(shopId);
+    }
+
+    public void startNpcDialogue(int dialogueId, int npcId) {
+        NpcWanneTalk = 0;
+        NpcDialogue = dialogueId;
+        NpcTalkTo = npcId;
+        NpcDialogueSend = false;
+        UpdateNPCChat();
+    }
+
+    public void setTeleportStage(int stage) {
+        tStage = stage;
+    }
+
+    public int getTeleportHeight() {
+        return tH;
+    }
+
+    public boolean isFishing() {
+        return fishing;
+    }
+
+    public void setFishing(boolean fishing) {
+        this.fishing = fishing;
+    }
+
+    public int getFishIndex() {
+        return fishIndex;
+    }
+
+    public boolean isCrafting() {
+        return crafting;
+    }
+
+    public void setCrafting(boolean crafting) {
+        this.crafting = crafting;
+    }
+
+    public int getCAmount() {
+        return cAmount;
     }
 
     public void checkItemUpdate() { //Checking bank etc..
@@ -2036,139 +2092,8 @@ public class Client extends Player implements Runnable {
         int startingX = getPosition().getX();
         int startingY = getPosition().getY();
         int startingZ = getPosition().getZ();
-        /* Combat stuff! */
-        setLastCombat(Math.max(getLastCombat() - 1, 0));
-        setCombatTimer(Math.max(getCombatTimer() - 1, 0));
-        setStunTimer(Math.max(getStunTimer() - 1, 0));
-        setSnareTimer(Math.max(getSnareTimer() - 1, 0));
-        changeEffectTime();
-        if (genieCombatFlag && !isInCombat()) { //Genie random!
-            genieCombatFlag = false;
-            showRandomEvent();
-        }
-        /* Daily stuff */
-        if (dailyLogin == 0)
-            battlestavesData();
-        else dailyLogin--;
-        /* Timers for actions! */
-        actionTimer = actionTimer > 0 ? actionTimer - 1 : 0;
-        getPlunder.reduceTicks();
-        if (getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
-            addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
-        //RegionMusic.handleRegionMusic(this);
-        if (getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
-            boolean gotIcon = getEquipment()[Equipment.Slot.NECK.getId()] == 8923 || gotSlayerHelmet(this);
-            if (iconTimer > 0 && !gotIcon) iconTimer--;
-            else if (iconTimer == 0 && !gotIcon) { //Hit with dmg!
-                send(new SendMessage("The strange aura from the dungeon makes you vulnerable!"));
-                int dmg = 5 + Misc.random(15);
-                dealDamage(null, dmg, dmg >= 15 ? Entity.hitType.CRIT : Entity.hitType.STANDARD);
-                iconTimer = 6;
-            } else iconTimer = 6;
-        } else
-            iconTimer = 6;
-        /* Prayer drain*/
-        if (prayers.getDrainRate() > 0.0) {
-            prayers.drainRate += 0.6;
-            if (prayers.drainRate >= prayers.getDrainRate()) {
-                drainPrayer(1);
-                prayers.drainRate = 0.0;
-            }
-        } else prayers.drainRate = 0.0;
-        /* Stat restore + drain */
-        lastRecoverEffect++;
-        if (lastRecoverEffect % 25 == 0) {
-            lastRecover--;
-            if (lastRecover == 0) {
-                lastRecoverEffect = 0;
-                lastRecover = 4;
-
-                Skill.enabledSkills().forEach(skill -> {
-                    boolean changed = false;
-                    switch (skill) {
-                        case HITPOINTS:
-                            if (getCurrentHealth() < getMaxHealth())
-                            {
-                                heal(1); //Not sure if we should remove 1 to max health!
-                                changed = true;
-                            }
-                            break;
-                        case PRAYER: //Do not restore prayer!
-                            break;
-                        default:
-                            int before = boostedLevel[skill.getId()];
-                            if (before > 0)
-                                boostedLevel[skill.getId()]--;
-                            else if (before != 0)
-                                boostedLevel[skill.getId()]++;
-                            changed = boostedLevel[skill.getId()] != before;
-                            break;
-                    }
-                    if (changed) {
-                        refreshSkill(skill);
-                        markSaveDirty(PlayerSaveSegment.STATS.getMask());
-                    }
-                });
-            }
-        }
-        if (reloadHp) {
-            heal(getMaxHealth());
-            setCurrentPrayer(getMaxPrayer());
-            pray(0);
-        }
-        // RubberCheck();
         long now = System.currentTimeMillis();
-        if (now >= walkBlock && xLog) {
-            UsingAgility = false;
-            disconnected = true;
-        }
-        if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
-            pickUpItem(attemptGround.x, attemptGround.y);
-        }
-        if (inTrade && tradeResetNeeded) {
-            Client o = getClient(trade_reqId);
-            if (o.tradeResetNeeded) {
-                resetTrade();
-                o.resetTrade();
-            }
-        }
-        if (tStage > 0) {
-            tStage++;
-            if (tStage == 2) { //Setup animation for teleport
-                requestAnim(tEmote, 0);
-                if (ancients == 1) gfx0(392); //Gfx for ancient start instant
-            } else if (tStage == 4 && ancients != 1) { //2 tick gfx for normal spellbook!
-                callGfxMask(308, 100);
-            } else if (tStage == 5) { //4 tick before teleporting!
-                transport(new Position(tX, tY, tH));
-                requestAnim(715, 0);
-                getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                tStage = 0;
-                GetBonus(true);
-                UsingAgility = false;
-            }
-        }
-        if (now - lastSave >= 60_000) { // Save every minute except for skills!
-            saveStats(PlayerSaveReason.PERIODIC, false, false);
-            lastSave = now;
-        }
-        if (now - lastProgressSave >= 3_600_000) { // Update skill progress every hour
-            saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
-            lastProgressSave = now;
-        }
-        // check banking
-        if (WanneBank > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), WanneBank)) {
-                openUpBank();
-                WanneBank = 0;
-            }
-        }
-        if (WanneShop > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
-                openUpShop(WanneShop);
-                WanneShop = 0;
-            }
-        }
+        PlayerLifecycleTickService.processBeforeCombat(this, now);
         // Attacking in wilderness
         if (attackingPlayer && deathStage == 0) {
             attackTarget(this);
@@ -2177,126 +2102,7 @@ public class Client extends Player implements Runnable {
         else if (attackingNpc && deathStage == 0) {
             attackTarget(this);
         }
-        // If killed apply dead
-        if (deathStage == 0 && getCurrentHealth() < 1) {
-            resetAttack();
-            if (target instanceof Npc) {
-                Npc npc = Server.npcManager.getNpc(target.getSlot());
-                npc.removeEnemy(this);
-            } else {
-                Client p = getClient(duel_with);
-                if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
-                    p.duelWin = true;
-                    p.DuelVictory();
-                }
-            }
-            requestAnim(836, 5);
-            setCurrentHealth(0);
-            deathStage++;
-            deathTimer = System.currentTimeMillis();
-            prayers.reset();
-            send(new SendMessage("Oh dear you have died!"));
-        } else if (deathStage == 1 && now - deathTimer >= 1800) {
-            transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), tH));
-            deathStage = 0;
-            deathTimer = 0;
-            setCombatTimer(0);
-            setLastCombat(0);
-            /* Effect reset! */
-            for (int i = 0; i < effects.size(); i++)
-                addEffectTime(i, i == 0 || effects.get(i) == -1 ? -1 : 0);
-            /* Stats check! */
-            for (int i = 0; i < boostedLevel.length; i++) {
-                if (i == 3)
-                    heal(Skills.getLevelForExperience(getExperience(Skill.HITPOINTS)));
-                else if (i == 5)
-                    setCurrentPrayer(Skills.getLevelForExperience(getExperience(Skill.PRAYER)));
-                else
-                    boostedLevel[i] = 0;
-                refreshSkill(Skill.getSkill(i));
-            }
-            /* Death in other content! */
-            if (inWildy())
-                died();
-            if (skullIcon >= 0) skullIcon = -1;
-            /* Item check !*/
-            GetBonus(true);
-            requestWeaponAnims();
-            getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        }
-        if (smithing[4] > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
-                smithing();
-            }
-        }
-        if (smelting && now - lastAction >= 1800) {
-            lastAction = now;
-            smelt(smelt_id);
-        } else if (goldCrafting && now - lastAction >= 1800) {
-            lastAction = now;
-            goldCraft();
-        } else if (shafting && now - lastAction >= 1800) {
-            lastAction = now;
-            shaft();
-        } else if (fletchings && now - lastAction >= 1800) {
-            lastAction = now;
-            fletching.fletchBow(this);
-        } else if (skillActionTimer > -1) {
-            if (skillActionTimer-- < 1) skillActionYield();
-        } else if (boneItem > 0 && prayerAction > -1) {
-            if (prayerAction-- < 1) Prayer.altarBones(this, boneItem);
-        } else if (filling) {
-            lastAction = now;
-            fill();
-        } else if (spinning && now - lastAction >= getSpinSpeed()) {
-            lastAction = now;
-            spin();
-        } else if (crafting && now - lastAction >= 1800) {
-            lastAction = now;
-            craft();
-        } else if (fishing && now - lastAction >= getFishingSpeed()) {
-            lastAction = now;
-            fish();
-        } else if (fishing && now - lastFishAction <= 0) { //Reapply animation every 3 tick!
-            boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-            if (fishIndex >= 0 && (playerHasItem(Utils.fishTool[fishIndex]) || harpoon)) {
-                requestAnim(Utils.fishAnim[fishIndex], 0);
-                lastFishAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            }
-        } else if (cooking && now - lastAction >= 1800) {
-            lastAction = now;
-            cook();
-        }
-        // Npc Talking
-        if (NpcWanneTalk == 2) { // Bank Booth
-            if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 1)) {
-                NpcDialogue = 1;
-                NpcTalkTo = 494;
-                NpcWanneTalk = 0;
-            }
-        } else if (NpcWanneTalk > 0) {
-            if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 2))
-                if (NpcWanneTalk == 804) {
-                    openTan();
-                    NpcWanneTalk = 0;
-                } else {
-                    NpcDialogue = NpcWanneTalk;
-                    NpcTalkTo = GetNPCID(skillX, skillY);
-                    NpcWanneTalk = 0;
-                }
-        }
-        if (NpcDialogue > 0 && !NpcDialogueSend) {
-            UpdateNPCChat();
-        }
-        /* Handle logout shiez */
-        incrementTimeOutCounter();
-        if (isKicked) //Kicked muhahah!
-            disconnected = true;
-        else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
-            logout();
+        PlayerLifecycleTickService.processAfterCombat(this, now);
 
         if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
             markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
@@ -3653,6 +3459,18 @@ public class Client extends Player implements Runnable {
         return true;
     }
 
+    public void startSmithing(int itemId, int amount) {
+        if (smithing[2] <= 0) {
+            send(new SendMessage("Illigal Smithing !"));
+            return;
+        }
+        smithing[4] = itemId;
+        smithing[0] = 1;
+        smithing[5] = amount;
+        send(new RemoveInterfaces());
+        SmithingActionService.startSmithing(this);
+    }
+
     public void resetSM() {
         smithing[0] = 0;
         smithing[1] = 0;
@@ -4978,6 +4796,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void resetAction(boolean full) {
+        cancelActiveAction();
         MiningService.stopMiningFromReset(this, full);
         WoodcuttingService.stopWoodcuttingFromReset(this, full);
         smelting = false;
@@ -5089,7 +4908,6 @@ public class Client extends Player implements Runnable {
             return;
         }
         checkItemUpdate();
-        lastAction = System.currentTimeMillis();
     }
 
     public void replaceDoors() {
@@ -5179,6 +4997,7 @@ public class Client extends Player implements Runnable {
             cAmount = amount == 10 ? getInvAmt(cSelected) : amount;
             cLevel = levels[index];
             cExp = exp[index] * 8;
+            LegacyPlayerActionService.startCrafting(this);
         } else if (id != -1) {
             send(new SendMessage("You need level " + levels[index] + " crafting to craft a " + GetItemName(id).toLowerCase()));
             send(new RemoveInterfaces());
@@ -5253,6 +5072,7 @@ public class Client extends Player implements Runnable {
             cExp = cExp * 8;
             crafting = true;
             send(new RemoveInterfaces());
+            LegacyPlayerActionService.startCrafting(this);
         } else if (required >= 0 && cItem != -1) {
             send(new SendMessage("You need level " + required + " crafting to craft a " + GetItemName(cItem).toLowerCase()));
             send(new RemoveInterfaces());
@@ -5301,8 +5121,8 @@ public class Client extends Player implements Runnable {
         tY = y;
         tH = height;
         tEmote = emote;
-        tStage = 1;
         addEffectTime(0, -1); //If we teleport, reset desert shiez!
+        TeleportActionService.startTeleport(this, x, y, height, emote);
     }
 
     public void startSmelt(int id) {
@@ -5319,6 +5139,7 @@ public class Client extends Player implements Runnable {
         smeltExperience = Utils.smelt_bars[index2][1] * 4;
         smelting = true;
         send(new RemoveInterfaces());
+        LegacyPlayerActionService.startSmelting(this);
     }
 
     public void startFishing(int object, int click) {
@@ -5367,11 +5188,10 @@ public class Client extends Player implements Runnable {
             return;
         }
         resourcesGathered = 0;
-        lastFishAction = System.currentTimeMillis() + 600;
-        lastAction = System.currentTimeMillis() - 600;
         fishing = true;
         requestAnim(Utils.fishAnim[fishIndex], 0);
         send(new SendMessage("You start fishing..."));
+        LegacyPlayerActionService.startFishing(this);
     }
 
     public void fish() {
@@ -5391,7 +5211,6 @@ public class Client extends Player implements Runnable {
             resetAction(true);
             return;
         }
-        lastAction = System.currentTimeMillis();
         int random = Misc.random(6);
         int itemId = fishIndex == 1 && getLevel(Skill.FISHING) >= 30 && random < 3 ? 331 : Utils.fishId[fishIndex];
         if (fishIndex == 1)
@@ -5425,6 +5244,7 @@ public class Client extends Player implements Runnable {
         if (valid) {
             cookAmount = getInvAmt(id);
             cooking = true;
+            LegacyPlayerActionService.startCooking(this);
         }
 
     }
@@ -6212,6 +6032,7 @@ public class Client extends Player implements Runnable {
         }
         magicId = -1;
         target = null;
+        CombatStartService.clearCombatTarget(this);
     }
 
     public void requestWeaponAnims() {
@@ -6757,6 +6578,7 @@ public class Client extends Player implements Runnable {
         goldSlot = slot;
         goldCrafting = true;
         send(new RemoveInterfaces());
+        LegacyPlayerActionService.startGoldCrafting(this);
     }
 
     public void deleteRunes(int[] runes, int[] qty) {

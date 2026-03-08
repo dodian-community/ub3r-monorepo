@@ -15,7 +15,7 @@ internal object Dori {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 34
+        client.openUpShopRouted(34)
         return true
     }
 }

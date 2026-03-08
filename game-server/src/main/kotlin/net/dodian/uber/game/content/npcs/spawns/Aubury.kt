@@ -45,7 +45,7 @@ internal object Aubury {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 9
+        client.openUpShopRouted(9)
         return true
     }
 

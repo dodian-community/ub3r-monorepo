@@ -15,7 +15,7 @@ internal object BeginnerStore {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 17
+        client.openUpShopRouted(17)
         return true
     }
 }

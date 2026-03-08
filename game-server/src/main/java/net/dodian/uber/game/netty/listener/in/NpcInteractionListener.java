@@ -18,6 +18,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
 import net.dodian.uber.game.runtime.interaction.scheduler.InteractionTaskScheduler;
 import net.dodian.uber.game.runtime.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.runtime.combat.CombatIntent;
+import net.dodian.uber.game.runtime.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -265,8 +267,7 @@ public class NpcInteractionListener implements PacketListener {
 
         boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
         if ((rangedAttack && client.goodDistanceEntity(npc, 5)) || client.goodDistanceEntity(npc, 1)) {
-            client.resetWalkingQueue();
-            client.startAttack(npc);
+            CombatStartService.startNpcAttack(client, npc, CombatIntent.ATTACK_NPC);
             return;
         }
 

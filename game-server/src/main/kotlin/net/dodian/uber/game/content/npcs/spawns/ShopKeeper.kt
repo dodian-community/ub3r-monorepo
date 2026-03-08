@@ -20,11 +20,11 @@ internal object ShopKeeper {
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         when (npc.id) {
             520 -> {
-                client.NpcWanneTalk = 19
+                client.startNpcDialogue(19, npc.id)
                 client.convoId = 4
             }
             506 -> {
-                client.WanneShop = 3
+                client.openUpShopRouted(3)
             }
             else -> return false
         }
@@ -34,7 +34,7 @@ internal object ShopKeeper {
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
         if (npc.id != 506) return false
-        client.WanneShop = 3
+        client.openUpShopRouted(3)
         return true
     }
 }

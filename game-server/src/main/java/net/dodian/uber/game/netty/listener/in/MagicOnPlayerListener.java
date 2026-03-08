@@ -11,6 +11,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.combat.CombatIntent;
+import net.dodian.uber.game.runtime.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,28 +55,6 @@ public class MagicOnPlayerListener implements PacketListener {
             return;
         }
 
-        // Replicate legacy distance & task logic
-        if (client.goodDistanceEntity(victim, 5)) {
-            client.resetWalkingQueue();
-            client.startAttack(victim);
-            return;
-        }
-
-        if (!client.goodDistanceEntity(victim, 5)) {
-            final WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_PLAYER, victimIndex, victim.getPosition());
-            client.setWalkToTask(task);
-            GameEventScheduler.runRepeatingMs(600, () -> {
-                if (client.disconnected || client.getWalkToTask() != task) {
-                    return false;
-                }
-                if (client.goodDistanceEntity(victim, 5)) {
-                    client.resetWalkingQueue();
-                    client.startAttack(victim);
-                    client.setWalkToTask(null);
-                    return false;
-                }
-                return true;
-            });
-        }
+        CombatStartService.startPlayerAttack(client, victim, CombatIntent.MAGIC_ON_PLAYER);
     }
 }

@@ -2,6 +2,8 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
+import net.dodian.uber.game.runtime.combat.CombatTargetState;
+import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
 import net.dodian.uber.game.skills.mining.MiningState;
@@ -15,6 +17,10 @@ final class PlayerInteractionState {
     private volatile QueueTaskHandle farmDebugTaskHandle;
     private volatile QueueTaskHandle miningTaskHandle;
     private volatile QueueTaskHandle woodcuttingTaskHandle;
+    private volatile QueueTaskHandle activeActionHandle;
+    private volatile PlayerActionType activeActionType;
+    private volatile long actionStartedCycle = 0L;
+    private volatile CombatTargetState combatTargetState;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
@@ -131,6 +137,52 @@ final class PlayerInteractionState {
         woodcuttingState = null;
     }
 
+    QueueTaskHandle getActiveActionHandle() {
+        return activeActionHandle;
+    }
+
+    void setActiveActionHandle(QueueTaskHandle activeActionHandle) {
+        this.activeActionHandle = activeActionHandle;
+    }
+
+    PlayerActionType getActiveActionType() {
+        return activeActionType;
+    }
+
+    void setActiveActionType(PlayerActionType activeActionType) {
+        this.activeActionType = activeActionType;
+    }
+
+    long getActionStartedCycle() {
+        return actionStartedCycle;
+    }
+
+    void setActionStartedCycle(long actionStartedCycle) {
+        this.actionStartedCycle = actionStartedCycle;
+    }
+
+    void cancelActiveAction() {
+        QueueTaskHandle handle = activeActionHandle;
+        activeActionHandle = null;
+        activeActionType = null;
+        actionStartedCycle = 0L;
+        if (handle != null) {
+            handle.cancel();
+        }
+    }
+
+    CombatTargetState getCombatTargetState() {
+        return combatTargetState;
+    }
+
+    void setCombatTargetState(CombatTargetState combatTargetState) {
+        this.combatTargetState = combatTargetState;
+    }
+
+    void clearCombatTargetState() {
+        combatTargetState = null;
+    }
+
     GameTaskSet<?> getPlayerTaskSet() {
         return playerTaskSet;
     }
@@ -140,6 +192,7 @@ final class PlayerInteractionState {
     }
 
     void terminatePlayerTasks() {
+        cancelActiveAction();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;

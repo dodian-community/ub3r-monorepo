@@ -12,6 +12,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.combat.CombatIntent;
+import net.dodian.uber.game.runtime.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,29 +44,7 @@ public class MagicOnNpcListener implements PacketListener {
         if (npc == null) return;
         if (client.randomed || client.UsingAgility) return;
 
-        // If already in distance start attack immediately
-        if (client.goodDistanceEntity(npc, 5)) {
-            client.resetWalkingQueue();
-            client.startAttack(npc);
-            return;
-        }
-
-        // Otherwise set walk task and attack when close enough
-        WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
-        client.setWalkToTask(task);
-
-        GameEventScheduler.runRepeatingMs(600, () -> {
-            if (client.disconnected || client.getWalkToTask() != task) {
-                return false;
-            }
-            if (client.goodDistanceEntity(npc, 5)) {
-                client.resetWalkingQueue();
-                client.startAttack(npc);
-                client.setWalkToTask(null);
-                return false;
-            }
-            return true;
-        });
+        CombatStartService.startNpcAttack(client, npc, CombatIntent.MAGIC_ON_NPC);
 
         logger.debug("MagicOnNpcListener: magic {} on npc {}", magicId, npcIndex);
     }

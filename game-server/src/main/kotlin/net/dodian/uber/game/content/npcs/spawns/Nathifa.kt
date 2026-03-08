@@ -15,7 +15,7 @@ internal object Nathifa {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 8
+        client.openUpShopRouted(8)
         return true
     }
 }

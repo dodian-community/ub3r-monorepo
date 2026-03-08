@@ -9,6 +9,7 @@ import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.chunk.Chunk;
 import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.entity.Entity;
+import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -49,7 +50,7 @@ public class Npc extends Entity {
     private int transformedNpcId = -1;
     public int viewX;
     public int viewY;
-    private int damageDealt = 0, damageDealt2 = 0;
+    private final PendingHitBuffer pendingHits = new PendingHitBuffer();
     private int deathEmote;
     public NpcData data;
     private boolean fighting = false;
@@ -188,6 +189,7 @@ public class Npc extends Entity {
         faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
+        clearPendingHits();
     }
 
     public int getViewX() {
@@ -281,7 +283,6 @@ public class Npc extends Entity {
         return walking;
     }
 
-    private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
 
     public void showConfig(Client client) {
         int magicDamage = (int) Math.floor(maxHit * this.getMagic());
@@ -368,15 +369,7 @@ public class Npc extends Entity {
             hitDiff = 0;
         else if (hitDiff > currentHealth)
             hitDiff = currentHealth;
-        if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
-            this.hitType = type;
-            damageDealt = hitDiff;
-            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
-        } else if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
-            this.hitType2 = type;
-            damageDealt2 = hitDiff;
-            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
-        }
+        appendHit(hitDiff, type);
         currentHealth -= hitDiff;
         /* Daganoth kings mechanic dodian style! */
         int otherIndex = this == Server.npcManager.getNpc(Server.npcManager.dagaRex) ? Server.npcManager.dagaSupreme : this == Server.npcManager.getNpc(Server.npcManager.dagaSupreme) ? Server.npcManager.dagaRex : -1;
@@ -938,16 +931,20 @@ public class Npc extends Entity {
     }
 
     public int getDamageDealt() {
-        return this.damageDealt;
+        return pendingHits.getPrimaryDamage();
     }
     public int getDamageDealt2() {
-        return this.damageDealt2;
+        return pendingHits.getSecondaryDamage();
     }
     public Entity.hitType getHitType() {
-        return this.hitType;
+        return pendingHits.getPrimaryType();
     }
     public Entity.hitType getHitType2() {
-        return this.hitType2;
+        return pendingHits.getSecondaryType();
+    }
+
+    public void clearPendingHits() {
+        pendingHits.clear();
     }
 
     public int getMaxHealth() {
@@ -969,6 +966,16 @@ public class Npc extends Entity {
     public void calmedDown() {
         inFrenzy = -1;
         hadFrenzy = true;
+    }
+
+    private PendingHitBuffer.AppendResult appendHit(int damage, Entity.hitType type) {
+        PendingHitBuffer.AppendResult result = pendingHits.appendHit(damage, type);
+        if (result == PendingHitBuffer.AppendResult.PRIMARY) {
+            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
+        } else if (result == PendingHitBuffer.AppendResult.SECONDARY) {
+            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
+        }
+        return result;
     }
 
     public void sendFightMessage(String msg) {

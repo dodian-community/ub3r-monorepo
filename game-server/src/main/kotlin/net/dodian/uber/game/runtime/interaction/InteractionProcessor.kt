@@ -15,6 +15,8 @@ import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.runtime.combat.CombatIntent
+import net.dodian.uber.game.runtime.combat.CombatStartService
 import net.dodian.uber.game.runtime.interaction.scheduler.InteractionExecutionResult
 import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
@@ -483,8 +485,7 @@ object InteractionProcessor {
         if (timing.handled) {
             return timing
         }
-        player.resetWalkingQueue()
-        player.startAttack(npc)
+        CombatStartService.beginAttackNow(player, npc, CombatIntent.ATTACK_NPC)
         return timing
     }
 

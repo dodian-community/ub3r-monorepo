@@ -185,7 +185,7 @@ object DialogueOptionService {
 
         if (c.convoId == 3) {
             if (button == 1) {
-                c.WanneShop = 9
+                c.openUpShopRouted(9)
             } else {
                 c.send(RemoveInterfaces())
             }
@@ -193,7 +193,7 @@ object DialogueOptionService {
 
         if (c.convoId == 4) {
             if (button == 1) {
-                c.WanneShop = 22
+                c.openUpShopRouted(22)
             } else {
                 c.send(RemoveInterfaces())
             }
@@ -484,7 +484,7 @@ object DialogueOptionService {
         } else if (c.NpcDialogue == 1177) {
             if (button == 1) {
                 c.send(RemoveInterfaces())
-                c.WanneShop = 19
+                c.openUpShopRouted(19)
             } else if (button == 2) {
                 c.nextDiag = 1178
             } else {

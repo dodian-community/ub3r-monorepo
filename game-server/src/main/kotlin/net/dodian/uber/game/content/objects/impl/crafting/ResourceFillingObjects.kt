@@ -28,19 +28,13 @@ object ResourceFillingObjects : ObjectContent {
         if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
             objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929
         ) {
-            client.fillingObj = objectId
-            client.filling = true
-            return true
+            return ResourceFillingService.handleObjectUse(client, objectId)
         }
         if (objectId == 884 || objectId == 878 || objectId == 6249) {
-            client.fillingObj = objectId
-            client.filling = true
-            return true
+            return ResourceFillingService.handleObjectUse(client, objectId)
         }
         if (objectId == 14890) {
-            client.fillingObj = objectId
-            client.filling = true
-            return true
+            return ResourceFillingService.handleObjectUse(client, objectId)
         }
         if (objectId == 8689 && itemId == 1925) {
             client.setFocus(position.x, position.y)

@@ -183,23 +183,24 @@ class WorldSynchronizationService {
             try {
                 val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
                 val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
+                val localActivityStamp = if (trackActivityStamps) SynchronizationContext.getNpcLocalActivityStamp(player) else 0L
                 val membershipRevision = if (trackActivityStamps) player.localNpcMembershipRevision else 0L
                 val decision =
                     if (trackActivityStamps) {
-                        shouldSkipNpcSync(player, state, chunkStamp, membershipRevision)
+                        shouldSkipNpcSync(player, state, chunkStamp, localActivityStamp, membershipRevision)
                     } else {
                         NpcSyncDecision.BUILD
                     }
                 if (decision == NpcSyncDecision.SKIP) {
                     SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
                     SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                    updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
+                    updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
                     return@forEach
                 }
                 player.sendNpcSynchronization()
                 SynchronizationContext.recordNpcPacketBuilt(player.localNpcs.size)
                 SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
-                updateNpcViewerSyncState(player, chunkStamp, membershipRevision)
+                updateNpcViewerSyncState(player, chunkStamp, localActivityStamp, membershipRevision)
             } catch (throwable: Throwable) {
                 handleViewerSyncFailure("npc-sync", player, throwable)
             }
@@ -273,6 +274,7 @@ class WorldSynchronizationService {
         player: Client,
         state: ViewerNpcSyncState?,
         chunkStamp: Long,
+        localActivityStamp: Long,
         membershipRevision: Long,
     ): NpcSyncDecision {
         state ?: run {
@@ -298,6 +300,7 @@ class WorldSynchronizationService {
         }
         return if (
             state.lastChunkActivityStamp == chunkStamp &&
+            state.lastLocalNpcActivityStamp == localActivityStamp &&
             state.lastLocalNpcMembershipRevision == membershipRevision
         ) {
             NpcSyncDecision.SKIP
@@ -305,8 +308,11 @@ class WorldSynchronizationService {
             if (state.lastChunkActivityStamp != chunkStamp) {
                 SynchronizationContext.recordNpcBuildChunkActivityChanged()
             }
-            if (state.lastLocalNpcMembershipRevision != membershipRevision) {
+            if (state.lastLocalNpcActivityStamp != localActivityStamp) {
                 SynchronizationContext.recordNpcBuildLocalActivityChanged()
+            }
+            if (state.lastLocalNpcMembershipRevision != membershipRevision) {
+                SynchronizationContext.recordNpcBuildLocalMembershipChanged()
             }
             NpcSyncDecision.BUILD
         }
@@ -344,7 +350,7 @@ class WorldSynchronizationService {
                     val localCoverage = cycle.npcLocalScans + cycle.npcLocalsSkipped
                     val avgLocals = if (total > 0) localCoverage.toDouble() / total.toDouble() else 0.0
                     logger.warn(
-                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, membership={}]",
+                        "Sync stage {} took {}ms viewersBuilt={} viewersSkipped={} avgLocalNpcs={} buildReasons=[noState={}, mapOrTeleport={}, localCount={}, pendingViewport={}, chunkStamp={}, localActivity={}, membership={}]",
                         stage,
                         elapsedMs,
                         built,
@@ -356,6 +362,7 @@ class WorldSynchronizationService {
                         cycle.npcBuildPendingViewportCount,
                         cycle.npcBuildChunkActivityChangedCount,
                         cycle.npcBuildLocalActivityChangedCount,
+                        cycle.npcBuildLocalMembershipChangedCount,
                     )
                 }
 
@@ -399,7 +406,12 @@ class WorldSynchronizationService {
         player.send(message)
     }
 
-    private fun updateNpcViewerSyncState(player: Client, chunkStamp: Long, membershipRevision: Long) {
+    private fun updateNpcViewerSyncState(
+        player: Client,
+        chunkStamp: Long,
+        localActivityStamp: Long,
+        membershipRevision: Long,
+    ) {
         val state: ViewerNpcSyncState = npcRevisionIndex.viewerState(player)
         state.lastNpcSyncTick = tick
         state.lastNpcViewportRevision = chunkStamp
@@ -408,6 +420,7 @@ class WorldSynchronizationService {
         state.lastKnownMapRegionY = player.mapRegionY
         state.lastKnownPlane = player.position.z
         state.lastChunkActivityStamp = chunkStamp
+        state.lastLocalNpcActivityStamp = localActivityStamp
         state.lastLocalNpcMembershipRevision = membershipRevision
     }
 }

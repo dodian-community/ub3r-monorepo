@@ -15,7 +15,7 @@ internal object Wolfman {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 5
+        client.openUpShopRouted(5)
         return true
     }
 }

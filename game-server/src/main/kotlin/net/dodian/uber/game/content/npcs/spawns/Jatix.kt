@@ -23,7 +23,7 @@ internal object Jatix {
             options(
                 title = "What do you wish to do?",
                 DialogueOption("Visit store") {
-                    action { c -> c.WanneShop = 19 }
+                    action { c -> c.openUpShopRouted(19) }
                     finish()
                 },
                 DialogueOption("Decant potions") {
@@ -41,7 +41,7 @@ internal object Jatix {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 19
+        client.openUpShopRouted(19)
         return true
     }
 }

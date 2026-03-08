@@ -67,16 +67,23 @@ object GameTaskRuntime {
     ): TaskHandle = worldTaskSet.queue(priority, block)
 
     @JvmStatic
-    fun cycle() {
+    fun cycleWorld() {
         worldTaskSet.cycle()
-        PlayerHandler.snapshotActivePlayers().forEach { player ->
-            playerTaskSet(player)?.cycle()
-        }
-        Server.npcManager?.getNpcs()?.forEach { npc ->
-            if (npc != null) {
-                npcTaskSet(npc)?.cycle()
-            }
-        }
+    }
+
+    @JvmStatic
+    fun cyclePlayer(player: Client) {
+        playerTaskSet(player)?.cycle()
+    }
+
+    @JvmStatic
+    fun cycleNpc(npc: Npc) {
+        npcTaskSet(npc)?.cycle()
+    }
+
+    @JvmStatic
+    fun cycle() {
+        cycleWorld()
     }
 
     @JvmStatic
@@ -104,7 +111,7 @@ object GameTaskRuntime {
     @JvmStatic
     fun clear() {
         worldTaskSet.terminateTasks()
-        PlayerHandler.playersOnline.values.forEach { player ->
+        PlayerHandler.playersOnline.values.forEach { player: Client ->
             terminatePlayerTasks(player)
         }
         Server.npcManager?.getNpcs()?.forEach { npc ->

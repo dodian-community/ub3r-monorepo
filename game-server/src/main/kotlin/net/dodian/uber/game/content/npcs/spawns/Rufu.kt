@@ -15,7 +15,7 @@ internal object Rufu {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        client.WanneShop = 7
+        client.openUpShopRouted(7)
         return true
     }
 }

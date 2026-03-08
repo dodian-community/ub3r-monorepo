@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.buttons.crafting
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.runtime.action.LegacyPlayerActionService
 
 object ProductionAmountButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(10239, 10238, 6212, 6211)
@@ -20,6 +21,7 @@ object ProductionAmountButtons : ButtonContent {
             else -> return false
         }
         client.skillActionTimer = client.playerSkillAction[7]
+        LegacyPlayerActionService.startLegacyProduction(client)
         return true
     }
 }
