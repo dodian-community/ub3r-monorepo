@@ -125,16 +125,9 @@ public class Client extends Player implements Runnable {
     public boolean tradeLocked = false;
     public boolean officialClient = true;
     public String[] UUID = null;
-    /*
-     * Danno: Last row all disabled. As none have effect.
-     */
-    public int[] duelButtons = {26069, 26070, 26071, 30136, 2158, 26065 /* 26072, 26073, 26074, 26066, 26076 */};
-    public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Gear Change", "Fun Weapons", "No Deflect Damage",
-            "No Drinks", "No Food", "No prayer", "No Movement", "Obstacles"};
-    /*
-     * Danno: Last row all disabled. As none have effect.
-     */
-    public boolean[] duelRule = {false, false, false, false, false, true, true, true, true, true, true};
+    public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Sp. Atk", "Fun Weapons", "No Forfeit",
+            "No Drinks", "No Food", "No Prayer", "No Movement", "Obstacles"};
+    public boolean[] duelRule = {false, false, false, false, false, false, false, false, false, false, false};
 
     /*
      * Danno: Testing for armor restriction rules.
@@ -144,6 +137,7 @@ public class Client extends Player implements Runnable {
     private final int[] trueSlots = {0, 1, 2, 13, 3, 4, 5, 7, 12, 10, 9};
     private final int[] falseSlots = {0, 1, 2, 4, 5, 6, -1, 7, -1, 10, 9, -1, 9, 3};
     private final int[] stakeConfigId = new int[23];
+    private final int[] duelRuleConfigIds = {11, 12, 13, 22, 15, 16, 17, 18, 19, 20, 21};
     public int[] duelLine = {6698, 6699, 6697, 7817, 669, 6696, 6701, 6702, 6703, 6704, 6731};
     public boolean duelRequested = false, inDuel = false, duelConfirmed = false, duelConfirmed2 = false,
             duelFight = false;
@@ -1828,10 +1822,6 @@ public class Client extends Player implements Runnable {
             SlayerTask.sendTask(this);
             return;
         }
-        if (duelFight && duelRule[3]) {
-            send(new SendMessage("Equipment changing has been disabled in this duel"));
-            return;
-        }
         if (duelConfirmed && !duelFight)
             return;
         if (!playerHasItem(wearID)) {
@@ -1994,10 +1984,6 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean remove(int slot, boolean force) {
-        if (duelFight && duelRule[3] && !force) {
-            send(new SendMessage("Equipment changing has been disabled in this duel!"));
-            return false;
-        }
         if (duelConfirmed && !force) {
             return false;
         }
@@ -4229,18 +4215,11 @@ public class Client extends Player implements Runnable {
 
 
     public void RefreshDuelRules() {
-        /*
-         * Danno: Testing ticks/armour blocks.
-         */
-
-        // "No Ranged", "No Melee", "No Magic",
-        // "No Gear Change", "Fun Weapons", "No Retreat", "No Drinks",
-        // "No Food", "No prayer", "No Movement", "Obstacles" };
         int configValue = 0;
         for (int i = 0; i < duelLine.length; i++) {
             if (duelRule[i]) {
                 send(new SendString(/* "@red@" + */duelNames[i], duelLine[i]));
-                configValue += stakeConfigId[i + 11];
+                configValue += stakeConfigId[duelRuleConfigIds[i]];
             } else {
                 send(new SendString(/* "@gre@" + */duelNames[i], duelLine[i]));
             }
@@ -5922,7 +5901,7 @@ public class Client extends Player implements Runnable {
         duelFight = false;
         canAttack = true;
         inDuel = false;
-        duelRule = new boolean[]{false, false, false, false, false, true, true, true, true, true, true};
+        duelRule = new boolean[]{false, false, false, false, false, false, false, false, false, false, false};
         Arrays.fill(duelBodyRules, false);
         otherdbId = -1;
     }
@@ -5932,67 +5911,44 @@ public class Client extends Player implements Runnable {
         send(new SetVarbit(id, value));
     }
 
-    public boolean duelButton(int button) {
+    public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
-        boolean found = false;
-        if (System.currentTimeMillis() - lastButton < 800) {
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length || System.currentTimeMillis() - lastButton < 800) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            for (int i = 0; i < duelButtons.length; i++) {
-                if (button == duelButtons[i]) {
-                    found = true;
-                    if (duelRule[i]) {
-                        duelRule[i] = false;
-                        other.duelRule[i] = false;
-                    } else {
-                        duelRule[i] = true;
-                        other.duelRule[i] = true;
-                    }
-                }
-            }
-            if (found) {
-                lastButton = System.currentTimeMillis();
-                duelConfirmed = false;
-                other.duelConfirmed = false;
-                send(new SendString("", 6684));
-                other.send(new SendString("", 6684));
-
-                other.duelRule[i] = duelRule[i];
-                RefreshDuelRules();
-                other.RefreshDuelRules();
-            }
-        }
-        return found;
-    }
-
-    public void duelButton2(int button) {
-        Client other = getClient(duel_with);
-        /*
-         * Danno: Null check :p
-         */
-        if (other == null)
-            return;
-        if (System.currentTimeMillis() - lastButton < 400) {
-            return;
-        }
-        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            if (duelBodyRules[button]) {
-                duelBodyRules[button] = false;
-                other.duelBodyRules[button] = false;
-            } else {
-                duelBodyRules[button] = true;
-                other.duelBodyRules[button] = true;
-            }
+            duelRule[ruleIndex] = !duelRule[ruleIndex];
+            other.duelRule[ruleIndex] = duelRule[ruleIndex];
             lastButton = System.currentTimeMillis();
             duelConfirmed = false;
             other.duelConfirmed = false;
             send(new SendString("", 6684));
             other.send(new SendString("", 6684));
-            other.duelBodyRules[i] = duelBodyRules[i];
             RefreshDuelRules();
             other.RefreshDuelRules();
+            return true;
         }
+        return false;
+    }
+
+    public boolean toggleDuelBodyRule(int ruleIndex) {
+        Client other = getClient(duel_with);
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length || System.currentTimeMillis() - lastButton < 400) {
+            return false;
+        }
+        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
+            duelBodyRules[ruleIndex] = !duelBodyRules[ruleIndex];
+            other.duelBodyRules[ruleIndex] = duelBodyRules[ruleIndex];
+            lastButton = System.currentTimeMillis();
+            duelConfirmed = false;
+            other.duelConfirmed = false;
+            send(new SendString("", 6684));
+            other.send(new SendString("", 6684));
+            RefreshDuelRules();
+            other.RefreshDuelRules();
+            return true;
+        }
+        return false;
     }
 
     public void addFriend(long name) {

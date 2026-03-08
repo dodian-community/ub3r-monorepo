@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory
 
 object TradeConfirmButtons : ButtonContent {
     private val logger = LoggerFactory.getLogger(TradeConfirmButtons::class.java)
-    override val buttonIds: IntArray = intArrayOf(13092, 13218)
+    override val buttonIds: IntArray = intArrayOf(3420, 3546)
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
         when (buttonId) {
-            13092 -> {
+            3420 -> {
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {
@@ -43,7 +43,7 @@ object TradeConfirmButtons : ButtonContent {
                 return true
             }
 
-            13218 -> {
+            3546 -> {
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {

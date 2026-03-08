@@ -6,11 +6,11 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 
 object DuelConfirmButtons : ButtonContent {
-    override val buttonIds: IntArray = intArrayOf(25120, 26018)
+    override val buttonIds: IntArray = intArrayOf(6520, 6674)
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
         when (buttonId) {
-            25120 -> {
+            6520 -> {
                 if (System.currentTimeMillis() - client.lastButton < 1000) {
                     client.lastButton = System.currentTimeMillis()
                     return true
@@ -38,7 +38,7 @@ object DuelConfirmButtons : ButtonContent {
                 return true
             }
 
-            26018 -> {
+            6674 -> {
                 val other = client.getClient(client.duel_with)
                 if (other == null || client.slot == other.slot || !client.inDuel || client.duelConfirmed) {
                     return true
@@ -89,4 +89,3 @@ object DuelConfirmButtons : ButtonContent {
         return false
     }
 }
-

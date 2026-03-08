@@ -2,11 +2,9 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 import java.util.Collection;
 
@@ -18,13 +16,13 @@ import java.util.Collection;
  * - For own items: 6509 if other has >= 14 items, otherwise 6507
  * - For other's items: 6508 if other has >= 14 items, otherwise 6502
  * 
- * Packet structure:
+ * Packet structure (must match Mystic's SEND_UPDATE_ITEMS handler):
  * - Opcode: 53 (variable size word)
- * - Interface ID: 2 bytes (dynamic based on item count)
- * - Item count: 2 bytes
+ * - Interface ID: 4 bytes (int)
+ * - Item count: 2 bytes (short)
  * - For each item:
- *   - Amount: 1 byte (if <= 254) or 1 byte (255) + 4 bytes (if > 254)
- *   - Item ID: 2 bytes (writeWordBigEndianA - item ID + 1, or -1 if negative)
+ *   - Amount: 4 bytes (int)
+ *   - Item ID: 2 bytes (short) - only if amount > 0
  */
 public class DuelConfirmItems implements OutgoingPacket {
 
@@ -61,48 +59,29 @@ public class DuelConfirmItems implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        
-        // Determine interface ID and items to send
+
         int interfaceId;
         Collection<GameItem> itemsToSend;
-        
+
         if (isForOwnItems) {
-            // For own items: 6509 if other has >= 14 items, otherwise 6507
             interfaceId = otherItems.size() >= 14 ? 6509 : 6507;
             itemsToSend = ownItems;
         } else {
-            // For other's items: 6508 if other has >= 14 items, otherwise 6502
             interfaceId = otherItems.size() >= 14 ? 6508 : 6502;
             itemsToSend = otherItems;
         }
-        
-        // Write interface ID
-        message.putShort(interfaceId);
-        
-        // Write item count
+
+        message.putInt(interfaceId);
         message.putShort(itemsToSend.size());
-        
-        // Write each item
+
         for (GameItem item : itemsToSend) {
-            // Write amount
-            if (item.getAmount() > 254) {
-                message.put(255); // item's stack count. if over 254, write byte 255
-                // writeDWord_v2 - scrambled byte order [16-23][24-31][0-7][8-15]
-                int amount = item.getAmount();
-                message.put((amount >> 16) & 0xFF); // bits 16-23
-                message.put((amount >> 24) & 0xFF); // bits 24-31
-                message.put(amount & 0xFF);         // bits 0-7
-                message.put((amount >> 8) & 0xFF);  // bits 8-15
-            } else {
-                message.put(item.getAmount());
+            int amount = item.getAmount();
+            message.putInt(amount);
+            if (amount != 0) {
+                message.putShort(item.getId() + 1);
             }
-            
-            // Write item ID (writeWordBigEndianA = little-endian + 128)
-            // Handle negative item IDs
-            int itemId = item.getId() < 0 ? -1 : item.getId() + 1;
-            message.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
         }
-        
+
         client.send(message);
     }
 }
