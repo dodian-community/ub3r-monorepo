@@ -81,4 +81,16 @@ class InboundPacketDecodeRegressionTest {
 
         assertEquals(42, ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL));
     }
+
+    @Test
+    void walkingFirstStepFieldsDecodeWithLegacyRsOrdering() {
+        ByteBuf buf = Unpooled.buffer();
+        buf.writeByte((319 * 8 + 10 + 128) & 0xFF);
+        buf.writeByte(((319 * 8 + 10) >> 8) & 0xFF);
+        buf.writeByte((381 * 8 + 11) & 0xFF);
+        buf.writeByte(((381 * 8 + 11) >> 8) & 0xFF);
+
+        assertEquals(319 * 8 + 10, ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD));
+        assertEquals(381 * 8 + 11, ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL));
+    }
 }

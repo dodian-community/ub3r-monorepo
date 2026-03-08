@@ -113,7 +113,7 @@ public final class WalkingListener implements PacketListener {
             return;
         }
 
-        int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.BIG);
+        int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.LITTLE);
         int firstStepX = firstStepXAbs - client.mapRegionX * 8;
 
         for (int i = 1; i < client.newWalkCmdSteps; i++) {
@@ -123,7 +123,7 @@ public final class WalkingListener implements PacketListener {
             client.tmpNWCY[i] = client.newWalkCmdY[i];
         }
 
-        int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.BIG);
+        int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.LITTLE);
         int firstStepY = firstStepYAbs - client.mapRegionY * 8;
         if (!isValidWorldCoordinate(firstStepXAbs) || !isValidWorldCoordinate(firstStepYAbs)) {
             rejectMalformedWalkPacket(client, opcode, size, firstStepXAbs, firstStepYAbs, "first step out of world bounds");
