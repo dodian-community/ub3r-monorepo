@@ -3,8 +3,6 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
-import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
@@ -53,26 +51,14 @@ public abstract class Player extends Entity {
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
     public long lastPickAction = 0, lastFishAction = 0;
-    private int playerNpc = -1;
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
-    // Start clean after account load; dirtiness is tracked by mutation sites.
-    private volatile int saveDirtyMask = 0;
-    private volatile long lastSavedRevision = 0L;
-    private volatile long saveRevision = 0L;
-    private volatile long lastProcessedCycle = 0L;
-    private volatile InteractionIntent pendingInteraction;
-    private volatile ActiveInteraction activeInteraction;
-    private volatile long interactionEarliestCycle = 0L;
-    private volatile QueueTaskHandle interactionTaskHandle;
-    private volatile QueueTaskHandle farmDebugTaskHandle;
-    private volatile QueueTaskHandle miningTaskHandle;
-    private volatile QueueTaskHandle woodcuttingTaskHandle;
-    private volatile GameTaskSet<?> playerTaskSet;
-    private volatile MiningState miningState;
-    private volatile WoodcuttingState woodcuttingState;
+    private final PlayerAccountState accountState = new PlayerAccountState(this);
+    private final PlayerInteractionState interactionState = new PlayerInteractionState();
+    private final PlayerMovementState movementState = new PlayerMovementState(this);
+    private final PlayerUpdateState updateState = new PlayerUpdateState(this);
     private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
@@ -89,9 +75,6 @@ public abstract class Player extends Entity {
     public int[] playerBonus = new int[12];
     public int fightType = 1; //What it should do!
     public fightStyle weaponStyle = fightStyle.PUNCH;
-    private int playerSE = 0x328; // SE = Standard Emotion
-    private int playerSEW = 0x333; // SEW = Standard Emotion Walking
-    private int playerSER = 0x338; // SER = Standard Emotion Run
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
     public PyramidPlunder getPlunder = new PyramidPlunder(((Client) this));
@@ -117,13 +100,10 @@ public abstract class Player extends Entity {
     public int[] bankItems = new int[playerBankSize];
     public int[] bankItemsN = new int[playerBankSize];
     public int pHairC, pTorsoC, pLegsC, pFeetC, pSkinC;
-    private int pGender, pHead, pTorso, pArms, pHands, pLegs, pFeet, pBeard;
     private final int[] playerEquipment = new int[14];
     private final int[] playerEquipmentN = new int[14];
-    private final int[] playerLevel = new int[21];
-    private final int[] playerXP = new int[21];
-    public int maxHealth = 10, currentHealth = getLevel(Skill.HITPOINTS);
-    public int maxPrayer = 1, currentPrayer = getLevel(Skill.PRAYER);
+    public int maxHealth = 10, currentHealth = 10;
+    public int maxPrayer = 1, currentPrayer = 1;
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
@@ -134,8 +114,6 @@ public abstract class Player extends Entity {
     private Chunk currentChunk;
     private ChunkRepository chunkRepository;
     public boolean loaded = false;
-    private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
-    private int faceTarget = -1;
     public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
     public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
     public int[] tmpNWCX = new int[WALKING_QUEUE_SIZE];
@@ -145,8 +123,6 @@ public abstract class Player extends Entity {
     public int[] travelBackX = new int[WALKING_QUEUE_SIZE];
     public int[] travelBackY = new int[WALKING_QUEUE_SIZE];
     public int numTravelBackSteps = 0;
-    private int graphicId = 0;
-    private int graphicHeight = 0;
     public int m4001 = 0;
     public int m4002 = 0;
     public int m4003 = 0;
@@ -175,10 +151,6 @@ public abstract class Player extends Entity {
     public int herbMaking = -1;
     public ArrayList<RewardItem> herbOptions = new ArrayList<>();
     //Slayer
-    private final ArrayList<Integer> slayerData = new ArrayList<>();
-    private final ArrayList<Boolean> travelData = new ArrayList<>();
-    private final ArrayList<Integer> paid = new ArrayList<>();
-    private final ArrayList<Boolean> unlocked = new ArrayList<>();
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int[] boostedLevel = new int[21];
@@ -188,12 +160,16 @@ public abstract class Player extends Entity {
     public int dailyLogin = 1;
     public ArrayList<String> dailyReward = new ArrayList<>();
     public int staffSize = 5;
+    private final PlayerStats stats = new PlayerStats(this);
+    private final PlayerAppearanceState appearanceState = new PlayerAppearanceState(this);
+    private final PlayerProgressState progressState = new PlayerProgressState(this);
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
-        teleportToX = teleportToY = -1;
-        mapRegionX = mapRegionY = -1;
-        currentX = currentY = teleportToZ = 0;
+        // Delegated state components are not safe to call from field initializers.
+        currentHealth = maxHealth;
+        currentPrayer = maxPrayer;
+        movementState.initializeRegionState();
         resetWalkingQueue();
     }
 
@@ -202,37 +178,14 @@ public abstract class Player extends Entity {
     }
 
     public void bossCount(String name, int amount) {
-        for(int i = 0; i < boss_name.length; i++) {
-            if(boss_name[i].equalsIgnoreCase(name))
-                boss_amount[i] = amount;
-        }
+        progressState.bossCount(name, amount);
     }
 
     public void defaultDailyReward(Client c) {
-        dailyReward.add(0, c.today.getTime() + "");
-        dailyReward.add(1, "6000"); //1 hour added to the timer for battlestaff
-        dailyReward.add(2, "0");
-        dailyReward.add(3, "0");
-        dailyReward.add(4, "60");
+        accountState.defaultDailyReward(c);
     }
     public void battlestavesData() {
-        if(dailyReward.isEmpty()) { //If size is empty do not send!
-            return;
-        }
-        int time = Integer.parseInt(dailyReward.get(1));
-        int amount = Integer.parseInt(dailyReward.get(2));
-        int current = Integer.parseInt(dailyReward.get(3));
-        int maxAmount = Integer.parseInt(dailyReward.get(4));
-        if(current == maxAmount) { //Cant get anymore battlestaffs this day!
-            return;
-        }
-        time -= 1;
-        if(time <= 0) { //Need this just incase someone is in the negative!
-            dailyReward.set(1, "6000");
-            dailyReward.set(2, (amount + 20) + "");
-            dailyReward.set(3, (current + 20) + "");
-            ((Client) this).send(new SendMessage("<col=ff6200>You got "+(amount + 20)+" battlestaves that you can claim at Baba Yaga."));
-        } else dailyReward.set(1, time + "");
+        accountState.battlestavesData();
     }
 
     public void addEffectTime(int slot, int ticks) {
@@ -320,9 +273,7 @@ public abstract class Player extends Entity {
     }
 
     public void defaultCharacterLook(Client temp) {
-        int[] testLook = {0, 3, 14, 18, 26, 34, 38, 42, 2, 14, 5, 4, 0}; // DEfault look!
-        System.arraycopy(testLook, 0, playerLooks, 0, 13);
-        temp.setLook(playerLooks);
+        appearanceState.defaultCharacterLook(temp);
     }
 
     public enum fightStyle {
@@ -339,101 +290,55 @@ public abstract class Player extends Entity {
     }
 
     void destruct() {
-        releaseCachedUpdateBlock();
+        updateState.releaseCachedUpdateBlock();
         cancelMiningTask();
         clearMiningState();
         cancelWoodcuttingTask();
         clearWoodcuttingState();
-        if (playerTaskSet != null) {
-            playerTaskSet.terminateTasks();
-            playerTaskSet = null;
-        }
+        interactionState.terminatePlayerTasks();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
-        mapRegionX = mapRegionY = -1;
-        currentX = currentY = 0;
+        movementState.resetTransientState();
         resetWalkingQueue();
     }
 
     public void setTask(String input) {
-        if (input.isEmpty())
-            input = "-1,-1,0,0,0,0,-1";
-        slayerData.clear();
-        String[] tasks = input.split(",");
-        for (String task : tasks) slayerData.add(Integer.parseInt(task));
-        ensureSlayerDataSize();
+        progressState.setTask(input);
     }
     public String saveTaskAsString() {
-        StringBuilder tasks = new StringBuilder();
-        for (int i = 0; i < slayerData.size(); i++) {
-            tasks.append(slayerData.get(i).toString()).append(i == slayerData.size() - 1 ? "" : ",");
-        }
-        return tasks.toString();
+        return progressState.saveTaskAsString();
     }
     public ArrayList<Integer> getSlayerData() {
-        //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
-        ensureSlayerDataSize();
-        return slayerData;
+        return progressState.getSlayerData();
     }
 
     private void ensureSlayerDataSize() {
-        final int[] defaultSlayerData = {-1, -1, 0, 0, 0, 0, -1};
-        for (int i = slayerData.size(); i < defaultSlayerData.length; i++) {
-            slayerData.add(defaultSlayerData[i]);
-        }
+        progressState.ensureSlayerDataSize();
     }
 
     public void setTravel(String input) {
-        if (input.isEmpty()) input = "0:0:0:0:0";
-        String[] travel = input.split(":");
-        for (String s : travel) travelData.add(s.equals("1"));
+        progressState.setTravel(input);
     }
     public String saveTravelAsString() {
-        StringBuilder travel = new StringBuilder();
-        for (int i = 0; i < travelData.size(); i++) {
-            int id = travelData.get(i) ? 1 : 0;
-            travel.append(id).append(i == travelData.size() - 1 ? "" : ":");
-        }
-        return travel.toString();
+        return progressState.saveTravelAsString();
     }
     public boolean getTravel(int i) {
-        return travelData.get(i);
+        return progressState.getTravel(i);
     }
     public void saveTravel(int i) {
-        travelData.set(i, true);
+        progressState.saveTravel(i);
     }
     public void addUnlocks(int i, String... check) {
-            if(check.length == 1) {
-                if(unlocked.isEmpty() || i == unlocked.size()) {
-                    paid.add(i, -1);
-                    unlocked.add(i, check[0].equals("1"));
-                } else {
-                    paid.set(i, -1);
-                    unlocked.set(i, check[0].equals("1"));
-                }
-            } else if (check.length == 2) {
-                if(unlocked.isEmpty() || i == unlocked.size()) {
-                    unlocked.add(i, check[1].equals("1"));
-                    paid.add(i, check[0].equals("1") ? 1 : 0);
-                } else {
-                    unlocked.set(i, check[1].equals("1"));
-                    paid.set(i, check[0].equals("1") ? 1 : 0);
-                }
-            }
+        progressState.addUnlocks(i, check);
     }
     public String saveUnlocksAsString() {
-        StringBuilder unlocks = new StringBuilder();
-        for (int i = 0; i < unlocked.size(); i++) {
-            int unlock = unlocked.get(i) ? 1 : 0;
-            unlocks.append(paid.get(i) == -1 ? unlock + "" : paid.get(i) + "," + unlock).append(i == unlocked.size() - 1 ? "" : ":");
-        }
-        return unlocks.toString();
+        return progressState.saveUnlocksAsString();
     }
     public boolean checkUnlock(int i) {
-        return !unlocked.isEmpty() && unlocked.size() >= i && unlocked.get(i);
+        return progressState.checkUnlock(i);
     }
     public int checkUnlockPaid(int i) {
-        return paid.isEmpty() || paid.size() < i  ? -1 : paid.get(i);
+        return progressState.checkUnlockPaid(i);
     }
 
     public abstract void initialize();
@@ -469,11 +374,7 @@ public abstract class Player extends Entity {
     }
 
     public String getSongUnlockedSaveText() {
-        StringBuilder out = new StringBuilder();
-        for (boolean b : songUnlocked) {
-            out.append(b ? 1 : 0).append(" ");
-        }
-        return out.toString();
+        return progressState.getSongUnlockedSaveText();
     }
 
     public boolean withinDistance(Object o) {
@@ -485,7 +386,7 @@ public abstract class Player extends Entity {
     }
 
     public boolean withinDistance(Player otherPlr) {
-        if (!otherPlr.isActive)
+        if (!otherPlr.isActivePlayer())
             return false;
         if (getPosition().getZ() != otherPlr.getPosition().getZ())
             return false;
@@ -508,11 +409,159 @@ public abstract class Player extends Entity {
      * @return The username of the player.
      */
     public String getPlayerName() {
-        return this.playerName;
+        return accountState.getPlayerName();
     }
 
     public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+        accountState.setPlayerName(playerName);
+    }
+
+    public String getPlayerPass() {
+        return accountState.getPlayerPass();
+    }
+
+    public void setPlayerPass(String playerPass) {
+        accountState.setPlayerPass(playerPass);
+    }
+
+    public int getDbId() {
+        return accountState.getDbId();
+    }
+
+    public void setDbId(int dbId) {
+        accountState.setDbId(dbId);
+    }
+
+    public int getPlayerRights() {
+        return accountState.getPlayerRights();
+    }
+
+    public void setPlayerRights(int playerRights) {
+        accountState.setPlayerRights(playerRights);
+    }
+
+    public int getPlayerGroup() {
+        return accountState.getPlayerGroup();
+    }
+
+    public void setPlayerGroup(int playerGroup) {
+        accountState.setPlayerGroup(playerGroup);
+    }
+
+    public boolean isPremium() {
+        return accountState.isPremium();
+    }
+
+    public void setPremium(boolean premium) {
+        accountState.setPremium(premium);
+    }
+
+    public int getLatestNews() {
+        return accountState.getLatestNews();
+    }
+
+    public void setLatestNews(int latestNews) {
+        accountState.setLatestNews(latestNews);
+    }
+
+    public String getConnectedFrom() {
+        return accountState.getConnectedFrom();
+    }
+
+    public void setConnectedFrom(String connectedFrom) {
+        accountState.setConnectedFrom(connectedFrom);
+    }
+
+    public int getIp() {
+        return accountState.getIp();
+    }
+
+    public void setIp(int ip) {
+        accountState.setIp(ip);
+    }
+
+    public String getUUID() {
+        return accountState.getUUID();
+    }
+
+    public void setUUID(String UUID) {
+        accountState.setUUID(UUID);
+    }
+
+    public boolean isInitialized() {
+        return accountState.isInitialized();
+    }
+
+    public void setInitialized(boolean initialized) {
+        accountState.setInitialized(initialized);
+    }
+
+    public boolean isDisconnected() {
+        return accountState.isDisconnected();
+    }
+
+    public void setDisconnected(boolean disconnected) {
+        accountState.setDisconnected(disconnected);
+    }
+
+    public boolean isActivePlayer() {
+        return accountState.isActivePlayer();
+    }
+
+    public void setActivePlayer(boolean active) {
+        accountState.setActivePlayer(active);
+    }
+
+    public boolean isKicked() {
+        return accountState.isKicked();
+    }
+
+    public void setKicked(boolean kicked) {
+        accountState.setKicked(kicked);
+    }
+
+    public boolean isSaveNeeded() {
+        return accountState.isSaveNeeded();
+    }
+
+    public void setSaveNeeded(boolean saveNeeded) {
+        accountState.setSaveNeeded(saveNeeded);
+    }
+
+    public boolean isYellOn() {
+        return accountState.isYellOn();
+    }
+
+    public void setYellOn(boolean yellOn) {
+        accountState.setYellOn(yellOn);
+    }
+
+    public boolean isDiscordEnabled() {
+        return accountState.isDiscord();
+    }
+
+    public void setDiscordEnabled(boolean discord) {
+        accountState.setDiscord(discord);
+    }
+
+    public boolean isInstaLootEnabled() {
+        return accountState.isInstaLoot();
+    }
+
+    public void setInstaLootEnabled(boolean instaLoot) {
+        accountState.setInstaLoot(instaLoot);
+    }
+
+    public int getDailyLogin() {
+        return accountState.getDailyLogin();
+    }
+
+    public void setDailyLogin(int dailyLogin) {
+        accountState.setDailyLogin(dailyLogin);
+    }
+
+    public ArrayList<String> getDailyReward() {
+        return accountState.getDailyReward();
     }
 
     public WalkToTask getWalkToTask() {
@@ -525,8 +574,6 @@ public abstract class Player extends Entity {
 
     public int mapRegionX, mapRegionY; // the map region the player is
     // currently in
-    private int currentX, currentY; // relative x/y coordinates (to map region)
-    // Note that mapRegionX*8+currentX yields absX
 
     public static final int WALKING_QUEUE_SIZE = 80;
     public int[] walkingQueueX = new int[WALKING_QUEUE_SIZE], walkingQueueY = new int[WALKING_QUEUE_SIZE];
@@ -536,179 +583,50 @@ public abstract class Player extends Entity {
     public int teleportToX, teleportToY, teleportToZ; // contain absolute x/y
     public boolean walkingBlock = false;
     public void resetWalkingQueue() {
-        walkingBlock = true;
-        wQueueReadPtr = wQueueWritePtr = 0;
-        newWalkCmdSteps = 0;
-        // properly initialize this to make the "travel back" algorithm work
-        for (int i = 0; i < WALKING_QUEUE_SIZE; i++) {
-            walkingQueueX[i] = currentX;
-            walkingQueueY[i] = currentY;
-        }
+        movementState.resetWalkingQueue();
     }
 
     public void addToWalkingQueue(int x, int y) {
-        int next = (wQueueWritePtr + 1) % WALKING_QUEUE_SIZE;
-        if (next == wQueueWritePtr)
-            return; // walking queue full, silently discard the data
-        walkingQueueX[wQueueWritePtr] = x;
-        walkingQueueY[wQueueWritePtr] = y;
-        wQueueWritePtr = next;
+        movementState.addToWalkingQueue(x, y);
     }
 
     // returns 0-7 for next walking direction or -1, if we're not moving
     public int getNextWalkingDirection() {
-        if (wQueueReadPtr == wQueueWritePtr)
-            return -1; // walking queue empty
-        int dir;
-        do {
-            dir = Utils.direction(currentX, currentY, walkingQueueX[wQueueReadPtr], walkingQueueY[wQueueReadPtr]);
-            if (dir == -1) {
-                wQueueReadPtr = (wQueueReadPtr + 1) % WALKING_QUEUE_SIZE;
-            } else {
-                // Convert the 16-direction value to 8-direction by dividing by 2
-                dir = dir / 2;
-                // Ensure the direction is within 0-7 range
-                if (dir < 0 || dir > 7) {
-                    println_debug("Invalid direction calculated: " + dir);
-                    resetWalkingQueue();
-                    return -1;
-                }
-            }
-        } while (dir == -1 && wQueueReadPtr != wQueueWritePtr);
-        
-        if (dir == -1) {
-            return -1;
-        }
-        
-        // Update position using the 8-direction deltas
-        Position newPos = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
-        int deltaX = Utils.directionDeltaX[dir];
-        int deltaY = Utils.directionDeltaY[dir];
-        
-        currentX += deltaX;
-        currentY += deltaY;
-        newPos.move(deltaX, deltaY);
-        getPosition().moveTo(newPos.getX(), newPos.getY());
-        
-        return dir;
+        return movementState.getNextWalkingDirection();
     }
 
-    // calculates directions of player movement, or the new coordinates when
-    // teleporting
-    private boolean didTeleport = false; // set to true if char did teleport in
-    // this cycle
-    private boolean mapRegionDidChange = false;
     public boolean firstSend = false;
-    private int primaryDirection = -1, secondaryDirection = -1; // direction char is going in this cycle
 
     public void getNextPlayerMovement() {
-        Client temp = (Client) this;
-        mapRegionDidChange = false;
-        didTeleport = false;
-        primaryDirection = secondaryDirection = -1;
-
-        if (teleportToX != -1 && teleportToY != -1) {
-            mapRegionDidChange = true;
-            if (mapRegionX != -1 && mapRegionY != -1) {
-                // check, whether destination is within current map region
-                int relX = teleportToX - mapRegionX * 8, relY = teleportToY - mapRegionY * 8;
-                if (relX >= 2 * 8 && relX < 11 * 8 && relY >= 2 * 8 && relY < 11 * 8)
-                    mapRegionDidChange = false;
-            }
-            if (mapRegionDidChange) {
-                // after map region change the relative coordinates range
-                // between 48 - 55+
-                if (firstSend) {
-                    temp.pLoaded = false;
-                } else {
-                    firstSend = true;
-                }
-                mapRegionX = (teleportToX >> 3) - 6;
-                mapRegionY = (teleportToY >> 3) - 6;
-                // playerListSize = 0; // completely rebuild playerList after
-                // teleport AND map region change
-            }
-            currentX = teleportToX - 8 * mapRegionX;
-            currentY = teleportToY - 8 * mapRegionY;
-            Position newPos = new Position(teleportToX, teleportToY, teleportToZ);
-            resetWalkingQueue();
-
-            teleportToX = teleportToY = -1;
-            teleportToZ = 0;
-            didTeleport = true;
-            temp.getPosition().moveTo(newPos.getX(), newPos.getY(), newPos.getZ());
-        } else {
-
-            primaryDirection = getNextWalkingDirection();
-            if (primaryDirection == -1)
-                return; // standing
-
-            if (isRunning) {
-                secondaryDirection = getNextWalkingDirection();
-            }
-
-            // check, if we're required to change the map region
-            int deltaX = 0, deltaY = 0;
-            if (currentX < 2 * 8) {
-                deltaX = 4 * 8;
-                mapRegionX -= 4;
-                mapRegionDidChange = true;
-            } else if (currentX >= 11 * 8) {
-                deltaX = -4 * 8;
-                mapRegionX += 4;
-                mapRegionDidChange = true;
-            }
-            if (currentY < 2 * 8) {
-                deltaY = 4 * 8;
-                mapRegionY -= 4;
-                mapRegionDidChange = true;
-            } else if (currentY >= 11 * 8) {
-                deltaY = -4 * 8;
-                mapRegionY += 4;
-                mapRegionDidChange = true;
-            }
-
-            if (mapRegionDidChange) {
-                // have to adjust all relative coordinates
-                if (firstSend) {
-                    temp.pLoaded = false;
-                } else {
-                    firstSend = true;
-                }
-                currentX += deltaX;
-                currentY += deltaY;
-                for (int i = 0; i < WALKING_QUEUE_SIZE; i++) {
-                    walkingQueueX[i] += deltaX;
-                    walkingQueueY[i] += deltaY;
-                }
-            }
-        }
+        movementState.getNextPlayerMovement();
     }
 
     public int getLevel(Skill skill) {
-        return playerLevel[skill.getId()];
+        return stats.getLevel(skill);
     }
 
     public int getExperience(Skill skill) {
-        return playerXP[skill.getId()];
+        return stats.getExperience(skill);
     }
 
     public void addExperience(int experience, Skill skill) {
-        playerXP[skill.getId()] += experience;
+        stats.addExperience(experience, skill);
     }
 
     public void setLevel(int level, Skill skill) {
-        playerLevel[skill.getId()] = level;
+        stats.setLevel(level, skill);
     }
 
     public void setExperience(int experience, Skill skill) {
-        playerXP[skill.getId()] = experience;
+        stats.setExperience(experience, skill);
     }
 
     // handles anything related to character position basically walking, running
     // and standing
     // applies to only to "non-thisPlayer" charracters
     public void updatePlayerMovement(ByteMessage str) {
+        int primaryDirection = getPrimaryDirection();
+        int secondaryDirection = getSecondaryDirection();
         if (primaryDirection == -1) {
             // don't have to update the character position, because the char is
             // just standing
@@ -790,144 +708,84 @@ public abstract class Player extends Entity {
         str.putBits(5, z); // x coordinate relative to thisPlayer
     }
 
-    // --- Cached player update block (for efficient multi-viewer reuse) ---
-    private ByteMessage cachedUpdateBlock = null;
-    private boolean cachedUpdateBlockValid = false;
-    private volatile long appearanceRevision = 0L;
-    private volatile long cachedAppearanceRevision = -1L;
-    private volatile byte[] cachedAppearanceBytes = null;
-
-    /**
-     * Returns true if the cached update block can be reused this cycle.
-     */
     public boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid
-                && cachedUpdateBlock != null
-                && cachedUpdateBlock.getBuffer().refCnt() > 0;
+        return updateState.isCachedUpdateBlockValid();
     }
 
-    /**
-     * Writes the cached block into the supplied stream. Caller must ensure it
-     * is valid first.
-     */
     public void writeCachedUpdateBlock(ByteMessage dst) {
-        dst.putBytes(cachedUpdateBlock);
+        updateState.writeCachedUpdateBlock(dst);
     }
 
-    /**
-     * Stores a freshly-built update block for re-use next time.
-     */
     public void cacheUpdateBlock(ByteMessage src) {
-        releaseCachedUpdateBlock();
-        if (src != null) {
-            src.retain();
-            this.cachedUpdateBlock = src;
-            this.cachedUpdateBlockValid = true;
-            return;
-        }
-        this.cachedUpdateBlockValid = false;
+        updateState.cacheUpdateBlock(src);
     }
 
-    /**
-     * Invalidates the cached block (called whenever an update flag is set or
-     * at the end of the tick).
-     */
     public void invalidateCachedUpdateBlock() {
-        this.cachedUpdateBlockValid = false;
-        releaseCachedUpdateBlock();
+        updateState.invalidateCachedUpdateBlock();
     }
 
     public void markAppearanceDirty() {
-        appearanceRevision++;
-        cachedAppearanceRevision = -1L;
-        cachedAppearanceBytes = null;
+        updateState.markAppearanceDirty();
     }
 
     public long getAppearanceRevision() {
-        return appearanceRevision;
+        return updateState.getAppearanceRevision();
     }
 
     public boolean isCachedAppearanceValid() {
-        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+        return updateState.isCachedAppearanceValid();
     }
 
     public byte[] getCachedAppearanceBytes() {
-        return cachedAppearanceBytes;
+        return updateState.getCachedAppearanceBytes();
     }
 
     public void cacheAppearanceBytes(byte[] bytes) {
-        cachedAppearanceBytes = bytes;
-        cachedAppearanceRevision = appearanceRevision;
+        updateState.cacheAppearanceBytes(bytes);
     }
-
-    private void releaseCachedUpdateBlock() {
-        if (cachedUpdateBlock == null) {
-            return;
-        }
-        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
-            cachedUpdateBlock.release();
-        }
-        cachedUpdateBlock = null;
-    }
-
-    private final byte[] chatText = new byte[4096];
-    private int chatTextSize = 0;  // Changed from byte to int to handle chat text > 127 chars
-    private int chatTextEffects = 0, chatTextColor = 0;
-    private String chatTextMessage = "";
 
     public byte[] getChatText() {
-        return this.chatText;
+        return updateState.getChatText();
     }
 
     public int getChatTextSize() {
-        return this.chatTextSize;
+        return updateState.getChatTextSize();
     }
 
     public void setChatTextSize(int chatTextSize) {
-        this.chatTextSize = chatTextSize;
+        updateState.setChatTextSize(chatTextSize);
     }
 
     public int getChatTextEffects() {
-        return this.chatTextEffects;
+        return updateState.getChatTextEffects();
     }
 
     public void setChatTextEffects(int chatTextEffects) {
-        this.chatTextEffects = chatTextEffects;
+        updateState.setChatTextEffects(chatTextEffects);
     }
 
     public int getChatTextColor() {
-        return this.chatTextColor;
+        return updateState.getChatTextColor();
     }
 
     public void setChatTextColor(int chatTextColor) {
-        this.chatTextColor = chatTextColor;
+        updateState.setChatTextColor(chatTextColor);
     }
 
     public String getChatTextMessage() {
-        return chatTextMessage;
+        return updateState.getChatTextMessage();
     }
 
     public void setChatTextMessage(String chatTextMessage) {
-        this.chatTextMessage = chatTextMessage == null ? "" : chatTextMessage;
+        updateState.setChatTextMessage(chatTextMessage);
     }
 
     public void clearUpdateFlags() {
-        faceTarget(-1);
-        getUpdateFlags().clear();
-        
-        // Reset chat-related fields when clearing flags to prevent T2 packet size mismatches
-        chatTextSize = 0;
-        chatTextColor = 0;
-        chatTextEffects = 0;
-        // Note: chatText buffer doesn't need to be cleared as chatTextSize controls usage
-        
-        // Any change this tick means our cached block is no longer valid.
-        invalidateCachedUpdateBlock();
+        updateState.clearUpdateFlags();
     }
 
     public void faceTarget(int index) {
-        this.faceTarget = index;
-        getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
+        updateState.faceTarget(index);
     }
     public void faceNpc(int index) {
         faceTarget(index);
@@ -937,248 +795,155 @@ public abstract class Player extends Entity {
     }
 
     public void gfx0(int gfx) {
-        graphicId = gfx;
-        graphicHeight = 65536;
-        getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+        updateState.gfx0(gfx);
     }
 
     public int getFaceTarget() {
-        return this.faceTarget;
+        return updateState.getFaceTarget();
     }
     public abstract void process(); //Send every 600 ms
 
     public void markSaveDirty(int segmentMask) {
-        saveDirtyMask |= segmentMask;
-        saveRevision++;
+        accountState.markSaveDirty(segmentMask);
     }
 
     public void clearSaveDirtyMask(int segmentMask) {
-        saveDirtyMask &= ~segmentMask;
+        accountState.clearSaveDirtyMask(segmentMask);
     }
 
     public void clearAllSaveDirty() {
-        saveDirtyMask = 0;
-        lastSavedRevision = saveRevision;
+        accountState.clearAllSaveDirty();
     }
 
     public int getSaveDirtyMask() {
-        return saveDirtyMask;
+        return accountState.getSaveDirtyMask();
     }
 
     public long getLastSavedRevision() {
-        return lastSavedRevision;
+        return accountState.getLastSavedRevision();
     }
 
     public long getSaveRevision() {
-        return saveRevision;
+        return accountState.getSaveRevision();
     }
 
     public void setLastSavedRevision(long lastSavedRevision) {
-        this.lastSavedRevision = lastSavedRevision;
+        accountState.setLastSavedRevision(lastSavedRevision);
     }
 
     public long getLastProcessedCycle() {
-        return lastProcessedCycle;
+        return accountState.getLastProcessedCycle();
     }
 
     public void setLastProcessedCycle(long lastProcessedCycle) {
-        this.lastProcessedCycle = lastProcessedCycle;
+        accountState.setLastProcessedCycle(lastProcessedCycle);
     }
 
     public InteractionIntent getPendingInteraction() {
-        return pendingInteraction;
+        return interactionState.getPendingInteraction();
     }
 
     public void setPendingInteraction(InteractionIntent pendingInteraction) {
-        this.pendingInteraction = pendingInteraction;
+        interactionState.setPendingInteraction(pendingInteraction);
     }
 
     public ActiveInteraction getActiveInteraction() {
-        return activeInteraction;
+        return interactionState.getActiveInteraction();
     }
 
     public void setActiveInteraction(ActiveInteraction activeInteraction) {
-        this.activeInteraction = activeInteraction;
+        interactionState.setActiveInteraction(activeInteraction);
     }
 
     public long getInteractionEarliestCycle() {
-        return interactionEarliestCycle;
+        return interactionState.getInteractionEarliestCycle();
     }
 
     public void setInteractionEarliestCycle(long interactionEarliestCycle) {
-        this.interactionEarliestCycle = interactionEarliestCycle;
+        interactionState.setInteractionEarliestCycle(interactionEarliestCycle);
     }
 
     public QueueTaskHandle getInteractionTaskHandle() {
-        return interactionTaskHandle;
+        return interactionState.getInteractionTaskHandle();
     }
 
     public void setInteractionTaskHandle(QueueTaskHandle interactionTaskHandle) {
-        this.interactionTaskHandle = interactionTaskHandle;
+        interactionState.setInteractionTaskHandle(interactionTaskHandle);
     }
 
     public void cancelInteractionTask() {
-        QueueTaskHandle handle = interactionTaskHandle;
-        interactionTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelInteractionTask();
     }
 
     public QueueTaskHandle getFarmDebugTaskHandle() {
-        return farmDebugTaskHandle;
+        return interactionState.getFarmDebugTaskHandle();
     }
 
     public void setFarmDebugTaskHandle(QueueTaskHandle farmDebugTaskHandle) {
-        this.farmDebugTaskHandle = farmDebugTaskHandle;
+        interactionState.setFarmDebugTaskHandle(farmDebugTaskHandle);
     }
 
     public void cancelFarmDebugTask() {
-        QueueTaskHandle handle = farmDebugTaskHandle;
-        farmDebugTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelFarmDebugTask();
     }
 
     public QueueTaskHandle getMiningTaskHandle() {
-        return miningTaskHandle;
+        return interactionState.getMiningTaskHandle();
     }
 
     public void setMiningTaskHandle(QueueTaskHandle miningTaskHandle) {
-        this.miningTaskHandle = miningTaskHandle;
+        interactionState.setMiningTaskHandle(miningTaskHandle);
     }
 
     public void cancelMiningTask() {
-        QueueTaskHandle handle = miningTaskHandle;
-        miningTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelMiningTask();
     }
 
     public MiningState getMiningState() {
-        return miningState;
+        return interactionState.getMiningState();
     }
 
     public void setMiningState(MiningState miningState) {
-        this.miningState = miningState;
+        interactionState.setMiningState(miningState);
     }
 
     public void clearMiningState() {
-        miningState = null;
+        interactionState.clearMiningState();
     }
 
     public QueueTaskHandle getWoodcuttingTaskHandle() {
-        return woodcuttingTaskHandle;
+        return interactionState.getWoodcuttingTaskHandle();
     }
 
     public void setWoodcuttingTaskHandle(QueueTaskHandle woodcuttingTaskHandle) {
-        this.woodcuttingTaskHandle = woodcuttingTaskHandle;
+        interactionState.setWoodcuttingTaskHandle(woodcuttingTaskHandle);
     }
 
     public void cancelWoodcuttingTask() {
-        QueueTaskHandle handle = woodcuttingTaskHandle;
-        woodcuttingTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelWoodcuttingTask();
     }
 
     public WoodcuttingState getWoodcuttingState() {
-        return woodcuttingState;
+        return interactionState.getWoodcuttingState();
     }
 
     public void setWoodcuttingState(WoodcuttingState woodcuttingState) {
-        this.woodcuttingState = woodcuttingState;
+        interactionState.setWoodcuttingState(woodcuttingState);
     }
 
     public void clearWoodcuttingState() {
-        woodcuttingState = null;
+        interactionState.clearWoodcuttingState();
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {
-        return playerTaskSet;
+        return interactionState.getPlayerTaskSet();
     }
 
     public void setPlayerTaskSet(GameTaskSet<?> playerTaskSet) {
-        this.playerTaskSet = playerTaskSet;
+        interactionState.setPlayerTaskSet(playerTaskSet);
     }
-
-
-
     public void postProcessing() {
-        if (walkingBlock) {
-            walkingBlock = false;
-            return;
-        }
-        if (newWalkCmdSteps > 0) {
-            int firstX = newWalkCmdX[0], firstY = newWalkCmdY[0]; // travel backwards to find a proper connection vertex
-            int lastDir;
-            boolean found = false;
-            numTravelBackSteps = 0;
-            int ptr = wQueueReadPtr;
-            int dir = Utils.direction(currentX, currentY, firstX, firstY);
-            if (dir != -1 && (dir & 1) != 0) { // we can't connect first and current directly
-                do {
-                    lastDir = dir;
-                    if (--ptr < 0)
-                        ptr = WALKING_QUEUE_SIZE - 1;
-
-                    travelBackX[numTravelBackSteps] = walkingQueueX[ptr];
-                    travelBackY[numTravelBackSteps++] = walkingQueueY[ptr];
-                    dir = Utils.direction(walkingQueueX[ptr], walkingQueueY[ptr], firstX, firstY);
-                    if (lastDir != dir) {
-                        found = true;
-                        break;
-                    }
-                } while (ptr != wQueueWritePtr);
-            } else found = true;
-
-            wQueueWritePtr = wQueueReadPtr;
-            addToWalkingQueue(currentX, currentY);
-
-            if (dir != -1 && (dir & 1) != 0) {
-                for (int i = 0; i < numTravelBackSteps - 1; i++) {
-                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                }
-                int wayPointX2 = travelBackX[numTravelBackSteps - 1], wayPointY2 = travelBackY[numTravelBackSteps - 1];
-                int wayPointX1, wayPointY1;
-                if (numTravelBackSteps == 1) {
-                    wayPointX1 = currentX;
-                    wayPointY1 = currentY;
-                } else {
-                    wayPointX1 = travelBackX[numTravelBackSteps - 2];
-                    wayPointY1 = travelBackY[numTravelBackSteps - 2];
-                }
-                dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
-                if (!(dir == -1 || (dir & 1) != 0)) {
-                    dir >>= 1;
-                    int x = wayPointX1, y = wayPointY1;
-                    while (x != wayPointX2 || y != wayPointY2) {
-                        x += Utils.directionDeltaX[dir];
-                        y += Utils.directionDeltaY[dir];
-                        if ((Utils.direction(x, y, firstX, firstY) & 1) == 0) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found)
-                        addToWalkingQueue(wayPointX1, wayPointY1);
-                }
-            } else {
-                for (int i = 0; i < numTravelBackSteps; i++) {
-                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                }
-            }
-            // now we can finally add those waypoints because we made sure
-            // about the connection to first
-            for (int i = 0; i < newWalkCmdSteps; i++) {
-                addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
-            }
-        }
-        isRunning = UsingAgility && System.currentTimeMillis() < walkBlock ? newWalkCmdIsRunning : buttonOnRun;
-        newWalkCmdSteps = 0;
+        movementState.postProcessing();
     }
 
     public boolean buttonOnRun = true;
@@ -1188,13 +953,7 @@ public abstract class Player extends Entity {
     public long deathTimer = 0;
 
     public void appendMask400Update(ByteMessage buf) { // Forcemovement mask!
-        buf.put(m4001, ValueType.SUBTRACT); // writeByteS
-        buf.put(m4002, ValueType.SUBTRACT);
-        buf.put(m4003, ValueType.SUBTRACT);
-        buf.put(m4004, ValueType.SUBTRACT);
-        buf.putShort(m4006, ByteOrder.BIG, ValueType.ADD); // writeWordBigEndianA
-        buf.putShort(m4005, ValueType.ADD); // writeWordA
-        buf.put(m4007, ValueType.SUBTRACT);
+        updateState.appendMask400Update(buf);
     }
 
     // PM Stuff
@@ -1275,7 +1034,7 @@ public abstract class Player extends Entity {
     private void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
         if(source instanceof Client p && target instanceof Npc n) {
             GameEventScheduler.runLaterMs(delay, () -> {
-                if(p.disconnected) {
+                if(p.isDisconnected()) {
                     return;
                 }
                 if(!n.alive) {
@@ -1286,10 +1045,10 @@ public abstract class Player extends Entity {
         }
         if(source instanceof Client p && target instanceof Client other) {
             GameEventScheduler.runLaterMs(delay, () -> {
-                if(p.disconnected) {
+                if(p.isDisconnected()) {
                     return;
                 }
-                if(other.disconnected || other.deathStage > 0) {
+                if(other.isDisconnected() || other.deathStage > 0) {
                     return;
                 }
                 other.receieveDamage(p, damage, type);
@@ -1312,7 +1071,7 @@ public abstract class Player extends Entity {
     Prayers prayers = new Prayers(this);
 
     public boolean isSongUnlocked(int songId) {
-        return this.songUnlocked[songId];
+        return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
         String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
@@ -1375,11 +1134,7 @@ public abstract class Player extends Entity {
     }
 
     public boolean areAllSongsUnlocked() {
-        for (boolean unlocked : songUnlocked) {
-            if (!unlocked)
-                return false;
-        }
-        return true;
+        return progressState.areAllSongsUnlocked();
     }
 
     public int dateDays(Date lowestDate, Date highestDate) {
@@ -1397,7 +1152,7 @@ public abstract class Player extends Entity {
     }
 
     public void setSongUnlocked(int songId, boolean unlocked) {
-        this.songUnlocked[songId] = unlocked;
+        progressState.setSongUnlocked(songId, unlocked);
     }
 
     /**
@@ -1426,40 +1181,39 @@ public abstract class Player extends Entity {
     }
 
     public boolean didTeleport() {
-        return this.didTeleport;
+        return movementState.didTeleport();
     }
 
     public boolean didMapRegionChange() {
-        return this.mapRegionDidChange;
+        return movementState.didMapRegionChange();
     }
 
     public int getPrimaryDirection() {
-        return this.primaryDirection;
+        return movementState.getPrimaryDirection();
     }
 
     public int getSecondaryDirection() {
-        return this.secondaryDirection;
+        return movementState.getSecondaryDirection();
     }
 
     public int getCurrentX() {
-        return this.currentX;
+        return movementState.getCurrentX();
     }
 
     public int getCurrentY() {
-        return this.currentY;
+        return movementState.getCurrentY();
     }
 
     public void setGraphic(int graphicId, int graphicHeight) {
-        this.graphicId = graphicId;
-        this.graphicHeight = graphicHeight;
+        updateState.setGraphic(graphicId, graphicHeight);
     }
 
     public int getGraphicId() {
-        return this.graphicId;
+        return updateState.getGraphicId();
     }
 
     public int getGraphicHeight() {
-        return this.graphicHeight;
+        return updateState.getGraphicHeight();
     }
 
     public String getForcedChat() {
@@ -1475,119 +1229,103 @@ public abstract class Player extends Entity {
     }
 
     public int getGender() {
-        return this.pGender;
+        return appearanceState.getGender();
     }
 
     public void setGender(int pGender) {
-        this.pGender = pGender;
-        markAppearanceDirty();
+        appearanceState.setGender(pGender);
     }
 
     public int getTorso() {
-        return this.pTorso;
+        return appearanceState.getTorso();
     }
 
     public void setTorso(int pTorso) {
-        this.pTorso = pTorso;
-        markAppearanceDirty();
+        appearanceState.setTorso(pTorso);
     }
 
     public int getArms() {
-        return this.pArms;
+        return appearanceState.getArms();
     }
 
     public void setArms(int pArms) {
-        this.pArms = pArms;
-        markAppearanceDirty();
+        appearanceState.setArms(pArms);
     }
 
     public int getLegs() {
-        return this.pLegs;
+        return appearanceState.getLegs();
     }
 
     public void setLegs(int pLegs) {
-        this.pLegs = pLegs;
-        markAppearanceDirty();
+        appearanceState.setLegs(pLegs);
     }
 
     public int getHands() {
-        return this.pHands;
+        return appearanceState.getHands();
     }
 
     public void setHands(int pHands) {
-        this.pHands = pHands;
-        markAppearanceDirty();
+        appearanceState.setHands(pHands);
     }
 
     public int getFeet() {
-        return this.pFeet;
+        return appearanceState.getFeet();
     }
 
     public void setFeet(int pFeet) {
-        this.pFeet = pFeet;
-        markAppearanceDirty();
+        appearanceState.setFeet(pFeet);
     }
 
     public int getBeard() {
-        return this.pBeard;
+        return appearanceState.getBeard();
     }
 
     public void setBeard(int pBeard) {
-        this.pBeard = pBeard;
-        markAppearanceDirty();
+        appearanceState.setBeard(pBeard);
     }
 
     public int getHead() {
-        return this.pHead;
+        return appearanceState.getHead();
     }
 
     public void setHead(int pHead) {
-        this.pHead = pHead;
-        markAppearanceDirty();
+        appearanceState.setHead(pHead);
     }
 
     public int getStandAnim() {
-        return this.playerSE;
+        return appearanceState.getStandAnim();
     }
 
     public void setStandAnim(int playerSE) {
-        this.playerSE = playerSE;
+        appearanceState.setStandAnim(playerSE);
     }
 
     public int getWalkAnim() {
-        return this.playerSEW;
+        return appearanceState.getWalkAnim();
     }
 
     public void setAgilityEmote(int walk, int run) {
-        setWalkAnim(walk);
-        setRunAnim(run);
-        markAppearanceDirty();
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setAgilityEmote(walk, run);
     }
 
     public void setWalkAnim(int playerSEW) {
-        this.playerSEW = playerSEW;
-        markAppearanceDirty();
-        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setWalkAnim(playerSEW);
     }
 
     public int getRunAnim() {
-        return this.playerSER;
+        return appearanceState.getRunAnim();
     }
 
     public void setRunAnim(int playerSER) {
-        this.playerSER = playerSER;
-        markAppearanceDirty();
-        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setRunAnim(playerSER);
     }
 
     public int getPlayerNpc() {
-        return this.playerNpc;
+        return appearanceState.getPlayerNpc();
     }
 
     public void setPlayerNpc(int playerNpc) {
-        this.playerNpc = playerNpc;
-        markAppearanceDirty();
+        appearanceState.setPlayerNpc(playerNpc);
     }
 
     public int getDamageDealt() {
@@ -1604,74 +1342,42 @@ public abstract class Player extends Entity {
     }
 
     public int getCurrentHealth() {
-        return this.currentHealth;
+        return stats.getCurrentHealth();
     }
     public int getMaxHealth() {
-        return this.maxHealth;
+        return stats.getMaxHealth();
     }
     public void setCurrentHealth(int currentHealth) {
-        this.currentHealth = currentHealth;
+        stats.setCurrentHealth(currentHealth);
     }
     public void heal(int healing) {
-        heal(healing, 0);
+        stats.heal(healing);
     }
     public void heal(int healing, int overHeal) {
-        Client c = (Client) this;
-        int maxLevel = getMaxHealth() + overHeal;
-        setCurrentHealth(Math.min(getCurrentHealth() + healing, maxLevel));
-        c.refreshSkill(Skill.HITPOINTS);
+        stats.heal(healing, overHeal);
     }
     public void eat(int healing, int removeId, int removeSlot) {
-        Client c = (Client) this;
-        if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) {
-            return;
-        }
-        if(getCurrentHealth() < getMaxHealth()) {
-            c.requestAnim(829, 0);
-            c.deleteItem(removeId, removeSlot, 1);
-            c.send(new SendMessage("You eat the " + Server.itemManager.getName(removeId).toLowerCase() + "."));
-            heal(healing);
-        } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
+        stats.eat(healing, removeId, removeSlot);
     }
 
     public void boost(int boosted, Skill skill) {
-        if (skill == null)
-            return;
-
-        if(skill == Skill.HITPOINTS || skill == Skill.PRAYER) //Cant do health or prayer with this method!
-            return;
-
-        Client c = (Client) this;
-        int lvl = Skills.getLevelForExperience(getExperience(skill));
-        int currentLevel = c.getLevel(skill);
-        boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
-        boostedLevel[skill.getId()] = boosted;
-        c.refreshSkill(skill);
-        c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
+        stats.boost(boosted, skill);
     }
 
     public int getCurrentPrayer() {
-        return this.currentPrayer;
+        return stats.getCurrentPrayer();
     }
     public int getMaxPrayer() {
-        return this.maxPrayer;
+        return stats.getMaxPrayer();
     }
     public void setCurrentPrayer(int amount) {
-        this.currentPrayer = amount;
+        stats.setCurrentPrayer(amount);
     }
     public void drainPrayer(int amount) {
-        pray(-amount);
-        if(getCurrentPrayer() <= 0) {
-            setCurrentPrayer(0);
-            prayers.reset();
-            ((Client) this).send(new SendMessage("<col=8B8000>Your prayer has ran out! Please recharge at a nearby altar!"));
-        }
+        stats.drainPrayer(amount);
     }
     public void pray(int healing) {
-        Client c = (Client) this;
-        int maxLevel = getMaxPrayer();
-        setCurrentPrayer(Math.min(getCurrentPrayer() + healing, maxLevel));
-        c.refreshSkill(Skill.PRAYER);
+        stats.pray(healing);
     }
 
     public boolean isInCombat() {
@@ -1710,29 +1416,11 @@ public abstract class Player extends Entity {
      * @return the combat level.
      */
     public int determineCombatLevel() {
-        int magLvl = Skills.getLevelForExperience(getExperience(Skill.MAGIC));
-        int ranLvl = Skills.getLevelForExperience(getExperience(Skill.RANGED));
-        int attLvl = Skills.getLevelForExperience(getExperience(Skill.ATTACK));
-        int strLvl = Skills.getLevelForExperience(getExperience(Skill.STRENGTH));
-        int defLvl = Skills.getLevelForExperience(getExperience(Skill.DEFENCE));
-        int hitLvl = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
-        int prayLvl = Skills.getLevelForExperience(getExperience(Skill.PRAYER));
-        double mag = magLvl * 1.5;
-        double ran = ranLvl * 1.5;
-        double attstr = attLvl + strLvl;
-        double combatLevel;
-        if (ran > attstr && ran > mag) { // player is ranged class
-            combatLevel = ((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(ranLvl) * 0.4875);
-        } else if (mag > attstr) { // player is mage class
-            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(magLvl) * 0.4875));
-        } else {
-            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
-        }
-        return customCombat != -1 ? customCombat : (int)combatLevel;
+        return stats.determineCombatLevel();
     }
 
     public int getSkillLevel(Skill skill) {
-        return Skills.getLevelForExperience(getExperience(skill));
+        return stats.getSkillLevel(skill);
     }
 
     public boolean skillcapePerk(Skill skill, boolean checkInventory) {
@@ -1894,64 +1582,19 @@ public abstract class Player extends Entity {
     public ArrayList<String> monsterName = new ArrayList<>();
     public ArrayList<Integer> monsterCount = new ArrayList<>();
     public void addMonsterName(String name) {
-        int index = monsterName.size();
-        if(index == 0) { //Add the first entry!
-            monsterName.add(name);
-            monsterCount.add(1);
-        } else { //Sorting after first entry!
-            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
-            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
-            monsterName.clear();
-            monsterCount.clear();
-            monsterName.add(name);
-            monsterCount.add(1);
-            for(int i = 0; i < nameClone.size(); i++) {
-                monsterName.add(nameClone.get(i));
-                monsterCount.add(countClone.get(i));
-            }
-        }
+        progressState.addMonsterName(name);
     }
     public int getMonsterIndex(String name) {
-        int slot = -1;
-        for(int i = 0; i < monsterName.size() && slot == -1; i++)
-            if(monsterName.get(i).equals(name)) {
-                slot = i;
-            }
-        return slot;
+        return progressState.getMonsterIndex(name);
     }
     public void incrementMonsterLog(Npc npc) {
-        String name = npc.npcName().toLowerCase();
-        int index = getMonsterIndex(name);
-        if(index >= 0)
-            addMonsterLog(npc, index);
-        else addMonsterName(name);
+        progressState.incrementMonsterLog(npc);
     }
     public void addMonsterLog(Npc npc, int index) {
-        String name = npc.npcName().toLowerCase();
-        int amount = index == -1 ? 0 : monsterCount.get(index);
-        int newAmount = amount < 1048576 ? amount + 1 : amount;
-        if(index == 0)
-            monsterCount.set(index, newAmount);
-        else if(index > 0) { //Sorting time!
-            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
-            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
-            monsterName.clear();
-            monsterCount.clear();
-            nameClone.remove(index);
-            countClone.remove(index);
-            monsterName.add(name);
-            monsterCount.add(newAmount);
-            for(int i = 0; i < nameClone.size(); i++) {
-                monsterName.add(nameClone.get(i));
-                monsterCount.add(countClone.get(i));
-            }
-        }
+        progressState.addMonsterLog(npc, index);
     }
     public int monsterKC(Npc npc) {
-        int index = getMonsterIndex(npc.npcName().toLowerCase());
-        if(index >= 0)
-            return monsterCount.get(index);
-        return 0;
+        return progressState.monsterKC(npc);
     }
 
     public void checkLoot(Client c, NpcData n) {
