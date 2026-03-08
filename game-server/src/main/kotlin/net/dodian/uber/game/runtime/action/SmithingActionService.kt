@@ -1,6 +1,7 @@
 package net.dodian.uber.game.runtime.action
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingRequest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -12,44 +13,52 @@ object SmithingActionService {
     private val barLevelRequired = intArrayOf(1, 15, 30, 55, 70, 85)
 
     @JvmStatic
-    fun startSmithing(client: Client) {
+    fun startSmithing(client: Client, request: SmithingRequest) {
+        client.setActiveSmithingSelection(
+            net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection(
+                request.tierId,
+                request.barId,
+                request.anvilX,
+                request.anvilY,
+            ),
+        )
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SMITHING,
             onStop = { player, _ -> stop(player) },
         ) {
-            if (resolveSpec(player) == null) {
+            if (resolveSpec(player, request) == null) {
                 return@start
             }
-            player.setFocus(player.skillX, player.skillY)
+            player.setFocus(request.anvilX, request.anvilY)
             player.send(SendMessage("You start hammering the bar..."))
             player.requestAnim(0x382, 0)
-            player.IsAnvil = true
+            var remaining = request.amount
 
-            while (player.IsAnvil && player.smithing[4] > 0 && player.smithing[5] > 0) {
-                val spec = resolveSpec(player) ?: return@start
-                wait(spec.delayTicks)
+            while (remaining > 0) {
+                val spec = resolveSpec(player, request) ?: return@start
+                wait(spec.delayTicks.toLong())
                 if (!isActive()) {
                     return@start
                 }
                 if (!performSmith(player, spec)) {
                     return@start
                 }
-                player.smithing[5]--
-                if (player.smithing[5] <= 0) {
+                remaining--
+                if (remaining <= 0) {
                     return@start
                 }
             }
         }
     }
 
-    private fun resolveSpec(player: Client): SmithingSpec? {
+    private fun resolveSpec(player: Client, request: SmithingRequest): SmithingSpec? {
         if (player.isBusy()) {
             player.send(SendMessage("You are currently busy to be smithing!"))
             stop(player)
             return null
         }
-        if (!player.GoodDistance(player.skillX, player.skillY, player.position.x, player.position.y, 1)) {
+        if (!player.GoodDistance(request.anvilX, request.anvilY, player.position.x, player.position.y, 1)) {
             stop(player)
             return null
         }
@@ -58,71 +67,15 @@ object SmithingActionService {
             stop(player)
             return null
         }
-        val targetItem = player.smithing[4]
-        if (targetItem <= 0 || !player.smithCheck(targetItem)) {
+        if (player.getLevel(Skill.SMITHING) < request.product.levelRequired) {
+            player.send(SendMessage("You need ${request.product.levelRequired} Smithing to smith a ${player.GetItemName(request.product.itemId)}."))
             stop(player)
             return null
         }
-
-        val smithType = player.smithing[2]
-        val rowIndex = smithType - 1
-        if (rowIndex !in Constants.smithing_frame.indices) {
-            stop(player)
-            return null
-        }
-
-        val barId =
-            if (smithType >= 4) {
-                2349 + ((smithType + 1) * 2)
-            } else {
-                2349 + ((smithType - 1) * 2)
-            }
-
-        var barsRequired = 0
-        var outputCount = 1
-        var levelRequired = player.smithing[1]
-        for (entry in Constants.smithing_frame[rowIndex]) {
-            if (entry[0] != targetItem) {
-                continue
-            }
-            barsRequired = entry[3]
-            if (levelRequired == 0) {
-                levelRequired = entry[2]
-            }
-            outputCount = entry[1]
-            break
-        }
-
-        if (barsRequired <= 0 || levelRequired <= 0) {
-            stop(player)
-            return null
-        }
-
-        var xpBase = 0
-        outer@ for (i in Constants.smithing_frame.indices) {
-            for (entry in Constants.smithing_frame[i]) {
-                if (entry[0] == targetItem) {
-                    if (!player.AreXItemsInBag(possibleBars[i], entry[3])) {
-                        player.send(SendMessage("You are missing bars needed to smith this!"))
-                        stop(player)
-                        return null
-                    }
-                    xpBase = barXp[i]
-                    break@outer
-                }
-            }
-        }
-
-        if (player.getLevel(Skill.SMITHING) < levelRequired) {
-            player.send(SendMessage("You need $levelRequired Smithing to smith a ${player.GetItemName(targetItem)}."))
-            stop(player)
-            return null
-        }
-
-        if (!player.AreXItemsInBag(barId, barsRequired)) {
+        if (!player.AreXItemsInBag(request.barId, request.product.barsRequired)) {
             player.send(
                 SendMessage(
-                    "You need $barsRequired ${player.GetItemName(barId)} to smith a ${player.GetItemName(targetItem)}.",
+                    "You need ${request.product.barsRequired} ${player.GetItemName(request.barId)} to smith a ${player.GetItemName(request.product.itemId)}.",
                 ),
             )
             player.rerequestAnim()
@@ -130,8 +83,9 @@ object SmithingActionService {
             return null
         }
 
-        val barIndex = player.CheckSmithing(player.smithing[3]) - 1
-        val requiredLevel = barLevelRequired.getOrElse(barIndex) { 1 }
+        val tierIndex = SmithingDefinitions.findSmithingTierByTypeId(request.tierId)?.let { it.typeId - 1 } ?: 0
+        val xpBase = barXp.getOrElse(tierIndex) { 13 }
+        val requiredLevel = barLevelRequired.getOrElse(tierIndex) { 1 }
         val diff = player.getLevel(Skill.SMITHING) - requiredLevel
         val delayTicks = 5 - when {
             diff >= 14 -> 2
@@ -140,13 +94,12 @@ object SmithingActionService {
         }
 
         return SmithingSpec(
-            targetItem = targetItem,
-            barId = barId,
-            barsRequired = barsRequired,
-            outputCount = outputCount,
-            levelRequired = levelRequired,
+            targetItem = request.product.itemId,
+            barId = request.barId,
+            barsRequired = request.product.barsRequired,
+            outputCount = request.product.outputAmount,
             delayTicks = delayTicks.coerceAtLeast(1),
-            experience = xpBase * barsRequired * 30,
+            experience = xpBase * request.product.barsRequired * 30,
         )
     }
 
@@ -164,10 +117,9 @@ object SmithingActionService {
     }
 
     private fun stop(player: Client) {
-        if (player.IsAnvil) {
-            player.resetSM()
-            player.send(RemoveInterfaces())
-        }
+        player.clearActiveSmithingSelection()
+        player.send(RemoveInterfaces())
+        player.rerequestAnim()
     }
 
     private data class SmithingSpec(
@@ -175,7 +127,6 @@ object SmithingActionService {
         val barId: Int,
         val barsRequired: Int,
         val outputCount: Int,
-        val levelRequired: Int,
         val delayTicks: Int,
         val experience: Int,
     )

@@ -38,6 +38,8 @@ import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
 import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
+import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
+import net.dodian.uber.game.content.skills.smithing.SmeltingSelection;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
@@ -1047,6 +1049,30 @@ public abstract class Player extends Entity {
 
     public void clearDeathTaskState() {
         interactionState.clearDeathTaskState();
+    }
+
+    public ActiveSmithingSelection getActiveSmithingSelection() {
+        return interactionState.getActiveSmithingSelection();
+    }
+
+    public void setActiveSmithingSelection(ActiveSmithingSelection activeSmithingSelection) {
+        interactionState.setActiveSmithingSelection(activeSmithingSelection);
+    }
+
+    public void clearActiveSmithingSelection() {
+        interactionState.clearActiveSmithingSelection();
+    }
+
+    public SmeltingSelection getSmeltingSelection() {
+        return interactionState.getSmeltingSelection();
+    }
+
+    public void setSmeltingSelection(SmeltingSelection smeltingSelection) {
+        interactionState.setSmeltingSelection(smeltingSelection);
+    }
+
+    public void clearSmeltingSelection() {
+        interactionState.clearSmeltingSelection();
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {

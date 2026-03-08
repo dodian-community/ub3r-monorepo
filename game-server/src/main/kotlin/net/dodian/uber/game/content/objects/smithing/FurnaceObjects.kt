@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects.smithing
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -16,10 +17,7 @@ object FurnaceObjects : ObjectContent {
         if (objectId != 3994 && objectId != 11666 && objectId != 16469 && objectId != 29662) {
             return false
         }
-        for (i in Utils.smelt_frame.indices) {
-            client.sendFrame246(Utils.smelt_frame[i], 150, Utils.smelt_bars[i][0])
-        }
-        client.sendFrame164(2400)
+        SmeltingInterfaceService.open(client)
         return true
     }
 
@@ -60,11 +58,7 @@ object FurnaceObjects : ObjectContent {
             client.showInterface(4161)
             return true
         }
-
-        for (fi in Utils.smelt_frame.indices) {
-            client.sendFrame246(Utils.smelt_frame[fi], 150, Utils.smelt_bars[fi][0])
-        }
-        client.sendFrame164(2400)
+        SmeltingInterfaceService.open(client)
         return true
     }
 

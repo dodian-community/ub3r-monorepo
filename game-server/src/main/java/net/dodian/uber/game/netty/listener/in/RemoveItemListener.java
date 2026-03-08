@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -121,11 +122,7 @@ public class RemoveItemListener implements PacketListener {
             String shopAdd = formatValueSuffix(shopValue);
             client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
         } else if (interfaceID >= 1119 && interfaceID <= 1123) { // smithing selection
-            if (client.smithing[2] > 0) {
-                client.startSmithing(removeID, 1);
-            } else {
-                client.send(new SendMessage("Illigal Smithing !"));
-            }
+            SmithingInterfaceService.startFromInterfaceItem(client, removeID, 1);
         }
         client.CheckGear();
     }

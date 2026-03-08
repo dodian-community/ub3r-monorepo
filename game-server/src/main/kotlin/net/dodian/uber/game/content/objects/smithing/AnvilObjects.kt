@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects.smithing
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -14,18 +15,12 @@ object AnvilObjects : ObjectContent {
         if (objectId != 2097) {
             return false
         }
-        var type = -1
-        val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
-        for (possibleBar in possibleBars) {
-            if (client.contains(possibleBar)) {
-                type = possibleBar
-            }
-        }
-        if (type != -1 && client.CheckSmithing(type) != -1) {
+        val barId = SmithingInterfaceService.firstBarInInventory(client)
+        if (barId != -1) {
             client.skillX = position.x
             client.setSkillY(position.y)
-            client.OpenSmithingFrame(client.CheckSmithing(type))
-        } else if (type == -1) {
+            SmithingInterfaceService.openForBar(client, barId, position.x, position.y)
+        } else {
             client.send(SendMessage("You do not have any bars to smith!"))
         }
         return true
@@ -63,12 +58,10 @@ object AnvilObjects : ObjectContent {
             }
             return true
         }
-
-        val type = client.CheckSmithing(itemId)
-        if (type != -1) {
+        if (SmithingInterfaceService.resolveTierId(itemId) != -1) {
             client.skillX = position.x
             client.setSkillY(position.y)
-            client.OpenSmithingFrame(type)
+            SmithingInterfaceService.openForBar(client, itemId, position.x, position.y)
             return true
         }
         return false

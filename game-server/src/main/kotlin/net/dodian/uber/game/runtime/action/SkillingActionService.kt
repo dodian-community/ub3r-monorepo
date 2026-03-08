@@ -2,6 +2,7 @@ package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Prayer
+import net.dodian.uber.game.content.skills.smithing.SmeltingActionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.utilities.Utils
 
@@ -11,18 +12,7 @@ object SkillingActionService {
 
     @JvmStatic
     fun startSmelting(client: Client) {
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.SMELTING,
-            onStop = { player, _ -> player.smelting = false },
-        ) {
-            while (player.smelting && player.smeltCount > 0) {
-                if (!isActive()) return@start
-                player.smelt(player.smelt_id)
-                if (!player.smelting || player.smeltCount <= 0) return@start
-                wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            }
-        }
+        SmeltingActionService.start(client)
     }
 
     @JvmStatic

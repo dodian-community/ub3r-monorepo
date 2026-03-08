@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -112,12 +113,7 @@ public class Bank10Listener implements PacketListener {
         } else if (interfaceId == 3900) { // buy 5 from shop
             client.buyItem(removeId, removeSlot, 5);
         } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing quantity depends on inv
-            if (client.smithing[2] > 0) {
-                client.startSmithing(removeId, client.smithing[3] != -1 ? client.getInvAmt(client.smithing[3]) : 10);
-            } else {
-                client.send(new SendMessage("Illigal Smithing !"));
-                logger.debug("Illegal Smith attempt by {}", client.getPlayerName());
-            }
+            SmithingInterfaceService.startFromInterfaceItem(client, removeId, client.getInvAmt(removeId));
         }
     }
 }

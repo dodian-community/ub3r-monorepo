@@ -34,6 +34,7 @@ object PlayerActionCancellationService {
     ) {
         player.smelting = false
         player.smelt_id = -1
+        player.clearSmeltingSelection()
         player.goldCrafting = false
         player.goldIndex = -1
         player.goldSlot = -1
@@ -49,7 +50,8 @@ object PlayerActionCancellationService {
         player.filling = false
         player.clearMiningState()
         player.clearWoodcuttingState()
-        if (player.IsAnvil) {
+        if (player.getActiveSmithingSelection() != null || player.IsAnvil) {
+            player.clearActiveSmithingSelection()
             player.resetSM()
             player.send(RemoveInterfaces())
         }
