@@ -96,6 +96,7 @@ object CombatStartService {
                 current.copy(
                     lastInRangeConfirmationCycle = cycle,
                     nextAttackCycle = cycle,
+                    lastAttackCycle = current.lastAttackCycle,
                     autoFollowEnabled = true,
                     lastFollowCycle = cycle,
                     lastFollowTargetX = target.position.x,
@@ -122,6 +123,7 @@ object CombatStartService {
                 attackStyleAtStart = style,
                 initialSwingConsumed = false,
                 nextAttackCycle = cycle,
+                lastAttackCycle = 0L,
                 autoFollowEnabled = true,
                 lastFollowCycle = cycle,
                 lastFollowTargetX = target.position.x,

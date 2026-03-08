@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.buttons.combat
 
 import net.dodian.uber.game.content.buttons.ButtonContent
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler
+import net.dodian.uber.game.combat.style.CombatStyleService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 
@@ -26,7 +26,7 @@ object CombatStyleButtons : ButtonContent {
                     else if (buttonId == 8234) Player.fightStyle.STAB
                     else Player.fightStyle.CHOP
                 client.fightType = 0
-                CombatStyleHandler.setWeaponHandler(client)
+                CombatStyleService.refreshWeaponStyleUi(client)
                 if (buttonId == 1080 && client.autocast_spellIndex != -1) {
                     client.resetAttack()
                     client.autocast_spellIndex = -1
@@ -42,7 +42,7 @@ object CombatStyleButtons : ButtonContent {
                     else if (buttonId == 6219 || buttonId == 6234 || buttonId == 17100) Player.fightStyle.LONGRANGE
                     else Player.fightStyle.BLOCK
                 client.fightType = 1
-                CombatStyleHandler.setWeaponHandler(client)
+                CombatStyleService.refreshWeaponStyleUi(client)
                 if (buttonId == 1078 && client.autocast_spellIndex != -1) {
                     client.resetAttack()
                     client.autocast_spellIndex = -1
@@ -60,7 +60,7 @@ object CombatStyleButtons : ButtonContent {
                     else if (buttonId == 9127) Player.fightStyle.CONTROLLED
                     else Player.fightStyle.LASH
                 client.fightType = 3
-                CombatStyleHandler.setWeaponHandler(client)
+                CombatStyleService.refreshWeaponStyleUi(client)
                 return true
             }
 
@@ -77,7 +77,7 @@ object CombatStyleButtons : ButtonContent {
                     else if (buttonId == 6220 || buttonId == 6235 || buttonId == 17101) Player.fightStyle.RAPID
                     else Player.fightStyle.LUNGE_STR
                 client.fightType = 2
-                CombatStyleHandler.setWeaponHandler(client)
+                CombatStyleService.refreshWeaponStyleUi(client)
                 if (buttonId == 1079 && client.autocast_spellIndex != -1) {
                     client.resetAttack()
                     client.autocast_spellIndex = -1
@@ -88,4 +88,3 @@ object CombatStyleButtons : ButtonContent {
         return false
     }
 }
-

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.buttons.magic
 
 import net.dodian.uber.game.content.buttons.ButtonContent
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler
+import net.dodian.uber.game.combat.style.CombatStyleService
 import net.dodian.uber.game.model.entity.player.Client
 
 object AutocastButtons : ButtonContent {
@@ -40,16 +40,15 @@ object AutocastButtons : ButtonContent {
                     client.autocast_spellIndex = index
                 }
             }
-            CombatStyleHandler.setWeaponHandler(client)
+            CombatStyleService.refreshWeaponStyleUi(client)
             return true
         }
 
         if (buttonId == 24017) {
-            CombatStyleHandler.setWeaponHandler(client)
+            CombatStyleService.refreshWeaponStyleUi(client)
             return true
         }
 
         return false
     }
 }
-

@@ -5,6 +5,7 @@ import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
+import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
@@ -30,6 +31,7 @@ final class PlayerInteractionState {
     private volatile CombatCancellationReason combatCancellationReason;
     private volatile long combatLogoutLockUntilCycle = 0L;
     private volatile long lastBlockAnimationCycle = -1L;
+    private volatile DeathTaskState deathTaskState;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
@@ -247,6 +249,18 @@ final class PlayerInteractionState {
 
     void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
         this.lastBlockAnimationCycle = lastBlockAnimationCycle;
+    }
+
+    DeathTaskState getDeathTaskState() {
+        return deathTaskState;
+    }
+
+    void setDeathTaskState(DeathTaskState deathTaskState) {
+        this.deathTaskState = deathTaskState;
+    }
+
+    void clearDeathTaskState() {
+        deathTaskState = null;
     }
 
     GameTaskSet<?> getPlayerTaskSet() {

@@ -24,7 +24,7 @@ object CombatRuntimeService {
             cancel(player, CombatCancellationReason.LOGOUT)
             return
         }
-        if (player.deathStage > 0 || player.currentHealth < 1) {
+        if (player.isDeathSequenceActive() || player.currentHealth < 1) {
             cancel(player, CombatCancellationReason.DEATH)
             return
         }
@@ -73,17 +73,20 @@ object CombatRuntimeService {
             return
         }
 
-        val attacked = player.attackTarget()
-        if (!attacked) {
+        val attackResult = player.attackTarget()
+        if (attackResult == null) {
             if (player.target == null || player.combatTargetState == null) {
                 return
             }
             return
         }
 
-        val nextDelay = maxOf(player.combatTimer, 1)
+        val nextDelay = maxOf(attackResult.nextDelayTicks, 1)
+        player.combatTimer = nextDelay
+        player.lastCombat = 16
         player.combatTargetState =
             (player.combatTargetState ?: state).copy(
+                lastAttackCycle = cycleNow,
                 nextAttackCycle = cycleNow + nextDelay,
                 lastInRangeConfirmationCycle = cycleNow,
                 autoFollowEnabled = true,
@@ -108,6 +111,7 @@ object CombatRuntimeService {
         npc: Npc,
         reason: CombatCancellationReason = CombatCancellationReason.TARGET_INVALID,
     ) {
+        CombatHitQueueService.clearFor(npc)
         for (player in PlayerHandler.playersOnline.values) {
             clearNpcTarget(player, npc, reason)
         }
@@ -152,7 +156,7 @@ object CombatRuntimeService {
 
     private fun isValidTarget(target: Entity): Boolean =
         when (target) {
-            is Client -> !target.disconnected && target.currentHealth > 0 && target.deathStage == 0
+            is Client -> !target.disconnected && target.currentHealth > 0 && !target.isDeathSequenceActive()
             is Npc -> target.alive && target.currentHealth > 0
             else -> false
         }

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.runtime.combat
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler.CombatStyles
+import net.dodian.uber.game.combat.style.CombatStyle
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 
@@ -16,7 +16,7 @@ object UnarmedAttackAnimationService {
             return Server.itemManager.getAttackAnim(weaponId)
         }
         return when (player.combatStyle) {
-            CombatStyles.AGGRESSIVE_MELEE -> KICK_ANIMATION
+            CombatStyle.AGGRESSIVE_MELEE -> KICK_ANIMATION
             else -> PUNCH_ANIMATION
         }
     }

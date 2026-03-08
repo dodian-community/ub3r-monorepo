@@ -28,7 +28,7 @@ class PlayerCombatState {
                 || (attacker.getType() == Entity.Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1))) {
             setLastCombat(16);
         }
-        if (owner.deathStage >= 0 && owner.getCurrentHealth() < 1) {
+        if (((Client) owner).isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
             amt = 0;
         } else if (amt > owner.currentHealth) {
             amt = owner.currentHealth;
@@ -165,7 +165,7 @@ class PlayerCombatState {
     }
 
     boolean isDeadOrDying() {
-        return owner.deathStage > 0 || owner.deathTimer > 0 || owner.getCurrentHealth() < 1;
+        return ((Client) owner).isDeathSequenceActive() || owner.getCurrentHealth() < 1;
     }
 
     private PendingHitBuffer.AppendResult appendHit(int damage, Entity.hitType type) {
@@ -176,31 +176,6 @@ class PlayerCombatState {
             owner.getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
         }
         return result;
-    }
-
-    void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
-        if (source instanceof Client player && target instanceof Npc npc) {
-            GameEventScheduler.runLaterMs(delay, () -> {
-                if (player.isDisconnected()) {
-                    return;
-                }
-                if (!npc.alive) {
-                    return;
-                }
-                npc.dealDamage(player, damage, type);
-            });
-        }
-        if (source instanceof Client player && target instanceof Client other) {
-            GameEventScheduler.runLaterMs(delay, () -> {
-                if (player.isDisconnected()) {
-                    return;
-                }
-                if (other.isDisconnected() || other.deathStage > 0) {
-                    return;
-                }
-                other.receieveDamage(player, damage, type);
-            });
-        }
     }
 
     private void maybePlayDefenderReaction(int damage, Entity.damageType damageType) {

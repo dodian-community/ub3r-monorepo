@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatAttackResult
 import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 import net.dodian.uber.game.runtime.combat.UnarmedAttackAnimationService
 import net.dodian.utilities.Misc
@@ -19,18 +20,16 @@ import net.dodian.utilities.Utils
 var hit = 0
 var hit2 = 0
 
-fun Client.handleMeleeAttack(): Int {
+fun Client.handleMeleeAttack(): CombatAttackResult? {
     if (hasStaff() && (autocast_spellIndex >= 0 || magicId >= 0))
-        return -1
+        return null
     else if (!hasStaff() && magicId >= 0)
-        return -1
+        return null
     else if (usingBow)
-        return -1
-    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
-        return 0
+        return null
+    if (stunTimer > 0 || target == null)
+        return null
 
-        combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
-        lastCombat = 16
         CombatLogoutLockService.refreshInteraction(this, target)
         setFocus(target.position.x, target.position.y)
         var maxHit = meleeMaxHit().toDouble()
@@ -147,8 +146,9 @@ fun Client.handleMeleeAttack(): Int {
                 player.dealDamage(this, hit2, Entity.hitType.STANDARD)
             }
         }
-        if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
-    return 1
+        val nextDelay = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
+        if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay"))
+    return CombatAttackResult(nextDelay)
 }
 
 fun highestAttackBonus(p: Client): Int {

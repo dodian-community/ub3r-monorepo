@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.UpdateFlags;
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
+import net.dodian.uber.game.combat.style.CombatStyle;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;
@@ -23,7 +23,7 @@ public abstract class Entity {
 
     private final UpdateFlags updateFlags;
 
-    private CombatStyleHandler.CombatStyles combatStyle = CombatStyleHandler.CombatStyles.ACCURATE_MELEE;
+    private CombatStyle combatStyle = CombatStyle.ACCURATE_MELEE;
 
     private int animationDelay;
     private int animationId;
@@ -178,11 +178,11 @@ public abstract class Entity {
                 getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
     }
 
-    public CombatStyleHandler.CombatStyles getCombatStyle() {
+    public CombatStyle getCombatStyle() {
         return combatStyle;
     }
 
-    public void setCombatStyle(CombatStyleHandler.CombatStyles combatStyle) {
+    public void setCombatStyle(CombatStyle combatStyle) {
         this.combatStyle = combatStyle;
     }
 

@@ -13,6 +13,7 @@ import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason
+import net.dodian.uber.game.runtime.combat.CombatHitQueueService
 import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 import net.dodian.utilities.Misc
 
@@ -21,15 +22,13 @@ object PlayerDeathTickService {
 
     @JvmStatic
     fun process(player: Client, wallClockNow: Long) {
-        if (player.deathStage == 0 && player.currentHealth < 1) {
+        val deathState = player.deathTaskState
+        if (deathState == null && player.currentHealth < 1) {
             beginDeath(player, wallClockNow)
             return
         }
 
-        if (player.deathStage == 1 &&
-            player.deathStartedCycle > 0L &&
-            GameCycleClock.currentCycle() - player.deathStartedCycle >= RESPAWN_DELAY_TICKS
-        ) {
+        if (deathState != null && GameCycleClock.currentCycle() >= deathState.respawnCycle) {
             respawn(player)
         }
     }
@@ -43,6 +42,7 @@ object PlayerDeathTickService {
         )
         player.combatCancellationReason = CombatCancellationReason.DEATH
         player.resetAttack()
+        CombatHitQueueService.clearFor(player)
         if (player.target is Npc) {
             val npc = Server.npcManager.getNpc(player.target.slot)
             npc.removeEnemy(player)
@@ -55,9 +55,10 @@ object PlayerDeathTickService {
         }
         player.requestAnim(836, 5)
         player.currentHealth = 0
-        player.deathStage++
+        player.deathStage = 1
         player.deathTimer = wallClockNow
         player.deathStartedCycle = player.currentGameCycle
+        player.deathTaskState = DeathTaskState(player.currentGameCycle, player.currentGameCycle + RESPAWN_DELAY_TICKS)
         player.prayerManager.reset()
         player.send(SendMessage("Oh dear you have died!"))
     }
@@ -67,6 +68,7 @@ object PlayerDeathTickService {
         player.deathStage = 0
         player.deathTimer = 0
         player.deathStartedCycle = 0
+        player.clearDeathTaskState()
         player.combatTimer = 0
         player.lastCombat = 0
         CombatLogoutLockService.clear(player)

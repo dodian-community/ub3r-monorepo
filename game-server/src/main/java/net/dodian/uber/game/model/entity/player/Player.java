@@ -37,6 +37,7 @@ import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
+import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
@@ -1036,6 +1037,18 @@ public abstract class Player extends Entity {
         interactionState.setLastBlockAnimationCycle(lastBlockAnimationCycle);
     }
 
+    public DeathTaskState getDeathTaskState() {
+        return interactionState.getDeathTaskState();
+    }
+
+    public void setDeathTaskState(DeathTaskState deathTaskState) {
+        interactionState.setDeathTaskState(deathTaskState);
+    }
+
+    public void clearDeathTaskState() {
+        interactionState.clearDeathTaskState();
+    }
+
     public GameTaskSet<?> getPlayerTaskSet() {
         return interactionState.getPlayerTaskSet();
     }
@@ -1065,6 +1078,10 @@ public abstract class Player extends Entity {
     public int deathStage = 0;
     public long deathTimer = 0;
     public long deathStartedCycle = 0;
+
+    public boolean isDeathSequenceActive() {
+        return getDeathTaskState() != null || deathStage > 0 || deathTimer > 0;
+    }
 
     public void appendMask400Update(ByteMessage buf) { // Forcemovement mask!
         updateState.appendMask400Update(buf);

@@ -27,7 +27,7 @@ class PlayerActionContext internal constructor(
         if (policy.cancelOnLogout && player.isLoggingOut) {
             return PlayerActionCancelReason.LOGOUT
         }
-        if (policy.cancelOnDeath && player.deathStage > 0) {
+        if (policy.cancelOnDeath && player.isDeathSequenceActive()) {
             return PlayerActionCancelReason.DEATH
         }
         if (policy.cancelOnTeleport && player.doingTeleport() && player.activeActionType != PlayerActionType.TELEPORT) {
