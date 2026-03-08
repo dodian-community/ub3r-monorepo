@@ -139,7 +139,7 @@ public class Server {
         new DoorHandler();
         ButtonContentRegistry.bootstrap();
         ObjectContentRegistry.bootstrap();
-        net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        net.dodian.uber.game.content.npc.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 

@@ -33,7 +33,7 @@ public class DialogueListener implements PacketListener {
             buf.skipBytes(buf.readableBytes()); // discard if any
         }
 
-        if (DialogueService.onLegacyContinue(client)) {
+        if (DialogueService.onIndexedContinue(client)) {
             return;
         }
     }

@@ -26,7 +26,7 @@ open class OutboundPacketProcessor(
             runSynchronization()
             return
         }
-        runLegacyOutbound()
+        runCompatibilityOutbound()
     }
 
     protected open fun runSynchronization() {
@@ -38,7 +38,7 @@ open class OutboundPacketProcessor(
         WorldSynchronizationService.INSTANCE.run()
     }
 
-    private fun runLegacyOutbound() {
+    private fun runCompatibilityOutbound() {
         if (DEBUG_ADDED_LOCAL_PLAYERS) {
             PlayerUpdating.resetDebugAddedLocalCounter()
         }

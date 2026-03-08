@@ -47,27 +47,27 @@ object DialogueOptionButtons : ButtonContent {
                     client.discord = false
                 }
                 client.triggerChat(1)
-                when (DialogueService.legacyDialogueId(client)) {
+                when (DialogueService.currentDialogueId(client)) {
                     2 -> {
-                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
                         client.openUpBank()
                     }
                     4 -> {
-                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
                         client.openUpShop(2)
                     }
                     1001 -> client.send(SendFrame27())
                     22 -> {
-                        DialogueService.setLegacyDialogueId(client, 23)
+                        DialogueService.setDialogueId(client, 23)
                         DialogueService.setDialogueSent(client, false)
                     }
                     27 -> {
                         client.yellOn = true
                         client.send(SendMessage("You have enabled boss yell messages."))
                         client.send(RemoveInterfaces())
-                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
                     }
                     9 -> {
@@ -89,17 +89,17 @@ object DialogueOptionButtons : ButtonContent {
                     client.discord = false
                 }
                 client.triggerChat(2)
-                when (DialogueService.legacyDialogueId(client)) {
+                when (DialogueService.currentDialogueId(client)) {
                     2 -> {
-                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
                     }
                     4 -> {
-                        DialogueService.setLegacyDialogueId(client, 5)
+                        DialogueService.setDialogueId(client, 5)
                         DialogueService.setDialogueSent(client, false)
                     }
                     22 -> {
-                        DialogueService.setLegacyDialogueId(client, 24)
+                        DialogueService.setDialogueId(client, 24)
                         DialogueService.setDialogueSent(client, false)
                     }
                     1001 -> {
@@ -110,7 +110,7 @@ object DialogueOptionButtons : ButtonContent {
                         client.yellOn = false
                         client.send(SendMessage("You have disabled boss yell messages."))
                         client.send(RemoveInterfaces())
-                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
                     }
                 }

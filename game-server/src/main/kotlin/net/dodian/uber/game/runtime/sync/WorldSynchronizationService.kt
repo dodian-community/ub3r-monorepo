@@ -172,7 +172,7 @@ class WorldSynchronizationService {
                 player.sendPlayerSynchronization()
                 updateViewerSyncState(player)
             } catch (throwable: Throwable) {
-                handleViewerSyncFailure("legacy-player-sync", player, throwable)
+                handleViewerSyncFailure("player-sync-compat", player, throwable)
             }
         }
     }

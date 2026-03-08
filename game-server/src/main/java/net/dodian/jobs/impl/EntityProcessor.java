@@ -522,7 +522,7 @@ public class EntityProcessor implements Runnable {
         player.setProcessedGameCycle(player.getCurrentGameCycle());
         player.setLastProcessedCycle(player.getProcessedGameCycle());
         GameTaskRuntime.cyclePlayer(player);
-        DialogueService.flushLegacyIfNeeded(player);
+        DialogueService.flushIndexedIfNeeded(player);
         CombatRuntimeService.process(player, player.getProcessedGameCycle());
         PlayerAnimationService.flush(player, player.getProcessedGameCycle());
         GlobalObject.updateObject(player);

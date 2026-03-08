@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.dialogue.DialogueService;
-import net.dodian.uber.game.content.npcs.spawns.HerbloreNpcDialogue;
+import net.dodian.uber.game.content.npc.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -50,7 +50,7 @@ public class BankX2Listener implements PacketListener {
                 client.send(new RemoveInterfaces());
                 int slot = client.XremoveSlot - 1;
                 int id = client.herbOptions.get(slot).getId();
-                int legacyNpcId = DialogueService.legacyNpcTalkTo(client);
+                int legacyNpcId = DialogueService.activeNpcId(client);
                 int npcId = legacyNpcId > 0 ? legacyNpcId : 4753;
                 boolean grimy = client.GetItemName(id).toLowerCase().contains("grimy");
                 int coins = client.getInvAmt(995);

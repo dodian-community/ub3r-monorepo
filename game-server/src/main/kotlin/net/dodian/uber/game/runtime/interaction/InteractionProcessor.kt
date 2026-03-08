@@ -6,8 +6,8 @@ import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
-import net.dodian.uber.game.content.objects.ObjectContentDispatcher
-import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
+import net.dodian.uber.game.content.objects.ObjectInteractionService
+import net.dodian.uber.game.content.npc.NpcInteractionService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
@@ -217,7 +217,7 @@ object InteractionProcessor {
         }
 
         val timing =
-            ObjectContentDispatcher.tryHandleTimed(
+            ObjectInteractionService.tryHandleTimed(
                 ObjectInteractionContext.click(
                     client = player,
                     option = intent.option,
@@ -312,7 +312,7 @@ object InteractionProcessor {
         if (player.playerHasItem(intent.itemId)) {
             player.setFocus(targetPosition.x, targetPosition.y)
             timing =
-                ObjectContentDispatcher.tryHandleTimed(
+                ObjectInteractionService.tryHandleTimed(
                     ObjectInteractionContext.useItem(
                         client = player,
                         objectId = intent.objectId,
@@ -406,7 +406,7 @@ object InteractionProcessor {
 
         player.setFocus(targetPosition.x, targetPosition.y)
         val timing =
-            ObjectContentDispatcher.tryHandleTimed(
+            ObjectInteractionService.tryHandleTimed(
                 ObjectInteractionContext.magic(
                     client = player,
                     objectId = intent.objectId,
@@ -440,7 +440,7 @@ object InteractionProcessor {
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
         player.startFishing(npc.id, 1)
-        return NpcContentDispatcher.tryHandleClickTimed(player, 1, npc)
+        return NpcInteractionService.tryHandleClickTimed(player, 1, npc)
     }
 
     private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -453,7 +453,7 @@ object InteractionProcessor {
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
         player.startFishing(npc.id, 2)
-        return NpcContentDispatcher.tryHandleClickTimed(player, 2, npc)
+        return NpcInteractionService.tryHandleClickTimed(player, 2, npc)
     }
 
     private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -464,7 +464,7 @@ object InteractionProcessor {
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        return NpcContentDispatcher.tryHandleClickTimed(player, 3, npc)
+        return NpcInteractionService.tryHandleClickTimed(player, 3, npc)
     }
 
     private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -473,7 +473,7 @@ object InteractionProcessor {
         }
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        return NpcContentDispatcher.tryHandleClickTimed(player, 4, npc)
+        return NpcInteractionService.tryHandleClickTimed(player, 4, npc)
     }
 
     private fun handleNpcAttack(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -483,7 +483,7 @@ object InteractionProcessor {
         if (player.deathStage >= 1) {
             return DispatchTiming(false, 0L, 0L, null)
         }
-        val timing = NpcContentDispatcher.tryHandleAttackTimed(player, npc)
+        val timing = NpcInteractionService.tryHandleAttackTimed(player, npc)
         if (timing.handled) {
             return timing
         }

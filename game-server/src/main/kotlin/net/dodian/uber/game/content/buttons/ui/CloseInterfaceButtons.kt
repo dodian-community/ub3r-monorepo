@@ -25,7 +25,7 @@ object CloseInterfaceButtons : ButtonContent {
             player = client,
             reason = PlayerActionCancelReason.INTERFACE_CLOSED,
             fullResetAnimation = false,
-            resetLegacyState = true,
+            resetCompatibilityState = true,
         )
         DialogueService.closeBlockingDialogue(client, closeInterfaces = true)
         if (client.refundSlot != -1) {

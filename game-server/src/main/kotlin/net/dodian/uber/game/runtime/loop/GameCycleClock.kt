@@ -13,14 +13,14 @@ object GameCycleClock {
     @JvmStatic
     fun advance(): Long {
         val next = cycle.incrementAndGet()
-        syncLegacyCycle(next)
+        syncPlayerHandlerCycle(next)
         return next
     }
 
     @JvmStatic
     fun syncTo(value: Long) {
         cycle.set(value.coerceAtLeast(0L))
-        syncLegacyCycle(cycle.get())
+        syncPlayerHandlerCycle(cycle.get())
     }
 
     @JvmStatic
@@ -32,7 +32,7 @@ object GameCycleClock {
         return ((durationMs + tickMs - 1L) / tickMs).toInt().coerceAtLeast(1)
     }
 
-    private fun syncLegacyCycle(value: Long) {
+    private fun syncPlayerHandlerCycle(value: Long) {
         PlayerHandler.cycle = value.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
     }
 }

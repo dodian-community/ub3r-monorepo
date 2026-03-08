@@ -65,7 +65,7 @@ object AccountPersistenceService {
     }
 
     @JvmStatic
-    fun submitLoginLoadLegacy(
+    fun submitLoginLoadCodeOnly(
         client: Client,
         username: String,
         password: String,

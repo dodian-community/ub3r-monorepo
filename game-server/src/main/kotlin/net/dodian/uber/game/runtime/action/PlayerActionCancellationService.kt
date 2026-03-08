@@ -13,7 +13,7 @@ object PlayerActionCancellationService {
         fullResetAnimation: Boolean = true,
         clearDialogue: Boolean = false,
         closeInterfaces: Boolean = false,
-        resetLegacyState: Boolean = true,
+        resetCompatibilityState: Boolean = true,
     ) {
         if (closeInterfaces) {
             player.send(RemoveInterfaces())
@@ -22,13 +22,13 @@ object PlayerActionCancellationService {
             DialogueService.closeBlockingDialogue(player, closeInterfaces = false)
         }
         PlayerActionController.cancel(player, reason)
-        if (resetLegacyState) {
-            resetLegacyState(player, fullResetAnimation)
+        if (resetCompatibilityState) {
+            resetCompatibilityState(player, fullResetAnimation)
         }
     }
 
     @JvmStatic
-    fun resetLegacyState(
+    fun resetCompatibilityState(
         player: Client,
         fullResetAnimation: Boolean,
     ) {

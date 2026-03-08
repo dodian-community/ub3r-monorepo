@@ -20,10 +20,10 @@ object DialogueOptionService {
 
     @JvmStatic
     fun triggerChat(c: net.dodian.uber.game.model.entity.player.Client, button: Int) {
-        fun setNextDialogue(id: Int) = DialogueService.setLegacyNextDialogueId(c, id)
-        fun setDialogue(id: Int) = DialogueService.setLegacyDialogueId(c, id)
+        fun setNextDialogue(id: Int) = DialogueService.setNextDialogueId(c, id)
+        fun setDialogue(id: Int) = DialogueService.setDialogueId(c, id)
         fun setDialogueSent(sent: Boolean) = DialogueService.setDialogueSent(c, sent)
-        fun resetDialogue() = DialogueService.resetLegacyDialogue(c)
+        fun resetDialogue() = DialogueService.resetDialogueState(c)
 
         if (c.playerPotato.isNotEmpty()) {
             if (c.playerPotato[0] == 2 && c.playerPotato[3] == 1) {
@@ -109,8 +109,8 @@ object DialogueOptionService {
             }
         }
 
-        val dialogueId = DialogueService.legacyDialogueId(c)
-        val npcTalkTo = DialogueService.legacyNpcTalkTo(c)
+        val dialogueId = DialogueService.currentDialogueId(c)
+        val npcTalkTo = DialogueService.activeNpcId(c)
 
         if (c.convoId == 0) {
             if (button == 1) {
@@ -592,7 +592,7 @@ object DialogueOptionService {
             c.setTravelMenu()
         }
 
-        val nextDialogueId = DialogueService.legacyNextDialogueId(c)
+        val nextDialogueId = DialogueService.nextDialogueId(c)
         if (nextDialogueId > 0) {
             setDialogue(nextDialogueId)
             setDialogueSent(false)

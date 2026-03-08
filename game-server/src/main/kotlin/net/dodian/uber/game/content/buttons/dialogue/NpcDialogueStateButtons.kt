@@ -11,12 +11,12 @@ object NpcDialogueStateButtons : ButtonContent {
     override fun onClick(client: Client, buttonId: Int): Boolean {
         when (buttonId) {
             150 -> {
-                DialogueService.setLegacyDialogueId(client, DialogueIds.Legacy.TOGGLE_SPECIALS)
+                DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_SPECIALS)
                 DialogueService.setDialogueSent(client, false)
             }
 
             151 -> {
-                DialogueService.setLegacyDialogueId(client, DialogueIds.Legacy.TOGGLE_BOSS_YELL)
+                DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_BOSS_YELL)
                 DialogueService.setDialogueSent(client, false)
             }
 

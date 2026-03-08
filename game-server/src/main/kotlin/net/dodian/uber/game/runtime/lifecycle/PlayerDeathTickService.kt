@@ -39,7 +39,7 @@ object PlayerDeathTickService {
             player = player,
             reason = PlayerActionCancelReason.DEATH,
             fullResetAnimation = false,
-            resetLegacyState = true,
+            resetCompatibilityState = true,
         )
         player.combatCancellationReason = CombatCancellationReason.DEATH
         player.resetAttack()

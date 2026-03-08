@@ -2,9 +2,9 @@ package net.dodian.uber.game.skills.core
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.content.objects.impl.travel.VerticalTravel
-import net.dodian.uber.game.content.objects.impl.travel.VerticalTravelStyle
-import net.dodian.uber.game.content.objects.impl.travel.VerticalTravelStyles
+import net.dodian.uber.game.content.objects.travel.VerticalTravel
+import net.dodian.uber.game.content.objects.travel.VerticalTravelStyle
+import net.dodian.uber.game.content.objects.travel.VerticalTravelStyles
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy

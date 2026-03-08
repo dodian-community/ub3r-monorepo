@@ -610,7 +610,7 @@ public class Client extends Player implements Runnable {
     public int WanneThieve = 0;
 
 
-    // Legacy Stream fields removed - using pure Netty now
+    // Stream cipher fields removed; Netty owns packet I/O now.
    // public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
 
     public final java.util.concurrent.atomic.AtomicInteger timeOutCounter = new java.util.concurrent.atomic.AtomicInteger(); // to detect timeouts on the connection to the client
@@ -661,7 +661,7 @@ public class Client extends Player implements Runnable {
         // Release references
         
         channel = null;
-        // Legacy Stream cleanup removed - using pure Netty now
+        // Stream cipher cleanup is no longer needed with Netty-owned I/O.
        // inStreamDecryption = null;
        // outStreamDecryption = null;
 
@@ -1654,11 +1654,11 @@ public class Client extends Player implements Runnable {
             return;
         }
         NpcWanneTalk = 0;
-        DialogueService.startLegacy(this, dialogueId, npcId);
+        DialogueService.startDialogueId(this, dialogueId, npcId);
     }
 
     public void setTeleportStage(int stage) {
-        // Legacy no-op bridge retained for untouched callers during teleport cutover.
+        // Compatibility no-op retained for untouched callers during teleport cutover.
     }
 
     public int getTeleportHeight() {
@@ -6886,7 +6886,7 @@ public class Client extends Player implements Runnable {
                     return;
                 }
                 if (i > 0 && !getTravel(i - 1)) {
-                    DialogueService.setLegacyDialogueId(this, 48054);
+                    DialogueService.setCompatDialogueId(this, 48054);
                     DialogueService.setDialogueSent(this, false);
                     return;
                 }

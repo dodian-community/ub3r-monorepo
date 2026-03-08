@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.dialogue.core
 
 object DialogueIds {
 
-    object Legacy {
+    object Classic {
         const val BANK_GREETING = 1
         const val BANK_OPTIONS = 2
         const val RUNE_SHOP_GREETING = 3

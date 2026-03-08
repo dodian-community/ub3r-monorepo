@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
-import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
+import net.dodian.uber.game.content.npc.NpcInteractionService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -101,7 +101,7 @@ public class NpcInteractionListener implements PacketListener {
 
         client.startFishing(npcId, 1);
 
-        if (NpcContentDispatcher.tryHandleClick(client, 1, tempNpc)) {
+        if (NpcInteractionService.tryHandleClick(client, 1, tempNpc)) {
             return;
         }
         logger.debug("Unhandled NPC first-click fallback npcId={} player={}", npcId, client.getPlayerName());
@@ -146,7 +146,7 @@ public class NpcInteractionListener implements PacketListener {
         client.setSkillY(tempNpc.getPosition().getY());
         client.startFishing(npcId, 2);
 
-        if (NpcContentDispatcher.tryHandleClick(client, 2, tempNpc)) {
+        if (NpcInteractionService.tryHandleClick(client, 2, tempNpc)) {
             return;
         }
 
@@ -190,7 +190,7 @@ public class NpcInteractionListener implements PacketListener {
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
 
-        if (NpcContentDispatcher.tryHandleClick(client, 3, tempNpc)) {
+        if (NpcInteractionService.tryHandleClick(client, 3, tempNpc)) {
             return;
         }
 
@@ -232,7 +232,7 @@ public class NpcInteractionListener implements PacketListener {
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
 
-        if (NpcContentDispatcher.tryHandleClick(client, 4, tempNpc)) {
+        if (NpcInteractionService.tryHandleClick(client, 4, tempNpc)) {
             return;
         }
 
@@ -261,7 +261,7 @@ public class NpcInteractionListener implements PacketListener {
         if (client.randomed || client.UsingAgility) {
             return;
         }
-        if (NpcContentDispatcher.tryHandleAttack(client, npc)) {
+        if (NpcInteractionService.tryHandleAttack(client, npc)) {
             return;
         }
 

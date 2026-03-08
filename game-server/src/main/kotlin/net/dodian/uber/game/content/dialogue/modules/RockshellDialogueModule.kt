@@ -2,14 +2,14 @@ package net.dodian.uber.game.content.dialogue.modules
 
 import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.core.DialogueIds
-import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.content.dialogue.core.DialogueRenderRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueRenderModule
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object RockshellDialogueModule : DialogueRenderModule {
-    override fun register(builder: DialogueRegistry.Builder) {
+    override fun register(builder: DialogueRenderRegistry.Builder) {
         builder.handle(DialogueIds.Misc.ROCKSHELL_MENU) { c ->
             if (c.getLevel(Skill.SMITHING) >= 60 && c.playerHasItem(2347)) {
                 DialogueUi.showPlayerOption(c, arrayOf("What would you like to make?", "Head", "Body", "Legs", "Boots", "Gloves"))

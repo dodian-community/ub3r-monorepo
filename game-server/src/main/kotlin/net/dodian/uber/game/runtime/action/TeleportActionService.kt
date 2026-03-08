@@ -17,7 +17,7 @@ object TeleportActionService {
             player = client,
             reason = PlayerActionCancelReason.TELEPORT,
             fullResetAnimation = false,
-            resetLegacyState = true,
+            resetCompatibilityState = true,
         )
         PlayerActionController.start(
             player = client,

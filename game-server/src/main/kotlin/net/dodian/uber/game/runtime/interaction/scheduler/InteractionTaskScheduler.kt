@@ -23,7 +23,7 @@ object InteractionTaskScheduler {
             player = player,
             reason = cancelReason(intent),
             fullResetAnimation = false,
-            resetLegacyState = true,
+            resetCompatibilityState = true,
         )
         player.pendingInteraction = intent
         player.activeInteraction = null

@@ -100,7 +100,7 @@ object WoodcuttingService {
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,
-            resetLegacyState = false,
+            resetCompatibilityState = false,
         )
         stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT)
     }

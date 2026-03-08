@@ -38,7 +38,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener");
             // Load UseItemOnNpcListener for opcode 57
             Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnNpcListener");
-            // Load LegacyBridge then ItemOnItem so listener overwrites any bridge registration
+            // Load the compatibility bridge before ItemOnItem so the concrete listener wins registration
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnItemListener");
             // Load ClickItem2Listener for opcode 16
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");

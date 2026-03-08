@@ -7,5 +7,5 @@ fun interface DialogueRenderHandler {
 }
 
 fun interface DialogueRenderModule {
-    fun register(builder: DialogueRegistry.Builder)
+    fun register(builder: DialogueRenderRegistry.Builder)
 }

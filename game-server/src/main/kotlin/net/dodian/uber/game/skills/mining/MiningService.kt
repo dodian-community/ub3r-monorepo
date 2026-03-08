@@ -108,7 +108,7 @@ object MiningService {
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,
-            resetLegacyState = false,
+            resetCompatibilityState = false,
         )
         stopMiningInternal(client, MiningStopReason.USER_INTERRUPT)
     }
