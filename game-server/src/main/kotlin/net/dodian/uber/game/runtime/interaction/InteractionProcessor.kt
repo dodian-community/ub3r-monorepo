@@ -29,7 +29,6 @@ object InteractionProcessor {
     fun process(player: Client): InteractionExecutionResult {
         val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
         if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
-            player.walkToTask = null
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -105,7 +104,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.walkToTask !== intent.task) {
+        if (player.pendingInteraction !== intent) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -148,7 +147,6 @@ object InteractionProcessor {
 
         if (intent.option == 1) {
             if (!player.validClient || player.randomed) {
-                player.walkToTask = null
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -164,7 +162,6 @@ object InteractionProcessor {
                 )
             }
             if (System.currentTimeMillis() < player.walkBlock || player.genie || player.antique) {
-                player.walkToTask = null
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -174,7 +171,6 @@ object InteractionProcessor {
             player.resetAction(false)
             player.setFocus(targetPosition.x, targetPosition.y)
             if (xDiff > 5 || yDiff > 5) {
-                player.walkToTask = null
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -190,7 +186,6 @@ object InteractionProcessor {
                 )
             }
             if (System.currentTimeMillis() < player.walkBlock) {
-                player.walkToTask = null
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -213,7 +208,6 @@ object InteractionProcessor {
                 objectDef = dispatchSnapshot.objectDef,
             )
         ) {
-            player.walkToTask = null
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -228,7 +222,6 @@ object InteractionProcessor {
                     obj = dispatchSnapshot.objectData,
                 ),
             )
-        player.walkToTask = null
         clear(player)
         slowLogIfNeeded(
             player,
@@ -250,7 +243,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.walkToTask !== intent.task) {
+        if (player.pendingInteraction !== intent) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -307,7 +300,6 @@ object InteractionProcessor {
                 objectDef = dispatchSnapshot.objectDef,
             )
         ) {
-            player.walkToTask = null
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -328,7 +320,6 @@ object InteractionProcessor {
                     ),
                 )
         }
-        player.walkToTask = null
         clear(player)
         slowLogIfNeeded(
             player,
@@ -350,7 +341,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.walkToTask !== intent.task) {
+        if (player.pendingInteraction !== intent) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -405,7 +396,6 @@ object InteractionProcessor {
                 objectDef = dispatchSnapshot.objectDef,
             )
         ) {
-            player.walkToTask = null
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -421,7 +411,6 @@ object InteractionProcessor {
                     spellId = intent.spellId,
                 ),
             )
-        player.walkToTask = null
         clear(player)
         slowLogIfNeeded(
             player,

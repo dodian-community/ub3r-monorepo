@@ -3,7 +3,6 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -59,7 +58,7 @@ public abstract class Player extends Entity {
     private final PlayerInteractionState interactionState = new PlayerInteractionState();
     private final PlayerMovementState movementState = new PlayerMovementState(this);
     private final PlayerUpdateState updateState = new PlayerUpdateState(this);
-    private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
+    int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
@@ -163,6 +162,7 @@ public abstract class Player extends Entity {
     private final PlayerStats stats = new PlayerStats(this);
     private final PlayerAppearanceState appearanceState = new PlayerAppearanceState(this);
     private final PlayerProgressState progressState = new PlayerProgressState(this);
+    private final PlayerCombatState combatState = new PlayerCombatState(this);
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
@@ -268,7 +268,7 @@ public abstract class Player extends Entity {
             }
         }
     }
-    private boolean antiFireEffect() {
+    boolean antiFireEffect() {
         return effects.size() > 1 && effects.get(1) > 0;
     }
 
@@ -948,7 +948,6 @@ public abstract class Player extends Entity {
 
     public boolean buttonOnRun = true;
 
-    private int damageDealt = 0, damageDealt2;
     public int deathStage = 0;
     public long deathTimer = 0;
 
@@ -964,96 +963,11 @@ public abstract class Player extends Entity {
     public abstract void sendpm(long name, int rights, byte[] chatmessage, int messagesize);
 
     public void dealDamage(Entity attacker, int amt, hitType type) {
-        Client plr = ((Client) this);
-        if(attacker != null && ((attacker.getType() == Type.NPC && ((Npc) attacker).getCurrentHealth() < 1) || (attacker.getType() == Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1)))
-            setLastCombat(16); //Sets this if the guy attacking is not below 1 health aka dead!
-        if (deathStage >= 0 && getCurrentHealth() < 1)
-            amt = 0;
-        else if (amt > currentHealth) amt = currentHealth;
-        double rolledChance = Math.random();
-        double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
-        double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
-        double dmg = ((Client) this).neglectDmg() / 10D;
-        double reduceDamage = 1.0 - (dmg / 100);
-        int oldDmg = amt;
-        if (!(plr.inDuel && plr.duelRule[5]) && rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
-            amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
-            if(amt != oldDmg)
-                ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
-        }
-        if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
-            this.hitType2 = type;
-            damageDealt2 = amt;
-            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
-        } else if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
-            this.hitType = type;
-            damageDealt = amt;
-            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
-        }
-        setCurrentHealth(Math.max(getCurrentHealth() - amt, 0));
-        ((Client) this).refreshSkill(Skill.HITPOINTS);
-        plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
-        if (attacker instanceof Player) { //Pvp damage profile!
-            int totalDmg;
-            if (getDamage().containsKey(attacker)) {
-                totalDmg = getDamage().get(attacker) + amt;
-                getDamage().remove(attacker);
-            } else
-                totalDmg = amt;
-            getDamage().put(attacker, totalDmg);
-        }
-        boolean veracEffect = Misc.chance(8) == 1 && armourSet("verac");
-        if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Player) {
-            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Player) attacker).dealDamage(plr, amt, type);
-        } else if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Npc) {
-            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Npc) attacker).dealDamage(plr, amt, type);
-        }
+        combatState.dealDamage(attacker, amt, type);
     }
 
     public void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType dmg) {
-        Client plr = ((Client) this);
-        Npc npc = ((Npc) attacker);
-        if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
-            boolean gotAntiEffect = plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
-                    || plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC) || antiFireEffect();
-            if(npc != null && npc.getId() == 239 && gotAntiEffect) amt /= 2;
-            else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
-                amt *= 3; amt /= 10; //Ugly way to write reduce dmg by 70%
-            } else plr.send(new SendMessage("You are badly burnt by the dragon fire!"));
-        } else if(dmg.equals(damageType.MELEE) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) amt /= 2;
-        else if(dmg.equals(damageType.RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt /= 2;
-        else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
-        else if(dmg.equals(damageType.JAD_RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt = 0;
-        else if(dmg.equals(damageType.JAD_MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt = 0;
-        dealDamage(attacker, amt, type);
-    }
-
-    private void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
-        if(source instanceof Client p && target instanceof Npc n) {
-            GameEventScheduler.runLaterMs(delay, () -> {
-                if(p.isDisconnected()) {
-                    return;
-                }
-                if(!n.alive) {
-                    return;
-                }
-                n.dealDamage(p, damage, type);
-            });
-        }
-        if(source instanceof Client p && target instanceof Client other) {
-            GameEventScheduler.runLaterMs(delay, () -> {
-                if(p.isDisconnected()) {
-                    return;
-                }
-                if(other.isDisconnected() || other.deathStage > 0) {
-                    return;
-                }
-                other.receieveDamage(p, damage, type);
-            });
-        }
+        combatState.dealDamage(amt, type, attacker, dmg);
     }
 
     public void sendAnimation(int id) {
@@ -1329,16 +1243,16 @@ public abstract class Player extends Entity {
     }
 
     public int getDamageDealt() {
-        return this.damageDealt;
+        return combatState.getDamageDealt();
     }
     public int getDamageDealt2() {
-        return this.damageDealt2;
+        return combatState.getDamageDealt2();
     }
     public Entity.hitType getHitType() {
-        return this.hitType;
+        return combatState.getHitType();
     }
     public Entity.hitType getHitType2() {
-        return this.hitType2;
+        return combatState.getHitType2();
     }
 
     public int getCurrentHealth() {
@@ -1381,33 +1295,37 @@ public abstract class Player extends Entity {
     }
 
     public boolean isInCombat() {
-        return getLastCombat() > 0;
+        return combatState.isInCombat();
+    }
+
+    public boolean isDeadOrDying() {
+        return combatState.isDeadOrDying();
     }
 
     public int getLastCombat() {
-        return lastCombat;
+        return combatState.getLastCombat();
     }
     public void setLastCombat(int lastCombat) {
-        this.lastCombat = lastCombat;
+        combatState.setLastCombat(lastCombat);
     }
 
     public int getCombatTimer() {
-        return combatTimer;
+        return combatState.getCombatTimer();
     }
     public void setCombatTimer(int timer) {
-        this.combatTimer = timer;
+        combatState.setCombatTimer(timer);
     }
     public int getStunTimer() {
-        return stunTimer;
+        return combatState.getStunTimer();
     }
     public void setStunTimer(int timer) {
-        this.stunTimer = timer;
+        combatState.setStunTimer(timer);
     }
     public int getSnareTimer() {
-        return snareTimer;
+        return combatState.getSnareTimer();
     }
     public void setSnareTimer(int timer) {
-        this.snareTimer = timer;
+        combatState.setSnareTimer(timer);
     }
 
     /**

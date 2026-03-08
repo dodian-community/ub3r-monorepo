@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -71,10 +70,6 @@ public class NpcInteractionListener implements PacketListener {
             return;
         }
 
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -119,10 +114,6 @@ public class NpcInteractionListener implements PacketListener {
             logger.trace("Npc click2 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
 
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -166,10 +157,6 @@ public class NpcInteractionListener implements PacketListener {
             logger.trace("Npc click3 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
 
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
         if (client.randomed || client.UsingAgility) {
             return;
         }
@@ -210,10 +197,6 @@ public class NpcInteractionListener implements PacketListener {
         if (logger.isTraceEnabled()) {
             logger.trace("Npc click4 opcode={} npcIndex={} npcId={} player={}", packet.opcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
         }
-
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
 
         if (client.randomed || client.UsingAgility) {
             return;
@@ -272,8 +255,6 @@ public class NpcInteractionListener implements PacketListener {
             return;
         }
 
-        WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
-        client.setWalkToTask(task);
         NpcInteractionIntent intent = new NpcInteractionIntent(packet.opcode(), PlayerHandler.cycle, npcIndex, 5);
         InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }

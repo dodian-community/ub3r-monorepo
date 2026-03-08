@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.model.object.Object;
@@ -89,10 +88,9 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectX = decoded.objectX;
         final int objectY = decoded.objectY;
 
-        final WalkToTask task = new WalkToTask(actionForOption(option), objectId, new Position(objectX, objectY, client.getPosition().getZ()));
+        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
         final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
-        final GameObjectData object = GameObjectData.forId(task.getWalkToId());
-        client.setWalkToTask(task);
+        final GameObjectData object = GameObjectData.forId(objectId);
 
         if (client.randomed || client.UsingAgility) {
             return;
@@ -105,8 +103,7 @@ public class ObjectInteractionListener implements PacketListener {
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
                         option,
                         objectId,
-                        task.getWalkToPosition(),
-                        task,
+                        targetPosition,
                         object,
                         def
                 );
@@ -134,14 +131,9 @@ public class ObjectInteractionListener implements PacketListener {
             return;
         }
 
-        final WalkToTask task = new WalkToTask(
-            WalkToTask.Action.ITEM_ON_OBJECT,
-            objectId,
-            new Position(objectX, objectY, client.getPosition().getZ())
-        );
-        client.setWalkToTask(task);
+        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
         GameObjectData objectData = GameObjectData.forId(objectId);
-        GameObjectDef def = Misc.getObject(objectId, task.getWalkToPosition().getX(), task.getWalkToPosition().getY(), client.getPosition().getZ());
+        GameObjectDef def = Misc.getObject(objectId, targetPosition.getX(), targetPosition.getY(), client.getPosition().getZ());
         ItemOnObjectIntent intent =
                 new ItemOnObjectIntent(
                         packet.opcode(),
@@ -150,8 +142,7 @@ public class ObjectInteractionListener implements PacketListener {
                         itemSlot,
                         itemId,
                         objectId,
-                        task.getWalkToPosition(),
-                        task,
+                        targetPosition,
                         objectData,
                         def
                 );
@@ -170,14 +161,9 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectY = readSignedWordBigEndianA(buf);
         final int objectId = readUnsignedWordLEA(buf) - 128;
 
-        final WalkToTask task = new WalkToTask(
-            WalkToTask.Action.OBJECT_FIRST_CLICK,
-            objectId,
-            new Position(objectX, objectY, client.getPosition().getZ())
-        );
+        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
         final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
-        final GameObjectData object = GameObjectData.forId(task.getWalkToId());
-        client.setWalkToTask(task);
+        final GameObjectData object = GameObjectData.forId(objectId);
 
         if (client.randomed || client.UsingAgility) {
             return;
@@ -188,8 +174,7 @@ public class ObjectInteractionListener implements PacketListener {
                         net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
                         spellId,
                         objectId,
-                        task.getWalkToPosition(),
-                        task,
+                        targetPosition,
                         object,
                         def
                 );
