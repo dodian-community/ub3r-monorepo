@@ -35,6 +35,9 @@ object DialoguePagingService {
     private val states = Collections.synchronizedMap(WeakHashMap<Client, PagingState>())
 
     @JvmStatic
+    fun hasActivePaging(client: Client): Boolean = states.containsKey(client)
+
+    @JvmStatic
     fun clear(client: Client) {
         states.remove(client)
     }

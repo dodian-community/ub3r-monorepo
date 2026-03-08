@@ -37,7 +37,7 @@ class PlayerActionContext internal constructor(
             return PlayerActionCancelReason.COMBAT_INTERRUPTED
         }
         if (policy.cancelOnDialogueOpen &&
-            (DialogueService.hasActiveSession(player) || player.NpcDialogue != 0 || player.NpcDialogueSend || player.nextDiag > 0)
+            DialogueService.hasBlockingDialogue(player)
         ) {
             return PlayerActionCancelReason.DIALOGUE_OPENED
         }

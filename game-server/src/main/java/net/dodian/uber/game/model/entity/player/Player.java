@@ -1020,6 +1020,14 @@ public abstract class Player extends Entity {
         interactionState.clearCombatCancellationReason();
     }
 
+    public long getCombatLogoutLockUntilCycle() {
+        return interactionState.getCombatLogoutLockUntilCycle();
+    }
+
+    public void setCombatLogoutLockUntilCycle(long combatLogoutLockUntilCycle) {
+        interactionState.setCombatLogoutLockUntilCycle(combatLogoutLockUntilCycle);
+    }
+
     public long getLastBlockAnimationCycle() {
         return interactionState.getLastBlockAnimationCycle();
     }
@@ -1035,6 +1043,19 @@ public abstract class Player extends Entity {
     public void setPlayerTaskSet(GameTaskSet<?> playerTaskSet) {
         interactionState.setPlayerTaskSet(playerTaskSet);
     }
+
+    public long getThrottleUntilCycle(String key) {
+        return interactionState.getThrottleUntilCycle(key);
+    }
+
+    public void setThrottleUntilCycle(String key, long cycle) {
+        interactionState.setThrottleUntilCycle(key, cycle);
+    }
+
+    public void clearThrottleUntilCycle(String key) {
+        interactionState.clearThrottleUntilCycle(key);
+    }
+
     public void postProcessing() {
         movementState.postProcessing();
     }

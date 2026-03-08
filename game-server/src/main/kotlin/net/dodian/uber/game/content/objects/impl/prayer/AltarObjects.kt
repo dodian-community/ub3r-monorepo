@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.LegacyPlayerActionService
+import net.dodian.uber.game.runtime.action.SkillingActionService
 
 object AltarObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(409, 20377)
@@ -41,7 +41,7 @@ object AltarObjects : ObjectContent {
         client.skillX = position.x
         client.setSkillY(position.y)
         client.boneItem = itemId
-        LegacyPlayerActionService.startAltarBones(client)
+        SkillingActionService.startAltarBones(client)
         return true
     }
 }

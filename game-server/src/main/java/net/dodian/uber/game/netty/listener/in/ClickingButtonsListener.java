@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.ButtonClickEvent;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +44,7 @@ public class ClickingButtonsListener implements PacketListener {
         if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
             logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
         }
-        if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) {
-            client.lastButton = System.currentTimeMillis();
+        if (!client.validClient || !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.BUTTON_GENERAL, 600L)) {
             return;
         }
 

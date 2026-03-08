@@ -13,14 +13,11 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
-import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
+import net.dodian.uber.game.runtime.action.SkillingActionService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.utilities.Utils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Full Netty port of the legacy ItemOnItem packet handler (opcode 53).
@@ -32,8 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 @PacketHandler(opcode = 53)
 public class ItemOnItemListener implements PacketListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(ItemOnItemListener.class);
 
     static {
         PacketListenerManager.register(53, new ItemOnItemListener());
@@ -188,7 +183,7 @@ public class ItemOnItemListener implements PacketListener {
         try {
             legacyTail(client, itemUsed, useWith, otherItem, itemUsedSlot, usedWithSlot, knife);
         } catch (Exception e) {
-            logger.error("Error in ItemOnItem listener", e);
+            return;
         }
     }
 
@@ -357,7 +352,7 @@ public class ItemOnItemListener implements PacketListener {
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction();
             client.shafting = true;
-            LegacyPlayerActionService.startShafting(client);
+            SkillingActionService.startShafting(client);
         }
         /* Leather crafting UI */
         if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == 1741 || otherItem == 1741)) {

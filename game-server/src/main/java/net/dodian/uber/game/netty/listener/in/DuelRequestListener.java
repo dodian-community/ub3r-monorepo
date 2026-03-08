@@ -6,6 +6,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService;
+import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,17 @@ public class DuelRequestListener implements PacketListener {
         }
         if (client.isBusy() || other.isBusy()) {
             client.send(new SendMessage(client.isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
+            return;
+        }
+        String guardMessage = PlayerInteractionGuardService.duelBlockMessage(client, other);
+        if (guardMessage != null) {
+            client.send(new SendMessage(guardMessage));
+            return;
+        }
+        if (CombatLogoutLockService.isLocked(client) || CombatLogoutLockService.isLocked(other)) {
+            client.send(new SendMessage(CombatLogoutLockService.isLocked(client)
+                    ? "You can't duel while in combat."
+                    : other.getPlayerName() + " can't duel while in combat."));
             return;
         }
 

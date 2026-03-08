@@ -10,6 +10,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
+import net.dodian.uber.game.runtime.combat.UnarmedAttackAnimationService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
@@ -29,6 +31,7 @@ fun Client.handleMeleeAttack(): Int {
 
         combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
         lastCombat = 16
+        CombatLogoutLockService.refreshInteraction(this, target)
         setFocus(target.position.x, target.position.y)
         var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
@@ -222,7 +225,7 @@ fun landHit(p: Client, t: Entity): Boolean {
 }
 
 fun Client.handleSpecial(crit: Boolean): Boolean {
-    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
+    val emote = UnarmedAttackAnimationService.resolve(this)
     val chance = Range(1, 8).value
     if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
         PlayerAnimationService.requestAttack(this, emote)

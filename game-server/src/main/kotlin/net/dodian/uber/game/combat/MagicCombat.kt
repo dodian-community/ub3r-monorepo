@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
@@ -47,6 +48,7 @@ fun Client.handleMagicAttack(): Int {
 
     combatTimer = coolDown[type]
     lastCombat = 16
+    CombatLogoutLockService.refreshInteraction(this, target)
     setFocus(target.position.x, target.position.y)
     deleteItem(565, 1)
     checkItemUpdate()

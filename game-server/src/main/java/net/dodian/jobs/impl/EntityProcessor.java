@@ -1,13 +1,14 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.content.dialogue.LegacyDialogueTickBridge;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
 import net.dodian.uber.game.runtime.loop.GameCycleClock;
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
@@ -521,9 +522,10 @@ public class EntityProcessor implements Runnable {
         player.setProcessedGameCycle(player.getCurrentGameCycle());
         player.setLastProcessedCycle(player.getProcessedGameCycle());
         GameTaskRuntime.cyclePlayer(player);
-        LegacyDialogueTickBridge.flushIfNeeded(player);
+        DialogueService.flushLegacyIfNeeded(player);
         CombatRuntimeService.process(player, player.getProcessedGameCycle());
         PlayerAnimationService.flush(player, player.getProcessedGameCycle());
+        GlobalObject.updateObject(player);
 
         if (startingHealth != player.getCurrentHealth() || startingPrayer != player.getCurrentPrayer()) {
             player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.STATS.getMask()

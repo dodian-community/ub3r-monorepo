@@ -20,6 +20,8 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.persistence.audit.ItemLog;
+import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
+import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.utilities.Misc;
@@ -577,6 +579,7 @@ public class Npc extends Entity {
         currentHealth = 0;
         fighting = false;
         deathTime = System.currentTimeMillis();
+        CombatRuntimeService.clearNpcTargets(this, CombatCancellationReason.TARGET_INVALID);
         // Keep death-floor/respawn progression exact even if this npc becomes offscreen.
         NpcTimerScheduler.onNpcDied(this);
         requestAnim(deathEmote, 0);

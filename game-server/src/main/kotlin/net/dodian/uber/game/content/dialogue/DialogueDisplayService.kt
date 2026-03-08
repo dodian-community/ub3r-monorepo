@@ -9,7 +9,9 @@ object DialogueDisplayService {
 
     @JvmStatic
     fun updateNpcChat(client: Client) {
+        DialogueService.captureLegacyBridgeState(client)
         DialogueRegistry.render(client)
+        DialogueService.captureLegacyBridgeState(client)
     }
 
     @JvmStatic

@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class PickUpGroundItemListener implements PacketListener {
         } catch (Exception e) {
             // date parse fallback; ignore
         }
-        if (System.currentTimeMillis() - client.lastAction <= 600 ||
+        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.PICKUP_GROUND_ITEM, 600L) ||
                 (client.attemptGround != null
                         && client.attemptGround.id == itemId
                         && client.attemptGround.x == itemX
@@ -53,7 +54,6 @@ public class PickUpGroundItemListener implements PacketListener {
                         && client.attemptGround.z == client.getPosition().getZ())) {
             return;
         }
-        client.lastAction = System.currentTimeMillis();
         PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.GROUND_ITEM_INTERACTION, false, false, false, true);
         client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.getPosition().getZ());
         if (client.attemptGround == null) {

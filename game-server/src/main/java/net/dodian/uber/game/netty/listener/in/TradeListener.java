@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,11 @@ public class TradeListener implements PacketListener {
         }
         if (client.isBusy() || other.isBusy()) {
             client.send(new SendMessage(client.isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
+            return;
+        }
+        String guardMessage = PlayerInteractionGuardService.tradeBlockMessage(client, other);
+        if (guardMessage != null) {
+            client.send(new SendMessage(guardMessage));
             return;
         }
         if (!client.inTrade) {

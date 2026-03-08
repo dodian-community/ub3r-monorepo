@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.buttons.ui
 
 import net.dodian.uber.game.content.buttons.ButtonContent
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
@@ -26,15 +27,7 @@ object CloseInterfaceButtons : ButtonContent {
             fullResetAnimation = false,
             resetLegacyState = true,
         )
-        client.send(RemoveInterfaces())
-        if (client.NpcDialogue == 1001) {
-            client.clearWalkableInterface()
-        }
-        if (client.NpcDialogue > 0) {
-            client.NpcDialogue = 0
-            client.NpcTalkTo = 0
-            client.NpcDialogueSend = false
-        }
+        DialogueService.closeBlockingDialogue(client, closeInterfaces = true)
         if (client.refundSlot != -1) {
             client.refundSlot = -1
         }

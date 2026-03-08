@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.dialogue.core
 
+import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.content.dialogue.modules.BrimhavenEntryDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.PyramidPlunderDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.RockshellDialogueModule
@@ -42,7 +43,7 @@ object DialogueRegistry {
 
     @JvmStatic
     fun render(client: Client): Boolean {
-        val handler = handlers[client.NpcDialogue] ?: return false
+        val handler = handlers[DialogueService.legacyDialogueId(client)] ?: return false
         return handler.render(client)
     }
 }

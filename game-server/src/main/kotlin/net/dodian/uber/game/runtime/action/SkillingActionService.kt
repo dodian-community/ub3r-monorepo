@@ -3,10 +3,9 @@ package net.dodian.uber.game.runtime.action
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.runtime.loop.GameCycleClock
-import net.dodian.uber.game.skills.core.LegacyProductionAdapter
 import net.dodian.utilities.Utils
 
-object LegacyPlayerActionService {
+object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
     private const val REAPPLY_ANIMATION_DELAY_MS = 1800L
 
@@ -18,13 +17,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.smelting = false },
         ) {
             while (player.smelting && player.smeltCount > 0) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.smelt(player.smelt_id)
-                if (!player.smelting || player.smeltCount <= 0) {
-                    return@start
-                }
+                if (!player.smelting || player.smeltCount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -38,13 +33,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.goldCrafting = false },
         ) {
             while (player.goldCrafting && player.goldCraftingCount > 0) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.goldCraft()
-                if (!player.goldCrafting || player.goldCraftingCount <= 0) {
-                    return@start
-                }
+                if (!player.goldCrafting || player.goldCraftingCount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -58,13 +49,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.shafting = false },
         ) {
             while (player.shafting) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.shaft()
-                if (!player.shafting) {
-                    return@start
-                }
+                if (!player.shafting) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -78,13 +65,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.fletchings = false },
         ) {
             while (player.fletchings && player.fletchAmount > 0) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.fletching.fletchBow(player)
-                if (!player.fletchings || player.fletchAmount <= 0) {
-                    return@start
-                }
+                if (!player.fletchings || player.fletchAmount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -98,13 +81,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.spinning = false },
         ) {
             while (player.spinning) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.spin()
-                if (!player.spinning) {
-                    return@start
-                }
+                if (!player.spinning) return@start
                 wait(GameCycleClock.ticksForDurationMs(player.spinSpeed))
             }
         }
@@ -118,13 +97,9 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.setCrafting(false) },
         ) {
             while (player.isCrafting() && player.getCAmount() > 0) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.craft()
-                if (!player.isCrafting() || player.getCAmount() <= 0) {
-                    return@start
-                }
+                if (!player.isCrafting() || player.getCAmount() <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -143,9 +118,7 @@ object LegacyPlayerActionService {
             var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
             var nextAnimationCycle = currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
             while (player.isFishing()) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 val cycle = currentCycle()
                 if (cycle >= nextAnimationCycle) {
                     val fishIndex = player.fishIndex
@@ -156,9 +129,7 @@ object LegacyPlayerActionService {
                 }
                 if (cycle >= nextCatchCycle) {
                     player.fish()
-                    if (!player.isFishing()) {
-                        return@start
-                    }
+                    if (!player.isFishing()) return@start
                     nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }
@@ -175,34 +146,10 @@ object LegacyPlayerActionService {
             onStop = { player, _ -> player.cooking = false },
         ) {
             while (player.cooking && player.cookAmount > 0) {
-                if (!isActive()) {
-                    return@start
-                }
+                if (!isActive()) return@start
                 player.cook()
-                if (!player.cooking || player.cookAmount <= 0) {
-                    return@start
-                }
+                if (!player.cooking || player.cookAmount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            }
-        }
-    }
-
-    @JvmStatic
-    fun startLegacyProduction(client: Client) {
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.LEGACY_PRODUCTION,
-            onStop = { player, _ -> player.skillActionTimer = -1 },
-        ) {
-            while (player.skillActionCount > 0 && player.playerSkillAction.size >= 8) {
-                if (!isActive()) {
-                    return@start
-                }
-                LegacyProductionAdapter.executeLegacySkillAction(player)
-                if (player.skillActionCount <= 0 || player.playerSkillAction.size < 8) {
-                    return@start
-                }
-                wait(player.playerSkillAction[7].coerceAtLeast(1))
             }
         }
     }
@@ -212,18 +159,11 @@ object LegacyPlayerActionService {
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.ALTAR_BONES,
-            onStop = { player, _ ->
-                player.prayerAction = -1
-                player.boneItem = -1
-            },
+            onStop = { player, _ -> player.boneItem = -1 },
         ) {
             while (player.boneItem > 0) {
-                if (!isActive()) {
-                    return@start
-                }
-                if (!Prayer.altarBones(player, player.boneItem)) {
-                    return@start
-                }
+                if (!isActive()) return@start
+                if (!Prayer.altarBones(player, player.boneItem)) return@start
                 wait(3)
             }
         }

@@ -13,6 +13,7 @@ import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 import net.dodian.utilities.Misc
 
 object PlayerDeathTickService {
@@ -68,6 +69,7 @@ object PlayerDeathTickService {
         player.deathStartedCycle = 0
         player.combatTimer = 0
         player.lastCombat = 0
+        CombatLogoutLockService.clear(player)
 
         for (i in 0 until player.effects.size) {
             player.addEffectTime(i, if (i == 0 || player.effects[i] == -1) -1 else 0)

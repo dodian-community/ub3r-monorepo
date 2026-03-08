@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.buttons.ui
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 
 object LogoutButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(2458, 9154)
@@ -13,9 +14,9 @@ object LogoutButtons : ButtonContent {
             client.send(SendMessage("You are unable to logout right now."))
             return true
         }
-        if (client.isInCombat) {
-            val seconds = (client.lastCombat * 0.6).toInt()
-            client.send(SendMessage("You must wait ${seconds + 1} seconds before you can logout!"))
+        if (CombatLogoutLockService.isLocked(client)) {
+            val seconds = CombatLogoutLockService.remainingSeconds(client)
+            client.send(SendMessage("You must wait $seconds seconds before you can logout!"))
             return true
         }
         if (System.currentTimeMillis() - client.lastPlayerCombat <= 30000 && client.inWildy()) {
@@ -27,4 +28,3 @@ object LogoutButtons : ButtonContent {
         return true
     }
 }
-

@@ -11,7 +11,7 @@ enum class PlayerActionType {
     CRAFTING,
     FISHING,
     COOKING,
-    LEGACY_PRODUCTION,
+    PRODUCTION,
     ALTAR_BONES,
     MINING,
     WOODCUTTING,

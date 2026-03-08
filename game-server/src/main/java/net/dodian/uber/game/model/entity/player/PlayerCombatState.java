@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.combat.CombatDefenderReaction;
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService;
 import net.dodian.utilities.Misc;
 
 class PlayerCombatState {
@@ -44,6 +45,7 @@ class PlayerCombatState {
                 player.send(new SendMessage("<col=FFD700>You neglected " + (amt == 0 ? "all" : "some") + " of the damage!"));
             }
         }
+        CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, inferDamageType(attacker));
         applyDamage(attacker, amt, type);
     }
@@ -75,6 +77,7 @@ class PlayerCombatState {
         } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) {
             amt = 0;
         }
+        CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, damageType);
         applyDamage(attacker, amt, type);
     }

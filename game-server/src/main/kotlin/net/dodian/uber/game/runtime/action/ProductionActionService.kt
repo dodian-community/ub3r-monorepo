@@ -1,22 +1,40 @@
-package net.dodian.uber.game.skills.core
+package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.sendFilterMessage
+import net.dodian.uber.game.skills.core.ProductionSpec
+import net.dodian.uber.game.skills.core.ProductionTask
 
-object LegacyProductionAdapter {
+object ProductionActionService {
     @JvmStatic
-    fun executeLegacySkillAction(client: Client): Boolean {
+    fun start(client: Client) {
+        PlayerActionController.start(
+            player = client,
+            type = PlayerActionType.PRODUCTION,
+        ) {
+            while (player.skillActionCount > 0 && player.playerSkillAction.size >= 8) {
+                if (!isActive()) return@start
+                if (!executeCycle(player)) return@start
+                if (player.skillActionCount <= 0 || player.playerSkillAction.size < 8) return@start
+                wait(player.playerSkillAction[7].coerceAtLeast(1))
+            }
+        }
+    }
+
+    @JvmStatic
+    fun executeCycle(client: Client): Boolean {
         if (client.skillActionCount < 1) {
             client.resetAction()
-            return true
+            return false
         }
         if (client.isBusy) {
             client.sendFilterMessage("You are currently busy to be doing this!")
-            return true
+            return false
         }
         if (client.playerSkillAction.size < 8) {
             client.resetAction()
-            return true
+            return false
         }
 
         val itemOne = client.playerSkillAction[3]
@@ -33,7 +51,7 @@ object LegacyProductionAdapter {
                     else if (!client.playerHasItem(2440)) client.GetItemName(2440).lowercase()
                     else client.GetItemName(2442).lowercase()
                 client.sendFilterMessage("You do not have anymore $text.")
-                return true
+                return false
             }
             client.deleteItem(itemOne, amount)
             client.deleteItem(if (!client.playerHasItem(269)) 111 else 269, amount)
@@ -48,7 +66,7 @@ object LegacyProductionAdapter {
                     else if (!client.playerHasItem(2444)) client.GetItemName(2444).lowercase()
                     else client.GetItemName(12695).lowercase()
                 client.sendFilterMessage("You do not have anymore $text.")
-                return true
+                return false
             }
             client.deleteItem(itemOne, amount)
             client.deleteItem(2444, amount)
@@ -58,7 +76,7 @@ object LegacyProductionAdapter {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo, 3)) {
                 client.resetAction()
                 client.sendFilterMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk.")
-                return true
+                return false
             }
             client.callGfxMask(if (itemMake == 569) 152 else 149 + ((itemMake - 571) / 2), 100)
             client.deleteItem(itemOne, amount)
@@ -68,7 +86,7 @@ object LegacyProductionAdapter {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo)) {
                 client.resetAction()
                 client.sendFilterMessage("You need one bucket of sand and one soda ash")
-                return true
+                return false
             }
             client.deleteItem(itemOne, amount)
             client.addItem(1925, amount)
@@ -79,14 +97,14 @@ object LegacyProductionAdapter {
                 client.resetAction()
                 val missingName = if (!client.playerHasItem(itemOne)) client.GetItemName(itemOne).lowercase() else client.GetItemName(itemTwo).lowercase()
                 client.sendFilterMessage("You do not have anymore $missingName.")
-                return true
+                return false
             }
             if (client.getInvAmt(itemOne) < amount || (itemTwo != -1 && client.getInvAmt(itemTwo) < amount)) {
                 amount = if (itemTwo == -1) client.getInvAmt(itemOne) else minOf(client.getInvAmt(itemOne), client.getInvAmt(itemTwo))
             }
             val spec =
                 ProductionSpec(
-                    actionName = "LegacyProduction",
+                    actionName = "Production",
                     skillId = client.playerSkillAction[0],
                     productId = itemMake,
                     amountPerCycle = amount,
@@ -96,9 +114,9 @@ object LegacyProductionAdapter {
                     animationId = client.playerSkillAction[6],
                     tickDelay = client.playerSkillAction[7],
                 )
-            if (!LegacySkillActionProductionTask(client, spec).runCycle()) {
+            if (!ProductionCycleTask(client, spec).runCycle()) {
                 client.resetAction()
-                return true
+                return false
             }
         }
 
@@ -110,14 +128,13 @@ object LegacyProductionAdapter {
         client.giveExperience(xp, Skill.getSkill(client.playerSkillAction[0]))
         client.triggerRandom(xp)
         client.skillActionCount--
-        client.skillActionTimer = client.playerSkillAction[7]
         if (client.skillMessage.isNotEmpty()) {
             client.sendFilterMessage(client.skillMessage)
         }
         return true
     }
 
-    private class LegacySkillActionProductionTask(
+    private class ProductionCycleTask(
         client: Client,
         spec: ProductionSpec,
     ) : ProductionTask(client, spec) {

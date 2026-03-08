@@ -4,6 +4,7 @@ import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
 import org.slf4j.LoggerFactory
 
 object TradeConfirmButtons : ButtonContent {
@@ -15,10 +16,11 @@ object TradeConfirmButtons : ButtonContent {
             3420 -> {
                 try {
                     val other = client.getClient(client.trade_reqId)
-                    if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {
+                    if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||
+                        !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 600L)
+                    ) {
                         return true
                     }
-                    client.lastButton = System.currentTimeMillis()
                     if (client.inTrade && !client.tradeConfirmed) {
                         client.tradeConfirmed = true
                         if (other.tradeConfirmed) {
@@ -46,10 +48,11 @@ object TradeConfirmButtons : ButtonContent {
             3546 -> {
                 try {
                     val other = client.getClient(client.trade_reqId)
-                    if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600 || !client.inTrade) {
+                    if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||
+                        !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 600L)
+                    ) {
                         return true
                     }
-                    client.lastButton = System.currentTimeMillis()
                     if (client.inTrade && client.tradeConfirmed && other.tradeConfirmed && !client.tradeConfirmed2) {
                         client.tradeConfirmed2 = true
                         if (other.tradeConfirmed2) {

@@ -8,6 +8,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +60,8 @@ public class ClickItemListener implements PacketListener {
         boolean isHerb = (itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051;
         if (isHerb) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-        } else if (System.currentTimeMillis() - client.lastAction > 100) {
+        } else if (PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CLICK_ITEM, 100L)) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-            client.lastAction = System.currentTimeMillis();
         }
     }
 

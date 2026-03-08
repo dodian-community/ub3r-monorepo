@@ -146,8 +146,7 @@ public final class WalkingListener implements PacketListener {
 
         if (client.newWalkCmdSteps > 0) {
             // Any movement cancels active dialogue sessions and paging.
-            DialoguePagingService.clear(client);
-            DialogueService.clear(client, false);
+            DialogueService.closeBlockingDialogue(client, false);
 
             if (client.inDuel) {
                 if (opcode != 98) client.send(new SendMessage("You cannot move during this duel!"));
@@ -174,13 +173,9 @@ public final class WalkingListener implements PacketListener {
         }
 
         if (client.chestEventOccur && opcode != 98) client.chestEventOccur = false;
-        if (client.NpcDialogue == 1001) client.clearWalkableInterface();
         client.convoId = -1;
-        if (client.NpcDialogue > 0) {
-            client.NpcDialogue = 0;
-            client.NpcTalkTo = 0;
-            client.NpcDialogueSend = false;
-            client.send(new RemoveInterfaces());
+        if (DialogueService.hasBlockingDialogue(client)) {
+            DialogueService.closeBlockingDialogue(client, true);
         }
         if (client.refundSlot != -1) client.refundSlot = -1;
         if (client.herbMaking != -1) client.herbMaking = -1;

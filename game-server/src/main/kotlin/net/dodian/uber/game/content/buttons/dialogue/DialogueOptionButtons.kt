@@ -47,28 +47,28 @@ object DialogueOptionButtons : ButtonContent {
                     client.discord = false
                 }
                 client.triggerChat(1)
-                when (client.NpcDialogue) {
+                when (DialogueService.legacyDialogueId(client)) {
                     2 -> {
-                        client.NpcDialogue = 0
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setLegacyDialogueSent(client, false)
                         client.openUpBank()
                     }
                     4 -> {
-                        client.NpcDialogue = 0
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setLegacyDialogueSent(client, false)
                         client.openUpShop(2)
                     }
                     1001 -> client.send(SendFrame27())
                     22 -> {
-                        client.NpcDialogue = 23
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 23)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                     27 -> {
                         client.yellOn = true
                         client.send(SendMessage("You have enabled boss yell messages."))
                         client.send(RemoveInterfaces())
-                        client.NpcDialogue = 0
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                     9 -> {
                         if (client.determineCombatLevel() >= 80) {
@@ -89,18 +89,18 @@ object DialogueOptionButtons : ButtonContent {
                     client.discord = false
                 }
                 client.triggerChat(2)
-                when (client.NpcDialogue) {
+                when (DialogueService.legacyDialogueId(client)) {
                     2 -> {
-                        client.NpcDialogue = 0
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                     4 -> {
-                        client.NpcDialogue = 5
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 5)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                     22 -> {
-                        client.NpcDialogue = 24
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 24)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                     1001 -> {
                         client.clearWalkableInterface()
@@ -110,8 +110,8 @@ object DialogueOptionButtons : ButtonContent {
                         client.yellOn = false
                         client.send(SendMessage("You have disabled boss yell messages."))
                         client.send(RemoveInterfaces())
-                        client.NpcDialogue = 0
-                        client.NpcDialogueSend = false
+                        DialogueService.setLegacyDialogueId(client, 0)
+                        DialogueService.setLegacyDialogueSent(client, false)
                     }
                 }
                 return true

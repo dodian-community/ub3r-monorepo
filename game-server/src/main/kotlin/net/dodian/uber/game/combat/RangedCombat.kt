@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
@@ -49,6 +50,7 @@ fun Client.handleRangedAttack(): Int {
 
     combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
     lastCombat = 16
+    CombatLogoutLockService.refreshInteraction(this, target)
     setFocus(target.position.x, target.position.y)
     if (DeleteArrow()) {
         val distance = distanceToPoint(target.position.x, target.position.y)

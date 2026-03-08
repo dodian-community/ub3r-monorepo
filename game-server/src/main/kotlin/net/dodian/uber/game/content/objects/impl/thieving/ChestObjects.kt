@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.thieving.Thieving
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Utils
 
@@ -50,15 +51,13 @@ object ChestObjects : ObjectContent {
                 client.send(SendMessage("You need atleast one free inventory slot!"))
                 return true
             }
-            if (System.currentTimeMillis() - client.lastAction < 1200) {
-                client.lastAction = System.currentTimeMillis()
+            if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.YANILLE_CHEST, 1200L)) {
                 return true
             }
             val emptyObj = GameObject(378, position.x, position.y, client.position.z, 10, 2, objectId)
             if (!GlobalObject.addGlobalObject(emptyObj, 12000)) {
                 return true
             }
-            client.lastAction = System.currentTimeMillis()
             val roll = Math.random() * 100
             if (roll <= 0.3) {
                 val items = intArrayOf(2577, 2579, 2631)
@@ -98,15 +97,13 @@ object ChestObjects : ObjectContent {
                 client.send(SendMessage("You need atleast one free inventory slot!"))
                 return true
             }
-            if (System.currentTimeMillis() - client.lastAction < 1200) {
-                client.lastAction = System.currentTimeMillis()
+            if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.LEGENDS_CHEST, 1200L)) {
                 return true
             }
             val emptyObj = GameObject(378, position.x, position.y, position.z, 11, -1, objectId)
             if (!GlobalObject.addGlobalObject(emptyObj, 15000)) {
                 return true
             }
-            client.lastAction = System.currentTimeMillis()
             val roll = Math.random() * 100
             if (roll <= 0.3) {
                 val items = intArrayOf(1050, 2581, 2631)

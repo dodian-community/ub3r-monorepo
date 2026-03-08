@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,8 @@ public class ClickingStuffListener implements PacketListener {
         }
         if (client.inDuel && !client.duelFight) {
             Client other = client.getClient(client.duel_with);
-            if (other == null || !client.validClient(client.duel_with) || System.currentTimeMillis() - client.lastButton < 600) {
+            if (other == null || !client.validClient(client.duel_with) ||
+                    !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_REQUEST, 600L)) {
                 return;
             }
             client.declineDuel();
@@ -62,7 +64,8 @@ public class ClickingStuffListener implements PacketListener {
         }
         if (client.inTrade) {
             Client other = client.getClient(client.trade_reqId);
-            if (other == null || !client.validClient(client.trade_reqId) || System.currentTimeMillis() - client.lastButton < 600) {
+            if (other == null || !client.validClient(client.trade_reqId) ||
+                    !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_REQUEST, 600L)) {
                 return;
             }
             client.declineTrade();

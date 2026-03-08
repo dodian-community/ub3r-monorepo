@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
 import net.dodian.utilities.Misc
 
 object WebObstacleObjects : ObjectContent {
@@ -17,15 +18,13 @@ object WebObstacleObjects : ObjectContent {
             client.send(SendMessage("You failed to cut the web!"))
             return true
         }
-        if (System.currentTimeMillis() - client.lastAction < 2000) {
-            client.lastAction = System.currentTimeMillis()
+        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.WEB_OBSTACLE, 2000L)) {
             return true
         }
         val emptyObj = GameObject(734, position.x, position.y, client.position.z, 10, 1, objectId)
         if (!GlobalObject.addGlobalObject(emptyObj, 30000)) {
             return true
         }
-        client.lastAction = System.currentTimeMillis()
         return true
     }
 }

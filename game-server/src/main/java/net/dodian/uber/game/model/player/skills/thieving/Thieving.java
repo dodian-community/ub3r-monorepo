@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.persistence.audit.ItemLog;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import net.dodian.utilities.Range;
 
 
@@ -157,10 +158,9 @@ public class Thieving {
             player.send(new SendMessage("You need a thieving level of " + data.getRequiredLevel() + " to steal from " + data.toString().toLowerCase().replace('_', ' ') + "s."));
             return;
         }
-        if (System.currentTimeMillis() - player.lastAction < 2000) {
+        if (!PlayerTickThrottleService.tryAcquireMs(player, PlayerTickThrottleService.THIEVING_GENERIC, 2000L)) {
             return;
         }
-        player.lastAction = System.currentTimeMillis();
         if (data.getThievingType() == ThievingType.PICKPOCKETING || data.getThievingType() == ThievingType.OTHER) {
             player.setFocus(position.getX(), position.getY());
             player.requestAnim(PICKPOCKET_EMOTE, 0);

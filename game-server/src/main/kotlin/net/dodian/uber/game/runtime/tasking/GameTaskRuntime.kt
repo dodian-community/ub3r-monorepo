@@ -122,10 +122,7 @@ object GameTaskRuntime {
     }
 
     private fun isClientTaskBlocked(player: Client): Boolean {
-        return DialogueService.hasActiveSession(player) ||
-            player.NpcDialogue != 0 ||
-            player.NpcDialogueSend ||
-            player.nextDiag > 0
+        return DialogueService.hasBlockingDialogue(player)
     }
 
     @Suppress("UNCHECKED_CAST")

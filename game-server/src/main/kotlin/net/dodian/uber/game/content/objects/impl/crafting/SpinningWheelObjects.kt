@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.action.LegacyPlayerActionService
+import net.dodian.uber.game.runtime.action.SkillingActionService
 
 object SpinningWheelObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(14889, 14896, 14909, 25824)
@@ -15,7 +15,7 @@ object SpinningWheelObjects : ObjectContent {
             14889, 25824 -> {
                 client.spinning = true
                 client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                LegacyPlayerActionService.startSpinning(client)
+                SkillingActionService.startSpinning(client)
                 true
             }
             14896, 14909 -> {

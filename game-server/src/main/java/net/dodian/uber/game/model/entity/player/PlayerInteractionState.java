@@ -10,6 +10,7 @@ import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
 import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class PlayerInteractionState {
     private volatile InteractionIntent pendingInteraction;
@@ -27,10 +28,12 @@ final class PlayerInteractionState {
     private volatile long lastActionCancelCycle = 0L;
     private volatile CombatTargetState combatTargetState;
     private volatile CombatCancellationReason combatCancellationReason;
+    private volatile long combatLogoutLockUntilCycle = 0L;
     private volatile long lastBlockAnimationCycle = -1L;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
+    private final ConcurrentHashMap<String, Long> throttleUntilCycles = new ConcurrentHashMap<>();
 
     InteractionIntent getPendingInteraction() {
         return pendingInteraction;
@@ -230,6 +233,14 @@ final class PlayerInteractionState {
         combatCancellationReason = null;
     }
 
+    long getCombatLogoutLockUntilCycle() {
+        return combatLogoutLockUntilCycle;
+    }
+
+    void setCombatLogoutLockUntilCycle(long combatLogoutLockUntilCycle) {
+        this.combatLogoutLockUntilCycle = combatLogoutLockUntilCycle;
+    }
+
     long getLastBlockAnimationCycle() {
         return lastBlockAnimationCycle;
     }
@@ -253,5 +264,21 @@ final class PlayerInteractionState {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;
         }
+    }
+
+    long getThrottleUntilCycle(String key) {
+        return throttleUntilCycles.getOrDefault(key, 0L);
+    }
+
+    void setThrottleUntilCycle(String key, long cycle) {
+        if (cycle <= 0L) {
+            throttleUntilCycles.remove(key);
+            return;
+        }
+        throttleUntilCycles.put(key, cycle);
+    }
+
+    void clearThrottleUntilCycle(String key) {
+        throttleUntilCycles.remove(key);
     }
 }

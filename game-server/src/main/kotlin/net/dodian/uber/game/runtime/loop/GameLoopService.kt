@@ -11,14 +11,12 @@ import kotlin.system.measureNanoTime
 import net.dodian.jobs.impl.ActionProcessor
 import net.dodian.jobs.impl.EntityProcessor
 import net.dodian.jobs.impl.ItemProcessor
-import net.dodian.jobs.impl.ObjectProcess
 import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.jobs.impl.ShopProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.runtime.metrics.TickPhaseTimer
 import net.dodian.uber.game.runtime.metrics.GcStallTracker
 import net.dodian.uber.game.runtime.phases.InboundPacketPhase
-import net.dodian.uber.game.runtime.phases.LegacyActionPhase
 import net.dodian.uber.game.runtime.phases.MovementFinalizePhase
 import net.dodian.uber.game.runtime.phases.NpcMainPhase
 import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor
@@ -35,7 +33,6 @@ class GameLoopService(
     private val outboundPacketProcessor: OutboundPacketProcessor = OutboundPacketProcessor(),
     private val itemProcessor: ItemProcessor = ItemProcessor(),
     private val shopProcessor: ShopProcessor = ShopProcessor(),
-    private val objectProcess: ObjectProcess = ObjectProcess(),
     private val plunderDoor: PlunderDoor = PlunderDoor(),
 ) {
     private val logger = LoggerFactory.getLogger(GameLoopService::class.java)
@@ -49,10 +46,9 @@ class GameLoopService(
     private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
-    private val worldMaintenancePhase = WorldMaintenancePhase(plunderDoor)
+    private val worldMaintenancePhase = WorldMaintenancePhase(plunderDoor, actionProcessor, itemProcessor, shopProcessor)
     private val npcMainPhase = NpcMainPhase(entityProcessor)
     private val playerMainPhase = PlayerMainPhase(entityProcessor)
-    private val legacyActionPhase = LegacyActionPhase(actionProcessor, itemProcessor, shopProcessor, objectProcess)
     private val movementFinalizePhase = MovementFinalizePhase(entityProcessor)
     @Volatile
     private var tickFuture: ScheduledFuture<*>? = null
@@ -145,7 +141,9 @@ class GameLoopService(
         timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
         timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
         timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
-        timed(GamePhase.LEGACY_ACTIONS) { legacyActionPhase.run() }
+        timed(GamePhase.WORLD_TASKS) { worldMaintenancePhase.runWorldTasks() }
+        timed(GamePhase.GROUND_ITEMS) { worldMaintenancePhase.runGroundItems() }
+        timed(GamePhase.SHOPS) { worldMaintenancePhase.runShops() }
         timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }
         timed(GamePhase.OUTBOUND_SYNC) { outboundPacketProcessor.run() }
         timed(GamePhase.HOUSEKEEPING) { entityProcessor.runHousekeepingPhase(now) }

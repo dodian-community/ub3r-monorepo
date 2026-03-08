@@ -4,6 +4,7 @@ import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
 
 object DuelConfirmButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(6520, 6674)
@@ -11,11 +12,9 @@ object DuelConfirmButtons : ButtonContent {
     override fun onClick(client: Client, buttonId: Int): Boolean {
         when (buttonId) {
             6520 -> {
-                if (System.currentTimeMillis() - client.lastButton < 1000) {
-                    client.lastButton = System.currentTimeMillis()
+                if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 1000L)) {
                     return true
                 }
-                client.lastButton = System.currentTimeMillis()
                 val other = client.getClient(client.duel_with)
                 if (other == null || client.slot == other.slot || !client.inDuel || client.duelConfirmed2) {
                     return true
@@ -53,11 +52,9 @@ object DuelConfirmButtons : ButtonContent {
                     return true
                 }
 
-                if (System.currentTimeMillis() - client.lastButton < 1000) {
-                    client.lastButton = System.currentTimeMillis()
+                if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 1000L)) {
                     return true
                 }
-                client.lastButton = System.currentTimeMillis()
                 if (!client.validClient(client.duel_with)) {
                     client.declineDuel()
                 }

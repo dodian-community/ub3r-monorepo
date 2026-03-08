@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.PlayerHandler
 
 object CombatRuntimeService {
     @JvmStatic
@@ -100,8 +101,38 @@ object CombatRuntimeService {
         player.resetAttack()
     }
 
+    @JvmStatic
+    fun clearNpcTargets(
+        npc: Npc,
+        reason: CombatCancellationReason = CombatCancellationReason.TARGET_INVALID,
+    ) {
+        for (player in PlayerHandler.playersOnline.values) {
+            clearNpcTarget(player, npc, reason)
+        }
+    }
+
+    @JvmStatic
+    fun clearNpcTarget(
+        player: Client,
+        npc: Npc,
+        reason: CombatCancellationReason = CombatCancellationReason.TARGET_INVALID,
+    ) {
+        val state = player.combatTargetState
+        val targetingNpc =
+            player.target === npc ||
+                (state != null && state.targetType == Entity.Type.NPC && state.targetSlot == npc.slot)
+        if (!targetingNpc) {
+            return
+        }
+        player.combatCancellationReason = reason
+        player.walkToTask = null
+        player.resetWalkingQueue()
+        player.faceTarget(-1)
+        player.resetAttack()
+    }
+
     private fun hasActiveCombat(player: Client): Boolean =
-        player.target != null || player.attackingNpc || player.attackingPlayer || player.combatTargetState != null
+        player.target != null || player.combatTargetState != null
 
     private fun createCompatibilityState(
         player: Client,

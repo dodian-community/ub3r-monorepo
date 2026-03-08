@@ -34,18 +34,19 @@ import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
-import net.dodian.uber.game.runtime.action.LegacyPlayerActionService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.action.ProductionActionService;
+import net.dodian.uber.game.runtime.action.SkillingActionService;
 import net.dodian.uber.game.runtime.action.SmithingActionService;
 import net.dodian.uber.game.runtime.action.TeleportActionService;
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
 import net.dodian.uber.game.runtime.combat.CombatStartService;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
-import net.dodian.uber.game.skills.core.LegacyProductionAdapter;
 import net.dodian.utilities.*;
 
 import java.io.IOException;
@@ -1641,10 +1642,7 @@ public class Client extends Player implements Runnable {
 
     public void startNpcDialogue(int dialogueId, int npcId) {
         NpcWanneTalk = 0;
-        NpcDialogue = dialogueId;
-        NpcTalkTo = npcId;
-        NpcDialogueSend = false;
-        UpdateNPCChat();
+        DialogueService.startLegacy(this, dialogueId, npcId);
     }
 
     public void setTeleportStage(int stage) {
@@ -3481,11 +3479,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
-        lastButton = System.currentTimeMillis();
         try {
             Client other = getClient(trade_reqId);
             if (!inTrade || !validClient(trade_reqId)) {
@@ -3551,9 +3548,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton >= 200) {
-            lastButton = System.currentTimeMillis();
-        } else {
+        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -4093,11 +4088,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
-        lastButton = System.currentTimeMillis();
         if (!Server.itemManager.isStackable(itemID))
             amount = Math.min(amount, getInvAmt(itemID));
         else
@@ -4174,9 +4168,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton >= 200) {
-            lastButton = System.currentTimeMillis();
-        } else {
+        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -4946,7 +4938,7 @@ public class Client extends Player implements Runnable {
             cAmount = amount == 10 ? getInvAmt(cSelected) : amount;
             cLevel = levels[index];
             cExp = exp[index] * 8;
-            LegacyPlayerActionService.startCrafting(this);
+            SkillingActionService.startCrafting(this);
         } else if (id != -1) {
             send(new SendMessage("You need level " + levels[index] + " crafting to craft a " + GetItemName(id).toLowerCase()));
             send(new RemoveInterfaces());
@@ -5021,7 +5013,7 @@ public class Client extends Player implements Runnable {
             cExp = cExp * 8;
             crafting = true;
             send(new RemoveInterfaces());
-            LegacyPlayerActionService.startCrafting(this);
+            SkillingActionService.startCrafting(this);
         } else if (required >= 0 && cItem != -1) {
             send(new SendMessage("You need level " + required + " crafting to craft a " + GetItemName(cItem).toLowerCase()));
             send(new RemoveInterfaces());
@@ -5088,7 +5080,7 @@ public class Client extends Player implements Runnable {
         smeltExperience = Utils.smelt_bars[index2][1] * 4;
         smelting = true;
         send(new RemoveInterfaces());
-        LegacyPlayerActionService.startSmelting(this);
+        SkillingActionService.startSmelting(this);
     }
 
     public void startFishing(int object, int click) {
@@ -5140,7 +5132,7 @@ public class Client extends Player implements Runnable {
         fishing = true;
         requestAnim(Utils.fishAnim[fishIndex], 0);
         send(new SendMessage("You start fishing..."));
-        LegacyPlayerActionService.startFishing(this);
+        SkillingActionService.startFishing(this);
     }
 
     public void fish() {
@@ -5193,7 +5185,7 @@ public class Client extends Player implements Runnable {
         if (valid) {
             cookAmount = getInvAmt(id);
             cooking = true;
-            LegacyPlayerActionService.startCooking(this);
+            SkillingActionService.startCooking(this);
         }
 
     }
@@ -5359,6 +5351,11 @@ public class Client extends Player implements Runnable {
             }
         }
         Client other = (Client) PlayerHandler.players[id];
+        String tradeBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
+        if (tradeBlockMessage != null) {
+            send(new SendMessage(tradeBlockMessage));
+            return;
+        }
         if (validClient(trade_reqId)) {
             setFocus(other.getPosition().getX(), other.getPosition().getY());
             if (isBusy() || other.isBusy()) {
@@ -5380,8 +5377,7 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && System.currentTimeMillis() - lastButton > 1000) {
-            lastButton = System.currentTimeMillis();
+        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
             send(new SendMessage("Sending trade request..."));
@@ -5503,8 +5499,20 @@ public class Client extends Player implements Runnable {
     public void duelReq(int pid) {
         facePlayer(pid);
         Client other = getClient(pid);
+        String duelBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
+        if (duelBlockMessage != null) {
+            send(new SendMessage(duelBlockMessage));
+            return;
+        }
         if (isBusy() || other.isBusy()) {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
+            return;
+        }
+        if (net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
+                    ? "You can't duel while in combat."
+                    : other.getPlayerName() + " can't duel while in combat."));
             return;
         }
         if (inWildy() || other.inWildy()) {
@@ -5682,13 +5690,13 @@ public class Client extends Player implements Runnable {
 
     public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
-        if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length || System.currentTimeMillis() - lastButton < 800) {
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
+                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
             duelRule[ruleIndex] = !duelRule[ruleIndex];
             other.duelRule[ruleIndex] = duelRule[ruleIndex];
-            lastButton = System.currentTimeMillis();
             duelConfirmed = false;
             other.duelConfirmed = false;
             send(new SendString("", 6684));
@@ -5702,13 +5710,13 @@ public class Client extends Player implements Runnable {
 
     public boolean toggleDuelBodyRule(int ruleIndex) {
         Client other = getClient(duel_with);
-        if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length || System.currentTimeMillis() - lastButton < 400) {
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
+                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
             duelBodyRules[ruleIndex] = !duelBodyRules[ruleIndex];
             other.duelBodyRules[ruleIndex] = duelBodyRules[ruleIndex];
-            lastButton = System.currentTimeMillis();
             duelConfirmed = false;
             other.duelConfirmed = false;
             send(new SendString("", 6684));
@@ -5966,7 +5974,6 @@ public class Client extends Player implements Runnable {
             attackingNpc = true;
             faceNpc(target.getSlot());
         } else {
-            Server.playerHandler.getClient(target.getSlot()).target = this;
             attackingPlayer = true;
             facePlayer(target.getSlot());
         }
@@ -5974,11 +5981,8 @@ public class Client extends Player implements Runnable {
 
     public void resetAttack() {
         //rerequestAnim();
-        if (target instanceof Npc)
-            attackingNpc = false;
-        else {
-            attackingPlayer = false;
-        }
+        attackingNpc = false;
+        attackingPlayer = false;
         magicId = -1;
         target = null;
         CombatStartService.clearCombatTarget(this);
@@ -6087,11 +6091,8 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (System.currentTimeMillis() - lastButton < 1000) {
-                lastButton = System.currentTimeMillis();
+            if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
-            } else {
-                lastButton = System.currentTimeMillis();
             }
             Client other = getClient(duel_with);
             CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
@@ -6344,10 +6345,6 @@ public class Client extends Player implements Runnable {
         setSkill(skill, itemMade, amount, itemOne, itemTwo, xp, emote, tick);
     }
 
-    private void skillActionYield() {
-        LegacyProductionAdapter.executeLegacySkillAction(this);
-    }
-
     public void guideBook() {
         send(new SendMessage("this is me a guide book!"));
         clearQuestInterface();
@@ -6527,7 +6524,7 @@ public class Client extends Player implements Runnable {
         goldSlot = slot;
         goldCrafting = true;
         send(new RemoveInterfaces());
-        LegacyPlayerActionService.startGoldCrafting(this);
+        SkillingActionService.startGoldCrafting(this);
     }
 
     public void deleteRunes(int[] runes, int[] qty) {
