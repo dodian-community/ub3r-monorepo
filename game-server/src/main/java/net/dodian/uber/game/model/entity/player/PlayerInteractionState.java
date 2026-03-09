@@ -9,8 +9,8 @@ import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
-import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
-import net.dodian.uber.game.content.skills.smithing.SmeltingSelection;
+import net.dodian.uber.game.skills.smithing.ActiveSmithingSelection;
+import net.dodian.uber.game.skills.smithing.SmeltingSelection;
 import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +36,7 @@ final class PlayerInteractionState {
     private volatile DeathTaskState deathTaskState;
     private volatile ActiveSmithingSelection activeSmithingSelection;
     private volatile SmeltingSelection smeltingSelection;
+    private volatile int pendingSmeltingBarId = -1;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
@@ -289,6 +290,18 @@ final class PlayerInteractionState {
 
     void clearSmeltingSelection() {
         smeltingSelection = null;
+    }
+
+    int getPendingSmeltingBarId() {
+        return pendingSmeltingBarId;
+    }
+
+    void setPendingSmeltingBarId(int pendingSmeltingBarId) {
+        this.pendingSmeltingBarId = pendingSmeltingBarId;
+    }
+
+    void clearPendingSmeltingBarId() {
+        pendingSmeltingBarId = -1;
     }
 
     GameTaskSet<?> getPlayerTaskSet() {

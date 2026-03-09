@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -61,7 +62,8 @@ public class BankX1Listener implements PacketListener {
         // Accept mystic bank tab containers (50300-50310) in addition to legacy 5382
         if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310) ||
             interfaceId == 5064 || interfaceId == 3322 || interfaceId == 3415 ||
-            interfaceId == 6669 || interfaceId == 2274 || interfaceId == 3900 || interfaceId == 3823) {
+            interfaceId == 6669 || interfaceId == 2274 || interfaceId == 3900 || interfaceId == 3823 ||
+            (interfaceId >= 4233 && interfaceId <= 4257) || SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) {
             // Prompt the client for an amount (frame 27 in legacy protocol)
             client.send(new SendFrame27());
         }

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.skills.smithing
+package net.dodian.uber.game.skills.smithing
 
 class SmeltingRecipeBuilder internal constructor(
     private val barId: Int,

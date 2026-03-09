@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.content.npc.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -127,6 +128,10 @@ public class BankX2Listener implements PacketListener {
                     client.cooking = true;
                     SkillingActionService.startCooking(client);
                     return;
+                } else if (client.enterAmountId == 2) { // smelting amt
+                    client.send(new RemoveInterfaces());
+                    SmeltingInterfaceService.startFromPending(client, enteredAmount);
+                    return;
                 }
             }
             if (client.XinterfaceID == 5064) { // remove from bag to bank
@@ -162,6 +167,10 @@ public class BankX2Listener implements PacketListener {
                 client.sellItem(id, slot, enteredAmount);
                 client.checkItemUpdate();
                 client.send(new InventoryInterface(3824, 3822));
+            } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(client.XinterfaceID)) { // smelting X
+                SmeltingInterfaceService.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
+            } else if (client.XinterfaceID >= 4233 && client.XinterfaceID <= 4257) { // gold crafting X
+                client.startGoldCrafting(client.XinterfaceID, client.XremoveSlot, enteredAmount);
             } else if (client.XinterfaceID == 3322 && client.inTrade && client.canOffer) { // bag to trade window
                 client.tradeItem(client.XremoveID, client.XremoveSlot, enteredAmount);
             } else if (client.XinterfaceID == 3415 && client.inTrade && client.canOffer) { // from trade window

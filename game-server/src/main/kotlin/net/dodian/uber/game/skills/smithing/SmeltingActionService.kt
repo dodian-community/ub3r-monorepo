@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.skills.smithing
+package net.dodian.uber.game.skills.smithing
 
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
@@ -10,7 +10,7 @@ import net.dodian.utilities.Range
 
 object SmeltingActionService {
     private const val SMELT_ANIMATION = 0x383
-    private const val SMELT_DELAY_TICKS = 3L
+    private const val SMELT_DELAY_TICKS = 3
 
     @JvmStatic
     fun start(client: Client) {
@@ -66,7 +66,6 @@ object SmeltingActionService {
             player.triggerRandom(recipe.experience)
         } else if (recipe.failureMessage != null) {
             player.send(SendMessage(recipe.failureMessage))
-            player.dealDamage(null, 0, Entity.hitType.STANDARD, Entity.damageType.MELEE)
         }
         player.checkItemUpdate()
         return true

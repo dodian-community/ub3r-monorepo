@@ -35,6 +35,9 @@ import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.content.dialogue.DialogueService;
+import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
@@ -3183,36 +3186,11 @@ public class Client extends Player implements Runnable {
     }
 
     public int CheckSmithing(int ItemID) {
-        int Type = -1;
         if (!IsItemInBag(2347)) {
             send(new SendMessage("You need a " + GetItemName(2347) + " to hammer bars."));
             return -1;
         }
-        switch (ItemID) {
-            case 2349: // Bronze Bar
-                Type = 1;
-                break;
-
-            case 2351: // Iron Bar
-                Type = 2;
-                break;
-
-            case 2353: // Steel Bar
-                Type = 3;
-                break;
-
-            case 2359: // Mithril Bar
-                Type = 4;
-                break;
-
-            case 2361: // Adamantite Bar
-                Type = 5;
-                break;
-
-            case 2363: // Runite Bar
-                Type = 6;
-                break;
-        }
+        int Type = SmithingInterfaceService.resolveTierId(ItemID);
         if (Type == -1)
             send(new SendMessage("You cannot smith this item."));
         else
@@ -3221,249 +3199,18 @@ public class Client extends Player implements Runnable {
     }
 
     public void OpenSmithingFrame(int Type) { //Not touching smithing interface anymore!!!
-        int Type2 = Type - 1;
-        int Length = 22;
-        // Sending amount of bars + make text green if lvl is highenough
-        send(new SendString("", 1132)); // Wire
-        send(new SendString("", 1096));
-        send(new SendString("", 11459)); // Lantern
-        send(new SendString("", 11461));
-        send(new SendString("", 1135)); // Studs
-        send(new SendString("", 1134));
-        String bar, color, color2, name = "";
-        if (Type == 1) {
-            name = "Bronze ";
-        } else if (Type == 2) {
-            name = "Iron ";
-        } else if (Type == 3) {
-            name = "Steel ";
-        } else if (Type == 4) {
-            name = "Mithril ";
-        } else if (Type == 5) {
-            name = "Adamant ";
-        } else if (Type == 6) {
-            name = "Rune ";
+        net.dodian.uber.game.skills.smithing.SmithingTier tier = SmithingDefinitions.findSmithingTierByTypeId(Type);
+        if (tier != null) {
+            SmithingInterfaceService.openForBar(this, tier.getBarId(), skillX, skillY);
         }
-        for (int i = 0; i < Length; i++) {
-            bar = "bar";
-            color = "@red@";
-            if (Constants.smithing_frame[Type2][i][3] > 1) {
-                bar = bar + "s";
-            }
-            int Type3 = Type2;
-
-            if (Type2 >= 3) {
-                Type3 = (Type2 + 2);
-            }
-            if (AreXItemsInBag((2349 + (Type3 * 2)), Constants.smithing_frame[Type2][i][3])) {
-                color = "@gre@";
-            }
-            send(new SendString(color + Constants.smithing_frame[Type2][i][3] + bar,
-                    Constants.smithing_frame[Type2][i][4]));
-            String linux_hack = GetItemName(Constants.smithing_frame[Type2][i][0]);
-            int index = GetItemName(Constants.smithing_frame[Type2][i][0]).indexOf(name);
-            if (index > 0) {
-                linux_hack = linux_hack.substring(index + 1);
-                send(new SendString(linux_hack, Constants.smithing_frame[Type2][i][5]));
-            }
-        }
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][0][0]; // Dagger
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][0][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][4][0]; // Sword
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][4][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][8][0]; // Scimitar
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][8][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][9][0]; // Long
-        // Sword
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][9][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][18][0]; // 2
-        // hand
-        // sword
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][18][1];
-        send(new SetSmithing(1119));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][1][0]; // Axe
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][1][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][2][0]; // Mace
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][2][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][13][0]; // Warhammer
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][13][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][14][0]; // Battle
-        // axe
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][14][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][17][0]; // Claws
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][17][1];
-        send(new SetSmithing(1120));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][15][0]; // Chain
-        // body
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][15][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][20][0]; // Plate
-        // legs
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][20][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][19][0]; // Plate
-        // skirt
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][19][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][21][0]; // Plate
-        // body
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][21][1];
-        color2 = "@bla@";
-        if (Type != -1 && Type <= 3) { //Second stuff!
-            if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][Length][2]) {
-                color2 = "@whi@";
-            }
-            Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][Length][0]; // Lantern
-            Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][Length][1];
-            send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][Length][0]).replace(name, ""), 11461));
-        } else {
-            Constants.SmithingItems[4][0] = -1; // Second stuff for smithing!
-            Constants.SmithingItems[4][1] = 0;
-        }
-        send(new SetSmithing(1121));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][3][0]; // Medium
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][3][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][10][0]; // Full
-        // Helm
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][10][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][12][0]; // Square
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][12][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][16][0]; // Kite
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][16][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][6][0]; // Nails
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][6][1];
-        send(new SetSmithing(1122));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][5][0]; // Dart
-        // Tips
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][5][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][7][0]; // Arrow
-        // Heads
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][7][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][11][0]; // Knives
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][11][1];
-        Constants.SmithingItems[3][0] = -1; // Wire
-        Constants.SmithingItems[3][1] = 0;
-        for (int i = 0; i < Length; i++) {
-            if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][i][2]) {
-                color2 = "@whi@";
-            } else
-                color2 = "@bla@";
-            send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][i][0]).replace(name, ""), Constants.smithing_frame[Type2][i][5]));
-        }
-        Constants.SmithingItems[4][0] = -1; // Studs
-        Constants.SmithingItems[4][1] = 0;
-        send(new SetSmithing(1123));
-        showInterface(994);
-        smithing[2] = Type;
     }
 
     public boolean smithing() {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be smithing!"));
-            return false;
-        }
-        if (IsItemInBag(2347)) {
-            if (!smithCheck(smithing[4])) {
-                IsAnvil = true;
-                resetAction();
-                return false;
-            }
-            int bars = 0;
-            int Length = 22;
-            int barid;
-            int xp = 0;
-            int ItemN = 1;
-
-            if (smithing[2] >= 4) {
-                barid = (2349 + ((smithing[2] + 1) * 2));
-            } else {
-                barid = (2349 + ((smithing[2] - 1) * 2));
-            }
-            if (smithing[2] == 1 || smithing[2] == 2) {
-                Length += 1;
-            } else if (smithing[2] == 3) {
-                Length += 2;
-            }
-            int[] possibleBars = {2349, 2351, 2353, 2359, 2361, 2363};
-            int[] bar_xp = {13, 25, 38, 50, 63, 75};
-            for (int i = 0; i < Constants.smithing_frame.length; i++) {
-                for (int i1 = 0; i1 < Constants.smithing_frame[i].length; i1++) {
-                    for (int i2 = 0; i2 < Constants.smithing_frame[i][i1].length; i2++) {
-                        if (Constants.smithing_frame[i][i1][0] == smithing[4]) {
-                            if (!AreXItemsInBag(possibleBars[i], Constants.smithing_frame[i][i1][3])) {
-                                send(new SendMessage("You are missing bars needed to smith this!"));
-                                IsAnvil = true;
-                                resetAction();
-                                return false;
-                            }
-                            xp = bar_xp[i];
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < Length; i++) {
-                if (Constants.smithing_frame[(smithing[2] - 1)][i][0] == smithing[4]) {
-                    bars = Constants.smithing_frame[(smithing[2] - 1)][i][3];
-                    if (smithing[1] == 0) {
-                        smithing[1] = Constants.smithing_frame[(smithing[2] - 1)][i][2];
-                    }
-                    ItemN = Constants.smithing_frame[(smithing[2] - 1)][i][1];
-                }
-            }
-            if (getLevel(Skill.SMITHING) >= smithing[1]) {
-                if (AreXItemsInBag(barid, bars)) {
-                    int[] barLevelRequired = {1, 15, 30, 55, 70, 85};
-                    long currentCycle = net.dodian.uber.game.runtime.loop.GameCycleClock.currentCycle();
-                    if (currentCycle - lastAction >= 1 && !IsAnvil) {
-                        lastAction = currentCycle;
-                        setFocus(skillX, skillY);
-                        send(new SendMessage("You start hammering the bar..."));
-                        requestAnim(0x382, 0);
-                        IsAnvil = true;
-                        int diff = getLevel(Skill.SMITHING) - barLevelRequired[CheckSmithing(smithing[3]) - 1];
-                        smithing[0] = 5 - (diff >= 14 ? 2 : diff >= 7 ? 1 : 0);
-                    }
-                    if (currentCycle - lastAction >= smithing[0] && IsAnvil) {
-                        lastAction = currentCycle;
-                        for (int i = 0; i < bars; i++) {
-                            deleteItem(barid, GetItemSlot(barid), playerItemsN[GetItemSlot(barid)]);
-                        }
-                        int experience = xp * bars * 30;
-                        giveExperience(experience, Skill.SMITHING);
-                        addItem(smithing[4], ItemN);
-                        checkItemUpdate();
-                        send(new SendMessage("You smith a " + GetItemName(smithing[4])));
-                        requestAnim(0x382, 0);
-                        triggerRandom(experience);
-                    }
-                } else {
-                    send(new SendMessage(
-                            "You need " + bars + " " + GetItemName(barid) + " to smith a " + GetItemName(smithing[4])));
-                    rerequestAnim();
-                    resetAction();
-                }
-            } else {
-                send(new SendMessage("You need " + smithing[1] + " Smithing to smith a " + GetItemName(smithing[4])));
-                IsAnvil = true;
-                resetAction();
-                return false;
-            }
-        } else {
-            send(new SendMessage("You need a " + GetItemName(2347) + " to hammer bars."));
-            IsAnvil = true;
-            resetAction();
-            return false;
-        }
-        return true;
+        return false;
     }
 
     public void startSmithing(int itemId, int amount) {
-        if (smithing[2] <= 0) {
-            send(new SendMessage("Illigal Smithing !"));
-            return;
-        }
-        smithing[4] = itemId;
-        smithing[0] = 1;
-        smithing[5] = amount;
-        send(new RemoveInterfaces());
-        SmithingActionService.startSmithing(this);
+        SmithingInterfaceService.startFromInterfaceItem(this, itemId, amount);
     }
 
     public void resetSM() {
@@ -4405,281 +4152,16 @@ public class Client extends Player implements Runnable {
     }
 
     public void smelt(int id) {
-        requestAnim(0x383, 0);
-        smelting = true;
-        int smelt_barId = -1;
-        ArrayList<Integer> removed = new ArrayList<>();
-        if (smeltCount < 1) {
-            resetAction(true);
+        net.dodian.uber.game.skills.smithing.SmeltingRecipe recipe = SmithingDefinitions.findSmeltingRecipe(id);
+        if (recipe == null) {
             return;
         }
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be smelting!"));
-            return;
-        }
-        smeltCount--;
-        switch (id) {
-            case 2349: // bronze
-                if (playerHasItem(436) && playerHasItem(438)) {
-                    smelt_barId = 2349;
-                    removed.add(436);
-                    removed.add(438);
-                } else
-                    send(new SendMessage("You need a tin and copper to do this!"));
-                break;
-            case 2351: // iron ore
-                if (getLevel(Skill.SMITHING) < 15) {
-                    send(new SendMessage("You need level 15 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(440)) {
-                    int ran = new Range(1, 100).getValue();
-                    int diff = (getLevel(Skill.SMITHING) + 1) / 4;
-                    if (ran <= 50 + diff) {
-                        smelt_barId = 2351;
-                        removed.add(440);
-                    } else {
-                        smelt_barId = 0;
-                        removed.add(440);
-                        send(new SendMessage("You fail to refine the iron"));
-                    }
-                } else
-                    send(new SendMessage("You need a iron ore to do this!"));
-                break;
-            case 2353:
-                if (getLevel(Skill.SMITHING) < 30) {
-                    send(new SendMessage("You need level 30 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(440) && playerHasItem(453, 2)) {
-                    smelt_barId = 2353;
-                    removed.add(440);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a iron ore and 2 coal to do this!"));
-                break;
-            case 2357:
-                if (getLevel(Skill.SMITHING) < 40) {
-                    send(new SendMessage("You need level 40 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(444, 1)) {
-                    smelt_barId = 2357;
-                    removed.add(444);
-                } else
-                    send(new SendMessage("You need a gold ore to do this!"));
-                break;
-            case 2359:
-                if (getLevel(Skill.SMITHING) < 55) {
-                    send(new SendMessage("You need level 55 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(447) && playerHasItem(453, 3)) {
-                    smelt_barId = 2359;
-                    removed.add(447);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a mithril ore and 3 coal to do this!"));
-                break;
-            case 2361:
-                if (getLevel(Skill.SMITHING) < 70) {
-                    send(new SendMessage("You need level 70 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(449) && playerHasItem(453, 4)) {
-                    smelt_barId = 2361;
-                    removed.add(449);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a adamantite ore and 4 coal to do this!"));
-                break;
-            case 2363:
-                if (getLevel(Skill.SMITHING) < 85) {
-                    send(new SendMessage("You need level 85 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(451) && playerHasItem(453, 6)) {
-                    smelt_barId = 2363;
-                    removed.add(451);
-                    for (int i = 0; i < 6; i++)
-                        removed.add(453);
-                } else
-                    send(new SendMessage("You need a runite ore and 6 coal to do this!"));
-                break;
-            default:
-                println("Unknown smelt: " + id);
-                break;
-        }
-        if (smelt_barId == -1) {
-            resetAction();
-            return;
-        }
-        for (Integer removeId : removed) {
-            deleteItem(removeId, 1);
-        }
-        if (smelt_barId > 0) {
-            addItem(smelt_barId, 1);
-            giveExperience(smeltExperience, Skill.SMITHING);
-            triggerRandom(smeltExperience);
-        }
-        checkItemUpdate();
+        setSmeltingSelection(new net.dodian.uber.game.skills.smithing.SmeltingSelection(recipe, 1));
+        net.dodian.uber.game.skills.smithing.SmeltingActionService.start(this);
     }
 
     public void superHeat(int id) {
-        resetAction(false);
-        ArrayList<Integer> removed = new ArrayList<>();
-        int smelt_barId = 0;
-        boolean fail = false;
-        switch (id) {
-
-            case 436: // Tin
-            case 438: // Copper
-                if (playerHasItem(436) && playerHasItem(438)) {
-                    smelt_barId = 2349;
-                    removed.add(436);
-                    removed.add(438);
-                } else
-                    send(new SendMessage("You need a tin and copper to do this!"));
-                break;
-            case 440: // iron ore
-                if (playerHasItem(440) && !playerHasItem(453, 2)) {
-                    if (getLevel(Skill.SMITHING) < 15) {
-                        send(new SendMessage("You need level 15 smithing to do this!"));
-                        break;
-                    }
-                    smelt_barId = 2351;
-                    removed.add(440);
-                } else if (playerHasItem(440) && playerHasItem(453, 2)) {
-                    if (getLevel(Skill.SMITHING) < 30) {
-                        send(new SendMessage("You need level 30 smithing to do this!"));
-                        break;
-                    }
-                    smelt_barId = 2353;
-                    removed.add(440);
-                    removed.add(453);
-                    removed.add(453);
-                }
-                break;
-            case 1781: //Soda ash
-            case 401: //Seaweed
-            case 1783: //Bucket of sand
-                smelt_barId = 1775;
-                break;
-            case 444:
-                if (getLevel(Skill.SMITHING) < 40) {
-                    send(new SendMessage("You need level 40 smithing to do this!"));
-                    break;
-                }
-                smelt_barId = 2357;
-                removed.add(444);
-                break;
-            case 447:
-                if (getLevel(Skill.SMITHING) < 55) {
-                    send(new SendMessage("You need level 55 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(447) && playerHasItem(453, 3)) {
-                    smelt_barId = 2359;
-                    removed.add(447);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a mithril ore and 3 coal to do this!"));
-                break;
-            case 449:
-                if (getLevel(Skill.SMITHING) < 70) {
-                    send(new SendMessage("You need level 70 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(449) && playerHasItem(453, 4)) {
-                    smelt_barId = 2361;
-                    removed.add(449);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a adamantite ore and 4 coal to do this!"));
-                break;
-            case 451:
-                if (getLevel(Skill.SMITHING) < 85) {
-                    send(new SendMessage("You need level 85 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(451) && playerHasItem(453, 6)) {
-                    smelt_barId = 2363;
-                    removed.add(451);
-                    for (int i = 0; i < 6; i++)
-                        removed.add(453);
-                } else
-                    send(new SendMessage("You need a runite ore and 6 coal to do this!"));
-                break;
-            default:
-                fail = true;
-                break;
-        }
-        int xp = 0;
-        for (int i = 0; i < Utils.smelt_bars.length && xp == 0; i++)
-            if (Utils.smelt_bars[i][0] == smelt_barId)
-                xp = Utils.smelt_bars[i][1] * 4;
-        if (fail) {
-            send(new SendMessage("You can only use this spell on ores or glass material!"));
-            callGfxMask(85, 100);
-        } else if (smelt_barId == 1775) {
-            if (!playerHasItem(561, 3)) {
-                send(new SendMessage("Need 3 nature runes to cast this spell on glass material!"));
-                return;
-            }
-            if (!playerHasItem(1783, 1) || (!playerHasItem(1781, 1) && !playerHasItem(401, 1))) {
-                send(new SendMessage("You need atleast 1 bucket of sand along with seaweed or soda ash to cast this!"));
-                return;
-            }
-            lastMagic = System.currentTimeMillis();
-            requestAnim(725, 0);
-            callGfxMask(148, 100);
-            /* Amount of molten glass! */
-            int count = getInvAmt(1783);
-            int ashCount = getInvAmt(1781) + getInvAmt(401);
-            if (count > ashCount) count = ashCount; //Need to know how much count to add!
-            int moltenCount = 0;
-            for (int i = 0; i < count; i++) {
-                deleteItem(1783, 1);
-                deleteItem(playerHasItem(1781, 1) ? 1781 : 401, 1);
-                moltenCount++;
-                if (Misc.chance(100) <= 30) moltenCount++;
-            }
-            deleteRunes(new int[]{561}, new int[]{3});
-            for (int i = 0; i < moltenCount; i++)
-                if (!addItem(smelt_barId, 1)) { //Ground drop!
-                    Ground.addFloorItem(this, smelt_barId, 1);
-                }
-            checkItemUpdate();
-            giveExperience(count * 40, CRAFTING);
-            giveExperience(500, MAGIC);
-        } else if (smelt_barId > 0) {
-            if (!playerHasItem(561, 1)) {
-                send(new SendMessage("You need 1 nature runes to cast this spell!"));
-                return;
-            }
-            lastMagic = System.currentTimeMillis();
-            requestAnim(725, 0);
-            callGfxMask(148, 100);
-            deleteRunes(new int[]{561}, new int[]{1});
-            for (Integer removeId : removed)
-                deleteItem(removeId, 1);
-            addItem(smelt_barId, 1);
-            checkItemUpdate();
-            giveExperience(xp, Skill.SMITHING);
-            giveExperience(500, Skill.MAGIC);
-        }
-        send(new SendSideTab(6));
+        net.dodian.uber.game.skills.smithing.SuperheatService.cast(this, id);
     }
 
     public void runecraft(int rune, int level, int xp) {
@@ -5077,20 +4559,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void startSmelt(int id) {
-        int[] amounts = {1, 5, 10, 28};
-        int index = 0, index2 = 0;
-        for (int i = 0; i < Utils.buttons_smelting.length; i++) {
-            if (id == Utils.buttons_smelting[i]) {
-                index = i % 4;
-                index2 = i / 4;
-            }
-        }
-        smelt_id = Utils.smelt_bars[index2][0];
-        smeltCount = amounts[index];
-        smeltExperience = Utils.smelt_bars[index2][1] * 4;
-        smelting = true;
-        send(new RemoveInterfaces());
-        SkillingActionService.startSmelting(this);
+        SmeltingInterfaceService.startFromButton(this, id);
     }
 
     public void startFishing(int object, int click) {
@@ -5875,15 +5344,11 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean smithCheck(int id) {
-        for (int i = 0; i < Constants.smithing_frame.length; i++) {
-            for (int i1 = 0; i1 < Constants.smithing_frame[i].length; i1++) {
-                if (id == Constants.smithing_frame[i][i1][0]) {
-                    return true;
-                }
-            }
+        boolean canSmith = SmithingInterfaceService.canSmithProduct(id);
+        if (!canSmith) {
+            send(new SendMessage("Client hack detected!"));
         }
-        send(new SendMessage("Client hack detected!"));
-        return false;
+        return canSmith;
     }
 
     public void callGfxMask(int id, int height) {

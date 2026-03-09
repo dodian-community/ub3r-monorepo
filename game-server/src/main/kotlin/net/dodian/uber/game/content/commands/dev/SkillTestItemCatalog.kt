@@ -5,6 +5,8 @@ import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.player.skills.thieving.Thieving
 import net.dodian.uber.game.skills.FarmingData
 import net.dodian.uber.game.skills.mining.MiningData
+import net.dodian.uber.game.skills.smithing.SmithingData
+import net.dodian.uber.game.skills.smithing.SmithingDefinitions
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingData
 import net.dodian.utilities.Utils
 
@@ -79,8 +81,8 @@ object SkillTestItemCatalog {
     private fun smithingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 2347)
-        Utils.smelt_bars.forEach { addIfValid(items, it[0]) }
-        for (row in Constants.smithing_frame) {
+        SmithingDefinitions.smeltingRecipes.forEach { addIfValid(items, it.barId) }
+        for (row in SmithingData.smithingFrame) {
             for (entry in row) {
                 addIfValid(items, entry[0])
             }

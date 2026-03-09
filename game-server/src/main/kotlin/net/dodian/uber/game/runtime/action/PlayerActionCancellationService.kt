@@ -35,6 +35,7 @@ object PlayerActionCancellationService {
         player.smelting = false
         player.smelt_id = -1
         player.clearSmeltingSelection()
+        player.clearPendingSmeltingBarId()
         player.goldCrafting = false
         player.goldIndex = -1
         player.goldSlot = -1

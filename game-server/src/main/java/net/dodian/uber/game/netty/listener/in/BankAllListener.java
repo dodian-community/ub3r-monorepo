@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -84,6 +85,10 @@ public class BankAllListener implements PacketListener {
             client.fromDuel(removeId, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (interfaceId == 3415 && client.inTrade && client.canOffer) { // trade → inventory
             client.fromTrade(removeId, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
+        } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) { // smelting all
+            SmeltingInterfaceService.startFromInterfaceItem(client, resolvedItemId, Integer.MAX_VALUE);
+        } else if (interfaceId >= 4233 && interfaceId <= 4257) { // gold crafting all
+            client.startGoldCrafting(interfaceId, removeSlot, client.getInvAmt(2357));
         } else if (interfaceId == 3823) { // sell 10 items to shop
             if (client.playerRights < 2) {
                 client.sellItem(resolvedItemId, removeSlot, 10);

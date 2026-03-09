@@ -1,6 +1,4 @@
-package net.dodian.uber.game.content.skills.smithing
-
-import net.dodian.uber.game.Constants
+package net.dodian.uber.game.skills.smithing
 
 object SmithingDefinitions {
     private val smithingPageSlots = mapOf(
@@ -84,24 +82,34 @@ object SmithingDefinitions {
     }
 
     val smithingTiers: List<SmithingTier> = listOf(
-        buildTier(1, "Bronze", 2349, Constants.smithing_frame[0]),
-        buildTier(2, "Iron", 2351, Constants.smithing_frame[1]),
-        buildTier(3, "Steel", 2353, Constants.smithing_frame[2]),
-        buildTier(4, "Mithril", 2359, Constants.smithing_frame[3]),
-        buildTier(5, "Adamant", 2361, Constants.smithing_frame[4]),
-        buildTier(6, "Rune", 2363, Constants.smithing_frame[5]),
+        buildTier(1, "Bronze", 2349, SmithingData.smithingFrame[0]),
+        buildTier(2, "Iron", 2351, SmithingData.smithingFrame[1]),
+        buildTier(3, "Steel", 2353, SmithingData.smithingFrame[2]),
+        buildTier(4, "Mithril", 2359, SmithingData.smithingFrame[3]),
+        buildTier(5, "Adamant", 2361, SmithingData.smithingFrame[4]),
+        buildTier(6, "Rune", 2363, SmithingData.smithingFrame[5]),
     )
 
+    @JvmStatic
     fun findSmeltingRecipe(barId: Int): SmeltingRecipe? = smeltingRecipes.firstOrNull { it.barId == barId }
 
+    @JvmStatic
+    fun findSmeltingRecipeByOre(itemId: Int): SmeltingRecipe? =
+        smeltingRecipes.firstOrNull { recipe -> recipe.oreRequirements.any { it.itemId == itemId } }
+
+    @JvmStatic
     fun findSmeltingButton(buttonId: Int): FurnaceButtonMapping? = smeltingButtonMappings.firstOrNull { it.buttonId == buttonId }
 
+    @JvmStatic
     fun findSmithingTierByBar(barId: Int): SmithingTier? = smithingTiers.firstOrNull { it.barId == barId }
 
+    @JvmStatic
     fun findSmithingTierByTypeId(typeId: Int): SmithingTier? = smithingTiers.firstOrNull { it.typeId == typeId }
 
+    @JvmStatic
     fun findTierForProduct(itemId: Int): SmithingTier? = smithingTiers.firstOrNull { tier -> tier.products.any { it.itemId == itemId } }
 
+    @JvmStatic
     fun displayItemsForFrame(tier: SmithingTier, frameId: Int): List<SmithingDisplayItem> {
         val indices = smithingPageSlots[frameId] ?: return emptyList()
         return indices.map { index ->
@@ -114,6 +122,7 @@ object SmithingDefinitions {
         }
     }
 
+    @JvmStatic
     fun frameIds(): IntArray = smeltFrameIds.copyOf()
 
     private fun buildTier(typeId: Int, displayName: String, barId: Int, frame: Array<IntArray>): SmithingTier {

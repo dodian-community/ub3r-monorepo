@@ -2,7 +2,7 @@ package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Prayer
-import net.dodian.uber.game.content.skills.smithing.SmeltingActionService
+import net.dodian.uber.game.skills.smithing.SmeltingActionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.utilities.Utils
 

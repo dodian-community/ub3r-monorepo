@@ -3,7 +3,8 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -115,6 +116,8 @@ public class Bank5Listener implements PacketListener {
             client.sellItem(removeId, removeSlot, 1);
         } else if (interfaceId == 3900) { // buy from shop (buys 1)
             client.buyItem(removeId, removeSlot, 1);
+        } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) { // smelting
+            SmeltingInterfaceService.startFromInterfaceItem(client, removeId, amount);
         } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing
             SmithingInterfaceService.startFromInterfaceItem(client, removeId, amount);
         } else if (interfaceId == 1688) { // operate equipment – animations and special chats

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.runtime.action
 
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
-import net.dodian.uber.game.content.skills.smithing.SmithingRequest
+import net.dodian.uber.game.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.skills.smithing.SmithingRequest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -15,7 +15,7 @@ object SmithingActionService {
     @JvmStatic
     fun startSmithing(client: Client, request: SmithingRequest) {
         client.setActiveSmithingSelection(
-            net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection(
+            net.dodian.uber.game.skills.smithing.ActiveSmithingSelection(
                 request.tierId,
                 request.barId,
                 request.anvilX,
@@ -37,7 +37,7 @@ object SmithingActionService {
 
             while (remaining > 0) {
                 val spec = resolveSpec(player, request) ?: return@start
-                wait(spec.delayTicks.toLong())
+                wait(spec.delayTicks)
                 if (!isActive()) {
                     return@start
                 }
