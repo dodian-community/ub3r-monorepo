@@ -123,6 +123,8 @@ public class RemoveItemListener implements PacketListener {
             String shopAdd = formatValueSuffix(shopValue);
             client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
         } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceID)) { // smelting selection
+            logger.warn("Smelting interface item click amount=1 interfaceId={} itemId={} slot={} player={}",
+                    interfaceID, removeID, removeSlot, client.getPlayerName());
             SmeltingInterfaceService.startFromInterfaceItem(client, removeID, 1);
         } else if (interfaceID >= 1119 && interfaceID <= 1123) { // smithing selection
             SmithingInterfaceService.startFromInterfaceItem(client, removeID, 1);

@@ -59,6 +59,11 @@ public class BankX1Listener implements PacketListener {
             logger.trace("BankX1 slot={} interface={} item={} player={}", slot, interfaceId, itemId, client.getPlayerName());
         }
 
+        if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) {
+            logger.warn("Smelting interface item click amount=X-prompt interfaceId={} itemId={} slot={} player={}",
+                    interfaceId, itemId, slot, client.getPlayerName());
+        }
+
         // Accept mystic bank tab containers (50300-50310) in addition to legacy 5382
         if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310) ||
             interfaceId == 5064 || interfaceId == 3322 || interfaceId == 3415 ||

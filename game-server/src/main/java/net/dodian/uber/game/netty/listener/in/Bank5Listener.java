@@ -117,6 +117,8 @@ public class Bank5Listener implements PacketListener {
         } else if (interfaceId == 3900) { // buy from shop (buys 1)
             client.buyItem(removeId, removeSlot, 1);
         } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) { // smelting
+            logger.warn("Smelting interface item click amount=5 interfaceId={} itemId={} slot={} player={}",
+                    interfaceId, removeId, removeSlot, client.getPlayerName());
             SmeltingInterfaceService.startFromInterfaceItem(client, removeId, amount);
         } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing
             SmithingInterfaceService.startFromInterfaceItem(client, removeId, amount);

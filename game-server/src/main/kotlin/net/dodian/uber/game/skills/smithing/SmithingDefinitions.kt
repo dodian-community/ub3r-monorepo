@@ -61,7 +61,7 @@ object SmithingDefinitions {
         }
     }
 
-    val smeltingButtonMappings: List<FurnaceButtonMapping> = listOf(
+    private val classicSmeltingButtonMappings: List<FurnaceButtonMapping> = listOf(
         15147, 15146, 10247, 9110,
         15151, 15150, 15149, 15148,
         15155, 15154, 15153, 15152,
@@ -80,6 +80,43 @@ object SmithingDefinitions {
         val recipeIndex = index / 4
         FurnaceButtonMapping(buttonId, smeltingRecipes[recipeIndex].barId, amount)
     }
+
+    private val mysticSmeltingButtonMappings: List<FurnaceButtonMapping> = listOf(
+        FurnaceButtonMapping(2414, 2349, 0),
+        FurnaceButtonMapping(2807, 2349, 10),
+        FurnaceButtonMapping(3986, 2349, 5),
+        FurnaceButtonMapping(3987, 2349, 1),
+        FurnaceButtonMapping(3988, 2351, 0),
+        FurnaceButtonMapping(3989, 2351, 10),
+        FurnaceButtonMapping(3990, 2351, 5),
+        FurnaceButtonMapping(3991, 2351, 1),
+        FurnaceButtonMapping(3992, 2355, 0),
+        FurnaceButtonMapping(3993, 2355, 10),
+        FurnaceButtonMapping(3994, 2355, 5),
+        FurnaceButtonMapping(3995, 2355, 1),
+        FurnaceButtonMapping(3996, 2353, 0),
+        FurnaceButtonMapping(3997, 2353, 10),
+        FurnaceButtonMapping(3998, 2353, 5),
+        FurnaceButtonMapping(3999, 2353, 1),
+        FurnaceButtonMapping(4000, 2357, 0),
+        FurnaceButtonMapping(4001, 2357, 10),
+        FurnaceButtonMapping(4002, 2357, 5),
+        FurnaceButtonMapping(4003, 2357, 1),
+        FurnaceButtonMapping(4158, 2359, 0),
+        FurnaceButtonMapping(6397, 2359, 10),
+        FurnaceButtonMapping(7440, 2359, 5),
+        FurnaceButtonMapping(7441, 2359, 1),
+        FurnaceButtonMapping(7442, 2361, 0),
+        FurnaceButtonMapping(7443, 2361, 10),
+        FurnaceButtonMapping(7444, 2361, 5),
+        FurnaceButtonMapping(7446, 2361, 1),
+        FurnaceButtonMapping(7447, 2363, 0),
+        FurnaceButtonMapping(7448, 2363, 10),
+        FurnaceButtonMapping(7449, 2363, 5),
+        FurnaceButtonMapping(7450, 2363, 1),
+    )
+
+    val smeltingButtonMappings: List<FurnaceButtonMapping> = classicSmeltingButtonMappings + mysticSmeltingButtonMappings
 
     val smithingTiers: List<SmithingTier> = listOf(
         buildTier(1, "Bronze", 2349, SmithingData.smithingFrame[0]),
@@ -124,6 +161,10 @@ object SmithingDefinitions {
 
     @JvmStatic
     fun frameIds(): IntArray = smeltFrameIds.copyOf()
+
+    @JvmStatic
+    fun isSmeltingInterfaceButton(buttonId: Int): Boolean =
+        smeltingButtonMappings.any { it.buttonId == buttonId } || smeltFrameIds.contains(buttonId)
 
     private fun buildTier(typeId: Int, displayName: String, barId: Int, frame: Array<IntArray>): SmithingTier {
         val products = frame.map { entry ->

@@ -9,7 +9,6 @@ import net.dodian.uber.game.content.buttons.crafting.LeatherCraftButtons
 import net.dodian.uber.game.content.buttons.crafting.ProductionAmountButtons
 import net.dodian.uber.game.content.buttons.crafting.SmeltingButtons
 import net.dodian.uber.game.content.buttons.crafting.SmeltingRecipeButtons
-import net.dodian.uber.game.content.buttons.crafting.SmeltingQuantityButtons
 import net.dodian.uber.game.content.buttons.crafting.TanningButtons
 import net.dodian.uber.game.content.buttons.dialogue.DialogueOptionButtons
 import net.dodian.uber.game.content.buttons.dialogue.NpcDialogueStateButtons
@@ -172,7 +171,6 @@ object ButtonContentRegistry {
             GlassCraftButtons,
             SmeltingButtons,
             SmeltingRecipeButtons,
-            SmeltingQuantityButtons,
             LeatherCraftButtons,
             TanningButtons,
             BowFletchingButtons,

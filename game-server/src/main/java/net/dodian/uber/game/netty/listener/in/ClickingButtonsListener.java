@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.ButtonClickEvent;
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,17 @@ public class ClickingButtonsListener implements PacketListener {
         }
         client.lastButtonActionIndex = actionIndex;
 
+        if (client.activeInterfaceId == 2400) {
+            logger.warn(
+                    "Smelting button click buttonId={} actionIndex={} size={} iface={} player={}",
+                    actionButton,
+                    actionIndex,
+                    packetSize,
+                    client.activeInterfaceId,
+                    client.getPlayerName()
+            );
+        }
+
         if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
             logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
         }
@@ -51,7 +63,8 @@ public class ClickingButtonsListener implements PacketListener {
         if (!(actionButton >= 9157 && actionButton <= 9194)) {
             client.actionButtonId = actionButton;
         }
-        if (actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
+        boolean preserveSmeltingSelection = client.activeInterfaceId == 2400 && SmithingDefinitions.isSmeltingInterfaceButton(actionButton);
+        if (!preserveSmeltingSelection && actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
             client.resetAction(false);
         }
 
@@ -61,6 +74,16 @@ public class ClickingButtonsListener implements PacketListener {
 
         if (ButtonClickDispatcher.tryHandle(client, actionButton)) {
             return;
+        }
+
+        if (client.activeInterfaceId == 2400) {
+            logger.warn(
+                    "Unhandled smelting button buttonId={} actionIndex={} iface={} player={}",
+                    actionButton,
+                    actionIndex,
+                    client.activeInterfaceId,
+                    client.getPlayerName()
+            );
         }
 
         if (getButtonTraceEnabled() && logger.isTraceEnabled()) {

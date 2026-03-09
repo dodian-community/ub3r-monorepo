@@ -168,6 +168,8 @@ public class BankX2Listener implements PacketListener {
                 client.checkItemUpdate();
                 client.send(new InventoryInterface(3824, 3822));
             } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(client.XinterfaceID)) { // smelting X
+                logger.warn("Smelting interface item click amount=X({}) interfaceId={} itemId={} slot={} player={}",
+                        enteredAmount, client.XinterfaceID, client.XremoveID, client.XremoveSlot, client.getPlayerName());
                 SmeltingInterfaceService.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
             } else if (client.XinterfaceID >= 4233 && client.XinterfaceID <= 4257) { // gold crafting X
                 client.startGoldCrafting(client.XinterfaceID, client.XremoveSlot, enteredAmount);

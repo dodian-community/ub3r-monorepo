@@ -86,6 +86,8 @@ public class BankAllListener implements PacketListener {
         } else if (interfaceId == 3415 && client.inTrade && client.canOffer) { // trade → inventory
             client.fromTrade(removeId, removeSlot, stack ? client.offeredItems.get(removeSlot).getAmount() : 28);
         } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) { // smelting all
+            logger.warn("Smelting interface item click amount=ALL interfaceId={} itemId={} slot={} player={}",
+                    interfaceId, resolvedItemId, removeSlot, client.getPlayerName());
             SmeltingInterfaceService.startFromInterfaceItem(client, resolvedItemId, Integer.MAX_VALUE);
         } else if (interfaceId >= 4233 && interfaceId <= 4257) { // gold crafting all
             client.startGoldCrafting(interfaceId, removeSlot, client.getInvAmt(2357));
