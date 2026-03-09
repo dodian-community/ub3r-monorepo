@@ -20,6 +20,22 @@ data class FurnaceButtonMapping(
     val amount: Int,
 )
 
+data class SmeltingButtonSet(
+    val displayName: String,
+    val barId: Int,
+    val oneButtonId: Int,
+    val fiveButtonId: Int,
+    val tenButtonId: Int,
+    val xButtonId: Int,
+) {
+    fun toMappings(): List<FurnaceButtonMapping> = listOf(
+        FurnaceButtonMapping(oneButtonId, barId, 1),
+        FurnaceButtonMapping(fiveButtonId, barId, 5),
+        FurnaceButtonMapping(tenButtonId, barId, 10),
+        FurnaceButtonMapping(xButtonId, barId, 0),
+    ).filter { it.buttonId > 0 }
+}
+
 data class SmithingProduct(
     val itemId: Int,
     val outputAmount: Int,
