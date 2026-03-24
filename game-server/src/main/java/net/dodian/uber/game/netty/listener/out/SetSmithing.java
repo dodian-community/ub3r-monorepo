@@ -1,6 +1,5 @@
 package net.dodian.uber.game.netty.listener.out;
 
-import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.*;
@@ -9,11 +8,6 @@ public class SetSmithing implements OutgoingPacket {
 
     private final int writeFrame;
     private final int[][] smithingItems;
-
-    public SetSmithing(int writeFrame) {
-        this.writeFrame = writeFrame;
-        this.smithingItems = Constants.SmithingItems;
-    }
 
     public SetSmithing(int writeFrame, int[][] smithingItems) {
         this.writeFrame = writeFrame;

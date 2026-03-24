@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.AttributeKey;
 import net.dodian.utilities.ISAACCipher;
-import net.dodian.uber.game.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                 int dec = (raw - cipher.getNextKey()) & 0xFF;
                 opcode = dec;
                 //logger.info("Raw byte {} decrypted opcode {}", raw, opcode);
-                if (opcode < 0 || opcode >= Constants.PACKET_SIZES.length) {
+                if (opcode < 0 || opcode > 0xFF) {
                     logger.debug("[Netty] Invalid packet opcode {} from {}", opcode, ctx.channel().remoteAddress());
                     ctx.close();
                     return;

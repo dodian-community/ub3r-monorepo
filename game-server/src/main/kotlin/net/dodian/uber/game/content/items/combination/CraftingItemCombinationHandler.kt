@@ -1,6 +1,5 @@
 package net.dodian.uber.game.content.items.combination
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -8,7 +7,7 @@ import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
-import net.dodian.utilities.Utils
+import net.dodian.uber.game.skills.crafting.CraftingDefinitions
 
 object CraftingItemCombinationHandler {
     @JvmStatic
@@ -33,8 +32,8 @@ object CraftingItemCombinationHandler {
             client.showInterface(2311)
             return true
         }
-        for (index in Constants.leathers.indices) {
-            if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == Constants.leathers[index] || otherItem == Constants.leathers[index])) {
+        for ((index, hide) in CraftingDefinitions.hideDefinitions.withIndex()) {
+            if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == hide.itemId || otherItem == hide.itemId)) {
                 net.dodian.uber.game.skills.crafting.CraftingService.openLeatherMenu(client, index)
                 client.cIndex = index
                 return true
@@ -42,29 +41,24 @@ object CraftingItemCombinationHandler {
         }
         if (itemUsed == 1755 || otherItem == 1755) {
             val gem = if (itemUsed == 1755) otherItem else itemUsed
-            var slot = -1
-            for (index in Utils.uncutGems.indices) {
-                if (Utils.uncutGems[index] == gem) {
-                    slot = index
-                }
-            }
-            if (slot >= 0) {
-                if (Utils.gemReq[slot] > client.getLevel(Skill.CRAFTING)) {
-                    client.send(SendMessage("You need a crafting level of ${Utils.gemReq[slot]} to cut this."))
+            val definition = CraftingDefinitions.findGemDefinition(gem)
+            if (definition != null) {
+                if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
+                    client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to cut this."))
                     return true
                 }
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.CRAFTING.id,
-                        productId = Utils.cutGems[slot],
+                        productId = definition.cutId,
                         amountPerCycle = 1,
                         primaryItemId = gem,
                         secondaryItemId = -1,
-                        experiencePerUnit = Utils.gemExp[slot] * 5,
-                        animationId = Utils.gemEmote[slot],
+                        experiencePerUnit = definition.experience * 5,
+                        animationId = definition.animationId,
                         tickDelay = 3,
-                        completionMessage = "You cut the ${client.GetItemName(Utils.cutGems[slot])}",
+                        completionMessage = "You cut the ${client.GetItemName(definition.cutId)}",
                     ),
                 )
                 return true
@@ -72,29 +66,24 @@ object CraftingItemCombinationHandler {
         }
         if (itemUsed == 1391 || otherItem == 1391) {
             val orb = if (itemUsed == 1391) otherItem else itemUsed
-            var slot = -1
-            for (index in Utils.orbs.indices) {
-                if (Utils.orbs[index] == orb) {
-                    slot = index
-                }
-            }
-            if (slot >= 0) {
-                if (Utils.orbLevel[slot] > client.getLevel(Skill.CRAFTING)) {
-                    client.send(SendMessage("You need a crafting level of ${Utils.orbLevel[slot]} to make this."))
+            val definition = CraftingDefinitions.findOrbDefinition(orb)
+            if (definition != null) {
+                if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
+                    client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to make this."))
                     return true
                 }
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.CRAFTING.id,
-                        productId = Utils.staves[slot],
+                        productId = definition.staffId,
                         amountPerCycle = 1,
                         primaryItemId = orb,
                         secondaryItemId = 1391,
-                        experiencePerUnit = Utils.orbXp[slot],
+                        experiencePerUnit = definition.experience,
                         animationId = -1,
                         tickDelay = 3,
-                        completionMessage = "You put the ${client.GetItemName(orb).lowercase()} onto the battlestaff and made a ${client.GetItemName(Utils.staves[slot]).lowercase()}.",
+                        completionMessage = "You put the ${client.GetItemName(orb).lowercase()} onto the battlestaff and made a ${client.GetItemName(definition.staffId).lowercase()}.",
                     ),
                 )
                 return true

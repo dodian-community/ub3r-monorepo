@@ -4,8 +4,10 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.agility.AgilityDefinitions
 import net.dodian.uber.game.skills.agility.AgilityCourseService
 import net.dodian.uber.game.skills.agility.DesertCarpetService
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -443,26 +445,26 @@ object DialogueOptionService {
         } else if (dialogueId == 536) {
             if (button == 1) {
                 val amount = c.getInvAmt(536).toLong() + c.getInvAmt(537) + c.getBankAmt(536)
-                var amt = 5
+                    var amt = AgilityDefinitions.KBD_ENTRANCE_BONE_AMOUNT
                 if (amount >= 5) {
                     while (amt > 0) {
                         for (slot in 0 until 28) {
                             if (amt <= 0) break
-                            if (c.playerItems[slot] - 1 == 536) {
-                                c.deleteItem(536, slot, 1)
+                            if (c.playerItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_BONE_ID) {
+                                c.deleteItem(AgilityDefinitions.KBD_ENTRANCE_BONE_ID, slot, 1)
                                 amt--
                             }
                         }
                         for (slot in 0 until 28) {
-                            if (c.playerItems[slot] - 1 == 537) {
+                            if (c.playerItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_NOTED_BONE_ID) {
                                 val toDelete = min(c.playerItemsN[slot], amt)
-                                c.deleteItem(537, slot, toDelete)
+                                c.deleteItem(AgilityDefinitions.KBD_ENTRANCE_NOTED_BONE_ID, slot, toDelete)
                                 amt -= toDelete
                                 break
                             }
                         }
                         for (slot in c.bankItems.indices) {
-                            if (c.bankItems[slot] - 1 == 536) {
+                            if (c.bankItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_BONE_ID) {
                                 c.bankItemsN[slot] -= amt
                                 break
                             }
@@ -503,50 +505,56 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
                 resetDialogue()
-                val amount = LongArray(Utils.pot_4_dose.size)
-                val vials = LongArray(Utils.pot_4_dose.size)
-                for (i in Utils.pot_4_dose.indices) {
-                    if (c.GetNotedItem(Utils.pot_4_dose[i]) > 0) {
-                        val invAmt = c.getInvAmt(c.GetNotedItem(Utils.pot_4_dose[i]))
+                val doseDefinitions = HerbloreDefinitions.potionDoseDefinitions
+                val amount = LongArray(doseDefinitions.size)
+                val vials = LongArray(doseDefinitions.size)
+                for (i in doseDefinitions.indices) {
+                    val notedId = c.GetNotedItem(doseDefinitions[i].fourDoseId)
+                    if (notedId > 0) {
+                        val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 4L
                         vials[i] += invAmt.toLong()
-                        c.deleteItem(c.GetNotedItem(Utils.pot_4_dose[i]), invAmt)
+                        c.deleteItem(notedId, invAmt)
                     }
                 }
-                for (i in Utils.pot_3_dose.indices) {
-                    if (c.GetNotedItem(Utils.pot_3_dose[i]) > 0) {
-                        val invAmt = c.getInvAmt(c.GetNotedItem(Utils.pot_3_dose[i]))
+                for (i in doseDefinitions.indices) {
+                    val notedId = c.GetNotedItem(doseDefinitions[i].threeDoseId)
+                    if (notedId > 0) {
+                        val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 3L
                         vials[i] += invAmt.toLong()
-                        c.deleteItem(c.GetNotedItem(Utils.pot_3_dose[i]), invAmt)
+                        c.deleteItem(notedId, invAmt)
                     }
                 }
-                for (i in Utils.pot_2_dose.indices) {
-                    if (c.GetNotedItem(Utils.pot_2_dose[i]) > 0) {
-                        val invAmt = c.getInvAmt(c.GetNotedItem(Utils.pot_2_dose[i]))
+                for (i in doseDefinitions.indices) {
+                    val notedId = c.GetNotedItem(doseDefinitions[i].twoDoseId)
+                    if (notedId > 0) {
+                        val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 2L
                         vials[i] += invAmt.toLong()
-                        c.deleteItem(c.GetNotedItem(Utils.pot_2_dose[i]), invAmt)
+                        c.deleteItem(notedId, invAmt)
                     }
                 }
-                for (i in Utils.pot_1_dose.indices) {
-                    if (c.GetNotedItem(Utils.pot_1_dose[i]) > 0) {
-                        val invAmt = c.getInvAmt(c.GetNotedItem(Utils.pot_1_dose[i]))
+                for (i in doseDefinitions.indices) {
+                    val notedId = c.GetNotedItem(doseDefinitions[i].oneDoseId)
+                    if (notedId > 0) {
+                        val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt.toLong()
                         vials[i] += invAmt.toLong()
-                        c.deleteItem(c.GetNotedItem(Utils.pot_1_dose[i]), invAmt)
+                        c.deleteItem(notedId, invAmt)
                     }
                 }
 
                 for (i in amount.indices) {
-                    val id = if (button == 1) Utils.pot_4_dose[i] else if (button == 2) Utils.pot_3_dose[i] else if (button == 3) Utils.pot_2_dose[i] else Utils.pot_1_dose[i]
+                    val definition = doseDefinitions[i]
+                    val id = if (button == 1) definition.fourDoseId else if (button == 2) definition.threeDoseId else if (button == 3) definition.twoDoseId else definition.oneDoseId
                     val divide = if (button == 1) 4 else if (button == 2) 3 else if (button == 3) 2 else 1
                     if (c.GetNotedItem(id) > 0) {
                         val invAmt = (amount[i] / divide).toInt()
                         var leftOver = (amount[i] % divide).toInt()
                         val invEmpty = (vials[i] - invAmt - if (leftOver > 0) 1 else 0).toInt()
                         val emptyAmount = c.getInvAmt(230)
-                        leftOver = if (leftOver == 3) Utils.pot_3_dose[i] else if (leftOver == 2) Utils.pot_2_dose[i] else if (leftOver == 1) Utils.pot_1_dose[i] else -1
+                        leftOver = if (leftOver == 3) definition.threeDoseId else if (leftOver == 2) definition.twoDoseId else if (leftOver == 1) definition.oneDoseId else -1
 
                         if (invAmt > 0 && !c.addItem(c.GetNotedItem(id), invAmt)) {
                             Ground.addFloorItem(c, c.GetNotedItem(id), invAmt)

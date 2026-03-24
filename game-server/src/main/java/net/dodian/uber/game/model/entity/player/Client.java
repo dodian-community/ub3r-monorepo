@@ -2643,10 +2643,12 @@ public class Client extends Player implements Runnable {
         boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
         double bonus = 1 + level + (harpoon ? 0.2 : 0.0);
         int fishIndex = getFishIndex();
-        if (fishIndex < 0 || fishIndex >= Utils.fishTime.length) {
+        net.dodian.uber.game.skills.fishing.FishingSpotDefinition spot =
+                net.dodian.uber.game.skills.fishing.FishingDefinitions.byIndex(fishIndex);
+        if (spot == null) {
             return 0L;
         }
-        double timer = Utils.fishTime[fishIndex];
+        double timer = spot.getBaseDelayMs();
         boolean chance = Misc.chance(8) == 1;
         if (chance && harpoon) //Dragon harpoon?!
             timer -= 600;
@@ -5083,11 +5085,9 @@ public class Client extends Player implements Runnable {
 
     public boolean bowWeapon(int weaponId) {
         boolean bow = false;
-        for (int i = 0; i < Constants.shortbow.length; i++)
-            if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
-                bow = true;
-                break;
-            }
+        if (net.dodian.uber.game.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
+            bow = true;
+        }
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
                 weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
             bow = true;

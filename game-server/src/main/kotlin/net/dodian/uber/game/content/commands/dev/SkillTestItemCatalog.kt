@@ -1,14 +1,17 @@
 package net.dodian.uber.game.content.commands.dev
 
 import java.util.LinkedHashSet
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.skills.cooking.CookingDefinitions
+import net.dodian.uber.game.skills.crafting.CraftingDefinitions
 import net.dodian.uber.game.skills.farming.FarmingDefinitions
+import net.dodian.uber.game.skills.fishing.FishingDefinitions
+import net.dodian.uber.game.skills.fletching.FletchingDefinitions
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 import net.dodian.uber.game.skills.mining.MiningDefinitions
 import net.dodian.uber.game.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions
 import net.dodian.uber.game.skills.thieving.ThievingService
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingDefinitions
-import net.dodian.utilities.Utils
 
 object SkillTestItemCatalog {
     private val categories: LinkedHashMap<String, List<Int>> =
@@ -95,55 +98,73 @@ object SkillTestItemCatalog {
     private fun fletchingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 946, 314, 52, 1777, 1779)
-        Constants.logs.forEach { addIfValid(items, it) }
-        Constants.shortbows.forEach { addIfValid(items, it) }
-        Constants.shortbow.forEach { addIfValid(items, it) }
-        Constants.longbows.forEach { addIfValid(items, it) }
-        Constants.longbow.forEach { addIfValid(items, it) }
-        Constants.heads.forEach { addIfValid(items, it) }
-        Constants.arrows.forEach { addIfValid(items, it) }
-        Constants.darttip.forEach { addIfValid(items, it) }
-        Constants.darts.forEach { addIfValid(items, it) }
+        FletchingDefinitions.bowLogs.forEach {
+            addIfValid(items, it.logItemId)
+            addIfValid(items, it.unstrungShortbowId)
+            addIfValid(items, it.shortbowId)
+            addIfValid(items, it.unstrungLongbowId)
+            addIfValid(items, it.longbowId)
+        }
+        FletchingDefinitions.arrowRecipes.forEach {
+            addIfValid(items, it.headId)
+            addIfValid(items, it.arrowId)
+        }
+        FletchingDefinitions.dartRecipes.forEach {
+            addIfValid(items, it.tipId)
+            addIfValid(items, it.dartId)
+        }
         return items.toList()
     }
 
     private fun fishingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        Utils.fishTool.forEach { addIfValid(items, it) }
-        Utils.fishId.forEach { addIfValid(items, it) }
-        Utils.cookIds.forEach { addIfValid(items, it) }
-        Utils.cookedIds.forEach { addIfValid(items, it) }
-        Utils.burnId.forEach { addIfValid(items, it) }
+        FishingDefinitions.fishingSpots.forEach {
+            addIfValid(items, it.toolItemId)
+            addIfValid(items, it.fishItemId)
+        }
+        CookingDefinitions.recipes.forEach {
+            addIfValid(items, it.rawItemId)
+            addIfValid(items, it.cookedItemId)
+            addIfValid(items, it.burntItemId)
+        }
         addAll(items, 314, 21028)
         return items.toList()
     }
 
     private fun cookingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        Utils.cookIds.forEach { addIfValid(items, it) }
-        Utils.cookedIds.forEach { addIfValid(items, it) }
-        Utils.burnId.forEach { addIfValid(items, it) }
+        CookingDefinitions.recipes.forEach {
+            addIfValid(items, it.rawItemId)
+            addIfValid(items, it.cookedItemId)
+            addIfValid(items, it.burntItemId)
+        }
         return items.toList()
     }
 
     private fun firemakingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addIfValid(items, 590)
-        Utils.woodcuttingLogs.forEach { addIfValid(items, it) }
+        WoodcuttingDefinitions.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
         return items.toList()
     }
 
     private fun craftingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 1733, 1734, 1755, 1592, 1595, 1597, 11065, 2357, 1783, 1781, 401, 1775, 1779, 1777, 1712)
-        Utils.uncutGems.forEach { addIfValid(items, it) }
-        Utils.cutGems.forEach { addIfValid(items, it) }
-        Utils.orbs.forEach { addIfValid(items, it) }
-        Utils.staves.forEach { addIfValid(items, it) }
-        Constants.leathers.forEach { addIfValid(items, it) }
-        Constants.gloves.forEach { addIfValid(items, it) }
-        Constants.legs.forEach { addIfValid(items, it) }
-        Constants.chests.forEach { addIfValid(items, it) }
+        CraftingDefinitions.gemDefinitions.forEach {
+            addIfValid(items, it.uncutId)
+            addIfValid(items, it.cutId)
+        }
+        CraftingDefinitions.orbDefinitions.forEach {
+            addIfValid(items, it.orbId)
+            addIfValid(items, it.staffId)
+        }
+        CraftingDefinitions.hideDefinitions.forEach {
+            addIfValid(items, it.itemId)
+            addIfValid(items, it.glovesId)
+            addIfValid(items, it.chapsId)
+            addIfValid(items, it.bodyId)
+        }
         addAll(
             items,
             1741, 1745, 1747, 1749, 1751, 2505, 2507, 2509,
@@ -160,15 +181,21 @@ object SkillTestItemCatalog {
     private fun herbloreItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 227, 228, 229, 233)
-        Utils.grimy_herbs.forEach { addIfValid(items, it) }
-        Utils.herbs.forEach { addIfValid(items, it) }
-        Utils.herb_unf.forEach { addIfValid(items, it) }
-        Utils.secondary.forEach { addIfValid(items, it) }
-        Utils.finished.forEach { addIfValid(items, it) }
-        Utils.pot_1_dose.forEach { addIfValid(items, it) }
-        Utils.pot_2_dose.forEach { addIfValid(items, it) }
-        Utils.pot_3_dose.forEach { addIfValid(items, it) }
-        Utils.pot_4_dose.forEach { addIfValid(items, it) }
+        HerbloreDefinitions.herbDefinitions.forEach {
+            addIfValid(items, it.grimyId)
+            addIfValid(items, it.cleanId)
+            addIfValid(items, it.unfinishedPotionId)
+        }
+        HerbloreDefinitions.potionRecipes.forEach {
+            addIfValid(items, it.secondaryId)
+            addIfValid(items, it.finishedPotionId)
+        }
+        HerbloreDefinitions.potionDoseDefinitions.forEach {
+            addIfValid(items, it.oneDoseId)
+            addIfValid(items, it.twoDoseId)
+            addIfValid(items, it.threeDoseId)
+            addIfValid(items, it.fourDoseId)
+        }
         addAll(items, 6045, 245, 3049, 3051, 3000, 3002, 3004, 12695, 12697, 12699, 12701, 11730, 11731, 11732, 11733)
         return items.toList()
     }
@@ -228,7 +255,7 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        net.dodian.uber.game.skills.thieving.ThievingDefinition.values().forEach { data ->
+        net.dodian.uber.game.skills.thieving.ThievingDefinitions.all.forEach { data ->
             data.item.forEach { addIfValid(items, it) }
         }
         return items.toList()

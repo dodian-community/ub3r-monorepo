@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.npc.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.skills.cooking.CookingInputService;
 import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
-import net.dodian.uber.game.skills.herblore.HerbloreBatchService;
+import net.dodian.uber.game.skills.herblore.HerbloreService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -50,7 +50,7 @@ public class BankX2Listener implements PacketListener {
                 Server.slots.rollDice(client, enteredAmount);
                 return;
             }
-            if (HerbloreBatchService.handleEnteredAmount(client, enteredAmount)) {
+            if (HerbloreService.handleEnteredAmount(client, enteredAmount)) {
                 return;
             }
             if (client.XinterfaceID == 3838) { // Claim battlestaffs

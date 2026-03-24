@@ -40,7 +40,7 @@ class WerewolfCourseService(private val c: Client) {
         if (c.UsingAgility) {
             return
         }
-        if (!requireAgilityLevel(60)) {
+        if (!requireAgilityLevel(AgilityDefinitions.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x == 3538 && pos.y == 9875 && c.position.x == 3538 && c.position.y == 9873) {
@@ -134,7 +134,7 @@ class WerewolfCourseService(private val c: Client) {
         if (c.UsingAgility) {
             return
         }
-        if (!requireAgilityLevel(60)) {
+        if (!requireAgilityLevel(AgilityDefinitions.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x in 3537..3543 && pos.y == 9893 && c.position.x in 3537..3543 && c.position.y == 9892) {
@@ -185,7 +185,7 @@ class WerewolfCourseService(private val c: Client) {
         if (c.UsingAgility) {
             return
         }
-        if (!requireAgilityLevel(60)) {
+        if (!requireAgilityLevel(AgilityDefinitions.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if ((pos.x == 3538 || pos.x == 3541 || pos.x == 3544) && pos.y == 9905 && c.position.x == pos.x && c.position.y == pos.y - 1) {

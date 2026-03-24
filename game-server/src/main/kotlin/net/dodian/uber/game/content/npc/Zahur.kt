@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.party.RewardItem
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.utilities.Utils
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 
 internal object Zahur {
     // Stats: 4753: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -94,8 +94,8 @@ internal object HerbloreNpcDialogue {
     fun openHerbCleaner(client: Client, npcId: Int) {
         client.herbMaking = 0
         client.herbOptions.clear()
-        for (index in Utils.grimy_herbs.indices) {
-            val notedGrimy = client.GetNotedItem(Utils.grimy_herbs[index])
+        for (definition in HerbloreDefinitions.herbDefinitions) {
+            val notedGrimy = client.GetNotedItem(definition.grimyId)
             if (client.playerHasItem(notedGrimy)) {
                 client.herbOptions.add(RewardItem(notedGrimy, 0))
             }
@@ -111,10 +111,10 @@ internal object HerbloreNpcDialogue {
     fun openUnfinishedPotionMaker(client: Client, npcId: Int) {
         client.herbMaking = 0
         client.herbOptions.clear()
-        for (index in Utils.herbs.indices) {
-            val notedHerb = client.GetNotedItem(Utils.herbs[index])
+        for (definition in HerbloreDefinitions.herbDefinitions) {
+            val notedHerb = client.GetNotedItem(definition.cleanId)
             if (client.playerHasItem(notedHerb)) {
-                client.herbOptions.add(RewardItem(client.GetNotedItem(Utils.herb_unf[index]), 0))
+                client.herbOptions.add(RewardItem(client.GetNotedItem(definition.unfinishedPotionId), 0))
             }
         }
         if (client.herbOptions.isEmpty()) {
@@ -138,10 +138,10 @@ internal object HerbloreNpcDialogue {
     }
 
     private fun decantPotions(client: Client, npcId: Int, dose: Int) {
-        val potionAmount = LongArray(Utils.pot_4_dose.size)
-        val vialAmount = LongArray(Utils.pot_4_dose.size)
+        val potionAmount = LongArray(HerbloreDefinitions.potionDoseDefinitions.size)
+        val vialAmount = LongArray(HerbloreDefinitions.potionDoseDefinitions.size)
 
-        fun collect(source: IntArray, sourceDose: Int) {
+        fun collect(source: List<Int>, sourceDose: Int) {
             for (index in source.indices) {
                 val notedPotion = client.GetNotedItem(source[index])
                 if (notedPotion > 0) {
@@ -153,17 +153,18 @@ internal object HerbloreNpcDialogue {
             }
         }
 
-        collect(Utils.pot_4_dose, 4)
-        collect(Utils.pot_3_dose, 3)
-        collect(Utils.pot_2_dose, 2)
-        collect(Utils.pot_1_dose, 1)
+        collect(HerbloreDefinitions.potionDoseDefinitions.map { it.fourDoseId }, 4)
+        collect(HerbloreDefinitions.potionDoseDefinitions.map { it.threeDoseId }, 3)
+        collect(HerbloreDefinitions.potionDoseDefinitions.map { it.twoDoseId }, 2)
+        collect(HerbloreDefinitions.potionDoseDefinitions.map { it.oneDoseId }, 1)
 
         for (index in potionAmount.indices) {
+            val definition = HerbloreDefinitions.potionDoseDefinitions[index]
             val targetPotion = when (dose) {
-                4 -> Utils.pot_4_dose[index]
-                3 -> Utils.pot_3_dose[index]
-                2 -> Utils.pot_2_dose[index]
-                else -> Utils.pot_1_dose[index]
+                4 -> definition.fourDoseId
+                3 -> definition.threeDoseId
+                2 -> definition.twoDoseId
+                else -> definition.oneDoseId
             }
             val notedTargetPotion = client.GetNotedItem(targetPotion)
             if (notedTargetPotion <= 0) {
@@ -171,13 +172,13 @@ internal object HerbloreNpcDialogue {
             }
 
             val producedAmount = (potionAmount[index] / dose).toInt()
-            var leftOverDose = (potionAmount[index] % dose).toInt()
+            val leftOverDose = (potionAmount[index] % dose).toInt()
             val emptyVials = (vialAmount[index] - producedAmount - if (leftOverDose > 0) 1 else 0).toInt()
             val currentEmptyVials = client.getInvAmt(230)
             val leftOverPotion = when (leftOverDose) {
-                3 -> Utils.pot_3_dose[index]
-                2 -> Utils.pot_2_dose[index]
-                1 -> Utils.pot_1_dose[index]
+                3 -> definition.threeDoseId
+                2 -> definition.twoDoseId
+                1 -> definition.oneDoseId
                 else -> -1
             }
 
@@ -201,17 +202,16 @@ internal object HerbloreNpcDialogue {
                 client.deleteItem(230, emptyVials * -1)
             }
 
-            leftOverDose = leftOverPotion
-            if (leftOverDose > 0 && !client.addItem(leftOverDose, 1)) {
-                Ground.addFloorItem(client, leftOverDose, 1)
+            if (leftOverPotion > 0 && !client.addItem(leftOverPotion, 1)) {
+                Ground.addFloorItem(client, leftOverPotion, 1)
                 ItemLog.playerDrop(
                     client,
-                    leftOverDose,
+                    leftOverPotion,
                     1,
                     client.position.copy(),
-                    "Decant dropped ${client.GetItemName(leftOverDose).lowercase()}",
+                    "Decant dropped ${client.GetItemName(leftOverPotion).lowercase()}",
                 )
-                client.send(SendMessage("<col=FF0000>You dropped the ${client.GetItemName(leftOverDose).lowercase()} to the floor!"))
+                client.send(SendMessage("<col=FF0000>You dropped the ${client.GetItemName(leftOverPotion).lowercase()} to the floor!"))
             }
         }
 

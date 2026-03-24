@@ -10,11 +10,11 @@ import net.dodian.uber.game.skills.fletching.FletchingService
 import net.dodian.uber.game.skills.crafting.CraftingService
 import net.dodian.uber.game.skills.crafting.CraftingMode
 import net.dodian.uber.game.skills.cooking.CookingService
+import net.dodian.uber.game.skills.fishing.FishingDefinitions
 import net.dodian.uber.game.skills.fishing.FishingService
 import net.dodian.uber.game.skills.prayer.PrayerInteractionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.skills.core.SkillingInterruptService
-import net.dodian.utilities.Utils
 
 object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
@@ -160,8 +160,9 @@ object SkillingActionService {
                 val cycle = currentCycle()
                 if (cycle >= nextAnimationCycle) {
                     val fishIndex = player.fishingState?.spotIndex ?: return@start
-                    if (fishIndex >= 0 && fishIndex < Utils.fishAnim.size) {
-                        player.requestAnim(Utils.fishAnim[fishIndex], 0)
+                    val spot = FishingDefinitions.byIndex(fishIndex)
+                    if (spot != null) {
+                        player.requestAnim(spot.animationId, 0)
                     }
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }

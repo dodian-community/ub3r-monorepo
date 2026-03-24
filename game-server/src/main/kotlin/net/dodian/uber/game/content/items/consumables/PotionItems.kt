@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.utilities.Utils
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 
 object PotionItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(
@@ -157,12 +157,12 @@ object PotionItems : ItemContent {
     }
 
     private fun nextDose(itemId: Int): Int {
-        for (index in Utils.pot_4_dose.indices) {
+        for (definition in HerbloreDefinitions.potionDoseDefinitions) {
             when (itemId) {
-                Utils.pot_4_dose[index] -> return Utils.pot_3_dose[index]
-                Utils.pot_3_dose[index] -> return Utils.pot_2_dose[index]
-                Utils.pot_2_dose[index] -> return Utils.pot_1_dose[index]
-                Utils.pot_1_dose[index] -> return 229
+                definition.fourDoseId -> return definition.threeDoseId
+                definition.threeDoseId -> return definition.twoDoseId
+                definition.twoDoseId -> return definition.oneDoseId
+                definition.oneDoseId -> return 229
             }
         }
         return -1

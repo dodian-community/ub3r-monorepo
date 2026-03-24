@@ -1,6 +1,5 @@
 package net.dodian.uber.game.skills.crafting
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -84,13 +83,14 @@ object CraftingService {
 
     @JvmStatic
     fun openLeatherMenu(client: Client, hideIndex: Int) {
+        val hide = CraftingDefinitions.hideDefinition(hideIndex) ?: return
         client.send(SendString("What would you like to make?", 8898))
         client.send(SendString("Vambraces", 8889))
         client.send(SendString("Chaps", 8893))
         client.send(SendString("Body", 8897))
-        client.sendFrame246(8883, 250, Constants.gloves[hideIndex])
-        client.sendFrame246(8884, 250, Constants.legs[hideIndex])
-        client.sendFrame246(8885, 250, Constants.chests[hideIndex])
+        client.sendFrame246(8883, 250, hide.glovesId)
+        client.sendFrame246(8884, 250, hide.chapsId)
+        client.sendFrame246(8885, 250, hide.bodyId)
         client.sendFrame164(8880)
     }
 
@@ -141,21 +141,25 @@ object CraftingService {
                 break
             }
         }
-        val selectedItemId = Constants.leathers[client.cIndex]
+        val hide = CraftingDefinitions.hideDefinition(client.cIndex) ?: run {
+            client.send(SendMessage("Can't make this??"))
+            return
+        }
+        val selectedItemId = hide.itemId
         val amount = if (amounts[amountIndex] == 27) client.getInvAmt(selectedItemId) else amounts[amountIndex]
-        val experience = Constants.leatherExp[client.cIndex] * 8
+        val experience = hide.experience * 8
 
         val required: Int
         val productId: Int
         if (productGroup == 0) {
-            required = Constants.gloveLevels[client.cIndex]
-            productId = Constants.gloves[client.cIndex]
+            required = hide.glovesLevel
+            productId = hide.glovesId
         } else if (productGroup == 1) {
-            required = Constants.legLevels[client.cIndex]
-            productId = Constants.legs[client.cIndex]
+            required = hide.chapsLevel
+            productId = hide.chapsId
         } else {
-            required = Constants.chestLevels[client.cIndex]
-            productId = Constants.chests[client.cIndex]
+            required = hide.bodyLevel
+            productId = hide.bodyId
         }
 
         if (required != -1 && client.getLevel(Skill.CRAFTING) >= required) {

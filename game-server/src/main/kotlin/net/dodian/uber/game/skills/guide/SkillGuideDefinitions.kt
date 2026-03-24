@@ -3,6 +3,9 @@ package net.dodian.uber.game.skills.guide
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.fletching.FletchingDefinitions
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.skills.smithing.SmithingFrameDefinitions
 import net.dodian.utilities.Utils
 
 object SkillGuideDefinitions {
@@ -281,20 +284,20 @@ object SkillGuideDefinitions {
                         levels = arrayOf("1", "15", "30", "40", "55", "70", "85"),
                         items = intArrayOf(2349, 2351, 2353, 2357, 2359, 2361, 2363),
                     )
-                    child > 0 && child <= Constants.smithing_frame.size -> {
-                        val frame = Constants.smithing_frame[child - 1]
+                    child > 0 && child <= SmithingFrameDefinitions.smithingFrame.size -> {
+                        val frame = SmithingFrameDefinitions.smithingFrame[child - 1]
                         SkillGuidePage(
                             frame.map { definition ->
                                 SkillGuideEntry(
-                                    text = client.GetItemName(definition[0]),
-                                    levelText = definition[2].toString(),
-                                    itemId = definition[0],
-                                    itemAmount = definition[1],
+                                    text = client.GetItemName(definition.itemId),
+                                    levelText = definition.levelRequired.toString(),
+                                    itemId = definition.itemId,
+                                    itemAmount = definition.outputAmount,
                                 )
                             },
                         )
                     }
-                    child == Constants.smithing_frame.size + 1 -> page(arrayOf("Rockshell armour", "Dragonfire shield", "Skillcape$PREMIUM"), arrayOf("60", "90", "99"), intArrayOf(6129, 11284, 9795))
+                    child == SmithingFrameDefinitions.smithingFrame.size + 1 -> page(arrayOf("Rockshell armour", "Dragonfire shield", "Skillcape$PREMIUM"), arrayOf("60", "90", "99"), intArrayOf(6129, 11284, 9795))
                     else -> emptyPage()
                 }
             }
@@ -393,11 +396,11 @@ object SkillGuideDefinitions {
                         items = intArrayOf(121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454, 12695, 11730),
                     )
                     1 -> SkillGuidePage(
-                        Utils.grimy_herbs.indices.map { index ->
+                        HerbloreDefinitions.herbDefinitions.map { definition ->
                             SkillGuideEntry(
-                                text = client.GetItemName(if (Utils.grimy_herbs[index] != 3051 && Utils.grimy_herbs[index] != 3049) Utils.grimy_herbs[index] + 50 else Utils.grimy_herbs[index] - 51) + if (index > 2) " $PREMIUM" else "",
-                                levelText = Utils.grimy_herbs_lvl[index].toString(),
-                                itemId = Utils.grimy_herbs[index],
+                                text = client.GetItemName(definition.cleanId) + if (definition.premiumOnly) " $PREMIUM" else "",
+                                levelText = definition.requiredLevel.toString(),
+                                itemId = definition.grimyId,
                             )
                         },
                     )
@@ -415,7 +418,19 @@ object SkillGuideDefinitions {
                 page(
                     names = arrayOf("Arrow Shafts", "Oak Shortbow", "Oak Longbow", "Willow Shortbow", "Willow Longbow", "Maple Shortbow", "Maple Longbow", "Yew Shortbow", "Yew Longbow", "Magic Shortbow", "Magic Longbow"),
                     levels = arrayOf("1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"),
-                    items = intArrayOf(52, 54, 56, 60, 58, 64, 62, 68, 66, 72, 70),
+                    items = intArrayOf(
+                        52,
+                        FletchingDefinitions.bowLogs[0].unstrungShortbowId,
+                        FletchingDefinitions.bowLogs[0].unstrungLongbowId,
+                        FletchingDefinitions.bowLogs[1].unstrungShortbowId,
+                        FletchingDefinitions.bowLogs[1].unstrungLongbowId,
+                        FletchingDefinitions.bowLogs[2].unstrungShortbowId,
+                        FletchingDefinitions.bowLogs[2].unstrungLongbowId,
+                        FletchingDefinitions.bowLogs[3].unstrungShortbowId,
+                        FletchingDefinitions.bowLogs[3].unstrungLongbowId,
+                        FletchingDefinitions.bowLogs[4].unstrungShortbowId,
+                        FletchingDefinitions.bowLogs[4].unstrungLongbowId,
+                    ),
                 )
             }
         }

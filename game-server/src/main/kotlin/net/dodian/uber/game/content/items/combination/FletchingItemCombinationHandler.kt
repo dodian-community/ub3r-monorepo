@@ -1,11 +1,11 @@
 package net.dodian.uber.game.content.items.combination
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.skills.fletching.FletchingDefinitions
 import net.dodian.uber.game.runtime.action.SkillingActionService
 import net.dodian.uber.game.skills.fletching.FletchingService
 
@@ -33,14 +33,14 @@ object FletchingItemCombinationHandler {
             )
             return true
         }
-        for (index in Constants.darttip.indices) {
-            if ((itemUsed == Constants.darttip[index] || otherItem == Constants.darttip[index]) && (itemUsed == 314 || otherItem == 314)) {
+        for (recipe in FletchingDefinitions.dartRecipes) {
+            if ((itemUsed == recipe.tipId || otherItem == recipe.tipId) && (itemUsed == 314 || otherItem == 314)) {
                 client.resetAction()
-                if (client.getLevel(Skill.FLETCHING) < Constants.darttip_required[index]) {
-                    client.send(SendMessage("You need level ${Constants.darttip_required[index]} fletcing to make ${client.GetItemName(Constants.darts[index]).lowercase()}"))
+                if (client.getLevel(Skill.FLETCHING) < recipe.requiredLevel) {
+                    client.send(SendMessage("You need level ${recipe.requiredLevel} fletcing to make ${client.GetItemName(recipe.dartId).lowercase()}"))
                     return true
                 }
-                if (!client.playerHasItem(Constants.darts[index]) && client.freeSlots() < 1) {
+                if (!client.playerHasItem(recipe.dartId) && client.freeSlots() < 1) {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
@@ -48,11 +48,11 @@ object FletchingItemCombinationHandler {
                     client,
                     ProductionRequest(
                         skillId = Skill.FLETCHING.id,
-                        productId = Constants.darts[index],
+                        productId = recipe.dartId,
                         amountPerCycle = 10,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
-                        experiencePerUnit = Constants.darttip_xp[index] / 2,
+                        experiencePerUnit = recipe.experience / 2,
                         animationId = -1,
                         tickDelay = 3,
                     ),
@@ -60,14 +60,14 @@ object FletchingItemCombinationHandler {
                 return true
             }
         }
-        for (index in Constants.heads.indices) {
-            if ((itemUsed == Constants.heads[index] || otherItem == Constants.heads[index]) && (itemUsed == 53 || otherItem == 53)) {
+        for (recipe in FletchingDefinitions.arrowRecipes) {
+            if ((itemUsed == recipe.headId || otherItem == recipe.headId) && (itemUsed == 53 || otherItem == 53)) {
                 client.resetAction()
-                if (client.getLevel(Skill.FLETCHING) < Constants.required[index]) {
-                    client.send(SendMessage("Requires level ${Constants.required[index]} fletching"))
+                if (client.getLevel(Skill.FLETCHING) < recipe.requiredLevel) {
+                    client.send(SendMessage("Requires level ${recipe.requiredLevel} fletching"))
                     return true
                 }
-                if (!client.playerHasItem(Constants.arrows[index]) && client.freeSlots() < 1) {
+                if (!client.playerHasItem(recipe.arrowId) && client.freeSlots() < 1) {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
@@ -75,68 +75,68 @@ object FletchingItemCombinationHandler {
                     client,
                     ProductionRequest(
                         skillId = Skill.FLETCHING.id,
-                        productId = Constants.arrows[index],
+                        productId = recipe.arrowId,
                         amountPerCycle = 15,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
-                        experiencePerUnit = Constants.xp[index],
+                        experiencePerUnit = recipe.experience,
                         animationId = -1,
                         tickDelay = 3,
-                        completionMessage = "You fletched some ${client.GetItemName(Constants.arrows[index]).lowercase()}.",
+                        completionMessage = "You fletched some ${client.GetItemName(recipe.arrowId).lowercase()}.",
                     ),
                 )
                 return true
             }
         }
-        for (index in Constants.logs.indices) {
-            if ((itemUsed == Constants.logs[index] || otherItem == Constants.logs[index]) && knife) {
+        FletchingDefinitions.bowLogs.forEachIndexed { index, bowLog ->
+            if ((itemUsed == bowLog.logItemId || otherItem == bowLog.logItemId) && knife) {
                 FletchingService.openBowSelection(client, index)
                 return true
             }
         }
-        for (index in Constants.shortbow.indices) {
-            if ((itemUsed == Constants.shortbows[index] || otherItem == Constants.shortbows[index]) && (itemUsed == 1777 || otherItem == 1777)) {
+        for (bowLog in FletchingDefinitions.bowLogs) {
+            if ((itemUsed == bowLog.unstrungShortbowId || otherItem == bowLog.unstrungShortbowId) && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction()
-                if (client.getLevel(Skill.FLETCHING) < Constants.shortreq[index]) {
-                    client.send(SendMessage("Requires level ${Constants.shortreq[index]} fletching"))
+                if (client.getLevel(Skill.FLETCHING) < bowLog.shortLevelRequired) {
+                    client.send(SendMessage("Requires level ${bowLog.shortLevelRequired} fletching"))
                     return true
                 }
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.FLETCHING.id,
-                        productId = Constants.shortbow[index],
+                        productId = bowLog.shortbowId,
                         amountPerCycle = 1,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
-                        experiencePerUnit = Constants.shortexp[index],
-                        animationId = 6679 + index,
+                        experiencePerUnit = bowLog.shortExperience,
+                        animationId = bowLog.shortStringAnimationId,
                         tickDelay = 2,
-                        completionMessage = "You string your ${client.GetItemName(Constants.shortbows[index]).lowercase()} into a ${client.GetItemName(Constants.shortbow[index]).lowercase()}.",
+                        completionMessage = "You string your ${client.GetItemName(bowLog.unstrungShortbowId).lowercase()} into a ${client.GetItemName(bowLog.shortbowId).lowercase()}.",
                     ),
                 )
                 return true
             }
         }
-        for (index in Constants.longbows.indices) {
-            if ((itemUsed == Constants.longbows[index] || otherItem == Constants.longbows[index]) && (itemUsed == 1777 || otherItem == 1777)) {
+        for (bowLog in FletchingDefinitions.bowLogs) {
+            if ((itemUsed == bowLog.unstrungLongbowId || otherItem == bowLog.unstrungLongbowId) && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction()
-                if (client.getLevel(Skill.FLETCHING) < Constants.longreq[index]) {
-                    client.send(SendMessage("Requires level ${Constants.longreq[index]} fletching"))
+                if (client.getLevel(Skill.FLETCHING) < bowLog.longLevelRequired) {
+                    client.send(SendMessage("Requires level ${bowLog.longLevelRequired} fletching"))
                     return true
                 }
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.FLETCHING.id,
-                        productId = Constants.longbow[index],
+                        productId = bowLog.longbowId,
                         amountPerCycle = 1,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
-                        experiencePerUnit = Constants.longexp[index],
-                        animationId = 6685 + index,
+                        experiencePerUnit = bowLog.longExperience,
+                        animationId = bowLog.longStringAnimationId,
                         tickDelay = 2,
-                        completionMessage = "You string your ${client.GetItemName(Constants.longbows[index]).lowercase()} into a ${client.GetItemName(Constants.longbow[index]).lowercase()}.",
+                        completionMessage = "You string your ${client.GetItemName(bowLog.unstrungLongbowId).lowercase()} into a ${client.GetItemName(bowLog.longbowId).lowercase()}.",
                     ),
                 )
                 return true

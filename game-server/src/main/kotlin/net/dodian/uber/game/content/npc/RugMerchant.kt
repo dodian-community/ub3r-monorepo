@@ -5,6 +5,7 @@ import net.dodian.uber.game.content.dialogue.DialogueOption
 import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.agility.AgilityDefinitions
 import net.dodian.uber.game.skills.agility.DesertCarpetService
 
 internal object RugMerchant {
@@ -63,9 +64,9 @@ internal object RugMerchant {
     }
 
     private fun travel(client: Client, npcId: Int, choice: Int) {
-        var missing = 5000
+        var missing = AgilityDefinitions.DESERT_CARPET_COST
         val amount = client.getInvAmt(995).toLong() + client.getBankAmt(995)
-        if (amount >= 5000L) {
+        if (amount >= AgilityDefinitions.DESERT_CARPET_COST.toLong()) {
             if (client.getInvAmt(995) >= missing) {
                 client.deleteItem(995, missing)
             } else {

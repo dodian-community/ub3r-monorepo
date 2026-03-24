@@ -10,61 +10,6 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
-    public static int[] buttons_smelting = {15147, 15146, 10247, 9110, 15151, 15150, 15149, 15148, 15155, 15154, 15153,
-            15152, 15159, 15158, 15157, 15156, 15163, 15162, 15161, 15160, 29017, 29016, 24253, 16062, 29022, 29020, 29019,
-            29018, 29026, 29025, 29024, 29023};
-    public static int[] smelt_frame = {2405, 2406, 2407, 2409, 2410, 2411, 2412, 2413};
-    public static int[][] smelt_bars = {{2349, 30}, {2351, 65}, {2355, 70}, {2353, 90}, {2357, 115},
-            {2359, 150}, {2361, 190}, {2363, 250}};
-    public static int[] unf_potion = {91, 95, 99, 99, 101, 105, 3004, 107, 109, 111};
-    public static int[] secondary = {221, 225, 239, 231, 221, 225, 223, 239, 245, 6045};
-    public static int[] finished = {121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454};
-    public static int[] req = {3, 14, 25, 38, 46, 55, 60, 65, 75, 79};
-    public static int[] potexp = {200, 480, 560, 700, 840, 1000, 1120, 1200, 1350, 1425};
-    public static int[] grimy_herbs = {199, 203, 207, 209, 213, 3051, 215, 217, 219};
-    public static int[] herbs = {249, 253, 257, 259, 263, 3000, 265, 267, 269};
-    public static int[] grimy_herbs_lvl = {1, 10, 25, 40, 54, 59, 65, 70, 75};
-    public static int[] grimy_herbs_xp = {24, 40, 56, 72, 88, 96, 104, 120, 136}; //3 guam, 5 tarromin, 7 ranarr, 9 irit, kwuarm 11, snapdragon 12, cadantine 13, dwarfweed 15, torstol 17
-    public static int[] herb_unf = {91, 95, 99, 101, 105, 3004, 107, 109, 111};
-    public static int[] pot_1_dose = {119, 125, 137, 143, 149, 161, 167, 173, 3030, 2458, 12701, 11733};
-    public static int[] pot_2_dose = {117, 123, 135, 141, 147, 159, 165, 171, 3028, 2456, 12699, 11732};
-    public static int[] pot_3_dose = {115, 121, 133, 139, 145, 157, 163, 169, 3026, 2454, 12697, 11731};
-    public static int[] pot_4_dose = {113, 2428, 2432, 2434, 2436, 2440, 2442, 2444, 3024, 2452, 12695, 11730};
-
-    public static int[] shortExp = {80, 120, 160, 200, 250, 320};
-    public static int[] longExp = {90, 135, 180, 230, 290, 360};
-    public static int[] woodcuttingDelays = {1800, 2400, 3200, 4600, 5600, 8200};
-    public static int[] woodcuttingLevels = {1, 15, 30, 45, 60, 75};
-    public static int[] woodcuttingLogs = {1511, 1521, 1519, 1517, 1515, 1513};
-    public static int[] woodcuttingExp = {100, 165, 285, 425, 735, 1075};
-    public static int[] axes = {1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739, 20011};
-    public static double[] axeBonus = {0.04, 0.065, 0.1, 0.15, 0.24, 0.33, 0.42, 0.8, 0.8};
-    public static int[] axeReq = {1, 1, 6, 11, 21, 31, 41, 61, 61};
-
-    public static int[] fishSpots = {1510, 1510, 1511, 1511, 1514, 1514, 1517, 1517};
-    public static int[] fishId = {317, 335, 377, 371, 7944, 383, 395, 389};
-    public static int[] fishAnim = {621, 622, 619, 618, 621, 618, 619, 618};
-    public static int[] fishReq = {1, 20, 40, 50, 60, 70, 85, 95};
-    public static int[] fishTime = {1350, 1660, 2480, 3300, 2480, 4900, 5800, 6650};
-    public static int[] fishTool = {303, 309, 301, 311, 303, 311, 301, 311};
-    public static int[] fishExp = {110, 200, 440, 650, 780, 1100, 1450, 1900};
-    public static int[] cookIds = {317, 2134, 2132, 2138, 2307, 3363, 335, 331, 377, 371, 7944, 383, 395, 389};
-    public static int[] cookedIds = {315, 2142, 2142, 2140, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-    public static int[] burnId = {323, 2146, 2146, 2144, 2311, 3375, 343, 343, 381, 375, 7948, 387, 399, 393};
-    public static int[] cookExp = {150, 100, 100, 50, 170, 200, 250, 350, 500, 720, 870, 1220, 1600, 2100};
-    public static int[] cookLevel = {1, 1, 1, 1, 10, 15, 20, 30, 40, 50, 60, 70, 85, 95};
-
-    // Crafting
-    public static int[] uncutGems = {1623, 1621, 1619, 1617, 1631, 6571, 1625, 1627, 1629}; //Opal, Jade and Topaz added later!
-    public static int[] cutGems = {1607, 1605, 1603, 1601, 1615, 6573, 1609, 1611, 1613};
-    public static int[] gemReq = {20, 27, 34, 43, 55, 67, 1, 13, 16};
-    public static int[] gemExp = {50, 68, 85, 108, 137, 168, 15, 20, 25};
-    public static int[] gemEmote = {888, 889, 887, 886, 885, 2717, 890, 891, 892};
-    public static int[] orbs = {571, 575, 569, 573};
-    public static int[] staves = {1395, 1399, 1393, 1397};
-    public static int[] orbLevel = {51, 56, 61, 66};
-    public static int[] orbXp = {450, 500, 550, 600};
-
     public static final char[] playerNameXlateTable = {'_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
             'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9'};

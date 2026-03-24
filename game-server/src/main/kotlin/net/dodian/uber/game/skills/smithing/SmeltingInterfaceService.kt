@@ -38,7 +38,7 @@ object SmeltingInterfaceService {
         return if (mapping.amount <= 0) {
             promptPendingX(client)
         } else {
-            start(client, recipe, mapping.amount)
+            start(client, SmeltingRequest(recipe, mapping.amount))
         }
     }
 
@@ -46,7 +46,7 @@ object SmeltingInterfaceService {
     fun startFromInterfaceItem(client: Client, barId: Int, amount: Int): Boolean {
         val recipe = SmithingDefinitions.findSmeltingRecipe(barId) ?: return false
         client.setPendingSmeltingBarId(recipe.barId)
-        return start(client, recipe, amount)
+        return start(client, SmeltingRequest(recipe, amount))
     }
 
     @JvmStatic
@@ -66,7 +66,7 @@ object SmeltingInterfaceService {
     @JvmStatic
     fun startFromPending(client: Client, amount: Int): Boolean {
         val recipe = SmithingDefinitions.findSmeltingRecipe(client.getPendingSmeltingBarId()) ?: return false
-        return start(client, recipe, amount)
+        return start(client, SmeltingRequest(recipe, amount))
     }
 
     @JvmStatic
@@ -77,12 +77,12 @@ object SmeltingInterfaceService {
         return true
     }
 
-    private fun start(client: Client, recipe: SmeltingRecipe, amount: Int): Boolean {
-        if (client.getLevel(Skill.SMITHING) < recipe.levelRequired) {
-            client.send(SendMessage("You need level ${recipe.levelRequired} smithing to do this!"))
+    private fun start(client: Client, request: SmeltingRequest): Boolean {
+        if (client.getLevel(Skill.SMITHING) < request.recipe.levelRequired) {
+            client.send(SendMessage("You need level ${request.recipe.levelRequired} smithing to do this!"))
             return true
         }
-        client.setPendingSmeltingBarId(recipe.barId)
+        client.setPendingSmeltingBarId(request.recipe.barId)
         client.send(RemoveInterfaces())
         PlayerActionCancellationService.cancel(
             client,
@@ -91,7 +91,7 @@ object SmeltingInterfaceService {
             closeInterfaces = false,
             resetCompatibilityState = false,
         )
-        client.setSmeltingSelection(SmeltingSelection(recipe, amount.coerceAtLeast(1)))
+        client.setSmeltingSelection(SmeltingSelection(request.recipe, request.amount.coerceAtLeast(1)))
         SmeltingActionService.start(client)
         return true
     }

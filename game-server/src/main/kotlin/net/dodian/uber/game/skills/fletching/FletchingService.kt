@@ -1,6 +1,5 @@
 package net.dodian.uber.game.skills.fletching
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -14,13 +13,14 @@ object FletchingService {
         client.resetAction()
         client.dialogInterface = 2459
         client.fletchingState = FletchingState(logIndex = logIndex)
+        val bowLog = FletchingDefinitions.bowLog(logIndex) ?: return
         client.send(SendString("Select a bow", 8879))
-        client.sendFrame246(8870, 250, Constants.longbows[logIndex])
-        client.sendFrame246(8869, 250, Constants.shortbows[logIndex])
-        client.send(SendString(client.GetItemName(Constants.shortbows[logIndex]), 8871))
-        client.send(SendString(client.GetItemName(Constants.shortbows[logIndex]), 8874))
-        client.send(SendString(client.GetItemName(Constants.longbows[logIndex]), 8878))
-        client.send(SendString(client.GetItemName(Constants.longbows[logIndex]), 8875))
+        client.sendFrame246(8870, 250, bowLog.unstrungLongbowId)
+        client.sendFrame246(8869, 250, bowLog.unstrungShortbowId)
+        client.send(SendString(client.GetItemName(bowLog.unstrungShortbowId), 8871))
+        client.send(SendString(client.GetItemName(bowLog.unstrungShortbowId), 8874))
+        client.send(SendString(client.GetItemName(bowLog.unstrungLongbowId), 8878))
+        client.send(SendString(client.GetItemName(bowLog.unstrungLongbowId), 8875))
         client.sendFrame164(8866)
     }
 
@@ -28,26 +28,27 @@ object FletchingService {
     fun startBowCrafting(client: Client, longBow: Boolean, amount: Int) {
         client.send(RemoveInterfaces())
         val logIndex = client.fletchingState?.logIndex ?: -1
-        if (logIndex !in Constants.logs.indices) {
+        val bowLog = FletchingDefinitions.bowLog(logIndex)
+        if (bowLog == null) {
             client.resetAction()
             return
         }
 
         val request =
         if (longBow) {
-            if (client.getLevel(Skill.FLETCHING) < Constants.longreq[logIndex]) {
-                client.send(SendMessage("Requires fletching ${Constants.longreq[logIndex]}!"))
+            if (client.getLevel(Skill.FLETCHING) < bowLog.longLevelRequired) {
+                client.send(SendMessage("Requires fletching ${bowLog.longLevelRequired}!"))
                 client.resetAction()
                 return
             }
-            FletchingRequest(logIndex, Constants.longbows[logIndex], Constants.longexp[logIndex], amount)
+            FletchingRequest(logIndex, bowLog.unstrungLongbowId, bowLog.longExperience, amount)
         } else {
-            if (client.getLevel(Skill.FLETCHING) < Constants.shortreq[logIndex]) {
-                client.send(SendMessage("Requires fletching ${Constants.shortreq[logIndex]}!"))
+            if (client.getLevel(Skill.FLETCHING) < bowLog.shortLevelRequired) {
+                client.send(SendMessage("Requires fletching ${bowLog.shortLevelRequired}!"))
                 client.resetAction()
                 return
             }
-            FletchingRequest(logIndex, Constants.shortbows[logIndex], Constants.shortexp[logIndex], amount)
+            FletchingRequest(logIndex, bowLog.unstrungShortbowId, bowLog.shortExperience, amount)
         }
 
         start(client, request)
@@ -85,12 +86,13 @@ object FletchingService {
         client.requestAnim(4433, 0)
 
         val logIndex = state.logIndex
-        if (logIndex !in Constants.logs.indices || !client.playerHasItem(Constants.logs[logIndex])) {
+        val bowLog = FletchingDefinitions.bowLog(logIndex)
+        if (bowLog == null || !client.playerHasItem(bowLog.logItemId)) {
             client.resetAction()
             return
         }
 
-        client.deleteItem(Constants.logs[logIndex], 1)
+        client.deleteItem(bowLog.logItemId, 1)
         client.addItem(state.productId, 1)
         client.checkItemUpdate()
         client.giveExperience(state.experience, Skill.FLETCHING)

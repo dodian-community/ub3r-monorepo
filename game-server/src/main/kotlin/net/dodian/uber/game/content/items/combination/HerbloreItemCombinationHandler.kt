@@ -6,28 +6,30 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
-import net.dodian.utilities.Utils
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 
 object HerbloreItemCombinationHandler {
     @JvmStatic
     fun handle(client: Client, itemUsed: Int, otherItem: Int): Boolean {
-        for (index in Utils.herbs.indices) {
-            val herb = Utils.herbs[index]
-            if ((itemUsed == herb && otherItem == 227) || (itemUsed == 227 && otherItem == herb)) {
-                if (!client.premium && index > 2) {
+        for (definition in HerbloreDefinitions.herbDefinitions) {
+            val herb = definition.cleanId
+            if ((itemUsed == herb && otherItem == HerbloreDefinitions.UNFINISHED_POTION_VIAL_ID) ||
+                (itemUsed == HerbloreDefinitions.UNFINISHED_POTION_VIAL_ID && otherItem == herb)
+            ) {
+                if (definition.premiumOnly && !client.premium) {
                     client.send(SendMessage("Need premium to mix these pots!"))
                     return true
                 }
-                if (client.getSkillLevel(Skill.HERBLORE) < Utils.grimy_herbs_lvl[index]) {
-                    client.send(SendMessage("Requires herblore level ${Utils.grimy_herbs_lvl[index]}"))
+                if (client.getSkillLevel(Skill.HERBLORE) < definition.requiredLevel) {
+                    client.send(SendMessage("Requires herblore level ${definition.requiredLevel}"))
                     return true
                 }
-                val xp = if (client.premium) Utils.grimy_herbs_xp[index] else 0
+                val xp = if (client.premium || !definition.premiumOnly) definition.cleaningExperience else 0
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.HERBLORE.id,
-                        productId = Utils.herb_unf[index],
+                        productId = definition.unfinishedPotionId,
                         amountPerCycle = 1,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
@@ -41,30 +43,30 @@ object HerbloreItemCombinationHandler {
             }
         }
 
-        for (index in Utils.unf_potion.indices) {
-            if ((itemUsed == Utils.secondary[index] && otherItem == Utils.unf_potion[index]) ||
-                (itemUsed == Utils.unf_potion[index] && otherItem == Utils.secondary[index])
+        for (recipe in HerbloreDefinitions.potionRecipes) {
+            if ((itemUsed == recipe.secondaryId && otherItem == recipe.unfinishedPotionId) ||
+                (itemUsed == recipe.unfinishedPotionId && otherItem == recipe.secondaryId)
             ) {
-                if (!client.premium && index > 3) {
+                if (recipe.premiumOnly && !client.premium) {
                     client.send(SendMessage("Need premium to mix these pots!"))
                     return true
                 }
-                if (client.getLevel(Skill.HERBLORE) < Utils.req[index]) {
-                    client.send(SendMessage("Requires herblore level ${Utils.req[index]}"))
+                if (client.getLevel(Skill.HERBLORE) < recipe.requiredLevel) {
+                    client.send(SendMessage("Requires herblore level ${recipe.requiredLevel}"))
                     return true
                 }
                 ProductionActionService.queueSelection(
                     client,
                     ProductionRequest(
                         skillId = Skill.HERBLORE.id,
-                        productId = Utils.finished[index],
+                        productId = recipe.finishedPotionId,
                         amountPerCycle = 1,
                         primaryItemId = itemUsed,
                         secondaryItemId = otherItem,
-                        experiencePerUnit = Utils.potexp[index],
+                        experiencePerUnit = recipe.experience,
                         animationId = 363,
                         tickDelay = 3,
-                        completionMessage = "You mix the ${client.GetItemName(Utils.secondary[index])} into your potion.",
+                        completionMessage = "You mix the ${client.GetItemName(recipe.secondaryId)} into your potion.",
                     ),
                 )
                 return true
@@ -151,75 +153,79 @@ object HerbloreItemCombinationHandler {
 
     @JvmStatic
     fun handleDoseMixing(client: Client, itemUsed: Int, useWith: Int): Boolean {
-        for (index in Utils.pot_4_dose.indices) {
-            if ((itemUsed == Utils.pot_4_dose[index] && useWith == 229) || (itemUsed == 229 && useWith == Utils.pot_4_dose[index])) {
+        for (dose in HerbloreDefinitions.potionDoseDefinitions) {
+            if ((itemUsed == dose.fourDoseId && useWith == HerbloreDefinitions.EMPTY_VIAL_ID) ||
+                (itemUsed == HerbloreDefinitions.EMPTY_VIAL_ID && useWith == dose.fourDoseId)
+            ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_2_dose[index], 1)
-                client.addItem(Utils.pot_2_dose[index], 1)
+                client.addItem(dose.twoDoseId, 1)
+                client.addItem(dose.twoDoseId, 1)
                 return true
             }
         }
-        for (index in Utils.pot_3_dose.indices) {
-            if ((itemUsed == Utils.pot_3_dose[index] && useWith == Utils.pot_3_dose[index]) ||
-                (itemUsed == Utils.pot_3_dose[index] && useWith == Utils.pot_3_dose[index])
+        for (dose in HerbloreDefinitions.potionDoseDefinitions) {
+            if ((itemUsed == dose.threeDoseId && useWith == dose.threeDoseId) ||
+                (itemUsed == dose.threeDoseId && useWith == dose.threeDoseId)
             ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_4_dose[index], 1)
-                client.addItem(Utils.pot_2_dose[index], 1)
+                client.addItem(dose.fourDoseId, 1)
+                client.addItem(dose.twoDoseId, 1)
                 return true
-            } else if ((itemUsed == Utils.pot_3_dose[index] && useWith == Utils.pot_2_dose[index]) ||
-                (itemUsed == Utils.pot_2_dose[index] && useWith == Utils.pot_3_dose[index])
+            } else if ((itemUsed == dose.threeDoseId && useWith == dose.twoDoseId) ||
+                (itemUsed == dose.twoDoseId && useWith == dose.threeDoseId)
             ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_4_dose[index], 1)
-                client.addItem(Utils.pot_1_dose[index], 1)
-                return true
-            }
-        }
-        for (index in Utils.pot_2_dose.indices) {
-            if ((itemUsed == Utils.pot_2_dose[index] && useWith == 229) || (itemUsed == 229 && useWith == Utils.pot_2_dose[index])) {
-                client.deleteItem(itemUsed, 1)
-                client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_1_dose[index], 1)
-                client.addItem(Utils.pot_1_dose[index], 1)
-                return true
-            } else if ((itemUsed == Utils.pot_2_dose[index] && useWith == Utils.pot_2_dose[index]) ||
-                (itemUsed == Utils.pot_2_dose[index] && useWith == Utils.pot_2_dose[index])
-            ) {
-                client.deleteItem(itemUsed, 1)
-                client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_4_dose[index], 1)
-                client.addItem(229, 1)
+                client.addItem(dose.fourDoseId, 1)
+                client.addItem(dose.oneDoseId, 1)
                 return true
             }
         }
-        for (index in Utils.pot_1_dose.indices) {
-            if ((itemUsed == Utils.pot_1_dose[index] && useWith == Utils.pot_1_dose[index]) ||
-                (itemUsed == Utils.pot_1_dose[index] && useWith == Utils.pot_1_dose[index])
+        for (dose in HerbloreDefinitions.potionDoseDefinitions) {
+            if ((itemUsed == dose.twoDoseId && useWith == HerbloreDefinitions.EMPTY_VIAL_ID) ||
+                (itemUsed == HerbloreDefinitions.EMPTY_VIAL_ID && useWith == dose.twoDoseId)
             ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_2_dose[index], 1)
-                client.addItem(229, 1)
+                client.addItem(dose.oneDoseId, 1)
+                client.addItem(dose.oneDoseId, 1)
                 return true
-            } else if ((itemUsed == Utils.pot_1_dose[index] && useWith == Utils.pot_2_dose[index]) ||
-                (itemUsed == Utils.pot_2_dose[index] && useWith == Utils.pot_1_dose[index])
+            } else if ((itemUsed == dose.twoDoseId && useWith == dose.twoDoseId) ||
+                (itemUsed == dose.twoDoseId && useWith == dose.twoDoseId)
             ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_3_dose[index], 1)
-                client.addItem(229, 1)
+                client.addItem(dose.fourDoseId, 1)
+                client.addItem(HerbloreDefinitions.EMPTY_VIAL_ID, 1)
                 return true
-            } else if ((itemUsed == Utils.pot_1_dose[index] && useWith == Utils.pot_3_dose[index]) ||
-                (itemUsed == Utils.pot_3_dose[index] && useWith == Utils.pot_1_dose[index])
+            }
+        }
+        for (dose in HerbloreDefinitions.potionDoseDefinitions) {
+            if ((itemUsed == dose.oneDoseId && useWith == dose.oneDoseId) ||
+                (itemUsed == dose.oneDoseId && useWith == dose.oneDoseId)
             ) {
                 client.deleteItem(itemUsed, 1)
                 client.deleteItem(useWith, 1)
-                client.addItem(Utils.pot_4_dose[index], 1)
-                client.addItem(229, 1)
+                client.addItem(dose.twoDoseId, 1)
+                client.addItem(HerbloreDefinitions.EMPTY_VIAL_ID, 1)
+                return true
+            } else if ((itemUsed == dose.oneDoseId && useWith == dose.twoDoseId) ||
+                (itemUsed == dose.twoDoseId && useWith == dose.oneDoseId)
+            ) {
+                client.deleteItem(itemUsed, 1)
+                client.deleteItem(useWith, 1)
+                client.addItem(dose.threeDoseId, 1)
+                client.addItem(HerbloreDefinitions.EMPTY_VIAL_ID, 1)
+                return true
+            } else if ((itemUsed == dose.oneDoseId && useWith == dose.threeDoseId) ||
+                (itemUsed == dose.threeDoseId && useWith == dose.oneDoseId)
+            ) {
+                client.deleteItem(itemUsed, 1)
+                client.deleteItem(useWith, 1)
+                client.addItem(dose.fourDoseId, 1)
+                client.addItem(HerbloreDefinitions.EMPTY_VIAL_ID, 1)
                 return true
             }
         }
