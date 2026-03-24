@@ -441,8 +441,7 @@ object InteractionProcessor {
         }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
-        player.skillX = npc.position.x
-        player.setSkillY(npc.position.y)
+        player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 1)) {
             return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
         }
@@ -456,8 +455,7 @@ object InteractionProcessor {
         }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
-        player.skillX = npc.position.x
-        player.setSkillY(npc.position.y)
+        player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 2)) {
             return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
         }
@@ -470,8 +468,7 @@ object InteractionProcessor {
         }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
-        player.skillX = npc.position.x
-        player.setSkillY(npc.position.y)
+        player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         return NpcInteractionService.tryHandleClickTimed(player, 3, npc)
     }
 
@@ -479,8 +476,7 @@ object InteractionProcessor {
         if (player.isBusy) {
             return DispatchTiming(false, 0L, 0L, null)
         }
-        player.skillX = npc.position.x
-        player.setSkillY(npc.position.y)
+        player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
         return NpcInteractionService.tryHandleClickTimed(player, 4, npc)
     }
 

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skills.crafting
 
-import net.dodian.uber.game.skills.core.SkillActionState
+import net.dodian.uber.game.skills.core.runtime.SkillActionState
 
 enum class CraftingMode {
     LEATHER,

@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.npc
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.thieving.ThievingService
+import net.dodian.uber.game.skills.thieving.api.ThievingPlugin
 
 internal object Farmer {
     // Stats: 3086: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -16,7 +16,7 @@ internal object Farmer {
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {
-        ThievingService.attempt(client, npc.id, npc.position)
+        ThievingPlugin.attempt(client, npc.id, npc.position)
         return true
     }
 }

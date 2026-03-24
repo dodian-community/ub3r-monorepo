@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.Misc
 
@@ -26,7 +27,7 @@ object PlayerLifecycleTickService {
         player.changeEffectTime()
         if (player.genieCombatFlag && !player.isInCombat()) {
             player.genieCombatFlag = false
-            player.showRandomEvent()
+            SkillingRandomEventService.show(player)
         }
 
         if (player.dailyLogin == 0) {

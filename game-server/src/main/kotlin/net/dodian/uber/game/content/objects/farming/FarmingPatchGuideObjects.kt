@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.guide.SkillGuideService
+import net.dodian.uber.game.skills.guide.api.SkillGuidePlugin
 
 object FarmingPatchGuideObjects : ObjectContent {
     private val guideObjects = intArrayOf(
@@ -32,27 +32,27 @@ object FarmingPatchGuideObjects : ObjectContent {
     override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when {
             (objectId in 8550..8557) || objectId == 27114 || objectId == 27113 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 0)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 0)
                 true
             }
             (objectId in 7847..7850) || objectId == 27111 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 1)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 1)
                 true
             }
             objectId in 7577..7580 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 2)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 2)
                 true
             }
             (objectId in 8150..8153) || objectId == 27115 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 3)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 3)
                 true
             }
             (objectId in 8389..8391) || objectId == 19147 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 4)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 4)
                 true
             }
             (objectId in 7962..7965) || objectId == 26579 -> {
-                SkillGuideService.open(client, Skill.FARMING.id, 5)
+                SkillGuidePlugin.open(client, Skill.FARMING.id, 5)
                 true
             }
             else -> false

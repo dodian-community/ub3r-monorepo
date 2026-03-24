@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skills.slayer.SlayerService
+import net.dodian.uber.game.skills.slayer.api.SlayerPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 
@@ -62,9 +62,9 @@ internal object SlayerMasterDialogue {
         }
 
         val tasks = when (npcId) {
-            402 -> SlayerService.mazchnaTasks(client)
-            403 -> SlayerService.vannakaTasks(client)
-            405 -> SlayerService.duradelTasks(client)
+            402 -> SlayerPlugin.tasksForMaster(client, npcId)
+            403 -> SlayerPlugin.tasksForMaster(client, npcId)
+            405 -> SlayerPlugin.tasksForMaster(client, npcId)
             else -> emptyList()
         }
 

@@ -4,6 +4,8 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.SkillingActionService
 
@@ -63,17 +65,17 @@ object CookingService {
         }
         client.cookingState = state.copy(remaining = state.remaining - 1)
         client.deleteItem(itemId, 1)
-        client.setFocus(client.skillX, client.skillY)
+        client.setFocus(client.interactionAnchorX, client.interactionAnchorY)
         client.requestAnim(883, 0)
         if (!burn) {
             client.addItem(recipe.cookedItemId, 1)
             client.send(SendMessage("You cook the ${client.GetItemName(itemId)}"))
-            client.giveExperience(recipe.experience, Skill.COOKING)
+            SkillProgressionService.gainXp(client, recipe.experience, Skill.COOKING)
         } else {
             client.addItem(recipe.burntItemId, 1)
             client.send(SendMessage("You burn the ${client.GetItemName(itemId)}"))
         }
         client.checkItemUpdate()
-        client.triggerRandom(recipe.experience)
+        SkillingRandomEventService.trigger(client, recipe.experience)
     }
 }

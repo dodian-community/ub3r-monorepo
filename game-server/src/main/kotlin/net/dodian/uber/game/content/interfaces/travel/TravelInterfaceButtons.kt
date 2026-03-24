@@ -14,13 +14,12 @@ object TravelInterfaceButtons : InterfaceButtonContent {
                 requiredInterfaceId = TravelComponents.INTERFACE_ID,
             ) { client, request ->
                 val pos =
-                    if (client.skillX == 2772 && client.skillY == 3235) 5
-                    else if (client.skillX == 2864 && client.skillY == 2971) 4
-                    else if (client.skillX == 3511 && client.skillY == 3505) 2
+                    if (client.interactionAnchorX == 2772 && client.interactionAnchorY == 3235) 5
+                    else if (client.interactionAnchorX == 2864 && client.interactionAnchorY == 2971) 4
+                    else if (client.interactionAnchorX == 3511 && client.interactionAnchorY == 3505) 2
                     else 0
                 client.travelTrigger(pos, request.rawButtonId)
                 true
             }
         }
 }
-

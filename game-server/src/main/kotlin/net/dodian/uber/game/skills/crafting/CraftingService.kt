@@ -2,6 +2,8 @@ package net.dodian.uber.game.skills.crafting
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
@@ -30,8 +32,8 @@ object CraftingService {
             client.addItem(52, 15)
             client.checkItemUpdate()
             client.requestAnim(1248, 0)
-            client.giveExperience(50, Skill.FLETCHING)
-            client.triggerRandom(50)
+            SkillProgressionService.gainXp(client, 50, Skill.FLETCHING)
+            SkillingRandomEventService.trigger(client, 50)
         } else {
             client.resetAction()
         }
@@ -48,13 +50,13 @@ object CraftingService {
         if (client.playerHasItem(1779)) {
             client.deleteItem(1779, 1)
             client.addItem(1777, 1)
-            client.giveExperience(50, Skill.CRAFTING)
-            client.triggerRandom(50)
+            SkillProgressionService.gainXp(client, 50, Skill.CRAFTING)
+            SkillingRandomEventService.trigger(client, 50)
         } else if (client.playerHasItem(1737)) {
             client.deleteItem(1737, 1)
             client.addItem(1759, 1)
-            client.giveExperience(100, Skill.CRAFTING)
-            client.triggerRandom(100)
+            SkillProgressionService.gainXp(client, 100, Skill.CRAFTING)
+            SkillingRandomEventService.trigger(client, 100)
         } else {
             client.send(SendMessage("You do not have anything to spin!"))
             client.resetAction(true)
@@ -67,6 +69,16 @@ object CraftingService {
     fun startSpinning(client: Client) {
         client.craftingState = CraftingState(mode = CraftingMode.SPINNING)
         SkillingActionService.startSpinning(client)
+    }
+
+    @JvmStatic
+    fun spinDelayMs(client: Client): Long {
+        val craftingLevel = client.getLevel(Skill.CRAFTING)
+        return when {
+            craftingLevel >= 70 -> 600L
+            craftingLevel >= 40 -> 1200L
+            else -> 1800L
+        }
     }
 
     @JvmStatic
@@ -216,12 +228,12 @@ object CraftingService {
         client.send(SendMessage("You crafted a ${client.GetItemName(state.productId).lowercase()}"))
         client.addItem(state.productId, 1)
         client.checkItemUpdate()
-        client.giveExperience(state.experience, Skill.CRAFTING)
+        SkillProgressionService.gainXp(client, state.experience, Skill.CRAFTING)
         val updated = state.copy(remaining = state.remaining - 1)
         client.craftingState = updated
         if (updated.remaining < 1) {
             client.resetAction(true)
         }
-        client.triggerRandom(state.experience)
+        SkillingRandomEventService.trigger(client, state.experience)
     }
 }

@@ -8,7 +8,9 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skills.thieving.ThievingService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.skills.thieving.api.ThievingPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
@@ -36,7 +38,7 @@ object ChestObjects : ObjectContent {
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 20873 || objectId == 6847) {
-            ThievingService.attempt(client, objectId, position)
+            ThievingPlugin.attempt(client, objectId, position)
             return true
         }
         if (objectId == 375 && position.x == 2593 && position.y == 3108 && client.position.z == 1) {
@@ -73,12 +75,12 @@ object ChestObjects : ObjectContent {
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
             if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                client.giveExperience(300, Skill.THIEVING)
+                SkillProgressionService.gainXp(client, 300, Skill.THIEVING)
             }
             client.checkItemUpdate()
             client.chestEvent++
             client.stillgfx(444, position.y, position.x)
-            client.triggerRandom(900)
+            SkillingRandomEventService.trigger(client, 900)
             return true
         }
         if (objectId == 375 && position.x == 2733 && position.y == 3374) {
@@ -119,12 +121,12 @@ object ChestObjects : ObjectContent {
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
             if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                client.giveExperience(500, Skill.THIEVING)
+                SkillProgressionService.gainXp(client, 500, Skill.THIEVING)
             }
             client.checkItemUpdate()
             client.chestEvent++
             client.stillgfx(444, position.y, position.x)
-            client.triggerRandom(1500)
+            SkillingRandomEventService.trigger(client, 1500)
             return true
         }
         return false
@@ -137,7 +139,7 @@ object ChestObjects : ObjectContent {
                 true
             }
             20873, 11729, 11730, 11731, 11732, 11733, 11734 -> {
-                ThievingService.attempt(client, objectId, position)
+                ThievingPlugin.attempt(client, objectId, position)
                 true
             }
             else -> false

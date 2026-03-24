@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.PlayerActionController
 import net.dodian.uber.game.runtime.action.PlayerActionType
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.utilities.Range
 
 object SmeltingActionService {
@@ -62,8 +64,8 @@ object SmeltingActionService {
         val success = recipe.successChancePercent >= 100 || Range(1, 100).value <= recipe.successChancePercent + ((player.getLevel(Skill.SMITHING) + 1) / 4)
         if (success) {
             player.addItem(recipe.barId, 1)
-            player.giveExperience(recipe.experience, Skill.SMITHING)
-            player.triggerRandom(recipe.experience)
+            SkillProgressionService.gainXp(player, recipe.experience, Skill.SMITHING)
+            SkillingRandomEventService.trigger(player, recipe.experience)
         } else if (recipe.failureMessage != null) {
             player.send(SendMessage(recipe.failureMessage))
         }

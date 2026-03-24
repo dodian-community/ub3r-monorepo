@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendSideTab
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.RuneCostService
 import net.dodian.utilities.Misc
 
 object SuperheatService {
@@ -61,7 +63,7 @@ object SuperheatService {
         client.lastMagic = System.currentTimeMillis()
         client.requestAnim(725, 0)
         client.callGfxMask(148, 100)
-        client.deleteRunes(intArrayOf(NATURE_RUNE), intArrayOf(1))
+        RuneCostService.consume(client, intArrayOf(NATURE_RUNE), intArrayOf(1))
         recipe.oreRequirements.forEach { requirement ->
             repeat(requirement.amount) {
                 client.deleteItem(requirement.itemId, 1)
@@ -72,11 +74,11 @@ object SuperheatService {
             net.dodian.utilities.Range(1, 100).value <= recipe.successChancePercent + ((client.getLevel(Skill.SMITHING) + 1) / 4)
         if (success) {
             client.addItem(recipe.barId, 1)
-            client.giveExperience(recipe.experience, Skill.SMITHING)
-            client.giveExperience(MAGIC_XP, Skill.MAGIC)
+            SkillProgressionService.gainXp(client, recipe.experience, Skill.SMITHING)
+            SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
         } else if (recipe.failureMessage != null) {
             client.send(SendMessage(recipe.failureMessage))
-            client.giveExperience(MAGIC_XP, Skill.MAGIC)
+            SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
         }
         client.checkItemUpdate()
         client.send(SendSideTab(6))
@@ -107,15 +109,15 @@ object SuperheatService {
                 moltenCount++
             }
         }
-        client.deleteRunes(intArrayOf(NATURE_RUNE), intArrayOf(3))
+        RuneCostService.consume(client, intArrayOf(NATURE_RUNE), intArrayOf(3))
         repeat(moltenCount) {
             if (!client.addItem(1775, 1)) {
                 Ground.addFloorItem(client, 1775, 1)
             }
         }
         client.checkItemUpdate()
-        client.giveExperience(count * 40, Skill.CRAFTING)
-        client.giveExperience(MAGIC_XP, Skill.MAGIC)
+        SkillProgressionService.gainXp(client, count * 40, Skill.CRAFTING)
+        SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
         client.send(SendSideTab(6))
     }
 

@@ -2,12 +2,15 @@ package net.dodian.uber.game.content.items.combination
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.uber.game.skills.crafting.CraftingDefinitions
+import net.dodian.uber.game.skills.crafting.GoldJewelryService
+import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
 
 object CraftingItemCombinationHandler {
     @JvmStatic
@@ -34,7 +37,7 @@ object CraftingItemCombinationHandler {
         }
         for ((index, hide) in CraftingDefinitions.hideDefinitions.withIndex()) {
             if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == hide.itemId || otherItem == hide.itemId)) {
-                net.dodian.uber.game.skills.crafting.CraftingService.openLeatherMenu(client, index)
+                CraftingPlugin.open(client, index)
                 client.cIndex = index
                 return true
             }
@@ -113,13 +116,13 @@ object CraftingItemCombinationHandler {
             client.deleteItem(6667, slot, 1)
             client.addItemSlot(7534, 1, slot)
             client.checkItemUpdate()
-            client.giveExperience(60, Skill.CRAFTING)
+            SkillProgressionService.gainXp(client, 60, Skill.CRAFTING)
             client.send(SendMessage("You chisel the fishbowl into a helmet."))
             return true
         }
         if (itemUsed == 1759 || otherItem == 1759) {
             val amulet = if (itemUsed == 1759) otherItem else itemUsed
-            val strung = client.findStrungAmulet(amulet)
+            val strung = GoldJewelryService.findStrungAmulet(amulet)
             if (strung < 0) {
                 client.send(SendMessage("You cannot string this item with wool!"))
                 return true

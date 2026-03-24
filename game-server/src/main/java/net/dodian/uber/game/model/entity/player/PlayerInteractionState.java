@@ -20,7 +20,9 @@ import net.dodian.uber.game.skills.fishing.FishingState;
 import net.dodian.uber.game.skills.cooking.CookingState;
 import net.dodian.uber.game.skills.crafting.CraftingState;
 import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderPlayerState;
+import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class PlayerInteractionState {
@@ -55,6 +57,8 @@ final class PlayerInteractionState {
     private volatile CookingState cookingState;
     private volatile CraftingState craftingState;
     private volatile PrayerOfferingState prayerOfferingState;
+    private volatile RunecraftingState runecraftingState;
+    private volatile InteractionAnchorState interactionAnchorState;
     private volatile PyramidPlunderPlayerState pyramidPlunderState;
     private final ConcurrentHashMap<String, Long> throttleUntilCycles = new ConcurrentHashMap<>();
 
@@ -228,6 +232,30 @@ final class PlayerInteractionState {
 
     void clearPrayerOfferingState() {
         prayerOfferingState = null;
+    }
+
+    RunecraftingState getRunecraftingState() {
+        return runecraftingState;
+    }
+
+    void setRunecraftingState(RunecraftingState runecraftingState) {
+        this.runecraftingState = runecraftingState;
+    }
+
+    void clearRunecraftingState() {
+        runecraftingState = null;
+    }
+
+    InteractionAnchorState getInteractionAnchorState() {
+        return interactionAnchorState;
+    }
+
+    void setInteractionAnchorState(InteractionAnchorState interactionAnchorState) {
+        this.interactionAnchorState = interactionAnchorState;
+    }
+
+    void clearInteractionAnchorState() {
+        interactionAnchorState = null;
     }
 
     PyramidPlunderPlayerState getPyramidPlunderState() {

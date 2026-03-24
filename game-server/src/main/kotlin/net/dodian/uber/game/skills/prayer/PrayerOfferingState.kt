@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skills.prayer
 
-import net.dodian.uber.game.skills.core.SkillActionState
+import net.dodian.uber.game.skills.core.runtime.SkillActionState
 
 data class PrayerOfferingState(
     val boneItemId: Int,

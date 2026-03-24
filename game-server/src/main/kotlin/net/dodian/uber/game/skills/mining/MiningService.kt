@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.runtime.loop.GameCycleClock
@@ -176,8 +178,8 @@ object MiningService {
         client.addItem(rock.oreItemId, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, rock.oreItemId, 1, client.position.copy(), "Mining")
-        client.giveExperience(rock.experience, Skill.MINING)
-        client.triggerRandom(rock.experience)
+        SkillProgressionService.gainXp(client, rock.experience, Skill.MINING)
+        SkillingRandomEventService.trigger(client, rock.experience)
         if (rock.randomGemEligible) {
             tryAwardRandomGem(client)
         }

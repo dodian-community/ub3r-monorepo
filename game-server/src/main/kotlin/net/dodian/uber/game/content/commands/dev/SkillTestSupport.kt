@@ -10,6 +10,7 @@ import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.skills.farming.FarmingDefinitions
 import net.dodian.uber.game.skills.farming.FarmingState
+import net.dodian.uber.game.skills.core.progression.SkillAdminService
 
 private const val SKILL_TEST_BANK_AMOUNT = 100_000
 
@@ -84,15 +85,14 @@ internal fun handleSkillSet(context: CommandContext): Boolean {
 
     val level = if (context.hasArgs(1)) context.int(1).coerceIn(1, 99) else 99
     SKILLING_SKILLS.forEach { skill ->
-        client.setExperience(Skills.getXPForLevel(level), skill)
-        client.setLevel(level, skill)
+        SkillAdminService.set(client = client, skill = skill, level = level, experience = Skills.getXPForLevel(level))
         when (skill) {
             Skill.PRAYER -> {
                 client.maxPrayer = level
                 client.currentPrayer = level
                 client.drainPrayer(0)
             }
-            else -> client.refreshSkill(skill)
+            else -> Unit
         }
     }
     client.markSaveDirty(PlayerSaveSegment.STATS.mask)

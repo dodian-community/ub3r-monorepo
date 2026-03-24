@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.items
 
+import net.dodian.uber.game.plugin.PluginModuleIndex
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -12,23 +13,7 @@ object ItemContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
-
-        register(net.dodian.uber.game.content.items.admin.StaffToolItems)
-        register(net.dodian.uber.game.content.items.prayer.BuryBonesItems)
-        register(net.dodian.uber.game.content.items.runecrafting.RunePouchItems)
-        register(net.dodian.uber.game.content.items.slayer.SlayerGemItems)
-        register(net.dodian.uber.game.content.items.slayer.SlayerMaskItems)
-        register(net.dodian.uber.game.content.items.consumables.DrinkItems)
-        register(net.dodian.uber.game.content.items.consumables.FoodItems)
-        register(net.dodian.uber.game.content.items.consumables.PotionItems)
-        register(net.dodian.uber.game.content.items.herblore.GrimyHerbItems)
-        register(net.dodian.uber.game.content.items.herblore.HerbloreSuppliesItems)
-        register(net.dodian.uber.game.content.items.rewards.LampRewardItems)
-        register(net.dodian.uber.game.content.items.utility.GuideBookItems)
-        register(net.dodian.uber.game.content.items.cosmetics.ToyItems)
-        register(net.dodian.uber.game.content.items.equipment.RepairHintItems)
-        register(net.dodian.uber.game.content.items.events.EventInfoItems)
-        register(net.dodian.uber.game.content.items.events.EventPackageItems)
+        PluginModuleIndex.itemContents.forEach(::register)
     }
 
     fun register(content: ItemContent) {

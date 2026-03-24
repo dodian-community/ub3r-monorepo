@@ -97,8 +97,7 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         client.resetAction();
         client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
+        client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
 
         if (FishingNpcInteractionService.handleNpcOption(client, npcId, 1)) {
             return;
@@ -145,8 +144,7 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         client.resetAction();
         client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
+        client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
         if (FishingNpcInteractionService.handleNpcOption(client, npcId, 2)) {
             return;
         }
@@ -192,8 +190,7 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         client.resetAction();
         client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
+        client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
 
         if (NpcInteractionService.tryHandleClick(client, 3, tempNpc)) {
             return;
@@ -234,8 +231,7 @@ public class NpcInteractionListener implements PacketListener {
         }
 
         int npcId = tempNpc.getId();
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
+        client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
 
         if (NpcInteractionService.tryHandleClick(client, 4, tempNpc)) {
             return;

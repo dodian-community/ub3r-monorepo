@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.6.21"
+    id("com.google.devtools.ksp") version "1.6.21-1.0.6"
     id("application")
     `java-library`
 }
@@ -38,6 +39,8 @@ tasks.jar {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(project(":game-plugin-index-annotations"))
+    ksp(project(":game-plugin-index-processor"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")

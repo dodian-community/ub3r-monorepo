@@ -13,6 +13,8 @@ import net.dodian.uber.game.runtime.animation.PlayerAnimationService
 import net.dodian.uber.game.runtime.combat.CombatAttackResult
 import net.dodian.uber.game.runtime.combat.CombatHitQueueService
 import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.RuneCostService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
@@ -43,7 +45,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         resetAttack()
         return null
     }
-    if (!runeCheck()) {
+    if (!RuneCostService.ensureBloodRune(this)) {
         resetAttack()
         return null
     }
@@ -110,8 +112,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
                 npc.inflictEffect(1, true, getSlot(), slot/4 + 1, 5)
         }
         /* Give experience */
-        giveExperience(40 * hit, Skill.MAGIC)
-        giveExperience(13 * hit, Skill.HITPOINTS)
+        SkillProgressionService.gainXp(this, 40 * hit, Skill.MAGIC)
+        SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)

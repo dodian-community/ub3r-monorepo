@@ -2,11 +2,14 @@ package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.skills.core.sendFilterMessage
-import net.dodian.uber.game.skills.core.ProductionSpec
-import net.dodian.uber.game.skills.core.ProductionTask
+import net.dodian.uber.game.skills.core.runtime.sendFilterMessage
+import net.dodian.uber.game.skills.core.runtime.ProductionSpec
+import net.dodian.uber.game.skills.core.runtime.ProductionTask
+import net.dodian.uber.game.skills.core.runtime.RuneCostService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 
 object ProductionActionService {
     @JvmStatic
@@ -114,7 +117,7 @@ object ProductionActionService {
             }
             client.callGfxMask(if (itemMake == 569) 152 else 149 + ((itemMake - 571) / 2), 100)
             client.deleteItem(itemOne, amount)
-            client.deleteRunes(intArrayOf(itemTwo), intArrayOf(3))
+            RuneCostService.consume(client, intArrayOf(itemTwo), intArrayOf(3))
             client.addItem(itemMake, amount)
         } else if (request.mode == ProductionMode.MOLTEN_GLASS) {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo)) {
@@ -159,8 +162,11 @@ object ProductionActionService {
             client.requestAnim(request.animationId, 0)
         }
         val xp = request.experiencePerUnit * amount
-        client.giveExperience(xp, Skill.getSkill(request.skillId))
-        client.triggerRandom(xp)
+        val skill = Skill.getSkill(request.skillId)
+        if (skill != null) {
+            SkillProgressionService.gainXp(client, xp, skill)
+        }
+        SkillingRandomEventService.trigger(client, xp)
         client.setActiveProductionSelection(active.copy(remainingCycles = active.remainingCycles - 1))
         if (request.completionMessage.isNotEmpty()) {
             client.sendFilterMessage(request.completionMessage)

@@ -3,6 +3,7 @@ package net.dodian.uber.game.runtime.action
 import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService
 
 object PlayerActionCancellationService {
     @JvmStatic
@@ -34,22 +35,16 @@ object PlayerActionCancellationService {
     ) {
         player.clearSmeltingSelection()
         player.clearPendingSmeltingBarId()
-        player.goldCrafting = false
-        player.goldIndex = -1
-        player.goldSlot = -1
         player.clearPrayerOfferingState()
         player.clearCraftingState()
         player.clearFletchingState()
         player.clearFishingState()
-        player.stringing = false
         player.resourcesGathered = 0
         player.clearCookingState()
-        player.filling = false
         player.clearMiningState()
         player.clearWoodcuttingState()
         if (player.getActiveSmithingSelection() != null || player.IsAnvil) {
-            player.clearActiveSmithingSelection()
-            player.resetSM()
+            SmithingInterfaceService.resetRuntimeState(player)
             player.send(RemoveInterfaces())
         }
         player.clearPendingProductionSelection()

@@ -216,7 +216,10 @@ object DialogueOptionService {
                 setNextDialogue(164)
             }
         } else if (dialogueId == 164) {
-            val type = if (c.skillX == 3002 && c.skillY == 3931) 3 else if (c.skillX == 2547 && c.skillY == 3554) 2 else 1
+            val type =
+                if (c.interactionAnchorX == 3002 && c.interactionAnchorY == 3931) 3
+                else if (c.interactionAnchorX == 2547 && c.interactionAnchorY == 3554) 2
+                else 1
             if (button == 1) {
                 c.teleportTo(if (type == 1) 2547 else 2474, if (type == 1) 3553 else 3438, 0)
             } else if (button == 2) {

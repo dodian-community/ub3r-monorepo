@@ -8,6 +8,8 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.utilities.Misc
 
 class WerewolfCourseService(private val c: Client) {
@@ -16,8 +18,8 @@ class WerewolfCourseService(private val c: Client) {
         if (ringCheck && c.equipment[Equipment.Slot.RING.id] == 4202) {
             awardedXp = (awardedXp * 1.1).toInt()
         }
-        c.giveExperience(awardedXp, Skill.AGILITY)
-        c.triggerRandom(awardedXp)
+        SkillProgressionService.gainXp(c, awardedXp, Skill.AGILITY)
+        SkillingRandomEventService.trigger(c, awardedXp)
     }
 
     private fun runLater(delayMs: Int, action: () -> Unit) {

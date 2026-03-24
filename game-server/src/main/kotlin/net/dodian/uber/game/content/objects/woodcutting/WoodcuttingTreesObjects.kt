@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingDefinitions
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingService
+import net.dodian.uber.game.skills.woodcutting.api.WoodcuttingPlugin
 
 object WoodcuttingTreesObjects : ObjectContent {
     override val objectIds: IntArray = WoodcuttingDefinitions.allTreeObjectIds
@@ -28,6 +28,6 @@ object WoodcuttingTreesObjects : ObjectContent {
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return WoodcuttingService.startWoodcutting(client, objectId, position, obj)
+        return WoodcuttingPlugin.attempt(client, objectId, position, obj)
     }
 }

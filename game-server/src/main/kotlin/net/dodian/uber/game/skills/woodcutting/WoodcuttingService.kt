@@ -5,12 +5,17 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionSucceededEvent
+import net.dodian.uber.game.skills.core.events.SkillActionCompleteEvent
+import net.dodian.uber.game.skills.core.events.SkillActionInterruptEvent
+import net.dodian.uber.game.skills.core.events.SkillActionStartEvent
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionController
@@ -20,7 +25,7 @@ import net.dodian.uber.game.runtime.action.PlayerActionType
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.uber.game.skills.core.ActionStopReason
+import net.dodian.uber.game.skills.core.runtime.ActionStopReason
 import net.dodian.utilities.Misc
 
 object WoodcuttingService {
@@ -75,6 +80,7 @@ object WoodcuttingService {
         client.requestAnim(axe.animationId, 0)
         client.send(SendMessage("You swing your axe at the tree..."))
         GameEventBus.post(SkillingActionStartedEvent(client, "Woodcutting"))
+        GameEventBus.post(SkillActionStartEvent(client, "Woodcutting"))
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.WOODCUTTING,
@@ -144,6 +150,7 @@ object WoodcuttingService {
         client.clearWoodcuttingState()
         if (hadWoodcutting) {
             GameEventBus.post(SkillingActionStoppedEvent(client, "Woodcutting", reason))
+            GameEventBus.post(SkillActionInterruptEvent(client, "Woodcutting", reason))
         }
     }
 
@@ -186,8 +193,8 @@ object WoodcuttingService {
             client.addItem(activeTree.logItemId, 1)
             client.checkItemUpdate()
             ItemLog.playerGathering(client, activeTree.logItemId, 1, client.position.copy(), "Woodcutting")
-            client.giveExperience(activeTree.experience, Skill.WOODCUTTING)
-            client.triggerRandom(activeTree.experience)
+            SkillProgressionService.gainXp(client, activeTree.experience, Skill.WOODCUTTING)
+            SkillingRandomEventService.trigger(client, activeTree.experience)
             client.requestAnim(activeAxe.animationId, 0)
 
             val gathered = state.resourcesGathered + 1
@@ -199,6 +206,7 @@ object WoodcuttingService {
                 )
             GameEventBus.post(SkillingActionCycleEvent(client, "Woodcutting"))
             GameEventBus.post(SkillingActionSucceededEvent(client, "Woodcutting"))
+            GameEventBus.post(SkillActionCompleteEvent(client, "Woodcutting"))
 
             if (gathered >= 4 && Misc.chance(20) == 1) {
                 client.send(SendMessage("You take a rest after gathering $gathered resources."))

@@ -5,7 +5,8 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionRequest
-import net.dodian.uber.game.skills.crafting.CraftingService
+import net.dodian.uber.game.skills.crafting.TanningRequest
+import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -22,7 +23,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
             ) { client, request ->
                 val amount = CraftingInterfaceComponents.hideCraftGroup.amountByButton[request.rawButtonId] ?: return@buttonBinding false
                 val productGroup = CraftingInterfaceComponents.hideCraftGroup.rawButtonIds.indexOf(request.rawButtonId) / 4
-                CraftingService.startHideCraft(client, productGroup, amount)
+                CraftingPlugin.startHide(client, productGroup, amount)
                 true
             })
             add(
@@ -35,7 +36,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
             ) { client, request ->
                 val amount = CraftingInterfaceComponents.standardCraftGroup.amountByButton[request.rawButtonId] ?: return@buttonBinding false
                 val productIndex = CraftingInterfaceComponents.standardCraftGroup.rawButtonIds.indexOf(request.rawButtonId) / 3
-                CraftingService.startStandardLeatherCraft(client, productIndex, amount)
+                CraftingPlugin.startLeather(client, productIndex, amount)
                 true
             })
             add(
@@ -94,7 +95,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
                         rawButtonIds = tanning.rawButtonIds,
                     ) { client, request ->
                         val amount = tanning.amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                        client.startTan(amount, tanning.hideType)
+                        CraftingPlugin.startTanning(client, TanningRequest(tanning.hideType, amount))
                         true
                     }
                 )

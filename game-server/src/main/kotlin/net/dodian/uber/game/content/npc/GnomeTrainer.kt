@@ -31,8 +31,8 @@ internal object GnomeTrainer {
                     finish()
                 },
                 DialogueOption("Another course, please.") {
-                    val atWilderness = client.skillX == 3002 && client.skillY == 3931
-                    val atBarbarian = client.skillX == 2547 && client.skillY == 3554
+                    val atWilderness = client.interactionAnchorX == 3002 && client.interactionAnchorY == 3931
+                    val atBarbarian = client.interactionAnchorX == 2547 && client.interactionAnchorY == 3554
                     val courseOptions = if (atWilderness) {
                         arrayOf("Gnome", "Barbarian", "Stay here")
                     } else if (atBarbarian) {

@@ -8,12 +8,14 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameThreadTimers
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.utilities.Misc
 
 class AgilityCourseService(private val c: Client) {
     fun giveEndExperience(xp: Int) {
-        c.giveExperience(xp, Skill.AGILITY)
-        c.triggerRandom(xp)
+        SkillProgressionService.gainXp(c, xp, Skill.AGILITY)
+        SkillingRandomEventService.trigger(c, xp)
     }
 
     private fun runLater(delayMs: Int, action: () -> Unit) {

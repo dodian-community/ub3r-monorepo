@@ -5,6 +5,7 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
@@ -38,7 +39,7 @@ public class PlayerInitializer {
 
         // Now that interface structure is set up, refresh all skills including HP
         Skill.enabledSkills().forEach(skill -> {
-            client.refreshSkill(skill);
+            SkillProgressionService.refresh(client, skill);
         });
 
         if (client.lookNeeded) {

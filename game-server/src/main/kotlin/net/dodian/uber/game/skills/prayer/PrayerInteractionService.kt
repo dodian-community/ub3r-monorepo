@@ -3,6 +3,8 @@ package net.dodian.uber.game.skills.prayer
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.SkillingActionService
@@ -13,7 +15,7 @@ object PrayerInteractionService {
         val bone = Bones.getBone(itemId) ?: return false
         if (!client.playerHasItem(itemId)) return false
         client.requestAnim(827, 0)
-        client.giveExperience(bone.getExperience(), Skill.PRAYER)
+        SkillProgressionService.gainXp(client, bone.getExperience(), Skill.PRAYER)
         client.deleteItem(itemId, itemSlot, 1)
         client.checkItemUpdate()
         client.send(SendMessage("You bury the ${client.GetItemName(itemId).lowercase()}"))
@@ -27,21 +29,21 @@ object PrayerInteractionService {
             client.resetAction()
             return false
         }
-        client.prayerOfferingState = PrayerOfferingState(itemId, client.skillX, client.skillY)
+        client.prayerOfferingState = PrayerOfferingState(itemId, client.interactionAnchorX, client.interactionAnchorY)
         client.deleteItem(itemId, 1)
         client.checkItemUpdate()
         client.requestAnim(3705, 0)
-        client.stillgfx(624, Position(client.skillX, client.skillY, client.position.z), 0)
+        client.stillgfx(624, Position(client.interactionAnchorX, client.interactionAnchorY, client.position.z), 0)
         val extra = (client.getLevel(Skill.FIREMAKING) + 1).toDouble() / 100
         val chance = 2.0 + extra
         val experience = (bone.getExperience() * chance).toInt()
-        client.giveExperience(experience, Skill.PRAYER)
+        SkillProgressionService.gainXp(client, experience, Skill.PRAYER)
         client.send(
             SendMessage(
                 "You sacrifice the ${client.GetItemName(itemId).lowercase()} and your multiplier was $chance (${(chance * 100).toInt()}%)"
             )
         )
-        client.triggerRandom(experience)
+        SkillingRandomEventService.trigger(client, experience)
         return true
     }
 

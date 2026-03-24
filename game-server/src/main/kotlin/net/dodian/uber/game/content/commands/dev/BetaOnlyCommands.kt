@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.skills.core.progression.SkillAdminService
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.gameWorldId
 
@@ -127,16 +128,19 @@ private fun handleBeta(context: CommandContext): Boolean {
         context.alias == "setup" -> {
             for (i in 0 until 7) {
                 val level = if (i == 3) 78 else 75
-                client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(i))
-                client.setLevel(level, Skill.getSkill(i))
+                val skill = Skill.getSkill(i) ?: continue
+                SkillAdminService.set(
+                    client = client,
+                    skill = skill,
+                    level = level,
+                    experience = Skills.getXPForLevel(level),
+                )
                 if (i == 3) {
                     client.maxHealth = level
                     client.heal(level)
                 } else if (i == 5) {
                     client.maxPrayer = level
                     client.pray(level)
-                } else {
-                    client.refreshSkill(Skill.getSkill(i))
                 }
             }
             client.equipment[0] = 3751

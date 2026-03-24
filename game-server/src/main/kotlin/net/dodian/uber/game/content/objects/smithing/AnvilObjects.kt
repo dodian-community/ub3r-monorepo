@@ -3,6 +3,8 @@ package net.dodian.uber.game.content.objects.smithing
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.skills.smithing.SmithingInterfaceService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.smithing.api.SmithingPlugin
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -17,9 +19,8 @@ object AnvilObjects : ObjectContent {
         }
         val barId = SmithingInterfaceService.firstBarInInventory(client)
         if (barId != -1) {
-            client.skillX = position.x
-            client.setSkillY(position.y)
-            SmithingInterfaceService.openForBar(client, barId, position.x, position.y)
+            client.setInteractionAnchor(position.x, position.y, position.z)
+            SmithingPlugin.openSmithing(client, barId, position.x, position.y)
         } else {
             client.send(SendMessage("You do not have any bars to smith!"))
         }
@@ -53,15 +54,14 @@ object AnvilObjects : ObjectContent {
                 client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
                 client.addItemSlot(11284, 1, itemSlot)
                 client.checkItemUpdate()
-                client.giveExperience(15000, Skill.SMITHING)
+                SkillProgressionService.gainXp(client, 15000, Skill.SMITHING)
                 client.send(SendMessage("Your smithing craft made a Dragonfire shield out of the visage."))
             }
             return true
         }
         if (SmithingInterfaceService.resolveTierId(itemId) != -1) {
-            client.skillX = position.x
-            client.setSkillY(position.y)
-            SmithingInterfaceService.openForBar(client, itemId, position.x, position.y)
+            client.setInteractionAnchor(position.x, position.y, position.z)
+            SmithingPlugin.openSmithing(client, itemId, position.x, position.y)
             return true
         }
         return false

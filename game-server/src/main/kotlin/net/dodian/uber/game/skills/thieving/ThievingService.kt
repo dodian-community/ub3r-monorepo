@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 
 object ThievingService {
     const val PICKPOCKET_EMOTE: Int = 881
@@ -57,7 +59,7 @@ object ThievingService {
                 player.send(SendMessage("You don't have enough inventory space!"))
                 return@runLaterMs
             }
-            player.giveExperience(data.receivedExperience, Skill.THIEVING)
+            SkillProgressionService.gainXp(player, data.receivedExperience, Skill.THIEVING)
             player.canPreformAction = false
             if (data.item.size > 1) {
                 val rollChance = (Math.random() * 100).toInt()
@@ -83,7 +85,7 @@ object ThievingService {
                 GlobalObject.addGlobalObject(stallObject, data.respawnTime * 1000)
             }
             player.checkItemUpdate()
-            player.triggerRandom(data.receivedExperience)
+            SkillingRandomEventService.trigger(player, data.receivedExperience)
             player.chestEvent++
         }
     }

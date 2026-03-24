@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 
 object SmithingActionService {
     private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
@@ -107,12 +109,12 @@ object SmithingActionService {
         repeat(spec.barsRequired) {
             player.deleteItem(spec.barId, 1)
         }
-        player.giveExperience(spec.experience, Skill.SMITHING)
+        SkillProgressionService.gainXp(player, spec.experience, Skill.SMITHING)
         player.addItem(spec.targetItem, spec.outputCount)
         player.checkItemUpdate()
         player.send(SendMessage("You smith a ${player.GetItemName(spec.targetItem)}"))
         player.requestAnim(0x382, 0)
-        player.triggerRandom(spec.experience)
+        SkillingRandomEventService.trigger(player, spec.experience)
         return true
     }
 

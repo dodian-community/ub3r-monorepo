@@ -3,12 +3,31 @@ package net.dodian.uber.game.skills.fishing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.runtime.action.SkillingActionService
 import net.dodian.utilities.Misc
 
 object FishingService {
+    @JvmStatic
+    fun cycleDelayMs(client: Client): Long {
+        val level = client.getLevel(Skill.FISHING) / 256.0
+        val harpoon =
+            client.getLevel(Skill.FISHING) >= 61 &&
+                (client.equipment[Equipment.Slot.WEAPON.id] == 21028 || client.playerHasItem(21028))
+        val bonus = 1 + level + (if (harpoon) 0.2 else 0.0)
+        val fishIndex = client.fishingState?.spotIndex ?: return 0L
+        val spot = FishingDefinitions.byIndex(fishIndex) ?: return 0L
+        var timer = spot.baseDelayMs.toDouble()
+        val chance = Misc.chance(8) == 1
+        if (chance && harpoon) {
+            timer -= 600
+        }
+        return (timer / bonus).toLong()
+    }
+
     @JvmStatic
     fun start(client: Client, objectId: Int, click: Int) {
         val harpoon = client.getLevel(Skill.FISHING) >= 61 &&
@@ -81,13 +100,13 @@ object FishingService {
         val random = Misc.random(6)
         val itemId = if (fishIndex == 1 && client.getLevel(Skill.FISHING) >= 30 && random < 3) 331 else spot.fishItemId
         if (spot.featherConsumed) client.deleteItem(314, 1)
-        client.giveExperience(if (itemId == 331) spot.experience + 100 else spot.experience, Skill.FISHING)
+        SkillProgressionService.gainXp(client, if (itemId == 331) spot.experience + 100 else spot.experience, Skill.FISHING)
         client.addItem(itemId, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Fishing")
         val gatheredCount = state.gatheredCount + 1
         client.requestAnim(spot.animationId, 0)
-        client.triggerRandom(spot.experience)
+        SkillingRandomEventService.trigger(client, spot.experience)
         client.send(SendMessage("You fish up some ${client.GetItemName(itemId).lowercase().replace("raw ", "")}."))
         client.fishingState = state.copy(gatheredCount = gatheredCount)
         if (gatheredCount >= 4 && Misc.chance(20) == 1) {

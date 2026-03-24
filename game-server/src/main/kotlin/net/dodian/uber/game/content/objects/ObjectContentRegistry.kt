@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.plugin.PluginModuleIndex
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -38,7 +39,7 @@ object ObjectContentRegistry {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            definitions += builtinDefinitions()
+            definitions += PluginModuleIndex.objectContents
             rebuildIndexLocked()
             bootstrapped.set(true)
         }
@@ -202,41 +203,6 @@ object ObjectContentRegistry {
         }
         byObjectId = rebuilt
     }
-
-    private fun builtinDefinitions(): List<Pair<String, ObjectContent>> =
-        listOf(
-            "AltarObjects" to net.dodian.uber.game.content.objects.prayer.AltarObjects,
-            "AnvilObjects" to net.dodian.uber.game.content.objects.smithing.AnvilObjects,
-            "BarbarianCourseObjects" to net.dodian.uber.game.content.objects.agility.BarbarianCourseObjects,
-            "BankBoothObjects" to net.dodian.uber.game.content.objects.banking.BankBoothObjects,
-            "BankChestObjects" to net.dodian.uber.game.content.objects.banking.BankChestObjects,
-            "ChestObjects" to net.dodian.uber.game.content.objects.thieving.ChestObjects,
-            "CompostBinObjects" to net.dodian.uber.game.content.objects.farming.CompostBinObjects,
-            "DoorToggleObjects" to net.dodian.uber.game.content.objects.doors.DoorToggleObjects,
-            "FarmingPatchObjects" to net.dodian.uber.game.content.objects.farming.FarmingPatchObjects,
-            "FurnaceObjects" to net.dodian.uber.game.content.objects.smithing.FurnaceObjects,
-            "FarmingPatchGuideObjects" to net.dodian.uber.game.content.objects.farming.FarmingPatchGuideObjects,
-            "GemRocksObjects" to net.dodian.uber.game.content.objects.mining.GemRocksObjects,
-            "GnomeCourseObjects" to net.dodian.uber.game.content.objects.agility.GnomeCourseObjects,
-            "LadderObjects" to net.dodian.uber.game.content.objects.travel.LadderObjects,
-            "MiningRocksObjects" to net.dodian.uber.game.content.objects.mining.MiningRocksObjects,
-            "PassageObjects" to net.dodian.uber.game.content.objects.travel.PassageObjects,
-            "PartyRoomObjects" to net.dodian.uber.game.content.objects.events.PartyRoomObjects,
-            "PlunderObjects" to net.dodian.uber.game.content.objects.thieving.PlunderObjects,
-            "RangeObjects" to net.dodian.uber.game.content.objects.cooking.RangeObjects,
-            "ResourceFillingObjects" to net.dodian.uber.game.content.objects.crafting.ResourceFillingObjects,
-            "RunecraftingObjects" to net.dodian.uber.game.content.objects.runecrafting.RunecraftingObjects,
-            "SpecialMiningObjects" to net.dodian.uber.game.content.objects.mining.SpecialMiningObjects,
-            "SpinningWheelObjects" to net.dodian.uber.game.content.objects.crafting.SpinningWheelObjects,
-            "StaircaseObjects" to net.dodian.uber.game.content.objects.travel.StaircaseObjects,
-            "StallObjects" to net.dodian.uber.game.content.objects.thieving.StallObjects,
-            "TeleportObjects" to net.dodian.uber.game.content.objects.travel.TeleportObjects,
-            "VerticalTeleportObjects" to net.dodian.uber.game.content.objects.travel.VerticalTeleportObjects,
-            "WebObstacleObjects" to net.dodian.uber.game.content.objects.travel.WebObstacleObjects,
-            "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.agility.WerewolfCourseObjects,
-            "WildernessCourseObjects" to net.dodian.uber.game.content.objects.agility.WildernessCourseObjects,
-            "WoodcuttingTreesObjects" to net.dodian.uber.game.content.objects.woodcutting.WoodcuttingTreesObjects,
-        )
 
     private fun validateInternalOverlaps(name: String, entries: List<RegisteredBinding>) {
         val grouped = entries.groupBy { it.binding.objectId }

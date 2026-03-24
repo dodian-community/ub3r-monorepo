@@ -93,4 +93,10 @@ object SmithingInterfaceService {
 
     @JvmStatic
     fun firstBarInInventory(client: Client): Int = possibleBars.firstOrNull(client::contains) ?: -1
+
+    @JvmStatic
+    fun resetRuntimeState(client: Client) {
+        client.clearActiveSmithingSelection()
+        client.IsAnvil = false
+    }
 }

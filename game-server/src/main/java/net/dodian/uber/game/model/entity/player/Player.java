@@ -37,7 +37,9 @@ import net.dodian.uber.game.skills.fishing.FishingState;
 import net.dodian.uber.game.skills.cooking.CookingState;
 import net.dodian.uber.game.skills.crafting.CraftingState;
 import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
+import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
@@ -1007,6 +1009,30 @@ public abstract class Player extends Entity {
 
     public void clearPrayerOfferingState() {
         interactionState.clearPrayerOfferingState();
+    }
+
+    public RunecraftingState getRunecraftingState() {
+        return interactionState.getRunecraftingState();
+    }
+
+    public void setRunecraftingState(RunecraftingState runecraftingState) {
+        interactionState.setRunecraftingState(runecraftingState);
+    }
+
+    public void clearRunecraftingState() {
+        interactionState.clearRunecraftingState();
+    }
+
+    public InteractionAnchorState getInteractionAnchorState() {
+        return interactionState.getInteractionAnchorState();
+    }
+
+    public void setInteractionAnchorState(InteractionAnchorState interactionAnchorState) {
+        interactionState.setInteractionAnchorState(interactionAnchorState);
+    }
+
+    public void clearInteractionAnchorState() {
+        interactionState.clearInteractionAnchorState();
     }
 
     public PyramidPlunderPlayerState getPyramidPlunderState() {

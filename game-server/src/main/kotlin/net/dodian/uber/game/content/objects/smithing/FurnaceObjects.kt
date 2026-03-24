@@ -11,6 +11,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
+import net.dodian.uber.game.skills.smithing.api.SmithingPlugin
 import net.dodian.utilities.Utils
 
 object FurnaceObjects : ObjectContent {
@@ -20,13 +22,13 @@ object FurnaceObjects : ObjectContent {
         if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
             return false
         }
-        SmeltingInterfaceService.open(client)
+        SmithingPlugin.openSmelting(client)
         return true
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId in SmithingObjectComponents.smeltingInterfaceFurnaces) {
-            SmeltingInterfaceService.open(client)
+            SmithingPlugin.openSmelting(client)
             return true
         }
         return false
@@ -69,12 +71,11 @@ object FurnaceObjects : ObjectContent {
         }
 
         if (itemId == 2357) {
-            client.showItemsGold()
-            client.showInterface(4161)
+            CraftingPlugin.openGoldJewelry(client)
             return true
         }
         SmeltingInterfaceService.selectPendingRecipeFromOre(client, itemId)
-        SmeltingInterfaceService.open(client)
+        SmithingPlugin.openSmelting(client)
         return true
     }
 

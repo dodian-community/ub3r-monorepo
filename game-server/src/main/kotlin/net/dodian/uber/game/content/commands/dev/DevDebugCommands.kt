@@ -7,6 +7,7 @@ import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.party.Balloons
 import net.dodian.utilities.Misc
@@ -187,7 +188,7 @@ private fun handleDevDebug(context: CommandContext): Boolean {
             for (i in 0 until 7) {
                 if (i != 3 && i != 5) {
                     client.boostedLevel[i] = 0
-                    client.refreshSkill(Skill.getSkill(i))
+                    Skill.getSkill(i)?.let { SkillProgressionService.refresh(client, it) }
                 }
             }
         }

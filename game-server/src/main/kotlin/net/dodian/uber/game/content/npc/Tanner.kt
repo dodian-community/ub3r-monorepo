@@ -4,6 +4,7 @@ package net.dodian.uber.game.content.npc
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.crafting.TanningService
 
 internal object Tanner {
     // Stats: 5809: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -15,7 +16,7 @@ internal object Tanner {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        client.openTan()
+        TanningService.open(client)
         return true
     }
 

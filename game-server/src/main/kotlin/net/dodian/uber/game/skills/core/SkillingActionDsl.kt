@@ -1,6 +1,9 @@
 package net.dodian.uber.game.skills.core
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.core.requirements.Requirement
+import net.dodian.uber.game.skills.core.requirements.RequirementBuilder
+import net.dodian.uber.game.skills.core.runtime.ActionStopReason
 
 data class ActionSpec(
     val name: String,

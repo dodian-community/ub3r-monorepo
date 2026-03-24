@@ -41,8 +41,15 @@ import net.dodian.uber.game.skills.cooking.CookingState;
 import net.dodian.uber.game.skills.crafting.CraftingService;
 import net.dodian.uber.game.skills.crafting.CraftingMode;
 import net.dodian.uber.game.skills.crafting.CraftingState;
+import net.dodian.uber.game.skills.crafting.GoldJewelryService;
+import net.dodian.uber.game.skills.crafting.TanningRequest;
+import net.dodian.uber.game.skills.crafting.TanningService;
 import net.dodian.uber.game.skills.prayer.PrayerInteractionService;
 import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingDefinitions;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingPouchService;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingService;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.content.dialogue.DialogueService;
@@ -62,8 +69,14 @@ import net.dodian.uber.game.runtime.action.TeleportActionService;
 import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
 import net.dodian.uber.game.runtime.combat.CombatStartService;
 import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.utilities.*;
+import net.dodian.uber.game.skills.core.progression.SkillAdminService;
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.skills.core.runtime.RuneCostService;
+import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService;
+import net.dodian.uber.game.skills.guide.SkillGuideBookService;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -72,11 +85,8 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.io.BufferedWriter;
 import io.netty.channel.Channel;
 
-import java.io.File;
-import java.io.FileWriter;
 /* Kotlin imports */
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
@@ -104,7 +114,6 @@ public class Client extends Player implements Runnable {
     public boolean isLoggingOut = false; //new flag 
     long lastBar = 0;
     public long lastSave, lastProgressSave;
-    public long lastClickAltar = 0;
     public Entity target = null;
     int otherdbId = -1;
     public int convoId = -1, nextDiag = -1, npcFace = 591;
@@ -134,9 +143,6 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean stringing = false;
-    public boolean filling = false;
-    public int fillingObj = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -232,24 +238,9 @@ public class Client extends Player implements Runnable {
      * Refreshes a skill's level and experience on the client.
      * @param skill The skill to refresh
      */
+    @Deprecated
     public void refreshSkill(Skill skill) {
-        int baseLevel = Skills.getLevelForExperience(getExperience(skill));
-        int level = baseLevel;
-        if (skill == Skill.HITPOINTS) {
-            level = getCurrentHealth();
-        } else if (skill == Skill.PRAYER) {
-            level = getCurrentPrayer();
-        } else if (boostedLevel[skill.getId()] != 0) {
-            level += boostedLevel[skill.getId()];
-        }
-
-        setSkillLevel(skill, level, getExperience(skill));
-        setLevel(level, skill);
-
-        int maxLevel = baseLevel;
-
-        // Send the skill update packet (level, maxLevel, experience)
-        send(new RefreshSkill(skill, level, maxLevel, getExperience(skill)));
+        SkillProgressionService.refresh(this, skill);
     }
 
     public void sendCachedString(String text, int lineId) {
@@ -590,11 +581,6 @@ public class Client extends Player implements Runnable {
     private long verticalTransitionSequence = 0L;
     private long activeVerticalTransitionToken = 0L;
     private long verticalTransitionUntilMillis = 0L;
-    public int[] smithing = {0, 0, 0, -1, -1, 0};
-
-    public int skillX = -1;
-    public int skillY = -1;
-
     public int WanneBank = 0;
     public int WanneShop = 0;
     public int WanneThieve = 0;
@@ -914,9 +900,9 @@ public class Client extends Player implements Runnable {
         send(new SetSidebarInterface(menuId, form));
     }
 
+    @Deprecated
     public void setSkillLevel(Skill skill, int currentLevel, int XP) {
-        send(new SendString(String.valueOf(Math.max(currentLevel, 0)), skill.getCurrentComponent()));
-        send(new SendString(String.valueOf(Math.max(Skills.getLevelForExperience(XP), 1)), skill.getLevelComponent()));
+        SkillProgressionService.setSkillLevel(this, skill, currentLevel, XP);
     }
 
 
@@ -1145,76 +1131,9 @@ public class Client extends Player implements Runnable {
         return slot;
     }
 
+    @Deprecated
     public boolean giveExperience(int amount, Skill skill) {
-        if (amount < 1)
-            return false;
-        /*if (randomed) {
-            send(new SendMessage("You must answer the genie before you can gain experience!"));
-            return false;
-        }*/ //Due to combat bug, I decided to remove this code. Might need a revisit if we wish to keep!
-        amount = amount * getGameMultiplierGlobalXp();
-        int oldXP = getExperience(skill),
-                newXP = Math.min(getExperience(skill) + amount, 200000000);
-        int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
-        amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
-        addExperience(amount, skill);
-        markSaveDirty(PlayerSaveSegment.STATS.getMask());
-        int animation = -1;
-        if (newLevel - oldLevel > 0) {
-            animation = 199;
-            if (newLevel == 99) {
-                animation = 623;
-                publicyell(getPlayerName() + " has just reached the max level for " + skill.getName() + "!");
-            } else if (newLevel > 90)
-                publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + newLevel + "!");
-            send(new SendMessage("Congratulations, you just advanced " + (skill == Skill.ATTACK || skill == Skill.AGILITY ? "an" : "a") + " " + skill.getName() + " level."));
-        }
-        if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 50 million experience!");
-        }
-        if (oldXP < 75000000 && newXP >= 75000000) { // 75 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 75 million experience!");
-        }
-        if (oldXP < 100000000 && newXP >= 100000000) { // 100 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 100 million experience!");
-        }
-        if (oldXP < 125000000 && newXP >= 125000000) { // 100 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 125 million experience!");
-        }
-        if (oldXP < 150000000 && newXP >= 150000000) { // 150 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 150 million experience!");
-        }
-        if (oldXP < 175000000 && newXP >= 175000000) { // 150 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 175 million experience!");
-        }
-        if (oldXP < 200000000 && newXP == 200000000) { // 200 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached the maximum experience!");
-        }
-    /*double chance = (double)newXp / 1000000; //1 xp = 0.000001, 0.0001 %
-    double roll = Math.random() * 1;
-    if(getGameWorldId() > 1)
-    	send(new SendMessage("XP gained: "+ newXp +", your chance is " + chance * 100 + "% and you rolled a " + roll * 100));
-    if(roll <= chance && getGameWorldId() > 1) //Test world 2 or higher for this to trigger!
-    	Balloons.triggerBalloonEvent(this);*/
-        setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
-        refreshSkill(skill);
-        if (skill == Skill.FIREMAKING)
-            updateBonus(11);
-        if (skill == Skill.HITPOINTS && newLevel > maxHealth)
-            maxHealth = newLevel;
-        else if (skill == Skill.PRAYER && newLevel > maxPrayer)
-            maxPrayer = newLevel;
-        if (animation != -1)
-            animation(animation, getPosition());
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        return true;
+        return SkillProgressionService.gainXp(this, amount, skill);
     }
 
     public void bankItem(int itemID, int fromSlot, int amount) {
@@ -1655,140 +1574,6 @@ public class Client extends Player implements Runnable {
         return tH;
     }
 
-    public boolean isFishing() {
-        return getFishingState() != null;
-    }
-
-    public void setFishing(boolean fishing) {
-        if (!fishing) {
-            clearFishingState();
-        } else if (getFishingState() == null) {
-            setFishingState(new FishingState(0, 0));
-        }
-    }
-
-    public int getFishIndex() {
-        FishingState state = getFishingState();
-        return state == null ? -1 : state.getSpotIndex();
-    }
-
-    public void setFishIndex(int fishIndex) {
-        FishingState state = getFishingState();
-        setFishingState(new FishingState(fishIndex, state == null ? 0 : state.getGatheredCount()));
-    }
-
-    public int getCookIndex() {
-        CookingState state = getCookingState();
-        return state == null ? -1 : state.getCookIndex();
-    }
-
-    public void setCookIndex(int cookIndex) {
-        CookingState state = getCookingState();
-        setCookingState(new CookingState(state == null ? -1 : state.getItemId(), cookIndex, state == null ? 0 : state.getRemaining()));
-    }
-
-    public int getCookAmount() {
-        CookingState state = getCookingState();
-        return state == null ? 0 : state.getRemaining();
-    }
-
-    public void setCookAmount(int cookAmount) {
-        CookingState state = getCookingState();
-        setCookingState(new CookingState(state == null ? -1 : state.getItemId(), state == null ? -1 : state.getCookIndex(), cookAmount));
-    }
-
-    public boolean isCrafting() {
-        CraftingState state = getCraftingState();
-        return state != null && state.getMode() == CraftingMode.LEATHER;
-    }
-
-    public void setCrafting(boolean crafting) {
-        if (!crafting) {
-            CraftingState state = getCraftingState();
-            if (state != null && state.getMode() == CraftingMode.LEATHER) {
-                clearCraftingState();
-            }
-        } else if (getCraftingState() == null) {
-            setCraftingState(new CraftingState(CraftingMode.LEATHER, -1, -1, 0, 0, 0));
-        }
-    }
-
-    public int getCAmount() {
-        CraftingState state = getCraftingState();
-        return state == null ? 0 : state.getRemaining();
-    }
-
-    public void setCAmount(int amount) {
-        CraftingState state = getCraftingState();
-        setCraftingState(
-                new CraftingState(
-                        state == null ? CraftingMode.LEATHER : state.getMode(),
-                        state == null ? -1 : state.getSelectedItemId(),
-                        state == null ? -1 : state.getProductId(),
-                        amount,
-                        state == null ? 0 : state.getRequiredLevel(),
-                        state == null ? 0 : state.getExperience()
-                )
-        );
-    }
-
-    public int getCItem() {
-        CraftingState state = getCraftingState();
-        return state == null ? -1 : state.getProductId();
-    }
-
-    public void setCItem(int item) {
-        CraftingState state = getCraftingState();
-        setCraftingState(
-                new CraftingState(
-                        state == null ? CraftingMode.LEATHER : state.getMode(),
-                        state == null ? -1 : state.getSelectedItemId(),
-                        item,
-                        state == null ? 0 : state.getRemaining(),
-                        state == null ? 0 : state.getRequiredLevel(),
-                        state == null ? 0 : state.getExperience()
-                )
-        );
-    }
-
-    public int getCLevel() {
-        CraftingState state = getCraftingState();
-        return state == null ? 0 : state.getRequiredLevel();
-    }
-
-    public void setCLevel(int level) {
-        CraftingState state = getCraftingState();
-        setCraftingState(
-                new CraftingState(
-                        state == null ? CraftingMode.LEATHER : state.getMode(),
-                        state == null ? -1 : state.getSelectedItemId(),
-                        state == null ? -1 : state.getProductId(),
-                        state == null ? 0 : state.getRemaining(),
-                        level,
-                        state == null ? 0 : state.getExperience()
-                )
-        );
-    }
-
-    public int getCExp() {
-        CraftingState state = getCraftingState();
-        return state == null ? 0 : state.getExperience();
-    }
-
-    public void setCExp(int exp) {
-        CraftingState state = getCraftingState();
-        setCraftingState(
-                new CraftingState(
-                        state == null ? CraftingMode.LEATHER : state.getMode(),
-                        state == null ? -1 : state.getSelectedItemId(),
-                        state == null ? -1 : state.getProductId(),
-                        state == null ? 0 : state.getRemaining(),
-                        state == null ? 0 : state.getRequiredLevel(),
-                        exp
-                )
-        );
-    }
-
     public void checkItemUpdate() { //Checking bank etc..
         PlayerBankService.checkItemUpdate(this);
     }
@@ -1968,7 +1753,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (emptyEssencePouch(wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.skills.runecrafting.api.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1989,7 +1774,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            SlayerService.sendTask(this);
+            net.dodian.uber.game.skills.slayer.api.SlayerPlugin.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -2595,65 +2380,6 @@ public class Client extends Player implements Runnable {
             }
         }
         return false;
-    }
-
-    public int CheckSmithing(int ItemID) {
-        if (!IsItemInBag(2347)) {
-            send(new SendMessage("You need a " + GetItemName(2347) + " to hammer bars."));
-            return -1;
-        }
-        int Type = SmithingInterfaceService.resolveTierId(ItemID);
-        if (Type == -1)
-            send(new SendMessage("You cannot smith this item."));
-        else
-            smithing[3] = ItemID;
-        return Type;
-    }
-
-    public void OpenSmithingFrame(int Type) { //Not touching smithing interface anymore!!!
-        net.dodian.uber.game.skills.smithing.SmithingTier tier = SmithingDefinitions.findSmithingTierByTypeId(Type);
-        if (tier != null) {
-            SmithingInterfaceService.openForBar(this, tier.getBarId(), skillX, skillY);
-        }
-    }
-
-    public boolean smithing() {
-        return false;
-    }
-
-    public void startSmithing(int itemId, int amount) {
-        SmithingInterfaceService.startFromInterfaceItem(this, itemId, amount);
-    }
-
-    public void resetSM() {
-        smithing[0] = 0;
-        smithing[1] = 0;
-        smithing[2] = 0;
-        smithing[3] = -1;
-        smithing[4] = -1;
-        smithing[5] = 0;
-        IsAnvil = false;
-        skillX = -1;
-        setSkillY(-1);
-        rerequestAnim();
-    }
-
-    public long getFishingSpeed() {
-        double level = getLevel(FISHING) / 256D;
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        double bonus = 1 + level + (harpoon ? 0.2 : 0.0);
-        int fishIndex = getFishIndex();
-        net.dodian.uber.game.skills.fishing.FishingSpotDefinition spot =
-                net.dodian.uber.game.skills.fishing.FishingDefinitions.byIndex(fishIndex);
-        if (spot == null) {
-            return 0L;
-        }
-        double timer = spot.getBaseDelayMs();
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && harpoon) //Dragon harpoon?!
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
@@ -3453,11 +3179,9 @@ public class Client extends Player implements Runnable {
         }
     }
 
+    @Deprecated
     public boolean runeCheck() {
-        if (playerHasItem(565))
-            return true;
-        send(new SendMessage("This spell requires 1 blood rune"));
-        return false;
+        return RuneCostService.ensureBloodRune(this);
     }
 
     public void resetPos() {
@@ -3478,43 +3202,14 @@ public class Client extends Player implements Runnable {
         }
     }
 
+    @Deprecated
     public void showRandomEvent() {
-        resetAction(true);
-        if (!randomed || !randomed2) {
-            random_skill = Utils.random(20);
-            send(new SendString("Click the @or1@" + Objects.requireNonNull(getSkill(random_skill)).getName() + " @yel@button", 2810));
-            send(new SendString("", 2811));
-            send(new SendString("", 2831));
-            randomed = true;
-            clearTabs();
-            showInterface(2808);
-        }
+        SkillingRandomEventService.show(this);
     }
 
+    @Deprecated
     public void triggerRandom(int xp) {
-        if (genieCombatFlag || randomed) { //Cant get a genie if we have it flagged from combat or we already got it open xD
-            return;
-        }
-        xp /= 5;
-        int reduceChance = Math.min(xp < 50 ? xp : xp < 100 ? (xp * 3) / 2 : xp < 200 ? xp * 2 : xp < 400 ? xp * 3 : xp * 4, 3000);
-        reduceChance *= 2 + Misc.random(8);
-        //System.out.println("testing..." + reduceChance + ", " + Math.min(reduceChance, 7000));
-        if (Misc.chance(6500 - Math.min(reduceChance, 6000)) == 1) {
-            if (isInCombat()) { //Fix for slayer or perhaps future random event while combat? 0.0
-                genieCombatFlag = true;
-                send(new SendMessage("You got a genie random! Stop attack for a bit to get it."));
-            } else showRandomEvent();
-            chestEvent = 0;
-        }
-        if (chestEvent >= 50) { //Prevent auto clicking I believe!
-            int chance = Misc.chance(100);
-            int trigger = (chestEvent - 50) * 2;
-            if (trigger >= chance) {
-                chestEventOccur = true;
-                chestEvent = 0;
-                send(new SendMessage("The server randomly detect you standing still for to long! Please move!"));
-            }
-        }
+        SkillingRandomEventService.trigger(this, xp);
     }
 
     public void openGenie() {
@@ -3569,168 +3264,12 @@ public class Client extends Player implements Runnable {
         return spaces;
     }
 
-    public void smelt(int id) {
-        net.dodian.uber.game.skills.smithing.SmeltingRecipe recipe = SmithingDefinitions.findSmeltingRecipe(id);
-        if (recipe == null) {
-            return;
-        }
-        setSmeltingSelection(new net.dodian.uber.game.skills.smithing.SmeltingSelection(recipe, 1));
-        net.dodian.uber.game.skills.smithing.SmeltingActionService.start(this);
-    }
-
-    public void superHeat(int id) {
-        net.dodian.uber.game.skills.smithing.SuperheatService.cast(this, id);
-    }
-
-    public void runecraft(int rune, int level, int xp) {
-        lastClickAltar = System.currentTimeMillis();
-        if (!contains(1436)) {
-            send(new SendMessage("You do not have any rune essence!"));
-            return;
-        }
-        if (getLevel(Skill.RUNECRAFTING) < level) {
-            send(new SendMessage("You must have " + level + " runecrafting to craft " + GetItemName(rune).toLowerCase()));
-            return;
-        }
-        int count = 0;
-        int extra = 0;
-        for (int c = 0; c < playerItems.length; c++) {
-            if (playerItems[c] == 1437 && playerItemsN[c] > 0) {
-                count++;
-                deleteItem(1436, 1);
-                int chance = (getLevel(Skill.RUNECRAFTING) + 1) / 2;
-                int roll = 1 + Misc.random(99);
-                if (roll <= chance)
-                    extra++;
-            }
-        }
-        send(new SendMessage("You craft " + (count + extra) + " " + GetItemName(rune).toLowerCase() + "s"));
-        addItem(rune, count + extra);
-        checkItemUpdate();
-        giveExperience((xp * count), Skill.RUNECRAFTING);
-        triggerRandom(xp * count);
-    }
-
-    public boolean fillEssencePouch(int pouch) {
-        int slot = pouch == 5509 ? 0 : ((pouch - 5508) / 2);
-        if (slot >= 0 && slot <= 3) {
-            if (getLevel(Skill.RUNECRAFTING) < runePouchesLevel[slot]) {
-                send(new SendMessage("You need level " + runePouchesLevel[slot] + " runecrafting to do this!"));
-                return true;
-            }
-            if (runePouchesAmount[slot] >= runePouchesMaxAmount[slot]) {
-                send(new SendMessage("This pouch is currently full of essence!"));
-                return true;
-            }
-            if (System.currentTimeMillis() - lastClickAltar <= 1200)
-                makeFileExploit();
-            int max = runePouchesMaxAmount[slot] - runePouchesAmount[slot];
-            int amount = Math.min(getInvAmt(1436), max);
-            if (amount > 0) {
-                for (int i = 0; i < amount; i++)
-                    deleteItem(1436, 1);
-                runePouchesAmount[slot] += amount;
-                checkItemUpdate();
-            } else
-                send(new SendMessage("No essence in your inventory!"));
-            return true;
-        }
-        return false;
-    }
-
-    public void makeFileExploit() {
-        File file = new File("./data/checkExploit.txt");
-        try {
-            if (file.createNewFile())
-                if (getClientPacketTraceEnabled()) {
-                    logger.debug("Created new file for exploit check!");
-                }
-            try (FileWriter fw = new FileWriter(file, true);
-                 BufferedWriter bw = new BufferedWriter(fw)) {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                Date date = new Date();
-                bw.write(getPlayerName() + " at " + formatter.format(date) + " filled pouch!");
-                bw.newLine();   // add new line, System.lineSeparator()
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean emptyEssencePouch(int pouch) {
-        int slot = pouch == 5509 ? 0 : ((pouch - 5508) / 2);
-        if (slot >= 0 && slot <= 3) {
-            if (getLevel(Skill.RUNECRAFTING) < runePouchesLevel[slot]) {
-                send(new SendMessage("You need level " + runePouchesLevel[slot] + " runecrafting to do this!"));
-                return true;
-            }
-            int amount = freeSlots();
-            if (amount <= 0) {
-                send(new SendMessage("Not enough inventory slot to empty the pouch!"));
-                return true;
-            }
-            amount = Math.min(amount, runePouchesAmount[slot]);
-            if (amount > 0) {
-                for (int i = 0; i < amount; i++)
-                    addItem(1436, 1);
-                runePouchesAmount[slot] -= amount;
-                checkItemUpdate();
-            } else
-                send(new SendMessage("No essence in your pouch!"));
-            return true;
-        }
-        return false;
-    }
-
     public void resetAction(boolean full) {
         PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.MANUAL_RESET, full, false, false, true);
     }
 
     public void resetAction() {
         resetAction(true);
-    }
-
-    public void shaft() {
-        CraftingService.performShaft(this);
-    }
-
-    public void fill() {
-        if (fillingObj == 879 || fillingObj == 873 || fillingObj == 874 || fillingObj == 6232 ||
-                fillingObj == 12279 || fillingObj == 14868 || fillingObj == 20358 || fillingObj == 25929) {
-            boolean canFill = fillStuff(229, 227, 832) || fillStuff(1980, 4458, 832) || fillStuff(1935, 1937, 832) ||
-                    fillStuff(1825, 1823, 832) || fillStuff(1827, 1823, 832) || fillStuff(1829, 1823, 832) ||
-                    fillStuff(1831, 1823, 832) || fillStuff(1925, 1929, 832) || fillStuff(1923, 1921, 832);
-            if (!canFill)
-                resetAction();
-        } else if (fillingObj == 14890) {
-            if (!fillStuff(1925, 1783, 895))
-                resetAction();
-        } else if (fillingObj == 884 || fillingObj == 878 || fillingObj == 6249) {
-            if (!fillStuff(1925, 1929, 832))
-                resetAction();
-        }
-    }
-
-    private boolean fillStuff(int itemId, int fillId, int emote) {
-        if (playerHasItem(itemId)) {
-            deleteItem(itemId, 1);
-            addItem(fillId, 1);
-            checkItemUpdate();
-            requestAnim(emote, 0);
-            return true;
-        }
-        return false;
-    }
-
-    public long getSpinSpeed() {
-        int craftingLevel = getLevel(Skill.CRAFTING);
-        return craftingLevel >= 40 && craftingLevel < 70 ? 1200 : craftingLevel >= 70 ? 600 : 1800;
-    }
-
-    public void spin() {
-        CraftingService.performSpin(this);
     }
 
     public void replaceDoors() {
@@ -3742,55 +3281,6 @@ public class Client extends Player implements Runnable {
                     ReplaceObject(DoorHandler.doorX[d], DoorHandler.doorY[d], DoorHandler.doorId[d], DoorHandler.doorFace[d], 0);
                 }
             }
-        }
-    }
-
-    public void openTan() {
-        send(new SendString("Regular Leather", 14777));
-        send(new SendString("50gp", 14785));
-        send(new SendString("", 14781));
-        send(new SendString("", 14789));
-        send(new SendString("", 14778));
-        send(new SendString("", 14786));
-        send(new SendString("", 14782));
-        send(new SendString("", 14790));
-        int[] soon = {14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792};
-        String[] dhide = {"Green", "Red", "Blue", "Black"};
-        String[] cost = {"1,000gp", "5,000gp", "2,000gp", "10,000gp"};
-        int type = 0;
-        for (int i = 0; i < soon.length; i++) {
-            if (type == 0) {
-                send(new SendString(dhide[i / 2], soon[i]));
-                type = 1;
-            } else {
-                send(new SendString(cost[i / 2], soon[i]));
-                type = 0;
-            }
-        }
-        sendFrame246(14769, 250, 1741);
-        sendFrame246(14773, 250, -1);
-        sendFrame246(14771, 250, 1753);
-        sendFrame246(14772, 250, 1751);
-        sendFrame246(14775, 250, 1749);
-        sendFrame246(14776, 250, 1747);
-        showInterface(14670);
-    }
-
-    public void startTan(int amount, int type) {
-        int[] hide = {1739, -1, 1753, 1751, 1749, 1747};
-        int[] leather = {1741, -1, 1745, 2505, 2507, 2509};
-        int[] charge = {50, 0, 1000, 2000, 5000, 10000};
-        if (!playerHasItem(995, charge[type])) {
-            send(new SendMessage("You need atleast " + charge[type] + " coins to do this!"));
-            return;
-        }
-        amount = getInvAmt(995) > amount * charge[type] ? getInvAmt(995) / charge[type] : amount;
-        amount = Math.min(amount, getInvAmt(hide[type]));
-        for (int i = 0; i < amount; i++) {
-            deleteItem(hide[type], 1);
-            deleteItem(995, charge[type]);
-            addItem(leather[type], 1);
-            checkItemUpdate();
         }
     }
 
@@ -3834,10 +3324,6 @@ public class Client extends Player implements Runnable {
         tH = height;
         addEffectTime(0, -1); //If we teleport, reset desert shiez!
         TeleportActionService.startTeleport(this, x, y, height, emote);
-    }
-
-    public void startSmelt(int id) {
-        SmeltingInterfaceService.startFromButton(this, id);
     }
 
     public boolean inHeat() { //King black dragon's domain!
@@ -4429,14 +3915,6 @@ public class Client extends Player implements Runnable {
         DialogueOptionService.triggerChat(this, button);
     }
 
-    public boolean smithCheck(int id) {
-        boolean canSmith = SmithingInterfaceService.canSmithProduct(id);
-        if (!canSmith) {
-            send(new SendMessage("Client hack detected!"));
-        }
-        return canSmith;
-    }
-
     public void callGfxMask(int id, int height) {
         setGraphic(id, height == 0 ? 65536 : 65536 * height);
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
@@ -4842,21 +4320,25 @@ public class Client extends Player implements Runnable {
         getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
     }
 
-    /**
-     * @param skillX the skillX to set
-     */
-    public void setSkillX(int skillX) {
-        this.skillX = skillX;
+    public void setInteractionAnchor(int x, int y) {
+        setInteractionAnchor(x, y, getPosition().getZ());
     }
 
-    /**
-     * @param skillY the skillY to set
-     */
-    public void setSkillY(int skillY) {
-        this.skillY = skillY;
+    public void setInteractionAnchor(int x, int y, int z) {
+        setInteractionAnchorState(new InteractionAnchorState(x, y, z));
         if (WanneBank > 0)
             WanneBank = 0;
         if (NpcWanneTalk > 0) NpcWanneTalk = 0;
+    }
+
+    public int getInteractionAnchorX() {
+        InteractionAnchorState state = getInteractionAnchorState();
+        return state == null ? -1 : state.getX();
+    }
+
+    public int getInteractionAnchorY() {
+        InteractionAnchorState state = getInteractionAnchorState();
+        return state == null ? -1 : state.getY();
     }
 
     public void spendTickets() {
@@ -4881,201 +4363,23 @@ public class Client extends Player implements Runnable {
         }
     }
 
+    @Deprecated
     public void guideBook() {
-        send(new SendMessage("this is me a guide book!"));
-        clearQuestInterface();
-        showInterface(8134);
-        send(new SendString("Newcomer's Guide", 8144));
-        send(new SendString("---------------------------", 8145));
-        send(new SendString("Welcome to Dodian.net!", 8147));
-        send(new SendString("This guide is to help new players to get a general", 8148));
-        send(new SendString("understanding of how Dodian works!", 8149));
-        send(new SendString("", 8150));
-        send(new SendString("For specific boss or skill locations", 8151));
-        send(new SendString("navigate to the 'Guides' section of the forums.", 8152));
-        send(new SendString("", 8153));
-        send(new SendString("Here in Yanille, there are various enemies to kill,", 8154));
-        send(new SendString("with armor rewards that get better the higher their level.", 8155));
-        send(new SendString("", 8156));
-        send(new SendString("From Yanille, you can also head North-East to access", 8157));
-        send(new SendString("the mining area or South-West", 8158));
-        send(new SendString("up the stairs in the magic guild to access the essence mine.", 8159));
-        send(new SendString("", 8160));
-        send(new SendString("If you navigate over to your spellbook, you will see", 8161));
-        send(new SendString("some teleports, these all lead to key points on the server", 8162));
-        send(new SendString("", 8163));
-        send(new SendString("Seers, Catherby, Fishing Guild, and Gnome Stronghold", 8164));
-        send(new SendString("teleports will all bring you to skilling locations.", 8165));
-        send(new SendString("", 8166));
-        send(new SendString("Legends Guild, and Taverly teleports", 8167));
-        send(new SendString("will all bring you to locations with more monsters to train on.", 8168));
-        send(new SendString("", 8169));
-        send(new SendString("Teleporting to Taverly and heading up the path", 8170));
-        send(new SendString("is how you access the Slayer Master!", 8171));
-        send(new SendString("", 8172));
-        send(new SendString("If you have more questions please visit the 'Guides'", 8173));
-        send(new SendString("section of the forums, and if you still can't find the answer.", 8174));
-        send(new SendString("Feel free to just ask a moderator!", 8175));
-        send(new SendString("---------------------------", 8176));
+        SkillGuideBookService.open(this);
     }
 
     public Prayers getPrayerManager() {
         return prayers;
     }
 
-    private int getItem(int i, int i2) {
-        if (!playerHasItem(items[i2]) && items[i2] != -1) {
-            return blanks[i][i2];
-        }
-        return jewelry[i][i2];
-    }
-
-    public int[][] blanks = {
-            {-1, 1647, 1647, 1647, 1647, 1647, 1647},
-            {-1, 1666, 1666, 1666, 1666, 1666, 1666},
-            {-1, 1685, 1685, 1685, 1685, 1685, 1685}};
-    public int[] startSlots = {4233, 4245, 4257, 79};
-    public int[] items = {-1, 1607, 1605, 1603, 1601, 1615, 6573};
-    public int[] black = {-1, -1, -1};
-    public int[] sizes = {100, 75, 120, 11067};
-    public int[] moulds = {1592, 1597, 1595, 11065};
-
-    public int findStrungAmulet(int amulet) {
-        for (int i = 0; i < strungAmulets.length; i++) {
-            if (jewelry[2][i] == amulet) {
-                return strungAmulets[i];
-            }
-        }
-        return -1;
-    }
-
-    public int[] strungAmulets = {1692, 1694, 1696, 1698, 1700, 1702, 6581};
-
-    private final int[][] jewelry = {{1635, 1637, 1639, 1641, 1643, 1645, 6575}, {1654, 1656, 1658, 1660, 1662, 1664, 6577},
-            {1673, 1675, 1677, 1679, 1681, 1683, 6579}, {11069, 11072, 11076, 11085, 11092, 11115, 11130}};
-
-    private final int[][] jewelry_levels = {{5, 20, 27, 34, 43, 55, 67}, {6, 22, 29, 40, 56, 72, 82},
-            {8, 23, 31, 50, 70, 80, 90}, {7, 24, 30, 42, 58, 74, 84}};
-
-    private final int[][] jewelry_xp = {{15, 40, 55, 70, 85, 100, 115}, {20, 55, 60, 75, 90, 105, 120},
-            {30, 65, 70, 85, 100, 150, 165}, {25, 60, 65, 80, 95, 110, 125}};
-
-    public void showItemsGold() {
-        int slot;
-        for (int i = 0; i < startSlots.length - 1; i++) {
-            slot = startSlots[i];
-            if (!playerHasItem(moulds[i])) {
-                changeInterfaceStatus(slot - 5, true);
-                changeInterfaceStatus(slot - 1, false);
-                continue;
-            } else {
-                changeInterfaceStatus(slot - 5, false);
-                changeInterfaceStatus(slot - 1, true);
-            }
-            int[] itemsToShow = new int[7];
-            for (int i2 = 0; i2 < itemsToShow.length; i2++) {
-                itemsToShow[i2] = getItem(i, i2);
-                if (i2 != 0 && itemsToShow[i2] != jewelry[i][i2])
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
-                else if (i2 != 0) {
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
-                }
-            }
-            setGoldItems(slot, itemsToShow);
-        }
-    }
-
-    public void setGoldItems(int slot, int[] items) {
-        send(new SetGoldItems(slot, items));
-    }
-
-    public int goldIndex = -1, goldSlot = -1;
-    public int goldCraftingCount = 0;
-    public boolean goldCrafting = false;
-
-    public void goldCraft() {
-        int level = jewelry_levels[goldIndex][goldSlot];
-        int amount = goldCraftingCount;
-        int item = jewelry[goldIndex][goldSlot];
-        int xp = jewelry_xp[goldIndex][goldSlot];
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be crafting!"));
-            return;
-        }
-        if (amount <= 0) {
-            goldCrafting = false;
-            resetAction();
-            return;
-        }
-        if (level > getLevel(Skill.CRAFTING)) {
-            send(new SendMessage("You need a crafting level of " + level + " to make this."));
-            goldCrafting = false;
-            return;
-        }
-        if (!playerHasItem(2357)) {
-            goldCrafting = false;
-            send(new SendMessage("You need at least one gold bar."));
-            return;
-        }
-        if (goldSlot != 0 && !playerHasItem(items[goldSlot])) {
-            goldCrafting = false;
-            send(new SendMessage("You need a " + GetItemName(items[goldSlot]).toLowerCase() + " to make this."));
-            return;
-        }
-        goldCraftingCount--;
-        if (goldCraftingCount <= 0) {
-            goldCrafting = false;
-        }
-        requestAnim(0x383, 0);
-        deleteItem(2357, 1);
-        if (goldSlot != 0)
-            deleteItem(items[goldSlot], 1);
-        send(new SendMessage("You craft a " + GetItemName(item).toLowerCase()));
-        addItem(item, 1);
-        checkItemUpdate();
-        giveExperience(xp * 10, Skill.CRAFTING);
-        triggerRandom(xp * 10);
-    }
-
-    public void startGoldCrafting(int interfaceID, int slot, int amount) {
-        int index = 0;
-        for (int i = 0; i < 3; i++)
-            if (startSlots[i] == interfaceID)
-                index = i;
-        int level = jewelry_levels[index][slot];
-        if (level > getLevel(Skill.CRAFTING)) {
-            send(new SendMessage("You need a crafting level of " + level + " to make this."));
-            return;
-        }
-        if (!playerHasItem(2357)) {
-            send(new SendMessage("You need at least one gold bar."));
-            return;
-        }
-        if (slot != 0 && !playerHasItem(items[slot])) {
-            send(new SendMessage("You need a " + GetItemName(items[slot]).toLowerCase() + " to make this."));
-            return;
-        }
-        goldCraftingCount = amount;
-        goldIndex = index;
-        goldSlot = slot;
-        goldCrafting = true;
-        send(new RemoveInterfaces());
-        SkillingActionService.startGoldCrafting(this);
-    }
-
+    @Deprecated
     public void deleteRunes(int[] runes, int[] qty) {
-        for (int i = 0; i < runes.length; i++) {
-            deleteItem(runes[i], qty[i]);
-        }
+        RuneCostService.consume(this, runes, qty);
     }
 
+    @Deprecated
     public boolean hasRunes(int[] runes, int[] qty) {
-        for (int i = 0; i < runes.length; i++) {
-            if (!playerHasItem(runes[i], qty[i])) {
-                return true;
-            }
-        }
-        return false;
+        return RuneCostService.isMissingAny(this, runes, qty);
     }
 
     public void checkBow() {
@@ -5191,40 +4495,9 @@ public class Client extends Player implements Runnable {
 
 
 
+    @Deprecated
     public void removeExperienceFromPlayer(String user, int id, int xp) {
-        String skillName = Objects.requireNonNull(getSkill(id)).getName();
-        if (PlayerHandler.getPlayer(user) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(user);
-            int currentXp = Objects.requireNonNull(other).getExperience(Skill.values()[id]);
-            xp = Math.min(currentXp, xp);
-            other.setExperience(currentXp - xp, Objects.requireNonNull(getSkill(id)));
-            other.setLevel(Skills.getLevelForExperience(other.getExperience(Skill.values()[id])), Objects.requireNonNull(getSkill(id)));
-            other.refreshSkill(Skill.getSkill(id));
-            send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-        } else {
-            final int requestedXp = xp;
-            CommandDbService.submit(
-                    "remove-skill",
-                    () -> CommandDbService.removeOfflineExperience(user, skillName, requestedXp),
-                    result -> {
-                        if (disconnected) {
-                            return;
-                        }
-                        if (result.getStatus() == CommandDbService.OfflineSkillMutationResult.Status.NOT_FOUND) {
-                            send(new SendMessage("username '" + user + "' have yet to login!"));
-                            return;
-                        }
-                        send(new SendMessage("Removed " + result.getRemovedXp() + "/" + result.getCurrentXp()
-                                + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-                    },
-                    exception -> {
-                        if (!disconnected) {
-                            logger.debug("issue: {}", exception.getMessage(), exception);
-                            send(new SendMessage("Could not update that player's skill right now."));
-                        }
-                    }
-            );
-        }
+        SkillAdminService.removeExperienceFromPlayer(this, user, id, xp);
     }
 
     public void removeItemsFromPlayer(String user, int id, int amount) {

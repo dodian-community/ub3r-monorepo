@@ -6,15 +6,15 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.uber.game.skills.fletching.FletchingDefinitions
-import net.dodian.uber.game.runtime.action.SkillingActionService
-import net.dodian.uber.game.skills.fletching.FletchingService
+import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
+import net.dodian.uber.game.skills.fletching.api.FletchingPlugin
 
 object FletchingItemCombinationHandler {
     @JvmStatic
     fun handle(client: Client, itemUsed: Int, otherItem: Int, knife: Boolean): Boolean {
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction()
-            net.dodian.uber.game.skills.crafting.CraftingService.startShafting(client)
+            CraftingPlugin.startShafting(client)
             return true
         }
         if ((itemUsed == 314 || otherItem == 314) && (itemUsed == 52 || otherItem == 52)) {
@@ -90,7 +90,7 @@ object FletchingItemCombinationHandler {
         }
         FletchingDefinitions.bowLogs.forEachIndexed { index, bowLog ->
             if ((itemUsed == bowLog.logItemId || otherItem == bowLog.logItemId) && knife) {
-                FletchingService.openBowSelection(client, index)
+                FletchingPlugin.open(client, index)
                 return true
             }
         }

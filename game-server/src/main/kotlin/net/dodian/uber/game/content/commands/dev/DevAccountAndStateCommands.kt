@@ -14,6 +14,8 @@ import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.command.CommandDbService
+import net.dodian.uber.game.skills.core.progression.SkillAdminService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 
 object DevAccountAndStateCommands : CommandContent {
     override fun definitions() =
@@ -104,7 +106,7 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
                 }
                 val xp = if (cmd[2].toInt() < 1) 0 else cmd[2].toInt()
                 val user = command.substring(cmd[0].length + cmd[1].length + cmd[2].length + 3)
-                client.removeExperienceFromPlayer(user, id, xp)
+                SkillAdminService.removeExperienceFromPlayer(client, user, id, xp)
                 true
             } catch (_: Exception) {
                 context.usage("Wrong usage.. ::${cmd[0]} id xp(0 - ${Int.MAX_VALUE} playername")
@@ -154,9 +156,13 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
             val skill = cmd[1].toInt()
             val level = cmd[2].toInt()
             if (level > 99 || level < 1) return true
-            client.setExperience(Skills.getXPForLevel(level), Skill.getSkill(skill))
-            client.setLevel(level, Skill.getSkill(skill))
-            client.refreshSkill(Skill.getSkill(skill))
+            val skillType = Skill.getSkill(skill) ?: return true
+            SkillAdminService.set(
+                client = client,
+                skill = skillType,
+                level = level,
+                experience = Skills.getXPForLevel(level),
+            )
             if (skill == 3) {
                 client.maxHealth = level
                 client.heal(client.maxHealth)
@@ -170,21 +176,18 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
         context.alias == "setxp" && context.specialRights -> {
             val skill = cmd[1].toInt()
             val xp = cmd[2].toInt()
-            if (xp + client.getExperience(Skill.getSkill(skill)) > 200000000 || xp < 1) return true
-            client.giveExperience(xp, Skill.getSkill(skill))
-            client.refreshSkill(Skill.getSkill(skill))
+            val skillType = Skill.getSkill(skill) ?: return true
+            if (xp + client.getExperience(skillType) > 200000000 || xp < 1) return true
+            SkillAdminService.addXp(client, skillType, xp)
+            SkillProgressionService.refresh(client, skillType)
             return true
         }
         command.equals("reset", true) && client.playerRights > 1 -> {
-            Skill.enabledSkills().forEach { skill ->
-                client.setExperience(if (skill == Skill.HITPOINTS) 1155 else 0, skill)
-                client.setLevel(if (skill == Skill.HITPOINTS) 10 else 1, skill)
-                client.refreshSkill(skill)
-            }
+            SkillAdminService.reset(client)
             return true
         }
         command.startsWith("master") && client.playerRights > 1 -> {
-            Skill.enabledSkills().forEach { skill -> client.giveExperience(14_000_000, skill) }
+            Skill.enabledSkills().forEach { skill -> SkillAdminService.addXp(client, skill, 14_000_000) }
             return true
         }
         context.alias == "quest" && client.playerRights > 1 -> {

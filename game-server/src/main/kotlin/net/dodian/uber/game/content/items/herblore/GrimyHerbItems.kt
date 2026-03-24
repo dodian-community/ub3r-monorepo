@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.items.herblore
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
@@ -20,7 +21,7 @@ object GrimyHerbItems : ItemContent {
                 return true
             }
 
-            client.giveExperience(herb.cleaningExperience, Skill.HERBLORE)
+            SkillProgressionService.gainXp(client, herb.cleaningExperience, Skill.HERBLORE)
             client.deleteItem(itemId, itemSlot, 1)
             client.addItemSlot(herb.cleanId, 1, itemSlot)
             client.send(SendMessage("You clean the ${client.GetItemName(itemId)}."))

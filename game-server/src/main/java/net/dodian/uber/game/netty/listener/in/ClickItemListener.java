@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.skills.runecrafting.api.RunecraftingPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ public class ClickItemListener implements PacketListener {
         // Debug line to confirm packet data is now being read correctly.
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 
-        if (client.fillEssencePouch(itemId)) {
+        if (RunecraftingPlugin.fillPouch(client, itemId)) {
             return;
         }
 

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skills.fletching
 
-import net.dodian.uber.game.skills.core.SkillActionRequest
+import net.dodian.uber.game.skills.core.runtime.SkillActionRequest
 
 data class FletchingRequest(
     val logIndex: Int,

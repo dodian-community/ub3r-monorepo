@@ -14,7 +14,9 @@ import net.dodian.uber.game.skills.fishing.FishingDefinitions
 import net.dodian.uber.game.skills.fishing.FishingService
 import net.dodian.uber.game.skills.prayer.PrayerInteractionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
-import net.dodian.uber.game.skills.core.SkillingInterruptService
+import net.dodian.uber.game.skills.core.events.SkillActionCompleteEvent
+import net.dodian.uber.game.skills.core.events.SkillActionStartEvent
+import net.dodian.uber.game.skills.core.runtime.SkillingInterruptService
 
 object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
@@ -22,6 +24,7 @@ object SkillingActionService {
 
     private fun postStarted(player: Client, name: String) {
         GameEventBus.post(SkillingActionStartedEvent(player, name))
+        GameEventBus.post(SkillActionStartEvent(player, name))
     }
 
     private fun postCycle(player: Client, name: String) {
@@ -30,27 +33,12 @@ object SkillingActionService {
 
     private fun postSucceeded(player: Client, name: String) {
         GameEventBus.post(SkillingActionSucceededEvent(player, name))
+        GameEventBus.post(SkillActionCompleteEvent(player, name))
     }
 
     @JvmStatic
     fun startSmelting(client: Client) {
         SmeltingActionService.start(client)
-    }
-
-    @JvmStatic
-    fun startGoldCrafting(client: Client) {
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.GOLD_CRAFTING,
-            onStop = { player, _ -> player.goldCrafting = false },
-        ) {
-            while (player.goldCrafting && player.goldCraftingCount > 0) {
-                if (!isActive()) return@start
-                player.goldCraft()
-                if (!player.goldCrafting || player.goldCraftingCount <= 0) return@start
-                wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            }
-        }
     }
 
     @JvmStatic
@@ -114,7 +102,7 @@ object SkillingActionService {
                 CraftingService.performSpin(player)
                 postSucceeded(player, "spinning")
                 if (player.craftingState?.mode != CraftingMode.SPINNING) return@start
-                wait(GameCycleClock.ticksForDurationMs(player.spinSpeed))
+                wait(GameCycleClock.ticksForDurationMs(CraftingService.spinDelayMs(player)))
             }
         }
     }
@@ -153,7 +141,7 @@ object SkillingActionService {
                 SkillingInterruptService.postStopped(player, "fishing", player.activeActionCancelReason)
             },
         ) {
-            var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
+            var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(player))
             var nextAnimationCycle = currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
             while (player.fishingState != null) {
                 if (!isActive()) return@start
@@ -171,7 +159,7 @@ object SkillingActionService {
                     FishingService.performCycle(player)
                     postSucceeded(player, "fishing")
                     if (player.fishingState == null) return@start
-                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
+                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(player))
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }
                 wait(1)

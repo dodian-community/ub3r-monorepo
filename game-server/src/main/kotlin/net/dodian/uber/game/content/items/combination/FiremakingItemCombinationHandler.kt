@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.items.combination
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object FiremakingItemCombinationHandler {
@@ -28,7 +29,7 @@ object FiremakingItemCombinationHandler {
             return true
         }
         client.deleteItem(log.itemId, 1)
-        client.giveExperience(log.xp, Skill.FIREMAKING)
+        SkillProgressionService.gainXp(client, log.xp, Skill.FIREMAKING)
         client.resetAction()
         return true
     }
