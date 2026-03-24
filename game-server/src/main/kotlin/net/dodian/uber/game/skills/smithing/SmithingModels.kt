@@ -36,6 +36,28 @@ data class SmeltingButtonSet(
     ).filter { it.buttonId > 0 }
 }
 
+data class NamedSmeltingButtonSet(
+    val bronze: SmeltingButtonSet,
+    val iron: SmeltingButtonSet,
+    val silver: SmeltingButtonSet,
+    val steel: SmeltingButtonSet,
+    val gold: SmeltingButtonSet,
+    val mithril: SmeltingButtonSet,
+    val adamant: SmeltingButtonSet,
+    val rune: SmeltingButtonSet,
+) {
+    val all: List<SmeltingButtonSet> = listOf(
+        bronze,
+        iron,
+        silver,
+        steel,
+        gold,
+        mithril,
+        adamant,
+        rune,
+    )
+}
+
 data class SmithingProduct(
     val itemId: Int,
     val outputAmount: Int,
@@ -76,4 +98,13 @@ data class SmeltingSelection(
 data class SmithingDisplayItem(
     val itemId: Int,
     val amount: Int,
+)
+
+data class SmithingFrameEntry(
+    val itemId: Int,
+    val outputAmount: Int,
+    val levelRequired: Int,
+    val barsRequired: Int,
+    val barCountLineId: Int,
+    val itemNameLineId: Int,
 )

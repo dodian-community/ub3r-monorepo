@@ -81,94 +81,8 @@ object SmithingDefinitions {
         FurnaceButtonMapping(buttonId, smeltingRecipes[recipeIndex].barId, amount)
     }
 
-    object MysticSmeltingButtons {
-        // Edit these named entries directly when the custom furnace interface changes.
-        val bronze = SmeltingButtonSet(
-            displayName = "Bronze",
-            barId = 2349,
-            oneButtonId = 3987,
-            fiveButtonId = 3986,
-            tenButtonId = 2807,
-            xButtonId = 2414,
-        )
-
-        val iron = SmeltingButtonSet(
-            displayName = "Iron",
-            barId = 2351,
-            oneButtonId = 3991,
-            fiveButtonId = 3990,
-            tenButtonId = 3989,
-            xButtonId = 3988,
-        )
-
-        val silver = SmeltingButtonSet(
-            displayName = "Silver",
-            barId = 2355,
-            oneButtonId = 3995,
-            fiveButtonId = 3994,
-            tenButtonId = 3993,
-            xButtonId = 3992,
-        )
-
-        val steel = SmeltingButtonSet(
-            displayName = "Steel",
-            barId = 2353,
-            oneButtonId = 3999,
-            fiveButtonId = 3998,
-            tenButtonId = 3997,
-            xButtonId = 3996,
-        )
-
-        val gold = SmeltingButtonSet(
-            displayName = "Gold",
-            barId = 2357,
-            oneButtonId = 4003,
-            fiveButtonId = 4002,
-            tenButtonId = 4001,
-            xButtonId = 4000,
-        )
-
-        val mithril = SmeltingButtonSet(
-            displayName = "Mithril",
-            barId = 2359,
-            oneButtonId = 7441,
-            fiveButtonId = 7440,
-            tenButtonId = 6397,
-            xButtonId = 4158,
-        )
-
-        val adamant = SmeltingButtonSet(
-            displayName = "Adamant",
-            barId = 2361,
-            oneButtonId = 7446,
-            fiveButtonId = 7444,
-            tenButtonId = 7443,
-            xButtonId = 7442,
-        )
-
-        val rune = SmeltingButtonSet(
-            displayName = "Rune",
-            barId = 2363,
-            oneButtonId = 7450,
-            fiveButtonId = 7449,
-            tenButtonId = 7448,
-            xButtonId = 7447,
-        )
-
-        val all: List<SmeltingButtonSet> = listOf(
-            bronze,
-            iron,
-            silver,
-            steel,
-            gold,
-            mithril,
-            adamant,
-            rune,
-        )
-    }
-
     private val mysticSmeltingButtonMappings: List<FurnaceButtonMapping> =
-        MysticSmeltingButtons.all.flatMap { it.toMappings() }
+        MysticSmeltingButtons.all.all.flatMap { it.toMappings() }
 
     val smeltingButtonMappings: List<FurnaceButtonMapping> = classicSmeltingButtonMappings + mysticSmeltingButtonMappings
 
@@ -223,15 +137,15 @@ object SmithingDefinitions {
     fun isSmeltingInterfaceButton(buttonId: Int): Boolean =
         smeltingButtonMappings.any { it.buttonId == buttonId } || smeltFrameIds.contains(buttonId)
 
-    private fun buildTier(typeId: Int, displayName: String, barId: Int, frame: Array<IntArray>): SmithingTier {
+    private fun buildTier(typeId: Int, displayName: String, barId: Int, frame: Array<SmithingFrameEntry>): SmithingTier {
         val products = frame.map { entry ->
             SmithingProduct(
-                itemId = entry[0],
-                outputAmount = entry[1],
-                levelRequired = entry[2],
-                barsRequired = entry[3],
-                barCountLineId = entry[4],
-                itemNameLineId = entry[5],
+                itemId = entry.itemId,
+                outputAmount = entry.outputAmount,
+                levelRequired = entry.levelRequired,
+                barsRequired = entry.barsRequired,
+                barCountLineId = entry.barCountLineId,
+                itemNameLineId = entry.itemNameLineId,
             )
         }
         return SmithingTier(typeId, displayName, barId, products)

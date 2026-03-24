@@ -84,7 +84,7 @@ object SkillTestItemCatalog {
         SmithingDefinitions.smeltingRecipes.forEach { addIfValid(items, it.barId) }
         for (row in SmithingData.smithingFrame) {
             for (entry in row) {
-                addIfValid(items, entry[0])
+                addIfValid(items, entry.itemId)
             }
         }
         MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }

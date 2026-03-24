@@ -39,7 +39,6 @@ object SmeltingActionService {
     }
 
     private fun performCycle(player: Client, recipe: SmeltingRecipe): Boolean {
-        player.requestAnim(SMELT_ANIMATION, 0)
         if (player.isBusy()) {
             player.send(SendMessage("You are currently busy to be smelting!"))
             return false
@@ -54,6 +53,7 @@ object SmeltingActionService {
                 return false
             }
         }
+        player.requestAnim(SMELT_ANIMATION, 0)
         recipe.oreRequirements.forEach { requirement ->
             repeat(requirement.amount) {
                 player.deleteItem(requirement.itemId, 1)
