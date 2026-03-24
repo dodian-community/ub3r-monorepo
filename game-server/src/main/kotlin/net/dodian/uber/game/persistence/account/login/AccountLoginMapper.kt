@@ -122,7 +122,8 @@ internal object AccountLoginMapper {
     private fun applyPrayerBoosts(player: Client, prayerParse: Array<String>, boostedParse: Array<String>, prayer: String, boosted: String) {
         if (prayer.isNotEmpty()) {
             for (index in 1 until prayerParse.size) {
-                player.prayerManager.togglePrayer(Prayers.Prayer.forButton(prayerParse[index].toInt()))
+                val prayerButton = Prayers.Prayer.forButton(prayerParse[index].toInt()) ?: continue
+                player.prayerManager.togglePrayer(prayerButton)
             }
         }
         if (boosted.isNotEmpty()) {

@@ -4,8 +4,8 @@ import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.runtime.action.SkillingActionService
+import net.dodian.uber.game.skills.fletching.FletchingService
 
 object FletchingItemCombinationHandler {
     @JvmStatic
@@ -53,17 +53,7 @@ object FletchingItemCombinationHandler {
         }
         for (index in Constants.logs.indices) {
             if ((itemUsed == Constants.logs[index] || otherItem == Constants.logs[index]) && knife) {
-                client.resetAction()
-                client.dialogInterface = 2459
-                client.fletchLog = index
-                client.send(SendString("Select a bow", 8879))
-                client.sendFrame246(8870, 250, Constants.longbows[index])
-                client.sendFrame246(8869, 250, Constants.shortbows[index])
-                client.send(SendString(client.GetItemName(Constants.shortbows[index]), 8871))
-                client.send(SendString(client.GetItemName(Constants.shortbows[index]), 8874))
-                client.send(SendString(client.GetItemName(Constants.longbows[index]), 8878))
-                client.send(SendString(client.GetItemName(Constants.longbows[index]), 8875))
-                client.sendFrame164(8866)
+                FletchingService.openBowSelection(client, index)
                 return true
             }
         }

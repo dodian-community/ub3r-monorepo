@@ -31,7 +31,8 @@ private fun handleBoss(context: CommandContext): Boolean {
             client.slayerData[1] = taskId
             client.slayerData[2] = 1337
             client.slayerData[3] = 1337
-            context.reply("[DEBUG]: You force the task to be 1337 of  ${net.dodian.uber.game.model.player.skills.slayer.SlayerTask.slayerTasks.getTask(taskId).textRepresentation} (${net.dodian.uber.game.model.player.skills.slayer.SlayerTask.slayerTasks.getTask(taskId)})")
+            val task = net.dodian.uber.game.model.player.skills.slayer.SlayerTask.slayerTasks.getTask(taskId) ?: return false
+            context.reply("[DEBUG]: You force the task to be 1337 of  ${task.textRepresentation} (${task})")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} taskId")

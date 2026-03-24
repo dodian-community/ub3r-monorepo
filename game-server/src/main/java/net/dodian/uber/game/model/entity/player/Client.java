@@ -19,8 +19,6 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.fletching.Fletching;
-import net.dodian.uber.game.model.player.skills.prayer.Prayer;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
 import net.dodian.uber.game.persistence.command.CommandDbService;
@@ -32,6 +30,11 @@ import net.dodian.uber.game.runtime.net.OutboundSessionQueue;
 import net.dodian.jobs.impl.EntityProcessor;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
+import net.dodian.uber.game.skills.fletching.FletchingService;
+import net.dodian.uber.game.skills.fishing.FishingService;
+import net.dodian.uber.game.skills.cooking.CookingService;
+import net.dodian.uber.game.skills.crafting.CraftingService;
+import net.dodian.uber.game.skills.prayer.PrayerInteractionService;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.content.dialogue.DialogueService;
@@ -88,7 +91,6 @@ public class Client extends Player implements Runnable {
 
     public Farming farming = new Farming();
     public FarmingJson farmingJson = new FarmingJson();
-    public Fletching fletching = new Fletching();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
     public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 
@@ -1680,6 +1682,26 @@ public class Client extends Player implements Runnable {
         return fishIndex;
     }
 
+    public void setFishIndex(int fishIndex) {
+        this.fishIndex = fishIndex;
+    }
+
+    public int getCookIndex() {
+        return cookIndex;
+    }
+
+    public void setCookIndex(int cookIndex) {
+        this.cookIndex = cookIndex;
+    }
+
+    public int getCookAmount() {
+        return cookAmount;
+    }
+
+    public void setCookAmount(int cookAmount) {
+        this.cookAmount = cookAmount;
+    }
+
     public boolean isCrafting() {
         return crafting;
     }
@@ -1690,6 +1712,34 @@ public class Client extends Player implements Runnable {
 
     public int getCAmount() {
         return cAmount;
+    }
+
+    public void setCAmount(int amount) {
+        this.cAmount = amount;
+    }
+
+    public int getCItem() {
+        return cItem;
+    }
+
+    public void setCItem(int item) {
+        this.cItem = item;
+    }
+
+    public int getCLevel() {
+        return cLevel;
+    }
+
+    public void setCLevel(int level) {
+        this.cLevel = level;
+    }
+
+    public int getCExp() {
+        return cExp;
+    }
+
+    public void setCExp(int exp) {
+        this.cExp = exp;
     }
 
     public void checkItemUpdate() { //Checking bank etc..
@@ -4275,23 +4325,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void shaft() {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be fletching!"));
-            return;
-        }
-        if (IsCutting || isFiremaking)
-            resetAction();
-        send(new RemoveInterfaces());
-        if (playerHasItem(1511)) {
-            deleteItem(1511, 1);
-            addItem(52, 15);
-            checkItemUpdate();
-            requestAnim(1248, 0);
-            giveExperience(50, Skill.FLETCHING);
-            triggerRandom(50);
-        } else {
-            resetAction();
-        }
+        CraftingService.performShaft(this);
     }
 
     public void fill() {
@@ -4328,22 +4362,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void spin() {
-        if (playerHasItem(1779)) {
-            deleteItem(1779, 1);
-            addItem(1777, 1);
-            giveExperience(50, Skill.CRAFTING);
-            triggerRandom(50);
-        } else if (playerHasItem(1737)) {
-            deleteItem(1737, 1);
-            addItem(1759, 1);
-            giveExperience(100, Skill.CRAFTING);
-            triggerRandom(100);
-        } else {
-            send(new SendMessage("You do not have anything to spin!"));
-            resetAction(true);
-            return;
-        }
-        checkItemUpdate();
+        CraftingService.performSpin(this);
     }
 
     public void replaceDoors() {
@@ -4408,112 +4427,19 @@ public class Client extends Player implements Runnable {
     }
 
     public void startCraft(int actionbutton) {
-        send(new RemoveInterfaces());
-        int[] buttons = {33187, 33186, 33185, 33190, 33189, 33188, 33193, 33192, 33191, 33196, 33195, 33194, 33199, 33198,
-                33197, 33202, 33201, 33200, 33205, 33204, 33203};
-        int[] amounts = {1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10};
-        int[] ids = {1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063, 1095, 1095, 1095, 1169, 1169,
-                1169, 1167, 1167, 1167};
-        int[] levels = {14, 1, 7, 11, 18, 38, 9};
-        int[] exp = {33, 18, 21, 29, 38, 52, 20};
-        int amount = 0, id = -1;
-        int index = 0;
-        for (int i = 0; i < buttons.length; i++) {
-            if (actionbutton == buttons[i]) {
-                amount = amounts[i];
-                id = ids[i];
-                index = i / 3;
-                break;
-            }
-        }
-        if (getLevel(Skill.CRAFTING) >= levels[index]) {
-            cSelected = 1741;
-            crafting = true;
-            cItem = id;
-            cAmount = amount == 10 ? getInvAmt(cSelected) : amount;
-            cLevel = levels[index];
-            cExp = exp[index] * 8;
-            SkillingActionService.startCrafting(this);
-        } else if (id != -1) {
-            send(new SendMessage("You need level " + levels[index] + " crafting to craft a " + GetItemName(id).toLowerCase()));
-            send(new RemoveInterfaces());
-        }
+        CraftingService.startStandardLeatherCraft(this, actionbutton);
     }
 
     public void craft() {
-        if (getLevel(Skill.CRAFTING) < cLevel) {
-            send(new SendMessage("You need " + cLevel + " crafting to make a " + GetItemName(cItem).toLowerCase()));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(1733) || !playerHasItem(1734) || !playerHasItem(cSelected, 1)) {
-            send(new SendMessage(!playerHasItem(1733) ? "You need a needle to craft!" : !playerHasItem(1734) ? "You have run out of thread!" : "You have run out of " + GetItemName(cSelected).toLowerCase() + "!"));
-            resetAction(true);
-            return;
-        }
-        if (cAmount > 0) {
-            requestAnim(1249, 0);
-            deleteItem(cSelected, 1);
-            deleteItem(1734, 1);
-            send(new SendMessage("You crafted a " + GetItemName(cItem).toLowerCase()));
-            addItem(cItem, 1);
-            checkItemUpdate();
-            giveExperience(cExp, Skill.CRAFTING);
-            cAmount--;
-            if (cAmount < 1)
-                resetAction(true);
-            triggerRandom(cExp);
-        } else
-            resetAction(true);
+        CraftingService.performCraft(this);
     }
 
     public void craftMenu(int i) {
-        send(new SendString("What would you like to make?", 8898));
-        send(new SendString("Vambraces", 8889));
-        send(new SendString("Chaps", 8893));
-        send(new SendString("Body", 8897));
-        sendFrame246(8883, 250, Constants.gloves[i]);
-        sendFrame246(8884, 250, Constants.legs[i]);
-        sendFrame246(8885, 250, Constants.chests[i]);
-        sendFrame164(8880);
+        CraftingService.openLeatherMenu(this, i);
     }
 
     public void startHideCraft(int b) {
-        int[] buttons = {34185, 34184, 34183, 34182, 34189, 34188, 34187, 34186, 34193, 34192, 34191, 34190};
-        int[] amounts = {1, 5, 10, 27};
-        int index = 0;
-        int index2 = 0;
-        for (int i = 0; i < buttons.length; i++) {
-            if (buttons[i] == b) {
-                index = i % 4;
-                index2 = i / 4;
-                break;
-            }
-        }
-        cSelected = Constants.leathers[cIndex];
-        cAmount = amounts[index] == 27 ? getInvAmt(cSelected) : amounts[index];
-        cExp = Constants.leatherExp[cIndex];
-        int required;
-        if (index2 == 0) {
-            required = Constants.gloveLevels[cIndex];
-            cItem = Constants.gloves[cIndex];
-        } else if (index2 == 1) {
-            required = Constants.legLevels[cIndex];
-            cItem = Constants.legs[cIndex];
-        } else {
-            required = Constants.chestLevels[cIndex];
-            cItem = Constants.chests[cIndex];
-        }
-        if (required != -1 && getLevel(Skill.CRAFTING) >= required) {
-            cExp = cExp * 8;
-            crafting = true;
-            send(new RemoveInterfaces());
-            SkillingActionService.startCrafting(this);
-        } else if (required >= 0 && cItem != -1) {
-            send(new SendMessage("You need level " + required + " crafting to craft a " + GetItemName(cItem).toLowerCase()));
-            send(new RemoveInterfaces());
-        } else
-            send(new SendMessage("Can't make this??"));
+        CraftingService.startHideCraft(this, b);
     }
 
     public void modYell(String msg) {
@@ -4563,195 +4489,19 @@ public class Client extends Player implements Runnable {
     }
 
     public void startFishing(int object, int click) {
-        boolean valid = false;
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        for (int i = 0; i < Utils.fishSpots.length; i++) {
-            if (Utils.fishSpots[i] == object) {
-                if (click == 1 && (i == 0 || i == 2 || i == 4 || i == 6)) {
-                    valid = true;
-                    fishIndex = i;
-                    break;
-                } else if (click == 2 && (i == 1 || i == 3 || i == 5 || i == 7)) {
-                    valid = true;
-                    fishIndex = i;
-                    break;
-                }
-            }
-        }
-        if (!valid) {
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Not enough inventory space."));
-            resetAction(true);
-            return;
-        }
-        if (getLevel(Skill.FISHING) < Utils.fishReq[fishIndex]) {
-            send(new SendMessage("You need level " + Utils.fishReq[fishIndex] + " fishing to fish here."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
-            send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            resetAction(true);
-            return;
-        }
-        if ((fishIndex == 4 || fishIndex >= 6) && !premium) {
-            send(new SendMessage("You need to be premium to fish from this spot!"));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(314) && fishIndex == 1) {
-            send(new SendMessage("You do not have any feathers."));
-            resetAction(true);
-            return;
-        }
-        resourcesGathered = 0;
-        fishing = true;
-        requestAnim(Utils.fishAnim[fishIndex], 0);
-        send(new SendMessage("You start fishing..."));
-        SkillingActionService.startFishing(this);
+        FishingService.start(this, object, click);
     }
 
     public void fish() {
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
-            send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Not enough inventory space."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(314) && fishIndex == 1) {
-            send(new SendMessage("You do not have any feathers."));
-            resetAction(true);
-            return;
-        }
-        int random = Misc.random(6);
-        int itemId = fishIndex == 1 && getLevel(Skill.FISHING) >= 30 && random < 3 ? 331 : Utils.fishId[fishIndex];
-        if (fishIndex == 1)
-            deleteItem(314, 1);
-        giveExperience(itemId == 331 ? Utils.fishExp[fishIndex] + 100 : Utils.fishExp[fishIndex], Skill.FISHING);
-        addItem(itemId, 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, itemId, 1, getPosition().copy(), "Fishing");
-        resourcesGathered++;
-        requestAnim(Utils.fishAnim[fishIndex], 0);
-        triggerRandom(Utils.fishExp[fishIndex]);
-        send(new SendMessage("You fish up some " + GetItemName(itemId).toLowerCase().replace("raw ", "") + "."));
-        if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        }
+        FishingService.performCycle(this);
     }
 
     public void startCooking(int id) {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be cooking!"));
-            return;
-        }
-        boolean valid = false;
-        for (int i = 0; i < Utils.cookIds.length; i++) {
-            if (id == Utils.cookIds[i]) {
-                cookIndex = i;
-                valid = true;
-            }
-        }
-        if (valid) {
-            cookAmount = getInvAmt(id);
-            cooking = true;
-            SkillingActionService.startCooking(this);
-        }
-
+        CookingService.start(this, id);
     }
 
     public void cook() {
-        if (isBusy() || cookAmount < 1) {
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(Utils.cookIds[cookIndex])) {
-            send(new SendMessage("You are out of fish"));
-            resetAction(true);
-            return;
-        }
-        int id = Utils.cookIds[cookIndex];
-        int ran = 0, index = 0;
-        for (int i = 0; i < Utils.cookIds.length; i++) {
-            if (id == Utils.cookIds[i]) {
-                index = i;
-            }
-        }
-        if (getLevel(Skill.COOKING) < Utils.cookLevel[index]) {
-            send(new SendMessage("You need " + Utils.cookLevel[index] + " cooking to cook the " + Server.itemManager.getName(id).toLowerCase() + "."));
-            resetAction(true);
-            return;
-        }
-        switch (id) {
-            case 2134:
-            case 317:
-                ran = 30 - getLevel(Skill.COOKING);
-                break;
-            case 2138:
-            case 2307:
-                ran = 36 - getLevel(Skill.COOKING);
-                break;
-            case 3363:
-                ran = 42 - getLevel(Skill.COOKING);
-                break;
-            case 335:
-                ran = 50 - getLevel(Skill.COOKING);
-                break;
-            case 331:
-                ran = 60 - getLevel(Skill.COOKING);
-                break;
-            case 377:
-                ran = 70 - getLevel(Skill.COOKING);
-                break;
-            case 371:
-                ran = 80 - getLevel(Skill.COOKING);
-                break;
-            case 7944:
-                ran = 90 - getLevel(Skill.COOKING);
-                break;
-            case 383:
-                ran = 100 - getLevel(Skill.COOKING);
-                break;
-            case 395:
-                ran = 110 - getLevel(Skill.COOKING);
-                break;
-            case 389:
-                ran = 120 - getLevel(Skill.COOKING);
-                break;
-        }
-        if (getEquipment()[Equipment.Slot.HANDS.getId()] == 775)
-            ran -= 4;
-        if (getEquipment()[Equipment.Slot.HEAD.getId()] == 1949)
-            ran -= 4;
-        if (getEquipment()[Equipment.Slot.HEAD.getId()] == 1949 && getEquipment()[Equipment.Slot.HANDS.getId()] == 775)
-            ran -= 2;
-        ran = ran < 0 ? 0 : Math.min(ran, 100);
-        boolean burn = 1 + Utils.random(99) <= ran;
-        if (Utils.cookExp[index] > 0) {
-            cookAmount--;
-            deleteItem(id, 1);
-            setFocus(skillX, skillY);
-            requestAnim(883, 0);
-            if (!burn) {
-                addItem(Utils.cookedIds[index], 1);
-                send(new SendMessage("You cook the " + GetItemName(id)));
-                giveExperience(Utils.cookExp[index], Skill.COOKING);
-            } else {
-                addItem(Utils.burnId[index], 1);
-                send(new SendMessage("You burn the " + GetItemName(id)));
-            }
-            checkItemUpdate();
-            triggerRandom(Utils.cookExp[index]);
-        }
+        CookingService.performCycle(this);
     }
 
     public boolean inHeat() { //King black dragon's domain!

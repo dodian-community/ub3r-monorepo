@@ -37,7 +37,7 @@ object PlayerRecoveryTickService {
                 Skill.PRAYER -> Unit
 
                 else -> {
-                    val skillId = skill.id
+                    val skillId = skill.getId()
                     val before = player.boostedLevel[skillId]
                     if (before > 0) {
                         player.boostedLevel[skillId]--

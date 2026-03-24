@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.buttons.crafting
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.crafting.CraftingService
 
 object LeatherCraftButtons : ButtonContent {
     private val hideCraftButtons = intArrayOf(
@@ -24,14 +25,13 @@ object LeatherCraftButtons : ButtonContent {
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
         if (buttonId in hideCraftButtons) {
-            client.startHideCraft(buttonId)
+            CraftingService.startHideCraft(client, buttonId)
             return true
         }
         if (buttonId in normalCraftButtons) {
-            client.startCraft(buttonId)
+            CraftingService.startStandardLeatherCraft(client, buttonId)
             return true
         }
         return false
     }
 }
-

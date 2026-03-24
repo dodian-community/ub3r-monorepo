@@ -23,7 +23,6 @@ import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
-import net.dodian.uber.game.model.player.skills.thieving.Thieving;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
@@ -80,7 +79,6 @@ public class Server {
     public static Server clientHandler = null;
     public static boolean shutdownServer = false;
     public static PlayerHandler playerHandler = null;
-    public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
     public static ChunkManager chunkManager = null;
@@ -125,7 +123,6 @@ public class Server {
             }
         }
         shopHandler = new ShopHandler();
-        thieving = new Thieving();
         clientHandler = new Server();
         login = new Login();
         Cache.load();

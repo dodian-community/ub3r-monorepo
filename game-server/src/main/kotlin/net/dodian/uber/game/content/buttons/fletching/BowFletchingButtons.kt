@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.buttons.fletching
 
 import net.dodian.uber.game.content.buttons.ButtonContent
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.skills.fletching.FletchingService
 
 object BowFletchingButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -19,8 +20,7 @@ object BowFletchingButtons : ButtonContent {
         }
 
         val longBow = buttonId in intArrayOf(34170, 34169, 34168, 34167)
-        client.fletching.fletchBow(client, longBow, amount)
+        FletchingService.startBowCrafting(client, longBow, amount)
         return true
     }
 }
-

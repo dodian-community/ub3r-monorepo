@@ -55,7 +55,7 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
     val slayExceptions = (slayerTask == null)
             || (slayerTask == SlayerTask.slayerTasks.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
 
-    if (!slayExceptions && slayerTask.isSlayerOnly && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
+    if (!slayExceptions && slayerTask?.slayerOnly == true && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
         send(SendMessage("You need a slayer task to kill this monster."))
         resetAttack()
         return false

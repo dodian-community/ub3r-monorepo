@@ -30,7 +30,7 @@ data class PlayerSaveEnvelope(
     val segments: List<PlayerSaveSegmentSnapshot>,
 ) {
     companion object {
-        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled }
+        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled() }
 
         @JvmStatic
         fun fromClient(

@@ -1,8 +1,12 @@
 package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.player.skills.prayer.Prayer
 import net.dodian.uber.game.skills.smithing.SmeltingActionService
+import net.dodian.uber.game.skills.fletching.FletchingService
+import net.dodian.uber.game.skills.crafting.CraftingService
+import net.dodian.uber.game.skills.cooking.CookingService
+import net.dodian.uber.game.skills.fishing.FishingService
+import net.dodian.uber.game.skills.prayer.PrayerInteractionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.utilities.Utils
 
@@ -40,7 +44,7 @@ object SkillingActionService {
         ) {
             while (player.shafting) {
                 if (!isActive()) return@start
-                player.shaft()
+                CraftingService.performShaft(player)
                 if (!player.shafting) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
@@ -56,7 +60,7 @@ object SkillingActionService {
         ) {
             while (player.fletchings && player.fletchAmount > 0) {
                 if (!isActive()) return@start
-                player.fletching.fletchBow(player)
+                FletchingService.performBowCycle(player)
                 if (!player.fletchings || player.fletchAmount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
@@ -72,7 +76,7 @@ object SkillingActionService {
         ) {
             while (player.spinning) {
                 if (!isActive()) return@start
-                player.spin()
+                CraftingService.performSpin(player)
                 if (!player.spinning) return@start
                 wait(GameCycleClock.ticksForDurationMs(player.spinSpeed))
             }
@@ -88,7 +92,7 @@ object SkillingActionService {
         ) {
             while (player.isCrafting() && player.getCAmount() > 0) {
                 if (!isActive()) return@start
-                player.craft()
+                CraftingService.performCraft(player)
                 if (!player.isCrafting() || player.getCAmount() <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
@@ -118,7 +122,7 @@ object SkillingActionService {
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }
                 if (cycle >= nextCatchCycle) {
-                    player.fish()
+                    FishingService.performCycle(player)
                     if (!player.isFishing()) return@start
                     nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
@@ -137,7 +141,7 @@ object SkillingActionService {
         ) {
             while (player.cooking && player.cookAmount > 0) {
                 if (!isActive()) return@start
-                player.cook()
+                CookingService.performCycle(player)
                 if (!player.cooking || player.cookAmount <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
@@ -153,7 +157,7 @@ object SkillingActionService {
         ) {
             while (player.boneItem > 0) {
                 if (!isActive()) return@start
-                if (!Prayer.altarBones(player, player.boneItem)) return@start
+                if (!PrayerInteractionService.altarBones(player, player.boneItem)) return@start
                 wait(3)
             }
         }

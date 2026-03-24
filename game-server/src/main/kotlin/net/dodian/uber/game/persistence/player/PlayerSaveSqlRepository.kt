@@ -9,7 +9,7 @@ class PlayerSaveSqlRepository(
     private val delegate: PlayerSaveRepository = PlayerSaveRepository(),
 ) {
     private companion object {
-        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled }
+        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled() }
     }
 
     fun saveEnvelope(envelope: PlayerSaveEnvelope) {

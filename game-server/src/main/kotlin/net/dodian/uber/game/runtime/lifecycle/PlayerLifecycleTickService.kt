@@ -90,19 +90,19 @@ object PlayerLifecycleTickService {
 
     private fun handlePrayerDrain(player: Client) {
         val prayers = player.prayerManager
-        if (prayers.drainRate <= 0.0 && prayers.getDrainRate() <= 0.0) {
-            prayers.drainRate = 0.0
+        if (prayers.getCurrentDrainRate() <= 0.0 && prayers.getDrainRate() <= 0.0) {
+            prayers.setCurrentDrainRate(0.0)
             return
         }
 
         if (prayers.getDrainRate() > 0.0) {
-            prayers.drainRate += 0.6
-            if (prayers.drainRate >= prayers.getDrainRate()) {
+            prayers.setCurrentDrainRate(prayers.getCurrentDrainRate() + 0.6)
+            if (prayers.getCurrentDrainRate() >= prayers.getDrainRate()) {
                 player.drainPrayer(1)
-                prayers.drainRate = 0.0
+                prayers.setCurrentDrainRate(0.0)
             }
         } else {
-            prayers.drainRate = 0.0
+            prayers.setCurrentDrainRate(0.0)
         }
     }
 
