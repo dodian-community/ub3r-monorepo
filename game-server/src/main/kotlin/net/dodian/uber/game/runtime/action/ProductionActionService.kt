@@ -2,29 +2,67 @@ package net.dodian.uber.game.runtime.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.skills.core.sendFilterMessage
 import net.dodian.uber.game.skills.core.ProductionSpec
 import net.dodian.uber.game.skills.core.ProductionTask
 
 object ProductionActionService {
     @JvmStatic
-    fun start(client: Client) {
+    fun queueSelection(
+        client: Client,
+        request: ProductionRequest,
+        interfaceModelZoom: Int = if (request.skillId == Skill.HERBLORE.id) 150 else 190,
+        titleLineBreaks: Int = if (request.skillId == Skill.HERBLORE.id) 4 else 5,
+    ) {
+        client.resetAction()
+        client.setPendingProductionSelection(PendingProductionSelection(request, interfaceModelZoom, titleLineBreaks))
+        client.sendFrame246(1746, interfaceModelZoom, request.productId)
+        client.send(SendString("\\n".repeat(titleLineBreaks) + client.GetItemName(request.productId), 2799))
+        client.sendFrame164(4429)
+    }
+
+    @JvmStatic
+    fun startPending(client: Client, cycleCount: Int): Boolean {
+        val selection = client.getPendingProductionSelection() ?: return false
+        client.send(RemoveInterfaces())
+        client.clearPendingProductionSelection()
+        return start(client, selection.request, cycleCount)
+    }
+
+    @JvmStatic
+    fun start(
+        client: Client,
+        request: ProductionRequest,
+        cycleCount: Int,
+    ): Boolean {
+        if (cycleCount < 1) {
+            client.clearActiveProductionSelection()
+            return false
+        }
+        client.setActiveProductionSelection(ActiveProductionSelection(request, cycleCount))
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.PRODUCTION,
         ) {
-            while (player.skillActionCount > 0 && player.playerSkillAction.size >= 8) {
+            while (true) {
+                val active = player.getActiveProductionSelection() ?: return@start
+                if (active.remainingCycles <= 0) return@start
                 if (!isActive()) return@start
                 if (!executeCycle(player)) return@start
-                if (player.skillActionCount <= 0 || player.playerSkillAction.size < 8) return@start
-                wait(player.playerSkillAction[7].coerceAtLeast(1))
+                val updated = player.getActiveProductionSelection() ?: return@start
+                if (updated.remainingCycles <= 0) return@start
+                wait(updated.request.tickDelay.coerceAtLeast(1))
             }
         }
+        return true
     }
 
     @JvmStatic
     fun executeCycle(client: Client): Boolean {
-        if (client.skillActionCount < 1) {
+        val active = client.getActiveProductionSelection()
+        if (active == null || active.remainingCycles < 1) {
             client.resetAction()
             return false
         }
@@ -32,17 +70,13 @@ object ProductionActionService {
             client.sendFilterMessage("You are currently busy to be doing this!")
             return false
         }
-        if (client.playerSkillAction.size < 8) {
-            client.resetAction()
-            return false
-        }
+        val request = active.request
+        val itemOne = request.primaryItemId
+        val itemTwo = request.secondaryItemId
+        val itemMake = request.productId
+        var amount = request.amountPerCycle
 
-        val itemOne = client.playerSkillAction[3]
-        val itemTwo = client.playerSkillAction[4]
-        val itemMake = client.playerSkillAction[1]
-        var amount = client.playerSkillAction[2]
-
-        if (itemMake == 12695) {
+        if (request.mode == ProductionMode.SUPER_COMBAT) {
             if (!client.playerHasItem(itemOne) || (!client.playerHasItem(111) && !client.playerHasItem(269)) || !client.playerHasItem(2440) || !client.playerHasItem(2442)) {
                 client.resetAction()
                 val text =
@@ -58,7 +92,7 @@ object ProductionActionService {
             client.deleteItem(2440, amount)
             client.deleteItem(2442, amount)
             client.addItem(itemMake, amount)
-        } else if (itemMake == 11730) {
+        } else if (request.mode == ProductionMode.OVERLOAD) {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(2444) || !client.playerHasItem(12695)) {
                 client.resetAction()
                 val text =
@@ -72,7 +106,7 @@ object ProductionActionService {
             client.deleteItem(2444, amount)
             client.deleteItem(12695, amount)
             client.addItem(itemMake, amount)
-        } else if (itemMake in 569..576) {
+        } else if (request.mode == ProductionMode.CHARGED_ORB) {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo, 3)) {
                 client.resetAction()
                 client.sendFilterMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk.")
@@ -82,7 +116,7 @@ object ProductionActionService {
             client.deleteItem(itemOne, amount)
             client.deleteRunes(intArrayOf(itemTwo), intArrayOf(3))
             client.addItem(itemMake, amount)
-        } else if (itemMake == 1775) {
+        } else if (request.mode == ProductionMode.MOLTEN_GLASS) {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(itemTwo)) {
                 client.resetAction()
                 client.sendFilterMessage("You need one bucket of sand and one soda ash")
@@ -105,14 +139,14 @@ object ProductionActionService {
             val spec =
                 ProductionSpec(
                     actionName = "Production",
-                    skillId = client.playerSkillAction[0],
+                    skillId = request.skillId,
                     productId = itemMake,
                     amountPerCycle = amount,
                     primaryItemId = itemOne,
                     secondaryItemId = itemTwo,
-                    experiencePerUnit = client.playerSkillAction[5],
-                    animationId = client.playerSkillAction[6],
-                    tickDelay = client.playerSkillAction[7],
+                    experiencePerUnit = request.experiencePerUnit,
+                    animationId = request.animationId,
+                    tickDelay = request.tickDelay,
                 )
             if (!ProductionCycleTask(client, spec).runCycle()) {
                 client.resetAction()
@@ -121,15 +155,15 @@ object ProductionActionService {
         }
 
         client.checkItemUpdate()
-        if (client.playerSkillAction[6] != -1) {
-            client.requestAnim(client.playerSkillAction[6], 0)
+        if (request.animationId != -1) {
+            client.requestAnim(request.animationId, 0)
         }
-        val xp = client.playerSkillAction[5] * amount
-        client.giveExperience(xp, Skill.getSkill(client.playerSkillAction[0]))
+        val xp = request.experiencePerUnit * amount
+        client.giveExperience(xp, Skill.getSkill(request.skillId))
         client.triggerRandom(xp)
-        client.skillActionCount--
-        if (client.skillMessage.isNotEmpty()) {
-            client.sendFilterMessage(client.skillMessage)
+        client.setActiveProductionSelection(active.copy(remainingCycles = active.remainingCycles - 1))
+        if (request.completionMessage.isNotEmpty()) {
+            client.sendFilterMessage(request.completionMessage)
         }
         return true
     }

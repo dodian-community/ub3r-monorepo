@@ -2,11 +2,11 @@ package net.dodian.uber.game.content.commands.dev
 
 import java.util.LinkedHashSet
 import net.dodian.uber.game.Constants
-import net.dodian.uber.game.model.player.skills.thieving.Thieving
 import net.dodian.uber.game.skills.FarmingData
 import net.dodian.uber.game.skills.mining.MiningData
 import net.dodian.uber.game.skills.smithing.SmithingData
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.skills.thieving.ThievingService
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingData
 import net.dodian.utilities.Utils
 
@@ -228,7 +228,7 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        Thieving.ThievingData.values().forEach { data ->
+        net.dodian.uber.game.skills.thieving.ThievingService.Definition.values().forEach { data ->
             data.item.forEach { addIfValid(items, it) }
         }
         return items.toList()

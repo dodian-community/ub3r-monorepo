@@ -20,7 +20,6 @@ import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
 import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
 import net.dodian.uber.game.event.GameEventBus;
@@ -73,7 +72,6 @@ public class Server {
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
-    public static PyramidPlunder entryObject = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
@@ -154,7 +152,6 @@ public class Server {
 
         new Thread(login).start();
         /* Processor for various stuff */
-        entryObject = new PyramidPlunder();
         if (getGameLoopEnabled()) {
             gameLoopService.start();
         } else {

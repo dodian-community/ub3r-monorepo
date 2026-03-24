@@ -20,7 +20,7 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.skills.slayer.SlayerService;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
@@ -187,9 +187,7 @@ public class Client extends Player implements Runnable {
     public boolean fletchings = false;
     public int fletchId = -1, fletchAmount = -1, fletchLog = -1, fletchExp = 0;
     /* Set make one skill action! */
-    public int skillActionCount = 0, skillActionTimer = -1, prayerAction = -1;
-    public ArrayList<Integer> playerSkillAction = new ArrayList<>(); //playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = tickTimer
-    public String skillMessage = "";
+    public int prayerAction = -1;
     public boolean smelting = false;
     public int smelt_id, smeltCount, smeltExperience;
 
@@ -1942,7 +1940,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            SlayerTask.sendTask(this);
+            SlayerService.sendTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -5543,27 +5541,6 @@ public class Client extends Player implements Runnable {
             deleteItem(2996, playerItemsN[slot]);
             checkItemUpdate();
         }
-    }
-
-    public void setSkill(int skill, int itemMade, int amount, int itemOne, int itemTwo, int xp, int emote, int tick) {
-        playerSkillAction.add(skill);
-        playerSkillAction.add(itemMade);
-        playerSkillAction.add(amount);
-        playerSkillAction.add(itemOne);
-        playerSkillAction.add(itemTwo);
-        playerSkillAction.add(xp);
-        playerSkillAction.add(emote);
-        playerSkillAction.add(tick);
-    }
-
-    public void setSkillAction(int skill, int itemMade, int amount, int itemOne, int itemTwo, int xp, int emote, int tick) {
-        //playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = emote, 7 = tickTimer
-        resetAction();
-        sendFrame246(1746, skill == Skill.HERBLORE.getId() ? 150 : 190, itemMade);
-        //Doubt this is how you do it but meh cba!
-        send(new SendString("\\n".repeat((skill == Skill.HERBLORE.getId() ? 4 : 5)) + GetItemName(itemMade), 2799));
-        sendFrame164(4429);
-        setSkill(skill, itemMade, amount, itemOne, itemTwo, xp, emote, tick);
     }
 
     public void guideBook() {

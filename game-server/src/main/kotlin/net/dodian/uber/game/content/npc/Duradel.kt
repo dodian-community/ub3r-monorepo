@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
+import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 
@@ -62,9 +62,9 @@ internal object SlayerMasterDialogue {
         }
 
         val tasks = when (npcId) {
-            402 -> SlayerTask.mazchnaTasks(client)
-            403 -> SlayerTask.vannakaTasks(client)
-            405 -> SlayerTask.duradelTasks(client)
+            402 -> SlayerService.mazchnaTasks(client)
+            403 -> SlayerService.vannakaTasks(client)
+            405 -> SlayerService.duradelTasks(client)
             else -> emptyList()
         }
 
@@ -103,7 +103,7 @@ internal object SlayerMasterDialogue {
             return
         }
 
-        val checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])
+        val checkTask = SlayerService.Task.getTask(client.getSlayerData()[1])
         val lines = if (checkTask != null && client.getSlayerData()[3] > 0) {
             arrayOf(
                 "You're currently assigned to ${checkTask.textRepresentation};",
@@ -118,7 +118,7 @@ internal object SlayerMasterDialogue {
 
     @JvmStatic
     fun showResetCountPrompt(client: Client) {
-        val checkTask = SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])
+        val checkTask = SlayerService.Task.getTask(client.getSlayerData()[1])
         val title = if (checkTask != null) {
             "Reset count for ${checkTask.textRepresentation}"
         } else {
@@ -274,7 +274,7 @@ internal object SlayerMasterDialogue {
     }
 
     private fun resetCurrentTaskCount(client: Client) {
-        val checkTask = SlayerTask.slayerTasks.getTask(client.slayerData[1]) ?: return
+        val checkTask = SlayerService.Task.getTask(client.slayerData[1]) ?: return
         for (npcId in checkTask.npcId) {
             val npcName = Server.npcManager.getName(npcId)
             for (slot in 0 until client.monsterName.size) {
@@ -298,6 +298,6 @@ internal object SlayerMasterDialogue {
         if (client.getSlayerData()[0] == -1 || client.getSlayerData()[3] <= 0) {
             return ""
         }
-        return SlayerTask.slayerTasks.getTask(client.getSlayerData()[1])?.textRepresentation ?: ""
+        return SlayerService.Task.getTask(client.getSlayerData()[1])?.textRepresentation ?: ""
     }
 }

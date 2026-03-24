@@ -6,7 +6,8 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.agility.Agility
 import net.dodian.uber.game.skills.agility.DesertCarpet
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
+import net.dodian.uber.game.skills.slayer.SlayerService
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -126,7 +127,7 @@ object DialogueOptionService {
 
         if (dialogueId == 16) {
             if (button == 1) {
-                val checkTask = SlayerTask.slayerTasks.getTask(c.slayerData[1])
+                val checkTask = SlayerService.Task.getTask(c.slayerData[1])
                 if (checkTask != null) {
                     for (i in checkTask.npcId.indices) {
                         for (slot in 0 until c.monsterName.size) {
@@ -571,7 +572,7 @@ object DialogueOptionService {
             }
         } else if (dialogueId == 20931) {
             if (button == 1) {
-                c.getPlunder.resetPlunder()
+                PyramidPlunderService.reset(c)
             }
             c.send(RemoveInterfaces())
         } else if (dialogueId == 48054) {

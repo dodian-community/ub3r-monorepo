@@ -18,7 +18,7 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.skills.slayer.SlayerService;
 import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
@@ -602,7 +602,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        SlayerTask.slayerTasks task = SlayerTask.slayerTasks.getSlayerNpc(id);
+        SlayerService.Task task = SlayerService.Task.getSlayerNpc(id);
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);

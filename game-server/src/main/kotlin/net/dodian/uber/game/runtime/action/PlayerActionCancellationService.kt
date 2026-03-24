@@ -56,12 +56,8 @@ object PlayerActionCancellationService {
             player.resetSM()
             player.send(RemoveInterfaces())
         }
-        player.skillActionTimer = -1
-        player.skillActionCount = 0
-        player.skillMessage = ""
-        if (!player.playerSkillAction.isEmpty()) {
-            player.playerSkillAction.clear()
-        }
+        player.clearPendingProductionSelection()
+        player.clearActiveProductionSelection()
         player.prayerAction = -1
         player.boneItem = -1
         player.NpcWanneTalk = 0

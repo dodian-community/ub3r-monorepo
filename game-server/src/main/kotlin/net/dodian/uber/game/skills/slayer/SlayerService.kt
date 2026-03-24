@@ -1,12 +1,12 @@
-package net.dodian.uber.game.model.player.skills.slayer
+package net.dodian.uber.game.skills.slayer
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Range
 
-object SlayerTask {
-    enum class slayerTasks(
+object SlayerService {
+    enum class Task(
         val textRepresentation: String,
         val slayerOnly: Boolean,
         val assignedLevelRange: Range,
@@ -50,66 +50,67 @@ object SlayerTask {
 
         companion object {
             @JvmStatic
-            fun getSlayerNpc(npcId: Int): slayerTasks? =
-                values().firstOrNull { task -> task.npcId.any { it == npcId } }
+            fun getSlayerNpc(npcId: Int): Task? = values().firstOrNull { task -> task.npcId.any { it == npcId } }
 
             @JvmStatic
-            fun getTask(slot: Int): slayerTasks? = values().getOrNull(slot)
+            fun getTask(slot: Int): Task? = values().getOrNull(slot)
         }
     }
 
-    private val mazchna = arrayOf(
-        slayerTasks.CRAWLING_HAND, slayerTasks.PYREFIENDS, slayerTasks.DEATH_SPAWN,
-        slayerTasks.JELLY, slayerTasks.HEAD_MOURNER, slayerTasks.HILL_GIANT,
-        slayerTasks.CHAOS_DWARF, slayerTasks.LESSER_DEMON, slayerTasks.ICE_GIANT,
-        slayerTasks.BERSERK_BARBARIAN_SPIRIT, slayerTasks.MITHRIL_DRAGON, slayerTasks.SKELE_HELLHOUNDS,
-        slayerTasks.FIRE_GIANTS, slayerTasks.BLOODVELD,
-    )
+    private val mazchna =
+        arrayOf(
+            Task.CRAWLING_HAND, Task.PYREFIENDS, Task.DEATH_SPAWN, Task.JELLY, Task.HEAD_MOURNER, Task.HILL_GIANT,
+            Task.CHAOS_DWARF, Task.LESSER_DEMON, Task.ICE_GIANT, Task.BERSERK_BARBARIAN_SPIRIT, Task.MITHRIL_DRAGON,
+            Task.SKELE_HELLHOUNDS, Task.FIRE_GIANTS, Task.BLOODVELD,
+        )
 
-    private val vannaka = arrayOf(
-        slayerTasks.GREATER_DEMON, slayerTasks.BLACK_DEMON, slayerTasks.BERSERK_BARBARIAN_SPIRIT,
-        slayerTasks.MITHRIL_DRAGON, slayerTasks.TZHAAR, slayerTasks.MUMMY,
-        slayerTasks.ABYSSAL_DEMONS, slayerTasks.GREEN_DRAGONS, slayerTasks.BLUE_DRAGONS,
-        slayerTasks.GARGOYLES, slayerTasks.BLOODVELD, slayerTasks.ABERRANT_SPECTRE,
-    )
+    private val vannaka =
+        arrayOf(
+            Task.GREATER_DEMON, Task.BLACK_DEMON, Task.BERSERK_BARBARIAN_SPIRIT, Task.MITHRIL_DRAGON, Task.TZHAAR,
+            Task.MUMMY, Task.ABYSSAL_DEMONS, Task.GREEN_DRAGONS, Task.BLUE_DRAGONS, Task.GARGOYLES,
+            Task.BLOODVELD, Task.ABERRANT_SPECTRE,
+        )
 
-    private val duradel = arrayOf(
-        slayerTasks.DAD, slayerTasks.SAN_TOJALON, slayerTasks.BLACK_KNIGHT_TITAN,
-        slayerTasks.JUNGLE_DEMON, slayerTasks.BLACK_DEMON, slayerTasks.UNGADULU,
-        slayerTasks.ICE_QUEEN, slayerTasks.NECHRYAEL, slayerTasks.KING_BLACK_DRAGON,
-        slayerTasks.DAGANNOTH_PRIME, slayerTasks.HEAD_MOURNER, slayerTasks.ABYSSAL_GUARDIAN,
-    )
+    private val duradel =
+        arrayOf(
+            Task.DAD, Task.SAN_TOJALON, Task.BLACK_KNIGHT_TITAN, Task.JUNGLE_DEMON, Task.BLACK_DEMON, Task.UNGADULU,
+            Task.ICE_QUEEN, Task.NECHRYAEL, Task.KING_BLACK_DRAGON, Task.DAGANNOTH_PRIME, Task.HEAD_MOURNER,
+            Task.ABYSSAL_GUARDIAN,
+        )
 
     @JvmStatic
-    fun mazchnaTasks(c: Client): ArrayList<slayerTasks> = collectTasks(c, mazchna) { task ->
-        when (task) {
-            slayerTasks.HEAD_MOURNER -> c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80
-            slayerTasks.LESSER_DEMON -> !c.checkItem(2383) && !c.checkItem(989)
-            slayerTasks.SKELE_HELLHOUNDS -> !c.checkItem(2382) && !c.checkItem(989)
-            slayerTasks.FIRE_GIANTS -> c.checkItem(1543)
-            else -> true
+    fun mazchnaTasks(client: Client): ArrayList<Task> =
+        collectTasks(client, mazchna) { task ->
+            when (task) {
+                Task.HEAD_MOURNER -> client.determineCombatLevel() >= 80 || client.getLevel(Skill.MAGIC) >= 80 || client.getLevel(Skill.RANGED) >= 80
+                Task.LESSER_DEMON -> !client.checkItem(2383) && !client.checkItem(989)
+                Task.SKELE_HELLHOUNDS -> !client.checkItem(2382) && !client.checkItem(989)
+                Task.FIRE_GIANTS -> client.checkItem(1543)
+                else -> true
+            }
         }
-    }
 
     @JvmStatic
-    fun vannakaTasks(c: Client): ArrayList<slayerTasks> = collectTasks(c, vannaka) { task ->
-        task != slayerTasks.MUMMY || c.checkItem(1544)
-    }
-
-    @JvmStatic
-    fun duradelTasks(c: Client): ArrayList<slayerTasks> = collectTasks(c, duradel) { task ->
-        when (task) {
-            slayerTasks.HEAD_MOURNER -> c.determineCombatLevel() >= 80 || c.getLevel(Skill.MAGIC) >= 80 || c.getLevel(Skill.RANGED) >= 80
-            slayerTasks.SAN_TOJALON, slayerTasks.BLACK_KNIGHT_TITAN -> c.checkItem(1544)
-            slayerTasks.JUNGLE_DEMON -> c.checkItem(1545)
-            slayerTasks.BLACK_DEMON -> c.checkItem(989)
-            else -> true
+    fun vannakaTasks(client: Client): ArrayList<Task> =
+        collectTasks(client, vannaka) { task ->
+            task != Task.MUMMY || client.checkItem(1544)
         }
-    }
+
+    @JvmStatic
+    fun duradelTasks(client: Client): ArrayList<Task> =
+        collectTasks(client, duradel) { task ->
+            when (task) {
+                Task.HEAD_MOURNER -> client.determineCombatLevel() >= 80 || client.getLevel(Skill.MAGIC) >= 80 || client.getLevel(Skill.RANGED) >= 80
+                Task.SAN_TOJALON, Task.BLACK_KNIGHT_TITAN -> client.checkItem(1544)
+                Task.JUNGLE_DEMON -> client.checkItem(1545)
+                Task.BLACK_DEMON -> client.checkItem(989)
+                else -> true
+            }
+        }
 
     @JvmStatic
     fun sendTask(client: Client) {
-        val checkTask = slayerTasks.getTask(client.slayerData[1])
+        val checkTask = Task.getTask(client.slayerData[1])
         if (checkTask != null && client.slayerData[3] > 0) {
             client.send(SendMessage("You need to kill ${client.slayerData[3]} more of ${checkTask.textRepresentation} <col=FF0000>|</col> Current streak is ${client.slayerData[4]}."))
         } else {
@@ -117,12 +118,8 @@ object SlayerTask {
         }
     }
 
-    private inline fun collectTasks(
-        client: Client,
-        tasks: Array<slayerTasks>,
-        allow: (slayerTasks) -> Boolean,
-    ): ArrayList<slayerTasks> {
-        val slayer = ArrayList<slayerTasks>()
+    private inline fun collectTasks(client: Client, tasks: Array<Task>, allow: (Task) -> Boolean): ArrayList<Task> {
+        val slayer = ArrayList<Task>()
         var index = 0
         while (index < tasks.size) {
             val task = tasks[index]
@@ -131,7 +128,7 @@ object SlayerTask {
                 index++
             } else if (task.assignedLevelRange.floor <= slayerLevel && slayerLevel <= task.assignedLevelRange.ceiling && allow(task)) {
                 slayer.add(task)
-                if (task == slayerTasks.LESSER_DEMON || task == slayerTasks.SKELE_HELLHOUNDS) {
+                if (task == Task.LESSER_DEMON || task == Task.SKELE_HELLHOUNDS) {
                     slayer.add(task)
                 }
             }

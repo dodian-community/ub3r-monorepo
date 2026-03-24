@@ -5,6 +5,9 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.runtime.action.ProductionActionService
+import net.dodian.uber.game.runtime.action.ProductionMode
+import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.utilities.Utils
 
 object CraftingItemCombinationHandler {
@@ -50,8 +53,20 @@ object CraftingItemCombinationHandler {
                     client.send(SendMessage("You need a crafting level of ${Utils.gemReq[slot]} to cut this."))
                     return true
                 }
-                client.setSkillAction(Skill.CRAFTING.id, Utils.cutGems[slot], 1, gem, -1, Utils.gemExp[slot] * 5, Utils.gemEmote[slot], 3)
-                client.skillMessage = "You cut the ${client.GetItemName(Utils.cutGems[slot])}"
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = Utils.cutGems[slot],
+                        amountPerCycle = 1,
+                        primaryItemId = gem,
+                        secondaryItemId = -1,
+                        experiencePerUnit = Utils.gemExp[slot] * 5,
+                        animationId = Utils.gemEmote[slot],
+                        tickDelay = 3,
+                        completionMessage = "You cut the ${client.GetItemName(Utils.cutGems[slot])}",
+                    ),
+                )
                 return true
             }
         }
@@ -68,8 +83,20 @@ object CraftingItemCombinationHandler {
                     client.send(SendMessage("You need a crafting level of ${Utils.orbLevel[slot]} to make this."))
                     return true
                 }
-                client.setSkillAction(Skill.CRAFTING.id, Utils.staves[slot], 1, orb, 1391, Utils.orbXp[slot], -1, 3)
-                client.skillMessage = "You put the ${client.GetItemName(orb).lowercase()} onto the battlestaff and made a ${client.GetItemName(Utils.staves[slot]).lowercase()}."
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = Utils.staves[slot],
+                        amountPerCycle = 1,
+                        primaryItemId = orb,
+                        secondaryItemId = 1391,
+                        experiencePerUnit = Utils.orbXp[slot],
+                        animationId = -1,
+                        tickDelay = 3,
+                        completionMessage = "You put the ${client.GetItemName(orb).lowercase()} onto the battlestaff and made a ${client.GetItemName(Utils.staves[slot]).lowercase()}.",
+                    ),
+                )
                 return true
             }
         }
@@ -108,8 +135,20 @@ object CraftingItemCombinationHandler {
                 client.send(SendMessage("You cannot string this item with wool!"))
                 return true
             }
-            client.setSkillAction(Skill.CRAFTING.id, strung, 1, amulet, 1759, 60, -1, 2)
-            client.skillMessage = "You put the wool onto the ${client.GetItemName(strung).lowercase()}."
+            ProductionActionService.queueSelection(
+                client,
+                ProductionRequest(
+                    skillId = Skill.CRAFTING.id,
+                    productId = strung,
+                    amountPerCycle = 1,
+                    primaryItemId = amulet,
+                    secondaryItemId = 1759,
+                    experiencePerUnit = 60,
+                    animationId = -1,
+                    tickDelay = 2,
+                    completionMessage = "You put the wool onto the ${client.GetItemName(strung).lowercase()}.",
+                ),
+            )
             return true
         }
         return false

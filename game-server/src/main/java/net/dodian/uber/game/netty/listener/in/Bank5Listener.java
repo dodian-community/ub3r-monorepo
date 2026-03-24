@@ -126,7 +126,7 @@ public class Bank5Listener implements PacketListener {
             if (removeId == 4566) {
                 client.requestAnim(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                net.dodian.uber.game.model.player.skills.slayer.SlayerTask.sendTask(client);
+                net.dodian.uber.game.skills.slayer.SlayerService.sendTask(client);
             }
         }
     }

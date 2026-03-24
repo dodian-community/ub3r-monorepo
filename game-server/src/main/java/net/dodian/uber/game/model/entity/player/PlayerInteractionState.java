@@ -3,9 +3,11 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.action.PendingProductionSelection;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatTargetState;
 import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
+import net.dodian.uber.game.runtime.action.ActiveProductionSelection;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
@@ -37,6 +39,8 @@ final class PlayerInteractionState {
     private volatile ActiveSmithingSelection activeSmithingSelection;
     private volatile SmeltingSelection smeltingSelection;
     private volatile int pendingSmeltingBarId = -1;
+    private volatile PendingProductionSelection pendingProductionSelection;
+    private volatile ActiveProductionSelection activeProductionSelection;
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
@@ -302,6 +306,30 @@ final class PlayerInteractionState {
 
     void clearPendingSmeltingBarId() {
         pendingSmeltingBarId = -1;
+    }
+
+    PendingProductionSelection getPendingProductionSelection() {
+        return pendingProductionSelection;
+    }
+
+    void setPendingProductionSelection(PendingProductionSelection pendingProductionSelection) {
+        this.pendingProductionSelection = pendingProductionSelection;
+    }
+
+    void clearPendingProductionSelection() {
+        pendingProductionSelection = null;
+    }
+
+    ActiveProductionSelection getActiveProductionSelection() {
+        return activeProductionSelection;
+    }
+
+    void setActiveProductionSelection(ActiveProductionSelection activeProductionSelection) {
+        this.activeProductionSelection = activeProductionSelection;
+    }
+
+    void clearActiveProductionSelection() {
+        activeProductionSelection = null;
     }
 
     GameTaskSet<?> getPlayerTaskSet() {

@@ -4,7 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.player.skills.thieving.Thieving
+import net.dodian.uber.game.skills.thieving.ThievingService
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 
 object StallObjects : ObjectContent {
@@ -27,7 +27,7 @@ object StallObjects : ObjectContent {
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        Thieving.attemptSteal(client, objectId, position)
+        ThievingService.attempt(client, objectId, position)
         return true
     }
 }

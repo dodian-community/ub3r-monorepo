@@ -4,6 +4,8 @@ import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.ProductionActionService
+import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.uber.game.runtime.action.SkillingActionService
 import net.dodian.uber.game.skills.fletching.FletchingService
 
@@ -17,7 +19,19 @@ object FletchingItemCombinationHandler {
             return true
         }
         if ((itemUsed == 314 || otherItem == 314) && (itemUsed == 52 || otherItem == 52)) {
-            client.setSkillAction(Skill.FLETCHING.id, 53, 15, itemUsed, otherItem, 5, -1, 2)
+            ProductionActionService.queueSelection(
+                client,
+                ProductionRequest(
+                    skillId = Skill.FLETCHING.id,
+                    productId = 53,
+                    amountPerCycle = 15,
+                    primaryItemId = itemUsed,
+                    secondaryItemId = otherItem,
+                    experiencePerUnit = 5,
+                    animationId = -1,
+                    tickDelay = 2,
+                ),
+            )
             return true
         }
         for (index in Constants.darttip.indices) {
@@ -31,7 +45,19 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
-                client.setSkillAction(Skill.FLETCHING.id, Constants.darts[index], 10, itemUsed, otherItem, Constants.darttip_xp[index] / 2, -1, 3)
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.FLETCHING.id,
+                        productId = Constants.darts[index],
+                        amountPerCycle = 10,
+                        primaryItemId = itemUsed,
+                        secondaryItemId = otherItem,
+                        experiencePerUnit = Constants.darttip_xp[index] / 2,
+                        animationId = -1,
+                        tickDelay = 3,
+                    ),
+                )
                 return true
             }
         }
@@ -46,8 +72,20 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
-                client.setSkillAction(Skill.FLETCHING.id, Constants.arrows[index], 15, itemUsed, otherItem, Constants.xp[index], -1, 3)
-                client.skillMessage = "You fletched some ${client.GetItemName(Constants.arrows[index]).lowercase()}."
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.FLETCHING.id,
+                        productId = Constants.arrows[index],
+                        amountPerCycle = 15,
+                        primaryItemId = itemUsed,
+                        secondaryItemId = otherItem,
+                        experiencePerUnit = Constants.xp[index],
+                        animationId = -1,
+                        tickDelay = 3,
+                        completionMessage = "You fletched some ${client.GetItemName(Constants.arrows[index]).lowercase()}.",
+                    ),
+                )
                 return true
             }
         }
@@ -64,8 +102,20 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Requires level ${Constants.shortreq[index]} fletching"))
                     return true
                 }
-                client.setSkillAction(Skill.FLETCHING.id, Constants.shortbow[index], 1, itemUsed, otherItem, Constants.shortexp[index], 6679 + index, 2)
-                client.skillMessage = "You string your ${client.GetItemName(Constants.shortbows[index]).lowercase()} into a ${client.GetItemName(Constants.shortbow[index]).lowercase()}."
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.FLETCHING.id,
+                        productId = Constants.shortbow[index],
+                        amountPerCycle = 1,
+                        primaryItemId = itemUsed,
+                        secondaryItemId = otherItem,
+                        experiencePerUnit = Constants.shortexp[index],
+                        animationId = 6679 + index,
+                        tickDelay = 2,
+                        completionMessage = "You string your ${client.GetItemName(Constants.shortbows[index]).lowercase()} into a ${client.GetItemName(Constants.shortbow[index]).lowercase()}.",
+                    ),
+                )
                 return true
             }
         }
@@ -76,8 +126,20 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Requires level ${Constants.longreq[index]} fletching"))
                     return true
                 }
-                client.setSkillAction(Skill.FLETCHING.id, Constants.longbow[index], 1, itemUsed, otherItem, Constants.longexp[index], 6685 + index, 2)
-                client.skillMessage = "You string your ${client.GetItemName(Constants.longbows[index]).lowercase()} into a ${client.GetItemName(Constants.longbow[index]).lowercase()}."
+                ProductionActionService.queueSelection(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.FLETCHING.id,
+                        productId = Constants.longbow[index],
+                        amountPerCycle = 1,
+                        primaryItemId = itemUsed,
+                        secondaryItemId = otherItem,
+                        experiencePerUnit = Constants.longexp[index],
+                        animationId = 6685 + index,
+                        tickDelay = 2,
+                        completionMessage = "You string your ${client.GetItemName(Constants.longbows[index]).lowercase()} into a ${client.GetItemName(Constants.longbow[index]).lowercase()}.",
+                    ),
+                )
                 return true
             }
         }

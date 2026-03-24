@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
+import net.dodian.uber.game.runtime.action.ProductionMode
+import net.dodian.uber.game.runtime.action.ProductionRequest
 
 object GlassCraftButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(
@@ -20,9 +22,20 @@ object GlassCraftButtons : ButtonContent {
             44210, 44209, 44208, 44207 -> {
                 client.send(RemoveInterfaces())
                 val craftVialAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.id, 229, 1, 1775, -1, 80, 884, 3)
-                client.skillActionCount = craftVialAmount[buttonId - 44207]
-                ProductionActionService.start(client)
+                ProductionActionService.start(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = 229,
+                        amountPerCycle = 1,
+                        primaryItemId = 1775,
+                        secondaryItemId = -1,
+                        experiencePerUnit = 80,
+                        animationId = 884,
+                        tickDelay = 3,
+                    ),
+                    craftVialAmount[buttonId - 44207],
+                )
                 return true
             }
 
@@ -33,9 +46,20 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftCupAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.id, 1980, 1, 1775, -1, 120, 884, 3)
-                client.skillActionCount = craftCupAmount[buttonId - 48105]
-                ProductionActionService.start(client)
+                ProductionActionService.start(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = 1980,
+                        amountPerCycle = 1,
+                        primaryItemId = 1775,
+                        secondaryItemId = -1,
+                        experiencePerUnit = 120,
+                        animationId = 884,
+                        tickDelay = 3,
+                    ),
+                    craftCupAmount[buttonId - 48105],
+                )
                 return true
             }
 
@@ -46,9 +70,20 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftFishAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.id, 6667, 1, 1775, -1, 160, 884, 3)
-                client.skillActionCount = craftFishAmount[buttonId - 48109]
-                ProductionActionService.start(client)
+                ProductionActionService.start(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = 6667,
+                        amountPerCycle = 1,
+                        primaryItemId = 1775,
+                        secondaryItemId = -1,
+                        experiencePerUnit = 160,
+                        animationId = 884,
+                        tickDelay = 3,
+                    ),
+                    craftFishAmount[buttonId - 48109],
+                )
                 return true
             }
 
@@ -59,9 +94,20 @@ object GlassCraftButtons : ButtonContent {
                     return true
                 }
                 val craftOrbAmount = intArrayOf(27, 10, 5, 1)
-                client.setSkill(Skill.CRAFTING.id, 567, 1, 1775, -1, 240, 884, 3)
-                client.skillActionCount = craftOrbAmount[buttonId - 48113]
-                ProductionActionService.start(client)
+                ProductionActionService.start(
+                    client,
+                    ProductionRequest(
+                        skillId = Skill.CRAFTING.id,
+                        productId = 567,
+                        amountPerCycle = 1,
+                        primaryItemId = 1775,
+                        secondaryItemId = -1,
+                        experiencePerUnit = 240,
+                        animationId = 884,
+                        tickDelay = 3,
+                    ),
+                    craftOrbAmount[buttonId - 48113],
+                )
                 return true
             }
         }

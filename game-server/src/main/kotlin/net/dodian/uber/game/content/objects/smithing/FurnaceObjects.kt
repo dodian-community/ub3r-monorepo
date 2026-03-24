@@ -8,6 +8,9 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.ProductionActionService
+import net.dodian.uber.game.runtime.action.ProductionMode
+import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.utilities.Utils
 
 object FurnaceObjects : ObjectContent {
@@ -47,8 +50,21 @@ object FurnaceObjects : ObjectContent {
                 client.send(SendMessage("You need one bucket of sand and one soda ash"))
                 return true
             }
-            client.setSkillAction(Skill.CRAFTING.id, 1775, 1, 1783, 1781, 80, 899, 3)
-            client.skillMessage = "You smelt soda ash with the sand and made molten glass."
+            ProductionActionService.queueSelection(
+                client,
+                ProductionRequest(
+                    skillId = Skill.CRAFTING.id,
+                    productId = 1775,
+                    amountPerCycle = 1,
+                    primaryItemId = 1783,
+                    secondaryItemId = 1781,
+                    experiencePerUnit = 80,
+                    animationId = 899,
+                    tickDelay = 3,
+                    completionMessage = "You smelt soda ash with the sand and made molten glass.",
+                    mode = ProductionMode.MOLTEN_GLASS,
+                ),
+            )
             return true
         }
 
@@ -87,8 +103,21 @@ object FurnaceObjects : ObjectContent {
             client.send(SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."))
             return true
         }
-        client.setSkillAction(Skill.MAGIC.id, resultItem, 1, 567, 564, exp, 726, 5)
-        client.skillMessage = message
+        ProductionActionService.queueSelection(
+            client,
+            ProductionRequest(
+                skillId = Skill.MAGIC.id,
+                productId = resultItem,
+                amountPerCycle = 1,
+                primaryItemId = 567,
+                secondaryItemId = 564,
+                experiencePerUnit = exp,
+                animationId = 726,
+                tickDelay = 5,
+                completionMessage = message,
+                mode = ProductionMode.CHARGED_ORB,
+            ),
+        )
         return true
     }
 }

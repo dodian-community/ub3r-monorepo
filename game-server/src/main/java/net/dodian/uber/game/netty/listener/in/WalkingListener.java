@@ -18,6 +18,7 @@ import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -58,7 +59,7 @@ public final class WalkingListener implements PacketListener {
                 || !client.pLoaded || now < client.walkBlock) {
             return;
         }
-        if (client.doingTeleport() || client.getPlunder.looting) return;
+        if (client.doingTeleport() || PyramidPlunderService.isLooting(client)) return;
         if (client.isVerticalTransitionActive()) {
             client.resetWalkingQueue();
             return;
@@ -164,7 +165,6 @@ public final class WalkingListener implements PacketListener {
             client.rerequestAnim();
             PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.MOVEMENT, true, false, false, true);
             client.discord = false;
-            client.playerSkillAction.clear();
             if (client.checkInv) { client.checkInv = false; client.resetItems(3214);}            
             if (opcode != 98 && CombatRuntimeService.hasActiveCombat(client)) {
                 client.setCombatCancellationReason(CombatCancellationReason.MOVEMENT_INTERRUPTED);

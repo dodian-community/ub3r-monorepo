@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.thieving.Thieving
+import net.dodian.uber.game.skills.thieving.ThievingService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
@@ -36,7 +36,7 @@ object ChestObjects : ObjectContent {
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 20873 || objectId == 6847) {
-            Thieving.attemptSteal(client, objectId, position)
+            ThievingService.attempt(client, objectId, position)
             return true
         }
         if (objectId == 375 && position.x == 2593 && position.y == 3108 && client.position.z == 1) {
@@ -137,7 +137,7 @@ object ChestObjects : ObjectContent {
                 true
             }
             20873, 11729, 11730, 11731, 11732, 11733, 11734 -> {
-                Thieving.attemptSteal(client, objectId, position)
+                ThievingService.attempt(client, objectId, position)
                 true
             }
             else -> false

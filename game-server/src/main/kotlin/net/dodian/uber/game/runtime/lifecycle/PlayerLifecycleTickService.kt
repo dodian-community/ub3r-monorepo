@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.Misc
 
 object PlayerLifecycleTickService {
@@ -35,7 +36,7 @@ object PlayerLifecycleTickService {
         }
 
         player.actionTimer = if (player.actionTimer > 0) player.actionTimer - 1 else 0
-        player.getPlunder.reduceTicks()
+        PyramidPlunderService.tick(player)
 
         if (player.getPositionName(player.position) == positions.DESERT && !player.effects.isEmpty() && player.effects[0] == -1) {
             player.addEffectTime(0, 30 + Misc.random(40))

@@ -9,18 +9,17 @@ object ProductionAmountButtons : ButtonContent {
     override val buttonIds: IntArray = intArrayOf(10239, 10238, 6212, 6211)
 
     override fun onClick(client: Client, buttonId: Int): Boolean {
-        if (client.playerSkillAction.isEmpty()) {
+        if (client.getPendingProductionSelection() == null) {
             return true
         }
-        client.send(RemoveInterfaces())
-        client.skillActionCount = when (buttonId) {
+        val amount = when (buttonId) {
             10239 -> 1
             10238 -> 5
             6212 -> 10
             6211 -> 28
             else -> return false
         }
-        ProductionActionService.start(client)
+        ProductionActionService.startPending(client, amount)
         return true
     }
 }

@@ -25,7 +25,7 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
+import net.dodian.uber.game.skills.slayer.SlayerService;
 import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.party.Balloons;
@@ -41,6 +41,8 @@ import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
 import net.dodian.uber.game.skills.smithing.ActiveSmithingSelection;
 import net.dodian.uber.game.skills.smithing.SmeltingSelection;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.action.PendingProductionSelection;
+import net.dodian.uber.game.runtime.action.ActiveProductionSelection;
 import net.dodian.uber.game.runtime.action.PlayerActionType;
 import net.dodian.uber.game.runtime.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.runtime.tasking.GameTaskSet;
@@ -1087,6 +1089,30 @@ public abstract class Player extends Entity {
         interactionState.clearPendingSmeltingBarId();
     }
 
+    public PendingProductionSelection getPendingProductionSelection() {
+        return interactionState.getPendingProductionSelection();
+    }
+
+    public void setPendingProductionSelection(PendingProductionSelection pendingProductionSelection) {
+        interactionState.setPendingProductionSelection(pendingProductionSelection);
+    }
+
+    public void clearPendingProductionSelection() {
+        interactionState.clearPendingProductionSelection();
+    }
+
+    public ActiveProductionSelection getActiveProductionSelection() {
+        return interactionState.getActiveProductionSelection();
+    }
+
+    public void setActiveProductionSelection(ActiveProductionSelection activeProductionSelection) {
+        interactionState.setActiveProductionSelection(activeProductionSelection);
+    }
+
+    public void clearActiveProductionSelection() {
+        interactionState.clearActiveProductionSelection();
+    }
+
     public GameTaskSet<?> getPlayerTaskSet() {
         return interactionState.getPlayerTaskSet();
     }
@@ -1158,15 +1184,15 @@ public abstract class Player extends Entity {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerService.Task.getTask(getSlayerData().get(1))).getTextRepresentation();
+        SlayerService.Task slayerTask = SlayerService.Task.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerService.Task.getTask(getSlayerData().get(1))).getTextRepresentation();
+        SlayerService.Task slayerTask = SlayerService.Task.getSlayerNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;

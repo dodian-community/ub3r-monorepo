@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.bank.PlayerBankService
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
+import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.skills.FarmingData
 import net.dodian.uber.game.skills.FarmingJson
@@ -169,10 +169,10 @@ private fun clearInventory(client: Client) {
     client.markSaveDirty(PlayerSaveSegment.INVENTORY.mask)
 }
 
-private fun resolveSlayerTask(raw: String): SlayerTask.slayerTasks? {
-    raw.toIntOrNull()?.let { return SlayerTask.slayerTasks.getTask(it) }
+private fun resolveSlayerTask(raw: String): SlayerService.Task? {
+    raw.toIntOrNull()?.let { return SlayerService.Task.getTask(it) }
     val normalized = raw.trim().lowercase().replace(" ", "_")
-    return SlayerTask.slayerTasks.values().firstOrNull { task ->
+    return SlayerService.Task.values().firstOrNull { task ->
         task.name.lowercase() == normalized ||
             task.textRepresentation.lowercase().replace(" ", "_") == normalized
     }
