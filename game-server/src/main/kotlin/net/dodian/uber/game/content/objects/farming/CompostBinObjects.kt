@@ -5,10 +5,10 @@ import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.farming.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingDefinitions
 
 object CompostBinObjects : ObjectContent {
-    private val compostBinIds: IntArray = FarmingData.compostBin.values()
+    private val compostBinIds: IntArray = FarmingDefinitions.compostBin.values()
         .map { it.objectId }
         .distinct()
         .sorted()

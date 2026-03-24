@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameThreadTimers
 import net.dodian.utilities.Misc
 
-class Agility(private val c: Client) {
+class AgilityCourseService(private val c: Client) {
     fun giveEndExperience(xp: Int) {
         c.giveExperience(xp, Skill.AGILITY)
         c.triggerRandom(xp)

@@ -21,8 +21,8 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.skills.slayer.SlayerService;
-import net.dodian.uber.game.skills.farming.Farming;
-import net.dodian.uber.game.skills.farming.FarmingJson;
+import net.dodian.uber.game.skills.farming.FarmingService;
+import net.dodian.uber.game.skills.farming.FarmingState;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
@@ -96,8 +96,8 @@ public class Client extends Player implements Runnable {
     private final OutboundSessionQueue outboundSessionQueue = new OutboundSessionQueue();
     private final java.util.concurrent.atomic.AtomicBoolean inboundReadyQueued = new java.util.concurrent.atomic.AtomicBoolean();
 
-    public Farming farming = new Farming();
-    public FarmingJson farmingJson = new FarmingJson();
+    public FarmingService farming = new FarmingService();
+    public FarmingState farmingJson = new FarmingState();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
     public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 

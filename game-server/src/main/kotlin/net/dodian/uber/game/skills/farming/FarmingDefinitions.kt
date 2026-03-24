@@ -2,7 +2,7 @@ package net.dodian.uber.game.skills.farming
 
 import net.dodian.uber.game.model.Position
 
-class FarmingData {
+class FarmingDefinitions {
     enum class allotmentPatch(val level : Int, val seed: Int, val plantXp : Int, val disease : Int, val config : Int, val stages : Int, val ticks : Int, val harvestXp : Int, val harvestItem : Int) {
         POTATO(1, 5318, 32, 180, 5, 5, 8, 36, 1942),
         ONION(5, 5319, 38, 190, 12, 5, 8, 42, 1957),

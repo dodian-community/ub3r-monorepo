@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.commands.dev
 
 import java.util.LinkedHashSet
 import net.dodian.uber.game.Constants
-import net.dodian.uber.game.skills.farming.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingDefinitions
 import net.dodian.uber.game.skills.mining.MiningDefinitions
 import net.dodian.uber.game.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions
@@ -175,44 +175,44 @@ object SkillTestItemCatalog {
 
     private fun farmingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        FarmingData.allotmentPatch.values().forEach {
+        FarmingDefinitions.allotmentPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.flowerPatch.values().forEach {
+        FarmingDefinitions.flowerPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.herbPatch.values().forEach {
+        FarmingDefinitions.herbPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.bushPatch.values().forEach {
+        FarmingDefinitions.bushPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.fruitTreePatch.values().forEach {
+        FarmingDefinitions.fruitTreePatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.treePatch.values().forEach {
+        FarmingDefinitions.treePatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.sapling.values().forEach {
+        FarmingDefinitions.sapling.values().forEach {
             addIfValid(items, it.treeSeed)
             addIfValid(items, it.plantedId)
             addIfValid(items, it.waterId)
             addIfValid(items, it.saplingId)
         }
-        FarmingData.compost.values().forEach { addIfValid(items, it.itemId) }
-        FarmingData().regularCompostItems.forEach { addIfValid(items, it) }
-        FarmingData().superCompostItems.forEach { addIfValid(items, it) }
+        FarmingDefinitions.compost.values().forEach { addIfValid(items, it.itemId) }
+        FarmingDefinitions().regularCompostItems.forEach { addIfValid(items, it) }
+        FarmingDefinitions().superCompostItems.forEach { addIfValid(items, it) }
         addAll(
             items,
-            FarmingData().BUCKET, FarmingData().SPADE, FarmingData().RAKE, FarmingData().SEED_DIBBER, FarmingData().TROWEL,
-            FarmingData().FILLED_PLANT_POT, FarmingData().EMPTY_PLANT_POT, FarmingData().SECATEURS, FarmingData().MAGIC_SECATEURS,
-            FarmingData().PLANT_CURE, FarmingData().VOLCANIC_ASH
+            FarmingDefinitions().BUCKET, FarmingDefinitions().SPADE, FarmingDefinitions().RAKE, FarmingDefinitions().SEED_DIBBER, FarmingDefinitions().TROWEL,
+            FarmingDefinitions().FILLED_PLANT_POT, FarmingDefinitions().EMPTY_PLANT_POT, FarmingDefinitions().SECATEURS, FarmingDefinitions().MAGIC_SECATEURS,
+            FarmingDefinitions().PLANT_CURE, FarmingDefinitions().VOLCANIC_ASH
         )
         return items.toList()
     }

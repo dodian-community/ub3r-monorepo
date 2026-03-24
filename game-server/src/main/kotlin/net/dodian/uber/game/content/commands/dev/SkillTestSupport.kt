@@ -8,8 +8,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.skills.farming.FarmingData
-import net.dodian.uber.game.skills.farming.FarmingJson
+import net.dodian.uber.game.skills.farming.FarmingDefinitions
+import net.dodian.uber.game.skills.farming.FarmingState
 
 private const val SKILL_TEST_BANK_AMOUNT = 100_000
 
@@ -106,7 +106,7 @@ internal fun handleFarmTest(context: CommandContext): Boolean {
         return false
     }
 
-    client.farmingJson = FarmingJson().apply { farmingLoad("") }
+    client.farmingJson = FarmingState().apply { farmingLoad("") }
     with(client.farming) {
         client.updateCompost()
         client.updateFarmPatch()
@@ -115,10 +115,10 @@ internal fun handleFarmTest(context: CommandContext): Boolean {
 
     clearInventory(client)
     intArrayOf(
-        FarmingData().RAKE,
-        FarmingData().SPADE,
-        FarmingData().SEED_DIBBER,
-        FarmingData().SECATEURS,
+        FarmingDefinitions().RAKE,
+        FarmingDefinitions().SPADE,
+        FarmingDefinitions().SEED_DIBBER,
+        FarmingDefinitions().SECATEURS,
         6032,
         6034,
         6036,

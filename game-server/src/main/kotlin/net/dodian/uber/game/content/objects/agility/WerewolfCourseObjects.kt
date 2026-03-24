@@ -6,28 +6,28 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.core.FirstClickDslObjectContent
 import net.dodian.uber.game.skills.core.firstClickObjectActions
-import net.dodian.uber.game.skills.agility.Werewolf
+import net.dodian.uber.game.skills.agility.WerewolfCourseService
 
 object WerewolfCourseObjects : FirstClickDslObjectContent(
     firstClickObjectActions {
         objectAction(11643) { client, _, position, _ ->
-            Werewolf(client).StepStone(position)
+            WerewolfCourseService(client).StepStone(position)
             true
         }
         objectAction(11638) { client, _, position, _ ->
-            Werewolf(client).hurdle(position)
+            WerewolfCourseService(client).hurdle(position)
             true
         }
         objectAction(11657) { client, _, position, _ ->
-            Werewolf(client).pipe(position)
+            WerewolfCourseService(client).pipe(position)
             true
         }
         objectAction(11641) { client, _, position, _ ->
-            Werewolf(client).slope(position)
+            WerewolfCourseService(client).slope(position)
             true
         }
         objectAction(11644, 11645, 11646) { client, _, position, _ ->
-            Werewolf(client).zipLine(position)
+            WerewolfCourseService(client).zipLine(position)
             true
         }
         objectAction(11636) { client, _, position, _ ->

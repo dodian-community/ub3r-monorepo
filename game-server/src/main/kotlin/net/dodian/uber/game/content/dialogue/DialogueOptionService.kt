@@ -4,8 +4,8 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skills.agility.Agility
-import net.dodian.uber.game.skills.agility.DesertCarpet
+import net.dodian.uber.game.skills.agility.AgilityCourseService
+import net.dodian.uber.game.skills.agility.DesertCarpetService
 import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -159,7 +159,7 @@ object DialogueOptionService {
                 c.checkItemUpdate()
             }
 
-            val carpet = DesertCarpet(c)
+            val carpet = DesertCarpetService(c)
             if (button >= 4) {
                 c.showPlayerChat(arrayOf("No, thank you."), 614)
             } else if (amount < 5000) {
@@ -469,7 +469,7 @@ object DialogueOptionService {
                         }
                         amt = 0
                     }
-                    val agi = Agility(c)
+                    val agi = AgilityCourseService(c)
                     agi.kbdEntrance()
                     c.checkItemUpdate()
                     c.send(SendMessage("You sacrifice 5 dragon bones!"))

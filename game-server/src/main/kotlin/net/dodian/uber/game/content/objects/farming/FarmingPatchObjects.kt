@@ -5,10 +5,10 @@ import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.farming.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingDefinitions
 
 object FarmingPatchObjects : ObjectContent {
-    private val patchIds: IntArray = FarmingData.patches.values()
+    private val patchIds: IntArray = FarmingDefinitions.patches.values()
         .flatMap { it.objectId.toList() }
         .distinct()
         .sorted()

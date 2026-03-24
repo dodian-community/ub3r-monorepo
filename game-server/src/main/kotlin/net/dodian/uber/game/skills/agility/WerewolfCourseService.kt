@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 
-class Werewolf(private val c: Client) {
+class WerewolfCourseService(private val c: Client) {
     fun giveEndExperience(xp: Int, ringCheck: Boolean) {
         var awardedXp = xp
         if (ringCheck && c.equipment[Equipment.Slot.RING.id] == 4202) {
