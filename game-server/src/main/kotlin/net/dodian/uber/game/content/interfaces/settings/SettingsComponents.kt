@@ -6,5 +6,7 @@ object SettingsComponents {
 
     val openMoreSettingsButtons = intArrayOf(44511)
     val closeMoreSettingsButtons = intArrayOf(23020)
+    val pinHelpButtons = intArrayOf(58073)
+    val bossYellEnableButtons = intArrayOf(24136)
+    val bossYellDisableButtons = intArrayOf(24137)
 }
-

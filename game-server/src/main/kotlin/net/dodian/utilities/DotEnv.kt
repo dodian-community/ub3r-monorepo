@@ -80,6 +80,7 @@ val clientUiTraceEnabled = dotenv["CLIENT_UI_TRACE_ENABLED"]?.toBoolean() ?: fal
 val clientPacketTraceEnabled = dotenv["CLIENT_PACKET_TRACE_ENABLED"]?.toBoolean() ?: false
 val combatReactionDebugEnabled = dotenv["COMBAT_REACTION_DEBUG_ENABLED"]?.toBoolean() ?: false
 val buttonTraceEnabled = dotenv["BUTTON_TRACE_ENABLED"]?.toBoolean() ?: false
+val objectTraceEnabled = dotenv["OBJECT_TRACE_ENABLED"]?.toBoolean() ?: false
 val smeltingTraceEnabled = dotenv["SMELTING_TRACE_ENABLED"]?.toBoolean() ?: false
 
 // Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)

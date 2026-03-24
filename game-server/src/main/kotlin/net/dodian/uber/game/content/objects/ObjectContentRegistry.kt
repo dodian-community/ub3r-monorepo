@@ -15,6 +15,13 @@ object ObjectContentRegistry {
         val binding: ObjectBinding,
     )
 
+    data class ObjectResolution(
+        val moduleName: String,
+        val content: ObjectContent,
+        val binding: ObjectBinding,
+        val bindingKey: String,
+    )
+
     private val bootstrapped = AtomicBoolean(false)
     private val definitions = mutableListOf<Pair<String, ObjectContent>>()
 
@@ -52,21 +59,32 @@ object ObjectContentRegistry {
 
     @JvmStatic
     fun resolve(objectId: Int, position: Position): ObjectContent? {
-        bootstrap()
-        val bucket = byObjectId.getOrNull(objectId) ?: return null
-        return bucket.firstOrNull { it.binding.matcher.matches(position) }?.content
+        return resolveCandidates(objectId, position).firstOrNull()?.content
     }
 
     @JvmStatic
     fun resolveAll(objectId: Int, position: Position): List<ObjectContent> {
+        return resolveCandidates(objectId, position)
+            .map { it.content }
+            .distinctBy { it::class.java.name }
+    }
+
+    @JvmStatic
+    fun resolveCandidates(objectId: Int, position: Position): List<ObjectResolution> {
         bootstrap()
-        val resolved = byObjectId.getOrNull(objectId)
+        return byObjectId.getOrNull(objectId)
             .orEmpty()
             .asSequence()
             .filter { it.binding.matcher.matches(position) }
-            .map { it.content }
+            .map {
+                ObjectResolution(
+                    moduleName = it.moduleName,
+                    content = it.content,
+                    binding = it.binding,
+                    bindingKey = "${it.moduleName}:${it.binding.objectId}:${it.binding.matcher.describe()}:${it.binding.priority}",
+                )
+            }
             .toList()
-        return resolved.distinctBy { it::class.java.name }
     }
 
     @JvmStatic

@@ -13,11 +13,7 @@ import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.Misc
 
 object PlunderObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        20275, 20277, 20931, 20932, 26580,
-        26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,
-        26616, 26618, 26619, 26620, 26621, 26622, 26623, 26624, 26625, 26626,
-    )
+    override val objectIds: IntArray = ThievingObjectComponents.plunderObjects
 
     override fun clickInteractionPolicy(
         option: Int,

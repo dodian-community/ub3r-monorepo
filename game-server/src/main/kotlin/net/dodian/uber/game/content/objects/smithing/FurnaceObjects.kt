@@ -14,10 +14,10 @@ import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.utilities.Utils
 
 object FurnaceObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(2150, 2151, 2152, 2153, 3994, 11666, 16469, 29662)
+    override val objectIds: IntArray = SmithingObjectComponents.furnaceObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId != 3994 && objectId != 11666 && objectId != 16469 && objectId != 29662) {
+        if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
             return false
         }
         SmeltingInterfaceService.open(client)
@@ -25,7 +25,7 @@ object FurnaceObjects : ObjectContent {
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        if (objectId == 3994 || objectId == 11666 || objectId == 16469 || objectId == 29662) {
+        if (objectId in SmithingObjectComponents.smeltingInterfaceFurnaces) {
             SmeltingInterfaceService.open(client)
             return true
         }
@@ -41,7 +41,7 @@ object FurnaceObjects : ObjectContent {
         itemSlot: Int,
         interfaceId: Int,
     ): Boolean {
-        if (objectId != 3994 && objectId != 11666 && objectId != 16469 && objectId != 29662) {
+        if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
             return false
         }
         if (itemId == 1783 || itemId == 1781) {

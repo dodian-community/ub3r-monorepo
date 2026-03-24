@@ -8,14 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object PassageObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        882,
-        1521, 1524,
-        2309, 23140, 23271, 23564,
-        2391, 2392,
-        2623, 2624, 2625, 2634,
-        15656, 16466, 16509, 16510,
-    )
+    override val objectIds: IntArray = TravelObjectComponents.passageObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when (objectId) {

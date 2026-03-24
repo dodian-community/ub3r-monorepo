@@ -13,6 +13,7 @@ enum class ObjectInteractionType {
 data class ObjectInteractionContext(
     val type: ObjectInteractionType,
     val client: Client,
+    val packetOpcode: Int? = null,
     val objectId: Int,
     val position: Position,
     val obj: GameObjectData?,
@@ -29,10 +30,12 @@ data class ObjectInteractionContext(
             objectId: Int,
             position: Position,
             obj: GameObjectData?,
+            packetOpcode: Int? = null,
         ): ObjectInteractionContext {
             return ObjectInteractionContext(
                 type = ObjectInteractionType.CLICK,
                 client = client,
+                packetOpcode = packetOpcode,
                 objectId = objectId,
                 position = position,
                 obj = obj,
@@ -48,10 +51,12 @@ data class ObjectInteractionContext(
             itemId: Int,
             itemSlot: Int,
             interfaceId: Int,
+            packetOpcode: Int? = null,
         ): ObjectInteractionContext {
             return ObjectInteractionContext(
                 type = ObjectInteractionType.USE_ITEM,
                 client = client,
+                packetOpcode = packetOpcode,
                 objectId = objectId,
                 position = position,
                 obj = obj,
@@ -67,10 +72,12 @@ data class ObjectInteractionContext(
             position: Position,
             obj: GameObjectData?,
             spellId: Int,
+            packetOpcode: Int? = null,
         ): ObjectInteractionContext {
             return ObjectInteractionContext(
                 type = ObjectInteractionType.MAGIC,
                 client = client,
+                packetOpcode = packetOpcode,
                 objectId = objectId,
                 position = position,
                 obj = obj,

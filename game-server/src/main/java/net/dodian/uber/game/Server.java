@@ -10,7 +10,6 @@ import net.dodian.jobs.impl.*;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
-import net.dodian.uber.game.content.buttons.ButtonContentRegistry;
 import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -132,7 +131,6 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
-        ButtonContentRegistry.bootstrap();
         ObjectContentRegistry.bootstrap();
         net.dodian.uber.game.content.npc.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();

@@ -8,7 +8,7 @@ import net.dodian.uber.game.skills.thieving.ThievingService
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 
 object StallObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(4877)
+    override val objectIds: IntArray = ThievingObjectComponents.stallObjects
 
     override fun clickInteractionPolicy(
         option: Int,

@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object AnvilObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(2097, 2783)
+    override val objectIds: IntArray = SmithingObjectComponents.anvilObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId != 2097) {

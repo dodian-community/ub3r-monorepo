@@ -1,15 +1,23 @@
 package net.dodian.uber.game.ui.buttons
 
+import net.dodian.uber.game.content.interfaces.appearance.AppearanceInterfaceButtons
 import net.dodian.uber.game.content.interfaces.combat.CombatInterfaceButtons
 import net.dodian.uber.game.content.interfaces.crafting.CraftingInterfaceButtons
 import net.dodian.uber.game.content.interfaces.dialogue.DialogueInterfaceButtons
+import net.dodian.uber.game.content.interfaces.duel.DuelInterfaceButtons
+import net.dodian.uber.game.content.interfaces.emotes.EmoteInterfaceButtons
 import net.dodian.uber.game.content.interfaces.fletching.FletchingInterfaceButtons
 import net.dodian.uber.game.content.interfaces.bank.BankInterfaceButtons
 import net.dodian.uber.game.content.interfaces.magic.MagicInterfaceButtons
+import net.dodian.uber.game.content.interfaces.partyroom.PartyRoomInterfaceButtons
 import net.dodian.uber.game.content.interfaces.prayer.PrayerInterfaceButtons
+import net.dodian.uber.game.content.interfaces.quests.QuestInterfaceButtons
+import net.dodian.uber.game.content.interfaces.rewards.RewardInterfaceButtons
 import net.dodian.uber.game.content.interfaces.settings.SettingsInterfaceButtons
 import net.dodian.uber.game.content.interfaces.skillguide.SkillGuideInterfaceButtons
 import net.dodian.uber.game.content.interfaces.smithing.SmithingInterfaceButtons
+import net.dodian.uber.game.content.interfaces.slots.SlotsInterfaceButtons
+import net.dodian.uber.game.content.interfaces.trade.TradeInterfaceButtons
 import net.dodian.uber.game.content.interfaces.travel.TravelInterfaceButtons
 import net.dodian.uber.game.content.interfaces.ui.UiInterfaceButtons
 import net.dodian.uber.game.model.entity.player.Client
@@ -98,14 +106,22 @@ object InterfaceButtonRegistry {
         listOf(
             SkillGuideInterfaceButtons,
             DialogueInterfaceButtons,
+            AppearanceInterfaceButtons,
             CombatInterfaceButtons,
             CraftingInterfaceButtons,
+            DuelInterfaceButtons,
+            EmoteInterfaceButtons,
             FletchingInterfaceButtons,
             SmithingInterfaceButtons,
             BankInterfaceButtons,
             PrayerInterfaceButtons,
             MagicInterfaceButtons,
             SettingsInterfaceButtons,
+            QuestInterfaceButtons,
+            PartyRoomInterfaceButtons,
+            RewardInterfaceButtons,
+            SlotsInterfaceButtons,
+            TradeInterfaceButtons,
             TravelInterfaceButtons,
             UiInterfaceButtons,
         )

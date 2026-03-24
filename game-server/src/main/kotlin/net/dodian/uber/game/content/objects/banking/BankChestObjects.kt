@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
 object BankChestObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(6943, 6948, 9391)
+    override val objectIds: IntArray = BankingObjectComponents.chestObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         client.openUpBankRouted()

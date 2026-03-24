@@ -11,7 +11,7 @@ import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
 import net.dodian.utilities.Misc
 
 object WebObstacleObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(733)
+    override val objectIds: IntArray = TravelObjectComponents.webObstacleObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (Misc.chance(100) <= 50) {

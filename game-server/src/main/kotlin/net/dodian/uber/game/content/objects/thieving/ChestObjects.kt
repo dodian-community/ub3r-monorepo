@@ -16,7 +16,7 @@ import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Utils
 
 object ChestObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(375, 378, 6847, 20873, 11729, 11730, 11731, 11732, 11733, 11734)
+    override val objectIds: IntArray = ThievingObjectComponents.chestObjects
 
     override fun clickInteractionPolicy(
         option: Int,

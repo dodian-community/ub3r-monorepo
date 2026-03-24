@@ -5,6 +5,26 @@ object MagicComponents {
     const val ANCIENT_INTERFACE_ID = 12855
 
     val spellbookToggleButtons = intArrayOf(74212, 49047, 49046, 23024)
+    val autocastClearButtons = intArrayOf(1097, 1094, 1093)
+    val autocastSelectButtons = intArrayOf(
+        51133,
+        51185,
+        51091,
+        24018,
+        51159,
+        51211,
+        51111,
+        51069,
+        51146,
+        51198,
+        51102,
+        51058,
+        51172,
+        51224,
+        51122,
+        51080,
+    )
+    val autocastRefreshButtons = intArrayOf(24017)
 
     data class TeleportBinding(
         val componentId: Int,
@@ -30,4 +50,3 @@ object MagicComponents {
             TeleportBinding(8, "magic.teleport.edgeville", intArrayOf(13095, 4140, 51039), 3085, 4, 3488, 4, false),
         )
 }
-

@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.interfaces.dialogue
 
 import net.dodian.uber.game.content.dialogue.DialogueService
+import net.dodian.uber.game.content.dialogue.core.DialogueIds
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.DialogueOptionEvent
 import net.dodian.uber.game.model.entity.player.Player
@@ -27,6 +28,16 @@ object DialogueInterfaceButtons : InterfaceButtonContent {
             },
             buttonBinding(DialogueComponents.INTERFACE_ID, 5, "dialogue.option.5", DialogueComponents.optionFive) { client, request ->
                 handleOption(client, request.rawButtonId, 5)
+            },
+            buttonBinding(-1, 6, "dialogue.state.toggle_specials", DialogueComponents.toggleSpecialsButtons) { client, _ ->
+                DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_SPECIALS)
+                DialogueService.setDialogueSent(client, false)
+                true
+            },
+            buttonBinding(-1, 7, "dialogue.state.toggle_boss_yell", DialogueComponents.toggleBossYellButtons) { client, _ ->
+                DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_BOSS_YELL)
+                DialogueService.setDialogueSent(client, false)
+                true
             },
         )
 

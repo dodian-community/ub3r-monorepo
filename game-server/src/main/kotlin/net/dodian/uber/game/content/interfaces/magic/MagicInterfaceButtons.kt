@@ -1,5 +1,6 @@
 package net.dodian.uber.game.content.interfaces.magic
 
+import net.dodian.uber.game.combat.style.CombatStyleService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
@@ -27,6 +28,45 @@ object MagicInterfaceButtons : InterfaceButtonContent {
                     true
                 }
             )
+            add(
+                buttonBinding(
+                    interfaceId = MagicComponents.ANCIENT_INTERFACE_ID,
+                    componentId = 1,
+                    componentKey = "magic.autocast.clear",
+                    rawButtonIds = MagicComponents.autocastClearButtons,
+                ) { client, _ ->
+                    client.autocast_spellIndex = -1
+                    client.setSidebarInterface(0, 1689)
+                    true
+                }
+            )
+            add(
+                buttonBinding(
+                    interfaceId = MagicComponents.ANCIENT_INTERFACE_ID,
+                    componentId = 2,
+                    componentKey = "magic.autocast.select",
+                    rawButtonIds = MagicComponents.autocastSelectButtons,
+                ) { client, request ->
+                    for (index in client.ancientButton.indices) {
+                        if (client.autocast_spellIndex == -1 && request.rawButtonId == client.ancientButton[index]) {
+                            client.autocast_spellIndex = index
+                        }
+                    }
+                    CombatStyleService.refreshWeaponStyleUi(client)
+                    true
+                }
+            )
+            add(
+                buttonBinding(
+                    interfaceId = MagicComponents.ANCIENT_INTERFACE_ID,
+                    componentId = 3,
+                    componentKey = "magic.autocast.refresh",
+                    rawButtonIds = MagicComponents.autocastRefreshButtons,
+                ) { client, _ ->
+                    CombatStyleService.refreshWeaponStyleUi(client)
+                    true
+                }
+            )
             MagicComponents.teleports.forEach { teleport ->
                 add(
                     buttonBinding(
@@ -47,4 +87,3 @@ object MagicInterfaceButtons : InterfaceButtonContent {
             }
         }
 }
-

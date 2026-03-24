@@ -9,12 +9,9 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.DispatchTiming
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentHashMap
 
 object ObjectInteractionService {
     private val logger = LoggerFactory.getLogger(ObjectInteractionService::class.java)
-    private const val FALLBACK_LOG_WINDOW_MS = 60_000L
-    private val lastUnhandledLogAt = ConcurrentHashMap<String, Long>()
     private val reentrancyGuard = ThreadLocal.withInitial { mutableSetOf<String>() }
 
     @JvmStatic
@@ -91,16 +88,17 @@ object ObjectInteractionService {
             }
 
             val resolveStart = System.nanoTime()
-            val candidates = ObjectContentRegistry.resolveAll(context.objectId, context.position)
+            val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
             val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
-                logUnhandled(context)
+                ObjectClickLoggingService.log(logger, context, resolution = null, handled = false)
                 return DispatchTiming(false, resolveNs, 0L, null)
             }
 
             var handlerNs = 0L
             var handlerName: String? = null
-            for (content in candidates) {
+            for (resolution in candidates) {
+                val content = resolution.content
                 try {
                     val handlerStart = System.nanoTime()
                     val handled = when (context.type) {
@@ -134,6 +132,7 @@ object ObjectInteractionService {
                     handlerNs += System.nanoTime() - handlerStart
                     if (handled) {
                         handlerName = content::class.java.name
+                        ObjectClickLoggingService.log(logger, context, resolution = resolution, handled = true)
                         return DispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
                 } catch (e: Exception) {
@@ -147,33 +146,13 @@ object ObjectInteractionService {
                     )
                 }
             }
-            logUnhandled(context)
+            ObjectClickLoggingService.log(logger, context, resolution = candidates.firstOrNull(), handled = false)
             return DispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
             active.remove(key)
             if (active.isEmpty()) {
                 reentrancyGuard.remove()
             }
-        }
-    }
-
-    private fun logUnhandled(context: ObjectInteractionContext) {
-        val now = System.currentTimeMillis()
-        val kind = when (context.type) {
-            ObjectInteractionType.CLICK -> "click:${context.option ?: -1}"
-            ObjectInteractionType.USE_ITEM -> "useItem"
-            ObjectInteractionType.MAGIC -> "magic"
-        }
-        val key = "$kind:${context.objectId}"
-        val last = lastUnhandledLogAt[key]
-        if (last == null || now - last >= FALLBACK_LOG_WINDOW_MS) {
-            lastUnhandledLogAt[key] = now
-            logger.debug(
-                "Unhandled object interaction kind={} objectId={} player={}",
-                kind,
-                context.objectId,
-                context.client.playerName,
-            )
         }
     }
 

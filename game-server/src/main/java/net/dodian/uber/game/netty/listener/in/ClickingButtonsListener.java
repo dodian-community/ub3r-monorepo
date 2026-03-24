@@ -1,7 +1,6 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.content.buttons.ButtonClickDispatcher;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
@@ -11,13 +10,13 @@ import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.ButtonClickEvent;
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.ui.buttons.ButtonClickLoggingService;
 import net.dodian.uber.game.ui.buttons.ButtonClickRequest;
 import net.dodian.uber.game.ui.buttons.InterfaceButtonBinding;
 import net.dodian.uber.game.ui.buttons.InterfaceButtonRegistry;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static net.dodian.utilities.DotEnvKt.getButtonTraceEnabled;
 
 @PacketHandler(opcode = 185)
 public class ClickingButtonsListener implements PacketListener {
@@ -56,9 +55,6 @@ public class ClickingButtonsListener implements PacketListener {
             );
         }
 
-        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
-            logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
-        }
         if (!client.validClient || !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.BUTTON_GENERAL, 600L)) {
             return;
         }
@@ -83,10 +79,12 @@ public class ClickingButtonsListener implements PacketListener {
         );
 
         if (GameEventBus.postWithResult(new ButtonClickEvent(request))) {
+            ButtonClickLoggingService.logClick(logger, request, packet.opcode(), true);
             return;
         }
 
-        if (ButtonClickDispatcher.tryHandle(client, actionButton, actionIndex)) {
+        if (InterfaceButtonService.tryHandle(client, actionButton, actionIndex)) {
+            ButtonClickLoggingService.logClick(logger, request, packet.opcode(), true);
             return;
         }
 
@@ -100,8 +98,6 @@ public class ClickingButtonsListener implements PacketListener {
             );
         }
 
-        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
-            logger.trace("Unhandled button buttonId={} player={} iface={}", client.actionButtonId, client.getPlayerName(), client.activeInterfaceId);
-        }
+        ButtonClickLoggingService.logClick(logger, request, packet.opcode(), false);
     }
 }

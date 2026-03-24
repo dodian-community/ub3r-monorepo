@@ -5,16 +5,9 @@ import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.farming.FarmingDefinitions
 
 object FarmingPatchObjects : ObjectContent {
-    private val patchIds: IntArray = FarmingDefinitions.patches.values()
-        .flatMap { it.objectId.toList() }
-        .distinct()
-        .sorted()
-        .toIntArray()
-
-    override val objectIds: IntArray = patchIds
+    override val objectIds: IntArray = FarmingObjectComponents.patchObjects
 
     override fun bindings(): List<ObjectBinding> {
         return objectIds.map { ObjectBinding(objectId = it, priority = 100) }

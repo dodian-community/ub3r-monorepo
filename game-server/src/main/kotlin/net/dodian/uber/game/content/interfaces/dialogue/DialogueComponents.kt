@@ -8,5 +8,6 @@ object DialogueComponents {
     val optionThree = intArrayOf(9169, 9180, 9192)
     val optionFour = intArrayOf(9181, 9193)
     val optionFive = intArrayOf(9194)
+    val toggleSpecialsButtons = intArrayOf(150)
+    val toggleBossYellButtons = intArrayOf(151)
 }
-

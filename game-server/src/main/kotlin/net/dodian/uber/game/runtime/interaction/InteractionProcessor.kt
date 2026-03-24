@@ -225,6 +225,7 @@ object InteractionProcessor {
                     objectId = intent.objectId,
                     position = targetPosition,
                     obj = dispatchSnapshot.objectData,
+                    packetOpcode = intent.opcode,
                 ),
             )
         clear(player)
@@ -322,6 +323,7 @@ object InteractionProcessor {
                         itemId = intent.itemId,
                         itemSlot = intent.itemSlot,
                         interfaceId = intent.interfaceId,
+                        packetOpcode = intent.opcode,
                     ),
                 )
         }
@@ -414,6 +416,7 @@ object InteractionProcessor {
                     position = targetPosition,
                     obj = dispatchSnapshot.objectData,
                     spellId = intent.spellId,
+                    packetOpcode = intent.opcode,
                 ),
             )
         clear(player)

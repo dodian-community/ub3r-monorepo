@@ -11,29 +11,7 @@ import net.dodian.utilities.Misc
 import java.util.Random
 
 object TeleportObjects : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(
-        823,
-        133,
-        410,
-        1294,
-        1591,
-        2352,
-        2492,
-        5960,
-        9368, 9369,
-        11833, 11834,
-        11635,
-        12260,
-        14914,
-        14847,
-        16519, 16520,
-        16680,
-        17384, 17385, 17387,
-        2156, 2158,
-        20877,
-        5553, 6702,
-        6451, 6452,
-    )
+    override val objectIds: IntArray = TravelObjectComponents.teleportObjects
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when (objectId) {
