@@ -2,8 +2,14 @@ package net.dodian.uber.game.event.events
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.ui.buttons.ButtonClickRequest
 
 data class ButtonClickEvent(
-    val client: Client,
-    val buttonId: Int,
-) : GameEvent
+    val request: ButtonClickRequest,
+) : GameEvent {
+    val client: Client
+        get() = request.client
+
+    val buttonId: Int
+        get() = request.rawButtonId
+}

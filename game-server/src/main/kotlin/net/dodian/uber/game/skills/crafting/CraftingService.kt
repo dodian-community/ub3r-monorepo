@@ -8,18 +8,6 @@ import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.runtime.action.SkillingActionService
 
 object CraftingService {
-    private val normalCraftButtons = intArrayOf(
-        33187, 33186, 33185,
-        33190, 33189, 33188,
-        33193, 33192, 33191,
-        33196, 33195, 33194,
-        33199, 33198, 33197,
-        33202, 33201, 33200,
-        33205, 33204, 33203,
-    )
-    private val normalCraftAmounts = intArrayOf(
-        1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10
-    )
     private val normalCraftIds = intArrayOf(
         1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063,
         1095, 1095, 1095, 1169, 1169, 1169, 1167, 1167, 1167
@@ -95,22 +83,12 @@ object CraftingService {
     }
 
     @JvmStatic
-    fun startStandardLeatherCraft(client: Client, buttonId: Int) {
+    fun startStandardLeatherCraft(client: Client, productIndex: Int, amount: Int) {
         client.send(RemoveInterfaces())
-        var amount = 0
-        var productId = -1
-        var productIndex = 0
-        for (i in normalCraftButtons.indices) {
-            if (buttonId == normalCraftButtons[i]) {
-                amount = normalCraftAmounts[i]
-                productId = normalCraftIds[i]
-                productIndex = i / 3
-                break
-            }
-        }
-        if (productId == -1) {
+        if (productIndex < 0 || productIndex >= normalCraftLevels.size) {
             return
         }
+        val productId = normalCraftIds[productIndex * 3]
         if (client.getLevel(Skill.CRAFTING) >= normalCraftLevels[productIndex]) {
             client.craftingState =
                 CraftingState(
@@ -129,24 +107,32 @@ object CraftingService {
     }
 
     @JvmStatic
-    fun startHideCraft(client: Client, buttonId: Int) {
-        val buttons = intArrayOf(34185, 34184, 34183, 34182, 34189, 34188, 34187, 34186, 34193, 34192, 34191, 34190)
-        val amounts = intArrayOf(1, 5, 10, 27)
-        var amountIndex = 0
-        var productGroup = 0
-        for (i in buttons.indices) {
-            if (buttons[i] == buttonId) {
-                amountIndex = i % 4
-                productGroup = i / 4
-                break
-            }
+    fun startStandardLeatherCraft(client: Client, buttonId: Int) {
+        val buttonIndex =
+            intArrayOf(
+                33187, 33186, 33185,
+                33190, 33189, 33188,
+                33193, 33192, 33191,
+                33196, 33195, 33194,
+                33199, 33198, 33197,
+                33202, 33201, 33200,
+                33205, 33204, 33203,
+            ).indexOf(buttonId)
+        if (buttonIndex == -1) {
+            return
         }
+        val amount = intArrayOf(1, 5, 10)[buttonIndex % 3]
+        startStandardLeatherCraft(client, buttonIndex / 3, amount)
+    }
+
+    @JvmStatic
+    fun startHideCraft(client: Client, productGroup: Int, amount: Int) {
         val hide = CraftingDefinitions.hideDefinition(client.cIndex) ?: run {
             client.send(SendMessage("Can't make this??"))
             return
         }
         val selectedItemId = hide.itemId
-        val amount = if (amounts[amountIndex] == 27) client.getInvAmt(selectedItemId) else amounts[amountIndex]
+        val requestedAmount = if (amount == 27) client.getInvAmt(selectedItemId) else amount
         val experience = hide.experience * 8
 
         val required: Int
@@ -168,7 +154,7 @@ object CraftingService {
                     mode = CraftingMode.LEATHER,
                     selectedItemId = selectedItemId,
                     productId = productId,
-                    remaining = amount,
+                    remaining = requestedAmount,
                     requiredLevel = required,
                     experience = experience,
                 )
@@ -182,6 +168,16 @@ object CraftingService {
             return
         }
         client.send(SendMessage("Can't make this??"))
+    }
+
+    @JvmStatic
+    fun startHideCraft(client: Client, buttonId: Int) {
+        val buttonIndex = intArrayOf(34185, 34184, 34183, 34182, 34189, 34188, 34187, 34186, 34193, 34192, 34191, 34190).indexOf(buttonId)
+        if (buttonIndex == -1) {
+            return
+        }
+        val amount = intArrayOf(1, 5, 10, 27)[buttonIndex % 4]
+        startHideCraft(client, buttonIndex / 4, amount)
     }
 
     @JvmStatic

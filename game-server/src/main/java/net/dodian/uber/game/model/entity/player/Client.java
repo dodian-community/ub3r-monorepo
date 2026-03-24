@@ -5389,6 +5389,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void travelTrigger(int checkPos) {
+        travelTrigger(checkPos, actionButtonId);
+    }
+
+    public void travelTrigger(int checkPos, int buttonId) {
         if (travelInitiate) {
             return;
         }
@@ -5403,7 +5407,7 @@ public class Client extends Player implements Runnable {
                 {48054, 2772, 3234, 0} //Totem aka Brimhaven
         };
         for (int i = 0; i < travel.length; i++)
-            if (travel[i][0] == actionButtonId) { //Initiate the teleport!
+            if (travel[i][0] == buttonId) { //Initiate the teleport!
                 /* Check conditions! */
                 if ((!home && i == 0) || (home && i != 0)) {
                     send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));

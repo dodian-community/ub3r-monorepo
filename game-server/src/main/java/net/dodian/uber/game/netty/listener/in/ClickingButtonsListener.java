@@ -11,6 +11,9 @@ import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.ButtonClickEvent;
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.ui.buttons.ButtonClickRequest;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonBinding;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,11 +71,22 @@ public class ClickingButtonsListener implements PacketListener {
             client.resetAction(false);
         }
 
-        if (GameEventBus.postWithResult(new ButtonClickEvent(client, actionButton))) {
+        InterfaceButtonBinding resolvedBinding = InterfaceButtonRegistry.INSTANCE.resolve(client, actionButton, actionIndex);
+        ButtonClickRequest request = new ButtonClickRequest(
+                client,
+                actionButton,
+                actionIndex,
+                client.activeInterfaceId,
+                resolvedBinding != null ? resolvedBinding.getInterfaceId() : -1,
+                resolvedBinding != null ? resolvedBinding.getComponentId() : -1,
+                resolvedBinding != null ? resolvedBinding.getComponentKey() : "raw:" + actionButton
+        );
+
+        if (GameEventBus.postWithResult(new ButtonClickEvent(request))) {
             return;
         }
 
-        if (ButtonClickDispatcher.tryHandle(client, actionButton)) {
+        if (ButtonClickDispatcher.tryHandle(client, actionButton, actionIndex)) {
             return;
         }
 

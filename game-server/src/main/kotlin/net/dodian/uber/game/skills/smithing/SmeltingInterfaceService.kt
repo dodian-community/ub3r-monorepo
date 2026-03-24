@@ -33,6 +33,11 @@ object SmeltingInterfaceService {
     @JvmStatic
     fun startFromButton(client: Client, buttonId: Int): Boolean {
         val mapping = SmithingDefinitions.findSmeltingButton(buttonId) ?: return false
+        return startFromMapping(client, mapping)
+    }
+
+    @JvmStatic
+    fun startFromMapping(client: Client, mapping: FurnaceButtonMapping): Boolean {
         val recipe = SmithingDefinitions.findSmeltingRecipe(mapping.barId) ?: return false
         client.setPendingSmeltingBarId(recipe.barId)
         return if (mapping.amount <= 0) {
