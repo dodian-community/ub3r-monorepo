@@ -127,7 +127,7 @@ object DialogueOptionService {
 
         if (dialogueId == 16) {
             if (button == 1) {
-                val checkTask = SlayerService.Task.getTask(c.slayerData[1])
+                val checkTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(c.slayerData[1])
                 if (checkTask != null) {
                     for (i in checkTask.npcId.indices) {
                         for (slot in 0 until c.monsterName.size) {

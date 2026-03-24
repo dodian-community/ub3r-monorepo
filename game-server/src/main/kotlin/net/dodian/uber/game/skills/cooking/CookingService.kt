@@ -16,9 +16,10 @@ object CookingService {
             return
         }
         var valid = false
+        var cookIndex = -1
         for (i in Utils.cookIds.indices) {
             if (itemId == Utils.cookIds[i]) {
-                client.setCookIndex(i)
+                cookIndex = i
                 valid = true
                 break
             }
@@ -26,19 +27,24 @@ object CookingService {
         if (!valid) {
             return
         }
-        client.setCookAmount(client.getInvAmt(itemId))
-        client.cooking = true
+        start(client, CookingRequest(itemId, cookIndex, client.getInvAmt(itemId)))
+    }
+
+    @JvmStatic
+    fun start(client: Client, request: CookingRequest) {
+        client.cookingState = CookingState(request.itemId, request.cookIndex, request.amount)
         SkillingActionService.startCooking(client)
     }
 
     @JvmStatic
     fun performCycle(client: Client) {
-        if (client.isBusy || client.getCookAmount() < 1) {
+        val state = client.cookingState
+        if (client.isBusy || state == null || state.remaining < 1) {
             client.resetAction(true)
             return
         }
-        val cookIndex = client.getCookIndex()
-        val itemId = Utils.cookIds[cookIndex]
+        val cookIndex = state.cookIndex
+        val itemId = state.itemId
         if (!client.playerHasItem(itemId)) {
             client.send(SendMessage("You are out of fish"))
             client.resetAction(true)
@@ -74,7 +80,7 @@ object CookingService {
             client.resetAction(true)
             return
         }
-        client.setCookAmount(client.getCookAmount() - 1)
+        client.cookingState = state.copy(remaining = state.remaining - 1)
         client.deleteItem(itemId, 1)
         client.setFocus(client.skillX, client.skillY)
         client.requestAnim(883, 0)

@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -87,8 +88,7 @@ public class RemoveItemListener implements PacketListener {
             client.tradeItem(removeID, removeSlot, 1);
         } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // trade -> bag
             client.fromTrade(removeID, removeSlot, 1);
-        } else if (interfaceID >= 4233 && interfaceID <= 4257) { // gold crafting
-            client.startGoldCrafting(interfaceID, removeSlot, 1);
+        } else if (SkillingInterfaceItemService.handleContainerAmount(client, interfaceID, removeID, removeSlot, 1)) {
         } else if (interfaceID == 3823) { // shop sell value
             if (!Server.shopping || client.tradeLocked) {
                 client.send(new SendMessage(client.tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
@@ -122,12 +122,6 @@ public class RemoveItemListener implements PacketListener {
             shopValue = client.MyShopID >= 9 && client.MyShopID <= 11 ? (int) (shopValue * 1.5) : shopValue;
             String shopAdd = formatValueSuffix(shopValue);
             client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
-        } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceID)) { // smelting selection
-            logger.warn("Smelting interface item click amount=1 interfaceId={} itemId={} slot={} player={}",
-                    interfaceID, removeID, removeSlot, client.getPlayerName());
-            SmeltingInterfaceService.startFromInterfaceItem(client, removeID, 1);
-        } else if (interfaceID >= 1119 && interfaceID <= 1123) { // smithing selection
-            SmithingInterfaceService.startFromInterfaceItem(client, removeID, 1);
         }
         client.CheckGear();
     }

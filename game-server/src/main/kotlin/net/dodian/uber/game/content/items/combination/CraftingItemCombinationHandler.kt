@@ -35,7 +35,7 @@ object CraftingItemCombinationHandler {
         }
         for (index in Constants.leathers.indices) {
             if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == Constants.leathers[index] || otherItem == Constants.leathers[index])) {
-                client.craftMenu(index)
+                net.dodian.uber.game.skills.crafting.CraftingService.openLeatherMenu(client, index)
                 client.cIndex = index
                 return true
             }

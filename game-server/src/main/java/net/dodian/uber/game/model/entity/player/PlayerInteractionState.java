@@ -15,6 +15,12 @@ import net.dodian.uber.game.skills.smithing.ActiveSmithingSelection;
 import net.dodian.uber.game.skills.smithing.SmeltingSelection;
 import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
+import net.dodian.uber.game.skills.fletching.FletchingState;
+import net.dodian.uber.game.skills.fishing.FishingState;
+import net.dodian.uber.game.skills.cooking.CookingState;
+import net.dodian.uber.game.skills.crafting.CraftingState;
+import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderPlayerState;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class PlayerInteractionState {
@@ -44,6 +50,12 @@ final class PlayerInteractionState {
     private volatile GameTaskSet<?> playerTaskSet;
     private volatile MiningState miningState;
     private volatile WoodcuttingState woodcuttingState;
+    private volatile FletchingState fletchingState;
+    private volatile FishingState fishingState;
+    private volatile CookingState cookingState;
+    private volatile CraftingState craftingState;
+    private volatile PrayerOfferingState prayerOfferingState;
+    private volatile PyramidPlunderPlayerState pyramidPlunderState;
     private final ConcurrentHashMap<String, Long> throttleUntilCycles = new ConcurrentHashMap<>();
 
     InteractionIntent getPendingInteraction() {
@@ -156,6 +168,78 @@ final class PlayerInteractionState {
 
     void clearWoodcuttingState() {
         woodcuttingState = null;
+    }
+
+    FletchingState getFletchingState() {
+        return fletchingState;
+    }
+
+    void setFletchingState(FletchingState fletchingState) {
+        this.fletchingState = fletchingState;
+    }
+
+    void clearFletchingState() {
+        fletchingState = null;
+    }
+
+    FishingState getFishingState() {
+        return fishingState;
+    }
+
+    void setFishingState(FishingState fishingState) {
+        this.fishingState = fishingState;
+    }
+
+    void clearFishingState() {
+        fishingState = null;
+    }
+
+    CookingState getCookingState() {
+        return cookingState;
+    }
+
+    void setCookingState(CookingState cookingState) {
+        this.cookingState = cookingState;
+    }
+
+    void clearCookingState() {
+        cookingState = null;
+    }
+
+    CraftingState getCraftingState() {
+        return craftingState;
+    }
+
+    void setCraftingState(CraftingState craftingState) {
+        this.craftingState = craftingState;
+    }
+
+    void clearCraftingState() {
+        craftingState = null;
+    }
+
+    PrayerOfferingState getPrayerOfferingState() {
+        return prayerOfferingState;
+    }
+
+    void setPrayerOfferingState(PrayerOfferingState prayerOfferingState) {
+        this.prayerOfferingState = prayerOfferingState;
+    }
+
+    void clearPrayerOfferingState() {
+        prayerOfferingState = null;
+    }
+
+    PyramidPlunderPlayerState getPyramidPlunderState() {
+        return pyramidPlunderState;
+    }
+
+    void setPyramidPlunderState(PyramidPlunderPlayerState pyramidPlunderState) {
+        this.pyramidPlunderState = pyramidPlunderState;
+    }
+
+    void clearPyramidPlunderState() {
+        pyramidPlunderState = null;
     }
 
     QueueTaskHandle getActiveActionHandle() {

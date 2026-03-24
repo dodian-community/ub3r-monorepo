@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skills
+package net.dodian.uber.game.skills.farming
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject

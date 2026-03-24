@@ -7,6 +7,7 @@ import net.dodian.uber.game.content.npc.NpcInteractionService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.skills.fishing.FishingNpcInteractionService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -99,7 +100,9 @@ public class NpcInteractionListener implements PacketListener {
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
 
-        client.startFishing(npcId, 1);
+        if (FishingNpcInteractionService.handleNpcOption(client, npcId, 1)) {
+            return;
+        }
 
         if (NpcInteractionService.tryHandleClick(client, 1, tempNpc)) {
             return;
@@ -144,7 +147,9 @@ public class NpcInteractionListener implements PacketListener {
         client.faceNpc(tempNpc.getSlot());
         client.skillX = tempNpc.getPosition().getX();
         client.setSkillY(tempNpc.getPosition().getY());
-        client.startFishing(npcId, 2);
+        if (FishingNpcInteractionService.handleNpcOption(client, npcId, 2)) {
+            return;
+        }
 
         if (NpcInteractionService.tryHandleClick(client, 2, tempNpc)) {
             return;

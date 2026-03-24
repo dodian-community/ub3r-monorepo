@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skills.smithing
 
-object SmithingData {
+object SmithingFrameDefinitions {
     @JvmField
     val smithingFrame: Array<Array<SmithingFrameEntry>> = arrayOf(
         arrayOf(

@@ -32,22 +32,18 @@ object PlayerActionCancellationService {
         player: Client,
         fullResetAnimation: Boolean,
     ) {
-        player.smelting = false
-        player.smelt_id = -1
         player.clearSmeltingSelection()
         player.clearPendingSmeltingBarId()
         player.goldCrafting = false
         player.goldIndex = -1
         player.goldSlot = -1
-        player.boneItem = -1
-        player.shafting = false
-        player.fletchings = false
-        player.spinning = false
-        player.setCrafting(false)
-        player.setFishing(false)
+        player.clearPrayerOfferingState()
+        player.clearCraftingState()
+        player.clearFletchingState()
+        player.clearFishingState()
         player.stringing = false
         player.resourcesGathered = 0
-        player.cooking = false
+        player.clearCookingState()
         player.filling = false
         player.clearMiningState()
         player.clearWoodcuttingState()
@@ -58,8 +54,6 @@ object PlayerActionCancellationService {
         }
         player.clearPendingProductionSelection()
         player.clearActiveProductionSelection()
-        player.prayerAction = -1
-        player.boneItem = -1
         player.NpcWanneTalk = 0
         if (fullResetAnimation) {
             player.rerequestAnim()

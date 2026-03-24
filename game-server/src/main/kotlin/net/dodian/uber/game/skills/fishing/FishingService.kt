@@ -15,16 +15,17 @@ object FishingService {
         var valid = false
         val harpoon = client.getLevel(Skill.FISHING) >= 61 &&
             (client.equipment[Equipment.Slot.WEAPON.id] == 21028 || client.playerHasItem(21028))
+        var selectedIndex = -1
         for (i in Utils.fishSpots.indices) {
             if (Utils.fishSpots[i] != objectId) continue
             if (click == 1 && (i == 0 || i == 2 || i == 4 || i == 6)) {
                 valid = true
-                client.setFishIndex(i)
+                selectedIndex = i
                 break
             }
             if (click == 2 && (i == 1 || i == 3 || i == 5 || i == 7)) {
                 valid = true
-                client.setFishIndex(i)
+                selectedIndex = i
                 break
             }
         }
@@ -37,36 +38,39 @@ object FishingService {
             client.resetAction(true)
             return
         }
-        if (client.getLevel(Skill.FISHING) < Utils.fishReq[client.getFishIndex()]) {
-            client.send(SendMessage("You need level ${Utils.fishReq[client.getFishIndex()]} fishing to fish here."))
+        if (client.getLevel(Skill.FISHING) < Utils.fishReq[selectedIndex]) {
+            client.send(SendMessage("You need level ${Utils.fishReq[selectedIndex]} fishing to fish here."))
             client.resetAction(true)
             return
         }
-        if (!client.playerHasItem(Utils.fishTool[client.getFishIndex()]) && !harpoon) {
-            client.send(SendMessage("You need a ${client.GetItemName(Utils.fishTool[client.getFishIndex()]).lowercase()} to fish here."))
+        if (!client.playerHasItem(Utils.fishTool[selectedIndex]) && !harpoon) {
+            client.send(SendMessage("You need a ${client.GetItemName(Utils.fishTool[selectedIndex]).lowercase()} to fish here."))
             client.resetAction(true)
             return
         }
-        if ((client.getFishIndex() == 4 || client.getFishIndex() >= 6) && !client.premium) {
+        if ((selectedIndex == 4 || selectedIndex >= 6) && !client.premium) {
             client.send(SendMessage("You need to be premium to fish from this spot!"))
             client.resetAction(true)
             return
         }
-        if (!client.playerHasItem(314) && client.getFishIndex() == 1) {
+        if (!client.playerHasItem(314) && selectedIndex == 1) {
             client.send(SendMessage("You do not have any feathers."))
             client.resetAction(true)
             return
         }
-        client.resourcesGathered = 0
-        client.setFishing(true)
-        client.requestAnim(Utils.fishAnim[client.getFishIndex()], 0)
+        client.fishingState = FishingState(selectedIndex, 0)
+        client.requestAnim(Utils.fishAnim[selectedIndex], 0)
         client.send(SendMessage("You start fishing..."))
         SkillingActionService.startFishing(client)
     }
 
     @JvmStatic
     fun performCycle(client: Client) {
-        val fishIndex = client.getFishIndex()
+        val state = client.fishingState ?: run {
+            client.resetAction(true)
+            return
+        }
+        val fishIndex = state.spotIndex
         val harpoon = client.getLevel(Skill.FISHING) >= 61 &&
             (client.equipment[Equipment.Slot.WEAPON.id] == 21028 || client.playerHasItem(21028))
         if (!client.playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
@@ -92,11 +96,12 @@ object FishingService {
         client.addItem(itemId, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Fishing")
-        client.resourcesGathered++
+        val gatheredCount = state.gatheredCount + 1
         client.requestAnim(Utils.fishAnim[fishIndex], 0)
         client.triggerRandom(Utils.fishExp[fishIndex])
         client.send(SendMessage("You fish up some ${client.GetItemName(itemId).lowercase().replace("raw ", "")}."))
-        if (client.resourcesGathered >= 4 && Misc.chance(20) == 1) {
+        client.fishingState = state.copy(gatheredCount = gatheredCount)
+        if (gatheredCount >= 4 && Misc.chance(20) == 1) {
             client.send(SendMessage("You take a rest after gathering ${client.resourcesGathered} resources."))
             client.resetAction(true)
         }

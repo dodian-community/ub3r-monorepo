@@ -36,10 +36,10 @@ object WoodcuttingService {
         position: Position,
         obj: GameObjectData?,
     ): Boolean {
-        val tree = WoodcuttingData.treeByObjectId[objectId] ?: return false
+        val tree = WoodcuttingDefinitions.treeByObjectId[objectId] ?: return false
         stopWoodcuttingInternal(client, ActionStopReason.USER_INTERRUPT)
 
-        if (client.fletchings || client.isFiremaking || client.shafting) {
+        if (client.fletchingState != null || client.isFiremaking || client.craftingState?.mode == net.dodian.uber.game.skills.crafting.CraftingMode.SHAFTING) {
             client.resetAction()
         }
 
@@ -114,7 +114,7 @@ object WoodcuttingService {
     fun resolveBestAxe(client: Client): AxeDef? {
         val level = client.getLevel(Skill.WOODCUTTING)
         val equippedWeapon = client.equipment[Equipment.Slot.WEAPON.id]
-        return WoodcuttingData.axesDescending.firstOrNull { axe ->
+        return WoodcuttingDefinitions.axesDescending.firstOrNull { axe ->
             level >= axe.requiredLevel && (equippedWeapon == axe.itemId || client.playerHasItem(axe.itemId))
         }
     }
@@ -149,7 +149,7 @@ object WoodcuttingService {
 
     private fun advanceWoodcutting(client: Client): Boolean {
         val state = client.woodcuttingState ?: return false
-        val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId] ?: return stopWoodcuttingInternal(client, ActionStopReason.INVALID_TARGET).let { false }
+        val activeTree = WoodcuttingDefinitions.treeByObjectId[state.treeObjectId] ?: return stopWoodcuttingInternal(client, ActionStopReason.INVALID_TARGET).let { false }
         if (client.isBusy) {
             return stopWoodcuttingInternal(client, ActionStopReason.BUSY).let { false }
         }

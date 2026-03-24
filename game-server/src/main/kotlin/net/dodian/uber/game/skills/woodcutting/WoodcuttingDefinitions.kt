@@ -73,7 +73,7 @@ enum class AxeDef(
     BRONZE(1351, 1, 0.04, 879),
 }
 
-object WoodcuttingData {
+object WoodcuttingDefinitions {
     val treeByObjectId: Map<Int, TreeDef> =
         buildMap {
             TreeDef.values().forEach { tree ->

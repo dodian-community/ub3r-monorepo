@@ -30,7 +30,7 @@ data class PickaxeDef(
     val dragonTierBoostEligible: Boolean,
 )
 
-object MiningData {
+object MiningDefinitions {
     private val content: ResourceSkillContent = buildMiningContent()
 
     val rocks: List<MiningRockDef> =

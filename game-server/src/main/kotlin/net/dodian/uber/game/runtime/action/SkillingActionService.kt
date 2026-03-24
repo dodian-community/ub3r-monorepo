@@ -1,18 +1,36 @@
 package net.dodian.uber.game.runtime.action
 
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.skilling.SkillingActionCycleEvent
+import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
+import net.dodian.uber.game.event.events.skilling.SkillingActionSucceededEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.skills.smithing.SmeltingActionService
 import net.dodian.uber.game.skills.fletching.FletchingService
 import net.dodian.uber.game.skills.crafting.CraftingService
+import net.dodian.uber.game.skills.crafting.CraftingMode
 import net.dodian.uber.game.skills.cooking.CookingService
 import net.dodian.uber.game.skills.fishing.FishingService
 import net.dodian.uber.game.skills.prayer.PrayerInteractionService
 import net.dodian.uber.game.runtime.loop.GameCycleClock
+import net.dodian.uber.game.skills.core.SkillingInterruptService
 import net.dodian.utilities.Utils
 
 object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
     private const val REAPPLY_ANIMATION_DELAY_MS = 1800L
+
+    private fun postStarted(player: Client, name: String) {
+        GameEventBus.post(SkillingActionStartedEvent(player, name))
+    }
+
+    private fun postCycle(player: Client, name: String) {
+        GameEventBus.post(SkillingActionCycleEvent(player, name))
+    }
+
+    private fun postSucceeded(player: Client, name: String) {
+        GameEventBus.post(SkillingActionSucceededEvent(player, name))
+    }
 
     @JvmStatic
     fun startSmelting(client: Client) {
@@ -37,15 +55,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startShafting(client: Client) {
+        postStarted(client, "shafting")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SHAFTING,
-            onStop = { player, _ -> player.shafting = false },
+            onStop = { player, result ->
+                player.clearCraftingState()
+                SkillingInterruptService.postStopped(player, "shafting", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.shafting) {
+            while (player.craftingState?.mode == CraftingMode.SHAFTING) {
                 if (!isActive()) return@start
+                postCycle(player, "shafting")
                 CraftingService.performShaft(player)
-                if (!player.shafting) return@start
+                postSucceeded(player, "shafting")
+                if (player.craftingState?.mode != CraftingMode.SHAFTING) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -53,15 +77,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startFletching(client: Client) {
+        postStarted(client, "fletching")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.FLETCHING,
-            onStop = { player, _ -> player.fletchings = false },
+            onStop = { player, result ->
+                player.clearFletchingState()
+                SkillingInterruptService.postStopped(player, "fletching", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.fletchings && player.fletchAmount > 0) {
+            while ((player.fletchingState?.remaining ?: 0) > 0) {
                 if (!isActive()) return@start
+                postCycle(player, "fletching")
                 FletchingService.performBowCycle(player)
-                if (!player.fletchings || player.fletchAmount <= 0) return@start
+                postSucceeded(player, "fletching")
+                if ((player.fletchingState?.remaining ?: 0) <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -69,15 +99,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startSpinning(client: Client) {
+        postStarted(client, "spinning")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.SPINNING,
-            onStop = { player, _ -> player.spinning = false },
+            onStop = { player, result ->
+                player.clearCraftingState()
+                SkillingInterruptService.postStopped(player, "spinning", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.spinning) {
+            while (player.craftingState?.mode == CraftingMode.SPINNING) {
                 if (!isActive()) return@start
+                postCycle(player, "spinning")
                 CraftingService.performSpin(player)
-                if (!player.spinning) return@start
+                postSucceeded(player, "spinning")
+                if (player.craftingState?.mode != CraftingMode.SPINNING) return@start
                 wait(GameCycleClock.ticksForDurationMs(player.spinSpeed))
             }
         }
@@ -85,15 +121,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startCrafting(client: Client) {
+        postStarted(client, "crafting")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.CRAFTING,
-            onStop = { player, _ -> player.setCrafting(false) },
+            onStop = { player, result ->
+                player.clearCraftingState()
+                SkillingInterruptService.postStopped(player, "crafting", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.isCrafting() && player.getCAmount() > 0) {
+            while ((player.craftingState?.remaining ?: 0) > 0 && player.craftingState?.mode == CraftingMode.LEATHER) {
                 if (!isActive()) return@start
+                postCycle(player, "crafting")
                 CraftingService.performCraft(player)
-                if (!player.isCrafting() || player.getCAmount() <= 0) return@start
+                postSucceeded(player, "crafting")
+                if ((player.craftingState?.remaining ?: 0) <= 0 || player.craftingState?.mode != CraftingMode.LEATHER) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -101,29 +143,33 @@ object SkillingActionService {
 
     @JvmStatic
     fun startFishing(client: Client) {
+        postStarted(client, "fishing")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.FISHING,
             onStop = { player, _ ->
-                player.setFishing(false)
+                player.clearFishingState()
                 player.lastFishAction = 0
+                SkillingInterruptService.postStopped(player, "fishing", player.activeActionCancelReason)
             },
         ) {
             var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
             var nextAnimationCycle = currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
-            while (player.isFishing()) {
+            while (player.fishingState != null) {
                 if (!isActive()) return@start
                 val cycle = currentCycle()
                 if (cycle >= nextAnimationCycle) {
-                    val fishIndex = player.fishIndex
+                    val fishIndex = player.fishingState?.spotIndex ?: return@start
                     if (fishIndex >= 0 && fishIndex < Utils.fishAnim.size) {
                         player.requestAnim(Utils.fishAnim[fishIndex], 0)
                     }
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }
                 if (cycle >= nextCatchCycle) {
+                    postCycle(player, "fishing")
                     FishingService.performCycle(player)
-                    if (!player.isFishing()) return@start
+                    postSucceeded(player, "fishing")
+                    if (player.fishingState == null) return@start
                     nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(player.fishingSpeed)
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                 }
@@ -134,15 +180,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startCooking(client: Client) {
+        postStarted(client, "cooking")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.COOKING,
-            onStop = { player, _ -> player.cooking = false },
+            onStop = { player, result ->
+                player.clearCookingState()
+                SkillingInterruptService.postStopped(player, "cooking", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.cooking && player.cookAmount > 0) {
+            while ((player.cookingState?.remaining ?: 0) > 0) {
                 if (!isActive()) return@start
+                postCycle(player, "cooking")
                 CookingService.performCycle(player)
-                if (!player.cooking || player.cookAmount <= 0) return@start
+                postSucceeded(player, "cooking")
+                if ((player.cookingState?.remaining ?: 0) <= 0) return@start
                 wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
             }
         }
@@ -150,14 +202,21 @@ object SkillingActionService {
 
     @JvmStatic
     fun startAltarBones(client: Client) {
+        postStarted(client, "altar_bones")
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.ALTAR_BONES,
-            onStop = { player, _ -> player.boneItem = -1 },
+            onStop = { player, result ->
+                player.clearPrayerOfferingState()
+                SkillingInterruptService.postStopped(player, "altar_bones", (result as? PlayerActionStopResult.Cancelled)?.reason)
+            },
         ) {
-            while (player.boneItem > 0) {
+            while (player.prayerOfferingState != null) {
                 if (!isActive()) return@start
-                if (!PrayerInteractionService.altarBones(player, player.boneItem)) return@start
+                val boneItemId = player.prayerOfferingState?.boneItemId ?: return@start
+                postCycle(player, "altar_bones")
+                if (!PrayerInteractionService.altarBones(player, boneItemId)) return@start
+                postSucceeded(player, "altar_bones")
                 wait(3)
             }
         }

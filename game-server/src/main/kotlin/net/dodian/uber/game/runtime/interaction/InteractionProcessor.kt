@@ -20,6 +20,7 @@ import net.dodian.uber.game.runtime.combat.CombatStartService
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
 import net.dodian.uber.game.runtime.interaction.scheduler.InteractionExecutionResult
+import net.dodian.uber.game.skills.fishing.FishingNpcInteractionService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -439,7 +440,9 @@ object InteractionProcessor {
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        player.startFishing(npc.id, 1)
+        if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 1)) {
+            return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
+        }
         return NpcInteractionService.tryHandleClickTimed(player, 1, npc)
     }
 
@@ -452,7 +455,9 @@ object InteractionProcessor {
         player.faceNpc(npc.slot)
         player.skillX = npc.position.x
         player.setSkillY(npc.position.y)
-        player.startFishing(npc.id, 2)
+        if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 2)) {
+            return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
+        }
         return NpcInteractionService.tryHandleClickTimed(player, 2, npc)
     }
 

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.action.SkillingActionService
 
 object PrayerInteractionService {
     @JvmStatic
@@ -26,7 +27,7 @@ object PrayerInteractionService {
             client.resetAction()
             return false
         }
-        client.prayerAction = 3
+        client.prayerOfferingState = PrayerOfferingState(itemId, client.skillX, client.skillY)
         client.deleteItem(itemId, 1)
         client.checkItemUpdate()
         client.requestAnim(3705, 0)
@@ -42,5 +43,11 @@ object PrayerInteractionService {
         )
         client.triggerRandom(experience)
         return true
+    }
+
+    @JvmStatic
+    fun startAltarOffering(client: Client, request: PrayerOfferingRequest) {
+        client.prayerOfferingState = PrayerOfferingState(request.boneItemId, request.altarX, request.altarY)
+        SkillingActionService.startAltarBones(client)
     }
 }

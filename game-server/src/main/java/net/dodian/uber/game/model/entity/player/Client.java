@@ -21,6 +21,8 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.skills.slayer.SlayerService;
+import net.dodian.uber.game.skills.farming.Farming;
+import net.dodian.uber.game.skills.farming.FarmingJson;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
@@ -31,10 +33,16 @@ import net.dodian.jobs.impl.EntityProcessor;
 import net.dodian.uber.game.skills.mining.MiningService;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.skills.fletching.FletchingService;
+import net.dodian.uber.game.skills.fletching.FletchingState;
 import net.dodian.uber.game.skills.fishing.FishingService;
+import net.dodian.uber.game.skills.fishing.FishingState;
 import net.dodian.uber.game.skills.cooking.CookingService;
+import net.dodian.uber.game.skills.cooking.CookingState;
 import net.dodian.uber.game.skills.crafting.CraftingService;
+import net.dodian.uber.game.skills.crafting.CraftingMode;
+import net.dodian.uber.game.skills.crafting.CraftingState;
 import net.dodian.uber.game.skills.prayer.PrayerInteractionService;
+import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.dialogue.DialogueOptionService;
 import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.content.dialogue.DialogueService;
@@ -72,7 +80,6 @@ import java.io.FileWriter;
 /* Kotlin imports */
 import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
-import net.dodian.uber.game.skills.*;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
@@ -130,7 +137,6 @@ public class Client extends Player implements Runnable {
     public boolean stringing = false;
     public boolean filling = false;
     public int fillingObj = -1;
-    public int boneItem = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -166,32 +172,13 @@ public class Client extends Player implements Runnable {
     public boolean adding = false;
     public ArrayList<RS2Object> objects = new ArrayList<>();
     public long lastButton = 0;
-    public int cookAmount = 0, cookIndex = 0, enterAmountId = 0;
-    public boolean cooking = false;
-    // Dodian: fishing
-    int fishIndex;
-    boolean fishing = false;
+    public int enterAmountId = 0;
     // Dodian: teleports
     private int tH = 0;
-    // Dodian: crafting
-    boolean crafting = false;
-    int cItem = -1;
-    int cAmount = 0;
-    int cLevel = 1;
-    int cExp = 0;
     public int cSelected = -1, cIndex = -1;
     public String dMsg = "";
 
-    public boolean spinning = false;
     public int dialogInterface = 2459;
-    public boolean fletchings = false;
-    public int fletchId = -1, fletchAmount = -1, fletchLog = -1, fletchExp = 0;
-    /* Set make one skill action! */
-    public int prayerAction = -1;
-    public boolean smelting = false;
-    public int smelt_id, smeltCount, smeltExperience;
-
-    public boolean shafting = false;
     public int random_skill = -1;
     public String[] otherGroups = new String[10];
     public int autocast_spellIndex = -1, magicId = -1;
@@ -1669,75 +1656,137 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean isFishing() {
-        return fishing;
+        return getFishingState() != null;
     }
 
     public void setFishing(boolean fishing) {
-        this.fishing = fishing;
+        if (!fishing) {
+            clearFishingState();
+        } else if (getFishingState() == null) {
+            setFishingState(new FishingState(0, 0));
+        }
     }
 
     public int getFishIndex() {
-        return fishIndex;
+        FishingState state = getFishingState();
+        return state == null ? -1 : state.getSpotIndex();
     }
 
     public void setFishIndex(int fishIndex) {
-        this.fishIndex = fishIndex;
+        FishingState state = getFishingState();
+        setFishingState(new FishingState(fishIndex, state == null ? 0 : state.getGatheredCount()));
     }
 
     public int getCookIndex() {
-        return cookIndex;
+        CookingState state = getCookingState();
+        return state == null ? -1 : state.getCookIndex();
     }
 
     public void setCookIndex(int cookIndex) {
-        this.cookIndex = cookIndex;
+        CookingState state = getCookingState();
+        setCookingState(new CookingState(state == null ? -1 : state.getItemId(), cookIndex, state == null ? 0 : state.getRemaining()));
     }
 
     public int getCookAmount() {
-        return cookAmount;
+        CookingState state = getCookingState();
+        return state == null ? 0 : state.getRemaining();
     }
 
     public void setCookAmount(int cookAmount) {
-        this.cookAmount = cookAmount;
+        CookingState state = getCookingState();
+        setCookingState(new CookingState(state == null ? -1 : state.getItemId(), state == null ? -1 : state.getCookIndex(), cookAmount));
     }
 
     public boolean isCrafting() {
-        return crafting;
+        CraftingState state = getCraftingState();
+        return state != null && state.getMode() == CraftingMode.LEATHER;
     }
 
     public void setCrafting(boolean crafting) {
-        this.crafting = crafting;
+        if (!crafting) {
+            CraftingState state = getCraftingState();
+            if (state != null && state.getMode() == CraftingMode.LEATHER) {
+                clearCraftingState();
+            }
+        } else if (getCraftingState() == null) {
+            setCraftingState(new CraftingState(CraftingMode.LEATHER, -1, -1, 0, 0, 0));
+        }
     }
 
     public int getCAmount() {
-        return cAmount;
+        CraftingState state = getCraftingState();
+        return state == null ? 0 : state.getRemaining();
     }
 
     public void setCAmount(int amount) {
-        this.cAmount = amount;
+        CraftingState state = getCraftingState();
+        setCraftingState(
+                new CraftingState(
+                        state == null ? CraftingMode.LEATHER : state.getMode(),
+                        state == null ? -1 : state.getSelectedItemId(),
+                        state == null ? -1 : state.getProductId(),
+                        amount,
+                        state == null ? 0 : state.getRequiredLevel(),
+                        state == null ? 0 : state.getExperience()
+                )
+        );
     }
 
     public int getCItem() {
-        return cItem;
+        CraftingState state = getCraftingState();
+        return state == null ? -1 : state.getProductId();
     }
 
     public void setCItem(int item) {
-        this.cItem = item;
+        CraftingState state = getCraftingState();
+        setCraftingState(
+                new CraftingState(
+                        state == null ? CraftingMode.LEATHER : state.getMode(),
+                        state == null ? -1 : state.getSelectedItemId(),
+                        item,
+                        state == null ? 0 : state.getRemaining(),
+                        state == null ? 0 : state.getRequiredLevel(),
+                        state == null ? 0 : state.getExperience()
+                )
+        );
     }
 
     public int getCLevel() {
-        return cLevel;
+        CraftingState state = getCraftingState();
+        return state == null ? 0 : state.getRequiredLevel();
     }
 
     public void setCLevel(int level) {
-        this.cLevel = level;
+        CraftingState state = getCraftingState();
+        setCraftingState(
+                new CraftingState(
+                        state == null ? CraftingMode.LEATHER : state.getMode(),
+                        state == null ? -1 : state.getSelectedItemId(),
+                        state == null ? -1 : state.getProductId(),
+                        state == null ? 0 : state.getRemaining(),
+                        level,
+                        state == null ? 0 : state.getExperience()
+                )
+        );
     }
 
     public int getCExp() {
-        return cExp;
+        CraftingState state = getCraftingState();
+        return state == null ? 0 : state.getExperience();
     }
 
     public void setCExp(int exp) {
-        this.cExp = exp;
+        CraftingState state = getCraftingState();
+        setCraftingState(
+                new CraftingState(
+                        state == null ? CraftingMode.LEATHER : state.getMode(),
+                        state == null ? -1 : state.getSelectedItemId(),
+                        state == null ? -1 : state.getProductId(),
+                        state == null ? 0 : state.getRemaining(),
+                        state == null ? 0 : state.getRequiredLevel(),
+                        exp
+                )
+        );
     }
 
     public void checkItemUpdate() { //Checking bank etc..
@@ -2192,691 +2241,6 @@ public class Client extends Player implements Runnable {
 
     public int currentSkill = -1;
 
-    private void clearSkillGuideInterface() {
-        // Clear the skill name
-        send(new SendString("", 8716));
-        
-        // Clear all potential tab name slots (8720-8799)
-        for (int i = 8720; i < 8800; i++) {
-            send(new SendString("", i));
-        }
-        
-        // Clear any other related components
-        send(new SendString("", 8846)); // Main tab title
-        send(new SendString("", 8823)); // First sub-tab
-        send(new SendString("", 8824)); // Second sub-tab
-        send(new SendString("", 8827)); // Third sub-tab
-    }
-    
-    public void showSkillMenu(int skillID, int child) {
-        if (currentSkill != skillID) {
-            send(new RemoveInterfaces());
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently too busy to open the skill menu!"));
-            return;
-        }
-        
-        // Clear all tab slots first
-        for (int i = 0; i < 80; i++) {
-            send(new SendString("", 8720 + i));
-        }
-
-        // Clear the interface first
-        clearSkillGuideInterface();
-
-        // Set the skill name
-        Skill skill = getSkill(skillID);
-        if (skill == null) {
-            return;
-        }
-        String skillName = skill.getName();
-        skillName = skillName.substring(0, 1).toUpperCase() + skillName.substring(1);
-        send(new SendString(skillName, 8716));
-        int slot = 8720;
-        if (skillID < 23) {
-            changeInterfaceStatus(15307, false);
-            changeInterfaceStatus(15304, false);
-            changeInterfaceStatus(15294, false);
-            changeInterfaceStatus(8863, false);
-            changeInterfaceStatus(8860, false);
-            changeInterfaceStatus(8850, false);
-            changeInterfaceStatus(8841, false);
-            changeInterfaceStatus(8838, false);
-            changeInterfaceStatus(8828, false);
-            changeInterfaceStatus(8825, true);
-            changeInterfaceStatus(8813, true);
-            send(new SendString("", 8849));
-        }
-        if (skillID == ATTACK.getId()) {
-            send(new SendString("Attack", 8846));
-            send(new SendString("Defence", 8823));
-            send(new SendString("Range", 8824));
-            send(new SendString("Magic", 8827));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Elemental battlestaff", "Mithril", "Adamant", "Rune", "Wolfbane", "Keris", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon", "Verac's flail", "Torag's hammers",
-                    "Skillcape" + prem};
-            String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "40", "40", "45", "45", "50", "55", "60", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {4151, 1291, 1293, 1295, 1395, 1299, 1301, 1303, 2952, 10581, 3842, 20223, 21646, 6523, 1305, 4755, 4747, 9747};
-            setMenuItems(items);
-        } else if (skillID == DEFENCE.getId()) {
-            send(new SendString("Attack", 8846));
-            send(new SendString("Defence", 8823));
-            send(new SendString("Range", 8824));
-            send(new SendString("Magic", 8827));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Barrows", "Crystal shield (with 60 agility)", "Dragonfire shield",
-                    "Skillcape" + prem};
-            String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "70", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4749, 4224, 11284, 9753};
-            setMenuItems(items);
-        } else if (skillID == STRENGTH.getId()) {
-            send(new SendString("Strength", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Dharok's greataxe", "Guthan's warspear", "Skillcape" + prem};
-            String[] s1 = {"45", "45", "45", "50", "55", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {3842, 20223, 20232, 4153, 6528, 4718, 4726, 9750};
-            setMenuItems(items);
-        } else if (skillID == HITPOINTS.getId()) {
-            send(new SendString("Hitpoints", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps (3 health)", "Chicken (3 health)", "Meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
-                    "Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-            setMenuItems(items);
-        } else if (skillID == RANGED.getId()) {
-            changeInterfaceStatus(8825, false);
-            send(new SendString("Bows", 8846));
-            send(new SendString("Armour", 8823));
-            send(new SendString("Misc", 8824));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Karil's crossbow", "Seercull"/*, "Twisted bow"*/};
-                s1 = new String[]{"1", "20", "30", "40", "50", "65", "70", "75"/*, "85"*/};
-            } else if (child == 1) {
-                s = new String[]{"Leather", "Green dragonhide body (with 40 defence)", "Green dragonhide chaps",
-                        "Green dragonhide vambraces", "Book of balance", "Peaceful blessing", "Honourable blessing", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
-                        "Blue dragonhide vambraces", "Red dragonhide body (with 40 defence)", "Red dragonhide chaps",
-                        "Red dragonhide vambraces", "Black dragonhide body (with 40 defence)", "Black dragonhide chaps",
-                        "Black dragonhide vambraces", "Karil (with 70 defence)", "Spined"};
-                s1 = new String[]{"1", "40", "40", "40", "45", "45", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "70", "75"};
-            } else if (child == 2) {
-                s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
-                s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 4734, 6724/*, 20997*/});
-            else if (child == 1)
-                setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 20226, 20229, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 4736, 6133});
-            else if (child == 2)
-                setMenuItems(new int[]{882, 884, 886, 888, 890, 892, 11212, 9756});
-        } else if (skillID == PRAYER.getId()) {
-            send(new SendString("Prayer", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Thick Skin", "Burst of Strength", "Clarity of Thought", "Sharp Eye", "Mystic Will",
-                    "Rock Skin", "Superhuman Strength", "Improved Reflexes", "Hawk Eye", "Mystic Lore", "Wolfbane",
-                    "Steel Skin", "Ultimate Strength", "Incredible Reflexes", "Eagle Eye", "Mystic Might",
-                    "Protect from Magic", "Protect from Missiles", "Protect from Melee", "Chivalry", "Piety", "Skillcape" + prem};
-            String[] s1 = {"5", "5", "5", "10", "10", "20", "20", "20", "25", "25", "25",
-                    "40", "40", "40", "45", "45", "55", "55", "55", "70", "80", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2952, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9759};
-            setMenuItems(items);
-        } else if (skillID == MAGIC.getId()) {
-            changeInterfaceStatus(8825, false);
-            send(new SendString("Spells", 8846));
-            send(new SendString("Armor", 8823));
-            send(new SendString("Misc", 8824));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
-                s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
-            } else if (child == 1) {
-                s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Holy blessing", "Infinity", "Ahrim (with 70 defence)"};
-                s1 = new String[]{"1", "20", "20", "35", "45", "45", "50", "70"};
-            } else if (child == 2) {
-                s = new String[]{"Battlestaff", "Elemental battlestaff", "Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Ahrim's staff", "Skillcape" + prem};
-                s1 = new String[]{"1", "1", "10", "10", "10", "25", "40", "50", "70", "99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
-                        new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
-            else if (child == 1)
-                setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 20220, 6918, 4708});
-            else if (child == 2)
-                setMenuItems(new int[]{1391, 1395, 2417, 2415, 2416, 4675, 6526, 6914, 4710, 9762});
-        } else if (skillID == THIEVING.getId()) {
-            send(new SendString("Thieving", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Cage", "Farmer", "Baker stall", "fur stall", "silver stall", "Master Farmer", "Yanille chest", "Spice Stall", "Legends chest" + prem, "Gem Stall" + prem};
-            String[] s1 = {"1", "10", "10", "40", "65", "70", "70", "80", "85", "90"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {4443, 3243, 2309, 1739, 2349, 5068, 6759, 199, 6759, 1623};
-            setMenuItems(items);
-        } else if (skillID == RUNECRAFTING.getId()) {
-            send(new SendString("Runecrafting", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Small pouch", "Nature rune", "Medium pouch", "Large pouch", "Blood rune", "Giant pouch", "Cosmic rune", "Skillcape" + prem};
-            String[] s1 = {"1", "1", "20", "40", "50", "60", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {5509, 561, 5510, 5512, 565, 5514, 564, 9765};
-            setMenuItems(items);
-            //crafting == 12
-        } else if (skillID == FISHING.getId()) {
-            send(new SendString("Fishing", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Dragon harpoon", "Shark",
-                    "Sea Turtle" + prem, "Manta Ray" + prem, ""};
-            String[] s1 = {"1", "20", "30", "40", "50", "60", "61", "70", "85", "95"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {317, 335, 331, 377, 371, 7944, 21028, 383, 395, 389};
-            setMenuItems(items);
-        } else if (skillID == COOKING.getId()) {
-            send(new SendString("Cooking", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps", "Chicken", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
-                    "Sea Turtle" + prem, "Manta Ray" + prem};
-            String[] s1 = {"1", "1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-            setMenuItems(items);
-        } else if (skillID == CRAFTING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, false);
-            changeInterfaceStatus(8850, false);
-            send(new SendString("Spinning", 8846));
-            send(new SendString("Armor", 8823));
-            send(new SendString("Jewelry", 8824));
-            send(new SendString("Glass", 8827));
-            send(new SendString("Weaponry", 8837));
-            send(new SendString("Other", 8840));
-
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Ball of wool", "Bow string", "2 tick stringing", "1 tick stringing"};
-                s1 = new String[]{"1", "10", "40", "70"};
-            } else if (child == 1) {
-                s = new String[]{"Leather gloves", "Leather boots", "Leather cowl", "Leather vambraces",
-                        "Leather body", "Leather chaps", "Coif", "Green d'hide vamb", "Green d'hide chaps",
-                        "Green d'hide body", "Blue d'hide vamb", "Blue d'hide chaps", "Blue d'hide body", "Slayer helmet",
-                        "Red d'hide vamb", "Red d'hide chaps", "Red d'hide body", "Black d'hide vamb",
-                        "Black d'hide chaps", "Black d'hide body"};
-                s1 = new String[]{"1", "7", "9", "11", "14", "18", "39", "50", "54", "58", "62", "66", "70", "70", "73",
-                        "76", "79", "82", "85", "88"};
-            } else if (child == 2) {
-                s = new String[]{"Gold ring", "Gold necklace", "Gold bracelet", "Gold amulet", "Cut sapphire",
-                        "Sapphire ring", "Sapphire necklace", "Sapphire bracelet", "Sapphire amulet", "Cut emerald",
-                        "Emerald ring", "Emerald necklace", "Emerald bracelet", "Emerald amulet", "Cut ruby",
-                        "Ruby ring", "Ruby necklace", "Ruby bracelet", "Cut diamond", "Diamond ring", "Ruby amulet",
-                        "Cut dragonstone", "Dragonstone ring", "Diamond necklace", "Diamond bracelet", "Cut onyx",
-                        "Onyx ring", "Diamond amulet", "Dragonstone necklace", "Dragonstone bracelet",
-                        "Dragonstone amulet", "Onyx necklace", "Onyx bracelet", "Onyx amulet"};
-                s1 = new String[]{"5", "6", "7", "8", "20", "20", "22", "23", "24", "27", "27", "29", "30", "31",
-                        "34", "34", "40", "42", "43", "43", "50", "55", "55", "56", "58", "67", "67", "70", "72", "74",
-                        "80", "82", "84", "90"};
-            } else if (child == 3) {
-                s = new String[]{"Vial", "Empty cup", "Fishbowl", "Unpowered orb"};
-                s1 = new String[]{"1", "18", "32", "48"};
-            } else if (child == 4) {
-                s = new String[]{"Water battlestaff", "Earth battlestaff", "Fire battlestaff", "Air battlestaff"};
-                s1 = new String[]{"51", "56", "61", "66"};
-            } else if (child == 5) {
-                s = new String[]{"Crystal key", "Skillcape" + prem};
-                s1 = new String[]{"60", "99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1759, 1777});
-            else if (child == 1)
-                setMenuItems(new int[]{1059, 1061, 1167, 1063, 1129, 1095, 1169, 1065, 1099, 1135, 2487, 2493, 2499, 11864,
-                        2489, 2495, 2501, 2491, 2497, 2503});
-            else if (child == 2)
-                setMenuItems(new int[]{1635, 1654, 11069, 1692, 1607, 1637, 1656, 11072, 1694, 1605, 1639, 1658,
-                        11076, 1696, 1603, 1641, 1660, 11085, 1601, 1643, 1698, 1615, 1645, 1662, 11092, 6573, 6575,
-                        1700, 1664, 11115, 1702, 6577, 11130, 6581});
-            else if (child == 3)
-                setMenuItems(new int[]{229, 1980, 6667, 567});
-            else if (child == 4)
-                setMenuItems(new int[]{1395, 1399, 1393, 1397});
-            else if (child == 5)
-                setMenuItems(new int[]{989, 9780});
-        } else if (skillID == SMITHING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, true);
-            changeInterfaceStatus(8850, true);
-            send(new SendString("Smelting", 8846));
-            send(new SendString("Bronze", 8823));
-            send(new SendString("Iron", 8824));
-            send(new SendString("Steel", 8827));
-            send(new SendString("Mithril", 8837));
-            send(new SendString("Adamant", 8840));
-            send(new SendString("Runite", 8843));
-            send(new SendString("Special", 8859));
-
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            int[] item = new int[0];
-            int[] amt = new int[0];
-            if (child == 0) {
-                s = new String[]{"Bronze bar", "Iron bar (" + (50 + ((getLevel(Skill.SMITHING) + 1) / 4)) + "% success)", "Steel bar (2 coal & 1 iron ore)",
-                        "Gold bar", "Mithril bar (3 coal & 1 mithril ore)", "Adamantite bar (4 coal & 1 adamantite ore)", "Runite bar (6 coal & 1 runite ore)"};
-                s1 = new String[]{"1", "15", "30", "40", "55", "70", "85"};
-            } else if (child > 0 && child <= Constants.smithing_frame.length) {
-                s = new String[Constants.smithing_frame[child - 1].length];
-                s1 = new String[Constants.smithing_frame[child - 1].length];
-                item = new int[Constants.smithing_frame[child - 1].length];
-                amt = new int[Constants.smithing_frame[child - 1].length];
-                for (int i = 0; i < s.length; i++) {
-                    item[i] = Constants.smithing_frame[child - 1][i][0];
-                    amt[i] = Constants.smithing_frame[child - 1][i][1];
-                    s[i] = this.GetItemName(item[i]);
-                    s1[i] = String.valueOf(Constants.smithing_frame[child - 1][i][2]);
-                }
-            } else if (child == Constants.smithing_frame.length + 1) {
-                s = new String[]{"Rockshell armour", "Dragonfire shield", "Skillcape" + prem};
-                s1 = new String[]{"60", "90", "99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-
-            if (child == 0)
-                setMenuItems(new int[]{2349, 2351, 2353, 2357, 2359, 2361, 2363});
-            else if (child > 0 && child <= Constants.smithing_frame.length)
-                setMenuItems(item, amt);
-            else if (child == Constants.smithing_frame.length + 1)
-                setMenuItems(new int[]{6129, 11284, 9795});
-        } else if (skillID == AGILITY.getId()) {
-            send(new SendString("Agility", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Shilo stepping stones ", "Prime boss shortcut", "Skillcape" + prem};
-            String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "75", "85", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, -1, 4155, 9771};
-            setMenuItems(items);
-        } else if (skillID == WOODCUTTING.getId()) {
-            send(new SendString("Axes", 8846));
-            send(new SendString("Logs", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Bronze Axe", "Iron Axe", "Steel Axe", "Black Axe", "Mithril Axe", "Adamant Axe", "Rune Axe",
-                        "Dragon Axe"};
-                s1 = new String[]{"1", "1", "6", "11", "21", "31", "41", "61"};
-            } else if (child == 1) {
-                s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs"};
-                s1 = new String[]{"1", "15", "30", "45", "60", "75"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739});
-            else if (child == 1)
-                setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513});
-            else if (child == 2)
-                setMenuItems(new int[]{9807});
-        } else if (skillID == MINING.getId()) {
-            send(new SendString("Pickaxes", 8846));
-            send(new SendString("Ores", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Bronze Pickaxe", "Iron Pickaxe", "Steel Pickaxe", "Black Pickaxe", "Mithril Pickaxe", "Adamant Pickaxe",
-                        "Rune Pickaxe", "Dragon Pickaxe"};
-                s1 = new String[]{"1", "1", "6", "11", "21", "31", "41", "61"};
-            } else if (child == 1) {
-                s = new String[]{"Rune essence", "Copper ore", "Tin ore", "Iron ore", "Coal", "Gold ore", "Mithril ore",
-                        "Adamant ore", "Runite ore"};
-                s1 = new String[]{"1", "1", "1", "15", "30", "40", "55", "70", "85"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920});
-            else if (child == 1)
-                setMenuItems(new int[]{1436, 436, 438, 440, 453, 444, 447, 449, 451});
-            else if (child == 2)
-                setMenuItems(new int[]{9792});
-        } else if (skillID == SLAYER.getId()) {
-            send(new SendString("Master", 8846));
-            send(new SendString("Monsters", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Mazchna (level 3 combat)", "Vannaka (level 3 combat)", "Duradel (level 50 combat)"};
-                s1 = new String[]{"1", "50", "50"};
-            } else if (child == 1) {
-                s = new String[]{"Crawling hands", "Pyrefiend", "Albino bat", "Death spawn", "Jelly", "Head mourner", "Jungle horrors", "Skeletal hellhound", "Lesser demon", "Bloodvelds", "Greater demon", "Black demon", "Gargoyles", "Cave horrors", "Berserker Spirit", "Aberrant Spectres", "Tzhaar", "Mithril Dragon", "Abyssal demon", "Dagannoth Prime"};
-                s1 = new String[]{"1", "20", "25", "30", "30", "45", "45", "50", "50", "53", "55", "60", "63", "65", "70", "73", "80", "83", "85", "86"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{4155});
-            else if (child == 1)
-                setMenuItems(new int[]{4133, 4138, -1, -1, 4142, -1, -1, -1, -1, 4141, -1, -1, 4147, 8900, -1, 4144, -1, -1, 4149, -1});
-            else if (child == 2)
-                setMenuItems(new int[]{9786});
-        } else if (skillID == FIREMAKING.getId()) {
-            send(new SendString("Firemaking", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s;
-            String[] s1;
-            s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs",
-                    "Skillcape" + prem};
-            s1 = new String[]{"1", "15", "30", "45", "60", "75", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513, 9804});
-        } else if (skillID == HERBLORE.getId()) {
-            send(new SendString("Potions", 8846));
-            send(new SendString("Herbs", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Attack Potion \\nGuam leaf & eye of newt", "Strength Potion\\nTarromin & limpwurt root", "Defence Potion\\nRanarr weed & white berries", "Prayer potion\\nRanarr weed & snape grass",
-                        "Super Attack Potion " + prem + "\\nIrit leaf & eye of newt", "Super Strength Potion" + prem + "\\nKwuarm & limpwurt root", "Super Restore Potion" + prem + "\\nSnapdragon & red spiders' eggs", "Super Defence Potion" + prem + "\\nCadantine & white berries",
-                        "Ranging Potion" + prem + "\\nDwarf weed & wine of Zamorak", "Antifire potion" + prem + "\\nTorstol & willow root",
-                        "Super Combat Potion" + prem + "\\nTorstol, Super attack, strength & defence potion", "Overload Potion" + prem + "\\nCoconut, Ranging & Super combat potion"};
-                s1 = new String[]{"3", "14", "25", "38", "46", "55", "60", "65", "75", "79", "88", "93"};
-            } else if (child == 1) {
-                String[][] array = new String[2][Utils.grimy_herbs.length];
-                for (int i = 0; i < array[1].length; i++) {
-                    array[0][i] = GetItemName(Utils.grimy_herbs[i] != 3051 && Utils.grimy_herbs[i] != 3049 ? Utils.grimy_herbs[i] + 50 : Utils.grimy_herbs[i] - 51) + (i > 2 ? " " + prem : "");
-                    array[1][i] = Integer.toString(Utils.grimy_herbs_lvl[i]);
-                }
-                s = array[0];
-                s1 = array[1];
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454, 12695, 11730});
-            else if (child == 1)
-                setMenuItems(Utils.grimy_herbs);
-            else if (child == 2)
-                setMenuItems(new int[]{9774});
-        } else if (skillID == FLETCHING.getId()) {
-            send(new SendString("Fletching", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String[] s = {"Arrow Shafts", "Oak Shortbow", "Oak Longbow", "Willow Shortbow", "Willow Longbow",
-                    "Maple Shortbow", "Maple Longbow", "Yew Shortbow", "Yew Longbow", "Magic Shortbow", "Magic Longbow"};
-            String[] s1 = {"1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {52, 54, 56, 60, 58, 64, 62, 68, 66, 72, 70};
-            setMenuItems(items);
-        } else if (skillID == FARMING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, true);
-            send(new SendString("Allotment", 8846));
-            send(new SendString("Flower", 8823));
-            send(new SendString("Bush", 8824));
-            send(new SendString("Herb", 8827));
-            send(new SendString("Tree", 8837));
-            send(new SendString("Fruit tree", 8840));
-            send(new SendString("Misc", 8843));
-            changeInterfaceStatus(8850, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Potatoes \\nPayment: 3 compost", "Onions \\nPayment: 1 sack of potato", "Cabbage \\nPayment: 1 sack of onion", "Tomatoes \\nPayment: 1 sack of cabbage",
-                        "Sweetcorn \\nPayment: 2 basket of tomato", "Strawberries " + prem + "\\nPayment: 12 sweetcorn",
-                        "Watermelons " + prem + "\\nPayment: 3 basket of strawberries", "Snape grass " + prem + "\\nPayment: 15 watermelon"};
-                s1 = new String[]{"1", "5", "9", "16", "25", "31", "47", "59"};
-            } else if (child == 1) {
-                s = new String[]{"Marigold \\nPayment: 2 compost", "Rosemary \\nPayment: 2 Marigold", "Nasturtium \\nPayment: 2 Rosemary",
-                        "Woad \\nPayment: 2 Nasturtium", "Limpwurt plants \\nPayment: 2 Woad leaf"};
-                s1 = new String[]{"3", "13", "22", "26", "34"};
-            } else if (child == 2) {
-                s = new String[]{"Redberry bushes " + prem + "\\nPayment: 5 super compost", "Dwellberry bushes " + prem + "\\nPayment: 8 redberries", "Jangerberry bushes " + prem + "\\nPayment: 8 dwellberries",
-                        "White berry bushes " + prem + "\\nPayment: 8 jangerberries", "Grape bushes" + prem + "\\nPayment: 8 jangerberries & 8 redberries"};
-                s1 = new String[]{"22", "36", "48", "59", "68"};
-            } else if (child == 3) {
-                s = new String[]{"Guam", "Marrentill", "Tarromin", "Ranarr", "Irit " + prem, "Kwuarm " + prem, "Snapdragon " + prem, "Cadantine " + prem, "Dwarf weed " + prem, "Torstol " + prem};
-                s1 = new String[]{"8", "12", "19", "34", "44", "56", "63", "70", "79", "85"};
-            } else if (child == 4) {
-                s = new String[]{"Acorn trees \\nPayment: 1 basket of Tomatoes & 1 basket of Strawberries", "Willow trees " + prem + "\\nPayment: 3 oak roots", "Maple trees " + prem + "\\nPayment: 3 willow roots",
-                        "Yew trees " + prem + "\\nPayment: 3 maple roots", "Magic trees " + prem + "\\nPayment: 3 yew roots"};
-                s1 = new String[]{"15", "30", "45", "60", "75"};
-            } else if (child == 5) {
-                s = new String[]{"Apple trees \\nPayment: 9 sweetcorn", "Banana trees \\nPayment: 2 basket of apples", "Orange trees \\nPayment: 2 basket of bananas",
-                        "Curry trees \\nPayment: 2 basket of oranges", "Pineapple plants " + prem + "\\nPayment: 10 curry",
-                        "Papaya trees " + prem + "\\nPayment: 10 pineapple", "Palm trees " + prem + "\\nPayment: 10 papaya"};
-                s1 = new String[]{"27", "33", "39", "45", "51", "57", "63"};
-            } else if (child == 6) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1942, 1957, 1965, 1982, 5986, 5504, 5982, 231});
-            else if (child == 1)
-                setMenuItems(new int[]{6010, 6014, 6012, 1793, 225});
-            else if (child == 2)
-                setMenuItems(new int[]{1951, 2126, 247, 239, 1987});
-            else if (child == 3)
-                setMenuItems(new int[]{199, 201, 203, 207, 209, 213, 3051, 215, 217, 219});
-            else if (child == 4)
-                setMenuItems(new int[]{1521, 1519, 1517, 1515, 1513});
-            else if (child == 5)
-                setMenuItems(new int[]{1955, 1963, 2108, 5970, 2114, 5972, 5974});
-            else if (child == 6)
-                setMenuItems(new int[]{9810});
-        }
-        
-        // Send the quest something packet (configures scrollbar)
-        sendQuestSomething(8717);
-        
-        // Only show the interface if we're switching skills
-        if (currentSkill != skillID) {
-            // Show the main interface (packet 97)
-            send(new ShowInterface(8714));
-        }
-        
-        // Update current skill
-        currentSkill = skillID;
-    }
-
     public static void publicyell(String message) {
         for (Player p : PlayerHandler.players) {
             if (p == null || !p.isActive) {
@@ -3278,6 +2642,10 @@ public class Client extends Player implements Runnable {
         double level = getLevel(FISHING) / 256D;
         boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
         double bonus = 1 + level + (harpoon ? 0.2 : 0.0);
+        int fishIndex = getFishIndex();
+        if (fishIndex < 0 || fishIndex >= Utils.fishTime.length) {
+            return 0L;
+        }
         double timer = Utils.fishTime[fishIndex];
         boolean chance = Misc.chance(8) == 1;
         if (chance && harpoon) //Dragon harpoon?!
@@ -4424,22 +3792,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void startCraft(int actionbutton) {
-        CraftingService.startStandardLeatherCraft(this, actionbutton);
-    }
-
-    public void craft() {
-        CraftingService.performCraft(this);
-    }
-
-    public void craftMenu(int i) {
-        CraftingService.openLeatherMenu(this, i);
-    }
-
-    public void startHideCraft(int b) {
-        CraftingService.startHideCraft(this, b);
-    }
-
     public void modYell(String msg) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
             Client p = (Client) PlayerHandler.players[i];
@@ -4484,22 +3836,6 @@ public class Client extends Player implements Runnable {
 
     public void startSmelt(int id) {
         SmeltingInterfaceService.startFromButton(this, id);
-    }
-
-    public void startFishing(int object, int click) {
-        FishingService.start(this, object, click);
-    }
-
-    public void fish() {
-        FishingService.performCycle(this);
-    }
-
-    public void startCooking(int id) {
-        CookingService.start(this, id);
-    }
-
-    public void cook() {
-        CookingService.performCycle(this);
     }
 
     public boolean inHeat() { //King black dragon's domain!

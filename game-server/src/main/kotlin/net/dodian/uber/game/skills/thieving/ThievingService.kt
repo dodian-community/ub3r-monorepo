@@ -9,45 +9,15 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
-import net.dodian.utilities.Range
 
 object ThievingService {
     const val PICKPOCKET_EMOTE: Int = 881
     const val STALL_THIEVING_EMOTE: Int = 832
     const val EMPTY_STALL_ID: Int = 634
 
-    enum class Type {
-        PICKPOCKETING,
-        STALL_THIEVING,
-        OTHER,
-    }
-
-    enum class Definition(
-        val entityId: Int,
-        val requiredLevel: Int,
-        val receivedExperience: Int,
-        val item: IntArray,
-        val itemAmount: Array<Range>,
-        val itemChance: IntArray,
-        val respawnTime: Int,
-        val type: Type,
-    ) {
-        FARMER(3086, 10, 800, intArrayOf(314), arrayOf(Range(2, 5)), intArrayOf(100), 0, Type.PICKPOCKETING),
-        MASTER_FARMER(3257, 70, 1200, intArrayOf(314), arrayOf(Range(4, 10)), intArrayOf(100), 0, Type.PICKPOCKETING),
-        CAGE(20873, 1, 150, intArrayOf(995), arrayOf(Range(20, 50)), intArrayOf(100), 0, Type.OTHER),
-        BAKER_STALL(11730, 10, 1000, intArrayOf(2309), arrayOf(Range(1, 1)), intArrayOf(100), 12, Type.STALL_THIEVING),
-        FUR_STALL(11732, 40, 1800, intArrayOf(1751, 1753, 1739, 1759, 995), arrayOf(Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(150, 350)), intArrayOf(5, 10, 15, 20, 100), 25, Type.STALL_THIEVING),
-        SILVER_STALL(11734, 65, 2500, intArrayOf(2349, 2351, 2353, 2357, 2359, 995), arrayOf(Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(300, 600)), intArrayOf(5, 10, 15, 20, 25, 100), 25, Type.STALL_THIEVING),
-        SPICE_STALL(11733, 80, 4800, intArrayOf(215, 213, 209, 207, 203, 199), arrayOf(Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1)), intArrayOf(5, 10, 20, 35, 55, 100), 35, Type.STALL_THIEVING),
-        GEM_STALL(11731, 90, 5800, intArrayOf(1617, 1619, 1621, 1623, 995), arrayOf(Range(1, 1), Range(1, 1), Range(1, 1), Range(1, 1), Range(500, 850)), intArrayOf(2, 5, 8, 15, 100), 38, Type.STALL_THIEVING),
-    }
-
-    @JvmStatic
-    fun forId(entityId: Int): Definition? = Definition.values().firstOrNull { it.entityId == entityId }
-
     @JvmStatic
     fun attempt(player: Client, entityId: Int, position: Position) {
-        val data = forId(entityId) ?: return
+        val data = ThievingDefinition.forId(entityId) ?: return
         if (player.chestEventOccur) return
         val failChance = 0
         val face =
@@ -56,7 +26,7 @@ object ThievingService {
             else if ((position.x == 2662 && position.y == 3314) || (position.x == 2657 && position.y == 3314)) 2
             else if ((position.x == 2667 && position.y == 3303) || (position.x == 2667 && position.y == 3310)) 3
             else -1
-        if (face == -1 && data.type == Type.STALL_THIEVING) {
+        if (face == -1 && data.type == ThievingType.STALL_THIEVING) {
             player.send(SendMessage("Not added object!"))
             return
         }
@@ -68,7 +38,7 @@ object ThievingService {
         if (!PlayerTickThrottleService.tryAcquireMs(player, PlayerTickThrottleService.THIEVING_GENERIC, 2000L)) {
             return
         }
-        if (data.type == Type.PICKPOCKETING || data.type == Type.OTHER) {
+        if (data.type == ThievingType.PICKPOCKETING || data.type == ThievingType.OTHER) {
             player.setFocus(position.x, position.y)
             player.requestAnim(PICKPOCKET_EMOTE, 0)
             player.send(SendMessage("You attempt to steal from the ${data.name.lowercase().replace('_', ' ')}..."))
@@ -108,7 +78,7 @@ object ThievingService {
                 ItemLog.playerGathering(player, id, amount, player.position.copy(), "Thieving")
                 player.send(SendMessage("You receive ${article(player.GetItemName(id))} ${player.GetItemName(id).lowercase()}"))
             }
-            if (data.type == Type.STALL_THIEVING) {
+            if (data.type == ThievingType.STALL_THIEVING) {
                 val stallObject = GameObject(EMPTY_STALL_ID, position.x, position.y, position.z, 10, face, data.entityId)
                 GlobalObject.addGlobalObject(stallObject, data.respawnTime * 1000)
             }

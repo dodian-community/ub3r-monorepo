@@ -14,8 +14,7 @@ object FletchingItemCombinationHandler {
     fun handle(client: Client, itemUsed: Int, otherItem: Int, knife: Boolean): Boolean {
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction()
-            client.shafting = true
-            SkillingActionService.startShafting(client)
+            net.dodian.uber.game.skills.crafting.CraftingService.startShafting(client)
             return true
         }
         if ((itemUsed == 314 || otherItem == 314) && (itemUsed == 52 || otherItem == 52)) {

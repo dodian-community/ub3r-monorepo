@@ -13,7 +13,7 @@ object FletchingService {
     fun openBowSelection(client: Client, logIndex: Int) {
         client.resetAction()
         client.dialogInterface = 2459
-        client.fletchLog = logIndex
+        client.fletchingState = FletchingState(logIndex = logIndex)
         client.send(SendString("Select a bow", 8879))
         client.sendFrame246(8870, 250, Constants.longbows[logIndex])
         client.sendFrame246(8869, 250, Constants.shortbows[logIndex])
@@ -27,38 +27,51 @@ object FletchingService {
     @JvmStatic
     fun startBowCrafting(client: Client, longBow: Boolean, amount: Int) {
         client.send(RemoveInterfaces())
-        val logIndex = client.fletchLog
+        val logIndex = client.fletchingState?.logIndex ?: -1
         if (logIndex !in Constants.logs.indices) {
             client.resetAction()
             return
         }
 
+        val request =
         if (longBow) {
             if (client.getLevel(Skill.FLETCHING) < Constants.longreq[logIndex]) {
                 client.send(SendMessage("Requires fletching ${Constants.longreq[logIndex]}!"))
                 client.resetAction()
                 return
             }
-            client.fletchId = Constants.longbows[logIndex]
-            client.fletchExp = Constants.longexp[logIndex]
+            FletchingRequest(logIndex, Constants.longbows[logIndex], Constants.longexp[logIndex], amount)
         } else {
             if (client.getLevel(Skill.FLETCHING) < Constants.shortreq[logIndex]) {
                 client.send(SendMessage("Requires fletching ${Constants.shortreq[logIndex]}!"))
                 client.resetAction()
                 return
             }
-            client.fletchId = Constants.shortbows[logIndex]
-            client.fletchExp = Constants.shortexp[logIndex]
+            FletchingRequest(logIndex, Constants.shortbows[logIndex], Constants.shortexp[logIndex], amount)
         }
 
-        client.fletchAmount = amount
-        client.fletchings = true
+        start(client, request)
+    }
+
+    @JvmStatic
+    fun start(client: Client, request: FletchingRequest) {
+        client.fletchingState =
+            FletchingState(
+                logIndex = request.logIndex,
+                productId = request.productId,
+                experience = request.experience,
+                remaining = request.amount,
+            )
         SkillingActionService.startFletching(client)
     }
 
     @JvmStatic
     fun performBowCycle(client: Client) {
-        if (client.fletchAmount < 1) {
+        val state = client.fletchingState ?: run {
+            client.resetAction()
+            return
+        }
+        if (state.remaining < 1) {
             client.resetAction()
             return
         }
@@ -67,21 +80,21 @@ object FletchingService {
             return
         }
 
-        client.fletchAmount--
         client.send(RemoveInterfaces())
         client.IsBanking = false
         client.requestAnim(4433, 0)
 
-        val logIndex = client.fletchLog
+        val logIndex = state.logIndex
         if (logIndex !in Constants.logs.indices || !client.playerHasItem(Constants.logs[logIndex])) {
             client.resetAction()
             return
         }
 
         client.deleteItem(Constants.logs[logIndex], 1)
-        client.addItem(client.fletchId, 1)
+        client.addItem(state.productId, 1)
         client.checkItemUpdate()
-        client.giveExperience(client.fletchExp, Skill.FLETCHING)
-        client.triggerRandom(client.fletchExp)
+        client.giveExperience(state.experience, Skill.FLETCHING)
+        client.triggerRandom(state.experience)
+        client.fletchingState = state.copy(remaining = state.remaining - 1)
     }
 }

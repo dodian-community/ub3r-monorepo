@@ -4,8 +4,8 @@ import com.google.gson.JsonArray
 import java.util.IdentityHashMap
 import java.util.TreeMap
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.FarmingJson
-import net.dodian.uber.game.skills.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingJson
+import net.dodian.uber.game.skills.farming.FarmingData
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 
 data class FarmingRefreshStats(

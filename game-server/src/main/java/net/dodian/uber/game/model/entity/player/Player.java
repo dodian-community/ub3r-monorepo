@@ -26,13 +26,17 @@ import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.skills.slayer.SlayerService;
-import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skills.mining.MiningState;
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingState;
+import net.dodian.uber.game.skills.fletching.FletchingState;
+import net.dodian.uber.game.skills.fishing.FishingState;
+import net.dodian.uber.game.skills.cooking.CookingState;
+import net.dodian.uber.game.skills.crafting.CraftingState;
+import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
 import net.dodian.uber.game.runtime.interaction.InteractionIntent;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
@@ -40,6 +44,7 @@ import net.dodian.uber.game.runtime.combat.CombatTargetState;
 import net.dodian.uber.game.runtime.lifecycle.DeathTaskState;
 import net.dodian.uber.game.skills.smithing.ActiveSmithingSelection;
 import net.dodian.uber.game.skills.smithing.SmeltingSelection;
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderPlayerState;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.action.PendingProductionSelection;
 import net.dodian.uber.game.runtime.action.ActiveProductionSelection;
@@ -86,7 +91,6 @@ public abstract class Player extends Entity {
     public fightStyle weaponStyle = fightStyle.PUNCH;
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
-    public PyramidPlunder getPlunder = new PyramidPlunder(((Client) this));
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
@@ -945,6 +949,78 @@ public abstract class Player extends Entity {
         interactionState.clearWoodcuttingState();
     }
 
+    public FletchingState getFletchingState() {
+        return interactionState.getFletchingState();
+    }
+
+    public void setFletchingState(FletchingState fletchingState) {
+        interactionState.setFletchingState(fletchingState);
+    }
+
+    public void clearFletchingState() {
+        interactionState.clearFletchingState();
+    }
+
+    public FishingState getFishingState() {
+        return interactionState.getFishingState();
+    }
+
+    public void setFishingState(FishingState fishingState) {
+        interactionState.setFishingState(fishingState);
+    }
+
+    public void clearFishingState() {
+        interactionState.clearFishingState();
+    }
+
+    public CookingState getCookingState() {
+        return interactionState.getCookingState();
+    }
+
+    public void setCookingState(CookingState cookingState) {
+        interactionState.setCookingState(cookingState);
+    }
+
+    public void clearCookingState() {
+        interactionState.clearCookingState();
+    }
+
+    public CraftingState getCraftingState() {
+        return interactionState.getCraftingState();
+    }
+
+    public void setCraftingState(CraftingState craftingState) {
+        interactionState.setCraftingState(craftingState);
+    }
+
+    public void clearCraftingState() {
+        interactionState.clearCraftingState();
+    }
+
+    public PrayerOfferingState getPrayerOfferingState() {
+        return interactionState.getPrayerOfferingState();
+    }
+
+    public void setPrayerOfferingState(PrayerOfferingState prayerOfferingState) {
+        interactionState.setPrayerOfferingState(prayerOfferingState);
+    }
+
+    public void clearPrayerOfferingState() {
+        interactionState.clearPrayerOfferingState();
+    }
+
+    public PyramidPlunderPlayerState getPyramidPlunderState() {
+        return interactionState.getPyramidPlunderState();
+    }
+
+    public void setPyramidPlunderState(PyramidPlunderPlayerState pyramidPlunderState) {
+        interactionState.setPyramidPlunderState(pyramidPlunderState);
+    }
+
+    public void clearPyramidPlunderState() {
+        interactionState.clearPyramidPlunderState();
+    }
+
     public QueueTaskHandle getActiveActionHandle() {
         return interactionState.getActiveActionHandle();
     }
@@ -1184,15 +1260,15 @@ public abstract class Player extends Entity {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerService.Task.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerService.Task slayerTask = SlayerService.Task.getSlayerNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerService.Task.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerService.Task slayerTask = SlayerService.Task.getSlayerNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
@@ -1909,12 +1985,12 @@ public abstract class Player extends Entity {
     }
 
     public boolean rejectTeleport() {
-        return getPlunder.hinderTeleport();
+        return net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            getPlunder.resetPlunder();
+            net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {

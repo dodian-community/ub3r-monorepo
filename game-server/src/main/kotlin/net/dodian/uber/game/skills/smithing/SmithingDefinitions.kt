@@ -82,17 +82,17 @@ object SmithingDefinitions {
     }
 
     private val mysticSmeltingButtonMappings: List<FurnaceButtonMapping> =
-        MysticSmeltingButtons.all.all.flatMap { it.toMappings() }
+        SmeltingButtons.all.all.flatMap { it.toMappings() }
 
     val smeltingButtonMappings: List<FurnaceButtonMapping> = classicSmeltingButtonMappings + mysticSmeltingButtonMappings
 
     val smithingTiers: List<SmithingTier> = listOf(
-        buildTier(1, "Bronze", 2349, SmithingData.smithingFrame[0]),
-        buildTier(2, "Iron", 2351, SmithingData.smithingFrame[1]),
-        buildTier(3, "Steel", 2353, SmithingData.smithingFrame[2]),
-        buildTier(4, "Mithril", 2359, SmithingData.smithingFrame[3]),
-        buildTier(5, "Adamant", 2361, SmithingData.smithingFrame[4]),
-        buildTier(6, "Rune", 2363, SmithingData.smithingFrame[5]),
+        buildTier(1, "Bronze", 2349, SmithingFrameDefinitions.smithingFrame[0]),
+        buildTier(2, "Iron", 2351, SmithingFrameDefinitions.smithingFrame[1]),
+        buildTier(3, "Steel", 2353, SmithingFrameDefinitions.smithingFrame[2]),
+        buildTier(4, "Mithril", 2359, SmithingFrameDefinitions.smithingFrame[3]),
+        buildTier(5, "Adamant", 2361, SmithingFrameDefinitions.smithingFrame[4]),
+        buildTier(6, "Rune", 2363, SmithingFrameDefinitions.smithingFrame[5]),
     )
 
     @JvmStatic

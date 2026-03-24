@@ -103,7 +103,7 @@ internal object SlayerMasterDialogue {
             return
         }
 
-        val checkTask = SlayerService.Task.getTask(client.getSlayerData()[1])
+        val checkTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(client.getSlayerData()[1])
         val lines = if (checkTask != null && client.getSlayerData()[3] > 0) {
             arrayOf(
                 "You're currently assigned to ${checkTask.textRepresentation};",
@@ -118,7 +118,7 @@ internal object SlayerMasterDialogue {
 
     @JvmStatic
     fun showResetCountPrompt(client: Client) {
-        val checkTask = SlayerService.Task.getTask(client.getSlayerData()[1])
+        val checkTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(client.getSlayerData()[1])
         val title = if (checkTask != null) {
             "Reset count for ${checkTask.textRepresentation}"
         } else {
@@ -274,7 +274,7 @@ internal object SlayerMasterDialogue {
     }
 
     private fun resetCurrentTaskCount(client: Client) {
-        val checkTask = SlayerService.Task.getTask(client.slayerData[1]) ?: return
+        val checkTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(client.slayerData[1]) ?: return
         for (npcId in checkTask.npcId) {
             val npcName = Server.npcManager.getName(npcId)
             for (slot in 0 until client.monsterName.size) {
@@ -298,6 +298,6 @@ internal object SlayerMasterDialogue {
         if (client.getSlayerData()[0] == -1 || client.getSlayerData()[3] <= 0) {
             return ""
         }
-        return SlayerService.Task.getTask(client.getSlayerData()[1])?.textRepresentation ?: ""
+        return net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(client.getSlayerData()[1])?.textRepresentation ?: ""
     }
 }

@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingData
 
 object FarmingPatchObjects : ObjectContent {
     private val patchIds: IntArray = FarmingData.patches.values()

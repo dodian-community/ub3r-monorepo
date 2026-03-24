@@ -2,12 +2,12 @@ package net.dodian.uber.game.content.commands.dev
 
 import java.util.LinkedHashSet
 import net.dodian.uber.game.Constants
-import net.dodian.uber.game.skills.FarmingData
-import net.dodian.uber.game.skills.mining.MiningData
-import net.dodian.uber.game.skills.smithing.SmithingData
+import net.dodian.uber.game.skills.farming.FarmingData
+import net.dodian.uber.game.skills.mining.MiningDefinitions
+import net.dodian.uber.game.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.skills.smithing.SmithingDefinitions
 import net.dodian.uber.game.skills.thieving.ThievingService
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingData
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingDefinitions
 import net.dodian.utilities.Utils
 
 object SkillTestItemCatalog {
@@ -63,17 +63,17 @@ object SkillTestItemCatalog {
 
     private fun woodcuttingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        WoodcuttingData.axesDescending.forEach { addIfValid(items, it.itemId) }
-        WoodcuttingData.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
+        WoodcuttingDefinitions.axesDescending.forEach { addIfValid(items, it.itemId) }
+        WoodcuttingDefinitions.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
         addAll(items, 590, 946)
         return items.toList()
     }
 
     private fun miningItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        MiningData.pickaxesDescending.forEach { addIfValid(items, it.itemId) }
-        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
-        MiningData.randomGemDropTable.forEach { addIfValid(items, it) }
+        MiningDefinitions.pickaxesDescending.forEach { addIfValid(items, it.itemId) }
+        MiningDefinitions.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningDefinitions.randomGemDropTable.forEach { addIfValid(items, it) }
         addAll(items, 1755, 1436)
         return items.toList()
     }
@@ -82,12 +82,12 @@ object SkillTestItemCatalog {
         val items = LinkedHashSet<Int>()
         addAll(items, 2347)
         SmithingDefinitions.smeltingRecipes.forEach { addIfValid(items, it.barId) }
-        for (row in SmithingData.smithingFrame) {
+        for (row in SmithingFrameDefinitions.smithingFrame) {
             for (entry in row) {
                 addIfValid(items, entry.itemId)
             }
         }
-        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningDefinitions.rocks.forEach { addIfValid(items, it.oreItemId) }
         addAll(items, 436, 438, 440, 444, 447, 449, 451, 453)
         return items.toList()
     }
@@ -228,7 +228,7 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        net.dodian.uber.game.skills.thieving.ThievingService.Definition.values().forEach { data ->
+        net.dodian.uber.game.skills.thieving.ThievingDefinition.values().forEach { data ->
             data.item.forEach { addIfValid(items, it) }
         }
         return items.toList()

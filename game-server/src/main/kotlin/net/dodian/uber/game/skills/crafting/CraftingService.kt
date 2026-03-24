@@ -51,6 +51,12 @@ object CraftingService {
     }
 
     @JvmStatic
+    fun startShafting(client: Client) {
+        client.craftingState = CraftingState(mode = CraftingMode.SHAFTING)
+        SkillingActionService.startShafting(client)
+    }
+
+    @JvmStatic
     fun performSpin(client: Client) {
         if (client.playerHasItem(1779)) {
             client.deleteItem(1779, 1)
@@ -68,6 +74,12 @@ object CraftingService {
             return
         }
         client.checkItemUpdate()
+    }
+
+    @JvmStatic
+    fun startSpinning(client: Client) {
+        client.craftingState = CraftingState(mode = CraftingMode.SPINNING)
+        SkillingActionService.startSpinning(client)
     }
 
     @JvmStatic
@@ -100,12 +112,15 @@ object CraftingService {
             return
         }
         if (client.getLevel(Skill.CRAFTING) >= normalCraftLevels[productIndex]) {
-            client.cSelected = 1741
-            client.setCrafting(true)
-            client.setCItem(productId)
-            client.setCAmount(if (amount == 10) client.getInvAmt(client.cSelected) else amount)
-            client.setCLevel(normalCraftLevels[productIndex])
-            client.setCExp(normalCraftExp[productIndex] * 8)
+            client.craftingState =
+                CraftingState(
+                    mode = CraftingMode.LEATHER,
+                    selectedItemId = 1741,
+                    productId = productId,
+                    remaining = if (amount == 10) client.getInvAmt(1741) else amount,
+                    requiredLevel = normalCraftLevels[productIndex],
+                    experience = normalCraftExp[productIndex] * 8,
+                )
             SkillingActionService.startCrafting(client)
         } else {
             client.send(SendMessage("You need level ${normalCraftLevels[productIndex]} crafting to craft a ${client.GetItemName(productId).lowercase()}"))
@@ -126,30 +141,39 @@ object CraftingService {
                 break
             }
         }
-        client.cSelected = Constants.leathers[client.cIndex]
-        client.setCAmount(if (amounts[amountIndex] == 27) client.getInvAmt(client.cSelected) else amounts[amountIndex])
-        client.setCExp(Constants.leatherExp[client.cIndex] * 8)
+        val selectedItemId = Constants.leathers[client.cIndex]
+        val amount = if (amounts[amountIndex] == 27) client.getInvAmt(selectedItemId) else amounts[amountIndex]
+        val experience = Constants.leatherExp[client.cIndex] * 8
 
         val required: Int
+        val productId: Int
         if (productGroup == 0) {
             required = Constants.gloveLevels[client.cIndex]
-            client.setCItem(Constants.gloves[client.cIndex])
+            productId = Constants.gloves[client.cIndex]
         } else if (productGroup == 1) {
             required = Constants.legLevels[client.cIndex]
-            client.setCItem(Constants.legs[client.cIndex])
+            productId = Constants.legs[client.cIndex]
         } else {
             required = Constants.chestLevels[client.cIndex]
-            client.setCItem(Constants.chests[client.cIndex])
+            productId = Constants.chests[client.cIndex]
         }
 
         if (required != -1 && client.getLevel(Skill.CRAFTING) >= required) {
-            client.setCrafting(true)
+            client.craftingState =
+                CraftingState(
+                    mode = CraftingMode.LEATHER,
+                    selectedItemId = selectedItemId,
+                    productId = productId,
+                    remaining = amount,
+                    requiredLevel = required,
+                    experience = experience,
+                )
             client.send(RemoveInterfaces())
             SkillingActionService.startCrafting(client)
             return
         }
-        if (required >= 0 && client.getCItem() != -1) {
-            client.send(SendMessage("You need level $required crafting to craft a ${client.GetItemName(client.getCItem()).lowercase()}"))
+        if (required >= 0 && productId != -1) {
+            client.send(SendMessage("You need level $required crafting to craft a ${client.GetItemName(productId).lowercase()}"))
             client.send(RemoveInterfaces())
             return
         }
@@ -158,37 +182,46 @@ object CraftingService {
 
     @JvmStatic
     fun performCraft(client: Client) {
-        if (client.getLevel(Skill.CRAFTING) < client.getCLevel()) {
-            client.send(SendMessage("You need ${client.getCLevel()} crafting to make a ${client.GetItemName(client.getCItem()).lowercase()}"))
+        val state = client.craftingState ?: run {
             client.resetAction(true)
             return
         }
-        if (!client.playerHasItem(1733) || !client.playerHasItem(1734) || !client.playerHasItem(client.cSelected, 1)) {
+        if (state.mode != CraftingMode.LEATHER) {
+            client.resetAction(true)
+            return
+        }
+        if (client.getLevel(Skill.CRAFTING) < state.requiredLevel) {
+            client.send(SendMessage("You need ${state.requiredLevel} crafting to make a ${client.GetItemName(state.productId).lowercase()}"))
+            client.resetAction(true)
+            return
+        }
+        if (!client.playerHasItem(1733) || !client.playerHasItem(1734) || !client.playerHasItem(state.selectedItemId, 1)) {
             client.send(
                 SendMessage(
                     if (!client.playerHasItem(1733)) "You need a needle to craft!"
                     else if (!client.playerHasItem(1734)) "You have run out of thread!"
-                    else "You have run out of ${client.GetItemName(client.cSelected).lowercase()}!"
+                    else "You have run out of ${client.GetItemName(state.selectedItemId).lowercase()}!"
                 )
             )
             client.resetAction(true)
             return
         }
-        if (client.getCAmount() <= 0) {
+        if (state.remaining <= 0) {
             client.resetAction(true)
             return
         }
         client.requestAnim(1249, 0)
-        client.deleteItem(client.cSelected, 1)
+        client.deleteItem(state.selectedItemId, 1)
         client.deleteItem(1734, 1)
-        client.send(SendMessage("You crafted a ${client.GetItemName(client.getCItem()).lowercase()}"))
-        client.addItem(client.getCItem(), 1)
+        client.send(SendMessage("You crafted a ${client.GetItemName(state.productId).lowercase()}"))
+        client.addItem(state.productId, 1)
         client.checkItemUpdate()
-        client.giveExperience(client.getCExp(), Skill.CRAFTING)
-        client.setCAmount(client.getCAmount() - 1)
-        if (client.getCAmount() < 1) {
+        client.giveExperience(state.experience, Skill.CRAFTING)
+        val updated = state.copy(remaining = state.remaining - 1)
+        client.craftingState = updated
+        if (updated.remaining < 1) {
             client.resetAction(true)
         }
-        client.triggerRandom(client.getCExp())
+        client.triggerRandom(state.experience)
     }
 }

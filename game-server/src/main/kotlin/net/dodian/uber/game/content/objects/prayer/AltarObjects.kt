@@ -6,7 +6,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.SkillingActionService
+import net.dodian.uber.game.skills.prayer.PrayerInteractionService
+import net.dodian.uber.game.skills.prayer.PrayerOfferingRequest
 
 object AltarObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(409, 20377)
@@ -39,8 +40,7 @@ object AltarObjects : ObjectContent {
         }
         client.skillX = position.x
         client.setSkillY(position.y)
-        client.boneItem = itemId
-        SkillingActionService.startAltarBones(client)
+        PrayerInteractionService.startAltarOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
         return true
     }
 }

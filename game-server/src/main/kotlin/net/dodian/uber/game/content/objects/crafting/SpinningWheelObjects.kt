@@ -13,9 +13,8 @@ object SpinningWheelObjects : ObjectContent {
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when (objectId) {
             14889, 25824 -> {
-                client.spinning = true
                 client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                SkillingActionService.startSpinning(client)
+                net.dodian.uber.game.skills.crafting.CraftingService.startSpinning(client)
                 true
             }
             14896, 14909 -> {

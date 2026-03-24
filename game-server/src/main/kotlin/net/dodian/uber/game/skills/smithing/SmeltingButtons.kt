@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skills.smithing
 
-object MysticSmeltingButtons {
+object SmeltingButtons {
     // Edit the ids for each bar here. Each block is one visible furnace option.
     val all = NamedSmeltingButtonSet(
         bronze = SmeltingButtonSet(

@@ -53,7 +53,7 @@ object MiningService {
     fun startMining(client: Client, rock: MiningRockDef, position: Position): Boolean {
         stopMiningInternal(client, MiningStopReason.USER_INTERRUPT)
 
-        if (client.fletchings || client.isFiremaking || client.shafting) {
+        if (client.fletchingState != null || client.isFiremaking || client.craftingState?.mode == net.dodian.uber.game.skills.crafting.CraftingMode.SHAFTING) {
             client.resetAction()
         }
 
@@ -122,7 +122,7 @@ object MiningService {
     fun resolveBestPickaxe(client: Client): PickaxeDef? {
         val miningLevel = client.getLevel(Skill.MINING)
         val equippedWeapon = client.equipment[Equipment.Slot.WEAPON.id]
-        return MiningData.pickaxesDescending.firstOrNull { pickaxe ->
+        return MiningDefinitions.pickaxesDescending.firstOrNull { pickaxe ->
             miningLevel >= pickaxe.requiredLevel &&
                 (pickaxe.itemId == equippedWeapon || client.playerHasItem(pickaxe.itemId))
         }
@@ -156,7 +156,7 @@ object MiningService {
     @JvmStatic
     fun performMiningCycle(client: Client): Boolean {
         val state = client.miningState ?: return false
-        val rock = MiningData.rockByObjectId[state.rockObjectId]
+        val rock = MiningDefinitions.rockByObjectId[state.rockObjectId]
             ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
         val pickaxe =
             resolveBestPickaxe(client)
@@ -219,7 +219,7 @@ object MiningService {
 
     internal fun tryAwardRandomGem(client: Client): Int? {
         val chance = resolveRandomGemChance(client)
-        return tryAwardRandomGem(client, chance, Misc.chance(chance), Misc.random(MiningData.randomGemDropTable.size - 1))
+        return tryAwardRandomGem(client, chance, Misc.chance(chance), Misc.random(MiningDefinitions.randomGemDropTable.size - 1))
     }
 
     internal fun resolveRandomGemChance(client: Client): Int {
@@ -242,7 +242,7 @@ object MiningService {
         if (client.freeSlots() < 1 || roll != 1) {
             return null
         }
-        val gem = MiningData.randomGemDropTable[gemIndex.coerceIn(0, MiningData.randomGemDropTable.lastIndex)]
+        val gem = MiningDefinitions.randomGemDropTable[gemIndex.coerceIn(0, MiningDefinitions.randomGemDropTable.lastIndex)]
         client.addItem(gem, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, gem, 1, client.position.copy(), "Mining")
@@ -252,7 +252,7 @@ object MiningService {
 
     private fun advanceMining(client: Client): Boolean {
         val state = client.miningState ?: return false
-        MiningData.rockByObjectId[state.rockObjectId]
+        MiningDefinitions.rockByObjectId[state.rockObjectId]
             ?: return stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
 
         if (client.isBusy) {
@@ -282,7 +282,7 @@ object MiningService {
         reason: MiningStopReason,
     ): Boolean {
         val state = client.miningState
-        val rock = state?.let { MiningData.rockByObjectId[it.rockObjectId] }
+        val rock = state?.let { MiningDefinitions.rockByObjectId[it.rockObjectId] }
         val position = state?.rockPosition?.copy()
         val hadMining = state != null || client.activeActionType == PlayerActionType.MINING
 

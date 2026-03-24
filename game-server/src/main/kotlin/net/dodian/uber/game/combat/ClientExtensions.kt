@@ -51,9 +51,9 @@ fun Client.slayerLevelRequired(npcId: Int): Boolean {
 }
 
 fun Client.checkSlayerTask(npcId: Int): Boolean {
-    val slayerTask = SlayerService.Task.getSlayerNpc(npcId)
+    val slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId)
     val slayExceptions = (slayerTask == null)
-            || (slayerTask == SlayerService.Task.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
+            || (slayerTask == net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
 
     if (!slayExceptions && slayerTask?.slayerOnly == true && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
         send(SendMessage("You need a slayer task to kill this monster."))

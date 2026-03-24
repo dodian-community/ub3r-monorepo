@@ -5,6 +5,9 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.content.npc.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.skills.cooking.CookingInputService;
+import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
+import net.dodian.uber.game.skills.herblore.HerbloreBatchService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -47,55 +50,7 @@ public class BankX2Listener implements PacketListener {
                 Server.slots.rollDice(client, enteredAmount);
                 return;
             }
-            if (client.XinterfaceID == 4753) { // Herb making code
-                client.send(new RemoveInterfaces());
-                int slot = client.XremoveSlot - 1;
-                int id = client.herbOptions.get(slot).getId();
-                int legacyNpcId = DialogueService.activeNpcId(client);
-                int npcId = legacyNpcId > 0 ? legacyNpcId : 4753;
-                boolean grimy = client.GetItemName(id).toLowerCase().contains("grimy");
-                int coins = client.getInvAmt(995);
-                if (grimy) {
-                    enteredAmount = Math.min(enteredAmount, coins / 200);
-                    enteredAmount = Math.min(enteredAmount, client.getInvAmt(id));
-                    if (enteredAmount > 0) {
-                        if (client.getInvAmt(id) <= enteredAmount) client.herbOptions.remove(slot);
-                        int otherHerb = -1;
-                        for (int h = 0; h < Utils.grimy_herbs.length && otherHerb == -1; h++)
-                            if (id == client.GetNotedItem(Utils.grimy_herbs[h]))
-                                otherHerb = client.GetNotedItem(Utils.herbs[h]);
-                        client.deleteItem(995, enteredAmount * 200);
-                        client.deleteItem(id, enteredAmount);
-                        client.addItem(otherHerb, enteredAmount);
-                        client.checkItemUpdate();
-                        HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
-                    } else {
-                        client.showNPCChat(npcId, 605, new String[]{"You need 1 herb and 200 coins", "for me to grind it for you."});
-                    }
-                } else if (!client.playerHasItem(228))
-                    client.showNPCChat(npcId, 605, new String[]{"You need noted vial of water for me to do that!"});
-                else { // Make unfinished potions!
-                    int otherHerb = -1;
-                    for (int h = 0; h < Utils.herb_unf.length && otherHerb == -1; h++)
-                        if (id == client.GetNotedItem(Utils.herb_unf[h]))
-                            otherHerb = client.GetNotedItem(Utils.herbs[h]);
-                    int vials = client.getInvAmt(228), herbs = client.getInvAmt(otherHerb);
-                    enteredAmount = Math.min(enteredAmount, coins / 1_000); // Check coins first!
-                    enteredAmount = Math.min(enteredAmount, vials); // Vials after
-                    enteredAmount = Math.min(enteredAmount, herbs); // Herb last
-                    if (enteredAmount > 0) {
-                        if (herbs <= enteredAmount) client.herbOptions.remove(slot);
-                        client.deleteItem(995, enteredAmount * 1_000);
-                        client.deleteItem(228, enteredAmount);
-                        client.deleteItem(otherHerb, enteredAmount);
-                        client.addItem(id, enteredAmount);
-                        client.checkItemUpdate();
-                        HerbloreNpcDialogue.showBatchResultAndContinue(client, npcId, "Here is your all of ", enteredAmount + " " + client.GetItemName(id).toLowerCase());
-                    } else {
-                        client.showNPCChat(npcId, 605, new String[]{"You need atleast 1 herb, 1 vial of water and 1000 coins", "for me to turn it into a unfinish potion."});
-                    }
-                }
-                client.XinterfaceID = -1;
+            if (HerbloreBatchService.handleEnteredAmount(client, enteredAmount)) {
                 return;
             }
             if (client.XinterfaceID == 3838) { // Claim battlestaffs
@@ -123,10 +78,7 @@ public class BankX2Listener implements PacketListener {
                         client.send(new SendMessage("Cannot cook in duel or trade"));
                         return;
                     }
-                    client.cookAmount = enteredAmount;
-                    client.enterAmountId = 0;
-                    client.cooking = true;
-                    SkillingActionService.startCooking(client);
+                    CookingInputService.startFromEnteredAmount(client, enteredAmount);
                     return;
                 } else if (client.enterAmountId == 2) { // smelting amt
                     client.send(new RemoveInterfaces());
@@ -171,8 +123,7 @@ public class BankX2Listener implements PacketListener {
                 logger.warn("Smelting interface item click amount=X({}) interfaceId={} itemId={} slot={} player={}",
                         enteredAmount, client.XinterfaceID, client.XremoveID, client.XremoveSlot, client.getPlayerName());
                 SmeltingInterfaceService.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
-            } else if (client.XinterfaceID >= 4233 && client.XinterfaceID <= 4257) { // gold crafting X
-                client.startGoldCrafting(client.XinterfaceID, client.XremoveSlot, enteredAmount);
+            } else if (SkillingInterfaceItemService.handleContainerAmount(client, client.XinterfaceID, client.XremoveID, client.XremoveSlot, enteredAmount)) {
             } else if (client.XinterfaceID == 3322 && client.inTrade && client.canOffer) { // bag to trade window
                 client.tradeItem(client.XremoveID, client.XremoveSlot, enteredAmount);
             } else if (client.XinterfaceID == 3415 && client.inTrade && client.canOffer) { // from trade window

@@ -3,6 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -107,18 +108,11 @@ public class Bank10Listener implements PacketListener {
     }
 
     private void handleSpecialInterfaces(Client client, int interfaceId, int removeId, int removeSlot) {
-        if (interfaceId >= 4233 && interfaceId <= 4257) { // Gold crafting quantity 10
-            client.startGoldCrafting(interfaceId, removeSlot, 10);
+        if (SkillingInterfaceItemService.handleContainerAmount(client, interfaceId, removeId, removeSlot, interfaceId >= 1119 && interfaceId <= 1123 ? client.getInvAmt(removeId) : 10)) {
         } else if (interfaceId == 3823) { // sell 5 to shop (legacy behaviour)
             client.sellItem(removeId, removeSlot, 5);
         } else if (interfaceId == 3900) { // buy 5 from shop
             client.buyItem(removeId, removeSlot, 5);
-        } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId)) { // smelting quantity 10
-            logger.warn("Smelting interface item click amount=10 interfaceId={} itemId={} slot={} player={}",
-                    interfaceId, removeId, removeSlot, client.getPlayerName());
-            SmeltingInterfaceService.startFromInterfaceItem(client, removeId, 10);
-        } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing quantity depends on inv
-            SmithingInterfaceService.startFromInterfaceItem(client, removeId, client.getInvAmt(removeId));
         }
     }
 }

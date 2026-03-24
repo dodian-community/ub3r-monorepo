@@ -8,8 +8,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.skills.FarmingData
-import net.dodian.uber.game.skills.FarmingJson
+import net.dodian.uber.game.skills.farming.FarmingData
+import net.dodian.uber.game.skills.farming.FarmingJson
 
 private const val SKILL_TEST_BANK_AMOUNT = 100_000
 
@@ -169,10 +169,10 @@ private fun clearInventory(client: Client) {
     client.markSaveDirty(PlayerSaveSegment.INVENTORY.mask)
 }
 
-private fun resolveSlayerTask(raw: String): SlayerService.Task? {
-    raw.toIntOrNull()?.let { return SlayerService.Task.getTask(it) }
+private fun resolveSlayerTask(raw: String): net.dodian.uber.game.skills.slayer.SlayerTaskDefinition? {
+    raw.toIntOrNull()?.let { return net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forOrdinal(it) }
     val normalized = raw.trim().lowercase().replace(" ", "_")
-    return SlayerService.Task.values().firstOrNull { task ->
+    return net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.values().firstOrNull { task ->
         task.name.lowercase() == normalized ||
             task.textRepresentation.lowercase().replace(" ", "_") == normalized
     }

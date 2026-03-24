@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skills
+package net.dodian.uber.game.skills.farming
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonPrimitive
@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.FarmingData.patches
+import net.dodian.uber.game.skills.farming.FarmingData.patches
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
 import net.dodian.utilities.Misc
 

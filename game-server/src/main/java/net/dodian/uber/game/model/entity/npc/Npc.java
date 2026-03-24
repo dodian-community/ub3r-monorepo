@@ -602,7 +602,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        SlayerService.Task task = SlayerService.Task.getSlayerNpc(id);
+        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition task = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(id);
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);
