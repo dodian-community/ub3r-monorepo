@@ -1,7 +1,7 @@
 package net.dodian.uber.game.skills.fishing
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.fishing.api.FishingPlugin
+import net.dodian.uber.game.skills.fishing.FishingPlugin
 
 object FishingNpcInteractionService {
     @JvmStatic

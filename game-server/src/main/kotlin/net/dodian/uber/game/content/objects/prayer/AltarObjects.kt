@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.skills.prayer.PrayerOfferingRequest
-import net.dodian.uber.game.skills.prayer.api.PrayerPlugin
+import net.dodian.uber.game.skills.prayer.PrayerPlugin
 
 object AltarObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(409, 20377)

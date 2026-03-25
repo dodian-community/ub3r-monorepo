@@ -4,7 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.skills.smithing.SmithingInterfaceService
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService
-import net.dodian.uber.game.skills.smithing.api.SmithingPlugin
+import net.dodian.uber.game.skills.smithing.SmithingPlugin
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill

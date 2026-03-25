@@ -1,7 +1,7 @@
 package net.dodian.uber.game.ui.buttons
 
+import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.plugin.PluginModuleIndex
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -22,7 +22,7 @@ object InterfaceButtonRegistry {
             if (bootstrapped.get()) {
                 return
             }
-            definitions += PluginModuleIndex.interfaceButtons
+            definitions += ContentModuleIndex.interfaceButtons
             rebuildLookupLocked()
             bootstrapped.set(true)
         }

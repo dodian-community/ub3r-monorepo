@@ -3,8 +3,8 @@ package net.dodian.uber.game.content.objects.agility
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.agility.WerewolfCourseService
-import net.dodian.uber.game.skills.core.FirstClickDslObjectContent
-import net.dodian.uber.game.skills.core.firstClickObjectActions
+import net.dodian.uber.game.content.objects.dsl.FirstClickDslObjectContent
+import net.dodian.uber.game.content.objects.dsl.firstClickObjectActions
 
 object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {

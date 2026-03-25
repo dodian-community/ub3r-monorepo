@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.npc
 
-import net.dodian.uber.game.plugin.PluginModuleIndex
+import net.dodian.uber.game.content.ContentModuleIndex
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -17,7 +17,7 @@ object NpcContentRegistry {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            PluginModuleIndex.npcContents
+            ContentModuleIndex.npcContents
                 .sortedBy { it.name }
                 .forEach(::register)
             rebuildLookupLocked()

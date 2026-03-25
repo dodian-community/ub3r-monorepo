@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.interfaces.skillguide
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.guide.api.SkillGuidePlugin
+import net.dodian.uber.game.skills.guide.SkillGuidePlugin
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 

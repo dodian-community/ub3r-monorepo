@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
 import net.dodian.uber.game.skills.core.runtime.RuneCostService;
-import net.dodian.uber.game.skills.smithing.api.SmithingPlugin;
+import net.dodian.uber.game.skills.smithing.SmithingPlugin;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;

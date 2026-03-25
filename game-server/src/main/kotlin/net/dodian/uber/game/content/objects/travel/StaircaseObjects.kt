@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.core.VerticalTravelDslObjectContent
-import net.dodian.uber.game.skills.core.verticalTravelActions
+import net.dodian.uber.game.content.objects.dsl.VerticalTravelDslObjectContent
+import net.dodian.uber.game.content.objects.dsl.verticalTravelActions
 
 private fun Position.stairsOffset(dx: Int = 0, dy: Int = 0, dz: Int = 0): Position = Position(x + dx, y + dy, z + dz)
 

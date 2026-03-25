@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.skills.runecrafting.RunecraftingDefinitions
-import net.dodian.uber.game.skills.runecrafting.api.RunecraftingPlugin
+import net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin
 
 object RunecraftingObjectBindings : ObjectContent {
     override val objectIds: IntArray = RunecraftingDefinitions.altarObjectIds

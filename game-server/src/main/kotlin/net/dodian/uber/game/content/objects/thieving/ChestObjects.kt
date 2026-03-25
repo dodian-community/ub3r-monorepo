@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
-import net.dodian.uber.game.skills.thieving.api.ThievingPlugin
+import net.dodian.uber.game.skills.thieving.ThievingPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService

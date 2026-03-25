@@ -435,10 +435,6 @@ object InteractionProcessor {
     }
 
     private fun handleNpcClick1(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
-        if (!npc.isAlive) {
-            player.send(SendMessage("That monster has been killed!"))
-            return DispatchTiming(false, 0L, 0L, null)
-        }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
@@ -449,10 +445,6 @@ object InteractionProcessor {
     }
 
     private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
-        if (!npc.isAlive) {
-            player.send(SendMessage("That monster has been killed!"))
-            return DispatchTiming(false, 0L, 0L, null)
-        }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)

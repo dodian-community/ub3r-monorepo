@@ -6,7 +6,7 @@ import net.dodian.uber.game.content.dialogue.DialogueService;
 import net.dodian.uber.game.content.npc.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.skills.cooking.CookingInputService;
-import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
 import net.dodian.uber.game.skills.herblore.HerbloreService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.game.GamePacket;

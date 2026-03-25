@@ -1,10 +1,10 @@
 package net.dodian.uber.game.event.bootstrap
 
-import net.dodian.uber.game.plugin.PluginModuleIndex
+import net.dodian.uber.game.content.ContentModuleIndex
 
 object CoreEventBusBootstrap {
     @JvmStatic
     fun bootstrap() {
-        PluginModuleIndex.eventBootstraps.forEach { bootstrap -> bootstrap() }
+        ContentModuleIndex.eventBootstraps.forEach { bootstrap -> bootstrap() }
     }
 }

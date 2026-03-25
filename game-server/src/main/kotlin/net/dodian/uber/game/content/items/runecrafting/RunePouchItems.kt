@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.items.runecrafting
 
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.runecrafting.api.RunecraftingPlugin
+import net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin
 
 object RunePouchItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(

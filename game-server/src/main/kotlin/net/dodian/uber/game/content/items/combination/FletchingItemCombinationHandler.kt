@@ -6,8 +6,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.uber.game.skills.fletching.FletchingDefinitions
-import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
-import net.dodian.uber.game.skills.fletching.api.FletchingPlugin
+import net.dodian.uber.game.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.skills.fletching.FletchingPlugin
 
 object FletchingItemCombinationHandler {
     @JvmStatic

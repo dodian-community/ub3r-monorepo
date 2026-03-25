@@ -3,7 +3,6 @@ package net.dodian.uber.game.content.commands.boss
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
-import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.utilities.gameWorldId
 
 object BossCommands : CommandContent {

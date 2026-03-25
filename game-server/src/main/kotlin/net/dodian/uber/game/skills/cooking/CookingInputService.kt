@@ -1,7 +1,7 @@
 package net.dodian.uber.game.skills.cooking
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.cooking.api.CookingPlugin
+import net.dodian.uber.game.skills.cooking.CookingPlugin
 
 object CookingInputService {
     @JvmStatic

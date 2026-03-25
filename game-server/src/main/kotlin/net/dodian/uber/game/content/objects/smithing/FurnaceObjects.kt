@@ -11,8 +11,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.action.ProductionActionService
 import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
-import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
-import net.dodian.uber.game.skills.smithing.api.SmithingPlugin
+import net.dodian.uber.game.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.skills.smithing.SmithingPlugin
 import net.dodian.utilities.Utils
 
 object FurnaceObjects : ObjectContent {

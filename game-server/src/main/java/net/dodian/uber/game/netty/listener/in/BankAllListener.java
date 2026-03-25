@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;

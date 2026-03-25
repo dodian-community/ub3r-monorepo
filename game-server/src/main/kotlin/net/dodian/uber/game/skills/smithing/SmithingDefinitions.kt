@@ -103,9 +103,6 @@ object SmithingDefinitions {
         smeltingRecipes.firstOrNull { recipe -> recipe.oreRequirements.any { it.itemId == itemId } }
 
     @JvmStatic
-    fun findSmeltingButton(buttonId: Int): FurnaceButtonMapping? = smeltingButtonMappings.firstOrNull { it.buttonId == buttonId }
-
-    @JvmStatic
     fun findSmithingTierByBar(barId: Int): SmithingTier? = smithingTiers.firstOrNull { it.barId == barId }
 
     @JvmStatic
@@ -129,9 +126,6 @@ object SmithingDefinitions {
 
     @JvmStatic
     fun frameIds(): IntArray = smeltFrameIds.copyOf()
-
-    @JvmStatic
-    fun smeltingButtonIds(): IntArray = smeltingButtonMappings.map { it.buttonId }.toIntArray()
 
     @JvmStatic
     fun isSmeltingInterfaceButton(buttonId: Int): Boolean =

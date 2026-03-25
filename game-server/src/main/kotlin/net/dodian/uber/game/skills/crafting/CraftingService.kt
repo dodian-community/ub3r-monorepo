@@ -119,25 +119,6 @@ object CraftingService {
     }
 
     @JvmStatic
-    fun startStandardLeatherCraft(client: Client, buttonId: Int) {
-        val buttonIndex =
-            intArrayOf(
-                33187, 33186, 33185,
-                33190, 33189, 33188,
-                33193, 33192, 33191,
-                33196, 33195, 33194,
-                33199, 33198, 33197,
-                33202, 33201, 33200,
-                33205, 33204, 33203,
-            ).indexOf(buttonId)
-        if (buttonIndex == -1) {
-            return
-        }
-        val amount = intArrayOf(1, 5, 10)[buttonIndex % 3]
-        startStandardLeatherCraft(client, buttonIndex / 3, amount)
-    }
-
-    @JvmStatic
     fun startHideCraft(client: Client, productGroup: Int, amount: Int) {
         val hide = CraftingDefinitions.hideDefinition(client.cIndex) ?: run {
             client.send(SendMessage("Can't make this??"))
@@ -180,16 +161,6 @@ object CraftingService {
             return
         }
         client.send(SendMessage("Can't make this??"))
-    }
-
-    @JvmStatic
-    fun startHideCraft(client: Client, buttonId: Int) {
-        val buttonIndex = intArrayOf(34185, 34184, 34183, 34182, 34189, 34188, 34187, 34186, 34193, 34192, 34191, 34190).indexOf(buttonId)
-        if (buttonIndex == -1) {
-            return
-        }
-        val amount = intArrayOf(1, 5, 10, 27)[buttonIndex % 4]
-        startHideCraft(client, buttonIndex / 4, amount)
     }
 
     @JvmStatic

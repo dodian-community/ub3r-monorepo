@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
-import net.dodian.uber.game.skills.thieving.api.ThievingPlugin
+import net.dodian.uber.game.skills.thieving.ThievingPlugin
 
 object StallObjects : ObjectContent {
     override val objectIds: IntArray = ThievingObjectComponents.stallObjects

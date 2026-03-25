@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.skills.core.SkillingInterfaceItemService;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
 import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -120,7 +120,7 @@ public class Bank5Listener implements PacketListener {
             if (removeId == 4566) {
                 client.requestAnim(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                net.dodian.uber.game.skills.slayer.api.SlayerPlugin.sendCurrentTask(client);
+                net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(client);
             }
         }
     }

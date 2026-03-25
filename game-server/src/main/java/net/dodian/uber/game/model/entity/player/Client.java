@@ -72,11 +72,7 @@ import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.utilities.*;
-import net.dodian.uber.game.skills.core.progression.SkillAdminService;
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
-import net.dodian.uber.game.skills.core.runtime.RuneCostService;
-import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService;
-import net.dodian.uber.game.skills.guide.SkillGuideBookService;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -1753,7 +1749,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (net.dodian.uber.game.skills.runecrafting.api.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1774,7 +1770,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.skills.slayer.api.SlayerPlugin.sendCurrentTask(this);
+            net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -3179,11 +3175,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    @Deprecated
-    public boolean runeCheck() {
-        return RuneCostService.ensureBloodRune(this);
-    }
-
     public void resetPos() {
         transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), 0));
     }
@@ -3200,16 +3191,6 @@ public class Client extends Player implements Runnable {
         if (debug) {
             send(new SendMessage(text));
         }
-    }
-
-    @Deprecated
-    public void showRandomEvent() {
-        SkillingRandomEventService.show(this);
-    }
-
-    @Deprecated
-    public void triggerRandom(int xp) {
-        SkillingRandomEventService.trigger(this, xp);
     }
 
     public void openGenie() {
@@ -3688,7 +3669,7 @@ public class Client extends Player implements Runnable {
         GetBonus(true); //Set bonus due to blessing!
         for (int i = 0; i < boostedLevel.length; i++) {
             boostedLevel[i] = 0;
-            refreshSkill(Skill.getSkill(i));
+            SkillProgressionService.refresh(this, Skill.getSkill(i));
         }
         Client other = getClient(duel_with);
         for (GameItem item : other.offeredItems) {
@@ -4356,30 +4337,15 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You must hand in at least 10 tickets at once"));
         } else {
             int amount = playerItemsN[slot];
-            giveExperience(amount * 700, Skill.AGILITY);
+            SkillProgressionService.gainXp(this, amount * 700, Skill.AGILITY);
             send(new SendMessage("You exchange your " + amount + " agility tickets"));
             deleteItem(2996, playerItemsN[slot]);
             checkItemUpdate();
         }
     }
 
-    @Deprecated
-    public void guideBook() {
-        SkillGuideBookService.open(this);
-    }
-
     public Prayers getPrayerManager() {
         return prayers;
-    }
-
-    @Deprecated
-    public void deleteRunes(int[] runes, int[] qty) {
-        RuneCostService.consume(this, runes, qty);
-    }
-
-    @Deprecated
-    public boolean hasRunes(int[] runes, int[] qty) {
-        return RuneCostService.isMissingAny(this, runes, qty);
     }
 
     public void checkBow() {
@@ -4496,10 +4462,6 @@ public class Client extends Player implements Runnable {
 
 
     @Deprecated
-    public void removeExperienceFromPlayer(String user, int id, int xp) {
-        SkillAdminService.removeExperienceFromPlayer(this, user, id, xp);
-    }
-
     public void removeItemsFromPlayer(String user, int id, int amount) {
         int totalItemRemoved = 0;
         if (PlayerHandler.getPlayer(user) != null) { //Online check

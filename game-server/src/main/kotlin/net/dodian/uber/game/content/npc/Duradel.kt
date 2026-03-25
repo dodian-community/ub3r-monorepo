@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skills.slayer.api.SlayerPlugin
+import net.dodian.uber.game.skills.slayer.SlayerPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 

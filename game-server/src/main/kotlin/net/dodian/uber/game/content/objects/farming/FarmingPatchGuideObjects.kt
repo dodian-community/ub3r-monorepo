@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.guide.api.SkillGuidePlugin
+import net.dodian.uber.game.skills.guide.SkillGuidePlugin
 
 object FarmingPatchGuideObjects : ObjectContent {
     private val guideObjects = intArrayOf(

@@ -10,7 +10,7 @@ import net.dodian.uber.game.runtime.action.ProductionMode
 import net.dodian.uber.game.runtime.action.ProductionRequest
 import net.dodian.uber.game.skills.crafting.CraftingDefinitions
 import net.dodian.uber.game.skills.crafting.GoldJewelryService
-import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
+import net.dodian.uber.game.skills.crafting.CraftingPlugin
 
 object CraftingItemCombinationHandler {
     @JvmStatic

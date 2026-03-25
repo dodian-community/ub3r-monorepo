@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.items
 
-import net.dodian.uber.game.plugin.PluginModuleIndex
+import net.dodian.uber.game.content.ContentModuleIndex
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -13,7 +13,7 @@ object ItemContentRegistry {
 
     fun ensureLoaded() {
         if (!loaded.compareAndSet(false, true)) return
-        PluginModuleIndex.itemContents.forEach(::register)
+        ContentModuleIndex.itemContents.forEach(::register)
     }
 
     fun register(content: ItemContent) {

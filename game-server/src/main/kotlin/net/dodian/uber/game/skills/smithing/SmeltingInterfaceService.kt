@@ -22,21 +22,6 @@ object SmeltingInterfaceService {
     fun isSmeltingInterfaceFrame(interfaceId: Int): Boolean = furnaceFrameIds.contains(interfaceId)
 
     @JvmStatic
-    fun selectPendingRecipeFromFrameButton(client: Client, buttonId: Int): Boolean {
-        val frameIndex = furnaceFrameIds.indexOf(buttonId)
-        if (frameIndex == -1) return false
-        val recipe = SmithingDefinitions.smeltingRecipes.getOrNull(frameIndex) ?: return false
-        client.setPendingSmeltingBarId(recipe.barId)
-        return true
-    }
-
-    @JvmStatic
-    fun startFromButton(client: Client, buttonId: Int): Boolean {
-        val mapping = SmithingDefinitions.findSmeltingButton(buttonId) ?: return false
-        return startFromMapping(client, mapping)
-    }
-
-    @JvmStatic
     fun startFromMapping(client: Client, mapping: FurnaceButtonMapping): Boolean {
         val recipe = SmithingDefinitions.findSmeltingRecipe(mapping.barId) ?: return false
         client.setPendingSmeltingBarId(recipe.barId)

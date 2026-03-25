@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.crafting.api.CraftingPlugin
+import net.dodian.uber.game.skills.crafting.CraftingPlugin
 
 object SpinningWheelObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(14889, 14896, 14909, 25824)

@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.plugin.PluginModuleIndex
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -39,7 +39,7 @@ object ObjectContentRegistry {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            definitions += PluginModuleIndex.objectContents
+            definitions += ContentModuleIndex.objectContents
             rebuildIndexLocked()
             bootstrapped.set(true)
         }

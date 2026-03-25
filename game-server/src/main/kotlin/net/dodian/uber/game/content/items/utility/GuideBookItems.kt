@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.items.utility
 
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.guide.api.SkillGuidePlugin
+import net.dodian.uber.game.skills.guide.SkillGuidePlugin
 
 object GuideBookItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(1856)

@@ -45,6 +45,7 @@ internal class GeneratedPluginModuleIndexWriter(
             out.appendLine("package net.dodian.uber.game.plugin")
             out.appendLine()
             out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
+            out.appendLine("import net.dodian.uber.game.content.npc.NpcModuleDefinitionBuilder")
             out.appendLine("import net.dodian.uber.game.content.npc.NpcContentDefinition")
             out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
             out.appendLine("import net.dodian.uber.game.ui.buttons.InterfaceButtonContent")
@@ -183,9 +184,14 @@ internal class GeneratedPluginModuleIndexWriter(
                 }
                 val moduleDecl = moduleType.declaration as? KSClassDeclaration ?: continue
                 validateObject(moduleDecl, annotationFqcn)
-                val hasNpcIds = moduleDecl.getAllProperties().any { it.simpleName.asString() == "npcIds" }
-                if (!hasNpcIds) {
-                    logger.error("Module ${moduleDecl.qualifiedName!!.asString()} missing required npcIds property", moduleDecl)
+                val properties = moduleDecl.getAllProperties().map { it.simpleName.asString() }.toSet()
+                val hasNpcIds = properties.contains("npcIds")
+                val hasDslDefinition = properties.contains("definition") || properties.contains("plugin")
+                if (!hasNpcIds && !hasDslDefinition) {
+                    logger.error(
+                        "Module ${moduleDecl.qualifiedName!!.asString()} must expose npcIds or definition/plugin property",
+                        moduleDecl,
+                    )
                 }
                 modules += NpcEntry(moduleDecl.qualifiedName!!.asString(), explicitName, owns)
             }

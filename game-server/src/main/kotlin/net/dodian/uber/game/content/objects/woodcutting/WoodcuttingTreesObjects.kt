@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.skills.woodcutting.WoodcuttingDefinitions
-import net.dodian.uber.game.skills.woodcutting.api.WoodcuttingPlugin
+import net.dodian.uber.game.skills.woodcutting.WoodcuttingPlugin
 
 object WoodcuttingTreesObjects : ObjectContent {
     override val objectIds: IntArray = WoodcuttingDefinitions.allTreeObjectIds
