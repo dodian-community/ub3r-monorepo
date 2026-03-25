@@ -5,10 +5,10 @@ import net.dodian.uber.game.content.dialogue.modules.BrimhavenEntryDialogueModul
 import net.dodian.uber.game.content.dialogue.modules.PyramidPlunderDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.RockshellDialogueModule
 import net.dodian.uber.game.content.dialogue.modules.SettingsDialogueModule
-import net.dodian.uber.game.content.npc.DukeHoracio
-import net.dodian.uber.game.content.npc.PartyPete
-import net.dodian.uber.game.content.npc.UnknownNpc1597
-import net.dodian.uber.game.content.npc.Watcher
+import net.dodian.uber.game.content.npcs.spawns.DukeHoracio
+import net.dodian.uber.game.content.npcs.spawns.PartyPete
+import net.dodian.uber.game.content.npcs.spawns.UnknownNpc1597
+import net.dodian.uber.game.content.npcs.spawns.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueRenderRegistry {
@@ -31,12 +31,12 @@ object DialogueRenderRegistry {
     }
 
     private val handlers: Map<Int, DialogueRenderHandler> = Builder().apply {
-        PartyPete.registerDialogueRenders(this)
+        PartyPete.registerLegacyDialogues(DialogueRegistry.Builder(this))
         include(SettingsDialogueModule)
-        UnknownNpc1597.registerDialogueRenders(this)
-        Watcher.registerDialogueRenders(this)
+        UnknownNpc1597.registerLegacyDialogues(DialogueRegistry.Builder(this))
+        Watcher.registerLegacyDialogues(DialogueRegistry.Builder(this))
         include(BrimhavenEntryDialogueModule)
-        DukeHoracio.registerDialogueRenders(this)
+        DukeHoracio.registerLegacyDialogues(DialogueRegistry.Builder(this))
         include(RockshellDialogueModule)
         include(PyramidPlunderDialogueModule)
     }.build()

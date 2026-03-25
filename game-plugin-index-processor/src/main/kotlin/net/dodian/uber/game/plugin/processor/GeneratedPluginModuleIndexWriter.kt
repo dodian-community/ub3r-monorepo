@@ -45,8 +45,8 @@ internal class GeneratedPluginModuleIndexWriter(
             out.appendLine("package net.dodian.uber.game.plugin")
             out.appendLine()
             out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
-            out.appendLine("import net.dodian.uber.game.content.npc.NpcModuleDefinitionBuilder")
-            out.appendLine("import net.dodian.uber.game.content.npc.NpcContentDefinition")
+            out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcModuleDefinitionBuilder")
+            out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcContentDefinition")
             out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
             out.appendLine("import net.dodian.uber.game.ui.buttons.InterfaceButtonContent")
             out.appendLine()
@@ -170,7 +170,31 @@ internal class GeneratedPluginModuleIndexWriter(
 
     private fun collectNpcModules(resolver: Resolver): List<NpcEntry> {
         val annotationFqcn = "net.dodian.uber.game.plugin.annotations.RegisterNpcContent"
-        val modules = mutableListOf<NpcEntry>()
+        val modulesByFqcn = linkedMapOf<String, NpcEntry>()
+
+        // Convention-based discovery for NPC modules under content/npcs/spawns/modules.
+        resolver.getAllFiles().forEach { file ->
+            val normalizedPath = file.filePath.replace('\\', '/')
+            if (!normalizedPath.contains("/net/dodian/uber/game/content/npcs/spawns/modules/")) {
+                return@forEach
+            }
+            file.declarations
+                .filterIsInstance<KSClassDeclaration>()
+                .forEach { moduleDecl ->
+                    if (moduleDecl.classKind != ClassKind.OBJECT) {
+                        return@forEach
+                    }
+                    val fqcn = moduleDecl.qualifiedName?.asString() ?: return@forEach
+                    if (moduleDecl.simpleName.asString().endsWith("Generated")) {
+                        return@forEach
+                    }
+                    if (!hasNpcModuleContract(moduleDecl)) {
+                        return@forEach
+                    }
+                    modulesByFqcn.putIfAbsent(fqcn, NpcEntry(fqcn, explicitName = "", ownsSpawnDefinitions = false))
+                }
+        }
+
         for (symbol in resolver.getSymbolsWithAnnotation(annotationFqcn)) {
             if (symbol !is KSClassDeclaration) continue
             for (annotation in symbol.annotations) {
@@ -184,23 +208,24 @@ internal class GeneratedPluginModuleIndexWriter(
                 }
                 val moduleDecl = moduleType.declaration as? KSClassDeclaration ?: continue
                 validateObject(moduleDecl, annotationFqcn)
-                val properties = moduleDecl.getAllProperties().map { it.simpleName.asString() }.toSet()
-                val hasNpcIds = properties.contains("npcIds")
-                val hasDslDefinition = properties.contains("definition") || properties.contains("plugin")
-                if (!hasNpcIds && !hasDslDefinition) {
+                if (!hasNpcModuleContract(moduleDecl)) {
                     logger.error(
-                        "Module ${moduleDecl.qualifiedName!!.asString()} must expose npcIds or definition/plugin property",
+                        "Module ${moduleDecl.qualifiedName!!.asString()} must expose npcIds, entries, or definition/plugin property",
                         moduleDecl,
                     )
                 }
-                modules += NpcEntry(moduleDecl.qualifiedName!!.asString(), explicitName, owns)
+                modulesByFqcn[moduleDecl.qualifiedName!!.asString()] = NpcEntry(moduleDecl.qualifiedName!!.asString(), explicitName, owns)
             }
         }
-        val duplicateKeys = modules.groupBy { it.moduleFqcn }.filterValues { it.size > 1 }.keys.sorted()
-        if (duplicateKeys.isNotEmpty()) {
-            logger.error("Duplicate $annotationFqcn modules: ${duplicateKeys.joinToString(", ")}")
-        }
-        return modules.distinctBy { it.moduleFqcn }.sortedBy { it.moduleFqcn }
+        return modulesByFqcn.values.sortedBy { it.moduleFqcn }
+    }
+
+    private fun hasNpcModuleContract(moduleDecl: KSClassDeclaration): Boolean {
+        val properties = moduleDecl.getAllProperties().map { it.simpleName.asString() }.toSet()
+        val hasNpcIds = properties.contains("npcIds")
+        val hasEntries = properties.contains("entries")
+        val hasDslDefinition = properties.contains("definition") || properties.contains("plugin")
+        return hasNpcIds || hasEntries || hasDslDefinition
     }
 
     private fun validateObject(moduleDecl: KSClassDeclaration, annotationFqcn: String) {

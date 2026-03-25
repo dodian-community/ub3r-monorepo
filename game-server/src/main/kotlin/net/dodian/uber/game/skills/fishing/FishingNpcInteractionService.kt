@@ -6,11 +6,13 @@ import net.dodian.uber.game.skills.fishing.FishingPlugin
 object FishingNpcInteractionService {
     @JvmStatic
     fun handleNpcOption(client: Client, npcId: Int, option: Int): Boolean {
-        return if (option == 1 || option == 2) {
-            FishingPlugin.attempt(client, npcId, option)
-            true
-        } else {
-            false
+        if (option != 1 && option != 2) {
+            return false
         }
+        if (FishingDefinitions.findSpot(npcId, option) == null) {
+            return false
+        }
+        FishingPlugin.attempt(client, npcId, option)
+        return true
     }
 }

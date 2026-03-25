@@ -8,16 +8,21 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 object SmithingInterfaceButtons : InterfaceButtonContent {
     override val bindings =
         buildList {
-            SmithingDefinitions.smeltingButtonMappings.forEach { mapping ->
+            SmithingDefinitions.smeltingButtonMappings
+                .groupBy { it.barId to it.amount }
+                .forEach { (key, mappings) ->
+                    val (barId, amount) = key
+                    val rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray()
+                    val primary = mappings.first()
                 add(
                     buttonBinding(
                         interfaceId = 2400,
-                        componentId = mapping.barId,
-                        componentKey = "smithing.smelting.${mapping.barId}.${mapping.amount}",
-                        rawButtonIds = intArrayOf(mapping.buttonId),
+                            componentId = barId,
+                            componentKey = "smithing.smelting.$barId.$amount",
+                            rawButtonIds = rawButtonIds,
                         requiredInterfaceId = 2400,
                     ) { client, _ ->
-                        SmeltingInterfaceService.startFromMapping(client, mapping)
+                            SmeltingInterfaceService.startFromMapping(client, primary)
                         true
                     }
                 )

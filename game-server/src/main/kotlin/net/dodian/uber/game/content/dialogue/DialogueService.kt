@@ -302,6 +302,12 @@ object DialogueService {
                     clear(client, closeInterfaces = step.closeInterfaces)
                     return
                 }
+
+                is DialogueStep.FinishThen -> {
+                    clear(client, closeInterfaces = step.closeInterfaces)
+                    step.action(client)
+                    return
+                }
             }
         }
     }
@@ -412,6 +418,11 @@ sealed interface DialogueStep {
     data class Restart(val steps: List<DialogueStep>) : DialogueStep
 
     data class Finish(
+        val closeInterfaces: Boolean,
+        val action: (Client) -> Unit,
+    ) : DialogueStep
+
+    data class FinishThen(
         val closeInterfaces: Boolean,
         val action: (Client) -> Unit,
     ) : DialogueStep

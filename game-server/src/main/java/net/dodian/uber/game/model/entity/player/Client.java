@@ -96,11 +96,17 @@ import org.slf4j.LoggerFactory;
 public class Client extends Player implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
+    private static final int RECENT_INBOUND_TRACE_SIZE = 10;
 
     public Channel channel;
     private final InboundPacketMailbox inboundPacketMailbox = new InboundPacketMailbox(MAX_PENDING_INBOUND_PACKETS);
     private final OutboundSessionQueue outboundSessionQueue = new OutboundSessionQueue();
     private final java.util.concurrent.atomic.AtomicBoolean inboundReadyQueued = new java.util.concurrent.atomic.AtomicBoolean();
+    private final int[] recentInboundOpcodes = new int[RECENT_INBOUND_TRACE_SIZE];
+    private final int[] recentInboundSizes = new int[RECENT_INBOUND_TRACE_SIZE];
+    private final int[] recentInboundCycles = new int[RECENT_INBOUND_TRACE_SIZE];
+    private int recentInboundWriteIndex = 0;
+    private int recentInboundCount = 0;
 
     public FarmingService farming = new FarmingService();
     public FarmingState farmingJson = new FarmingState();
@@ -201,7 +207,16 @@ public class Client extends Player implements Runnable {
     public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
     public String properName = "";
     public int actionButtonId = 0;
+    public int skillX = 0, skillY = 0;
+    public int stairs = 0, stairDistance = 0;
     public boolean validLogin = false;
+
+    /**
+     * Legacy NPC compatibility bridge.
+     */
+    public void openTan() {
+        TanningService.open(this);
+    }
 
     /**
      * Replaces an object in the game world.
@@ -704,10 +719,21 @@ public class Client extends Player implements Runnable {
     }
 
     private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
+        recordInboundPacket(packet);
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
             boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            if (logger.isDebugEnabled() && isNpcTraceOpcode(packet.opcode())) {
+                logger.debug(
+                        "Inbound npc-trace opcode={} size={} preview={} recent={} player={}",
+                        packet.opcode(),
+                        packet.size(),
+                        previewInboundPayload(packet, 4),
+                        describeRecentInboundPackets(),
+                        getPlayerName()
+                );
+            }
             if (sample || getInboundOpcodeProfilingEnabled()) {
                 long startNs = System.nanoTime();
                 listener.handle(this, packet);
@@ -730,7 +756,72 @@ public class Client extends Player implements Runnable {
             } else {
                 listener.handle(this, packet);
             }
+        } else {
+            logger.warn(
+                    "Unhandled inbound opcode={} size={} player={}",
+                    packet.opcode(),
+                    packet.size(),
+                    getPlayerName()
+            );
         }
+    }
+
+    private boolean isNpcTraceOpcode(int opcode) {
+        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 72;
+    }
+
+    private void recordInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        int slot = recentInboundWriteIndex;
+        recentInboundOpcodes[slot] = packet.opcode();
+        recentInboundSizes[slot] = packet.size();
+        recentInboundCycles[slot] = PlayerHandler.cycle;
+        recentInboundWriteIndex = (recentInboundWriteIndex + 1) % RECENT_INBOUND_TRACE_SIZE;
+        if (recentInboundCount < RECENT_INBOUND_TRACE_SIZE) {
+            recentInboundCount++;
+        }
+    }
+
+    public String describeRecentInboundPackets() {
+        if (recentInboundCount <= 0) {
+            return "[]";
+        }
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < recentInboundCount; i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            int index = (recentInboundWriteIndex - recentInboundCount + i + RECENT_INBOUND_TRACE_SIZE) % RECENT_INBOUND_TRACE_SIZE;
+            builder.append(recentInboundCycles[index])
+                    .append(':')
+                    .append(recentInboundOpcodes[index])
+                    .append('/')
+                    .append(recentInboundSizes[index]);
+        }
+        return builder.append(']').toString();
+    }
+
+    public String previewInboundPayload(net.dodian.uber.game.netty.game.GamePacket packet, int maxBytes) {
+        if (packet == null || packet.payload() == null || packet.size() <= 0 || maxBytes <= 0) {
+            return "[]";
+        }
+        io.netty.buffer.ByteBuf payload = packet.payload();
+        int start = payload.readerIndex();
+        int count = Math.min(maxBytes, payload.readableBytes());
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                builder.append(' ');
+            }
+            int value = payload.getUnsignedByte(start + i);
+            if (value < 0x10) {
+                builder.append('0');
+            }
+            builder.append(Integer.toHexString(value).toUpperCase());
+        }
+        if (payload.readableBytes() > count) {
+            builder.append(" ...");
+        }
+        return builder.append(']').toString();
     }
 
     private void releaseQueuedInboundPackets() {

@@ -3,9 +3,8 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.content.npc.SpawnGroups;
-import net.dodian.uber.game.content.npc.NpcSpawnDef;
-import net.dodian.uber.game.content.npc.NpcContentRegistry;
+import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -18,6 +17,7 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,24 +67,47 @@ public class NpcManager {
 
         // The rest of the logic for hardcoded/extra spawns remains the same.
         int hardcodedSpawns = 0;
+        Map<Integer, Integer> skippedHardcodedMissingData = new TreeMap<>();
         gnomeSpawn = nextIndex;
         for (Position position : gnomePosition) {
+            if (getData(6080) == null) {
+                skippedHardcodedMissingData.merge(6080, 1, Integer::sum);
+                continue;
+            }
             createNpc(6080, position, 0);
             hardcodedSpawns++;
         }
 
         werewolfSpawn = nextIndex;
         for (int i = 0; i < werewolfPosition.length; i++) {
-            createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
+            int npcId = i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926;
+            if (getData(npcId) == null) {
+                skippedHardcodedMissingData.merge(npcId, 1, Integer::sum);
+                continue;
+            }
+            createNpc(npcId, werewolfPosition[i], 0);
             hardcodedSpawns++;
         }
 
         /* Daganoth kings */
         dagaRex = nextIndex;
-        createNpc(2267, new Position(3248, 2794, 0), 2);
+        if (getData(2267) != null) {
+            createNpc(2267, new Position(3248, 2794, 0), 2);
+            hardcodedSpawns++;
+        } else {
+            skippedHardcodedMissingData.merge(2267, 1, Integer::sum);
+        }
         dagaSupreme = nextIndex;
-        createNpc(2265, new Position(3251, 2794, 0), 2);
-        hardcodedSpawns += 2;
+        if (getData(2265) != null) {
+            createNpc(2265, new Position(3251, 2794, 0), 2);
+            hardcodedSpawns++;
+        } else {
+            skippedHardcodedMissingData.merge(2265, 1, Integer::sum);
+        }
+
+        if (!skippedHardcodedMissingData.isEmpty()) {
+            logger.warn("Skipped hardcoded NPC spawns with missing definitions: {}", formatMissingNpcCounts(skippedHardcodedMissingData));
+        }
 
         int contentSpawns = loadContentSpawns();
         int totalSpawns = hardcodedSpawns + contentSpawns;
@@ -98,19 +121,24 @@ public class NpcManager {
     }
 
     private int loadContentSpawns() {
-        List<NpcSpawnDef> functionSpawns = NpcContentRegistry.allSpawns();
-        java.util.Set<Integer> functionOwnedNpcIds = NpcContentRegistry.spawnSourceNpcIds();
-        List<NpcSpawnDef> generatedSpawns = SpawnGroups.all();
-        int total = functionSpawns.size() + generatedSpawns.size();
+        List<NpcSpawnDef> contentSpawns = NpcContentRegistry.allSpawns();
+        int total = contentSpawns.size();
         int loaded = 0;
         int skipped = 0;
-        int skippedFunctionOwned = 0;
         int skippedDuplicatePosition = 0;
+        int skippedMissingData = 0;
         int failed = 0;
+        Map<Integer, Integer> missingDataByNpcId = new TreeMap<>();
         Set<String> seen = new HashSet<>(total);
 
-        for (NpcSpawnDef spawn : functionSpawns) {
+        for (NpcSpawnDef spawn : contentSpawns) {
             try {
+                if (getData(spawn.getNpcId()) == null) {
+                    skipped++;
+                    skippedMissingData++;
+                    missingDataByNpcId.merge(spawn.getNpcId(), 1, Integer::sum);
+                    continue;
+                }
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
                 String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
                 if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
@@ -143,7 +171,7 @@ public class NpcManager {
             } catch (Exception e) {
                 failed++;
                 logger.error(
-                        "Failed to create function-owned NPC spawn (id={}, x={}, y={}, z={}).",
+                        "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
                         spawn.getNpcId(),
                         spawn.getX(),
                         spawn.getY(),
@@ -153,65 +181,37 @@ public class NpcManager {
             }
         }
 
-        for (NpcSpawnDef spawn : generatedSpawns) {
-            try {
-                if (functionOwnedNpcIds.contains(spawn.getNpcId())) {
-                    skipped++;
-                    skippedFunctionOwned++;
-                    continue;
-                }
-                Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
-                String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
-                if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
-                    skipped++;
-                    skippedDuplicatePosition++;
-                    continue;
-                }
-                Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
-                if (npc == null) {
-                    failed++;
-                    continue;
-                }
-                // Keep base combat stats from MySQL npc definitions unless explicit spawn overrides are provided.
-                npc.applySpawnOverrides(
-                        spawn.getRespawnTicks(),
-                        spawn.getAttack(),
-                        spawn.getDefence(),
-                        spawn.getStrength(),
-                        spawn.getHitpoints(),
-                        spawn.getRanged(),
-                        spawn.getMagic()
-                );
-                npc.applySpawnBehaviorOverrides(
-                        spawn.getWalkRadius(),
-                        spawn.getAttackRange(),
-                        spawn.getAlwaysActive(),
-                        spawn.getCondition()
-                );
-                loaded++;
-            } catch (Exception e) {
-                failed++;
-                logger.error(
-                        "Failed to create generated NPC spawn (id={}, x={}, y={}, z={}).",
-                        spawn.getNpcId(),
-                        spawn.getX(),
-                        spawn.getY(),
-                        spawn.getZ(),
-                        e
-                );
-            }
+        if (!missingDataByNpcId.isEmpty()) {
+            logger.warn(
+                    "Skipped {} content NPC spawns with missing NPC definitions: {}",
+                    skippedMissingData,
+                    formatMissingNpcCounts(missingDataByNpcId)
+            );
         }
 
         logger.info(
-                "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, function-owned {}, failed {}).",
+                "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, missing-data {}, failed {}).",
                 loaded,
                 total,
                 skipped,
                 skippedDuplicatePosition,
-                skippedFunctionOwned,
+                skippedMissingData,
                 failed
         );
         return loaded;
+    }
+
+    private String formatMissingNpcCounts(Map<Integer, Integer> missingDataByNpcId) {
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<Integer, Integer> entry : missingDataByNpcId.entrySet()) {
+            if (!first) {
+                builder.append(", ");
+            }
+            builder.append(entry.getKey()).append("x").append(entry.getValue());
+            first = false;
+        }
+        return builder.toString();
     }
 
     private boolean hasSpawnAt(int npcId, Position position) {

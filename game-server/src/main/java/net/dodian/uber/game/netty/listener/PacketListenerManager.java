@@ -105,6 +105,7 @@ public final class PacketListenerManager {
             repository.registerNoOp(202); // Client idle logout (not used)
             repository.registerNoOp(230); // Anti-cheat/checks for 2nd click npc (not used)
             repository.registerNoOp(86);  // Camera movement (unused)
+            repository.registerNoOp(229); // Client plane/update side packet (non-gameplay)
             
             // Note: WalkingListener registers itself for opcodes 248, 164, 98 in its static block
             

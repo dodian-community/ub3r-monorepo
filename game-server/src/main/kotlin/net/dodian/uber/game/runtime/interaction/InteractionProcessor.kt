@@ -7,7 +7,7 @@ import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectInteractionService
-import net.dodian.uber.game.content.npc.NpcInteractionService
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
@@ -441,7 +441,7 @@ object InteractionProcessor {
         if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 1)) {
             return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
         }
-        return NpcInteractionService.tryHandleClickTimed(player, 1, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 1, npc)
     }
 
     private fun handleNpcClick2(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -451,7 +451,7 @@ object InteractionProcessor {
         if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 2)) {
             return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
         }
-        return NpcInteractionService.tryHandleClickTimed(player, 2, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 2, npc)
     }
 
     private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -461,7 +461,7 @@ object InteractionProcessor {
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
-        return NpcInteractionService.tryHandleClickTimed(player, 3, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 3, npc)
     }
 
     private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -469,7 +469,7 @@ object InteractionProcessor {
             return DispatchTiming(false, 0L, 0L, null)
         }
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
-        return NpcInteractionService.tryHandleClickTimed(player, 4, npc)
+        return NpcContentDispatcher.tryHandleClickTimed(player, 4, npc)
     }
 
     private fun handleNpcAttack(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
@@ -479,7 +479,7 @@ object InteractionProcessor {
         if (player.deathStage >= 1) {
             return DispatchTiming(false, 0L, 0L, null)
         }
-        val timing = NpcInteractionService.tryHandleAttackTimed(player, npc)
+        val timing = NpcContentDispatcher.tryHandleAttackTimed(player, npc)
         if (timing.handled) {
             return timing
         }

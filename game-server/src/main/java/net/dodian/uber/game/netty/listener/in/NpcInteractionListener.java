@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.combat.PlayerAttackCombatKt;
-import net.dodian.uber.game.content.npc.NpcInteractionService;
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -70,7 +70,7 @@ public class NpcInteractionListener implements PacketListener {
         if (payload.readableBytes() < 2) {
             return;
         }
-        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -103,7 +103,7 @@ public class NpcInteractionListener implements PacketListener {
             return;
         }
 
-        if (NpcInteractionService.tryHandleClick(client, 1, tempNpc)) {
+        if (NpcContentDispatcher.tryHandleClick(client, 1, tempNpc)) {
             return;
         }
         logger.debug("Unhandled NPC first-click fallback npcId={} player={}", npcId, client.getPlayerName());
@@ -114,7 +114,7 @@ public class NpcInteractionListener implements PacketListener {
         if (payload.readableBytes() < 2) {
             return;
         }
-        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.ADD);
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.ADD);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -149,7 +149,7 @@ public class NpcInteractionListener implements PacketListener {
             return;
         }
 
-        if (NpcInteractionService.tryHandleClick(client, 2, tempNpc)) {
+        if (NpcContentDispatcher.tryHandleClick(client, 2, tempNpc)) {
             return;
         }
 
@@ -161,7 +161,7 @@ public class NpcInteractionListener implements PacketListener {
         if (payload.readableBytes() < 2) {
             return;
         }
-        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.BIG, ValueType.NORMAL);
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -192,7 +192,7 @@ public class NpcInteractionListener implements PacketListener {
         client.faceNpc(tempNpc.getSlot());
         client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
 
-        if (NpcInteractionService.tryHandleClick(client, 3, tempNpc)) {
+        if (NpcContentDispatcher.tryHandleClick(client, 3, tempNpc)) {
             return;
         }
 
@@ -204,7 +204,7 @@ public class NpcInteractionListener implements PacketListener {
         if (payload.readableBytes() < 2) {
             return;
         }
-        int npcIndex = ByteBufReader.readShortSigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
         Npc tempNpc = Server.npcManager.getNpc(npcIndex);
         if (tempNpc == null) {
             return;
@@ -233,7 +233,7 @@ public class NpcInteractionListener implements PacketListener {
         int npcId = tempNpc.getId();
         client.setInteractionAnchor(tempNpc.getPosition().getX(), tempNpc.getPosition().getY(), tempNpc.getPosition().getZ());
 
-        if (NpcInteractionService.tryHandleClick(client, 4, tempNpc)) {
+        if (NpcContentDispatcher.tryHandleClick(client, 4, tempNpc)) {
             return;
         }
 
@@ -262,7 +262,7 @@ public class NpcInteractionListener implements PacketListener {
         if (client.randomed || client.UsingAgility) {
             return;
         }
-        if (NpcInteractionService.tryHandleAttack(client, npc)) {
+        if (NpcContentDispatcher.tryHandleAttack(client, npc)) {
             return;
         }
 

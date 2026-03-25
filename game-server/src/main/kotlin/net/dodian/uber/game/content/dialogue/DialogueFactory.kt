@@ -61,6 +61,10 @@ class DialogueFactory {
         steps += DialogueStep.Finish(closeInterfaces = closeInterfaces, action = action)
     }
 
+    fun finishThen(closeInterfaces: Boolean = true, action: (Client) -> Unit = {}) {
+        steps += DialogueStep.FinishThen(closeInterfaces = closeInterfaces, action = action)
+    }
+
     /**
      * Clears remaining queued steps at runtime and replaces them with [builder]'s steps.
      */
