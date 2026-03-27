@@ -1,4 +1,4 @@
-package net.dodian.uber.api
+package net.dodian.uber.webapi
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature

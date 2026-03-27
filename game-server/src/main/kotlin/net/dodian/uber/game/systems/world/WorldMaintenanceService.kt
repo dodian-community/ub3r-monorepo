@@ -7,6 +7,7 @@ import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
+import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
 import net.dodian.uber.game.config.gameWorldId
 import net.dodian.uber.game.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -56,14 +57,18 @@ class WorldMaintenanceService(
     }
 
     fun runFarming(cycle: Long) {
-        if (cycle % MAINTENANCE_INTERVAL_TICKS != 0L) {
+        if (!GlobalPulseService.isDue(cycle)) {
             return
         }
+        val pulseNow = System.currentTimeMillis()
         playerIndex.refresh()
         val refreshStats = farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
         val runStats: net.dodian.uber.game.systems.world.farming.FarmingRunStats
         val elapsed = measureNanoTime {
             runStats = farmingScheduler.runDue(cycle)
+        }
+        playerIndex.snapshot().forEach { client ->
+            client.farmingJson.lastGlobalPulseAtMillis = pulseNow
         }
         val elapsedMs = elapsed / 1_000_000L
         if (elapsedMs >= runtimePhaseWarnMs) {

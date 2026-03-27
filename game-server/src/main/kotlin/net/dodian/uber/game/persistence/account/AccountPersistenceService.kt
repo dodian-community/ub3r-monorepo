@@ -12,6 +12,8 @@ import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.account.login.AccountLoginService
 import net.dodian.uber.game.persistence.player.PlayerSaveService
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.persistence.repository.DbResult
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import org.slf4j.LoggerFactory
@@ -104,8 +106,8 @@ object AccountPersistenceService {
             return
         }
         scope.launch {
-            val hasUnclaimed =
-                try {
+            val hasUnclaimedResult =
+                DbAsyncRepository.suspendRead(dispatcher) {
                     dbConnection.use { conn ->
                         conn.prepareStatement(
                             "SELECT 1 FROM ${DbTables.GAME_REFUND_ITEMS} " +
@@ -115,27 +117,35 @@ object AccountPersistenceService {
                             ps.executeQuery().use { rs -> rs.next() }
                         }
                     }
-                } catch (exception: Exception) {
-                    logger.debug("Refund check failed for dbId={}", dbId, exception)
-                    false
+                }
+            val hasUnclaimed =
+                when (hasUnclaimedResult) {
+                    is DbResult.Success -> hasUnclaimedResult.value
+                    is DbResult.Failure -> {
+                        logger.debug("Refund check failed for dbId={}", dbId, hasUnclaimedResult.error)
+                        false
+                    }
                 }
 
             if (!hasUnclaimed) {
                 return@launch
             }
 
-            try {
-                dbConnection.use { conn ->
-                    conn.prepareStatement(
-                        "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' " +
-                            "WHERE receivedBy=? AND message='0' AND claimed IS NULL",
-                    ).use { ps ->
-                        ps.setInt(1, dbId)
-                        ps.executeUpdate()
+            val updateResult =
+                DbAsyncRepository.suspendRead(dispatcher) {
+                    dbConnection.use { conn ->
+                        conn.prepareStatement(
+                            "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' " +
+                                "WHERE receivedBy=? AND message='0' AND claimed IS NULL",
+                        ).use { ps ->
+                            ps.setInt(1, dbId)
+                            ps.executeUpdate()
+                        }
                     }
+                    true
                 }
-            } catch (exception: Exception) {
-                logger.debug("Refund message update failed for dbId={}", dbId, exception)
+            if (updateResult is DbResult.Failure) {
+                logger.debug("Refund message update failed for dbId={}", dbId, updateResult.error)
             }
 
             GameThreadTaskQueue.submit {

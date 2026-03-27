@@ -164,6 +164,7 @@ class FarmingService {
         }
     }
     fun Client.interactItemBin(objectId : Int, itemId: Int) : Boolean {
+        FarmingCatchUpService.applyInteractionCatchUp(this)
         val objName = GameObjectData.forId(objectId).name.lowercase()
         val itemName = GetItemName(itemId).lowercase()
 
@@ -419,6 +420,7 @@ class FarmingService {
     }
 
     fun Client.clickPatch(objectId : Int) : Boolean {
+        FarmingCatchUpService.applyInteractionCatchUp(this)
         if(findPatch(objectId, 0).isEmpty()) //Not go through if object is not here :D!
             return false
         val objName = GameObjectData.forId(objectId).name.lowercase()

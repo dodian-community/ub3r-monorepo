@@ -315,4 +315,52 @@ class ArchitectureBoundaryTest {
             "Plugin index generation must be KSP-driven.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `intellij tools module is not wired in repo`() {
+        val repoRoot = Paths.get("..").normalize().toAbsolutePath()
+        val rootSettings = repoRoot.resolve("settings.gradle.kts")
+        val moduleDir = repoRoot.resolve("ub3r-intellij-tools")
+        val settingsText = Files.readString(rootSettings)
+        val violations = mutableListOf<String>()
+        if (settingsText.contains("include(\":ub3r-intellij-tools\")")) {
+            violations += "settings.gradle.kts must not include :ub3r-intellij-tools"
+        }
+        if (Files.exists(moduleDir)) {
+            violations += "ub3r-intellij-tools directory must not exist"
+        }
+        assertTrue(
+            violations.isEmpty(),
+            "IntelliJ tools rollback must be complete.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `engine loop and netty listeners avoid direct database access`() {
+        val violations = sourceFiles
+            .filter { file ->
+                val normalized = file.invariantSeparatorsPathString
+                normalized.contains("/net/dodian/uber/game/engine/loop/") ||
+                    normalized.contains("/net/dodian/uber/game/engine/processing/") ||
+                    normalized.contains("/net/dodian/uber/game/netty/listener/")
+            }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (
+                        trimmed.contains("getDbConnection(") ||
+                        trimmed.contains("dbConnection")
+                    ) {
+                        "${file}:${idx + 1} -> $trimmed"
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Hot paths must not access database directly.\n${violations.joinToString("\n")}",
+        )
+    }
 }

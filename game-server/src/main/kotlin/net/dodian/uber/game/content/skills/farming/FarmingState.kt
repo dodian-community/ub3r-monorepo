@@ -8,8 +8,15 @@ import com.google.gson.JsonParser
 class FarmingState {
     private var farmingCompostValues = JsonObject()
     private var farmingPatchValues = JsonObject()
+    private var farmingMetaValues = JsonObject()
     @Volatile
-    private var cachedSaveSnapshot = "[{},\n{}]"
+    private var cachedSaveSnapshot = "[{},\n{},\n{}]"
+
+    var lastGlobalPulseAtMillis: Long
+        get() = farmingMetaValues.get("lastGlobalPulseAtMillis")?.asLong ?: 0L
+        set(value) {
+            farmingMetaValues.addProperty("lastGlobalPulseAtMillis", value)
+        }
 
     fun farmingSave() : String {
         return buildSaveSnapshot()
@@ -47,6 +54,9 @@ class FarmingState {
                 }
                 farmingPatchValues.add(patch.name, farmPatch)
             }
+            farmingMetaValues = JsonObject().apply {
+                addProperty("lastGlobalPulseAtMillis", System.currentTimeMillis())
+            }
         } else { /* Values from save! */
             farmingCompostValues = farmJson.asJsonArray.get(0) as JsonObject
             for(compost in FarmingDefinitions.compostBin.values()) { /* Compost default values */
@@ -62,6 +72,15 @@ class FarmingState {
                 }
             }
             farmingPatchValues = farmJson.asJsonArray.get(1) as JsonObject
+            farmingMetaValues =
+                if (farmJson.asJsonArray.size() > 2) {
+                    farmJson.asJsonArray.get(2) as JsonObject
+                } else {
+                    JsonObject()
+                }
+            if (!farmingMetaValues.has("lastGlobalPulseAtMillis")) {
+                farmingMetaValues.addProperty("lastGlobalPulseAtMillis", System.currentTimeMillis())
+            }
             for (patch in FarmingDefinitions.patches.values()) { /* Patches default values */
                 if (farmingPatchValues.get(patch.name) == null) {
                     farmPatch = JsonArray()
@@ -89,6 +108,6 @@ class FarmingState {
 
     val PATCHAMOUNT = 6
 
-    private fun buildSaveSnapshot(): String = "[$farmingCompostValues,\n$farmingPatchValues]"
+    private fun buildSaveSnapshot(): String = "[$farmingCompostValues,\n$farmingPatchValues,\n$farmingMetaValues]"
 
 }

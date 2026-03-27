@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.skills.farming.FarmingState
 import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
 import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
 
 data class FarmingRefreshStats(
     val activePlayers: Int,
@@ -189,7 +190,7 @@ class FarmingScheduler {
         @JvmField
         val INSTANCE = FarmingScheduler()
 
-        private const val ACTIVE_INTERVAL_TICKS = 100L
-        private const val IDLE_RECHECK_INTERVAL_TICKS = 1000L
+        private const val ACTIVE_INTERVAL_TICKS = GlobalPulseService.FIVE_MINUTE_PULSE_TICKS
+        private const val IDLE_RECHECK_INTERVAL_TICKS = GlobalPulseService.FIVE_MINUTE_PULSE_TICKS
     }
 }
