@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.core.progression
 
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
@@ -54,7 +54,7 @@ object SkillAdminService {
         val skill = Skill.getSkill(skillId) ?: return
         val skillName = skill.getName()
         val safeAmount = experienceToRemove.coerceAtLeast(0)
-        val online = PlayerHandler.getPlayer(user) as? Client
+        val online = PlayerRegistry.getPlayer(user) as? Client
         if (online != null) {
             val currentXp = online.getExperience(skill)
             val removed = minOf(currentXp, safeAmount)
@@ -78,7 +78,7 @@ object SkillAdminService {
                     return@submit
                 }
                 if (result.status == CommandDbService.OfflineSkillMutationResult.Status.NOT_FOUND) {
-                    moderator.send(SendMessage("username '$user' have yet to login!"))
+                    moderator.sendMessage("username '$user' have yet to login!")
                     return@submit
                 }
                 moderator.send(
@@ -89,7 +89,7 @@ object SkillAdminService {
             },
             { exception ->
                 if (!moderator.disconnected) {
-                    moderator.send(SendMessage("Could not update that player's skill right now."))
+                    moderator.sendMessage("Could not update that player's skill right now.")
                 }
             },
         )

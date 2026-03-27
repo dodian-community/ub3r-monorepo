@@ -4,7 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.DoorHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -46,7 +46,7 @@ object DoorToggleObjects : ObjectContent {
         ) {
             client.ReplaceObject(2758, 3482, 1558, -2, 0)
             client.ReplaceObject(2757, 3482, 1557, 0, 0)
-            client.send(SendMessage("Welcome to the Castle"))
+            client.sendMessage("Welcome to the Castle")
             return true
         }
 
@@ -77,7 +77,7 @@ object DoorToggleObjects : ObjectContent {
                 DoorHandler.doorFaceClosed[index]
             }
             DoorHandler.doorFace[index] = newFace
-            for (player in PlayerHandler.players) {
+            for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue
                 if (other.playerName == null) continue
                 if (other.position.z != client.position.z) continue

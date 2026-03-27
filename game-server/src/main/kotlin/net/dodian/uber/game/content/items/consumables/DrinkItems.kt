@@ -33,8 +33,8 @@ object DrinkItems : ItemContent {
                 client.addItemSlot(1925, 1, itemSlot)
                 client.checkItemUpdate()
                 if (itemId == 1927) {
-                    client.requestAnim(0x33D, 0)
-                    client.send(SendMessage("You drank the milk and gained 15% magic penetration!"))
+                    client.performAnimation(0x33D, 0)
+                    client.sendMessage("You drank the milk and gained 15% magic penetration!")
                 }
                 return true
             }

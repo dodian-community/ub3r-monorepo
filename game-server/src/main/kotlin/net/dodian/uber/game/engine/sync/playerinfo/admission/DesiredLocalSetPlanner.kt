@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.sync.playerinfo.admission
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.engine.sync.player.pool.PlayerSyncScratchPool
 import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules
 
@@ -37,7 +37,7 @@ class DesiredLocalSetPlanner {
             if (!scratch.isMarked(slot)) {
                 continue
             }
-            val player = PlayerHandler.players.getOrNull(slot)
+            val player = PlayerRegistry.players.getOrNull(slot)
             if (!PlayerVisibilityRules.isVisibleTo(viewer, player)) {
                 continue
             }
@@ -52,7 +52,7 @@ class DesiredLocalSetPlanner {
                 if (slot < 0 || scratch.isCurrent(slot)) {
                     continue
                 }
-                val player = PlayerHandler.players.getOrNull(slot) ?: continue
+                val player = PlayerRegistry.players.getOrNull(slot) ?: continue
                 insertSorted(viewer, player, sortedCount)
                 sortedCount++
             }
@@ -99,7 +99,7 @@ class DesiredLocalSetPlanner {
             if (slot < 0) {
                 continue
             }
-            val player = PlayerHandler.players.getOrNull(slot)
+            val player = PlayerRegistry.players.getOrNull(slot)
             if (player == null || !scratch.isMarked(slot)) {
                 scratch.removals[removalsCount++] = slot
                 continue

@@ -17,7 +17,7 @@ internal object PartyAnnouncer {
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         client.triggerTele(3045, 3372, 0, false)
-        client.send(SendMessage("Welcome to the party room!"))
+        client.sendMessage("Welcome to the party room!")
         return true
     }
 }

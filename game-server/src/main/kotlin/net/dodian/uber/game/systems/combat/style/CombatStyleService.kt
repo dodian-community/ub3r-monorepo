@@ -37,8 +37,8 @@ object CombatStyleService {
         if (profile == null) {
             val interfaceId = 5855
             player.setSidebarInterface(0, interfaceId)
-            player.sendFrame246(interfaceId + 1, 200, weaponId)
-            player.send(SendString("Unhandled item!", interfaceId + 2))
+            player.sendInterfaceModel(interfaceId + 1, 200, weaponId)
+            player.sendString("Unhandled item!", interfaceId + 2)
             return
         }
 
@@ -52,8 +52,8 @@ object CombatStyleService {
             profile.interfaceId + 3
         }
         player.setSidebarInterface(0, profile.interfaceId)
-        player.sendFrame246(itemOnInterfaceId, 200, weaponId)
-        player.send(SendString(itemName, textOnInterfaceId))
+        player.sendInterfaceModel(itemOnInterfaceId, 200, weaponId)
+        player.sendString(itemName, textOnInterfaceId)
     }
 
     @JvmStatic
@@ -233,7 +233,7 @@ object CombatStyleService {
                     setResolvedStyle(player, CombatStyle.DEFENSIVE_MELEE, Player.fightStyle.BLOCK, 1, 2, setVarbit43 = true)
                 }
             }
-            else -> player.send(SendMessage("Unhandled interface style!"))
+            else -> player.sendMessage("Unhandled interface style!")
         }
     }
 

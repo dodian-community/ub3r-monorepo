@@ -19,7 +19,7 @@ object SkillGuideService {
             client.send(RemoveInterfaces())
         }
         if (client.isBusy) {
-            client.send(SendMessage("You are currently too busy to open the skill menu!"))
+            client.sendMessage("You are currently too busy to open the skill menu!")
             return
         }
 
@@ -30,17 +30,17 @@ object SkillGuideService {
         resetBaselineVisibility(client, skillId)
 
         val skillName = skill.name.lowercase().replaceFirstChar { it.uppercase() }
-        client.send(SendString(skillName, 8716))
+        client.sendString(skillName, 8716)
 
         definition.layout.hideComponents.forEach { client.changeInterfaceStatus(it, false) }
         definition.layout.showComponents.forEach { client.changeInterfaceStatus(it, true) }
-        definition.layout.extraStrings.forEach { (componentId, text) -> client.send(SendString(text, componentId)) }
-        definition.tabLabels.forEach { label -> client.send(SendString(label.text, label.componentId)) }
+        definition.layout.extraStrings.forEach { (componentId, text) -> client.sendString(text, componentId) }
+        definition.tabLabels.forEach { label -> client.sendString(label.text, label.componentId) }
 
         val page = definition.pageProvider(client, child) ?: SkillGuidePage()
         page.entries.forEachIndexed { index, entry ->
-            client.send(SendString(entry.text, 8760 + index))
-            entry.levelText?.let { client.send(SendString(it, 8720 + index)) }
+            client.sendString(entry.text, 8760 + index)
+            entry.levelText?.let { client.sendString(it, 8720 + index) }
         }
 
         val itemIds = page.entries.map { it.itemId }.toIntArray()
@@ -60,9 +60,9 @@ object SkillGuideService {
     }
 
     private fun clearInterface(client: Client) {
-        titleComponentIds.forEach { componentId -> client.send(SendString("", componentId)) }
+        titleComponentIds.forEach { componentId -> client.sendString("", componentId) }
         for (componentId in 8720 until 8800) {
-            client.send(SendString("", componentId))
+            client.sendString("", componentId)
         }
     }
 
@@ -72,6 +72,6 @@ object SkillGuideService {
         }
         baselineHidden.forEach { componentId -> client.changeInterfaceStatus(componentId, false) }
         baselineShown.forEach { componentId -> client.changeInterfaceStatus(componentId, true) }
-        client.send(SendString("", 8849))
+        client.sendString("", 8849)
     }
 }

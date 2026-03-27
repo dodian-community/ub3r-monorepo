@@ -34,7 +34,7 @@ class WerewolfCourseService(private val c: Client) {
         if (c.getLevel(Skill.AGILITY) >= level) {
             return true
         }
-        c.send(SendMessage("You need level $level agility to use this!"))
+        c.sendMessage("You need level $level agility to use this!")
         return false
     }
 
@@ -48,7 +48,7 @@ class WerewolfCourseService(private val c: Client) {
         if (pos.x == 3538 && pos.y == 9875 && c.position.x == 3538 && c.position.y == 9873) {
             c.UsingAgility = true
             val npc = NpcSpawnLocator.werewolfCourseNpc(0)
-            c.requestAnim(769, 0)
+            c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             val x = 3533 + Misc.random(4)
             val y = 9910 + Misc.random(2)
@@ -57,7 +57,7 @@ class WerewolfCourseService(private val c: Client) {
             val offsetX = x - originY
             val offsetY = y - originX
             val distance = c.distanceToPoint(x, y)
-            npc?.requestAnim(6547, 0)
+            npc?.performAnimation(6547, 0)
             npc?.text = "Go fetch!"
             c.createProjectile(
                 originY,
@@ -85,7 +85,7 @@ class WerewolfCourseService(private val c: Client) {
             }
         } else if (pos.x == 3538 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9875) {
             c.UsingAgility = true
-            c.requestAnim(769, 0)
+            c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -97,7 +97,7 @@ class WerewolfCourseService(private val c: Client) {
             }
         } else if (pos.x == 3540 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9877) {
             c.UsingAgility = true
-            c.requestAnim(769, 0)
+            c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -109,7 +109,7 @@ class WerewolfCourseService(private val c: Client) {
             }
         } else if (pos.x == 3540 && pos.y == 9879 && c.position.x == 3540 && c.position.y == 9877) {
             c.UsingAgility = true
-            c.requestAnim(769, 0)
+            c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -121,7 +121,7 @@ class WerewolfCourseService(private val c: Client) {
             }
         } else if (pos.x == 3540 && pos.y == 9881 && c.position.x == 3540 && c.position.y == 9879) {
             c.UsingAgility = true
-            c.requestAnim(769, 0)
+            c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -146,7 +146,7 @@ class WerewolfCourseService(private val c: Client) {
             val npc = NpcSpawnLocator.werewolfCourseNpc(1)
             npc?.text = "GO GO GO!"
             c.setFocus(pos.x, pos.y)
-            c.requestAnim(2750, 0)
+            c.performAnimation(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -159,7 +159,7 @@ class WerewolfCourseService(private val c: Client) {
         } else if (pos.x in 3537..3543 && pos.y == 9896 && c.position.x in 3537..3543 && c.position.y == 9895) {
             c.UsingAgility = true
             c.setFocus(pos.x, pos.y)
-            c.requestAnim(2750, 0)
+            c.performAnimation(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -172,7 +172,7 @@ class WerewolfCourseService(private val c: Client) {
         } else if (pos.x in 3537..3543 && pos.y == 9899 && c.position.x in 3537..3543 && c.position.y == 9898) {
             c.UsingAgility = true
             c.setFocus(pos.x, pos.y)
-            c.requestAnim(2750, 0)
+            c.performAnimation(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
                 if (c.disconnected) {
@@ -207,7 +207,7 @@ class WerewolfCourseService(private val c: Client) {
                 when {
                     part == 6 -> {
                         c.requestWeaponAnims()
-                        c.requestAnim(748, 0)
+                        c.performAnimation(748, 0)
                         giveEndExperience(600, true)
                         c.UsingAgility = false
                         false

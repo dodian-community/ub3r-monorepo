@@ -16,7 +16,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.chunk.ChunkRepository
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.content.events.partyroom.Balloons
@@ -91,7 +91,7 @@ class EntityProcessor : Runnable {
     }
 
     fun runPlayerMainPhase() {
-        PlayerHandler.forEachActivePlayer { processPlayer(it) }
+        PlayerRegistry.forEachActivePlayer { processPlayer(it) }
     }
 
     fun runMovementFinalizePhase() {
@@ -101,7 +101,7 @@ class EntityProcessor : Runnable {
 
     fun runHousekeepingPhase(now: Long) {
         if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
-            if (PlayerHandler.getPlayerCount() < 1) {
+            if (PlayerRegistry.getPlayerCount() < 1) {
                 System.exit(0)
             }
         }
@@ -362,7 +362,7 @@ class EntityProcessor : Runnable {
 
     private fun handleNpcAnimation(npc: Npc, animId: Int, chance: Int) {
         if (Misc.chance(chance) == 1) {
-            npc.requestAnim(animId, 0)
+            npc.performAnimation(animId, 0)
         }
     }
 
@@ -374,7 +374,7 @@ class EntityProcessor : Runnable {
 
     private fun handlePartyAnnouncement(npc: Npc) {
         if (Balloons.eventActive()) {
-            npc.requestAnim(866, 0)
+            npc.performAnimation(866, 0)
             npc.setText(if (Balloons.spawnedBalloons()) "A party is going on right now!" else "A party is about to Start!!!!")
         }
     }
@@ -383,7 +383,7 @@ class EntityProcessor : Runnable {
         if (Misc.chance(25) == 1) {
             var peopleInWild = 0
             var peopleInEdge = 0
-            PlayerHandler.forEachActivePlayer { checkPlayer ->
+            PlayerRegistry.forEachActivePlayer { checkPlayer ->
                 if (checkPlayer.inWildy()) {
                     peopleInWild++
                 } else if (checkPlayer.inEdgeville()) {
@@ -477,7 +477,7 @@ class EntityProcessor : Runnable {
         @JvmStatic
         fun buildActiveNpcChunks(activeChunks: LongHashSet) {
             activeChunks.clear()
-            PlayerHandler.forEachActivePlayer { player ->
+            PlayerRegistry.forEachActivePlayer { player ->
                 val position = player.position ?: return@forEachActivePlayer
                 val centerChunkX = position.chunkX
                 val centerChunkY = position.chunkY
@@ -491,7 +491,7 @@ class EntityProcessor : Runnable {
 
         @JvmStatic
         fun syncActivePlayerChunksForTick() {
-            PlayerHandler.forEachActivePlayer { it.syncChunkMembership() }
+            PlayerRegistry.forEachActivePlayer { it.syncChunkMembership() }
         }
 
         private fun getSpawnAlwaysActiveNpcs(): Array<Npc?> {

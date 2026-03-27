@@ -6,7 +6,7 @@ import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.content.commands.recordStaffCommand
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 
 object StaffWorldControlCommands : CommandContent {
@@ -53,7 +53,7 @@ private fun handleWorldControl(context: CommandContext): Boolean {
             Server.banking = !Server.banking
             client.yell(if (Server.banking) "[SERVER]: The Bank has been enabled!" else "[SERVER]: The Bank has been disabled!")
             if (!Server.banking) {
-                for (player in PlayerHandler.players) {
+                for (player in PlayerRegistry.players) {
                     val other = player as? Client ?: continue
                     if (other.IsBanking) {
                         other.send(RemoveInterfaces())

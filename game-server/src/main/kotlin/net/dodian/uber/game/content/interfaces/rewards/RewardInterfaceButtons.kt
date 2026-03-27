@@ -27,9 +27,9 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                         val level = Skills.getLevelForExperience(client.getExperience(trainedSkill))
                         val experience = 100 * level
                         SkillProgressionService.gainXp(client, experience, trainedSkill)
-                        client.send(SendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}."))
+                        client.sendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}.")
                     } else {
-                        client.send(SendMessage("Experience for ${trainedSkill.getName()} is disabled until 10th of July!"))
+                        client.sendMessage("Experience for ${trainedSkill.getName()} is disabled until 10th of July!")
                     }
                     return@buttonBinding true
                 }
@@ -47,7 +47,7 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                     val level = Skills.getLevelForExperience(client.getExperience(trainedSkill))
                     val experience = 250 * level
                     SkillProgressionService.gainXp(client, experience, trainedSkill)
-                    client.send(SendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}."))
+                    client.sendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}.")
                     return@buttonBinding true
                 }
 
@@ -57,7 +57,7 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                     client.send(RemoveInterfaces())
                     if (!client.addItem(2528, 1)) {
                         Ground.addFloorItem(client, 2528, 1)
-                        client.send(SendMessage("You dropped the lamp on the floor!"))
+                        client.sendMessage("You dropped the lamp on the floor!")
                     } else {
                         client.checkItemUpdate()
                     }

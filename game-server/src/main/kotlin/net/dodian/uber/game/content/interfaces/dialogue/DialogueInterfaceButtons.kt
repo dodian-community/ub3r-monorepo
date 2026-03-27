@@ -83,7 +83,7 @@ object DialogueInterfaceButtons : InterfaceButtonContent {
                     }
                     27 -> {
                         client.yellOn = true
-                        client.send(SendMessage("You have enabled boss yell messages."))
+                        client.sendMessage("You have enabled boss yell messages.")
                         client.send(RemoveInterfaces())
                         DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)
@@ -93,8 +93,8 @@ object DialogueInterfaceButtons : InterfaceButtonContent {
                             client.moveTo(3105, 3933, 0)
                             client.send(RemoveInterfaces())
                         } else {
-                            client.send(SendMessage("You need to be level 80 or above to enter the mage arena."))
-                            client.send(SendMessage("The skeletons at the varrock castle are a good place until then."))
+                            client.sendMessage("You need to be level 80 or above to enter the mage arena.")
+                            client.sendMessage("The skeletons at the varrock castle are a good place until then.")
                         }
                     }
                 }
@@ -125,7 +125,7 @@ object DialogueInterfaceButtons : InterfaceButtonContent {
                     }
                     27 -> {
                         client.yellOn = false
-                        client.send(SendMessage("You have disabled boss yell messages."))
+                        client.sendMessage("You have disabled boss yell messages.")
                         client.send(RemoveInterfaces())
                         DialogueService.setDialogueId(client, 0)
                         DialogueService.setDialogueSent(client, false)

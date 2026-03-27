@@ -105,20 +105,20 @@ object PlayerBankService {
     @JvmStatic
     fun openUpBank(client: Client) {
         if (!Server.banking) {
-            client.send(SendMessage("Banking have been disabled!"))
+            client.sendMessage("Banking have been disabled!")
             return
         }
         if (!PlayerInteractionGuardService.canOpenBank(client)) {
             PlayerInteractionGuardService.blockingInteractionMessage(client)?.let {
-                client.send(SendMessage(it))
+                client.sendMessage(it)
             }
             return
         }
         client.resetAction(true)
-        client.send(SendString("Withdraw as:", 5388))
-        client.send(SendString("Note", 5389))
-        client.send(SendString("Item", 5391))
-        client.send(SendString("Bank of ${client.playerName}", 5383))
+        client.sendString("Withdraw as:", 5388)
+        client.sendString("Note", 5389)
+        client.sendString("Item", 5391)
+        client.sendString("Bank of ${client.playerName}", 5383)
         ensureBankTabState(client)
         client.currentBankTab = 0
         client.previousBankTab = 0
@@ -239,7 +239,7 @@ object PlayerBankService {
     fun sendBankStyleViewContainers(client: Client) {
         rebuildBankStyleViewContainers(client)
         val size = client.bankSize()
-        client.send(SendString(client.bankStyleViewTitle, 5383))
+        client.sendString(client.bankStyleViewTitle, 5383)
         client.send(SendCurrentBankTab(0))
         var tab = 0
         while (tab < 11) {
@@ -328,7 +328,7 @@ object PlayerBankService {
         }
         ensureBankTabState(client)
         if (tab in 1..9 && !hasBankTabItems(client, tab)) {
-            client.send(SendMessage("To create a new tab, drag an item onto this tab."))
+            client.sendMessage("To create a new tab, drag an item onto this tab.")
             return
         }
         if (tab != 10 && client.bankSearchActive) {
@@ -413,8 +413,8 @@ object PlayerBankService {
             }
             index++
         }
-        client.send(SendString(used.toString(), 50053))
-        client.send(SendString(size.toString(), 50055))
+        client.sendString(used.toString(), 50053)
+        client.sendString(size.toString(), 50055)
     }
 
     private fun rebuildBankContainers(client: Client) {
@@ -455,7 +455,7 @@ object PlayerBankService {
         if (slot < 0 || slot >= client.bankSize() || client.bankItems[slot] <= 0 || client.bankItemsN[slot] <= 0) {
             return false
         }
-        val itemName = client.GetItemName(client.bankItems[slot] - 1) ?: return false
+        val itemName = client.getItemName(client.bankItems[slot] - 1) ?: return false
         return itemName.lowercase().contains(client.bankSearchQuery)
     }
 

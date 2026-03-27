@@ -10,7 +10,7 @@ import net.dodian.uber.game.content.commands.playerNameTail
 import net.dodian.uber.game.content.commands.recordStaffCommand
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.CameraReset
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendCamera
@@ -45,7 +45,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                 client.setPlayerNpc(if (npcId >= 0) npcId else -1)
                 client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
             }
-            client.send(SendMessage(if (npcId > 8195) "Maximum 8195 in npc id!" else if (npcId >= 0) "Setting npc to ${client.playerNpc}" else "Setting you normal!"))
+            client.sendMessage(if (npcId > 8195) "Maximum 8195 in npc id!" else if (npcId >= 0) "Setting npc to ${client.playerNpc}" else "Setting you normal!")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} npcid")
@@ -57,7 +57,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
     when {
         context.alias == "invis" -> {
             client.invis = !client.invis
-            client.send(SendMessage("You turn invis to ${client.invis}"))
+            client.sendMessage("You turn invis to ${client.invis}")
             client.transport(client.position)
             recordStaffCommand(client, command)
             return true
@@ -65,25 +65,25 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         context.alias == "teleto" -> {
             return try {
                 if (!canUseStaffTeleport(client, specialRights)) {
-                    client.send(SendMessage("Command can't be used in the wilderness!"))
+                    client.sendMessage("Command can't be used in the wilderness!")
                     return true
                 }
                 val otherName = context.playerNameTail()
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     if (other.wildyLevel > 0 && !specialRights) {
-                        client.send(SendMessage("That player is in the wilderness!"))
+                        client.sendMessage("That player is in the wilderness!")
                         return true
                     }
                     if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
                         return true
                     }
                     client.transport(other.position.copy())
-                    client.send(SendMessage("Teleto: You teleport to ${other.playerName}"))
+                    client.sendMessage("Teleto: You teleport to ${other.playerName}")
                     recordStaffCommand(client, command)
                 } else {
-                    client.send(SendMessage("Player $otherName is not online!"))
+                    client.sendMessage("Player $otherName is not online!")
                 }
                 true
             } catch (_: Exception) {
@@ -93,34 +93,34 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         context.alias == "kick" -> {
             return try {
                 val otherName = context.playerNameTail()
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     other.disconnected = true
-                    client.send(SendMessage("Player ${other.playerName} has been kicked!"))
+                    client.sendMessage("Player ${other.playerName} has been kicked!")
                     recordStaffCommand(client, command)
                 } else {
-                    client.send(SendMessage("Player $otherName is not online!"))
+                    client.sendMessage("Player $otherName is not online!")
                 }
                 true
             } catch (exception: Exception) {
-                client.send(SendMessage("Try entering a name you wish to kick.."))
-                client.send(SendMessage(exception.message))
+                client.sendMessage("Try entering a name you wish to kick..")
+                client.sendMessage(exception.message)
                 true
             }
         }
         context.alias == "teletome" -> {
             return try {
                 if (!canUseStaffTeleport(client, specialRights)) {
-                    client.send(SendMessage("Command can't be used in the wilderness"))
+                    client.sendMessage("Command can't be used in the wilderness")
                     return true
                 }
                 val otherName = context.playerNameTail()
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     if (other.wildyLevel > 0 && !specialRights) {
-                        client.send(SendMessage("Can not teleport someone out of the wilderness! Contact a admin!"))
+                        client.sendMessage("Can not teleport someone out of the wilderness! Contact a admin!")
                         return true
                     }
                     if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
@@ -129,7 +129,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                     other.transport(client.position.copy())
                     recordStaffCommand(client, command)
                 } else {
-                    client.send(SendMessage("Player $otherName is not online!"))
+                    client.sendMessage("Player $otherName is not online!")
                 }
                 true
             } catch (_: Exception) {
@@ -138,21 +138,21 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         }
         context.alias == "staffzone" -> {
             if (client.inWildy()) {
-                client.send(SendMessage("Cant use this in the wilderness!"))
+                client.sendMessage("Cant use this in the wilderness!")
                 return true
             }
             client.teleportTo(2936, 4688, 0)
-            client.send(SendMessage("Welcome to the staff zone!"))
+            client.sendMessage("Welcome to the staff zone!")
             return true
         }
         context.alias == "test_area" -> {
             client.triggerTele(3260, 2784, 0, false)
-            client.send(SendMessage("Welcome to the monster test area!"))
+            client.sendMessage("Welcome to the monster test area!")
             return true
         }
         context.alias == "busy" && client.playerRights > 1 -> {
             client.busy = !client.busy
-            client.send(SendMessage(if (!client.busy) "You are no longer busy!" else "You are now busy!"))
+            client.sendMessage(if (!client.busy) "You are no longer busy!" else "You are now busy!")
             return true
         }
         context.alias == "camera" -> {
@@ -165,11 +165,11 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         }
         context.alias == "slots" -> {
             if (client.playerRights < 2) {
-                client.send(SendMessage("Do not fool with yaaaaar!"))
+                client.sendMessage("Do not fool with yaaaaar!")
                 return true
             }
             client.send(RemoveInterfaces())
-            client.showInterface(671)
+            client.openInterface(671)
             Server.slots.playSlots(client, -1)
             return true
         }
@@ -186,14 +186,14 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         command.startsWith("banmac") -> {
             return try {
                 val otherName = command.substring(7)
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     Login.addUidToFile(other.UUID)
                     other.logout()
                     recordStaffCommand(client, command)
                 } else {
-                    client.send(SendMessage("Error MAC banning player. Name doesn't exist or player is offline."))
+                    client.sendMessage("Error MAC banning player. Name doesn't exist or player is offline.")
                 }
                 true
             } catch (_: Exception) {
@@ -203,18 +203,18 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
         command.startsWith("tradelock") -> {
             return try {
                 if (client.wildyLevel > 0) {
-                    client.send(SendMessage("Command can't be used in the wilderness"))
+                    client.sendMessage("Command can't be used in the wilderness")
                     return true
                 }
                 val otherName = context.playerNameTail()
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     other.tradeLocked = true
-                    client.send(SendMessage("You have just tradelocked $otherName"))
+                    client.sendMessage("You have just tradelocked $otherName")
                     recordStaffCommand(client, command)
                 } else {
-                    client.send(SendMessage("The name doesnt exist."))
+                    client.sendMessage("The name doesnt exist.")
                 }
                 true
             } catch (_: Exception) {
@@ -222,11 +222,11 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
             }
         }
         command.equals("meeting", true) && client.playerRights > 1 -> {
-            for (i in PlayerHandler.players.indices) {
+            for (i in PlayerRegistry.players.indices) {
                 if (client.validClient(i)) {
                     val other = client.getClient(i)
                     if (other.playerRights > 0) {
-                        other.send(SendMessage("All of you belong to ${client.playerName}"))
+                        other.sendMessage("All of you belong to ${client.playerName}")
                         other.triggerTele(2936, 4688, 0, false)
                     }
                 }
@@ -234,15 +234,15 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
             return true
         }
         command.equals("alltome", true) && client.playerRights > 1 -> {
-            for (i in PlayerHandler.players.indices) {
+            for (i in PlayerRegistry.players.indices) {
                 if (client.validClient(i)) {
                     val other = client.getClient(i)
                     if (other == client) continue
-                    other.send(SendMessage("<col=cc0000>A force moved you towards a location!"))
+                    other.sendMessage("<col=cc0000>A force moved you towards a location!")
                     other.triggerTele(client.position.x, client.position.y, client.position.z, false)
                 }
             }
-            client.send(SendMessage("You teleported all online to you!"))
+            client.sendMessage("You teleported all online to you!")
             return true
         }
     }

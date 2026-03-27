@@ -29,7 +29,7 @@ object RuneCostService {
         if (client.playerHasItem(565)) {
             return true
         }
-        client.send(SendMessage("This spell requires 1 blood rune"))
+        client.sendMessage("This spell requires 1 blood rune")
         return false
     }
 }

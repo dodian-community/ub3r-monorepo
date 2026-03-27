@@ -25,7 +25,7 @@ object PyramidPlunderService {
         if (state.ticksRemaining == 0) {
             reset(client, timedOut = true)
         } else if (state.ticksRemaining % 100 == 0) {
-            client.send(SendMessage("You got ${state.ticksRemaining / 100} minute${if ((state.ticksRemaining / 100) == 1) "" else "s"} left."))
+            client.sendMessage("You got ${state.ticksRemaining / 100} minute${if ((state.ticksRemaining / 100) == 1) "" else "s"} left.")
         }
     }
 
@@ -38,7 +38,7 @@ object PyramidPlunderService {
         resetObstacles(client, state)
         client.pyramidPlunderState = state
         client.transport(globalState.start)
-        client.send(SendMessage("Starting plunder test..."))
+        client.sendMessage("Starting plunder test...")
     }
 
     @JvmOverloads
@@ -46,7 +46,7 @@ object PyramidPlunderService {
     fun reset(client: Client, timedOut: Boolean = false) {
         val state = client.pyramidPlunderState ?: return
         if (timedOut) {
-            client.send(SendMessage("You have run out time!"))
+            client.sendMessage("You have run out time!")
         }
         state.ticksRemaining = -1
         state.roomNumber = 0
@@ -100,7 +100,7 @@ object PyramidPlunderService {
         }
         val level = 31 + (state.roomNumber * 10)
         if (client.getLevel(Skill.THIEVING) < level) {
-            client.send(SendMessage("You need level $level thieving to enter next room!"))
+            client.sendMessage("You need level $level thieving to enter next room!")
             return
         }
         client.transport(globalState.roomEntrances[state.roomNumber])
@@ -129,13 +129,13 @@ object PyramidPlunderService {
         if (!found && state.obstacles[0] == objectId && state.obstacles[1] == 0) {
             state.obstacles[1] = 1
             displayTombs(client, state)
-            client.send(SendMessage("Room: ${state.roomNumber} trying to do gold chest!"))
+            client.sendMessage("Room: ${state.roomNumber} trying to do gold chest!")
             found = true
         }
         if (!found && state.obstacles[2] == objectId && state.obstacles[3] == 0) {
             state.obstacles[3] = 1
             displayTombs(client, state)
-            client.send(SendMessage("Sarcophagus!"))
+            client.sendMessage("Sarcophagus!")
             found = true
         }
         for (i in 2 until state.tombConfig.size) {

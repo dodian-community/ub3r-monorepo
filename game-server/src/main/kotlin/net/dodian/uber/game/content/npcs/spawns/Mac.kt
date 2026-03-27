@@ -41,7 +41,7 @@ internal object Mac {
                                     c.addItem(13281, 1)
                                     c.addItem(13280, 1)
                                     c.checkItemUpdate()
-                                    c.send(SendMessage("Here you go. Max cape just for you."))
+                                    c.sendMessage("Here you go. Max cape just for you.")
                                 }
                             }
                         }

@@ -38,33 +38,33 @@ object FishingService {
             return
         }
         if (!client.playerHasItem(-1)) {
-            client.send(SendMessage("Not enough inventory space."))
+            client.sendMessage("Not enough inventory space.")
             client.resetAction(true)
             return
         }
         if (client.getLevel(Skill.FISHING) < spot.requiredLevel) {
-            client.send(SendMessage("You need level ${spot.requiredLevel} fishing to fish here."))
+            client.sendMessage("You need level ${spot.requiredLevel} fishing to fish here.")
             client.resetAction(true)
             return
         }
         if (!client.playerHasItem(spot.toolItemId) && !harpoon) {
-            client.send(SendMessage("You need a ${client.GetItemName(spot.toolItemId).lowercase()} to fish here."))
+            client.sendMessage("You need a ${client.getItemName(spot.toolItemId).lowercase()} to fish here.")
             client.resetAction(true)
             return
         }
         if (spot.premiumOnly && !client.premium) {
-            client.send(SendMessage("You need to be premium to fish from this spot!"))
+            client.sendMessage("You need to be premium to fish from this spot!")
             client.resetAction(true)
             return
         }
         if (spot.featherConsumed && !client.playerHasItem(314)) {
-            client.send(SendMessage("You do not have any feathers."))
+            client.sendMessage("You do not have any feathers.")
             client.resetAction(true)
             return
         }
         client.fishingState = FishingState(spot.index, 0)
-        client.requestAnim(spot.animationId, 0)
-        client.send(SendMessage("You start fishing..."))
+        client.performAnimation(spot.animationId, 0)
+        client.sendMessage("You start fishing...")
         SkillingActionService.startFishing(client)
     }
 
@@ -82,17 +82,17 @@ object FishingService {
         val harpoon = client.getLevel(Skill.FISHING) >= 61 &&
             (client.equipment[Equipment.Slot.WEAPON.id] == 21028 || client.playerHasItem(21028))
         if (!client.playerHasItem(spot.toolItemId) && !harpoon) {
-            client.send(SendMessage("You need a ${client.GetItemName(spot.toolItemId).lowercase()} to fish here."))
+            client.sendMessage("You need a ${client.getItemName(spot.toolItemId).lowercase()} to fish here.")
             client.resetAction(true)
             return
         }
         if (!client.playerHasItem(-1)) {
-            client.send(SendMessage("Not enough inventory space."))
+            client.sendMessage("Not enough inventory space.")
             client.resetAction(true)
             return
         }
         if (spot.featherConsumed && !client.playerHasItem(314)) {
-            client.send(SendMessage("You do not have any feathers."))
+            client.sendMessage("You do not have any feathers.")
             client.resetAction(true)
             return
         }
@@ -105,12 +105,12 @@ object FishingService {
         client.checkItemUpdate()
         ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Fishing")
         val gatheredCount = state.gatheredCount + 1
-        client.requestAnim(spot.animationId, 0)
+        client.performAnimation(spot.animationId, 0)
         SkillingRandomEventService.trigger(client, spot.experience)
-        client.send(SendMessage("You fish up some ${client.GetItemName(itemId).lowercase().replace("raw ", "")}."))
+        client.sendMessage("You fish up some ${client.getItemName(itemId).lowercase().replace("raw ", "")}.")
         client.fishingState = state.copy(gatheredCount = gatheredCount)
         if (gatheredCount >= 4 && Misc.chance(20) == 1) {
-            client.send(SendMessage("You take a rest after gathering ${client.resourcesGathered} resources."))
+            client.sendMessage("You take a rest after gathering ${client.resourcesGathered} resources.")
             client.resetAction(true)
         }
     }

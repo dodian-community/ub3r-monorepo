@@ -20,7 +20,7 @@ object CraftingService {
     @JvmStatic
     fun performShaft(client: Client) {
         if (client.isBusy) {
-            client.send(SendMessage("You are currently busy to be fletching!"))
+            client.sendMessage("You are currently busy to be fletching!")
             return
         }
         if (client.IsCutting || client.isFiremaking) {
@@ -31,7 +31,7 @@ object CraftingService {
             client.deleteItem(1511, 1)
             client.addItem(52, 15)
             client.checkItemUpdate()
-            client.requestAnim(1248, 0)
+            client.performAnimation(1248, 0)
             SkillProgressionService.gainXp(client, 50, Skill.FLETCHING)
             SkillingRandomEventService.trigger(client, 50)
         } else {
@@ -58,7 +58,7 @@ object CraftingService {
             SkillProgressionService.gainXp(client, 100, Skill.CRAFTING)
             SkillingRandomEventService.trigger(client, 100)
         } else {
-            client.send(SendMessage("You do not have anything to spin!"))
+            client.sendMessage("You do not have anything to spin!")
             client.resetAction(true)
             return
         }
@@ -84,14 +84,14 @@ object CraftingService {
     @JvmStatic
     fun openLeatherMenu(client: Client, hideIndex: Int) {
         val hide = CraftingDefinitions.hideDefinition(hideIndex) ?: return
-        client.send(SendString("What would you like to make?", 8898))
-        client.send(SendString("Vambraces", 8889))
-        client.send(SendString("Chaps", 8893))
-        client.send(SendString("Body", 8897))
-        client.sendFrame246(8883, 250, hide.glovesId)
-        client.sendFrame246(8884, 250, hide.chapsId)
-        client.sendFrame246(8885, 250, hide.bodyId)
-        client.sendFrame164(8880)
+        client.sendString("What would you like to make?", 8898)
+        client.sendString("Vambraces", 8889)
+        client.sendString("Chaps", 8893)
+        client.sendString("Body", 8897)
+        client.sendInterfaceModel(8883, 250, hide.glovesId)
+        client.sendInterfaceModel(8884, 250, hide.chapsId)
+        client.sendInterfaceModel(8885, 250, hide.bodyId)
+        client.sendChatboxInterface(8880)
     }
 
     @JvmStatic
@@ -113,7 +113,7 @@ object CraftingService {
                 )
             SkillingActionService.startCrafting(client)
         } else {
-            client.send(SendMessage("You need level ${normalCraftLevels[productIndex]} crafting to craft a ${client.GetItemName(productId).lowercase()}"))
+            client.sendMessage("You need level ${normalCraftLevels[productIndex]} crafting to craft a ${client.getItemName(productId).lowercase()}")
             client.send(RemoveInterfaces())
         }
     }
@@ -121,7 +121,7 @@ object CraftingService {
     @JvmStatic
     fun startHideCraft(client: Client, productGroup: Int, amount: Int) {
         val hide = CraftingDefinitions.hideDefinition(client.cIndex) ?: run {
-            client.send(SendMessage("Can't make this??"))
+            client.sendMessage("Can't make this??")
             return
         }
         val selectedItemId = hide.itemId
@@ -156,11 +156,11 @@ object CraftingService {
             return
         }
         if (required >= 0 && productId != -1) {
-            client.send(SendMessage("You need level $required crafting to craft a ${client.GetItemName(productId).lowercase()}"))
+            client.sendMessage("You need level $required crafting to craft a ${client.getItemName(productId).lowercase()}")
             client.send(RemoveInterfaces())
             return
         }
-        client.send(SendMessage("Can't make this??"))
+        client.sendMessage("Can't make this??")
     }
 
     @JvmStatic
@@ -174,7 +174,7 @@ object CraftingService {
             return
         }
         if (client.getLevel(Skill.CRAFTING) < state.requiredLevel) {
-            client.send(SendMessage("You need ${state.requiredLevel} crafting to make a ${client.GetItemName(state.productId).lowercase()}"))
+            client.sendMessage("You need ${state.requiredLevel} crafting to make a ${client.getItemName(state.productId).lowercase()}")
             client.resetAction(true)
             return
         }
@@ -183,7 +183,7 @@ object CraftingService {
                 SendMessage(
                     if (!client.playerHasItem(1733)) "You need a needle to craft!"
                     else if (!client.playerHasItem(1734)) "You have run out of thread!"
-                    else "You have run out of ${client.GetItemName(state.selectedItemId).lowercase()}!"
+                    else "You have run out of ${client.getItemName(state.selectedItemId).lowercase()}!"
                 )
             )
             client.resetAction(true)
@@ -193,10 +193,10 @@ object CraftingService {
             client.resetAction(true)
             return
         }
-        client.requestAnim(1249, 0)
+        client.performAnimation(1249, 0)
         client.deleteItem(state.selectedItemId, 1)
         client.deleteItem(1734, 1)
-        client.send(SendMessage("You crafted a ${client.GetItemName(state.productId).lowercase()}"))
+        client.sendMessage("You crafted a ${client.getItemName(state.productId).lowercase()}")
         client.addItem(state.productId, 1)
         client.checkItemUpdate()
         SkillProgressionService.gainXp(client, state.experience, Skill.CRAFTING)

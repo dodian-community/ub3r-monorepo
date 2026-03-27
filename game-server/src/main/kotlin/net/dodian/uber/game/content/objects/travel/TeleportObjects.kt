@@ -20,7 +20,7 @@ object TeleportObjects : ObjectContent {
                 true
             }
             133 -> {
-                client.send(SendMessage("Welcome to the dragon lair!"))
+                client.sendMessage("Welcome to the dragon lair!")
                 client.transport(Position(3235, 9366, 0))
                 true
             }
@@ -32,7 +32,7 @@ object TeleportObjects : ObjectContent {
                 when {
                     position.x == 2884 && position.y == 3397 -> {
                         if (client.getLevel(Skill.SLAYER) < 50) {
-                            client.send(SendMessage("You need at least level 50 slayer to enter the Taverly Dungeon."))
+                            client.sendMessage("You need at least level 50 slayer to enter the Taverly Dungeon.")
                         } else {
                             client.transport(Position(2884, 9798, 0))
                         }
@@ -77,8 +77,8 @@ object TeleportObjects : ObjectContent {
                     if (client.determineCombatLevel() >= 80) {
                         client.transport(Position(2540, 4716, 0))
                     } else {
-                        client.send(SendMessage("You need to be level 80 or above to enter the mage arena."))
-                        client.send(SendMessage("The skeletons at the varrock castle are a good place until then."))
+                        client.sendMessage("You need to be level 80 or above to enter the mage arena.")
+                        client.sendMessage("The skeletons at the varrock castle are a good place until then.")
                     }
                     true
                 } else {
@@ -117,7 +117,7 @@ object TeleportObjects : ObjectContent {
             }
             11833 -> {
                 if (position.x == 2437 && position.y == 5166) {
-                    client.send(SendMessage("You have entered the Jad Cave."))
+                    client.sendMessage("You have entered the Jad Cave.")
                     client.transport(Position(2413, 5117, 0))
                     true
                 } else {
@@ -126,7 +126,7 @@ object TeleportObjects : ObjectContent {
             }
             11834 -> {
                 if (position.x == 2412 && position.y == 5118) {
-                    client.send(SendMessage("You have left the Jad Cave."))
+                    client.sendMessage("You have left the Jad Cave.")
                     client.transport(Position(2438, 5168, 0))
                     true
                 } else {
@@ -197,7 +197,7 @@ object TeleportObjects : ObjectContent {
             }
             16520, 16519 -> {
                 if (client.getLevel(Skill.AGILITY) < 50) {
-                    client.send(SendMessage("You need level 50 agility to use this shortcut!"))
+                    client.sendMessage("You need level 50 agility to use this shortcut!")
                     true
                 } else {
                     if (position.x == 2575 && position.y == 3108) {
@@ -218,7 +218,7 @@ object TeleportObjects : ObjectContent {
             }
             410 -> {
                 if (position.x == 2925 && position.y == 3483) {
-                    client.requestAnim(645, 0)
+                    client.performAnimation(645, 0)
                     when (Misc.random(3)) {
                         1 -> client.transport(Position(2162 + Misc.random(2), 4831 + Misc.random(4), 0))
                         2 -> client.transport(Position(2140 + Misc.random(4), 4811 + Misc.random(2), 0))
@@ -231,7 +231,7 @@ object TeleportObjects : ObjectContent {
                 }
             }
             14847 -> {
-                client.requestAnim(645, 0)
+                client.performAnimation(645, 0)
                 client.transport(Position(2924, 3483, 0))
                 true
             }

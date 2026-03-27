@@ -183,9 +183,9 @@ class NpcManager {
                         }
                     }
                 }
-                c.send(SendMessage("Finished reloading all drops for ${data[id]!!.name}"))
+                c.sendMessage("Finished reloading all drops for ${data[id]!!.name}")
             } else {
-                c.send(SendMessage("No npc with id of $id"))
+                c.sendMessage("No npc with id of $id")
             }
         } catch (e: Exception) {
             println("npc drop wrong during drop reload..$e")
@@ -209,7 +209,7 @@ class NpcManager {
                 }
             }
             reloadDrops(c, id)
-            c.send(SendMessage("Finished updating all '${getData(id)?.name}' npcs!"))
+            c.sendMessage("Finished updating all '${getData(id)?.name}' npcs!")
         } catch (e: Exception) {
             println("npc drop wrong during reload of data..$e")
         }
@@ -226,7 +226,7 @@ class NpcManager {
                         statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'").use { results ->
                             if (results.next()) {
                                 data[results.getInt("id")] = NpcData(results)
-                                c.send(SendMessage("Added default config values to the npc!"))
+                                c.sendMessage("Added default config values to the npc!")
                             }
                         }
                     }
@@ -242,14 +242,14 @@ class NpcManager {
                         statement.executeUpdate(query)
                     }
                 }
-                c.send(SendMessage("You updated '$table' with value '$value'!"))
+                c.sendMessage("You updated '$table' with value '$value'!")
                 reloadAllData(c, id)
             } catch (e: Exception) {
                 when {
                     e.message?.contains("Unknown column") == true ->
-                        c.send(SendMessage("row name '$table' do not exist in the database!"))
+                        c.sendMessage("row name '$table' do not exist in the database!")
                     e.message?.contains("Incorrect integer") == true ->
-                        c.send(SendMessage("row name '$table' need a int value!"))
+                        c.sendMessage("row name '$table' need a int value!")
                     else -> println("npc drop wrong during config reload..$e")
                 }
             }

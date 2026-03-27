@@ -289,7 +289,7 @@ object SkillGuideDefinitions {
                         SkillGuidePage(
                             frame.map { definition ->
                                 SkillGuideEntry(
-                                    text = client.GetItemName(definition.itemId),
+                                    text = client.getItemName(definition.itemId),
                                     levelText = definition.levelRequired.toString(),
                                     itemId = definition.itemId,
                                     itemAmount = definition.outputAmount,
@@ -398,7 +398,7 @@ object SkillGuideDefinitions {
                     1 -> SkillGuidePage(
                         HerbloreDefinitions.herbDefinitions.map { definition ->
                             SkillGuideEntry(
-                                text = client.GetItemName(definition.cleanId) + if (definition.premiumOnly) " $PREMIUM" else "",
+                                text = client.getItemName(definition.cleanId) + if (definition.premiumOnly) " $PREMIUM" else "",
                                 levelText = definition.requiredLevel.toString(),
                                 itemId = definition.grimyId,
                             )

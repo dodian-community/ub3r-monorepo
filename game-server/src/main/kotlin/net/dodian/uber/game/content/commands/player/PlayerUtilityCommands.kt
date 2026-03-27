@@ -9,7 +9,7 @@ import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.config.gameWorldId
@@ -64,8 +64,8 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
             Player.openPage(client, url)
             true
         } catch (_: Exception) {
-            client.send(SendMessage("Wrong usage.. ::${cmd[0]} or ::${cmd[0]} First_name or"))
-            client.send(SendMessage("::${cmd[0]} First_name second_name"))
+            client.sendMessage("Wrong usage.. ::${cmd[0]} or ::${cmd[0]} First_name or")
+            client.sendMessage("::${cmd[0]} First_name second_name")
             true
         }
     }
@@ -86,7 +86,7 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
                 }
             }
         }
-        client.send(SendMessage("Total amount of times: $totalTimes out of 1000!"))
+        client.sendMessage("Total amount of times: $totalTimes out of 1000!")
         return true
     }
     if (context.alias == "price") {
@@ -95,24 +95,24 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
         return true
     }
     if (context.alias == "max") {
-        client.send(SendMessage("<col=FF8000>Melee max hit: ${client.meleeMaxHit()} (MeleeStr: ${client.playerBonus[10]})"))
-        client.send(SendMessage("<col=0B610B>Range max hit: ${client.rangedMaxHit()} (RangeStr: ${client.getRangedStr()})"))
+        client.sendMessage("<col=FF8000>Melee max hit: ${client.meleeMaxHit()} (MeleeStr: ${client.playerBonus[10]})")
+        client.sendMessage("<col=0B610B>Range max hit: ${client.rangedMaxHit()} (RangeStr: ${client.getRangedStr()})")
         val magicIncrease = String.format("%3.1f", (client.magicBonusDamage() - 1.0) * 100.0)
         if (client.autocast_spellIndex == -1) {
-            client.send(SendMessage("<col=292BA3>Magic max hit (smoke rush): ${(client.baseDamage[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)"))
+            client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(client.baseDamage[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         } else {
-            client.send(SendMessage("<col=292BA3>Magic max hit (${client.spellName[client.autocast_spellIndex]}): ${(client.baseDamage[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)"))
+            client.sendMessage("<col=292BA3>Magic max hit (${client.spellName[client.autocast_spellIndex]}): ${(client.baseDamage[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         }
         return true
     }
     if (command.equals("players", true)) {
-        client.send(SendMessage("There are currently <col=006600>${PlayerHandler.getPlayerCount()}<col=0> players online!"))
-        client.send(SendString("@dre@                    Uber 3.0", 8144))
+        client.sendMessage("There are currently <col=006600>${PlayerRegistry.getPlayerCount()}<col=0> players online!")
+        client.sendString("@dre@                    Uber 3.0", 8144)
         client.clearQuestInterface()
-        client.send(SendString("@dbl@Online players: @blu@${PlayerHandler.getPlayerCount()}", 8145))
+        client.sendString("@dbl@Online players: @blu@${PlayerRegistry.getPlayerCount()}", 8145)
         var line = 8147
         var count = 0
-        for (player in PlayerHandler.players) {
+        for (player in PlayerRegistry.players) {
             if (player != null && player.dbId >= 0) {
                 val title =
                     when {
@@ -122,7 +122,7 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
                         player.playerRights == 2 -> "@yel@Admin "
                         else -> ""
                     }
-                client.send(SendString("@bla@$title@dbl@${player.playerName} @bla@(Level-${player.determineCombatLevel()}) @bla@is ${player.positionName}", line))
+                client.sendString("@bla@$title@dbl@${player.playerName} @bla@(Level-${player.determineCombatLevel()}) @bla@is ${player.positionName}", line)
                 line++
                 count++
                 if (line == 8196) {
@@ -133,11 +133,11 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
                 }
             }
         }
-        if (PlayerHandler.getPlayerCount() > 100) {
-            client.send(SendMessage("Note: there are too many players online to list, 100 are shown"))
+        if (PlayerRegistry.getPlayerCount() > 100) {
+            client.sendMessage("Note: there are too many players online to list, 100 are shown")
         }
         client.sendQuestSomething(8143)
-        client.showInterface(8134)
+        client.openInterface(8134)
         return true
     }
     return true

@@ -27,7 +27,7 @@ object BankBoothObjects : ObjectContent {
     }
 
     override fun onFourthClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        client.send(SendMessage("This bank options are not working currently!"))
+        client.sendMessage("This bank options are not working currently!")
         return true
     }
 }

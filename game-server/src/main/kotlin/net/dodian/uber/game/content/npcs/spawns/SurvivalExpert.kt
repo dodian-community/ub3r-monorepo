@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.npcs.spawns
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 internal object SurvivalExpert {
     val npcIds: IntArray = intArrayOf(943)
@@ -10,7 +10,7 @@ internal object SurvivalExpert {
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         var count = 0
-        for (player in PlayerHandler.players) {
+        for (player in PlayerRegistry.players) {
             if (player != null && player.wildyLevel > 0) {
                 count++
             }

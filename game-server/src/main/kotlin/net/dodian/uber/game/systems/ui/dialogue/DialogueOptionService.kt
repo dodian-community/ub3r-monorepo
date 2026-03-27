@@ -35,8 +35,8 @@ object DialogueOptionService {
                 resetDialogue()
 
                 if (button == 1) {
-                    c.send(SendMessage("NPC spawn DB deletion is disabled after hard cutover."))
-                    c.send(SendMessage("Remove/update spawns in Kotlin NPC content files instead."))
+                    c.sendMessage("NPC spawn DB deletion is disabled after hard cutover.")
+                    c.sendMessage("Remove/update spawns in Kotlin NPC content files instead.")
                     // TODO(npc-hard-cutover): legacy SQL delete flow kept for rollback.
 //                    try {
 //                        val connection = dbConnection
@@ -44,7 +44,7 @@ object DialogueOptionService {
 //                        try {
 //                            val sql = "delete from " + DbTables.GAME_NPC_SPAWNS + " where id='" + npcId + "' && x='" + tempNpc.position.x + "' && y='" + tempNpc.position.y + "' && height='" + tempNpc.position.z + "'"
 //                            if (statement.executeUpdate(sql) < 1) {
-//                                c.send(SendMessage("This npc has already been removed!"))
+//                                c.sendMessage("This npc has already been removed!")
 //                            } else {
 //                                tempNpc.die()
 //                                Replaced with GameEventScheduler after legacy event scheduler removal.
@@ -53,26 +53,26 @@ object DialogueOptionService {
 //                                        stop()
 //                                    }
 //                                })
-//                                c.send(SendMessage("You removed this npc spawn!"))
+//                                c.sendMessage("You removed this npc spawn!")
 //                            }
 //                        } finally {
 //                            statement.close()
 //                            connection.close()
 //                        }
 //                    } catch (e: Exception) {
-//                        c.send(SendMessage("Something went wrong in removing this npc!"))
+//                        c.sendMessage("Something went wrong in removing this npc!")
 //                    }
                 } else if (button == 2) {
                     if (tempNpc.data.drops.isNotEmpty()) {
                         var line = 8147
                         var totalChance = 0.0
                         c.clearQuestInterface()
-                        c.send(SendString("@dre@Drops for @blu@" + tempNpc.npcName() + "@bla@(@gre@" + npcId + "@bla@)", 8144))
+                        c.sendString("@dre@Drops for @blu@" + tempNpc.npcName() + "@bla@(@gre@" + npcId + "@bla@)", 8144)
                         val text = ArrayList<String>()
 
                         for (drop in tempNpc.data.drops) {
                             if (drop.chance >= 100.0) {
-                                text.add((if (drop.minAmount == drop.maxAmount) drop.minAmount.toString() else drop.minAmount.toString() + " - " + drop.maxAmount) + " " + c.GetItemName(drop.id) + "(" + drop.id + ")")
+                                text.add((if (drop.minAmount == drop.maxAmount) drop.minAmount.toString() else drop.minAmount.toString() + " - " + drop.maxAmount) + " " + c.getItemName(drop.id) + "(" + drop.id + ")")
                             }
                         }
                         for (drop in tempNpc.data.drops) {
@@ -81,23 +81,23 @@ object DialogueOptionService {
                                 val maxAmount = drop.maxAmount
                                 val itemId = drop.id
                                 val chance = drop.chance
-                                text.add((if (minAmount == maxAmount) minAmount.toString() else "$minAmount - $maxAmount") + " " + c.GetItemName(itemId) + "(" + itemId + ") " + chance + "% (1:" + Math.round(100.0 / chance) + ")" + if (drop.rareShout()) ", YELL" else "")
+                                text.add((if (minAmount == maxAmount) minAmount.toString() else "$minAmount - $maxAmount") + " " + c.getItemName(itemId) + "(" + itemId + ") " + chance + "% (1:" + Math.round(100.0 / chance) + ")" + if (drop.rareShout()) ", YELL" else "")
                                 totalChance += chance
                             }
                         }
                         for (txt in text) {
-                            c.send(SendString(txt, line))
+                            c.sendString(txt, line)
                             line++
                             if (line == 8196) {
                                 line = 12174
                             }
                         }
-                        c.send(SendString(if (totalChance > 100.0) "You are currently " + (totalChance - 100.0) + " % over!" else "Total drops %: $totalChance%", 8145))
-                        c.send(SendString(if (totalChance < 0.0 || totalChance >= 100.0) "" else "Nothing " + (100.0 - totalChance) + "%", line))
+                        c.sendString(if (totalChance > 100.0) "You are currently " + (totalChance - 100.0) + " % over!" else "Total drops %: $totalChance%", 8145)
+                        c.sendString(if (totalChance < 0.0 || totalChance >= 100.0) "" else "Nothing " + (100.0 - totalChance) + "%", line)
                         c.sendQuestSomething(8143)
-                        c.showInterface(8134)
+                        c.openInterface(8134)
                     } else {
-                        c.send(SendMessage("Npc " + tempNpc.npcName() + " (" + npcId + ") has no assigned drops!"))
+                        c.sendMessage("Npc " + tempNpc.npcName() + " (" + npcId + ") has no assigned drops!")
                     }
                 } else if (button == 3) {
                     Server.npcManager.reloadDrops(c, npcId)
@@ -137,7 +137,7 @@ object DialogueOptionService {
                             }
                         }
                     }
-                    c.send(SendMessage(checkTask.textRepresentation + " have now been reseted!"))
+                    c.sendMessage(checkTask.textRepresentation + " have now been reseted!")
                 }
             }
             c.send(RemoveInterfaces())
@@ -399,7 +399,7 @@ object DialogueOptionService {
                     c.checkItemUpdate()
                     c.showPlayerChat(arrayOf("I just made Rock-shell head."), 614)
                 } else {
-                    c.showPlayerChat(arrayOf("I need the following items:", c.GetItemName(6161) + " and " + c.GetItemName(6159)), 614)
+                    c.showPlayerChat(arrayOf("I need the following items:", c.getItemName(6161) + " and " + c.getItemName(6159)), 614)
                 }
             } else if (button == 2) {
                 if (c.playerHasItem(6157) && c.playerHasItem(6159) && c.playerHasItem(6161)) {
@@ -410,7 +410,7 @@ object DialogueOptionService {
                     c.checkItemUpdate()
                     c.showPlayerChat(arrayOf("I just made Rock-shell body."), 614)
                 } else {
-                    c.showPlayerChat(arrayOf("I need the following items:", c.GetItemName(6161) + ", " + c.GetItemName(6159) + " and " + c.GetItemName(6157)), 614)
+                    c.showPlayerChat(arrayOf("I need the following items:", c.getItemName(6161) + ", " + c.getItemName(6159) + " and " + c.getItemName(6157)), 614)
                 }
             } else if (button == 3) {
                 if (c.playerHasItem(6159) && c.playerHasItem(6157)) {
@@ -420,7 +420,7 @@ object DialogueOptionService {
                     c.checkItemUpdate()
                     c.showPlayerChat(arrayOf("I just made Rock-shell legs."), 614)
                 } else {
-                    c.showPlayerChat(arrayOf("I need the following items:", c.GetItemName(6159) + " and " + c.GetItemName(6157)), 614)
+                    c.showPlayerChat(arrayOf("I need the following items:", c.getItemName(6159) + " and " + c.getItemName(6157)), 614)
                 }
             } else if (button == 4) {
                 if (c.playerHasItem(6161) && c.playerHasItem(6159)) {
@@ -430,7 +430,7 @@ object DialogueOptionService {
                     c.checkItemUpdate()
                     c.showPlayerChat(arrayOf("I just made Rock-shell boots."), 614)
                 } else {
-                    c.showPlayerChat(arrayOf("I need the following items:", c.GetItemName(6161) + " and " + c.GetItemName(6159)), 614)
+                    c.showPlayerChat(arrayOf("I need the following items:", c.getItemName(6161) + " and " + c.getItemName(6159)), 614)
                 }
             } else if (button == 5) {
                 if (c.playerHasItem(6161, 2)) {
@@ -440,7 +440,7 @@ object DialogueOptionService {
                     c.checkItemUpdate()
                     c.showPlayerChat(arrayOf("I just made Rock-shell gloves."), 614)
                 } else {
-                    c.showPlayerChat(arrayOf("I need two of " + c.GetItemName(6161)), 614)
+                    c.showPlayerChat(arrayOf("I need two of " + c.getItemName(6161)), 614)
                 }
             }
             setDialogueSent(true)
@@ -476,9 +476,9 @@ object DialogueOptionService {
                     val agi = AgilityCourseService(c)
                     agi.kbdEntrance()
                     c.checkItemUpdate()
-                    c.send(SendMessage("You sacrifice 5 dragon bones!"))
+                    c.sendMessage("You sacrifice 5 dragon bones!")
                 } else {
-                    c.send(SendMessage("You need to have 5 dragon bones to sacrifice!"))
+                    c.sendMessage("You need to have 5 dragon bones to sacrifice!")
                 }
                 c.send(RemoveInterfaces())
             } else {
@@ -511,7 +511,7 @@ object DialogueOptionService {
                 val amount = LongArray(doseDefinitions.size)
                 val vials = LongArray(doseDefinitions.size)
                 for (i in doseDefinitions.indices) {
-                    val notedId = c.GetNotedItem(doseDefinitions[i].fourDoseId)
+                    val notedId = c.getNotedItem(doseDefinitions[i].fourDoseId)
                     if (notedId > 0) {
                         val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 4L
@@ -520,7 +520,7 @@ object DialogueOptionService {
                     }
                 }
                 for (i in doseDefinitions.indices) {
-                    val notedId = c.GetNotedItem(doseDefinitions[i].threeDoseId)
+                    val notedId = c.getNotedItem(doseDefinitions[i].threeDoseId)
                     if (notedId > 0) {
                         val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 3L
@@ -529,7 +529,7 @@ object DialogueOptionService {
                     }
                 }
                 for (i in doseDefinitions.indices) {
-                    val notedId = c.GetNotedItem(doseDefinitions[i].twoDoseId)
+                    val notedId = c.getNotedItem(doseDefinitions[i].twoDoseId)
                     if (notedId > 0) {
                         val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt * 2L
@@ -538,7 +538,7 @@ object DialogueOptionService {
                     }
                 }
                 for (i in doseDefinitions.indices) {
-                    val notedId = c.GetNotedItem(doseDefinitions[i].oneDoseId)
+                    val notedId = c.getNotedItem(doseDefinitions[i].oneDoseId)
                     if (notedId > 0) {
                         val invAmt = c.getInvAmt(notedId)
                         amount[i] += invAmt.toLong()
@@ -551,29 +551,29 @@ object DialogueOptionService {
                     val definition = doseDefinitions[i]
                     val id = if (button == 1) definition.fourDoseId else if (button == 2) definition.threeDoseId else if (button == 3) definition.twoDoseId else definition.oneDoseId
                     val divide = if (button == 1) 4 else if (button == 2) 3 else if (button == 3) 2 else 1
-                    if (c.GetNotedItem(id) > 0) {
+                    if (c.getNotedItem(id) > 0) {
                         val invAmt = (amount[i] / divide).toInt()
                         var leftOver = (amount[i] % divide).toInt()
                         val invEmpty = (vials[i] - invAmt - if (leftOver > 0) 1 else 0).toInt()
                         val emptyAmount = c.getInvAmt(230)
                         leftOver = if (leftOver == 3) definition.threeDoseId else if (leftOver == 2) definition.twoDoseId else if (leftOver == 1) definition.oneDoseId else -1
 
-                        if (invAmt > 0 && !c.addItem(c.GetNotedItem(id), invAmt)) {
-                            Ground.addFloorItem(c, c.GetNotedItem(id), invAmt)
-                            ItemLog.playerDrop(c, c.GetNotedItem(id), invAmt, c.position.copy(), "Decant dropped " + c.GetItemName(id).lowercase())
-                            c.send(SendMessage("<col=FF0000>You dropped the " + c.GetItemName(id).lowercase() + " to the floor!"))
+                        if (invAmt > 0 && !c.addItem(c.getNotedItem(id), invAmt)) {
+                            Ground.addFloorItem(c, c.getNotedItem(id), invAmt)
+                            ItemLog.playerDrop(c, c.getNotedItem(id), invAmt, c.position.copy(), "Decant dropped " + c.getItemName(id).lowercase())
+                            c.sendMessage("<col=FF0000>You dropped the " + c.getItemName(id).lowercase() + " to the floor!")
                         }
                         if (invEmpty > 0 && (invEmpty + emptyAmount) < 1000 && !c.addItem(230, invEmpty)) {
                             Ground.addFloorItem(c, 230, invEmpty)
-                            ItemLog.playerDrop(c, 230, invEmpty, c.position.copy(), "Decant dropped " + c.GetItemName(230).lowercase())
-                            c.send(SendMessage("<col=FF0000>You dropped the " + c.GetItemName(230).lowercase() + " to the floor!"))
+                            ItemLog.playerDrop(c, 230, invEmpty, c.position.copy(), "Decant dropped " + c.getItemName(230).lowercase())
+                            c.sendMessage("<col=FF0000>You dropped the " + c.getItemName(230).lowercase() + " to the floor!")
                         } else if (invEmpty < 0) {
                             c.deleteItem(230, invEmpty * -1)
                         }
                         if (leftOver > 0 && !c.addItem(leftOver, 1)) {
                             Ground.addFloorItem(c, leftOver, 1)
-                            ItemLog.playerDrop(c, leftOver, 1, c.position.copy(), "Decant dropped " + c.GetItemName(leftOver).lowercase())
-                            c.send(SendMessage("<col=FF0000>You dropped the " + c.GetItemName(leftOver).lowercase() + " to the floor!"))
+                            ItemLog.playerDrop(c, leftOver, 1, c.position.copy(), "Decant dropped " + c.getItemName(leftOver).lowercase())
+                            c.sendMessage("<col=FF0000>You dropped the " + c.getItemName(leftOver).lowercase() + " to the floor!")
                         }
                     }
                 }
@@ -587,16 +587,16 @@ object DialogueOptionService {
             c.send(RemoveInterfaces())
         } else if (dialogueId == 48054) {
             if (c.getInvAmt(621) < 1) {
-                c.send(SendMessage("You need a ship ticket to unlock this travel!"))
+                c.sendMessage("You need a ship ticket to unlock this travel!")
             } else if (button == 1) {
                 val id = if (c.actionButtonId == 48054) 4 else if (c.actionButtonId == 3056) 3 else c.actionButtonId - 3058
                 if (c.getTravel(id)) {
-                    c.send(SendMessage("You have already unlocked this travel!"))
+                    c.sendMessage("You have already unlocked this travel!")
                 } else {
                     c.deleteItem(621, 1)
                     c.checkItemUpdate()
                     c.saveTravel(id)
-                    c.send(SendMessage("You have now unlocked the travel!"))
+                    c.sendMessage("You have now unlocked the travel!")
                 }
             }
             resetDialogue()

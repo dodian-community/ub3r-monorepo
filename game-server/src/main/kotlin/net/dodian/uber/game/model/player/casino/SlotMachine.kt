@@ -57,10 +57,10 @@ class SlotMachine {
             client.send(RemoveInterfaces())
             client.clearWalkableInterface()
             if (amount > 50_000_000) {
-                client.send(SendMessage("You can't bet more than 50M"))
+                client.sendMessage("You can't bet more than 50M")
             }
             if (amount < 100_000) {
-                client.send(SendMessage("Party pete do not accept anything less then 100k as a gamble!"))
+                client.sendMessage("Party pete do not accept anything less then 100k as a gamble!")
             }
             return
         }
@@ -68,38 +68,38 @@ class SlotMachine {
             DialogueService.setDialogueSent(client, true)
             client.convoId = -1
             client.send(RemoveInterfaces())
-            client.send(SendMessage("You can't bet with more then 2b cash in your inventory!"))
+            client.sendMessage("You can't bet with more then 2b cash in your inventory!")
             return
         }
         if (!client.playerHasItem(995, amount)) {
             DialogueService.setDialogueSent(client, true)
             client.convoId = -1
             client.send(RemoveInterfaces())
-            client.send(SendMessage("You do not have enough cash!"))
+            client.sendMessage("You do not have enough cash!")
             return
         }
 
         client.deleteItem(995, amount)
-        client.send(SendString("", 7815))
-        client.send(SendString("", 8399))
-        client.send(SendString("Royal Dice", 7815))
-        client.send(SendString("Bet: $amount", 8399))
+        client.sendString("", 7815)
+        client.sendString("", 8399)
+        client.sendString("Royal Dice", 7815)
+        client.sendString("Bet: $amount", 8399)
 
         val first = ((Math.random() * 999_999_999).toInt() % 6) + 1
         val second = ((Math.random() * 999_999_999).toInt() % 6) + 1
         val total = first + second
 
-        client.send(SendString(first.toString(), 8424))
-        client.send(SendString(second.toString(), 8425))
+        client.sendString(first.toString(), 8424)
+        client.sendString(second.toString(), 8425)
 
         if (total > 7 && total < 12) {
-            client.send(SendString("Roll: $total.  You win!", 8426))
+            client.sendString("Roll: $total.  You win!", 8426)
             client.addItem(995, amount * 2)
             if (client.playerGroup != 6 || client.playerRights < 2) {
                 trackDice(1, amount)
             }
         } else if (total == 12) {
-            client.send(SendString("Roll: $total.  You win a Jackpot!", 8426))
+            client.sendString("Roll: $total.  You win a Jackpot!", 8426)
             client.addItem(995, amount + amount + amount / 2)
             if (amount + amount / 2 > 50_000_000) {
                 Client.publicyell(client.playerName + " has won " + Utils.format(amount + amount / 2) + " gp jackpot at the Dice!")
@@ -108,7 +108,7 @@ class SlotMachine {
                 trackDice(1, amount + amount / 2)
             }
         } else {
-            client.send(SendString("Roll: $total.  You lose", 8426))
+            client.sendString("Roll: $total.  You lose", 8426)
             if (client.playerGroup != 6 || client.playerRights < 2) {
                 trackDice(2, amount)
             }
@@ -204,16 +204,16 @@ class SlotMachine {
     fun playSlots(client: Client, times: Int) {
         if (!client.playerHasItem(995, 3000)) {
             client.send(RemoveInterfaces())
-            client.send(SendMessage("You don't have enough gold to play!"))
+            client.sendMessage("You don't have enough gold to play!")
             return
         }
 
         slotsGames = times
         if (slotsGames > 0) {
             slotsGames--
-            client.send(SendString("PETE'S SLOTS CO - JACKPOT: $slotsGames plays remaining", 13896))
+            client.sendString("PETE'S SLOTS CO - JACKPOT: $slotsGames plays remaining", 13896)
         } else {
-            client.send(SendString("PETE'S SLOTS CO - JACKPOT: Manual play", 13896))
+            client.sendString("PETE'S SLOTS CO - JACKPOT: Manual play", 13896)
         }
 
         client.deleteItem(995, 3000)
@@ -226,20 +226,20 @@ class SlotMachine {
 
         val spin = spin()
         val winnings = spin.getWinnings()
-        client.send(SendString("", 13884))
-        client.send(SendString(spin.getSymbols()[0].output(), 13885))
-        client.send(SendString(spin.getSymbols()[1].output(), 13886))
-        client.send(SendString(spin.getSymbols()[2].output(), 13887))
+        client.sendString("", 13884)
+        client.sendString(spin.getSymbols()[0].output(), 13885)
+        client.sendString(spin.getSymbols()[1].output(), 13886)
+        client.sendString(spin.getSymbols()[2].output(), 13887)
 
         if (winnings in 1..239_999) {
             client.addItem(995, winnings)
-            client.send(SendMessage("You have won " + Utils.format(winnings) + " gp!"))
+            client.sendMessage("You have won " + Utils.format(winnings) + " gp!")
         } else if (winnings >= 240_000) {
-            client.send(SendMessage("You have won the jackpot!  There is a 15% tax on winnings."))
+            client.sendMessage("You have won the jackpot!  There is a 15% tax on winnings.")
             val amount = (winnings * 0.85).toInt()
             client.addItem(995, amount)
-            client.send(SendMessage("You receive " + Utils.format(amount) + " gp"))
-            client.send(SendString("Jackpot!", 18812))
+            client.sendMessage("You receive " + Utils.format(amount) + " gp")
+            client.sendString("Jackpot!", 18812)
             slotsJackpot = (slotsJackpot / 0.85).toInt()
             Client.publicyell(client.playerName + " has won the " + Utils.format(winnings) + " gp jackpot at the slots!")
         }

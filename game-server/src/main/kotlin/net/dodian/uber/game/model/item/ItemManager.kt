@@ -182,7 +182,7 @@ open class ItemManager @JvmOverloads constructor(
             }
         }
         if (!send) {
-            c.send(SendMessage("Could not find the item $normalizedName in the database!"))
+            c.sendMessage("Could not find the item $normalizedName in the database!")
         }
     }
 

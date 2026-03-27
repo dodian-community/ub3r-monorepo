@@ -63,7 +63,7 @@ object PlunderObjects : ObjectContent {
                 if (PyramidPlunderService.canOpenNextRoomDoor(client, objectId)) {
                     PyramidPlunderService.advanceRoom(client)
                 } else if (PyramidPlunderService.openDoor(client, objectId)) {
-                    client.send(SendMessage("This tomb door lead nowhere."))
+                    client.sendMessage("This tomb door lead nowhere.")
                 } else {
                     PyramidPlunderService.toggleObstacle(client, objectId)
                 }

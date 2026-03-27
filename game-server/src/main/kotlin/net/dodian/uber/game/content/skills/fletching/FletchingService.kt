@@ -16,14 +16,14 @@ object FletchingService {
         client.dialogInterface = 2459
         client.fletchingState = FletchingState(logIndex = logIndex)
         val bowLog = FletchingDefinitions.bowLog(logIndex) ?: return
-        client.send(SendString("Select a bow", 8879))
-        client.sendFrame246(8870, 250, bowLog.unstrungLongbowId)
-        client.sendFrame246(8869, 250, bowLog.unstrungShortbowId)
-        client.send(SendString(client.GetItemName(bowLog.unstrungShortbowId), 8871))
-        client.send(SendString(client.GetItemName(bowLog.unstrungShortbowId), 8874))
-        client.send(SendString(client.GetItemName(bowLog.unstrungLongbowId), 8878))
-        client.send(SendString(client.GetItemName(bowLog.unstrungLongbowId), 8875))
-        client.sendFrame164(8866)
+        client.sendString("Select a bow", 8879)
+        client.sendInterfaceModel(8870, 250, bowLog.unstrungLongbowId)
+        client.sendInterfaceModel(8869, 250, bowLog.unstrungShortbowId)
+        client.sendString(client.getItemName(bowLog.unstrungShortbowId), 8871)
+        client.sendString(client.getItemName(bowLog.unstrungShortbowId), 8874)
+        client.sendString(client.getItemName(bowLog.unstrungLongbowId), 8878)
+        client.sendString(client.getItemName(bowLog.unstrungLongbowId), 8875)
+        client.sendChatboxInterface(8866)
     }
 
     @JvmStatic
@@ -39,14 +39,14 @@ object FletchingService {
         val request =
         if (longBow) {
             if (client.getLevel(Skill.FLETCHING) < bowLog.longLevelRequired) {
-                client.send(SendMessage("Requires fletching ${bowLog.longLevelRequired}!"))
+                client.sendMessage("Requires fletching ${bowLog.longLevelRequired}!")
                 client.resetAction()
                 return
             }
             FletchingRequest(logIndex, bowLog.unstrungLongbowId, bowLog.longExperience, amount)
         } else {
             if (client.getLevel(Skill.FLETCHING) < bowLog.shortLevelRequired) {
-                client.send(SendMessage("Requires fletching ${bowLog.shortLevelRequired}!"))
+                client.sendMessage("Requires fletching ${bowLog.shortLevelRequired}!")
                 client.resetAction()
                 return
             }
@@ -79,13 +79,13 @@ object FletchingService {
             return
         }
         if (client.isBusy) {
-            client.send(SendMessage("You are currently busy to be fletching!"))
+            client.sendMessage("You are currently busy to be fletching!")
             return
         }
 
         client.send(RemoveInterfaces())
         client.IsBanking = false
-        client.requestAnim(4433, 0)
+        client.performAnimation(4433, 0)
 
         val logIndex = state.logIndex
         val bowLog = FletchingDefinitions.bowLog(logIndex)

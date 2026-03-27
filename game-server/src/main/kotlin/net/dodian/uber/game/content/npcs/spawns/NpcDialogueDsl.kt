@@ -49,7 +49,7 @@ class NpcActionChainBuilder {
     fun clientMessage(message: String) {
         actions += { client, _ ->
             if (message.isNotBlank()) {
-                client.send(SendMessage(message))
+                client.sendMessage(message)
             }
         }
     }

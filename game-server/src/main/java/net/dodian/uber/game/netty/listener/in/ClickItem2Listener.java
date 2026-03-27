@@ -43,7 +43,7 @@ public class ClickItem2Listener implements PacketListener {
             return;
         }
 
-        String itemName = client.GetItemName(itemId);
+        String itemName = client.getItemName(itemId);
 
         /* Slayer helm task reminder */
         if (itemName.startsWith("Slayer helm")) {

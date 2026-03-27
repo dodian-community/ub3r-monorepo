@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.WalkToTask
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object CombatRuntimeService {
     @JvmStatic
@@ -112,7 +112,7 @@ object CombatRuntimeService {
         reason: CombatCancellationReason = CombatCancellationReason.TARGET_INVALID,
     ) {
         CombatHitQueueService.clearFor(npc)
-        for (player in PlayerHandler.playersOnline.values) {
+        for (player in PlayerRegistry.playersOnline.values) {
             clearNpcTarget(player, npc, reason)
         }
     }

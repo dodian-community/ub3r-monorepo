@@ -17,14 +17,14 @@ object GrimyHerbItems : ItemContent {
             val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
             val requiredLevel = herb.requiredLevel
             if (herbloreLevel < requiredLevel) {
-                client.send(SendMessage("You need level $requiredLevel herblore to clean this herb."))
+                client.sendMessage("You need level $requiredLevel herblore to clean this herb.")
                 return true
             }
 
             SkillProgressionService.gainXp(client, herb.cleaningExperience, Skill.HERBLORE)
             client.deleteItem(itemId, itemSlot, 1)
             client.addItemSlot(herb.cleanId, 1, itemSlot)
-            client.send(SendMessage("You clean the ${client.GetItemName(itemId)}."))
+            client.sendMessage("You clean the ${client.getItemName(itemId)}.")
             return true
         }
         return false

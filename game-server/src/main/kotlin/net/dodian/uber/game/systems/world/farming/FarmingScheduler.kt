@@ -6,7 +6,7 @@ import java.util.TreeMap
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.skills.farming.FarmingState
 import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
 
 data class FarmingRefreshStats(
@@ -60,7 +60,7 @@ class FarmingScheduler {
         return FarmingRefreshStats(activePlayers.size)
     }
 
-    fun noteActivity(player: Client, currentCycle: Long = PlayerHandler.cycle.toLong()) {
+    fun noteActivity(player: Client, currentCycle: Long = PlayerRegistry.cycle.toLong()) {
         schedule(player, alignedCycle(player, currentCycle, ACTIVE_INTERVAL_TICKS))
     }
 

@@ -32,7 +32,7 @@ class TargetedWorldPollApplier {
             .filter { it.loadingDone && it.latestNews != latestNews }
             .forEach { client ->
                 client.latestNews = latestNews
-                client.send(SendMessage("[SERVER]: There is a new post on the homepage! type ::news"))
+                client.sendMessage("[SERVER]: There is a new post on the homepage! type ::news")
             }
     }
 
@@ -46,7 +46,7 @@ class TargetedWorldPollApplier {
         result.playersWithRefunds.forEach { dbId ->
             val client = playerIndex.byDbId(dbId) ?: return@forEach
             if (client.loadingDone) {
-                client.send(SendMessage("<col=4C4B73>You have some unclaimed items to claim!"))
+                client.sendMessage("<col=4C4B73>You have some unclaimed items to claim!")
             }
         }
     }

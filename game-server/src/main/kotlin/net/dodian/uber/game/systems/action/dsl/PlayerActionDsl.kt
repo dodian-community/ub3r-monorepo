@@ -70,7 +70,7 @@ class ActionScope internal constructor(
     ): Boolean {
         val result = requirement.validate(player)
         if (result is ValidationResult.Failed) {
-            player.send(SendMessage(result.message))
+            player.sendMessage(result.message)
             stop(failureReason)
         }
         return true

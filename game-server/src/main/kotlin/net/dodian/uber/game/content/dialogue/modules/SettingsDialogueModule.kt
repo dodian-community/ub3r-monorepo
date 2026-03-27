@@ -12,10 +12,10 @@ object SettingsDialogueModule : DialogueRenderModule {
         builder.handle(DialogueIds.Classic.TOGGLE_SPECIALS) { c ->
             c.send(Frame171(1, 2465))
             c.send(Frame171(0, 2468))
-            c.send(SendString("What would you like to do?", 2460))
-            c.send(SendString("Enable specials", 2461))
-            c.send(SendString("Disable specials", 2462))
-            c.sendFrame164(2459)
+            c.sendString("What would you like to do?", 2460)
+            c.sendString("Enable specials", 2461)
+            c.sendString("Disable specials", 2462)
+            c.sendChatboxInterface(2459)
             DialogueService.setDialogueSent(c, true)
             true
         }
@@ -23,10 +23,10 @@ object SettingsDialogueModule : DialogueRenderModule {
         builder.handle(DialogueIds.Classic.TOGGLE_BOSS_YELL) { c ->
             c.send(Frame171(1, 2465))
             c.send(Frame171(0, 2468))
-            c.send(SendString("What would you like to do?", 2460))
-            c.send(SendString("Enable boss yell messages", 2461))
-            c.send(SendString("Disable boss yell messages", 2462))
-            c.sendFrame164(2459)
+            c.sendString("What would you like to do?", 2460)
+            c.sendString("Enable boss yell messages", 2461)
+            c.sendString("Disable boss yell messages", 2462)
+            c.sendChatboxInterface(2459)
             DialogueService.setDialogueSent(c, true)
             true
         }

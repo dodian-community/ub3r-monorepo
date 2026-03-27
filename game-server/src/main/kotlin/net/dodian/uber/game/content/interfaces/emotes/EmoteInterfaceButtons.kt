@@ -15,53 +15,53 @@ object EmoteInterfaceButtons : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 1, "emotes.special.goblin_bow", EmoteComponents.goblinBowButtons) { client, _ ->
-                client.requestAnim(4276, 0)
+                client.performAnimation(4276, 0)
                 client.gfx0(712)
                 true
             },
             buttonBinding(-1, 2, "emotes.special.goblin_salute", EmoteComponents.goblinSaluteButtons) { client, _ ->
-                client.requestAnim(4278, 0)
+                client.performAnimation(4278, 0)
                 client.gfx0(713)
                 true
             },
             buttonBinding(-1, 3, "emotes.special.glass_box", EmoteComponents.glassBoxButtons) { client, _ ->
-                client.requestAnim(4280, 0)
+                client.performAnimation(4280, 0)
                 true
             },
             buttonBinding(-1, 4, "emotes.special.climb_rope", EmoteComponents.climbRopeButtons) { client, _ ->
-                client.requestAnim(4275, 0)
+                client.performAnimation(4275, 0)
                 true
             },
             buttonBinding(-1, 5, "emotes.special.lean", EmoteComponents.leanButtons) { client, _ ->
-                client.requestAnim(2836, 0)
+                client.performAnimation(2836, 0)
                 true
             },
             buttonBinding(-1, 6, "emotes.special.glass_wall", EmoteComponents.glassWallButtons) { client, _ ->
-                client.requestAnim(6111, 0)
+                client.performAnimation(6111, 0)
                 true
             },
             buttonBinding(-1, 7, "emotes.special.idea", EmoteComponents.ideaButtons) { client, _ ->
-                client.requestAnim(3543, 0)
+                client.performAnimation(3543, 0)
                 true
             },
             buttonBinding(-1, 8, "emotes.special.stomp", EmoteComponents.stompButtons) { client, _ ->
-                client.requestAnim(3544, 0)
+                client.performAnimation(3544, 0)
                 true
             },
             buttonBinding(-1, 9, "emotes.special.skillcape", EmoteComponents.skillcapeButtons) { client, _ ->
                 var skillcape = Skillcape.getSkillCape(client.equipment[Equipment.Slot.CAPE.id])
                 if (skillcape != null) {
-                    client.requestAnim(skillcape.emote, 0)
+                    client.performAnimation(skillcape.emote, 0)
                     client.gfx0(skillcape.gfx)
                 } else if (client.equipment[Equipment.Slot.CAPE.id] == 9813) {
-                    client.requestAnim(4945, 0)
+                    client.performAnimation(4945, 0)
                     client.gfx0(816)
-                } else if (client.GetItemName(client.equipment[Equipment.Slot.CAPE.id]).lowercase().contains("max cape")) {
+                } else if (client.getItemName(client.equipment[Equipment.Slot.CAPE.id]).lowercase().contains("max cape")) {
                     skillcape = Skillcape.getRandomCape()
-                    client.requestAnim(skillcape.emote, 0)
+                    client.performAnimation(skillcape.emote, 0)
                     client.gfx0(skillcape.gfx)
                 } else {
-                    client.send(SendMessage("You need to be wearing a skillcape to do that!"))
+                    client.sendMessage("You need to be wearing a skillcape to do that!")
                 }
                 true
             },

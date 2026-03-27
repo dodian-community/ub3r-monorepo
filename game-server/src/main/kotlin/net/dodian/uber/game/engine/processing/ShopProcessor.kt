@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.processing
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.ShopHandler
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 class ShopProcessor : Runnable {
     override fun run() {
@@ -33,7 +33,7 @@ class ShopProcessor : Runnable {
             }
 
             if (didUpdate) {
-                PlayerHandler.forEachActivePlayer { player ->
+                PlayerRegistry.forEachActivePlayer { player ->
                     if (player.isShopping && player.MyShopID == i) {
                         (player as Client).checkItemUpdate()
                     }

@@ -53,51 +53,51 @@ class DesertCarpetService(private val c: Client) {
             if (countAbove && count < 20) {
                 c.setWalkAnim(6936)
                 c.setRunAnim(6936)
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
                 c.AddToRunCords(if (pos == 2) -2 else if (pos == 1) 2 else 0, 2, 600L * (35 - count))
             } else if (count == 20) {
-                c.showInterface(18460)
-                c.requestAnim(6936, 0)
+                c.openInterface(18460)
+                c.performAnimation(6936, 0)
             } else if (countAbove && count < 23) {
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
             }
             when (pos) {
                 0 -> {
                     if (count == 23) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3349, 3003, 0))
                     }
                     if (count == 25) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Pollnivneach."))
+                        c.sendMessage("Welcome to Pollnivneach.")
                         return@startRide false
                     }
                 }
                 1 -> {
                     if (count == 26) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3401, 2916, 0))
                     }
                     if (count == 28) {
                         landed(c)
                         c.AddToWalkCords(0, 1, 600)
-                        c.send(SendMessage("Welcome to Nardah."))
+                        c.sendMessage("Welcome to Nardah.")
                         return@startRide false
                     }
                 }
                 2 -> {
                     if (count == 29) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3180, 3045, 0))
                     }
                     if (count == 31) {
                         landed(c)
                         c.AddToWalkCords(-1, 0, 600)
-                        c.send(SendMessage("Welcome to Bedabin Camp."))
+                        c.sendMessage("Welcome to Bedabin Camp.")
                         return@startRide false
                     }
                 }
@@ -138,7 +138,7 @@ class DesertCarpetService(private val c: Client) {
             if (countAbove && count < 20) {
                 c.setWalkAnim(6936)
                 c.setRunAnim(6936)
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
                 when (pos) {
                     0 -> {
                         if (count - 1 <= 2) {
@@ -159,22 +159,22 @@ class DesertCarpetService(private val c: Client) {
                     }
                 }
             } else if (count == 20) {
-                c.showInterface(18460)
-                c.requestAnim(6936, 0)
+                c.openInterface(18460)
+                c.performAnimation(6936, 0)
             } else if (countAbove && count < 23) {
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
             }
             when (pos) {
                 0 -> {
                     if (count == 23) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3401, 2916, 0))
                     }
                     if (count == 25) {
                         landed(c)
                         c.AddToWalkCords(0, 1, 600)
-                        c.send(SendMessage("Welcome to Nardah."))
+                        c.sendMessage("Welcome to Nardah.")
                         false
                     } else {
                         true
@@ -182,14 +182,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 1 -> {
                     if (count == 26) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3180, 3045, 0))
                     }
                     if (count == 28) {
                         landed(c)
                         c.AddToWalkCords(-1, 0, 600)
-                        c.send(SendMessage("Welcome to Bedabin Camp."))
+                        c.sendMessage("Welcome to Bedabin Camp.")
                         false
                     } else {
                         true
@@ -197,14 +197,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 2 -> {
                     if (count == 29) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3285, 2813, 0))
                     }
                     if (count == 31) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Sophanem."))
+                        c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {
                         true
@@ -245,29 +245,29 @@ class DesertCarpetService(private val c: Client) {
             if (countAbove && count < 20) {
                 c.setWalkAnim(6936)
                 c.setRunAnim(6936)
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
                 if (pos != 1 && count >= 18) {
                     c.AddToRunCords(-2, 0, 600L * (35 - count))
                 } else {
                     c.AddToRunCords(-2, if (pos == 1) -2 else 2, 600L * (35 - count))
                 }
             } else if (count == 20) {
-                c.showInterface(18460)
-                c.requestAnim(6936, 0)
+                c.openInterface(18460)
+                c.performAnimation(6936, 0)
             } else if (countAbove && count < 23) {
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
             }
             when (pos) {
                 0 -> {
                     if (count == 23) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3349, 3003, 0))
                     }
                     if (count == 25) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Pollnivneach."))
+                        c.sendMessage("Welcome to Pollnivneach.")
                         false
                     } else {
                         true
@@ -275,14 +275,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 1 -> {
                     if (count == 26) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3285, 2813, 0))
                     }
                     if (count == 28) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Sophanem."))
+                        c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {
                         true
@@ -290,14 +290,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 2 -> {
                     if (count == 29) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3180, 3045, 0))
                     }
                     if (count == 31) {
                         landed(c)
                         c.AddToWalkCords(-1, 0, 600)
-                        c.send(SendMessage("Welcome to Bedabin Camp."))
+                        c.sendMessage("Welcome to Bedabin Camp.")
                         false
                     } else {
                         true
@@ -335,25 +335,25 @@ class DesertCarpetService(private val c: Client) {
             if (countAbove && count < 20) {
                 c.setWalkAnim(6936)
                 c.setRunAnim(6936)
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
                 c.AddToRunCords(if (pos < 2) 2 else 0, -2, 600L * (35 - count))
             } else if (count == 20) {
-                c.showInterface(18460)
-                c.requestAnim(6936, 0)
+                c.openInterface(18460)
+                c.performAnimation(6936, 0)
             } else if (countAbove && count < 23) {
-                c.requestAnim(6936, 0)
+                c.performAnimation(6936, 0)
             }
             when (pos) {
                 0 -> {
                     if (count == 23) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3349, 3003, 0))
                     }
                     if (count == 25) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Pollnivneach."))
+                        c.sendMessage("Welcome to Pollnivneach.")
                         false
                     } else {
                         true
@@ -361,14 +361,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 1 -> {
                     if (count == 26) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3401, 2916, 0))
                     }
                     if (count == 28) {
                         landed(c)
                         c.AddToWalkCords(0, 1, 600)
-                        c.send(SendMessage("Welcome to Nardah."))
+                        c.sendMessage("Welcome to Nardah.")
                         false
                     } else {
                         true
@@ -376,14 +376,14 @@ class DesertCarpetService(private val c: Client) {
                 }
                 2 -> {
                     if (count == 29) {
-                        c.requestAnim(-1, 0)
-                        c.showInterface(18452)
+                        c.performAnimation(-1, 0)
+                        c.openInterface(18452)
                         c.transport(Position(3285, 2813, 0))
                     }
                     if (count == 31) {
                         landed(c)
                         c.AddToWalkCords(0, -1, 600)
-                        c.send(SendMessage("Welcome to Sophanem."))
+                        c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {
                         true

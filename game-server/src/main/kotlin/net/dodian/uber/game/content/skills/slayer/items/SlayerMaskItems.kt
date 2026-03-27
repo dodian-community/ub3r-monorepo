@@ -14,7 +14,7 @@ object SlayerMaskItems : ItemContent {
                 if (needed > 0) {
                     client.send(
                         SendMessage(
-                            "you need $needed empty inventory slots to disassemble the ${client.GetItemName(itemId).lowercase()}."
+                            "you need $needed empty inventory slots to disassemble the ${client.getItemName(itemId).lowercase()}."
                         )
                     )
                     true
@@ -30,7 +30,7 @@ object SlayerMaskItems : ItemContent {
                     client.addItem(6720, 1)
                     client.addItem(8923, 1)
                     client.checkItemUpdate()
-                    client.send(SendMessage("you disassemble the ${client.GetItemName(itemId).lowercase()}."))
+                    client.sendMessage("you disassemble the ${client.getItemName(itemId).lowercase()}.")
                     true
                 }
             }
@@ -42,7 +42,7 @@ object SlayerMaskItems : ItemContent {
                     client.addItemSlot(8921, 1, itemSlot)
                     client.checkItemUpdate()
                 } else {
-                    client.send(SendMessage("You either need one free space or coins to not go beyond 2147million!"))
+                    client.sendMessage("You either need one free space or coins to not go beyond 2147million!")
                 }
                 true
             }

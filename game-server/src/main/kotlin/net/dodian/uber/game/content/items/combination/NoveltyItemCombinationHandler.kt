@@ -41,13 +41,13 @@ object NoveltyItemCombinationHandler {
                     client.addItem(otherId + 1, 1)
                     client.send(
                         SendMessage(
-                            "Your key shine bright and turned your ${client.GetItemName(85).lowercase()} into a ${client.GetItemName(otherId + 1).lowercase()}",
+                            "Your key shine bright and turned your ${client.getItemName(85).lowercase()} into a ${client.getItemName(otherId + 1).lowercase()}",
                         ),
                     )
                 } else {
                     client.send(
                         SendMessage(
-                            "I already have a ${client.GetItemName(otherId + 1).lowercase()} in ${if (client.playerHasItem(otherId + 1)) "my inventory!" else "my bank!"}",
+                            "I already have a ${client.getItemName(otherId + 1).lowercase()} in ${if (client.playerHasItem(otherId + 1)) "my inventory!" else "my bank!"}",
                         ),
                     )
                 }
@@ -60,15 +60,15 @@ object NoveltyItemCombinationHandler {
                     client.addItem(transformed, 1)
                     client.send(
                         SendMessage(
-                            "Your key shine bright and turned your ${client.GetItemName(85).lowercase()} into a ${client.GetItemName(transformed).lowercase()}",
+                            "Your key shine bright and turned your ${client.getItemName(85).lowercase()} into a ${client.getItemName(transformed).lowercase()}",
                         ),
                     )
                 } else if (!client.checkItem(989) && client.checkItem(2382) && client.checkItem(2383)) {
-                    client.send(SendMessage("You already have the crystals, perhaps you should combine them?"))
+                    client.sendMessage("You already have the crystals, perhaps you should combine them?")
                 } else {
                     client.send(
                         SendMessage(
-                            "I already have a ${client.GetItemName(989).lowercase()} in ${if (client.playerHasItem(989)) "my inventory!" else "my bank!"}",
+                            "I already have a ${client.getItemName(989).lowercase()} in ${if (client.playerHasItem(989)) "my inventory!" else "my bank!"}",
                         ),
                     )
                 }
@@ -108,7 +108,7 @@ object NoveltyItemCombinationHandler {
                 }
                 client.addItemSlot(11863, 1, itemUsedSlot)
             } else {
-                client.send(SendMessage("You need one of each partyhat to combine it into the rainbow partyhat!"))
+                client.sendMessage("You need one of each partyhat to combine it into the rainbow partyhat!")
             }
             return true
         }
@@ -121,9 +121,9 @@ object NoveltyItemCombinationHandler {
                     client.addItem(id, 1)
                     id += 2
                 }
-                client.send(SendMessage("You gentle used the knife on the paper hat and cut it into different color partyhats."))
+                client.sendMessage("You gentle used the knife on the paper hat and cut it into different color partyhats.")
             } else {
-                client.send(SendMessage("You need to have ${if (slotRemain == 1) "one" else slotRemain} empty slot${if (slotRemain != 1) "s" else ""} to tear the rainbow partyhat apart."))
+                client.sendMessage("You need to have ${if (slotRemain == 1) "one" else slotRemain} empty slot${if (slotRemain != 1) "s" else ""} to tear the rainbow partyhat apart.")
             }
             return true
         }
@@ -139,9 +139,9 @@ object NoveltyItemCombinationHandler {
                 client.deleteItem(11862, slot, 1)
                 client.addItemSlot(11863, 1, slot)
                 client.addItem(962, 1)
-                client.send(SendMessage("You gentle used the knife on the paper hat and cut it into a cracker and a rainbow partyhat."))
+                client.sendMessage("You gentle used the knife on the paper hat and cut it into a cracker and a rainbow partyhat.")
             } else {
-                client.send(SendMessage("You need to have atleast one space to tear the black partyhat apart!"))
+                client.sendMessage("You need to have atleast one space to tear the black partyhat apart!")
             }
             return true
         }
@@ -173,7 +173,7 @@ object NoveltyItemCombinationHandler {
                             client.deleteItem(otherItem, usedWithSlot, 1)
                             client.addItemSlot(dye[1], 1, if (itemUsed == target[1]) itemUsedSlot else usedWithSlot)
                         } else {
-                            client.send(SendMessage("There is no point in using the same color as the cape!"))
+                            client.sendMessage("There is no point in using the same color as the cape!")
                         }
                         return true
                     }

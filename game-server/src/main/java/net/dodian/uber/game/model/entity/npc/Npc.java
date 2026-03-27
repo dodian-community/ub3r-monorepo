@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
@@ -163,11 +163,11 @@ public class Npc extends Entity {
     }
 
     public Client getClient(int index) {
-        return ((Client) PlayerHandler.players[index]);
+        return ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) PlayerHandler.players[index];
+        Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
@@ -325,7 +325,7 @@ public class Npc extends Entity {
                 break;
         }
         client.sendQuestSomething(8143);
-        client.showInterface(8134);
+        client.openInterface(8134);
         //client.flushOutStream();
     }
     public void showGemConfig(Client client) {
@@ -362,7 +362,7 @@ public class Npc extends Entity {
                 break;
         }
         client.sendQuestSomething(8143);
-        client.showInterface(8134);
+        client.openInterface(8134);
         //client.flushOutStream();
     }
 
@@ -416,7 +416,7 @@ public class Npc extends Entity {
             }
             if(!specialCondition(enemy)) {
                 int hitDiff = landHit(enemy, true) ? Utils.random(maxHit) : 0;
-                requestAnim(data.getAttackEmote(), 0);
+                performAnimation(data.getAttackEmote(), 0);
                 enemy.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
                 setLastAttack(getAttackTimer());
             }
@@ -451,7 +451,7 @@ public class Npc extends Entity {
                                     c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
                                 });
                             } else {
-                                requestAnim(data.getAttackEmote(), 0);
+                                performAnimation(data.getAttackEmote(), 0);
                                 enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
                             }
                         }
@@ -465,7 +465,7 @@ public class Npc extends Entity {
                 boolean landRanged = Misc.chance(6) == 1;
                 //278 = start gfx!, 288 = range gfx!
                 if(!landRanged) {
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     if(target != null && isActivelyTargetingThisNpc(target))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                     if(enemy != null && isActivelyTargetingThisNpc(enemy))
@@ -523,7 +523,7 @@ public class Npc extends Entity {
                         delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 } else { //Melee!
-                    requestAnim(5327, 0);
+                    performAnimation(5327, 0);
                     if(target != null && isActivelyTargetingThisNpc(target))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                     if(enemy != null && isActivelyTargetingThisNpc(enemy))
@@ -586,7 +586,7 @@ public class Npc extends Entity {
         CombatRuntimeService.clearNpcTargets(this, CombatCancellationReason.TARGET_INVALID);
         // Keep death-floor/respawn progression exact even if this npc becomes offscreen.
         NpcTimerScheduler.onNpcDied(this);
-        requestAnim(deathEmote, 0);
+        performAnimation(deathEmote, 0);
         Client p = getTarget(false);
         if (p == null)
             return;
@@ -648,7 +648,7 @@ public class Npc extends Entity {
                 checkChance = drop.getChance();
                 if (wealth && drop.getChance() < 10.0)
                     checkChance *= drop.getId() >= 5509 && drop.getId() <= 5515 ? 1.0 : drop.getChance() <= 0.1 ? 1.25 : drop.getChance() <= 1.0 ? 1.15 : 1.05;
-                //System.out.println("Chance for item "+target.GetItemName(drop.getId())+": " + rolledChance + ", " + checkChance + ", " + currentChance + ": " + (checkChance + currentChance));
+                //System.out.println("Chance for item "+target.getItemName(drop.getId())+": " + rolledChance + ", " + checkChance + ", " + currentChance + ": " + (checkChance + currentChance));
                 if (checkChance >= 100.0 || target.instaLoot || (checkChance + currentChance >= rolledChance && !itemDropped)) { // 100% items!
                     if (drop.getId() >= 5509 && drop.getId() <= 5515) //Just incase shiet!
                         if (target.checkItem(drop.getId()))
@@ -666,7 +666,7 @@ public class Npc extends Entity {
                         target.send(new SendMessage("<col=FF6347>Your ring of wealth shines more brightly!"));
                     if (drop.rareShout()) {
                         String yell = "<col=292BA3>" + target.getPlayerName() + " has recieved a "
-                                + target.GetItemName(drop.getId()).toLowerCase() + " from " + npcName().toLowerCase() + (killCount(target) > 0 && boss ? " (Kill: " + killCount(target) + ")" : "(Kill: " + target.monsterKC(this) + ")");
+                                + target.getItemName(drop.getId()).toLowerCase() + " from " + npcName().toLowerCase() + (killCount(target) > 0 && boss ? " (Kill: " + killCount(target) + ")" : "(Kill: " + target.monsterKC(this) + ")");
                         target.yell("<col=FFFF00>System<col=000000> <col=FFFF00>" + yell);
                     }
                     ItemLog.npcDrop(target, id, drop.getId(), drop.getAmount(), pos);
@@ -786,7 +786,7 @@ public class Npc extends Entity {
      * @return the respawn
      */
     public int getRespawn() {
-        int bossSpawn = boss ? respawn - Math.max(30, Math.max(PlayerHandler.getPlayerCount() - 5, 0)) : 0;
+        int bossSpawn = boss ? respawn - Math.max(30, Math.max(PlayerRegistry.getPlayerCount() - 5, 0)) : 0;
         return Math.max(boss ? bossSpawn : respawn, 1);
     }
 
@@ -1014,10 +1014,10 @@ public class Npc extends Entity {
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     sendArrow(c, 87, 88);
                     delayGfx(c, 708, 89, getDistanceDelay(distance, true), hitDiff, false, this, damageType.MAGIC);
-                    //requestAnim(708, 0);
+                    //performAnimation(708, 0);
                 } else { //Melee attack
                     hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
                 }
                 break;
@@ -1026,9 +1026,9 @@ public class Npc extends Entity {
                 setLastAttack(getAttackTimer());
                 if(!halfHealth) { //Melee attack
                     hitDiff = landHit(c, true) ? Utils.random(maxHit) : 0;
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    //requestAnim(708, 0);
+                    //performAnimation(708, 0);
                 } else { //Ranged attack
                     CalculateMaxHit(false);
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
@@ -1044,7 +1044,7 @@ public class Npc extends Entity {
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
                     sendArrow(c, 23, 14);
                     delayGfx(c, data.getAttackEmote(), -1, getDistanceDelay(distance, false), hitDiff, false, this, damageType.RANGED);
-                    //requestAnim(708, 0);
+                    //performAnimation(708, 0);
                 } else { //Magic attack
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
                     sendArrow(c, -1, 146);
@@ -1058,7 +1058,7 @@ public class Npc extends Entity {
             case 2919: //Mithril dragon
                 if(Misc.chance(6) == 1) {
                     hitDiff = Utils.random(50);
-                    requestAnim(82, 0);
+                    performAnimation(82, 0);
                     c.callGfxMask(438, 100);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.FIRE_BREATH);
                     setLastAttack(getAttackTimer());
@@ -1068,7 +1068,7 @@ public class Npc extends Entity {
             case 2585: // Abyssal guardian boss!
                 if(Misc.chance(5) == 1) {
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    requestAnim(data.getAttackEmote() + 1, 0);
+                    performAnimation(data.getAttackEmote() + 1, 0);
                     c.callGfxMask(getId() == 2585 ? 89 : 76, 100);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MAGIC);
                     setLastAttack(getAttackTimer());
@@ -1077,7 +1077,7 @@ public class Npc extends Entity {
             case 1432: //Black demon
                 if(Misc.chance(6) == 1) { //Cast magic attack!
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    requestAnim(69, 0);
+                    performAnimation(69, 0);
                     c.stillgfx(381, c.getPosition().getY(), c.getPosition().getX());
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MAGIC);
                     setLastAttack(getAttackTimer());
@@ -1087,7 +1087,7 @@ public class Npc extends Entity {
                 if(Misc.chance(5) == 1) { //Cast magic attack!
                     boolean heal = Misc.random(2) == 1;
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic() * (heal ? 1.1 : 0.9)));
-                    requestAnim(69, 0);
+                    performAnimation(69, 0);
                     c.stillgfx(heal ? 377 : 78, c.getPosition().getY(), c.getPosition().getX());
                     if(heal)
                         heal(hitDiff);
@@ -1098,7 +1098,7 @@ public class Npc extends Entity {
             case 4922: //Ice queen
                 if(Misc.chance(6) == 1) { //Cast magic attack!
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    requestAnim(1979, 0);
+                    performAnimation(1979, 0);
                     c.stillgfx(369, c.getPosition().getY(), c.getPosition().getX());
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this,  damageType.MAGIC);
                     setLastAttack(getAttackTimer());
@@ -1108,7 +1108,7 @@ public class Npc extends Entity {
                 if(Misc.chance(5) == 1) { //Cast range Attack
                     CalculateMaxHit(false);
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    requestAnim(4237, 0);
+                    performAnimation(4237, 0);
                     c.stillgfx(378, c.getPosition().getY(), c.getPosition().getX());
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.RANGED);
                     setLastAttack(getAttackTimer());
@@ -1118,7 +1118,7 @@ public class Npc extends Entity {
                 if(Misc.chance(4) == 1) { //Cast range Attack
                     CalculateMaxHit(false);
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    requestAnim(1978, 0);
+                    performAnimation(1978, 0);
                     c.stillgfx(180, c.getPosition().getY(), c.getPosition().getX());
                     c.setSnared(-1, 5);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.RANGED);
@@ -1127,7 +1127,7 @@ public class Npc extends Entity {
                 break;
             case 2193: //Tok-Xil
                 CalculateMaxHit(false);
-                requestAnim(data.getAttackEmote(), 0);
+                performAnimation(data.getAttackEmote(), 0);
                 hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
                 c.stillgfx(441, c.getPosition().getY(), c.getPosition().getX());
                 c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.RANGED);
@@ -1136,7 +1136,7 @@ public class Npc extends Entity {
             case 2154: // TzHaar-Mej
                 if(Misc.chance(3) == 1) {
                     hitDiff = Utils.random((int)Math.floor(maxHit * this.getMagic()));
-                    requestAnim(data.getAttackEmote() + 1, 0);
+                    performAnimation(data.getAttackEmote() + 1, 0);
                     c.callGfxMask(440, 100);
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.MAGIC);
                     setLastAttack(getAttackTimer());
@@ -1145,7 +1145,7 @@ public class Npc extends Entity {
             case 3964: //San Tojalon
                 if(Misc.chance(5) == 1 && (boostedStat[0] <= boostedStatOrig[0] / 2)) { //Cast boost
                     setText("Let the shadow protect me!");
-                    requestAnim(5489, 0);
+                    performAnimation(5489, 0);
                     boostedStat(0, 60);
                     setLastAttack(getAttackTimer() + 1);
                 } else attack = false;
@@ -1153,7 +1153,7 @@ public class Npc extends Entity {
             case 4067: //Black knight titan
                 if(Misc.chance(5) == 1 && (boostedStat[2] <= boostedStatOrig[2] / 2)) { //Cast boost
                     setText("GRRRRR!");
-                    requestAnim(129, 0);
+                    performAnimation(129, 0);
                     boostedStat(2, 60);
                     setLastAttack(getAttackTimer() + 1);
                 } else attack = false;
@@ -1161,7 +1161,7 @@ public class Npc extends Entity {
             case 8: //Nechrayel
                 if(Misc.chance(6) == 1 && (boostedStat[0] <= boostedStatOrig[0] / 2)) { //Cast boost
                     setText("I HAVE AWAKEN!");
-                    requestAnim(1529, 0);
+                    performAnimation(1529, 0);
                     for(int i = 0; i <= 2; i++)
                         boostedStat(i, 40);
                     setLastAttack(getAttackTimer() + 1);
@@ -1170,14 +1170,14 @@ public class Npc extends Entity {
             case 2266: //Prime
                 if(Misc.chance(5) == 1 && (boostedStat[4] <= boostedStatOrig[4] / 2)) { //Cast boost
                     setText("Rawr!");
-                    requestAnim(2855, 0);
+                    performAnimation(2855, 0);
                     boostedStat(1, 60);
                     boostedStat(4, 60);
                     setLastAttack(getAttackTimer() + 1);
                 } else if(Misc.chance(5) == 1) {
                     CalculateMaxHit(false);
                     hitDiff = landHit(c, false) ? Utils.random(maxHit) : 0;
-                    requestAnim(2854, 0);
+                    performAnimation(2854, 0);
                     c.stillgfx(406, c.getPosition().getY(), c.getPosition().getX());
                     c.dealDamage(hitDiff, Entity.hitType.STANDARD, this, damageType.RANGED);
                     setLastAttack(getAttackTimer());
@@ -1186,7 +1186,7 @@ public class Npc extends Entity {
             case 5311: //Head Mourner
                 if(Misc.chance(5) == 1) { //True melee damage!
                     setText("Get out of my farm!");
-                    requestAnim(1203, 0);
+                    performAnimation(1203, 0);
                     hitDiff = ((int)(maxHit * 0.2) + Misc.random((int)((maxHit * 0.6) - (maxHit * 0.2))));
                     c.dealDamage(hitDiff, Entity.hitType.CRIT, this, damageType.TRUEDAMAGE);
                     setLastAttack(getAttackTimer() / 2);
@@ -1226,7 +1226,7 @@ public class Npc extends Entity {
                 if(prayerBonus < 15) {
                     setText("I'll suckie your bloodie!");
                     hitDiff = 15 + Utils.random(25);
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, hitDiff >= 35 ? Entity.hitType.CRIT : Entity.hitType.STANDARD, this, damageType.BLOODATTACK);
                     heal(hitDiff);
                     setLastAttack(getAttackTimer());
@@ -1236,7 +1236,7 @@ public class Npc extends Entity {
                 boolean slayer_gloves = c.getEquipment()[Equipment.Slot.HANDS.getId()] == 6720 || c.gotSlayerHelmet(c);
                 if(!slayer_gloves) { //Sting the target!
                     hitDiff = 8 + Utils.random(22);
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, hitDiff >= 25 ? Entity.hitType.CRIT : Entity.hitType.STANDARD, this, damageType.TRUEDAMAGE);
                     setLastAttack(getAttackTimer());
                     c.send(new SendMessage("The spider stung you. Ouch!"));
@@ -1246,7 +1246,7 @@ public class Npc extends Entity {
                 boolean earmuffs = c.getEquipment()[0] == 4166 || c.gotSlayerHelmet(c);
                 if(!earmuffs) { //echo damage the player
                     hitDiff = 10 + Utils.random(15);
-                    requestAnim(data.getAttackEmote(), 0);
+                    performAnimation(data.getAttackEmote(), 0);
                     c.dealDamage(hitDiff, hitDiff >= 22 ? Entity.hitType.CRIT : Entity.hitType.STANDARD, this, damageType.TRUEDAMAGE);
                     setLastAttack(getAttackTimer());
                     c.send(new SendMessage("Banshees' screech echoes through your ears!"));
@@ -1260,7 +1260,7 @@ public class Npc extends Entity {
     }
 
     public void delayGfx(Client c, int anim, int gfx, int delay, int dmg, boolean crit, Entity npc, damageType type) {
-        requestAnim(anim, 0);
+        performAnimation(anim, 0);
         GameEventScheduler.runLaterMs(delay * 600, () -> {
             if(c.disconnected || c.getCurrentHealth() < 1) {
                 return;

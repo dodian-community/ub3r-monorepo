@@ -14,11 +14,11 @@ object PrayerInteractionService {
     fun buryBones(client: Client, itemId: Int, itemSlot: Int): Boolean {
         val bone = Bones.getBone(itemId) ?: return false
         if (!client.playerHasItem(itemId)) return false
-        client.requestAnim(827, 0)
+        client.performAnimation(827, 0)
         SkillProgressionService.gainXp(client, bone.getExperience(), Skill.PRAYER)
         client.deleteItem(itemId, itemSlot, 1)
         client.checkItemUpdate()
-        client.send(SendMessage("You bury the ${client.GetItemName(itemId).lowercase()}"))
+        client.sendMessage("You bury the ${client.getItemName(itemId).lowercase()}")
         return true
     }
 
@@ -32,7 +32,7 @@ object PrayerInteractionService {
         client.prayerOfferingState = PrayerOfferingState(itemId, client.interactionAnchorX, client.interactionAnchorY)
         client.deleteItem(itemId, 1)
         client.checkItemUpdate()
-        client.requestAnim(3705, 0)
+        client.performAnimation(3705, 0)
         client.stillgfx(624, Position(client.interactionAnchorX, client.interactionAnchorY, client.position.z), 0)
         val extra = (client.getLevel(Skill.FIREMAKING) + 1).toDouble() / 100
         val chance = 2.0 + extra
@@ -40,7 +40,7 @@ object PrayerInteractionService {
         SkillProgressionService.gainXp(client, experience, Skill.PRAYER)
         client.send(
             SendMessage(
-                "You sacrifice the ${client.GetItemName(itemId).lowercase()} and your multiplier was $chance (${(chance * 100).toInt()}%)"
+                "You sacrifice the ${client.getItemName(itemId).lowercase()} and your multiplier was $chance (${(chance * 100).toInt()}%)"
             )
         )
         SkillingRandomEventService.trigger(client, experience)

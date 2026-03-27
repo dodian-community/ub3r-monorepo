@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -36,7 +36,7 @@ public class UseItemOnPlayerListener implements PacketListener {
         int itemId = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
         int crackerSlot = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
-        Client player = (playerSlot >= 0 && playerSlot < Constants.maxPlayers) ? ((Client) PlayerHandler.players[playerSlot]) : null;
+        Client player = (playerSlot >= 0 && playerSlot < Constants.maxPlayers) ? ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[playerSlot]) : null;
         if (player == null || !client.playerHasItem(itemId)) return;
         if (client.randomed || client.UsingAgility) return;
 
@@ -67,12 +67,12 @@ public class UseItemOnPlayerListener implements PacketListener {
             int partyHat = hats[Misc.random(hats.length - 1)];
             if (Misc.random(99) < 50) {
                 client.addItemSlot(partyHat, 1, crackerSlot);
-                client.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
+                client.send(new SendMessage("You got a " + client.getItemName(partyHat).toLowerCase() + " from the cracker!"));
             } else {
                 player.addItem(partyHat, 1);
                 client.checkItemUpdate();
-                player.send(new SendMessage("You got a " + client.GetItemName(partyHat).toLowerCase() + " from " + client.getPlayerName()));
-                client.send(new SendMessage(player.getPlayerName() + " got a  " + client.GetItemName(partyHat).toLowerCase() + " from the cracker!"));
+                player.send(new SendMessage("You got a " + client.getItemName(partyHat).toLowerCase() + " from " + client.getPlayerName()));
+                client.send(new SendMessage(player.getPlayerName() + " got a  " + client.getItemName(partyHat).toLowerCase() + " from the cracker!"));
             }
         }
     }

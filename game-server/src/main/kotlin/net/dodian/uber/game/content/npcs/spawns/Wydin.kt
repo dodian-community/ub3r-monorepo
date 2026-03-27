@@ -18,7 +18,7 @@ internal object Wydin {
     val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        npc.requestAnim(5643, 0)
+        npc.performAnimation(5643, 0)
         for (skill in listOf(0, 1, 2, 4)) {
             val skillType = Objects.requireNonNull(Skill.getSkill(skill))
             val maxLevel = Skills.getLevelForExperience(client.getExperience(skillType))
@@ -26,7 +26,7 @@ internal object Wydin {
         }
         val ticks = (1 + Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))) * 2
         client.addEffectTime(2, 200 + ticks)
-        client.send(SendMessage("The monk boost your stats!"))
+        client.sendMessage("The monk boost your stats!")
         return true
     }
 }

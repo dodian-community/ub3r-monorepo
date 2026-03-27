@@ -45,7 +45,7 @@ public class PlayerInitializer {
         });
 
         if (client.lookNeeded) {
-            client.showInterface(3559);
+            client.openInterface(3559);
         } else {
             client.setLook(client.playerLooks);
         }

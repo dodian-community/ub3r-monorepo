@@ -3,7 +3,7 @@ package net.dodian.uber.game.systems.ui
 import java.util.IdentityHashMap
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.player.quests.QuestSend
 import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
@@ -186,12 +186,12 @@ class GlobalUiPublisher {
         GlobalUiPayload(
             revision = 0L,
             uptimeText = QuestSend.getCachedUptimeText(),
-            topBarText = topBarText(PlayerHandler.getPlayerCount()),
+            topBarText = topBarText(PlayerRegistry.getPlayerCount()),
         )
 
     fun publish(now: Long): GlobalUiPayload {
         val uptimeMinute = now / 60_000L
-        val playerCount = PlayerHandler.getPlayerCount()
+        val playerCount = PlayerRegistry.getPlayerCount()
         if (uptimeMinute != lastUptimeMinute || playerCount != lastPlayerCount) {
             revision++
             lastUptimeMinute = uptimeMinute

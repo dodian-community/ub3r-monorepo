@@ -19,7 +19,7 @@ class CommandContext(
         get() = client.playerGroup == 6 || client.playerGroup == 10 || client.playerGroup == 35
 
     fun reply(message: String) {
-        client.send(SendMessage(message))
+        client.sendMessage(message)
     }
 
     fun usage(message: String): Boolean {

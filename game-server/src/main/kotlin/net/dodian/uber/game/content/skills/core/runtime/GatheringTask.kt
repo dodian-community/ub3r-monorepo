@@ -33,7 +33,7 @@ abstract class GatheringTask(
     ): Boolean {
         val validation = validateRequirements()
         if (validation is ValidationResult.Failed) {
-            client.send(SendMessage(validation.message))
+            client.sendMessage(validation.message)
             return false
         }
 
@@ -54,7 +54,7 @@ abstract class GatheringTask(
                     }
                     val check = validateRequirements()
                     if (check is ValidationResult.Failed) {
-                        client.send(SendMessage(check.message))
+                        client.sendMessage(check.message)
                         stop(ActionStopReason.REQUIREMENT_FAILED)
                         return@queuePlayer
                     }

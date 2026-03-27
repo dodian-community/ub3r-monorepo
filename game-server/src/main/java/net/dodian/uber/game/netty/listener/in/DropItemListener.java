@@ -68,7 +68,7 @@ public class DropItemListener implements PacketListener {
         }
 
         // Block max cape/hood
-        String itemName = client.GetItemName(droppedItem);
+        String itemName = client.getItemName(droppedItem);
         if (itemName.contains("Max cape") || itemName.contains("Max hood")) {
             client.send(new SendMessage("This cape represents mastery; you shouldn't drop it!"));
             return;

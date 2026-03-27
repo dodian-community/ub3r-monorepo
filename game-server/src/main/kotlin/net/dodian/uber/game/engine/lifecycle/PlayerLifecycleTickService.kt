@@ -194,7 +194,7 @@ object PlayerLifecycleTickService {
         when {
             player.iconTimer > 0 && !gotIcon -> player.iconTimer--
             player.iconTimer == 0 && !gotIcon -> {
-                player.send(SendMessage("The strange aura from the dungeon makes you vulnerable!"))
+                player.sendMessage("The strange aura from the dungeon makes you vulnerable!")
                 val damage = 5 + Misc.random(15)
                 player.dealDamage(null, damage, if (damage >= 15) Entity.hitType.CRIT else Entity.hitType.STANDARD)
                 player.iconTimer = 6

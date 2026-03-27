@@ -174,7 +174,7 @@ internal object AccountLoginMapper {
             } else if (player.freeSlots() == 0 || !player.addItem(id, amount)) {
                 Ground.addFloorItem(player, id, amount)
                 ItemLog.playerDrop(player, id, amount, player.position.copy(), "Equipment check drop")
-                player.send(SendMessage("<col=FF0000>You dropped the ${Server.itemManager.getName(id).lowercase()} on the floor!!!"))
+                player.sendMessage("<col=FF0000>You dropped the ${Server.itemManager.getName(id).lowercase()} on the floor!!!")
             }
         }
     }

@@ -10,7 +10,7 @@ object EventBusProbeBootstrap {
         GameEventBus.on<CommandEvent>(
             condition = { it.rawCommand.equals("eventbus_probe", ignoreCase = true) },
         ) { event ->
-            event.client.send(SendMessage("Event bus probe handled."))
+            event.client.sendMessage("Event bus probe handled.")
             true
         }
     }

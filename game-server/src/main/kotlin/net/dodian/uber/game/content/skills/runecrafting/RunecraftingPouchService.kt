@@ -12,11 +12,11 @@ object RunecraftingPouchService {
     fun fill(client: Client, pouchId: Int): Boolean {
         val slot = resolvePouchSlot(pouchId) ?: return false
         if (client.getLevel(Skill.RUNECRAFTING) < client.runePouchesLevel[slot]) {
-            client.send(SendMessage("You need level ${client.runePouchesLevel[slot]} runecrafting to do this!"))
+            client.sendMessage("You need level ${client.runePouchesLevel[slot]} runecrafting to do this!")
             return true
         }
         if (client.runePouchesAmount[slot] >= client.runePouchesMaxAmount[slot]) {
-            client.send(SendMessage("This pouch is currently full of essence!"))
+            client.sendMessage("This pouch is currently full of essence!")
             return true
         }
 
@@ -35,7 +35,7 @@ object RunecraftingPouchService {
             client.runePouchesAmount[slot] += amount
             client.checkItemUpdate()
         } else {
-            client.send(SendMessage("No essence in your inventory!"))
+            client.sendMessage("No essence in your inventory!")
         }
         return true
     }
@@ -44,12 +44,12 @@ object RunecraftingPouchService {
     fun empty(client: Client, pouchId: Int): Boolean {
         val slot = resolvePouchSlot(pouchId) ?: return false
         if (client.getLevel(Skill.RUNECRAFTING) < client.runePouchesLevel[slot]) {
-            client.send(SendMessage("You need level ${client.runePouchesLevel[slot]} runecrafting to do this!"))
+            client.sendMessage("You need level ${client.runePouchesLevel[slot]} runecrafting to do this!")
             return true
         }
         var amount = client.freeSlots()
         if (amount <= 0) {
-            client.send(SendMessage("Not enough inventory slot to empty the pouch!"))
+            client.sendMessage("Not enough inventory slot to empty the pouch!")
             return true
         }
         amount = minOf(amount, client.runePouchesAmount[slot])
@@ -60,7 +60,7 @@ object RunecraftingPouchService {
             client.runePouchesAmount[slot] -= amount
             client.checkItemUpdate()
         } else {
-            client.send(SendMessage("No essence in your pouch!"))
+            client.sendMessage("No essence in your pouch!")
         }
         return true
     }
@@ -68,7 +68,7 @@ object RunecraftingPouchService {
     @JvmStatic
     fun check(client: Client, pouchId: Int): Boolean {
         val slot = resolvePouchSlot(pouchId) ?: return false
-        client.send(SendMessage("There is ${client.runePouchesAmount[slot]} rune essence in this pouch!"))
+        client.sendMessage("There is ${client.runePouchesAmount[slot]} rune essence in this pouch!")
         return true
     }
 

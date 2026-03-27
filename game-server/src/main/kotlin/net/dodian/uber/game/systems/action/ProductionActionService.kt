@@ -28,9 +28,9 @@ object ProductionActionService {
     ) {
         client.resetAction()
         client.setPendingProductionSelection(PendingProductionSelection(request, interfaceModelZoom, titleLineBreaks))
-        client.sendFrame246(1746, interfaceModelZoom, request.productId)
-        client.send(SendString("\\n".repeat(titleLineBreaks) + client.GetItemName(request.productId), 2799))
-        client.sendFrame164(4429)
+        client.sendInterfaceModel(1746, interfaceModelZoom, request.productId)
+        client.sendString("\\n".repeat(titleLineBreaks) + client.getItemName(request.productId), 2799)
+        client.sendChatboxInterface(4429)
     }
 
     @JvmStatic
@@ -104,10 +104,10 @@ object ProductionActionService {
             if (!client.playerHasItem(itemOne) || (!client.playerHasItem(111) && !client.playerHasItem(269)) || !client.playerHasItem(2440) || !client.playerHasItem(2442)) {
                 client.resetAction()
                 val text =
-                    if (!client.playerHasItem(111) && !client.playerHasItem(269)) client.GetItemName(269).lowercase()
-                    else if (!client.playerHasItem(itemOne)) client.GetItemName(2436).lowercase()
-                    else if (!client.playerHasItem(2440)) client.GetItemName(2440).lowercase()
-                    else client.GetItemName(2442).lowercase()
+                    if (!client.playerHasItem(111) && !client.playerHasItem(269)) client.getItemName(269).lowercase()
+                    else if (!client.playerHasItem(itemOne)) client.getItemName(2436).lowercase()
+                    else if (!client.playerHasItem(2440)) client.getItemName(2440).lowercase()
+                    else client.getItemName(2442).lowercase()
                 client.sendFilterMessage("You do not have anymore $text.")
                 return false
             }
@@ -120,9 +120,9 @@ object ProductionActionService {
             if (!client.playerHasItem(itemOne) || !client.playerHasItem(2444) || !client.playerHasItem(12695)) {
                 client.resetAction()
                 val text =
-                    if (!client.playerHasItem(itemOne)) client.GetItemName(itemOne).lowercase()
-                    else if (!client.playerHasItem(2444)) client.GetItemName(2444).lowercase()
-                    else client.GetItemName(12695).lowercase()
+                    if (!client.playerHasItem(itemOne)) client.getItemName(itemOne).lowercase()
+                    else if (!client.playerHasItem(2444)) client.getItemName(2444).lowercase()
+                    else client.getItemName(12695).lowercase()
                 client.sendFilterMessage("You do not have anymore $text.")
                 return false
             }
@@ -153,7 +153,7 @@ object ProductionActionService {
         } else {
             if (!client.playerHasItem(itemOne) || (itemTwo != -1 && !client.playerHasItem(itemTwo))) {
                 client.resetAction()
-                val missingName = if (!client.playerHasItem(itemOne)) client.GetItemName(itemOne).lowercase() else client.GetItemName(itemTwo).lowercase()
+                val missingName = if (!client.playerHasItem(itemOne)) client.getItemName(itemOne).lowercase() else client.getItemName(itemTwo).lowercase()
                 client.sendFilterMessage("You do not have anymore $missingName.")
                 return false
             }
@@ -180,7 +180,7 @@ object ProductionActionService {
 
         client.checkItemUpdate()
         if (request.animationId != -1) {
-            client.requestAnim(request.animationId, 0)
+            client.performAnimation(request.animationId, 0)
         }
         val xp = request.experiencePerUnit * amount
         val skill = Skill.getSkill(request.skillId)

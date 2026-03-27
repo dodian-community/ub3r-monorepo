@@ -14,5 +14,5 @@ fun Client.addSkillExperience(skill: Skill, amount: Int) {
 }
 
 fun Client.playAnimation(animationId: Int) {
-    requestAnim(animationId, 0)
+    performAnimation(animationId, 0)
 }

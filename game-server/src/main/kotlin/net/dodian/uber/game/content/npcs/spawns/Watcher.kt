@@ -10,11 +10,11 @@ internal object Watcher {
 
     fun registerLegacyDialogues(builder: DialogueRegistry.Builder) {
         builder.handle(DialogueIds.Legacy.WATCHER_MESSAGE) { c ->
-            c.sendFrame200(4883, 804)
-            c.send(SendString(c.GetNpcName(804), 4884))
-            c.send(SendString(c.dMsg, 4885))
+            c.sendInterfaceAnimation(4883, 804)
+            c.sendString(c.GetNpcName(804), 4884)
+            c.sendString(c.dMsg, 4885)
             c.send(NpcDialogueHead(804, 4883))
-            c.sendFrame164(4882)
+            c.sendChatboxInterface(4882)
             c.NpcDialogueSend = true
             true
         }

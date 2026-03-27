@@ -15,9 +15,9 @@ object AltarObjects : ObjectContent {
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (client.currentPrayer < client.maxPrayer) {
             client.pray(client.maxPrayer)
-            client.send(SendMessage("You restore your prayer points!"))
+            client.sendMessage("You restore your prayer points!")
         } else {
-            client.send(SendMessage("You are at maximum prayer points!"))
+            client.sendMessage("You are at maximum prayer points!")
         }
         return true
     }

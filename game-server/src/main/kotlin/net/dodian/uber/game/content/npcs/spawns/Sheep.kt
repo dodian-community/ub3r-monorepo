@@ -24,7 +24,7 @@ internal object Sheep {
             client.addItem(1737, 1)
             client.checkItemUpdate()
         } else {
-            client.send(SendMessage("You need some shears to shear this sheep!"))
+            client.sendMessage("You need some shears to shear this sheep!")
         }
         return true
     }

@@ -64,7 +64,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
                     ) { client, request ->
                         client.send(RemoveInterfaces())
                         if (product.minimumLevel > 1 && client.getLevel(Skill.CRAFTING) < product.minimumLevel) {
-                            product.levelMessage?.let { client.send(SendMessage(it)) }
+                            product.levelMessage?.let { client.sendMessage(it) }
                             return@buttonBinding true
                         }
                         val amount = product.amountByButton[request.rawButtonId] ?: return@buttonBinding false

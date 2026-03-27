@@ -10,14 +10,14 @@ object TanningService {
 
     @JvmStatic
     fun open(client: Client) {
-        client.send(SendString("Regular Leather", 14777))
-        client.send(SendString("50gp", 14785))
-        client.send(SendString("", 14781))
-        client.send(SendString("", 14789))
-        client.send(SendString("", 14778))
-        client.send(SendString("", 14786))
-        client.send(SendString("", 14782))
-        client.send(SendString("", 14790))
+        client.sendString("Regular Leather", 14777)
+        client.sendString("50gp", 14785)
+        client.sendString("", 14781)
+        client.sendString("", 14789)
+        client.sendString("", 14778)
+        client.sendString("", 14786)
+        client.sendString("", 14782)
+        client.sendString("", 14790)
 
         val soon = intArrayOf(14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792)
         var type = 2
@@ -28,23 +28,23 @@ object TanningService {
                 } else {
                     costByType[type].orEmpty().also { type++ }
                 }
-            client.send(SendString(label, soon[i]))
+            client.sendString(label, soon[i])
         }
 
-        client.sendFrame246(14769, 250, 1741)
-        client.sendFrame246(14773, 250, -1)
-        client.sendFrame246(14771, 250, 1753)
-        client.sendFrame246(14772, 250, 1751)
-        client.sendFrame246(14775, 250, 1749)
-        client.sendFrame246(14776, 250, 1747)
-        client.showInterface(14670)
+        client.sendInterfaceModel(14769, 250, 1741)
+        client.sendInterfaceModel(14773, 250, -1)
+        client.sendInterfaceModel(14771, 250, 1753)
+        client.sendInterfaceModel(14772, 250, 1751)
+        client.sendInterfaceModel(14775, 250, 1749)
+        client.sendInterfaceModel(14776, 250, 1747)
+        client.openInterface(14670)
     }
 
     @JvmStatic
     fun start(client: Client, request: TanningRequest): Boolean {
         val definition = TanningDefinitions.find(request.hideType) ?: return false
         if (!client.playerHasItem(995, definition.coinCost)) {
-            client.send(SendMessage("You need atleast ${definition.coinCost} coins to do this!"))
+            client.sendMessage("You need atleast ${definition.coinCost} coins to do this!")
             return true
         }
         var amount = request.amount

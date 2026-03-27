@@ -28,7 +28,7 @@ object TeleportActionService {
                 player.UsingAgility = false
             },
         ) {
-            player.requestAnim(emote, 0)
+            player.performAnimation(emote, 0)
             if (player.ancients == 1) {
                 player.gfx0(392)
             }
@@ -48,7 +48,7 @@ object TeleportActionService {
             }
 
             player.transport(Position(targetX, targetY, targetHeight))
-            player.requestAnim(715, 0)
+            player.performAnimation(715, 0)
             player.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
             player.GetBonus(true)
         }

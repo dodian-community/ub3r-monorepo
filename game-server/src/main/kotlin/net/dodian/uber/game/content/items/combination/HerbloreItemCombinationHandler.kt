@@ -17,11 +17,11 @@ object HerbloreItemCombinationHandler {
                 (itemUsed == HerbloreDefinitions.UNFINISHED_POTION_VIAL_ID && otherItem == herb)
             ) {
                 if (definition.premiumOnly && !client.premium) {
-                    client.send(SendMessage("Need premium to mix these pots!"))
+                    client.sendMessage("Need premium to mix these pots!")
                     return true
                 }
                 if (client.getSkillLevel(Skill.HERBLORE) < definition.requiredLevel) {
-                    client.send(SendMessage("Requires herblore level ${definition.requiredLevel}"))
+                    client.sendMessage("Requires herblore level ${definition.requiredLevel}")
                     return true
                 }
                 val xp = if (client.premium || !definition.premiumOnly) definition.cleaningExperience else 0
@@ -36,7 +36,7 @@ object HerbloreItemCombinationHandler {
                         experiencePerUnit = xp,
                         animationId = 363,
                         tickDelay = 1,
-                        completionMessage = "You mix the ${client.GetItemName(if (itemUsed != 227) itemUsed else otherItem).lowercase()} herb with the vial of water.",
+                        completionMessage = "You mix the ${client.getItemName(if (itemUsed != 227) itemUsed else otherItem).lowercase()} herb with the vial of water.",
                     ),
                 )
                 return true
@@ -48,11 +48,11 @@ object HerbloreItemCombinationHandler {
                 (itemUsed == recipe.unfinishedPotionId && otherItem == recipe.secondaryId)
             ) {
                 if (recipe.premiumOnly && !client.premium) {
-                    client.send(SendMessage("Need premium to mix these pots!"))
+                    client.sendMessage("Need premium to mix these pots!")
                     return true
                 }
                 if (client.getLevel(Skill.HERBLORE) < recipe.requiredLevel) {
-                    client.send(SendMessage("Requires herblore level ${recipe.requiredLevel}"))
+                    client.sendMessage("Requires herblore level ${recipe.requiredLevel}")
                     return true
                 }
                 ContentActions.queueProductionSelection(
@@ -66,7 +66,7 @@ object HerbloreItemCombinationHandler {
                         experiencePerUnit = recipe.experience,
                         animationId = 363,
                         tickDelay = 3,
-                        completionMessage = "You mix the ${client.GetItemName(recipe.secondaryId)} into your potion.",
+                        completionMessage = "You mix the ${client.getItemName(recipe.secondaryId)} into your potion.",
                     ),
                 )
                 return true
@@ -92,11 +92,11 @@ object HerbloreItemCombinationHandler {
                 }
             }
             if (!hasAllItems) {
-                client.send(SendMessage("You need a torstol herb or (unf) potion, super attack, strength and defence potion!"))
+                client.sendMessage("You need a torstol herb or (unf) potion, super attack, strength and defence potion!")
                 return true
             }
             if (client.getSkillLevel(Skill.HERBLORE) < 88) {
-                client.send(SendMessage("You need level 88 herblore to mix a super combat potion!"))
+                client.sendMessage("You need level 88 herblore to mix a super combat potion!")
                 return true
             }
             ContentActions.queueProductionSelection(
@@ -123,11 +123,11 @@ object HerbloreItemCombinationHandler {
         if (usedMatchesOverload && otherMatchesOverload) {
             val hasAllItems = overloadItems.all { client.playerHasItem(it) }
             if (!hasAllItems) {
-                client.send(SendMessage("You need a coconut, super combat potion and a ranging potion!"))
+                client.sendMessage("You need a coconut, super combat potion and a ranging potion!")
                 return true
             }
             if (client.getSkillLevel(Skill.HERBLORE) < 93) {
-                client.send(SendMessage("You need level 93 herblore to mix an overload potion!"))
+                client.sendMessage("You need level 93 herblore to mix an overload potion!")
                 return true
             }
             ContentActions.queueProductionSelection(

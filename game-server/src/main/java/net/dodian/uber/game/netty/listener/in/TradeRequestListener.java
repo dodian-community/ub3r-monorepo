@@ -32,7 +32,7 @@ public class TradeRequestListener implements PacketListener {
         // If holding rubber chicken, just do the emote.
         if (client.getEquipment()[Equipment.Slot.WEAPON.getId()] == 4566) {
             client.facePlayer(targetSlot);
-            client.requestAnim(1833, 0);
+            client.performAnimation(1833, 0);
             return;
         }
 

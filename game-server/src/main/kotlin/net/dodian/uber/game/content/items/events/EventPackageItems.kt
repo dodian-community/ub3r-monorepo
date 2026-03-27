@@ -14,7 +14,7 @@ object EventPackageItems : ItemContent {
                 val rewards = intArrayOf(6856, 6857, 6859, 6861, 6860, 6858)
                 client.deleteItem(6199, 1)
                 client.addItem(rewards[Misc.random(rewards.size - 1)], 1)
-                client.send(SendMessage("Thank you for waiting patiently on us, take this as a token of gratitude!"))
+                client.sendMessage("Thank you for waiting patiently on us, take this as a token of gratitude!")
                 true
             }
 
@@ -27,7 +27,7 @@ object EventPackageItems : ItemContent {
                     }
                 }
                 if (client.freeSlots() < slotNeeded) {
-                    client.send(SendMessage("You need atleast $slotNeeded free slot to open this!"))
+                    client.sendMessage("You need atleast $slotNeeded free slot to open this!")
                     true
                 } else {
                     client.deleteItem(itemId, 1)
@@ -40,7 +40,7 @@ object EventPackageItems : ItemContent {
 
             6542, 11996, 13345, 13346 -> {
                 if (client.freeSlots() < 1) {
-                    client.send(SendMessage("You need atleast one free slot to open this!"))
+                    client.sendMessage("You need atleast one free slot to open this!")
                     true
                 } else {
                     val randomEventItems = intArrayOf(12887, 12888, 12889, 12890, 12891, 13343, 13344, 13203)
@@ -49,10 +49,10 @@ object EventPackageItems : ItemContent {
                     if (Misc.chance(1000) == 1) {
                         val eventItemId = randomEventItems[Misc.random(randomEventItems.size - 1)]
                         client.addItem(eventItemId, 1)
-                        client.send(SendMessage("You found something of interest!"))
+                        client.sendMessage("You found something of interest!")
                         client.yell(
-                            client.playerName + " just found " + client.GetItemName(eventItemId)
-                                .lowercase() + " in a " + client.GetItemName(itemId).lowercase() + "!"
+                            client.playerName + " just found " + client.getItemName(eventItemId)
+                                .lowercase() + " in a " + client.getItemName(itemId).lowercase() + "!"
                         )
                     }
                     true
@@ -61,17 +61,17 @@ object EventPackageItems : ItemContent {
 
             11918 -> {
                 if (client.freeSlots() < 1) {
-                    client.send(SendMessage("You need atleast one free slot to open this!"))
+                    client.sendMessage("You need atleast one free slot to open this!")
                     true
                 } else {
                     val halloweenMasks = intArrayOf(1053, 1055, 1057)
                     client.deleteItem(itemId, 1)
                     val maskId = halloweenMasks[Misc.random(halloweenMasks.size - 1)]
                     client.addItem(maskId, 1)
-                    client.send(SendMessage("You found a ${client.GetItemName(maskId).lowercase()}!"))
+                    client.sendMessage("You found a ${client.getItemName(maskId).lowercase()}!")
                     client.yell(
-                        client.playerName + " just found " + client.GetItemName(maskId)
-                            .lowercase() + " in a " + client.GetItemName(itemId).lowercase() + "!"
+                        client.playerName + " just found " + client.getItemName(maskId)
+                            .lowercase() + " in a " + client.getItemName(itemId).lowercase() + "!"
                     )
                     true
                 }

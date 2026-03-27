@@ -5,7 +5,7 @@ import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.PartyItemsDisplay
@@ -67,9 +67,9 @@ object Balloons {
     }
 
     private fun sendPartyTimer(message: String) {
-        PlayerHandler.snapshotActivePlayers().forEach { player ->
+        PlayerRegistry.snapshotActivePlayers().forEach { player ->
             if (inPartyRoom(player.position)) {
-                player.send(SendMessage(message))
+                player.sendMessage(message)
             }
         }
     }
@@ -91,7 +91,7 @@ object Balloons {
     @JvmStatic
     fun triggerPartyEvent(client: Client) {
         if (eventActive) {
-            client.send(SendMessage("Event is already active!"))
+            client.sendMessage("Event is already active!")
             return
         }
         eventActive = true
@@ -151,7 +151,7 @@ object Balloons {
             droppedItems.add(reward)
         }
 
-        PlayerHandler.snapshotActivePlayers().forEach { person ->
+        PlayerRegistry.snapshotActivePlayers().forEach { person ->
             if (person.distanceToPoint(pos.x, pos.y) <= 104) {
                 person.ReplaceObject2(pos, id, 0, 10)
                 if (person.isPartyInterface) {
@@ -170,7 +170,7 @@ object Balloons {
         }
 
         val balloon = balloons.removeAt(balloonIndex)
-        client.requestAnim(794, 0)
+        client.performAnimation(794, 0)
         client.ReplaceObject2(Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10)
 
         GameEventScheduler.runLaterMs(600) {
@@ -178,16 +178,16 @@ object Balloons {
             if (droppedIndex != -1) {
                 val dropped = droppedItems.removeAt(droppedIndex)
                 Ground.addFloorItem(client, dropped.getId(), dropped.getAmount())
-                client.send(SendMessage("<col=664400>Something odd appears on the ground."))
+                client.sendMessage("<col=664400>Something odd appears on the ground.")
             } else {
-                client.send(SendMessage("<col=664400>The balloon bursts open and yields nothing."))
+                client.sendMessage("<col=664400>The balloon bursts open and yields nothing.")
             }
             if (inPartyRoom(pos) && !partyEventPos.contains(pos)) {
                 partyEventPos.add(pos)
             }
         }
 
-        PlayerHandler.snapshotActivePlayers().forEach { person ->
+        PlayerRegistry.snapshotActivePlayers().forEach { person ->
             if (person.distanceToPoint(balloon.x, balloon.y) <= 104 && person.position.z == balloon.z) {
                 val balloonPos = Position(balloon.x, balloon.y, balloon.z)
                 person.ReplaceObject2(balloonPos, balloon.id + 8, 0, 10)
@@ -300,7 +300,7 @@ object Balloons {
     @JvmStatic
     fun acceptItems(client: Client) {
         if (partyItems.size >= MAX_LENGTH) {
-            client.send(SendMessage("You cant put in more items!"))
+            client.sendMessage("You cant put in more items!")
             return
         }
 

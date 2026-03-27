@@ -11,7 +11,7 @@ import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
 import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -38,7 +38,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (PlayerHandler.cycle < player.interactionEarliestCycle) {
+        if (PlayerRegistry.cycle < player.interactionEarliestCycle) {
             return InteractionExecutionResult.WAITING
         }
         return when (intent) {
@@ -579,10 +579,10 @@ object InteractionProcessor {
         }
         val settledSince = settledSinceCycle[intent]
         if (settledSince == null) {
-            settledSinceCycle[intent] = PlayerHandler.cycle.toLong()
+            settledSinceCycle[intent] = PlayerRegistry.cycle.toLong()
             return false
         }
-        if (PlayerHandler.cycle.toLong() - settledSince < policy.settleTicks) {
+        if (PlayerRegistry.cycle.toLong() - settledSince < policy.settleTicks) {
             return false
         }
         settledSinceCycle.remove(intent)

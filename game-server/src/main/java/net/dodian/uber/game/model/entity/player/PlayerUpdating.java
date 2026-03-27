@@ -933,7 +933,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (slot < 0 || slot >= PlayerHandler.players.length) {
             return null;
         }
-        return PlayerHandler.players[slot];
+        return net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
     }
 
     @Override

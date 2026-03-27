@@ -115,34 +115,34 @@ enum class QuestSend(
                 client.clearQuestInterface()
                 if (quest.getId() == 0) {
                     val stage = client.quests[quest.getId()]
-                    client.send(SendString("@dre@" + quest.getName(), 8144))
+                    client.sendString("@dre@" + quest.getName(), 8144)
                     if (stage == 0) {
-                        client.send(SendString("I can start this quest by talking to the monk in Yanille", 8147))
-                        client.send(SendString("\\nI need to have the following levels:", 8148))
-                        client.send(SendString("", 8149))
-                        client.send(SendString(if (client.getLevel(Skill.HERBLORE) >= 15) "@str@15 herblore@str@" else "15 herblore", 8150))
-                        client.send(SendString(if (client.getLevel(Skill.SMITHING) >= 20) "@str@20 smithing@str@" else "20 smithing", 8151))
-                        client.send(SendString(if (client.getLevel(Skill.CRAFTING) >= 40) "@str@40 crafting@str@" else "40 crafting", 8152))
+                        client.sendString("I can start this quest by talking to the monk in Yanille", 8147)
+                        client.sendString("\\nI need to have the following levels:", 8148)
+                        client.sendString("", 8149)
+                        client.sendString(if (client.getLevel(Skill.HERBLORE) >= 15) "@str@15 herblore@str@" else "15 herblore", 8150)
+                        client.sendString(if (client.getLevel(Skill.SMITHING) >= 20) "@str@20 smithing@str@" else "20 smithing", 8151)
+                        client.sendString(if (client.getLevel(Skill.CRAFTING) >= 40) "@str@40 crafting@str@" else "40 crafting", 8152)
                     } else if (stage > 0) {
-                        client.send(SendString("@str@I have talked to the monk@str@", 8147))
-                        client.send(SendString("The monk said f' all and I am more confused...", 8148))
-                        client.send(SendString("I wonder why no quest in Dodian exist....", 8149))
+                        client.sendString("@str@I have talked to the monk@str@", 8147)
+                        client.sendString("The monk said f' all and I am more confused...", 8148)
+                        client.sendString("I wonder why no quest in Dodian exist....", 8149)
                     }
                     client.sendQuestSomething(8143)
-                    client.showInterface(8134)
+                    client.openInterface(8134)
                     return true
                 }
             } else {
                 when (button) {
                     7332 -> {
-                        client.send(SendString("@dre@Uber Server 3.0 - Boss Log", 8144))
+                        client.sendString("@dre@Uber Server 3.0 - Boss Log", 8144)
                         client.clearQuestInterface()
                         var line = 8145
                         for (i in client.boss_name.indices) {
                             if (client.boss_amount[i] < 100000) {
-                                client.send(SendString(client.boss_name[i].replace("_", " ") + ": " + client.boss_amount[i], line))
+                                client.sendString(client.boss_name[i].replace("_", " ") + ": " + client.boss_amount[i], line)
                             } else {
-                                client.send(SendString(client.boss_name[i].replace("_", " ") + ": LOTS", line))
+                                client.sendString(client.boss_name[i].replace("_", " ") + ": LOTS", line)
                             }
                             line++
                             if (line == 8196) {
@@ -153,12 +153,12 @@ enum class QuestSend(
                             }
                         }
                         client.sendQuestSomething(8143)
-                        client.showInterface(8134)
+                        client.openInterface(8134)
                         return true
                     }
 
                     7333 -> {
-                        client.send(SendString("@dre@Uber Server 3.0 - Monster Log", 8144))
+                        client.sendString("@dre@Uber Server 3.0 - Monster Log", 8144)
                         client.clearQuestInterface()
                         var line = 8145
                         val max = if (client.monsterName.size >= 100) 100 else client.monsterName.size
@@ -166,7 +166,7 @@ enum class QuestSend(
                             val amount = client.monsterCount[i]
                             val name = client.monsterName[i]
                             val newName = name.substring(0, 1).uppercase() + name.substring(1).replace("_", " ")
-                            client.send(SendString(newName + ": " + if (amount == 1048576) "LOTS" else amount.toString(), line))
+                            client.sendString(newName + ": " + if (amount == 1048576) "LOTS" else amount.toString(), line)
                             line++
                             if (line == 8196) {
                                 line = 12174
@@ -176,7 +176,7 @@ enum class QuestSend(
                             }
                         }
                         client.sendQuestSomething(8143)
-                        client.showInterface(8134)
+                        client.openInterface(8134)
                         return true
                     }
 
@@ -191,7 +191,7 @@ enum class QuestSend(
                     }
 
                     7334 -> {
-                        client.send(SendString("@dre@Uber Server 3.0 - Commands", 8144))
+                        client.sendString("@dre@Uber Server 3.0 - Commands", 8144)
                         client.clearQuestInterface()
                         var line = 8145
                         val commands =
@@ -223,7 +223,7 @@ enum class QuestSend(
                                 if (client.playerRights > 0) "::mod msg - Sends a message to all online staff." else "",
                             )
                         for (command in commands) {
-                            client.send(SendString(command, line))
+                            client.sendString(command, line)
                             line++
                             if (line == 8196) {
                                 line = 12174
@@ -233,7 +233,7 @@ enum class QuestSend(
                             }
                         }
                         client.sendQuestSomething(8143)
-                        client.showInterface(8134)
+                        client.openInterface(8134)
                         return true
                     }
 
@@ -274,7 +274,7 @@ enum class QuestSend(
         @JvmStatic
         fun clearQuestName(client: Client) {
             for (quest in QUEST_SEND_VALUES) {
-                client.send(SendString("", quest.getConfig()))
+                client.sendString("", quest.getConfig())
             }
         }
 

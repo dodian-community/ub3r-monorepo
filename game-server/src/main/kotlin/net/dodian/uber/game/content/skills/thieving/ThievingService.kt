@@ -29,12 +29,12 @@ object ThievingService {
             else if ((position.x == 2667 && position.y == 3303) || (position.x == 2667 && position.y == 3310)) 3
             else -1
         if (face == -1 && data.type == ThievingType.STALL_THIEVING) {
-            player.send(SendMessage("Not added object!"))
+            player.sendMessage("Not added object!")
             return
         }
         val emptyObject = GameObject(EMPTY_STALL_ID, position.x, position.y, position.z, 10, face, data.entityId)
         if (player.getLevel(Skill.THIEVING) < data.requiredLevel) {
-            player.send(SendMessage("You need a thieving level of ${data.requiredLevel} to steal from ${data.name.lowercase().replace('_', ' ')}s."))
+            player.sendMessage("You need a thieving level of ${data.requiredLevel} to steal from ${data.name.lowercase().replace('_', ' ')}s.")
             return
         }
         if (!PlayerTickThrottleService.tryAcquireMs(player, PlayerTickThrottleService.THIEVING_GENERIC, 2000L)) {
@@ -42,21 +42,21 @@ object ThievingService {
         }
         if (data.type == ThievingType.PICKPOCKETING || data.type == ThievingType.OTHER) {
             player.setFocus(position.x, position.y)
-            player.requestAnim(PICKPOCKET_EMOTE, 0)
-            player.send(SendMessage("You attempt to steal from the ${data.name.lowercase().replace('_', ' ')}..."))
+            player.performAnimation(PICKPOCKET_EMOTE, 0)
+            player.sendMessage("You attempt to steal from the ${data.name.lowercase().replace('_', ' ')}...")
         } else {
             if (GlobalObject.hasGlobalObject(emptyObject)) return
-            player.requestAnim(STALL_THIEVING_EMOTE, 0)
+            player.performAnimation(STALL_THIEVING_EMOTE, 0)
         }
 
         GameEventScheduler.runLaterMs(600) {
             if (player.disconnected) return@runLaterMs
             if (failChance > 75) {
-                player.send(SendMessage("You fail to thieve from the ${data.name.lowercase().replace('_', ' ')}"))
+                player.sendMessage("You fail to thieve from the ${data.name.lowercase().replace('_', ' ')}")
                 return@runLaterMs
             }
             if (!player.hasSpace()) {
-                player.send(SendMessage("You don't have enough inventory space!"))
+                player.sendMessage("You don't have enough inventory space!")
                 return@runLaterMs
             }
             SkillProgressionService.gainXp(player, data.receivedExperience, Skill.THIEVING)
@@ -69,7 +69,7 @@ object ThievingService {
                         val amount = data.itemAmount[i].value
                         player.addItem(id, amount)
                         ItemLog.playerGathering(player, id, amount, player.position.copy(), "Thieving")
-                        player.send(SendMessage("You receive ${article(player.GetItemName(id))} ${player.GetItemName(id).lowercase()}"))
+                        player.sendMessage("You receive ${article(player.getItemName(id))} ${player.getItemName(id).lowercase()}")
                         break
                     }
                 }
@@ -78,7 +78,7 @@ object ThievingService {
                 val amount = data.itemAmount[0].value
                 player.addItem(id, amount)
                 ItemLog.playerGathering(player, id, amount, player.position.copy(), "Thieving")
-                player.send(SendMessage("You receive ${article(player.GetItemName(id))} ${player.GetItemName(id).lowercase()}"))
+                player.sendMessage("You receive ${article(player.getItemName(id))} ${player.getItemName(id).lowercase()}")
             }
             if (data.type == ThievingType.STALL_THIEVING) {
                 val stallObject = GameObject(EMPTY_STALL_ID, position.x, position.y, position.z, 10, face, data.entityId)

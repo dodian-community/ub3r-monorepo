@@ -31,7 +31,7 @@ object SuperheatService {
             449 -> superheatRecipe(client, 2361)
             451 -> superheatRecipe(client, 2363)
             else -> {
-                client.send(SendMessage("You can only use this spell on ores or glass material!"))
+                client.sendMessage("You can only use this spell on ores or glass material!")
                 client.callGfxMask(85, 100)
                 client.send(SendSideTab(6))
             }
@@ -40,17 +40,17 @@ object SuperheatService {
 
     private fun superheatRecipe(client: Client, barId: Int) {
         val recipe = SmithingDefinitions.findSmeltingRecipe(barId) ?: run {
-            client.send(SendMessage("You can only use this spell on ores or glass material!"))
+            client.sendMessage("You can only use this spell on ores or glass material!")
             client.callGfxMask(85, 100)
             client.send(SendSideTab(6))
             return
         }
         if (client.getLevel(Skill.SMITHING) < recipe.levelRequired) {
-            client.send(SendMessage("You need level ${recipe.levelRequired} smithing to do this!"))
+            client.sendMessage("You need level ${recipe.levelRequired} smithing to do this!")
             return
         }
         if (!client.playerHasItem(NATURE_RUNE, 1)) {
-            client.send(SendMessage("You need 1 nature runes to cast this spell!"))
+            client.sendMessage("You need 1 nature runes to cast this spell!")
             return
         }
         for (requirement in recipe.oreRequirements) {
@@ -61,7 +61,7 @@ object SuperheatService {
         }
 
         client.lastMagic = System.currentTimeMillis()
-        client.requestAnim(725, 0)
+        client.performAnimation(725, 0)
         client.callGfxMask(148, 100)
         RuneCostService.consume(client, intArrayOf(NATURE_RUNE), intArrayOf(1))
         recipe.oreRequirements.forEach { requirement ->
@@ -77,7 +77,7 @@ object SuperheatService {
             SkillProgressionService.gainXp(client, recipe.experience, Skill.SMITHING)
             SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
         } else if (recipe.failureMessage != null) {
-            client.send(SendMessage(recipe.failureMessage))
+            client.sendMessage(recipe.failureMessage)
             SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
         }
         client.checkItemUpdate()
@@ -86,16 +86,16 @@ object SuperheatService {
 
     private fun superheatGlass(client: Client) {
         if (!client.playerHasItem(NATURE_RUNE, 3)) {
-            client.send(SendMessage("Need 3 nature runes to cast this spell on glass material!"))
+            client.sendMessage("Need 3 nature runes to cast this spell on glass material!")
             return
         }
         if (!client.playerHasItem(1783, 1) || (!client.playerHasItem(1781, 1) && !client.playerHasItem(401, 1))) {
-            client.send(SendMessage("You need atleast 1 bucket of sand along with seaweed or soda ash to cast this!"))
+            client.sendMessage("You need atleast 1 bucket of sand along with seaweed or soda ash to cast this!")
             return
         }
 
         client.lastMagic = System.currentTimeMillis()
-        client.requestAnim(725, 0)
+        client.performAnimation(725, 0)
         client.callGfxMask(148, 100)
         val sandCount = client.getInvAmt(1783)
         val ashCount = client.getInvAmt(1781) + client.getInvAmt(401)
@@ -133,7 +133,7 @@ object SuperheatService {
                 if (missing == null) {
                     SendMessage("You can only use this spell on ores or glass material!")
                 } else {
-                    SendMessage("You need ${missing.amount} ${client.GetItemName(missing.itemId).lowercase()} to do this!")
+                    SendMessage("You need ${missing.amount} ${client.getItemName(missing.itemId).lowercase()} to do this!")
                 }
             }
         }

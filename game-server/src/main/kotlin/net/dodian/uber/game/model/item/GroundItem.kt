@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.item
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem
 
@@ -102,7 +102,7 @@ class GroundItem {
     fun getDespawnTime(): Int = if (timeToShow < 1) timeToDespawn else timeToShow + timeToDespawn
 
     fun removeItemDisplay() {
-        PlayerHandler.forEachActivePlayer { c ->
+        PlayerRegistry.forEachActivePlayer { c ->
             if (c.GoodDistance(c.position.x, c.position.y, x, y, 104)) {
                 c.send(RemoveGroundItem(GameItem(id, amount), Position(x, y, z)))
             }
@@ -110,7 +110,7 @@ class GroundItem {
     }
 
     fun itemDisplay() {
-        PlayerHandler.forEachActivePlayer { c ->
+        PlayerRegistry.forEachActivePlayer { c ->
             if (type == 1 && playerId != c.dbId) {
                 return@forEachActivePlayer
             }

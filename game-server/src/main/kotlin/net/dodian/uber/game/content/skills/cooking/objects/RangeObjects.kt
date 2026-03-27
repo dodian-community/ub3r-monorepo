@@ -26,7 +26,7 @@ object RangeObjects : ObjectContent {
                 client.addItem(1781, 1)
             }
             client.checkItemUpdate()
-            client.send(SendMessage("You burn all your seaweed into ashes."))
+            client.sendMessage("You burn all your seaweed into ashes.")
             return true
         }
 

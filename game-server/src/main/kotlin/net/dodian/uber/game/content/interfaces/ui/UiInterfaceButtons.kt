@@ -95,17 +95,17 @@ object UiInterfaceButtons : InterfaceButtonContent {
                     return@buttonBinding true
                 }
                 if (System.currentTimeMillis() < client.walkBlock && !client.UsingAgility) {
-                    client.send(SendMessage("You are unable to logout right now."))
+                    client.sendMessage("You are unable to logout right now.")
                     return@buttonBinding true
                 }
                 if (ContentSafety.isLogoutLocked(client)) {
                     val seconds = ContentSafety.logoutLockRemainingSeconds(client)
-                    client.send(SendMessage("You must wait $seconds seconds before you can logout!"))
+                    client.sendMessage("You must wait $seconds seconds before you can logout!")
                     return@buttonBinding true
                 }
                 if (System.currentTimeMillis() - client.lastPlayerCombat <= 30000 && client.inWildy()) {
-                    client.send(SendMessage("You must wait 30 seconds after combat in the wilderness to logout."))
-                    client.send(SendMessage("If you X out or disconnect you will stay online for up to a minute"))
+                    client.sendMessage("You must wait 30 seconds after combat in the wilderness to logout.")
+                    client.sendMessage("If you X out or disconnect you will stay online for up to a minute")
                     return@buttonBinding true
                 }
                 client.logout()

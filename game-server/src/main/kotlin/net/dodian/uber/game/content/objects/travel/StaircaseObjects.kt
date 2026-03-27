@@ -38,14 +38,14 @@ object StaircaseObjects : VerticalTravelDslObjectContent(
                     }
                     position.x == 2603 && position.y == 3078 -> {
                         if (!client.checkItem(1543)) {
-                            client.send(SendMessage("You need a red key to go down these stairs!"))
+                            client.sendMessage("You need a red key to go down these stairs!")
                             return@firstClick true
                         }
                         Position(2602, 9479, 0)
                     }
                     position.x == 2569 && position.y == 3122 -> {
                         if (!client.checkItem(1545)) {
-                            client.send(SendMessage("You need a yellow key to use this staircase!"))
+                            client.sendMessage("You need a yellow key to use this staircase!")
                             return@firstClick true
                         }
                         Position(2570, 9525, 0)

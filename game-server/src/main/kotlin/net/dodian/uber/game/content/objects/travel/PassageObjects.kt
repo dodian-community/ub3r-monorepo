@@ -18,7 +18,7 @@ object PassageObjects : ObjectContent {
             }
             23140 -> {
                 if (!client.checkItem(1544)) {
-                    client.send(SendMessage("You need a orange key to use this pipe!"))
+                    client.sendMessage("You need a orange key to use this pipe!")
                     return true
                 }
                 when {
@@ -38,7 +38,7 @@ object PassageObjects : ObjectContent {
             }
             16466 -> {
                 if (client.getLevel(Skill.AGILITY) < 75) {
-                    client.send(SendMessage("You need level 75 agility to use this shortcut!"))
+                    client.sendMessage("You need level 75 agility to use this shortcut!")
                 } else {
                     client.transport(Position(2863, if (client.position.y == 2971) 2976 else 2971, 0))
                 }
@@ -48,14 +48,14 @@ object PassageObjects : ObjectContent {
                 when {
                     position.x == 2899 && position.y == 9728 -> {
                         if (client.getLevel(Skill.AGILITY) < 85) {
-                            client.send(SendMessage("You need level 85 agility to use this shortcut!"))
+                            client.sendMessage("You need level 85 agility to use this shortcut!")
                         } else {
                             client.transport(Position(2885, 9795, 0))
                         }
                     }
                     position.x == 2885 && position.y == 9794 -> {
                         if (client.getLevel(Skill.AGILITY) < 85) {
-                            client.send(SendMessage("You need level 85 agility to use this shortcut!"))
+                            client.sendMessage("You need level 85 agility to use this shortcut!")
                         } else {
                             client.transport(Position(2899, 9729, 0))
                         }
@@ -66,7 +66,7 @@ object PassageObjects : ObjectContent {
             }
             16509 -> {
                 if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
-                    client.send(SendMessage("You need a crystal key and 70 agility to use this shortcut!"))
+                    client.sendMessage("You need a crystal key and 70 agility to use this shortcut!")
                 } else if (client.position.x == 2886 && client.position.y == 9799) {
                     client.transport(Position(2892, 9799, 0))
                 } else if (client.position.x == 2892 && client.position.y == 9799) {
@@ -76,7 +76,7 @@ object PassageObjects : ObjectContent {
             }
             16510 -> {
                 if (!client.checkItem(989) || client.getLevel(Skill.AGILITY) < 70) {
-                    client.send(SendMessage("You need a crystal key and 70 agility to use this shortcut!"))
+                    client.sendMessage("You need a crystal key and 70 agility to use this shortcut!")
                 } else if (client.position.x == 2880 && client.position.y == 9813) {
                     client.transport(Position(2878, 9813, 0))
                 } else if (client.position.x == 2878 && client.position.y == 9813) {
@@ -94,7 +94,7 @@ object PassageObjects : ObjectContent {
             2309 -> {
                 if (position.x == 2998 && position.y == 3917) {
                     if (client.getLevel(Skill.AGILITY) < 75) {
-                        client.send(SendMessage("You need at least 75 agility to enter!"))
+                        client.sendMessage("You need at least 75 agility to enter!")
                     } else {
                         client.ReplaceObject(2998, 3917, 2309, 2, 0)
                     }
@@ -113,11 +113,11 @@ object PassageObjects : ObjectContent {
             1521, 1524 -> {
                 if ((position.x == 2908 || position.x == 2907) && position.y == 9698) {
                     if (!client.checkItem(989)) {
-                        client.send(SendMessage("You need a crystal key to open this door."))
+                        client.sendMessage("You need a crystal key to open this door.")
                         return true
                     }
                     if (client.getLevel(Skill.SLAYER) < 120) {
-                        client.send(SendMessage("You need at least 120 slayer to enter!"))
+                        client.sendMessage("You need at least 120 slayer to enter!")
                         return true
                     }
                     client.ReplaceObject(2908, 9698, -1, 0, 0)
@@ -133,14 +133,14 @@ object PassageObjects : ObjectContent {
                 if (client.checkItem(989)) {
                     client.ReplaceObject(2924, 9803, 2623, -3, 0)
                 } else {
-                    client.send(SendMessage("You need the crystal key to enter"))
-                    client.send(SendMessage("The crystal key is made from 2 crystal pieces"))
+                    client.sendMessage("You need the crystal key to enter")
+                    client.sendMessage("The crystal key is made from 2 crystal pieces")
                 }
                 true
             }
             2634 -> {
                 if (position.x == 2838 && position.y == 3517) {
-                    client.send(SendMessage("You jump to the other side of the rubble"))
+                    client.sendMessage("You jump to the other side of the rubble")
                     client.transport(Position(2840, 3517, 0))
                     true
                 } else {

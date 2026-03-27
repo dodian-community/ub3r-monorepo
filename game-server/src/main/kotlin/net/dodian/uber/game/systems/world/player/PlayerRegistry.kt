@@ -2,6 +2,7 @@ package net.dodian.uber.game.systems.world.player
 
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.metrics.MemoryReporter
 import net.dodian.uber.game.model.entity.player.Client
@@ -31,6 +32,15 @@ object PlayerRegistry {
 
     @JvmField
     val players: Array<Player?> = arrayOfNulls(Constants.maxPlayers + 1)
+
+    @JvmField
+    var cycle: Int = 1
+
+    @JvmStatic
+    fun currentTick(): Long = GameCycleClock.currentCycle()
+
+    @JvmStatic
+    fun currentTickInt(): Int = currentTick().coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 
     @JvmStatic
     fun validClient(index: Int): Boolean {

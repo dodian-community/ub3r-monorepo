@@ -59,7 +59,7 @@ object DialogueService {
     @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
         if (!ContentInteraction.canStartDialogue(client)) {
-            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.sendMessage(it) }
             return
         }
         ContentActions.cancel(
@@ -104,7 +104,7 @@ object DialogueService {
     @JvmStatic
     fun startDialogueId(client: Client, dialogueId: Int, npcId: Int) {
         if (!ContentInteraction.canStartDialogue(client)) {
-            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.sendMessage(it) }
             return
         }
         sessions.remove(client)

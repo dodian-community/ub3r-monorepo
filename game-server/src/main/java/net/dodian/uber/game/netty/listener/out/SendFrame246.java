@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 
 /**
  * Sends a frame 246 packet with main frame and two sub frame parameters.
- * This replaces the legacy sendFrame246() method with proper Netty implementation.
+ * This replaces the legacy sendInterfaceModel() method with proper Netty implementation.
  * 
  * Packet structure:
  * - Opcode: 246 (fixed size)

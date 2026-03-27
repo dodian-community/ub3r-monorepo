@@ -33,12 +33,12 @@ class Prayers(player: Player) {
 
     fun togglePrayer(prayer: Prayer) {
         if (prayer.prayerLevel != -1 && Skills.getLevelForExperience(p.getExperience(Skill.PRAYER)) < prayer.prayerLevel) {
-            c.send(SendMessage("You need a prayer level of at least ${prayer.prayerLevel} to use ${formatEnum(prayer).lowercase()}"))
+            c.sendMessage("You need a prayer level of at least ${prayer.prayerLevel} to use ${formatEnum(prayer).lowercase()}")
             c.varbit(prayer.configId, 0)
             return
         }
         if (c.currentPrayer < 1) {
-            c.send(SendMessage("You have no prayer points currently! Recharge at a nearby altar"))
+            c.sendMessage("You have no prayer points currently! Recharge at a nearby altar")
             reset()
             return
         }

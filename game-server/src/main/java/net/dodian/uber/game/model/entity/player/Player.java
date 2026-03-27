@@ -262,7 +262,7 @@ public abstract class Player extends Entity {
                     dealDamage(null, 3 + Misc.random(12), Entity.hitType.STANDARD);
                     c.send(new SendMessage("The thirst from the heat damage you!"));
                 } else {
-                    c.requestAnim(829, 0);
+                    c.performAnimation(829, 0);
                     c.checkItemUpdate();
                     //c.send(new SendMessage("You take a sip on some water.")); //Should we add a msg when drinking?!
                 }
@@ -1284,7 +1284,7 @@ public abstract class Player extends Entity {
         String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
         net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
-        String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
+        String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
     }
 
@@ -1292,7 +1292,7 @@ public abstract class Player extends Entity {
         return playerEquipment[slot];
     }
     public String getEquipName(int slot) {
-        return ((Client) this).GetItemName(getEquipment(slot));
+        return ((Client) this).getItemName(getEquipment(slot));
     }
     public boolean armourSet(String armourName) {
         return switch (armourName) {
@@ -1330,7 +1330,7 @@ public abstract class Player extends Entity {
         return false;
     }
     public boolean gotSlayerHelmet(Client c) {
-        return c.GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
+        return c.getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
     }
 
     public boolean areAllSongsUnlocked() {
@@ -1629,12 +1629,12 @@ public abstract class Player extends Entity {
 
     public boolean skillcapePerk(Skill skill, boolean checkInventory) {
         Skillcape skillcape = Skillcape.getSkillCape(getEquipment()[Equipment.Slot.CAPE.getId()]);
-        boolean maxCape = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
+        boolean maxCape = ((Client) this).getItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
 
         if(checkInventory && (!maxCape || (skillcape != null && skillcape.getSkill() != skill))) {
             for(int i = 0; i < 28 && !maxCape; i++) {
                 skillcape = Skillcape.getSkillCape(playerItems[i] - 1);
-                if(((Client) this).GetItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
+                if(((Client) this).getItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
                 || (skillcape != null && skillcape.getSkill() == skill))
                     maxCape = true; //I am lazy and this is some shiet that could work :L
             }
@@ -2008,7 +2008,7 @@ public abstract class Player extends Entity {
     }
 
     public void examineItem(Client c, int id, int amount) {
-        String name = c.GetItemName(id);
+        String name = c.getItemName(id);
         if(amount >= 0x186a0)
             c.send(new SendMessage(amount + " x " + name));
         else { //Got this incase we need to do future stuff for item examine!
@@ -2063,7 +2063,7 @@ public abstract class Player extends Entity {
         text[0] = "What do you wish me to do?";
         int position = Math.min(3, herbOptions.size() - slot);
         for(int i = 0; i < position; i++)
-            text[i + 1] = c.GetItemName(herbOptions.get(slot + i).getId());
+            text[i + 1] = c.getItemName(herbOptions.get(slot + i).getId());
         text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
         if(text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";

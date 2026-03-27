@@ -37,8 +37,8 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                     client.startDuel()
                     other.startDuel()
                 } else {
-                    client.send(SendString("Waiting for other player...", 6571))
-                    other.send(SendString("Other player has accepted", 6571))
+                    client.sendString("Waiting for other player...", 6571)
+                    other.sendString("Other player has accepted", 6571)
                 }
                 true
             },
@@ -49,9 +49,9 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                 }
                 val sendMsgToOther = client.maxHealth - client.currentHealth == 0 && other.maxHealth - other.currentHealth != 0
                 if (other.maxHealth - other.currentHealth != 0 || client.maxHealth - client.currentHealth != 0) {
-                    client.send(SendMessage(if (sendMsgToOther) "Your opponent is low on health!" else "You are low on health, so please heal up!"))
+                    client.sendMessage(if (sendMsgToOther) "Your opponent is low on health!" else "You are low on health, so please heal up!")
                     if (sendMsgToOther) {
-                        other.send(SendMessage("You are low on health, so please heal up!"))
+                        other.sendMessage("You are low on health, so please heal up!")
                     }
                     return@buttonBinding true
                 }
@@ -65,13 +65,13 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                 if (other.duelConfirmed) {
                     if (client.duelRule[0] && client.duelRule[1] && client.duelRule[2]) {
                         client.declineDuel()
-                        client.send(SendMessage("At least one combat style must be enabled!"))
-                        other.send(SendMessage("At least one combat style must be enabled!"))
+                        client.sendMessage("At least one combat style must be enabled!")
+                        other.sendMessage("At least one combat style must be enabled!")
                         return@buttonBinding true
                     }
                     if (client.hasEnoughSpace() || other.hasEnoughSpace()) {
-                        client.send(SendMessage(client.failer))
-                        other.send(SendMessage(client.failer))
+                        client.sendMessage(client.failer)
+                        other.sendMessage(client.failer)
                         client.declineDuel()
                         return@buttonBinding true
                     }
@@ -79,8 +79,8 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                     client.confirmDuel()
                     other.confirmDuel()
                 } else {
-                    client.send(SendString("Waiting for other player...", 6684))
-                    other.send(SendString("Other player has accepted.", 6684))
+                    client.sendString("Waiting for other player...", 6684)
+                    other.sendString("Other player has accepted.", 6684)
                 }
                 true
             },

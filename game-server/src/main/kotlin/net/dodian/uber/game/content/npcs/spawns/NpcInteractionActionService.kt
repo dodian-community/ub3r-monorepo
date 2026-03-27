@@ -18,14 +18,14 @@ object NpcInteractionActionService {
     fun teleport(client: Client, x: Int, y: Int, z: Int, message: String?) {
         client.triggerTele(x, y, z, false)
         if (!message.isNullOrBlank()) {
-            client.send(SendMessage(message))
+            client.sendMessage(message)
         }
     }
 
     @JvmStatic
     fun sendMessage(client: Client, message: String) {
         if (message.isNotBlank()) {
-            client.send(SendMessage(message))
+            client.sendMessage(message)
         }
     }
 }

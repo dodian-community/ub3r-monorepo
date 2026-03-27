@@ -15,12 +15,12 @@ object SkillingRandomEventService {
             return
         }
         client.random_skill = Utils.random(20)
-        client.send(SendString("Click the @or1@${Skill.getSkill(client.random_skill)?.name ?: "skill"} @yel@button", 2810))
-        client.send(SendString("", 2811))
-        client.send(SendString("", 2831))
+        client.sendString("Click the @or1@${Skill.getSkill(client.random_skill)?.name ?: "skill"} @yel@button", 2810)
+        client.sendString("", 2811)
+        client.sendString("", 2831)
         client.randomed = true
         client.clearTabs()
-        client.showInterface(2808)
+        client.openInterface(2808)
     }
 
     @JvmStatic
@@ -45,7 +45,7 @@ object SkillingRandomEventService {
         if (Misc.chance(6500 - minOf(reduceChance, 6000)) == 1) {
             if (client.isInCombat()) {
                 client.genieCombatFlag = true
-                client.send(SendMessage("You got a genie random! Stop attack for a bit to get it."))
+                client.sendMessage("You got a genie random! Stop attack for a bit to get it.")
             } else {
                 show(client)
             }
@@ -58,7 +58,7 @@ object SkillingRandomEventService {
             if (trigger >= chance) {
                 client.chestEventOccur = true
                 client.chestEvent = 0
-                client.send(SendMessage("The server randomly detect you standing still for to long! Please move!"))
+                client.sendMessage("The server randomly detect you standing still for to long! Please move!")
             }
         }
     }

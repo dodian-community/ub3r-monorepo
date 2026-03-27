@@ -19,9 +19,9 @@ object CraftingItemCombinationHandler {
                 client.deleteItem(itemUsed, itemUsedSlot, 1)
                 client.deleteItem(otherItem, usedWithSlot, 1)
                 client.addItem(989, 1)
-                client.send(SendMessage("You have crafted the crystal key!  I wonder what it's for?"))
+                client.sendMessage("You have crafted the crystal key!  I wonder what it's for?")
             } else {
-                client.send(SendMessage("You need 60 crafting to make the crystal key"))
+                client.sendMessage("You need 60 crafting to make the crystal key")
             }
             return true
         }
@@ -31,7 +31,7 @@ object CraftingItemCombinationHandler {
     @JvmStatic
     fun handle(client: Client, itemUsed: Int, otherItem: Int, itemUsedSlot: Int, usedWithSlot: Int): Boolean {
         if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == 1741 || otherItem == 1741)) {
-            client.showInterface(2311)
+            client.openInterface(2311)
             return true
         }
         for ((index, hide) in CraftingDefinitions.hideDefinitions.withIndex()) {
@@ -46,7 +46,7 @@ object CraftingItemCombinationHandler {
             val definition = CraftingDefinitions.findGemDefinition(gem)
             if (definition != null) {
                 if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
-                    client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to cut this."))
+                    client.sendMessage("You need a crafting level of ${definition.requiredLevel} to cut this.")
                     return true
                 }
                 ContentActions.queueProductionSelection(
@@ -60,7 +60,7 @@ object CraftingItemCombinationHandler {
                         experiencePerUnit = definition.experience * 5,
                         animationId = definition.animationId,
                         tickDelay = 3,
-                        completionMessage = "You cut the ${client.GetItemName(definition.cutId)}",
+                        completionMessage = "You cut the ${client.getItemName(definition.cutId)}",
                     ),
                 )
                 return true
@@ -71,7 +71,7 @@ object CraftingItemCombinationHandler {
             val definition = CraftingDefinitions.findOrbDefinition(orb)
             if (definition != null) {
                 if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
-                    client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to make this."))
+                    client.sendMessage("You need a crafting level of ${definition.requiredLevel} to make this.")
                     return true
                 }
                 ContentActions.queueProductionSelection(
@@ -85,7 +85,7 @@ object CraftingItemCombinationHandler {
                         experiencePerUnit = definition.experience,
                         animationId = -1,
                         tickDelay = 3,
-                        completionMessage = "You put the ${client.GetItemName(orb).lowercase()} onto the battlestaff and made a ${client.GetItemName(definition.staffId).lowercase()}.",
+                        completionMessage = "You put the ${client.getItemName(orb).lowercase()} onto the battlestaff and made a ${client.getItemName(definition.staffId).lowercase()}.",
                     ),
                 )
                 return true
@@ -93,21 +93,21 @@ object CraftingItemCombinationHandler {
         }
         if ((itemUsed == 1785 && otherItem == 1775) || (itemUsed == 1775 && otherItem == 1785)) {
             val jump = "\n\n\n"
-            client.sendFrame246(11465, 160, 229)
-            client.send(SendString(jump + "Vial", 11474))
-            client.sendFrame246(11466, 180, 1980)
-            client.send(SendString(jump + "Empty cup", 12396))
-            client.sendFrame246(11467, 150, 6667)
-            client.send(SendString(jump + "Fishbowl", 12400))
-            client.sendFrame246(11468, 150, 567)
-            client.send(SendString(jump + "Orb", 12404))
-            client.sendFrame246(11469, 190, -1)
-            client.send(SendString(jump, 12408))
-            client.sendFrame246(11470, 190, -1)
-            client.send(SendString(jump, 12412))
-            client.sendFrame246(6199, 190, -1)
-            client.send(SendString(jump, 6203))
-            client.showInterface(11462)
+            client.sendInterfaceModel(11465, 160, 229)
+            client.sendString(jump + "Vial", 11474)
+            client.sendInterfaceModel(11466, 180, 1980)
+            client.sendString(jump + "Empty cup", 12396)
+            client.sendInterfaceModel(11467, 150, 6667)
+            client.sendString(jump + "Fishbowl", 12400)
+            client.sendInterfaceModel(11468, 150, 567)
+            client.sendString(jump + "Orb", 12404)
+            client.sendInterfaceModel(11469, 190, -1)
+            client.sendString(jump, 12408)
+            client.sendInterfaceModel(11470, 190, -1)
+            client.sendString(jump, 12412)
+            client.sendInterfaceModel(6199, 190, -1)
+            client.sendString(jump, 6203)
+            client.openInterface(11462)
             return true
         }
         if ((itemUsed == 6667 && otherItem == 1755) || (itemUsed == 1755 && otherItem == 6667)) {
@@ -116,14 +116,14 @@ object CraftingItemCombinationHandler {
             client.addItemSlot(7534, 1, slot)
             client.checkItemUpdate()
             SkillProgressionService.gainXp(client, 60, Skill.CRAFTING)
-            client.send(SendMessage("You chisel the fishbowl into a helmet."))
+            client.sendMessage("You chisel the fishbowl into a helmet.")
             return true
         }
         if (itemUsed == 1759 || otherItem == 1759) {
             val amulet = if (itemUsed == 1759) otherItem else itemUsed
             val strung = GoldJewelryService.findStrungAmulet(amulet)
             if (strung < 0) {
-                client.send(SendMessage("You cannot string this item with wool!"))
+                client.sendMessage("You cannot string this item with wool!")
                 return true
             }
             ContentActions.queueProductionSelection(
@@ -137,7 +137,7 @@ object CraftingItemCombinationHandler {
                     experiencePerUnit = 60,
                     animationId = -1,
                     tickDelay = 2,
-                    completionMessage = "You put the wool onto the ${client.GetItemName(strung).lowercase()}.",
+                    completionMessage = "You put the wool onto the ${client.getItemName(strung).lowercase()}.",
                 ),
             )
             return true

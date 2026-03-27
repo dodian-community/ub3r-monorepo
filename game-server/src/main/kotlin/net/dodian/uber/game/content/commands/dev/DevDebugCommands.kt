@@ -169,7 +169,7 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                         -1
                     }
             }
-            context.reply("You found gem..${client.GetItemName(gem)}($gem)")
+            context.reply("You found gem..${client.getItemName(gem)}($gem)")
         }
         "rune" -> {
             val level = cmd[1].toInt()
@@ -204,22 +204,22 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "wcor" -> {
             context.reply("Scheduled world coroutine demo.")
             worldTaskCoroutine {
-                client.send(SendMessage("[${gameClock()}] world: start"))
+                client.sendMessage("[${gameClock()}] world: start")
                 delay(3)
-                client.send(SendMessage("[${gameClock()}] world: step-2"))
+                client.sendMessage("[${gameClock()}] world: step-2")
                 delay(7)
-                client.send(SendMessage("[${gameClock()}] world: stop"))
+                client.sendMessage("[${gameClock()}] world: stop")
                 stop()
             }
         }
         "pcor" -> {
             context.reply("Scheduled player coroutine demo.")
             playerTaskCoroutine(client) {
-                player.send(SendMessage("[${gameClock()}] player: start"))
+                player.sendMessage("[${gameClock()}] player: start")
                 delay(2)
-                player.send(SendMessage("[${gameClock()}] player: step-2"))
+                player.sendMessage("[${gameClock()}] player: step-2")
                 delay(2)
-                player.send(SendMessage("[${gameClock()}] player: stop"))
+                player.sendMessage("[${gameClock()}] player: stop")
                 stop()
             }
         }

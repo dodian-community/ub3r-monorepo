@@ -40,11 +40,11 @@ object SmeltingActionService {
 
     private fun performCycle(player: Client, recipe: SmeltingRecipe): Boolean {
         if (player.isBusy()) {
-            player.send(SendMessage("You are currently busy to be smelting!"))
+            player.sendMessage("You are currently busy to be smelting!")
             return false
         }
         if (player.getLevel(Skill.SMITHING) < recipe.levelRequired) {
-            player.send(SendMessage("You need level ${recipe.levelRequired} smithing to do this!"))
+            player.sendMessage("You need level ${recipe.levelRequired} smithing to do this!")
             return false
         }
         for (requirement in recipe.oreRequirements) {
@@ -53,7 +53,7 @@ object SmeltingActionService {
                 return false
             }
         }
-        player.requestAnim(SMELT_ANIMATION, 0)
+        player.performAnimation(SMELT_ANIMATION, 0)
         recipe.oreRequirements.forEach { requirement ->
             repeat(requirement.amount) {
                 player.deleteItem(requirement.itemId, 1)
@@ -65,7 +65,7 @@ object SmeltingActionService {
             SkillProgressionService.gainXp(player, recipe.experience, Skill.SMITHING)
             SkillingRandomEventService.trigger(player, recipe.experience)
         } else if (recipe.failureMessage != null) {
-            player.send(SendMessage(recipe.failureMessage))
+            player.sendMessage(recipe.failureMessage)
         }
         player.checkItemUpdate()
         return true
@@ -78,7 +78,7 @@ object SmeltingActionService {
             2359 -> "You need a mithril ore and 3 coal to do this!"
             2361 -> "You need a adamantite ore and 4 coal to do this!"
             2363 -> "You need a runite ore and 6 coal to do this!"
-            else -> "You need ${missing.amount} ${player.GetItemName(missing.itemId).lowercase()} to do this!"
+            else -> "You need ${missing.amount} ${player.getItemName(missing.itemId).lowercase()} to do this!"
         }
         return SendMessage(message)
     }

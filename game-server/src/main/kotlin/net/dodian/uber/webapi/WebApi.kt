@@ -3,7 +3,7 @@ package net.dodian.uber.webapi
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import spark.Spark.get
 import java.time.LocalDateTime
 
@@ -17,7 +17,7 @@ data class OnlinePlayer(
     val username: String
 )
 
-private fun getOnlinePlayers() = PlayerHandler.playersOnline.map { (_, player) ->
+private fun getOnlinePlayers() = PlayerRegistry.playersOnline.map { (_, player) ->
     OnlinePlayer(player.dbId, player.playerName)
 }
 

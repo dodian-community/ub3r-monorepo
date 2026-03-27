@@ -13,7 +13,7 @@ import net.dodian.uber.game.engine.processing.EntityProcessor
 import net.dodian.uber.game.engine.processing.ItemProcessor
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.engine.phases.InboundPacketPhase
 import net.dodian.uber.game.engine.phases.MovementFinalizePhase
@@ -156,7 +156,7 @@ class GameLoopService(
             "[Cycle time: {}ms avg / {}ms last] [Players: {}] [Tick: {}]",
             String.format("%.2f", average),
             elapsedMillis,
-            PlayerHandler.getPlayerCount(),
+            PlayerRegistry.getPlayerCount(),
             currentCycle,
         )
         debugTick = 0

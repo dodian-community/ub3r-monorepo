@@ -49,7 +49,7 @@ object FurnaceObjects : ObjectContent {
         if (itemId == 1783 || itemId == 1781) {
             client.send(RemoveInterfaces())
             if (!client.playerHasItem(1783) || !client.playerHasItem(1781)) {
-                client.send(SendMessage("You need one bucket of sand and one soda ash"))
+                client.sendMessage("You need one bucket of sand and one soda ash")
                 return true
             }
             ContentActions.queueProductionSelection(
@@ -97,11 +97,11 @@ object FurnaceObjects : ObjectContent {
 
     private fun chargeOrb(client: Client, levelReq: Int, resultItem: Int, exp: Int, message: String): Boolean {
         if (client.getLevel(Skill.MAGIC) < levelReq) {
-            client.send(SendMessage("You need level $levelReq magic in order to cast this spell!"))
+            client.sendMessage("You need level $levelReq magic in order to cast this spell!")
             return true
         }
         if (!client.playerHasItem(567) || !client.playerHasItem(564, 3)) {
-            client.send(SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."))
+            client.sendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk.")
             return true
         }
         ContentActions.queueProductionSelection(

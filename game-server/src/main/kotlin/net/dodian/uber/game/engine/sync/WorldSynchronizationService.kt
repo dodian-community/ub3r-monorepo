@@ -6,7 +6,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
@@ -92,7 +92,7 @@ class WorldSynchronizationService {
 
     private fun currentActivePlayers(): List<Client> {
         activePlayerBuffer.clear()
-        for (player in PlayerHandler.playersOnline.values) {
+        for (player in PlayerRegistry.playersOnline.values) {
             if (player.isActive && !player.disconnected) {
                 val channel = player.channel
                 if (channel != null && channel.isActive) {

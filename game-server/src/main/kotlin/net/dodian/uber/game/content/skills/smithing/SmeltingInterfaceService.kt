@@ -13,9 +13,9 @@ object SmeltingInterfaceService {
     @JvmStatic
     fun open(client: Client) {
         SmithingDefinitions.smeltingRecipes.forEachIndexed { index, recipe ->
-            client.sendFrame246(furnaceFrameIds[index], 150, recipe.barId)
+            client.sendInterfaceModel(furnaceFrameIds[index], 150, recipe.barId)
         }
-        client.sendFrame164(2400)
+        client.sendChatboxInterface(2400)
     }
 
     @JvmStatic
@@ -69,7 +69,7 @@ object SmeltingInterfaceService {
 
     private fun start(client: Client, request: SmeltingRequest): Boolean {
         if (client.getLevel(Skill.SMITHING) < request.recipe.levelRequired) {
-            client.send(SendMessage("You need level ${request.recipe.levelRequired} smithing to do this!"))
+            client.sendMessage("You need level ${request.recipe.levelRequired} smithing to do this!")
             return true
         }
         client.setPendingSmeltingBarId(request.recipe.barId)

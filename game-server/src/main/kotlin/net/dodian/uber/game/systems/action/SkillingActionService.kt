@@ -133,7 +133,7 @@ object SkillingActionService {
                         val fishIndex = fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
                         val spot = FishingDefinitions.byIndex(fishIndex)
                         if (spot != null) {
-                            requestAnim(spot.animationId, 0)
+                            performAnimation(spot.animationId, 0)
                         }
                         nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                     }

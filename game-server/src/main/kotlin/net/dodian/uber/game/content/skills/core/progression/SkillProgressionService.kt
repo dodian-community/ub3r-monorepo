@@ -68,8 +68,8 @@ object SkillProgressionService {
 
     @JvmStatic
     fun setSkillLevel(client: Client, skill: Skill, currentLevel: Int, xp: Int) {
-        client.send(SendString(maxOf(currentLevel, 0).toString(), skill.currentComponent))
-        client.send(SendString(maxOf(Skills.getLevelForExperience(xp), 1).toString(), skill.levelComponent))
+        client.sendString(maxOf(currentLevel, 0).toString(), skill.currentComponent)
+        client.sendString(maxOf(Skills.getLevelForExperience(xp), 1).toString(), skill.levelComponent)
     }
 
     private fun applyGainXp(client: Client, request: SkillProgressionRequest): SkillProgressionResult {
@@ -108,7 +108,7 @@ object SkillProgressionService {
             }
             if (request.allowLevelUpMessage) {
                 val article = if (request.skill == Skill.ATTACK || request.skill == Skill.AGILITY) "an" else "a"
-                client.send(SendMessage("Congratulations, you just advanced $article ${request.skill.name} level."))
+                client.sendMessage("Congratulations, you just advanced $article ${request.skill.name} level.")
             }
         }
 

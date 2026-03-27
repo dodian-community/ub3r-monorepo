@@ -54,14 +54,14 @@ object PlayerDeathTickService {
                 other.DuelVictory()
             }
         }
-        player.requestAnim(836, 5)
+        player.performAnimation(836, 5)
         player.currentHealth = 0
         player.deathStage = 1
         player.deathTimer = wallClockNow
         player.deathStartedCycle = player.currentGameCycle
         player.deathTaskState = DeathTaskState(player.currentGameCycle, player.currentGameCycle + RESPAWN_DELAY_TICKS)
         player.prayerManager.reset()
-        player.send(SendMessage("Oh dear you have died!"))
+        player.sendMessage("Oh dear you have died!")
     }
 
     private fun respawn(player: Client) {

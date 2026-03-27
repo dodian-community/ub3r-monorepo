@@ -49,10 +49,18 @@ public abstract class Entity {
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
     }
 
+    public void performAnimation(int id, int delay) {
+        requestAnim(id, delay);
+    }
+
     public void setGfx(int id, int height) {
         this.gfxId = id;
         this.gfxHeight = height;
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+    }
+
+    public void performGraphic(int id, int delay) {
+        setGfx(id, delay);
     }
     public int getGfxHeight() {
         return this.gfxHeight;
@@ -72,6 +80,10 @@ public abstract class Entity {
     public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
         return dist <= distance;
+    }
+
+    public boolean isWithinDistance(Position otherPosition, int distance) {
+        return getPosition().withinDistance(otherPosition, distance);
     }
 
     public int getSlot() {

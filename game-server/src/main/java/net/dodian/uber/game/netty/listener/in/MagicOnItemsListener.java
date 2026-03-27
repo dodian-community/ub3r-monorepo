@@ -132,7 +132,7 @@ public class MagicOnItemsListener implements PacketListener {
         RuneCostService.consume(client, new int[]{564}, new int[]{runeCost});
         client.addItem(resultItem, 1);
         client.checkItemUpdate();
-        client.requestAnim(720, 0);
+        client.performAnimation(720, 0);
         client.callGfxMask(115, 100);
         client.send(new SendSideTab(6));
         SkillProgressionService.gainXp(client, exp, Skill.MAGIC);
@@ -154,7 +154,7 @@ public class MagicOnItemsListener implements PacketListener {
         client.addItem(995, value);
         client.checkItemUpdate();
         SkillProgressionService.gainXp(client, 600, Skill.MAGIC);
-        client.requestAnim(713, 0);
+        client.performAnimation(713, 0);
         client.callGfxMask(113, 100);
         client.send(new SendSideTab(6));
         client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);

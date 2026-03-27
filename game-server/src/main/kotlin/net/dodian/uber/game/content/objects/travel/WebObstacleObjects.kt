@@ -15,7 +15,7 @@ object WebObstacleObjects : ObjectContent {
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (Misc.chance(100) <= 50) {
-            client.send(SendMessage("You failed to cut the web!"))
+            client.sendMessage("You failed to cut the web!")
             return true
         }
         if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.WEB_OBSTACLE, 2000L)) {

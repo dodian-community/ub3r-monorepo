@@ -23,7 +23,7 @@ object FarmingPatchGuideObjects : ObjectContent {
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 7962) {
-            client.send(SendMessage("You inspect the monolith, but can't make sense of the inscription."))
+            client.sendMessage("You inspect the monolith, but can't make sense of the inscription.")
             return true
         }
         return false

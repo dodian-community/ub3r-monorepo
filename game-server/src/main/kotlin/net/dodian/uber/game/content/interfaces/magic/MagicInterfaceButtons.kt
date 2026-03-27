@@ -19,11 +19,11 @@ object MagicInterfaceButtons : InterfaceButtonContent {
                     if (client.ancients == 1) {
                         client.setSidebarInterface(6, 1151)
                         client.ancients = 0
-                        client.send(SendMessage("Normal magic enabled"))
+                        client.sendMessage("Normal magic enabled")
                     } else {
                         client.setSidebarInterface(6, 12855)
                         client.ancients = 1
-                        client.send(SendMessage("Ancient magic enabled"))
+                        client.sendMessage("Ancient magic enabled")
                     }
                     true
                 }

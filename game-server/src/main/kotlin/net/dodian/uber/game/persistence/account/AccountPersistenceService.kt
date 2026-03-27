@@ -147,7 +147,7 @@ object AccountPersistenceService {
                 if (client.disconnected) {
                     return@submit
                 }
-                client.send(SendMessage("<col=4C4B73>You have some unclaimed items to claim!"))
+                client.sendMessage("<col=4C4B73>You have some unclaimed items to claim!")
             }
         }
     }

@@ -98,6 +98,8 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         return kotlin.math.abs(otherX - thisX) <= amount && kotlin.math.abs(otherY - thisY) <= amount
     }
 
+    fun isWithinDistance(other: Position, amount: Int): Boolean = withinDistance(other, amount)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true

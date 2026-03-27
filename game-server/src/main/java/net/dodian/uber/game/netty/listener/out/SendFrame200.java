@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 
 /**
  * Sends a frame 200 packet with main and sub frame parameters.
- * This replaces the legacy sendFrame200() method with proper Netty implementation.
+ * This replaces the legacy sendInterfaceAnimation() method with proper Netty implementation.
  * 
  * Packet structure:
  * - Opcode: 200 (fixed size)

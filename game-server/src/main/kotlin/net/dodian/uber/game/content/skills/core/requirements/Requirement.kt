@@ -68,7 +68,7 @@ class HasItemRequirement(
         return if (client.playerHasItem(itemId, amount)) {
             ValidationResult.ok()
         } else {
-            val defaultMessage = "You need ${client.GetItemName(itemId).lowercase()} x$amount."
+            val defaultMessage = "You need ${client.getItemName(itemId).lowercase()} x$amount."
             ValidationResult.failed(overrideMessage ?: defaultMessage)
         }
     }

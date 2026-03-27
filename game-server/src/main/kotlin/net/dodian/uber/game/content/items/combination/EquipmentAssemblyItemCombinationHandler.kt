@@ -22,8 +22,8 @@ object EquipmentAssemblyItemCombinationHandler {
             }
         }
         if (!hasAllItems) {
-            client.send(SendMessage("You need a enchanted gem, mirror shield, face mask, earmuffs, nosepeg, spiny helm,"))
-            client.send(SendMessage("slayer gloves, witchwood icon and black mask or black mask (i)"))
+            client.sendMessage("You need a enchanted gem, mirror shield, face mask, earmuffs, nosepeg, spiny helm,")
+            client.sendMessage("slayer gloves, witchwood icon and black mask or black mask (i)")
             return true
         }
 
@@ -34,7 +34,7 @@ object EquipmentAssemblyItemCombinationHandler {
         }
 
         if (client.getSkillLevel(Skill.CRAFTING) < 70) {
-            client.send(SendMessage("You need level 70 crafting to assemble these items together."))
+            client.sendMessage("You need level 70 crafting to assemble these items together.")
             return true
         }
 
@@ -44,7 +44,7 @@ object EquipmentAssemblyItemCombinationHandler {
         }
         client.deleteItem(if (slayerHelm == 11865) slayerHelmItems[slayerHelmItems.size - 2] else slayerHelmItems[slayerHelmItems.size - 1], 1)
         client.addItem(slayerHelm, 1)
-        client.send(SendMessage("You assemble the items together and made a ${client.GetItemName(slayerHelm).lowercase()}."))
+        client.sendMessage("You assemble the items together and made a ${client.getItemName(slayerHelm).lowercase()}.")
         client.checkItemUpdate()
         return true
     }

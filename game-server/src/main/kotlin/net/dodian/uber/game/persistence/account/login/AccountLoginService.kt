@@ -3,7 +3,7 @@ package net.dodian.uber.game.persistence.account.login
 import java.sql.Connection
 import net.dodian.uber.game.model.Login
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
@@ -59,7 +59,7 @@ object AccountLoginService {
         } catch (exception: Exception) {
             println("Something wrong with updating a players forum rights $exception")
         }
-        player.send(SendMessage("You have now been registered to the forum! Enjoy your stay :D"))
+        player.sendMessage("You have now been registered to the forum! Enjoy your stay :D")
     }
 
     @JvmStatic
@@ -76,7 +76,7 @@ object AccountLoginService {
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
     ): Int {
-        if (PlayerHandler.isPlayerOn(playerName)) {
+        if (PlayerRegistry.isPlayerOn(playerName)) {
             return 5
         }
         if (playerName.isEmpty()) {

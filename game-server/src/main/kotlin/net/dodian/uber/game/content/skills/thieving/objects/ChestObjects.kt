@@ -42,11 +42,11 @@ object ChestObjects : ObjectContent {
                 return true
             }
             if (client.getLevel(Skill.THIEVING) < 70) {
-                client.send(SendMessage("You must be level 70 thieving to open this chest"))
+                client.sendMessage("You must be level 70 thieving to open this chest")
                 return true
             }
             if (client.freeSlots() < 1) {
-                client.send(SendMessage("You need atleast one free inventory slot!"))
+                client.sendMessage("You need atleast one free inventory slot!")
                 return true
             }
             if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.YANILLE_CHEST, 1200L)) {
@@ -60,13 +60,13 @@ object ChestObjects : ObjectContent {
             if (roll <= 0.3) {
                 val items = intArrayOf(2577, 2579, 2631)
                 val itemId = items[(Math.random() * items.size).toInt()]
-                client.send(SendMessage("You have recieved a ${client.GetItemName(itemId)}!"))
+                client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
                 client.addItem(itemId, 1)
                 ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
-                client.yell("[Server] - ${client.playerName} has just received from the Yanille chest a  ${client.GetItemName(itemId)}")
+                client.yell("[Server] - ${client.playerName} has just received from the Yanille chest a  ${client.getItemName(itemId)}")
             } else {
                 val coins = 300 + Utils.random(1200)
-                client.send(SendMessage("You find $coins coins inside the chest"))
+                client.sendMessage("You find $coins coins inside the chest")
                 client.addItem(995, coins)
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
@@ -88,11 +88,11 @@ object ChestObjects : ObjectContent {
                 return true
             }
             if (client.getLevel(Skill.THIEVING) < 85) {
-                client.send(SendMessage("You must be level 85 thieving to open this chest"))
+                client.sendMessage("You must be level 85 thieving to open this chest")
                 return true
             }
             if (client.freeSlots() < 1) {
-                client.send(SendMessage("You need atleast one free inventory slot!"))
+                client.sendMessage("You need atleast one free inventory slot!")
                 return true
             }
             if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.LEGENDS_CHEST, 1200L)) {
@@ -106,13 +106,13 @@ object ChestObjects : ObjectContent {
             if (roll <= 0.3) {
                 val items = intArrayOf(1050, 2581, 2631)
                 val itemId = items[(Math.random() * items.size).toInt()]
-                client.send(SendMessage("You have recieved a ${client.GetItemName(itemId)}!"))
+                client.sendMessage("You have recieved a ${client.getItemName(itemId)}!")
                 client.addItem(itemId, 1)
                 ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Thieving")
-                client.yell("[Server] - ${client.playerName} has just received from the Legends chest a  ${client.GetItemName(itemId)}")
+                client.yell("[Server] - ${client.playerName} has just received from the Legends chest a  ${client.getItemName(itemId)}")
             } else {
                 val coins = 500 + Utils.random(2000)
-                client.send(SendMessage("You find $coins coins inside the chest"))
+                client.sendMessage("You find $coins coins inside the chest")
                 client.addItem(995, coins)
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
@@ -131,7 +131,7 @@ object ChestObjects : ObjectContent {
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         return when (objectId) {
             378 -> {
-                client.send(SendMessage("This chest is empty!"))
+                client.sendMessage("This chest is empty!")
                 true
             }
             20873, 11729, 11730, 11731, 11732, 11733, 11734 -> {

@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.`object`
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object GlobalObject {
     private val globalObjects = CopyOnWriteArrayList<Object>()
@@ -13,7 +13,7 @@ object GlobalObject {
 
     @JvmStatic
     fun updateNewObject(worldObject: Object) {
-        for (player in PlayerHandler.players) {
+        for (player in PlayerRegistry.players) {
             val client = player as? Client ?: continue
             if (!client.isActive) {
                 continue
@@ -31,7 +31,7 @@ object GlobalObject {
 
     @JvmStatic
     fun updateOldObject(worldObject: Object) {
-        for (player in PlayerHandler.players) {
+        for (player in PlayerRegistry.players) {
             val client = player as? Client ?: continue
             if (!client.isActive) {
                 continue

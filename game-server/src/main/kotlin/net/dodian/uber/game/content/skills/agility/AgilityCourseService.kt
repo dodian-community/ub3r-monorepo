@@ -54,7 +54,7 @@ class AgilityCourseService(private val c: Client) {
         if (c.getLevel(Skill.AGILITY) >= level) {
             return true
         }
-        c.send(SendMessage("You need level $level agility to use this!"))
+        c.sendMessage("You need level $level agility to use this!")
         return false
     }
 
@@ -86,7 +86,7 @@ class AgilityCourseService(private val c: Client) {
         }
         c.UsingAgility = true
         npc?.text = "My mom is faster than you!"
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         scheduleVerticalMove(Position(2473, 3424, 1)) {
             giveEndExperience(150)
             c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
@@ -101,7 +101,7 @@ class AgilityCourseService(private val c: Client) {
         }
         c.UsingAgility = true
         npc?.text = "Haha you suck at this simple obstacle!"
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
         scheduleVerticalMove(Position(2473, 3420, 2)) {
             giveEndExperience(50)
@@ -138,7 +138,7 @@ class AgilityCourseService(private val c: Client) {
         }
         c.UsingAgility = true
         npc?.text = "To darn easy."
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         scheduleVerticalMove(Position(2485, 3421, 0)) {
             giveEndExperience(50)
             c.agilityCourseStage = if (c.agilityCourseStage >= 4) 5 else c.agilityCourseStage
@@ -156,7 +156,7 @@ class AgilityCourseService(private val c: Client) {
         }
         c.UsingAgility = true
         npc?.text = "net profit of zero effort."
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         c.walkBlock = System.currentTimeMillis() + 600
         runLater(600) {
             c.teleportTo(c.position.x, c.position.y + 2, 0)
@@ -182,13 +182,13 @@ class AgilityCourseService(private val c: Client) {
             when {
                 part > 0 && isMovementSettled() -> {
                     c.requestWeaponAnims()
-                    c.requestAnim(748, 0)
+                    c.performAnimation(748, 0)
                     c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
                     if (c.agilityCourseStage == 6) {
                         c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11))
                         c.checkItemUpdate()
                         c.agilityCourseStage = 0
-                        c.send(SendMessage("You finished a gnome lap!"))
+                        c.sendMessage("You finished a gnome lap!")
                         giveEndExperience(1050)
                     } else {
                         giveEndExperience(250)
@@ -296,7 +296,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         c.UsingAgility = true
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         c.walkBlock = System.currentTimeMillis() + 600
         runLater(600) {
             c.teleportTo(c.position.x - 2, c.position.y, 1)
@@ -326,7 +326,7 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun BarbStairs() {
-        c.requestAnim(828, 0)
+        c.performAnimation(828, 0)
         c.teleportTo(c.position.x, c.position.y, 0)
         c.walkBlock = System.currentTimeMillis() + 600
     }
@@ -392,7 +392,7 @@ class AgilityCourseService(private val c: Client) {
                 c.addItem(2996, 2 + Misc.random(c.getLevel(Skill.AGILITY) / 22))
                 c.checkItemUpdate()
                 giveEndExperience(1300)
-                c.send(SendMessage("You finished a barbarian lap!"))
+                c.sendMessage("You finished a barbarian lap!")
                 c.agilityCourseStage = 0
             } else {
                 giveEndExperience(100)
@@ -412,7 +412,7 @@ class AgilityCourseService(private val c: Client) {
             if (c.position.x == 3004 && c.position.y == 3937) {
                 c.UsingAgility = true
                 val distance = 13
-                c.requestAnim(746, 0)
+                c.performAnimation(746, 0)
                 c.setWalkAnim(747)
                 c.AddToWalkCords(0, distance, (distance * 600).toLong())
                 var part = 0
@@ -420,7 +420,7 @@ class AgilityCourseService(private val c: Client) {
                     part++
                     if (part == distance - 1) {
                         c.requestWeaponAnims()
-                        c.requestAnim(748, 1)
+                        c.performAnimation(748, 1)
                         giveEndExperience(1000)
                         c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
                         c.UsingAgility = false
@@ -472,7 +472,7 @@ class AgilityCourseService(private val c: Client) {
                 parts++
                 when {
                     parts > 1 && parts < 6 -> {
-                        c.requestAnim(769, 0)
+                        c.performAnimation(769, 0)
                         c.transport(Position(c.position.x - 1, c.position.y, 0))
                         true
                     }
@@ -550,7 +550,7 @@ class AgilityCourseService(private val c: Client) {
                 if (c.agilityCourseStage == 4) {
                     c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33))
                     c.checkItemUpdate()
-                    c.send(SendMessage("You finished a wilderness lap!"))
+                    c.sendMessage("You finished a wilderness lap!")
                     giveEndExperience(2700)
                     c.agilityCourseStage = 0
                 } else {
@@ -566,7 +566,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         if (!c.checkItem(1544)) {
-            c.send(SendMessage("You need a orange key to use these bars!"))
+            c.sendMessage("You need a orange key to use these bars!")
             return
         }
         val time =
@@ -612,7 +612,7 @@ class AgilityCourseService(private val c: Client) {
                     return@runLater
                 }
                 c.requestWeaponAnims()
-                c.requestAnim(743, 0)
+                c.performAnimation(743, 0)
                 c.UsingAgility = false
             }
             false
@@ -624,7 +624,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         if (!c.checkItem(1545)) {
-            c.send(SendMessage("You need a yellow key to use this ledge!"))
+            c.sendMessage("You need a yellow key to use this ledge!")
             return
         }
         val distance =

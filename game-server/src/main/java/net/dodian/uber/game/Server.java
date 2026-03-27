@@ -161,7 +161,7 @@ public class Server {
     public static int totalHostConnection(String host) {
         int num = 0;
         for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
-            Player p = PlayerHandler.players[slot];
+            Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
             if (p != null) {
                 if (host.equals(p.connectedFrom))
                     num++;

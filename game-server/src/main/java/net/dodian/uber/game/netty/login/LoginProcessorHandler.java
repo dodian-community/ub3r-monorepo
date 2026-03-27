@@ -253,7 +253,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 // Channel died before the game thread could register the player; release the reserved slot.
                 synchronized (PlayerHandler.SLOT_LOCK) {
                     PlayerHandler.usedSlots.clear(slotCopy);
-                    PlayerHandler.players[slotCopy] = null;
+                    net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = null;
                 }
                 logger.warn(
                         "Login channel closed before game-thread finalization for {} queueWait={}ms failures={}",
@@ -264,7 +264,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return;
             }
 
-            PlayerHandler.players[slotCopy] = client;
+            net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = client;
             PlayerHandler.playersOnline.put(client.longName, client);
 
             long initializerDurationMs = 0L;
@@ -326,7 +326,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         if (slot <= 0) return;
         synchronized (PlayerHandler.SLOT_LOCK) {
             PlayerHandler.usedSlots.clear(slot);
-            PlayerHandler.players[slot] = null;
+            net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot] = null;
         }
     }
 

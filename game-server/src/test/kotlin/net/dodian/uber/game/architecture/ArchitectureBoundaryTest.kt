@@ -245,12 +245,27 @@ class ArchitectureBoundaryTest {
                         (trimmed.contains("type = PlayerActionType.FISHING") ||
                             trimmed.contains("type = PlayerActionType.FLETCHING") ||
                             trimmed.contains("type = PlayerActionType.COOKING"))
-                val isCoreSkillLegacyLoopMarker =
-                    normalized.endsWith("/systems/action/SkillingActionService.kt") &&
-                        (trimmed.contains("type = PlayerActionType.SHAFTING") ||
-                            trimmed.contains("type = PlayerActionType.SPINNING") ||
-                            trimmed.contains("type = PlayerActionType.CRAFTING") ||
-                            trimmed.contains("type = PlayerActionType.ALTAR_BONES"))
+                val isLegacyPlayerArrayAccess =
+                    trimmed.contains("PlayerHandler.players[") &&
+                        !normalized.endsWith("/model/entity/player/PlayerHandler.kt") &&
+                        !normalized.endsWith("/model/entity/player/Client.java")
+                val isLegacyFrameApiUsage =
+                    (
+                        trimmed.contains("sendFrame164(") ||
+                            trimmed.contains("sendFrame200(") ||
+                            trimmed.contains("sendFrame246(")
+                        ) &&
+                        !normalized.endsWith("/model/entity/player/Client.java")
+                val isLegacyClientItemHelperUsage =
+                    (
+                        trimmed.contains("GetItemName(") ||
+                            trimmed.contains("GetItemSlot(") ||
+                            trimmed.contains("IsItemInBag(") ||
+                            trimmed.contains("AreXItemsInBag(") ||
+                            trimmed.contains("GetNotedItem(") ||
+                            trimmed.contains("GetUnnotedItem(")
+                        ) &&
+                        !normalized.endsWith("/model/entity/player/Client.java")
                 val isManualCoreSkillControllerMarker =
                     (normalized.endsWith("/systems/action/SmithingActionService.kt") ||
                         normalized.endsWith("/content/skills/smithing/SmeltingActionService.kt")) &&
@@ -273,8 +288,10 @@ class ArchitectureBoundaryTest {
                             trimmed.contains("import net.dodian.uber.game.config.$symbol") ||
                                 trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
                         } ||
-                        isWave2LegacyLoopMarker
-                        || isCoreSkillLegacyLoopMarker
+                        isWave2LegacyLoopMarker ||
+                        isLegacyPlayerArrayAccess ||
+                        isLegacyFrameApiUsage ||
+                        isLegacyClientItemHelperUsage
                         || isManualCoreSkillControllerMarker
                 if (!isLegacyRef) return@mapIndexedNotNull null
                 "${file}:${idx + 1} -> $trimmed"

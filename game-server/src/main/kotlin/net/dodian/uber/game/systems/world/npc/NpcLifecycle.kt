@@ -65,11 +65,11 @@ object NpcLifecycle {
         val rate = Misc.chance(100000) / 1000.0
         if (chance - 10 >= 5 && rate <= chance) {
             npc.drop()
-            player.send(SendMessage("You managed to roll for the loot!"))
+            player.sendMessage("You managed to roll for the loot!")
         } else if (chance - 10 < 5) {
-            player.send(SendMessage("You were not eligible for the drop!"))
+            player.sendMessage("You were not eligible for the drop!")
         } else {
-            player.send(SendMessage("Unlucky! Better luck next time."))
+            player.sendMessage("Unlucky! Better luck next time.")
         }
     }
 }

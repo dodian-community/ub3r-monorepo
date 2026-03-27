@@ -22,12 +22,12 @@ object ToyItems : ItemContent {
                     "You are the real M.V.P. dude!",
                     "More lazier then Spunky is Ivan :D",
                 )
-                client.send(SendMessage(quotes[Misc.random(quotes.size - 1)]))
+                client.sendMessage(quotes[Misc.random(quotes.size - 1)])
                 return true
             }
 
             4566 -> {
-                client.requestAnim(1835, 0)
+                client.performAnimation(1835, 0)
                 return true
             }
         }

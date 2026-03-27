@@ -37,93 +37,93 @@ object PotionItems : ItemContent {
         when (itemId) {
             121, 123, 125, 2428 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(3 + (levelFor(client, Skill.ATTACK) * 0.1).toInt(), Skill.ATTACK)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the attack potion." else "You drink the attack potion."))
+                client.sendMessage(if (nextId == 229) "You empty the attack potion." else "You drink the attack potion.")
             }
 
             113, 115, 117, 119 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(3 + (levelFor(client, Skill.STRENGTH) * 0.1).toInt(), Skill.STRENGTH)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the strength potion." else "You drink the strength potion."))
+                client.sendMessage(if (nextId == 229) "You empty the strength potion." else "You drink the strength potion.")
             }
 
             133, 135, 137, 2432 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(3 + (levelFor(client, Skill.DEFENCE) * 0.1).toInt(), Skill.DEFENCE)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the defense potion." else "You drink the defense potion."))
+                client.sendMessage(if (nextId == 229) "You empty the defense potion." else "You drink the defense potion.")
             }
 
             145, 147, 149, 2436 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(5 + (levelFor(client, Skill.ATTACK) * 0.15).toInt(), Skill.ATTACK)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the super attack potion." else "You drink the super attack potion."))
+                client.sendMessage(if (nextId == 229) "You empty the super attack potion." else "You drink the super attack potion.")
             }
 
             157, 159, 161, 2440 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(5 + (levelFor(client, Skill.STRENGTH) * 0.15).toInt(), Skill.STRENGTH)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the super strength potion." else "You drink the super strength potion."))
+                client.sendMessage(if (nextId == 229) "You empty the super strength potion." else "You drink the super strength potion.")
             }
 
             163, 165, 167, 2442 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(5 + (levelFor(client, Skill.DEFENCE) * 0.15).toInt(), Skill.DEFENCE)
                 SkillProgressionService.refresh(client, Skill.DEFENCE)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the super defense potion." else "You drink the super defense potion."))
+                client.sendMessage(if (nextId == 229) "You empty the super defense potion." else "You drink the super defense potion.")
             }
 
             169, 171, 173, 2444 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.boost(4 + (levelFor(client, Skill.RANGED) * 0.12).toInt(), Skill.RANGED)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the ranging potion." else "You drink the ranging potion."))
+                client.sendMessage(if (nextId == 229) "You empty the ranging potion." else "You drink the ranging potion.")
             }
 
             139, 141, 143, 2434 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.pray(8 + (client.maxPrayer * 0.25).toInt())
                 SkillProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the prayer potion." else "You drink the prayer potion."))
+                client.sendMessage(if (nextId == 229) "You empty the prayer potion." else "You drink the prayer potion.")
             }
 
             3026, 3028, 3030, 3024 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.pray(10 + (client.maxPrayer * 0.28).toInt())
                 SkillProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the restore potion." else "You drink the restore potion."))
+                client.sendMessage(if (nextId == 229) "You empty the restore potion." else "You drink the restore potion.")
             }
 
             12695, 12697, 12699, 12701 -> {
                 if (blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 for (skillIndex in 0..2) {
                     val skill = Skill.getSkill(skillIndex) ?: continue
                     client.boost(5 + (levelFor(client, skill) * 0.15).toInt(), skill)
                 }
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the super combat potion." else "You drink the super combat potion."))
+                client.sendMessage(if (nextId == 229) "You empty the super combat potion." else "You drink the super combat potion.")
             }
 
             11730, 11731, 11732, 11733 -> {
                 if (blockedByDeathOrDuel || client.currentHealth < 11) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.dealDamage(null, 10, Entity.hitType.CRIT)
                 for (skillIndex in intArrayOf(0, 1, 2, 4)) {
                     val skill = Skill.getSkill(skillIndex) ?: continue
@@ -132,15 +132,15 @@ object PotionItems : ItemContent {
                 val ticks = (1 + levelFor(client, Skill.HERBLORE)) * 2
                 client.addEffectTime(2, 200 + ticks)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the overload potion." else "You drink the overload potion."))
+                client.sendMessage(if (nextId == 229) "You empty the overload potion." else "You drink the overload potion.")
             }
 
             2452, 2454, 2456, 2458 -> {
                 if ((client.effects.size > 1 && client.effects[1] > 50) || blockedByDeathOrDuel) return true
-                client.requestAnim(1327, 0)
+                client.performAnimation(1327, 0)
                 client.addEffectTime(1, 500)
                 nextId = nextDose(itemId)
-                client.send(SendMessage(if (nextId == 229) "You empty the anti-fire potion." else "You drink the anti-fire potion."))
+                client.sendMessage(if (nextId == 229) "You empty the anti-fire potion." else "You drink the anti-fire potion.")
             }
 
             else -> return false

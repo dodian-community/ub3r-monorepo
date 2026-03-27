@@ -8,7 +8,7 @@ import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.content.commands.numericToken
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -43,7 +43,7 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
                 val rank = cmd[1]
                 var rankId = -1
                 val name = command.substring(cmd[0].length + cmd[1].length + 2)
-                val other = PlayerHandler.getPlayer(name) as? Client
+                val other = PlayerRegistry.getPlayer(name) as? Client
                 when (rank) {
                     "normal" -> rankId = 40
                     "premium" -> rankId = 11
@@ -133,11 +133,11 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
         context.alias == "resettask" && context.specialRights -> {
             return try {
                 val otherName = command.substring(cmd[0].length + 1)
-                val otherIndex = PlayerHandler.getPlayerID(otherName)
+                val otherIndex = PlayerRegistry.getPlayerID(otherName)
                 if (otherIndex != -1) {
-                    val other = PlayerHandler.players[otherIndex] as Client
+                    val other = PlayerRegistry.players[otherIndex] as Client
                     other.slayerData[3] = 0
-                    other.send(SendMessage(client.playerName + " have reset your task!"))
+                    other.sendMessage(client.playerName + " have reset your task!")
                     context.reply("You reset the task for ${other.playerName}!")
                 } else {
                     context.reply("Player $otherName is not online!")
@@ -205,23 +205,23 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
             }
         }
         context.alias == "quest_reward" && client.playerRights > 1 -> {
-            client.send(SendString("Quest name here", 12144))
-            client.send(SendString(" 99", 12147))
-            for (i in 0 until 6) client.send(SendString(i.toString(), 12150 + i))
-            client.sendFrame246(12145, 250, 4151)
-            client.showInterface(12140)
+            client.sendString("Quest name here", 12144)
+            client.sendString(" 99", 12147)
+            for (i in 0 until 6) client.sendString(i.toString(), 12150 + i)
+            client.sendInterfaceModel(12145, 250, 4151)
+            client.openInterface(12140)
             client.stillgfx(199, client.position.y, client.position.x)
             return true
         }
         context.alias == "moooo" && client.playerRights > 1 -> {
             client.clearQuestInterface()
-            client.send(SendString("@str@testing something@str@", 8147))
-            client.send(SendString("Yes", 8148))
-            client.send(SendString("@369@Tits1@369@", 8149))
-            client.send(SendString("@mon@Tits3@mon@", 8150))
-            client.send(SendString("@lre@Tits3@lre@", 8151))
+            client.sendString("@str@testing something@str@", 8147)
+            client.sendString("Yes", 8148)
+            client.sendString("@369@Tits1@369@", 8149)
+            client.sendString("@mon@Tits3@mon@", 8150)
+            client.sendString("@lre@Tits3@lre@", 8151)
             client.sendQuestSomething(8143)
-            client.showInterface(8134)
+            client.openInterface(8134)
             return true
         }
     }

@@ -47,20 +47,20 @@ object WoodcuttingService {
 
         val axe = resolveBestAxe(client)
         if (axe == null) {
-            client.send(SendMessage("You need an axe in which you got the required woodcutting level for."))
+            client.sendMessage("You need an axe in which you got the required woodcutting level for.")
             client.resetAction()
             return true
         }
         if (client.getLevel(Skill.WOODCUTTING) < tree.requiredLevel) {
-            client.send(SendMessage("You need a woodcutting level of ${tree.requiredLevel} to cut this tree."))
+            client.sendMessage("You need a woodcutting level of ${tree.requiredLevel} to cut this tree.")
             return true
         }
         if (!client.playerHasItem(-1)) {
-            client.send(SendMessage("You got full inventory!"))
+            client.sendMessage("You got full inventory!")
             return true
         }
         if (!isWithinTreeBoundaryDistance(client, objectId, position, obj)) {
-            client.send(SendMessage("You moved too far away from the tree."))
+            client.sendMessage("You moved too far away from the tree.")
             return true
         }
 
@@ -99,8 +99,8 @@ object WoodcuttingService {
             type = PlayerActionType.WOODCUTTING,
             actionName = "Woodcutting",
             onStart = {
-                player.requestAnim(axe.animationId, 0)
-                player.send(SendMessage("You swing your axe at the tree..."))
+                player.performAnimation(axe.animationId, 0)
+                player.sendMessage("You swing your axe at the tree...")
             },
             onStop = { stoppedPlayer, reason ->
                 stopWoodcuttingInternal(stoppedPlayer, reason)
@@ -114,8 +114,8 @@ object WoodcuttingService {
                 val activeAxe = resolveBestAxe(player)
                     ?: stop(ActionStopReason.MISSING_TOOL)
 
-                player.requestAnim(activeAxe.animationId, 0)
-                player.send(SendMessage("You cut some ${player.GetItemName(activeTree.logItemId).lowercase()}"))
+                player.performAnimation(activeAxe.animationId, 0)
+                player.sendMessage("You cut some ${player.getItemName(activeTree.logItemId).lowercase()}")
                 player.addItem(activeTree.logItemId, 1)
                 player.checkItemUpdate()
                 ItemLog.playerGathering(player, activeTree.logItemId, 1, position.copy(), "Woodcutting")
@@ -126,7 +126,7 @@ object WoodcuttingService {
                 val gathered = state.resourcesGathered + 1
                 player.woodcuttingState = state.copy(resourcesGathered = gathered)
                 if (gathered >= 4 && Misc.chance(20) == 1) {
-                    player.send(SendMessage("You take a rest after gathering $gathered resources."))
+                    player.sendMessage("You take a rest after gathering $gathered resources.")
                     stop(ActionStopReason.COMPLETED)
                 }
                 waitTicks(computeWoodcuttingDelayTicks(player, activeTree, activeAxe))

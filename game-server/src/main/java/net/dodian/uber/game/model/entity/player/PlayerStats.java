@@ -63,7 +63,7 @@ final class PlayerStats {
             return;
         }
         if (getCurrentHealth() < getMaxHealth()) {
-            c.requestAnim(829, 0);
+            c.performAnimation(829, 0);
             c.deleteItem(removeId, removeSlot, 1);
             c.send(new net.dodian.uber.game.netty.listener.out.SendMessage("You eat the " + Server.itemManager.getName(removeId).toLowerCase() + "."));
             heal(healing);

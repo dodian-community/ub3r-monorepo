@@ -23,7 +23,7 @@ object BankInterfaceButtons : InterfaceButtonContent {
                             client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i])
                         }
                     }
-                    client.send(SendMessage("You deposit all your items."))
+                    client.sendMessage("You deposit all your items.")
                     client.checkItemUpdate()
                     true
                 }
@@ -45,11 +45,11 @@ object BankInterfaceButtons : InterfaceButtonContent {
                         if (equipId > 0 && equipAmount > 0 && client.hasSpace()) {
                             if (client.remove(i, false)) {
                                 client.addItem(equipId, equipAmount)
-                                client.bankItem(equipId, client.GetItemSlot(equipId), equipAmount)
+                                client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
                             }
                         }
                     }
-                    client.send(SendMessage("You deposit your worn items."))
+                    client.sendMessage("You deposit your worn items.")
                     client.checkItemUpdate()
                     true
                 }
@@ -64,7 +64,7 @@ object BankInterfaceButtons : InterfaceButtonContent {
                 ) { client, _ ->
                     if (!client.IsBanking || client.bankStyleViewOpen) return@buttonBinding true
                     client.takeAsNote = true
-                    client.send(SendMessage("You can now note items."))
+                    client.sendMessage("You can now note items.")
                     true
                 }
             )
@@ -78,7 +78,7 @@ object BankInterfaceButtons : InterfaceButtonContent {
                 ) { client, _ ->
                     if (!client.IsBanking || client.bankStyleViewOpen) return@buttonBinding true
                     client.takeAsNote = false
-                    client.send(SendMessage("You can no longer note items."))
+                    client.sendMessage("You can no longer note items.")
                     true
                 }
             )

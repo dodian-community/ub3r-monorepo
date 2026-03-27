@@ -39,9 +39,9 @@ object SlayerService {
     fun sendTask(client: Client) {
         val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerData[1])
         if (checkTask != null && client.slayerData[3] > 0) {
-            client.send(SendMessage("You need to kill ${client.slayerData[3]} more of ${checkTask.textRepresentation} <col=FF0000>|</col> Current streak is ${client.slayerData[4]}."))
+            client.sendMessage("You need to kill ${client.slayerData[3]} more of ${checkTask.textRepresentation} <col=FF0000>|</col> Current streak is ${client.slayerData[4]}.")
         } else {
-            client.send(SendMessage("You need to be assigned a task!"))
+            client.sendMessage("You need to be assigned a task!")
         }
     }
 

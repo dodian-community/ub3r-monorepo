@@ -20,7 +20,7 @@ object DialogueUi {
         for (i in text.indices) {
             send(SendString(text[i], base + 1 + i))
         }
-        sendFrame164(base)
+        sendChatboxInterface(base)
     }
 
     @JvmStatic
@@ -30,14 +30,14 @@ object DialogueUi {
         if (text.size == 3) base = 4893
         if (text.size == 4) base = 4900
 
-        sendFrame200(base + 1, emote)
+        sendInterfaceAnimation(base + 1, emote)
         send(SendString(GetNpcName(npcId), base + 2))
         for (i in text.indices) {
             send(SendString(text[i], base + 3 + i))
         }
         send(SendString("Click here to continue", base + 3 + text.size))
         send(NpcDialogueHead(npcId, base + 1))
-        sendFrame164(base)
+        sendChatboxInterface(base)
     }
 
     @JvmStatic
@@ -48,11 +48,11 @@ object DialogueUi {
         if (text.size == 4) base = 986
 
         send(PlayerDialogueHead(base + 1))
-        sendFrame200(base + 1, emote)
+        sendInterfaceAnimation(base + 1, emote)
         send(SendString(playerName, base + 2))
         for (i in text.indices) {
             send(SendString(text[i], base + 3 + i))
         }
-        sendFrame164(base)
+        sendChatboxInterface(base)
     }
 }

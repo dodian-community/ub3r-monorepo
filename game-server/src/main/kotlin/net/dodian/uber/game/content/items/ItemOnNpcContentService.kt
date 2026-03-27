@@ -64,30 +64,30 @@ object ItemOnNpcContentService {
                 client.addItem(1737, 1)
                 client.checkItemUpdate()
             } else {
-                client.send(SendMessage("You need some shears to shear this sheep!"))
+                client.sendMessage("You need some shears to shear this sheep!")
             }
             return
         }
 
         if (npcId == 0) {
-            if (client.farming.farmData.canNote(itemId, client.GetItemName(itemId).lowercase())) {
+            if (client.farming.farmData.canNote(itemId, client.getItemName(itemId).lowercase())) {
                 client.showNPCChat(
                     npcId,
-                    if (client.GetNotedItem(itemId) < 1) 594 else 594,
+                    if (client.getNotedItem(itemId) < 1) 594 else 594,
                     arrayOf(
-                        if (client.GetNotedItem(itemId) < 1) {
+                        if (client.getNotedItem(itemId) < 1) {
                             "I can not note that item!"
                         } else {
                             "Here is your noted item."
                         },
                     ),
                 )
-                if (client.GetNotedItem(itemId) > 0) {
+                if (client.getNotedItem(itemId) > 0) {
                     val amount = client.getInvAmt(itemId)
                     for (i in 0 until amount) {
                         client.deleteItem(itemId, 1)
                     }
-                    client.addItem(client.GetNotedItem(itemId), amount)
+                    client.addItem(client.getNotedItem(itemId), amount)
                     client.checkItemUpdate()
                 }
             } else {
@@ -103,19 +103,19 @@ object ItemOnNpcContentService {
                 client.checkItemUpdate()
                 client.showNPCChat(6059, 588, arrayOf("Here, have a skillcape hood from me."))
             } else {
-                client.send(SendMessage("Not enough of space to get a skillcape hood."))
+                client.sendMessage("Not enough of space to get a skillcape hood.")
             }
             return
         }
 
-        val gotMaxCape = client.GetItemName(itemId).contains("Max cape")
+        val gotMaxCape = client.getItemName(itemId).contains("Max cape")
         if (gotMaxCape && npcId == 6481) {
             if (client.hasSpace()) {
                 client.addItem(itemId + 1, 1)
                 client.checkItemUpdate()
                 client.showNPCChat(6481, 588, arrayOf("Here, have a skillcape hood from me."))
             } else {
-                client.send(SendMessage("Not enough of space to get a skillcape hood."))
+                client.sendMessage("Not enough of space to get a skillcape hood.")
             }
         }
     }

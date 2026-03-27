@@ -71,7 +71,7 @@ object MiningService {
                 if (result.resetAction) {
                     client.resetAction()
                 }
-                client.send(SendMessage(result.message))
+                client.sendMessage(result.message)
                 return true
             }
         }
@@ -113,8 +113,8 @@ object MiningService {
             type = PlayerActionType.MINING,
             actionName = "Mining",
             onStart = {
-                player.requestAnim(pickaxe.animationId, 0)
-                player.send(SendMessage("You swing your pick at the rock..."))
+                player.performAnimation(pickaxe.animationId, 0)
+                player.sendMessage("You swing your pick at the rock...")
             },
             onStop = { stoppedPlayer, reason ->
                 stopMiningInternal(stoppedPlayer, mapStopReason(reason))
@@ -131,7 +131,7 @@ object MiningService {
                 val activePickaxe = resolveBestPickaxe(player)
                     ?: stop(ActionStopReason.MISSING_TOOL)
 
-                player.requestAnim(activePickaxe.animationId, 0)
+                player.performAnimation(activePickaxe.animationId, 0)
                 if (!performMiningCycle(player)) {
                     stop(ActionStopReason.COMPLETED)
                 }
@@ -207,17 +207,17 @@ object MiningService {
         val pickaxe =
             resolveBestPickaxe(client)
                 ?: run {
-                    client.send(SendMessage("You need a pickaxe in which you got the required mining level for."))
+                    client.sendMessage("You need a pickaxe in which you got the required mining level for.")
                     return stopMiningInternal(client, MiningStopReason.NO_PICKAXE)
                 }
 
         if (!client.playerHasItem(-1)) {
-            client.send(SendMessage("Your inventory is full!"))
+            client.sendMessage("Your inventory is full!")
             return stopMiningInternal(client, MiningStopReason.FULL_INVENTORY)
         }
 
         if (rock.oreItemId != 1436) {
-            client.send(SendMessage("You mine some ${client.GetItemName(rock.oreItemId).lowercase()}"))
+            client.sendMessage("You mine some ${client.getItemName(rock.oreItemId).lowercase()}")
         }
         client.addItem(rock.oreItemId, 1)
         client.checkItemUpdate()
@@ -233,11 +233,11 @@ object MiningService {
         GameEventBus.post(MiningSuccessEvent(client, rock, rock.oreItemId, rock.experience, client.position.copy()))
 
         if (updatedState.resourcesGathered >= rock.restThreshold && Misc.chance(20) == 1) {
-            client.send(SendMessage("You take a rest after gathering ${updatedState.resourcesGathered} resources."))
+            client.sendMessage("You take a rest after gathering ${updatedState.resourcesGathered} resources.")
             return stopMiningInternal(client, MiningStopReason.RESTED)
         }
 
-        client.requestAnim(pickaxe.animationId, 0)
+        client.performAnimation(pickaxe.animationId, 0)
         return true
     }
 
@@ -247,7 +247,7 @@ object MiningService {
     }
 
     internal fun resolveRandomGemChance(client: Client): Int {
-        return if (client.GetItemName(client.equipment[Equipment.Slot.NECK.id]).lowercase().contains("glory")) {
+        return if (client.getItemName(client.equipment[Equipment.Slot.NECK.id]).lowercase().contains("glory")) {
             128
         } else {
             256
@@ -270,7 +270,7 @@ object MiningService {
         client.addItem(gem, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, gem, 1, client.position.copy(), "Mining")
-        client.send(SendMessage("You found a ${client.GetItemName(gem).lowercase()} inside the rock."))
+        client.sendMessage("You found a ${client.getItemName(gem).lowercase()} inside the rock.")
         return gem
     }
 

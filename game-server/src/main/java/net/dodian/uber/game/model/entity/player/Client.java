@@ -378,7 +378,7 @@ public class Client extends Player implements Runnable {
 
     public void animation(int id, Position pos) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Player p = PlayerHandler.players[i];
+            Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
             if (p != null) {
                 Client person = (Client) p;
                 if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
@@ -394,7 +394,7 @@ public class Client extends Player implements Runnable {
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
         if (showAll) {
             for (int i = 0; i < PlayerHandler.players.length; i++) {
-                Player p = PlayerHandler.players[i];
+                Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
                 if (p != null) {
                     Client person = (Client) p;
                     if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
@@ -522,16 +522,36 @@ public class Client extends Player implements Runnable {
         PlayerAnimationService.requestResetClear(this);
     }
 
+    public void sendMessage(String text) {
+        send(new SendMessage(text));
+    }
+
+    public void sendString(String text, int lineId) {
+        send(new SendString(text, lineId));
+    }
+
     public void sendFrame200(int MainFrame, int SubFrame) {
         send(new SendFrame200(MainFrame, SubFrame));
+    }
+
+    public void sendInterfaceAnimation(int mainFrame, int subFrame) {
+        sendFrame200(mainFrame, subFrame);
     }
 
     public void sendFrame164(int Frame) {
         send(new SendFrame164(Frame));
     }
 
+    public void sendChatboxInterface(int frame) {
+        sendFrame164(frame);
+    }
+
     public void sendFrame246(int MainFrame, int SubFrame, int SubFrame2) {
         send(new SendFrame246(MainFrame, SubFrame, SubFrame2));
+    }
+
+    public void sendInterfaceModel(int mainFrame, int subFrame, int subFrame2) {
+        sendFrame246(mainFrame, subFrame, subFrame2);
     }
 
     public void sendQuestSomething(int id) {
@@ -545,8 +565,16 @@ public class Client extends Player implements Runnable {
 
     public void showInterface(int interfaceid) {
         resetAction();
-        // Delegates to the new packet implementation while preserving the old method signature.
         send(new ShowInterface(interfaceid));
+    }
+
+    public void openInterface(int interfaceId) {
+        showInterface(interfaceId);
+    }
+
+    public void closeInterfaces() {
+        send(new RemoveInterfaces());
+        clearWalkableInterface();
     }
 
     public int ancients = 1;
@@ -2187,6 +2215,10 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
+    public boolean hasItemInInventory(int itemId) {
+        return IsItemInBag(itemId);
+    }
+
     public boolean AreXItemsInBag(int ItemID, int Amount) {
         int ItemCount = 0;
 
@@ -2201,6 +2233,10 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
+    public boolean hasItemsInInventory(int itemId, int amount) {
+        return AreXItemsInBag(itemId, amount);
+    }
+
     public int GetItemSlot(int ItemID) {
         for (int i = 0; i < playerItems.length; i++) {
             if ((playerItems[i] - 1) == ItemID) {
@@ -2210,6 +2246,10 @@ public class Client extends Player implements Runnable {
         return -1;
     }
 
+    public int getItemSlot(int itemId) {
+        return GetItemSlot(itemId);
+    }
+
     public int GetBankItemSlot(int ItemID) {
         for (int i = 0; i < bankItems.length; i++) {
             if ((bankItems[i] - 1) == ItemID) {
@@ -2217,6 +2257,10 @@ public class Client extends Player implements Runnable {
             }
         }
         return -1;
+    }
+
+    public int getBankItemSlot(int itemId) {
+        return GetBankItemSlot(itemId);
     }
 
     public boolean randomed2;
@@ -2344,6 +2388,10 @@ public class Client extends Player implements Runnable {
         return Server.itemManager.getName(ItemID);
     }
 
+    public String getItemName(int itemId) {
+        return GetItemName(itemId);
+    }
+
     public double GetShopSellValue(int ItemID) {
         return Server.itemManager.getShopSellValue(ItemID);
     }
@@ -2363,6 +2411,10 @@ public class Client extends Player implements Runnable {
         return 0;
     }
 
+    public int getUnnotedItem(int itemId) {
+        return GetUnnotedItem(itemId);
+    }
+
     public int GetNotedItem(int ItemID) {
         String NotedName = Server.itemManager.getName(ItemID);
         for (Item item : Server.itemManager.items.values()) {
@@ -2374,11 +2426,19 @@ public class Client extends Player implements Runnable {
         return 0;
     }
 
+    public int getNotedItem(int itemId) {
+        return GetNotedItem(itemId);
+    }
+
     public void WriteEnergy() {
         // Stub: always report 100% run energy to the client
         send(new SendRunEnergy(100));
         invalidateUiText(149);
         send(new SendString("100%", 149));
+    }
+
+    public void updateRunEnergy() {
+        WriteEnergy();
     }
 
     public void ResetBonus() {
@@ -2712,10 +2772,10 @@ public class Client extends Player implements Runnable {
 
     public void UpdatePlayerShop() {
         for (int i = 1; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] != null) {
-                if (PlayerHandler.players[i].isShopping() && PlayerHandler.players[i].MyShopID == MyShopID
+            if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i] != null) {
+                if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
                         && i != getSlot()) {
-                    ((Client) PlayerHandler.players[i]).checkItemUpdate();
+                    ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
                 }
             }
         }
@@ -3334,7 +3394,7 @@ public class Client extends Player implements Runnable {
 
     public void modYell(String msg) {
         for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Client p = (Client) PlayerHandler.players[i];
+            Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
             if (p != null && !p.disconnected && p.getPosition().getX() > 0 && p.dbId > 0 && p.playerRights > 0) {
                 p.send(new SendMessage(msg));
             }
@@ -3385,10 +3445,10 @@ public class Client extends Player implements Runnable {
         resetTItems(3415);
         resetOTItems(3416);
         send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = PlayerHandler.players[trade_reqId].getPlayerName();
-        if (PlayerHandler.players[trade_reqId].playerRights == 1) {
+        String out = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
+        if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
             out = "@cr1@" + out;
-        } else if (PlayerHandler.players[trade_reqId].playerRights == 2) {
+        } else if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
             out = "@cr2@" + out;
         }
         send(new SendString("Trading With: " + out, 3417));
@@ -3429,12 +3489,12 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) PlayerHandler.players[index];
+        Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
     public Client getClient(int index) {
-        return index < 0 ? null : ((Client) PlayerHandler.players[index]);
+        return index < 0 ? null : ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public void tradeReq(int id) {
@@ -3449,7 +3509,7 @@ public class Client extends Player implements Runnable {
                 logout();
             }
         }
-        Client other = (Client) PlayerHandler.players[id];
+        Client other = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[id];
         String tradeBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
         if (tradeBlockMessage != null) {
             send(new SendMessage(tradeBlockMessage));

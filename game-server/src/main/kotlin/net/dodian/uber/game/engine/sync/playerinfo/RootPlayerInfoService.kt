@@ -10,7 +10,7 @@ import java.util.LinkedHashMap
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
@@ -50,7 +50,7 @@ class RootPlayerInfoService {
                     viewer.println_debug("\nRemove disconnected player " + viewer.playerName)
                     Server.playerHandler.removePlayer(viewer)
                     viewer.disconnected = false
-                    PlayerHandler.players[viewer.slot] = null
+                    PlayerRegistry.players[viewer.slot] = null
                     return@forEach
                 }
 

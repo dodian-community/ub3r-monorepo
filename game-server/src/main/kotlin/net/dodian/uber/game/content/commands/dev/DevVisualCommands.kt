@@ -94,12 +94,12 @@ private fun handleDevVisual(context: CommandContext): Boolean {
         }
         "if" -> {
             val id = cmd[1].toInt()
-            client.showInterface(id)
+            client.openInterface(id)
             context.reply("You open interface $id")
         }
         "emote" -> {
             val id = cmd[1].toInt()
-            client.requestAnim(id, 0)
+            client.performAnimation(id, 0)
             context.reply("You set animation to: $id")
         }
         "heat" -> {

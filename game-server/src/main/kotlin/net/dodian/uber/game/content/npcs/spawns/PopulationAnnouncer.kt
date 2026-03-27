@@ -5,7 +5,7 @@ package net.dodian.uber.game.content.npcs.spawns
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 internal object PopulationAnnouncer {
     // Stats: 3306: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -20,7 +20,7 @@ internal object PopulationAnnouncer {
         var peopleInEdge = 0
         var peopleInWild = 0
         for (index in 0 until Constants.maxPlayers) {
-            val checkPlayer = PlayerHandler.players[index] as? Client ?: continue
+            val checkPlayer = PlayerRegistry.players[index] as? Client ?: continue
             if (checkPlayer.inWildy()) {
                 peopleInWild++
             } else if (checkPlayer.inEdgeville()) {

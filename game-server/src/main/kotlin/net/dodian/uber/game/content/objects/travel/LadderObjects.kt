@@ -31,7 +31,7 @@ object LadderObjects : VerticalTravelDslObjectContent(
         ladderDown(5947, 6434) { _, _, position, _ -> position.offset(dy = 6400) }
         firstClick(2113) { client, _, position, _ ->
             if (client.getLevel(Skill.MINING) < 60) {
-                client.send(SendMessage("You need 60 mining to enter the mining guild."))
+                client.sendMessage("You need 60 mining to enter the mining guild.")
                 return@firstClick true
             }
             VerticalTravel.start(client, position.offset(dy = 6400), VerticalTravelStyles.LADDER)

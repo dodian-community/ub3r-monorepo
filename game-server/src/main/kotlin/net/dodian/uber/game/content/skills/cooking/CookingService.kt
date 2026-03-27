@@ -13,7 +13,7 @@ object CookingService {
     @JvmStatic
     fun start(client: Client, itemId: Int) {
         if (client.isBusy) {
-            client.send(SendMessage("You are currently busy to be cooking!"))
+            client.sendMessage("You are currently busy to be cooking!")
             return
         }
         val recipe = CookingDefinitions.findRecipe(itemId) ?: run {
@@ -42,12 +42,12 @@ object CookingService {
             return
         }
         if (!client.playerHasItem(itemId)) {
-            client.send(SendMessage("You are out of fish"))
+            client.sendMessage("You are out of fish")
             client.resetAction(true)
             return
         }
         if (client.getLevel(Skill.COOKING) < recipe.requiredLevel) {
-            client.send(SendMessage("You need ${recipe.requiredLevel} cooking to cook the ${Server.itemManager.getName(itemId).lowercase()}."))
+            client.sendMessage("You need ${recipe.requiredLevel} cooking to cook the ${Server.itemManager.getName(itemId).lowercase()}.")
             client.resetAction(true)
             return
         }
@@ -66,14 +66,14 @@ object CookingService {
         client.cookingState = state.copy(remaining = state.remaining - 1)
         client.deleteItem(itemId, 1)
         client.setFocus(client.interactionAnchorX, client.interactionAnchorY)
-        client.requestAnim(883, 0)
+        client.performAnimation(883, 0)
         if (!burn) {
             client.addItem(recipe.cookedItemId, 1)
-            client.send(SendMessage("You cook the ${client.GetItemName(itemId)}"))
+            client.sendMessage("You cook the ${client.getItemName(itemId)}")
             SkillProgressionService.gainXp(client, recipe.experience, Skill.COOKING)
         } else {
             client.addItem(recipe.burntItemId, 1)
-            client.send(SendMessage("You burn the ${client.GetItemName(itemId)}"))
+            client.sendMessage("You burn the ${client.getItemName(itemId)}")
         }
         client.checkItemUpdate()
         SkillingRandomEventService.trigger(client, recipe.experience)

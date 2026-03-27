@@ -35,7 +35,7 @@ object SkillGuideInterfaceButtons : InterfaceButtonContent {
                             0 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.ATTACK.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 0)
                             1 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.DEFENCE.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 1)
                             2 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.RANGED.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 2)
-                            3 -> if (client.currentSkill < 2) client.send(SendMessage("Coming soon!")) else SkillGuidePlugin.open(client, client.currentSkill, 3)
+                            3 -> if (client.currentSkill < 2) client.sendMessage("Coming soon!") else SkillGuidePlugin.open(client, client.currentSkill, 3)
                             else -> SkillGuidePlugin.open(client, client.currentSkill, subTab.targetTab)
                         }
                         true

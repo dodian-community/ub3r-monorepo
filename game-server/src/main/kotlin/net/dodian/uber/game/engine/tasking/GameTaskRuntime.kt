@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.engine.tasking.set.PawnTaskSet
 import net.dodian.uber.game.engine.tasking.set.WorldTaskSet
 import java.util.function.Supplier
@@ -111,7 +111,7 @@ object GameTaskRuntime {
     @JvmStatic
     fun clear() {
         worldTaskSet.terminateTasks()
-        PlayerHandler.playersOnline.values.forEach { player: Client ->
+        PlayerRegistry.playersOnline.values.forEach { player: Client ->
             terminatePlayerTasks(player)
         }
         Server.npcManager?.getNpcs()?.forEach { npc ->

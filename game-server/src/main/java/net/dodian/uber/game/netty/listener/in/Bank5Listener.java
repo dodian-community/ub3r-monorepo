@@ -118,7 +118,7 @@ public class Bank5Listener implements PacketListener {
             client.buyItem(removeId, removeSlot, 1);
         } else if (interfaceId == 1688) { // operate equipment – animations and special chats
             if (removeId == 4566) {
-                client.requestAnim(1835, 0);
+                client.performAnimation(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
                 net.dodian.uber.game.content.skills.slayer.SlayerPlugin.sendCurrentTask(client);
             }

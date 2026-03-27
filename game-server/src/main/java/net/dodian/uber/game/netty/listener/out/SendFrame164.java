@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.MessageType;
 
 /**
  * Sends a frame 164 packet to display an interface.
- * This replaces the legacy sendFrame164() method with proper Netty implementation.
+ * This replaces the legacy sendChatboxInterface() method with proper Netty implementation.
  * <p>
  * Packet structure:
  * - Opcode: 164 (variable short - interface display packet)

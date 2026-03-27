@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.metrics
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -10,8 +10,8 @@ class MemoryReporter private constructor() {
         val runtime = Runtime.getRuntime()
         val usedMemoryMb = ((runtime.totalMemory() - runtime.freeMemory()) / MB).toInt()
         val maxMemoryMb = (runtime.maxMemory() / MB).toInt()
-        val onlinePlayers = PlayerHandler.getPlayerCount()
-        val trackedPlayers = PlayerHandler.playersOnline.size
+        val onlinePlayers = PlayerRegistry.getPlayerCount()
+        val trackedPlayers = PlayerRegistry.playersOnline.size
 
         logger.info("--------------------------------------------------------------------------------")
         logger.info(
@@ -65,8 +65,8 @@ class MemoryReporter private constructor() {
     }
 
     private fun snapshotActiveClients(): List<Client> {
-        val clients = ArrayList<Client>(PlayerHandler.playersOnline.size)
-        for (client in PlayerHandler.playersOnline.values) {
+        val clients = ArrayList<Client>(PlayerRegistry.playersOnline.size)
+        for (client in PlayerRegistry.playersOnline.values) {
             if (client != null && client.playerName != null) {
                 clients.add(client)
             }

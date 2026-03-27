@@ -11,13 +11,13 @@ object RunecraftingService {
     @JvmStatic
     fun start(client: Client, request: RunecraftingRequest): Boolean {
         if (!client.contains(RunecraftingDefinitions.RUNE_ESSENCE_ID)) {
-            client.send(SendMessage("You do not have any rune essence!"))
+            client.sendMessage("You do not have any rune essence!")
             return false
         }
         if (client.getLevel(Skill.RUNECRAFTING) < request.requiredLevel) {
             client.send(
                 SendMessage(
-                    "You must have ${request.requiredLevel} runecrafting to craft ${client.GetItemName(request.runeId).lowercase()}",
+                    "You must have ${request.requiredLevel} runecrafting to craft ${client.getItemName(request.runeId).lowercase()}",
                 ),
             )
             return false
@@ -25,7 +25,7 @@ object RunecraftingService {
 
         val essenceCount = client.getInvAmt(RunecraftingDefinitions.RUNE_ESSENCE_ID)
         if (essenceCount <= 0) {
-            client.send(SendMessage("You do not have any rune essence!"))
+            client.sendMessage("You do not have any rune essence!")
             return false
         }
 
@@ -40,7 +40,7 @@ object RunecraftingService {
         }
 
         val crafted = essenceCount + extra
-        client.send(SendMessage("You craft $crafted ${client.GetItemName(request.runeId).lowercase()}s"))
+        client.sendMessage("You craft $crafted ${client.getItemName(request.runeId).lowercase()}s")
         client.addItem(request.runeId, crafted)
         client.checkItemUpdate()
         val xp = request.experiencePerEssence * essenceCount

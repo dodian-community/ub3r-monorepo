@@ -25,7 +25,7 @@ object FiremakingItemCombinationHandler {
         }
         val log = logs.firstOrNull { itemUsed == it.itemId || useWith == it.itemId } ?: return false
         if (client.getLevel(Skill.FIREMAKING) < log.level) {
-            client.send(SendMessage("You need a firemaking level of ${log.level} to burn ${log.name}."))
+            client.sendMessage("You need a firemaking level of ${log.level} to burn ${log.name}.")
             return true
         }
         client.deleteItem(log.itemId, 1)

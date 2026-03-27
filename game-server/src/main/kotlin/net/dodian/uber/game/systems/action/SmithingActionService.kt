@@ -35,8 +35,8 @@ object SmithingActionService {
                 return@playerAction
             }
             player.setFocus(request.anvilX, request.anvilY)
-            player.send(SendMessage("You start hammering the bar..."))
-            player.requestAnim(0x382, 0)
+            player.sendMessage("You start hammering the bar...")
+            player.performAnimation(0x382, 0)
             var remaining = request.amount
 
             while (remaining > 0) {
@@ -55,7 +55,7 @@ object SmithingActionService {
 
     private fun resolveSpec(player: Client, request: SmithingRequest): SmithingSpec? {
         if (player.isBusy()) {
-            player.send(SendMessage("You are currently busy to be smithing!"))
+            player.sendMessage("You are currently busy to be smithing!")
             stop(player)
             return null
         }
@@ -63,20 +63,20 @@ object SmithingActionService {
             stop(player)
             return null
         }
-        if (!player.IsItemInBag(2347)) {
-            player.send(SendMessage("You need a ${player.GetItemName(2347)} to hammer bars."))
+        if (!player.hasItemInInventory(2347)) {
+            player.sendMessage("You need a ${player.getItemName(2347)} to hammer bars.")
             stop(player)
             return null
         }
         if (player.getLevel(Skill.SMITHING) < request.product.levelRequired) {
-            player.send(SendMessage("You need ${request.product.levelRequired} Smithing to smith a ${player.GetItemName(request.product.itemId)}."))
+            player.sendMessage("You need ${request.product.levelRequired} Smithing to smith a ${player.getItemName(request.product.itemId)}.")
             stop(player)
             return null
         }
-        if (!player.AreXItemsInBag(request.barId, request.product.barsRequired)) {
+        if (!player.hasItemsInInventory(request.barId, request.product.barsRequired)) {
             player.send(
                 SendMessage(
-                    "You need ${request.product.barsRequired} ${player.GetItemName(request.barId)} to smith a ${player.GetItemName(request.product.itemId)}.",
+                    "You need ${request.product.barsRequired} ${player.getItemName(request.barId)} to smith a ${player.getItemName(request.product.itemId)}.",
                 ),
             )
             player.rerequestAnim()
@@ -111,8 +111,8 @@ object SmithingActionService {
         SkillProgressionService.gainXp(player, spec.experience, Skill.SMITHING)
         player.addItem(spec.targetItem, spec.outputCount)
         player.checkItemUpdate()
-        player.send(SendMessage("You smith a ${player.GetItemName(spec.targetItem)}"))
-        player.requestAnim(0x382, 0)
+        player.sendMessage("You smith a ${player.getItemName(spec.targetItem)}")
+        player.performAnimation(0x382, 0)
         SkillingRandomEventService.trigger(player, spec.experience)
         return true
     }

@@ -32,7 +32,7 @@ object HerbloreService {
     fun processBatch(client: Client, request: HerbloreBatchRequest) {
         var amount = request.amount
         val id = client.herbOptions[request.slot].getId()
-        val grimy = client.GetItemName(id).lowercase().contains("grimy")
+        val grimy = client.getItemName(id).lowercase().contains("grimy")
         val coins = client.getInvAmt(995)
 
         if (grimy) {
@@ -43,14 +43,14 @@ object HerbloreService {
                 }
                 val otherHerb =
                     HerbloreDefinitions.herbDefinitions
-                        .firstOrNull { id == client.GetNotedItem(it.grimyId) }
-                        ?.let { client.GetNotedItem(it.cleanId) }
+                        .firstOrNull { id == client.getNotedItem(it.grimyId) }
+                        ?.let { client.getNotedItem(it.cleanId) }
                         ?: -1
                 client.deleteItem(995, amount * HerbloreDefinitions.GRIND_COST_PER_HERB)
                 client.deleteItem(id, amount)
                 client.addItem(otherHerb, amount)
                 client.checkItemUpdate()
-                HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.GetItemName(id).lowercase()}")
+                HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.getItemName(id).lowercase()}")
             } else {
                 client.showNPCChat(request.npcId, 605, arrayOf("You need 1 herb and 200 coins", "for me to grind it for you."))
             }
@@ -64,8 +64,8 @@ object HerbloreService {
 
         val otherHerb =
             HerbloreDefinitions.herbDefinitions
-                .firstOrNull { id == client.GetNotedItem(it.unfinishedPotionId) }
-                ?.let { client.GetNotedItem(it.cleanId) }
+                .firstOrNull { id == client.getNotedItem(it.unfinishedPotionId) }
+                ?.let { client.getNotedItem(it.cleanId) }
                 ?: -1
         val vials = client.getInvAmt(HerbloreDefinitions.VIAL_OF_WATER_ID)
         val herbs = client.getInvAmt(otherHerb)
@@ -79,7 +79,7 @@ object HerbloreService {
             client.deleteItem(otherHerb, amount)
             client.addItem(id, amount)
             client.checkItemUpdate()
-            HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.GetItemName(id).lowercase()}")
+            HerbloreNpcDialogue.showBatchResultAndContinue(client, request.npcId, "Here is your all of ", "$amount ${client.getItemName(id).lowercase()}")
         } else {
             client.showNPCChat(
                 request.npcId,

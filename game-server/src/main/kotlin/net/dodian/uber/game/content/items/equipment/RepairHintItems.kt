@@ -9,8 +9,8 @@ object RepairHintItems : ItemContent {
 
     override fun onSecondClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         when (itemId) {
-            4936 -> client.send(SendMessage("This crossbow need a Seercull bow to be fully repaired."))
-            4864 -> client.send(SendMessage("This staff need a Master wand to be fully repaired."))
+            4936 -> client.sendMessage("This crossbow need a Seercull bow to be fully repaired.")
+            4864 -> client.sendMessage("This staff need a Master wand to be fully repaired.")
             else -> return false
         }
         return true

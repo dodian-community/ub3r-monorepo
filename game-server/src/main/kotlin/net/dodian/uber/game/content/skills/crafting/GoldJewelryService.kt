@@ -29,14 +29,14 @@ object GoldJewelryService {
             for (itemSlot in itemsToShow.indices) {
                 itemsToShow[itemSlot] = resolveShownItem(client, index, itemSlot)
                 if (itemSlot != 0 && itemsToShow[itemSlot] != GoldJewelryDefinitions.jewelryByGroup[index][itemSlot]) {
-                    client.sendFrame246(slot + 13 + itemSlot - 1 - index, GoldJewelryDefinitions.frameSizes[index], GoldJewelryDefinitions.blackFrames[index])
+                    client.sendInterfaceModel(slot + 13 + itemSlot - 1 - index, GoldJewelryDefinitions.frameSizes[index], GoldJewelryDefinitions.blackFrames[index])
                 } else if (itemSlot != 0) {
-                    client.sendFrame246(slot + 13 + itemSlot - 1 - index, GoldJewelryDefinitions.frameSizes[index], -1)
+                    client.sendInterfaceModel(slot + 13 + itemSlot - 1 - index, GoldJewelryDefinitions.frameSizes[index], -1)
                 }
             }
             client.send(SetGoldItems(slot, itemsToShow))
         }
-        client.showInterface(4161)
+        client.openInterface(4161)
     }
 
     @JvmStatic
@@ -44,16 +44,16 @@ object GoldJewelryService {
         val index = resolveIndex(request.interfaceId)
         val product = GoldJewelryDefinitions.product(index, request.slot) ?: return false
         if (product.requiredLevel > client.getLevel(Skill.CRAFTING)) {
-            client.send(SendMessage("You need a crafting level of ${product.requiredLevel} to make this."))
+            client.sendMessage("You need a crafting level of ${product.requiredLevel} to make this.")
             return true
         }
         if (!client.playerHasItem(GOLD_BAR_ID)) {
-            client.send(SendMessage("You need at least one gold bar."))
+            client.sendMessage("You need at least one gold bar.")
             return true
         }
         val requiredGem = GoldJewelryDefinitions.requiredGemItems[request.slot]
         if (request.slot != 0 && !client.playerHasItem(requiredGem)) {
-            client.send(SendMessage("You need a ${client.GetItemName(requiredGem).lowercase()} to make this."))
+            client.sendMessage("You need a ${client.getItemName(requiredGem).lowercase()} to make this.")
             return true
         }
 
@@ -69,7 +69,7 @@ object GoldJewelryService {
                 experiencePerUnit = product.experience,
                 animationId = GOLD_CRAFT_ANIMATION,
                 tickDelay = 3,
-                completionMessage = "You craft a ${client.GetItemName(product.productId).lowercase()}",
+                completionMessage = "You craft a ${client.getItemName(product.productId).lowercase()}",
             ),
             request.amount,
         )

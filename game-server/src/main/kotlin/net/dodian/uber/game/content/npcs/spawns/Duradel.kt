@@ -70,7 +70,7 @@ internal object SlayerMasterDialogue {
         }
 
         if (tasks.isEmpty()) {
-            client.send(SendMessage("You cant get any task!"))
+            client.sendMessage("You cant get any task!")
             return
         }
 
@@ -100,7 +100,7 @@ internal object SlayerMasterDialogue {
     fun showCurrentTask(client: Client) {
         val slayerMaster = client.getSlayerData()[0]
         if (slayerMaster == -1) {
-            client.send(SendMessage("You have yet to get a task. Talk to a slayer master!"))
+            client.sendMessage("You have yet to get a task. Talk to a slayer master!")
             return
         }
 
@@ -284,7 +284,7 @@ internal object SlayerMasterDialogue {
                 }
             }
         }
-        client.send(SendMessage("${checkTask.textRepresentation} have now been reseted!"))
+        client.sendMessage("${checkTask.textRepresentation} have now been reseted!")
     }
 
     private fun cancelTaskCost(client: Client): Int {

@@ -102,7 +102,7 @@ internal object HerbloreNpcDialogue {
         client.herbMaking = 0
         client.herbOptions.clear()
         for (index in grimyHerbs.indices) {
-            val notedGrimy = client.GetNotedItem(grimyHerbs[index])
+            val notedGrimy = client.getNotedItem(grimyHerbs[index])
             if (client.playerHasItem(notedGrimy)) {
                 client.herbOptions.add(RewardItem(notedGrimy, 0))
             }
@@ -119,9 +119,9 @@ internal object HerbloreNpcDialogue {
         client.herbMaking = 0
         client.herbOptions.clear()
         for (index in cleanHerbs.indices) {
-            val notedHerb = client.GetNotedItem(cleanHerbs[index])
+            val notedHerb = client.getNotedItem(cleanHerbs[index])
             if (client.playerHasItem(notedHerb)) {
-                client.herbOptions.add(RewardItem(client.GetNotedItem(unfinishedPotions[index]), 0))
+                client.herbOptions.add(RewardItem(client.getNotedItem(unfinishedPotions[index]), 0))
             }
         }
         if (client.herbOptions.isEmpty()) {
@@ -150,7 +150,7 @@ internal object HerbloreNpcDialogue {
 
         fun collect(source: IntArray, sourceDose: Int) {
             for (index in source.indices) {
-                val notedPotion = client.GetNotedItem(source[index])
+                val notedPotion = client.getNotedItem(source[index])
                 if (notedPotion > 0) {
                     val inventoryAmount = client.getInvAmt(notedPotion)
                     potionAmount[index] += inventoryAmount.toLong() * sourceDose
@@ -172,7 +172,7 @@ internal object HerbloreNpcDialogue {
                 2 -> pot2Dose[index]
                 else -> pot1Dose[index]
             }
-            val notedTargetPotion = client.GetNotedItem(targetPotion)
+            val notedTargetPotion = client.getNotedItem(targetPotion)
             if (notedTargetPotion <= 0) {
                 continue
             }
@@ -195,15 +195,15 @@ internal object HerbloreNpcDialogue {
                     notedTargetPotion,
                     producedAmount,
                     client.position.copy(),
-                    "Decant dropped ${client.GetItemName(targetPotion).lowercase()}",
+                    "Decant dropped ${client.getItemName(targetPotion).lowercase()}",
                 )
-                client.send(SendMessage("<col=FF0000>You dropped the ${client.GetItemName(targetPotion).lowercase()} to the floor!"))
+                client.sendMessage("<col=FF0000>You dropped the ${client.getItemName(targetPotion).lowercase()} to the floor!")
             }
 
             if (emptyVials > 0 && (emptyVials + currentEmptyVials) < 1000 && !client.addItem(230, emptyVials)) {
                 Ground.addFloorItem(client, 230, emptyVials)
-                ItemLog.playerDrop(client, 230, emptyVials, client.position.copy(), "Decant dropped ${client.GetItemName(230).lowercase()}")
-                client.send(SendMessage("<col=FF0000>You dropped the ${client.GetItemName(230).lowercase()} to the floor!"))
+                ItemLog.playerDrop(client, 230, emptyVials, client.position.copy(), "Decant dropped ${client.getItemName(230).lowercase()}")
+                client.sendMessage("<col=FF0000>You dropped the ${client.getItemName(230).lowercase()} to the floor!")
             } else if (emptyVials < 0) {
                 client.deleteItem(230, emptyVials * -1)
             }
@@ -216,9 +216,9 @@ internal object HerbloreNpcDialogue {
                     leftOverDose,
                     1,
                     client.position.copy(),
-                    "Decant dropped ${client.GetItemName(leftOverDose).lowercase()}",
+                    "Decant dropped ${client.getItemName(leftOverDose).lowercase()}",
                 )
-                client.send(SendMessage("<col=FF0000>You dropped the ${client.GetItemName(leftOverDose).lowercase()} to the floor!"))
+                client.sendMessage("<col=FF0000>You dropped the ${client.getItemName(leftOverDose).lowercase()} to the floor!")
             }
         }
 

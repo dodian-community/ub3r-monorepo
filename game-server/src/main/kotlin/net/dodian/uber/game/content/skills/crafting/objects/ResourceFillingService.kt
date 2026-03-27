@@ -38,7 +38,7 @@ object ResourceFillingService {
             client.deleteItem(entry.emptyItemId, 1)
             client.addItem(entry.filledItemId, 1)
             client.checkItemUpdate()
-            client.requestAnim(entry.emote, 0)
+            client.performAnimation(entry.emote, 0)
             return true
         }
         return true

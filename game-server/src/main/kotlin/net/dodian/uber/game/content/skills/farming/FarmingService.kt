@@ -166,7 +166,7 @@ class FarmingService {
     fun Client.interactItemBin(objectId : Int, itemId: Int) : Boolean {
         FarmingCatchUpService.applyInteractionCatchUp(this)
         val objName = GameObjectData.forId(objectId).name.lowercase()
-        val itemName = GetItemName(itemId).lowercase()
+        val itemName = getItemName(itemId).lowercase()
 
         for(compost in FarmingDefinitions.compostBin.values()) {
             if(objectId == compost.objectId) {
@@ -180,7 +180,7 @@ class FarmingService {
                         farmCompost.set(0, JsonPrimitive(FarmingDefinitions.compost.ULTRACOMPOST.toString()))
                         checkItemUpdate()
                         markFarmingDirty()
-                    } else send(SendMessage("You need 25 "+GetItemName(itemId).lowercase()+" in order to convert into ultra compost."))
+                    } else send(SendMessage("You need 25 "+getItemName(itemId).lowercase()+" in order to convert into ultra compost."))
                     return true
                 }
                 if(farmCompost.get(1).asString != FarmingDefinitions.compostState.EMPTY.toString() && !(farmCompost.get(1).asString == FarmingDefinitions.compostState.FILLED.toString() && farmCompost.get(2).asInt < 15)) { //If not empty, or filled to the brim...
@@ -307,7 +307,7 @@ class FarmingService {
                             else if (FarmingDefinitions.treePatch.findSeed(itemId)) "tree" else ""
 
                             if(foundStage == 2)
-                                send(SendMessage(GetItemName(itemId) + " can only be planted at a " + value + " patch."))
+                                send(SendMessage(getItemName(itemId) + " can only be planted at a " + value + " patch."))
                             else if(foundStage == 1) { //Found seed for right patch!
                                 val tool = if(checkName.contains("tree")) farmData.SPADE else farmData.SEED_DIBBER
                                 if(playerHasItem(tool)) {
@@ -328,9 +328,9 @@ class FarmingService {
                                             updateFarmPatch()
                                             markFarmingDirty()
                                             FarmingScheduler.INSTANCE.noteActivity(this)
-                                        } else send(SendMessage("You need " + amount + " " + GetItemName(itemId).lowercase() + " to plant here."))
-                                    } else send(SendMessage("You need level " + farmData.getPlantLevel(itemId) + " farming to plant " + GetItemName(itemId).lowercase() + "."))
-                                } else send(SendMessage("You are missing the "+GetItemName(tool).lowercase()+" tool."))
+                                        } else send(SendMessage("You need " + amount + " " + getItemName(itemId).lowercase() + " to plant here."))
+                                    } else send(SendMessage("You need level " + farmData.getPlantLevel(itemId) + " farming to plant " + getItemName(itemId).lowercase() + "."))
+                                } else send(SendMessage("You are missing the "+getItemName(tool).lowercase()+" tool."))
                             }
                         } else clickPatch(objectId)
                     }
@@ -637,12 +637,12 @@ class FarmingService {
         for (sapling in FarmingDefinitions.sapling.values()) {
             if((itemOne == sapling.treeSeed || itemTwo == sapling.treeSeed) && (itemOne == farmData.FILLED_PLANT_POT || itemTwo == farmData.FILLED_PLANT_POT)) {
                 if(!playerHasItem(farmData.TROWEL)) {
-                    send(SendMessage("You are missing your "+GetItemName(farmData.TROWEL).lowercase()+"."))
+                    send(SendMessage("You are missing your "+getItemName(farmData.TROWEL).lowercase()+"."))
                     return
                 }
                 if(getSkillLevel(Skill.FARMING) < sapling.farmLevel) {
                     send(SendMessage( "You need level " + sapling.farmLevel + " " +
-                    "farming to plant the " + GetItemName(sapling.treeSeed).lowercase() + "."))
+                    "farming to plant the " + getItemName(sapling.treeSeed).lowercase() + "."))
                     return
                 }
                 deleteItem(itemOne, if(itemOne == farmData.FILLED_PLANT_POT) itemOneSlot else itemTwoSlot,  1)
@@ -650,9 +650,9 @@ class FarmingService {
                 addItemSlot(sapling.plantedId, 1, if(itemOne == farmData.FILLED_PLANT_POT) itemOneSlot else itemTwoSlot)
                 checkItemUpdate()
                 FarmingScheduler.INSTANCE.noteActivity(this)
-            } else if ((itemOne == sapling.plantedId || itemTwo == sapling.plantedId) && (GetItemName(itemOne).startsWith("Watering can(") || GetItemName(itemTwo).startsWith("Watering can("))) {
+            } else if ((itemOne == sapling.plantedId || itemTwo == sapling.plantedId) && (getItemName(itemOne).startsWith("Watering can(") || getItemName(itemTwo).startsWith("Watering can("))) {
                 deleteItem(if(itemOne == sapling.plantedId) itemTwo else itemOne, if(itemOne == sapling.plantedId) itemTwoSlot else itemOneSlot,1)
-                if((itemOne == sapling.plantedId && !GetItemName(itemTwo).endsWith("1)")) || (itemTwo == sapling.plantedId && !GetItemName(itemOne).endsWith("1)")))
+                if((itemOne == sapling.plantedId && !getItemName(itemTwo).endsWith("1)")) || (itemTwo == sapling.plantedId && !getItemName(itemOne).endsWith("1)")))
                     addItemSlot(if(itemOne == sapling.plantedId) itemTwo-1 else itemOne-1, 1, if(itemOne == sapling.plantedId) itemTwoSlot else itemOneSlot)
                 else addItemSlot(5331, 1, if(itemOne == sapling.plantedId) itemTwoSlot else itemOneSlot)
                 deleteItem(sapling.plantedId, if(itemOne == sapling.plantedId) itemOneSlot else itemTwoSlot, 1)

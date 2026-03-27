@@ -22,12 +22,12 @@ private fun handleSocial(context: CommandContext): Boolean {
     val cmd = context.parts
     if ((command.startsWith("/") && command.substring(1).isNotEmpty()) || (context.alias == "yell" && command.length > 5)) {
         if (!client.premium) {
-            client.send(SendMessage("You must be a Premium Member to yell."))
-            client.send(SendMessage("Use the Dodian.net Market Forums to post new threads to buy/sell."))
+            client.sendMessage("You must be a Premium Member to yell.")
+            client.sendMessage("Use the Dodian.net Market Forums to post new threads to buy/sell.")
             return true
         }
         if (!Server.chatOn && client.playerRights < 1) {
-            client.send(SendMessage("Yell chat is disabled!"))
+            client.sendMessage("Yell chat is disabled!")
             return true
         }
         var text = command.substring(if (command.startsWith("/")) 1 else 5)
@@ -50,7 +50,7 @@ private fun handleSocial(context: CommandContext): Boolean {
             }
             ChatLog.recordYellChat(client, yell)
         } else {
-            client.send(SendMessage("You are currently muted!"))
+            client.sendMessage("You are currently muted!")
         }
         return true
     }

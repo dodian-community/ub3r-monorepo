@@ -3,7 +3,7 @@ package net.dodian.uber.game.systems.world
 import java.util.IdentityHashMap
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 class OnlinePlayerIndex {
     private val byDbId = HashMap<Int, Client>()
@@ -17,7 +17,7 @@ class OnlinePlayerIndex {
         activePlayers.clear()
         activeSet.clear()
         for (i in 0 until Constants.maxPlayers) {
-            val client = PlayerHandler.players[i] as? Client ?: continue
+            val client = PlayerRegistry.players[i] as? Client ?: continue
             if (!client.isActive) {
                 continue
             }
