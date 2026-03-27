@@ -1,15 +1,26 @@
 package net.dodian.utilities
 
+import kotlin.jvm.JvmName
+
 class Range(
-    private val floor: Int,
-    private val ceiling: Int,
+    private val floorRaw: Int,
+    private val ceilingRaw: Int,
 ) {
-    fun getFloor(): Int = floor
+    fun getFloor(): Int = floorRaw
 
-    fun getCeiling(): Int = ceiling
+    @get:JvmName("getFloorValue")
+    val floor: Int
+        get() = getFloor()
 
+    fun getCeiling(): Int = ceilingRaw
+
+    @get:JvmName("getCeilingValue")
+    val ceiling: Int
+        get() = getCeiling()
+
+    @get:JvmName("getValueProperty")
     val value: Int
         get() = getValue()
 
-    fun getValue(): Int = floor + (Math.random() * (ceiling - floor + 1)).toInt()
+    fun getValue(): Int = floorRaw + (Math.random() * (ceilingRaw - floorRaw + 1)).toInt()
 }

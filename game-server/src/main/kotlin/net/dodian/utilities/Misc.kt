@@ -1,6 +1,6 @@
 package net.dodian.utilities
 
-import net.dodian.cache.object.GameObjectDef
+import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.model.Position
 
 object Misc {

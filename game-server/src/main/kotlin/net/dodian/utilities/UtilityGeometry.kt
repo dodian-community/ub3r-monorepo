@@ -1,11 +1,11 @@
 package net.dodian.utilities
 
-import net.dodian.cache.object.CacheObject
-import net.dodian.cache.object.GameObjectDef
-import net.dodian.cache.object.ObjectLoader
+import net.dodian.cache.`object`.CacheObject
+import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.cache.`object`.ObjectLoader
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.object.DoorHandler
+import net.dodian.uber.game.model.`object`.DoorHandler
 
 object UtilityGeometry {
     @JvmStatic
