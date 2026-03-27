@@ -1,7 +1,5 @@
 package net.dodian.uber.game.systems.world.npc
 
-import java.sql.ResultSet
-import java.sql.Statement
 import java.util.TreeMap
 import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry
 import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef
@@ -9,9 +7,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.persistence.world.npc.NpcDataRepository
 import org.slf4j.LoggerFactory
 
 class NpcManager {
@@ -166,27 +162,16 @@ class NpcManager {
 
     fun reloadDrops(c: Client, id: Int) {
         try {
-            if (data.containsKey(id)) {
-                data[id]!!.drops.clear()
-                DbAsyncRepository.withConnection { connection ->
-                    connection.createStatement().use { statement ->
-                        statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DROPS} where npcid='$id'").use { results ->
-                            while (results.next()) {
-                                data[id]!!.addDrop(
-                                    results.getInt("itemid"),
-                                    results.getInt("amt_min"),
-                                    results.getInt("amt_max"),
-                                    results.getDouble("percent"),
-                                    results.getBoolean("rareShout"),
-                                )
-                            }
-                        }
-                    }
-                }
-                c.sendMessage("Finished reloading all drops for ${data[id]!!.name}")
-            } else {
+            val npcData = data[id]
+            if (npcData == null) {
                 c.sendMessage("No npc with id of $id")
+                return
             }
+            npcData.drops.clear()
+            for (drop in NpcDataRepository.loadDropsForNpc(id)) {
+                npcData.addDrop(drop.itemId, drop.amountMin, drop.amountMax, drop.percent, drop.rareShout)
+            }
+            c.sendMessage("Finished reloading all drops for ${npcData.name}")
         } catch (e: Exception) {
             println("npc drop wrong during drop reload..$e")
         }
@@ -194,17 +179,12 @@ class NpcManager {
 
     fun reloadAllData(c: Client, id: Int) {
         try {
-            DbAsyncRepository.withConnection { connection ->
-                connection.createStatement().use { statement ->
-                    statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'").use { results ->
-                        if (results.next()) {
-                            data[results.getInt("id")] = NpcData(results)
-                            for (n in npcMap.values) {
-                                if (n.id == id) {
-                                    n.reloadData()
-                                }
-                            }
-                        }
+            val definition = NpcDataRepository.loadDefinitionById(id)
+            if (definition != null) {
+                data[id] = definition
+                for (n in npcMap.values) {
+                    if (n.id == id) {
+                        n.reloadData()
                     }
                 }
             }
@@ -218,30 +198,18 @@ class NpcManager {
     fun reloadNpcConfig(c: Client, id: Int, table: String, value: String) {
         if (!data.containsKey(id)) {
             try {
-                DbAsyncRepository.withConnection { connection ->
-                    connection.createStatement().use { statement1 ->
-                        statement1.executeUpdate("INSERT INTO ${DbTables.GAME_NPC_DEFINITIONS}(id, name, examine, size) VALUES($id, 'no_name', 'no_examine', '1')")
-                    }
-                    connection.createStatement().use { statement2 ->
-                        statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'").use { results ->
-                            if (results.next()) {
-                                data[results.getInt("id")] = NpcData(results)
-                                c.sendMessage("Added default config values to the npc!")
-                            }
-                        }
-                    }
+                NpcDataRepository.insertDefaultDefinition(id)
+                val defaultDefinition = NpcDataRepository.loadDefinitionById(id)
+                if (defaultDefinition != null) {
+                    data[id] = defaultDefinition
+                    c.sendMessage("Added default config values to the npc!")
                 }
             } catch (e: Exception) {
                 println("error? $e")
             }
         } else if (!table.equals("new npc", ignoreCase = true)) {
             try {
-                DbAsyncRepository.withConnection { connection ->
-                    connection.createStatement().use { statement ->
-                        val query = "UPDATE ${DbTables.GAME_NPC_DEFINITIONS} SET $table = '$value' WHERE id = '$id'"
-                        statement.executeUpdate(query)
-                    }
-                }
+                NpcDataRepository.updateDefinitionField(id, table, value)
                 c.sendMessage("You updated '$table' with value '$value'!")
                 reloadAllData(c, id)
             } catch (e: Exception) {
@@ -258,49 +226,30 @@ class NpcManager {
 
     fun loadData() {
         try {
-            DbAsyncRepository.withConnection { conn1 ->
-                conn1.createStatement().use { statement1 ->
-                    statement1.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS}").use { results1 ->
-                        var amount = 0
-                        while (results1.next()) {
-                            amount++
-                            data[results1.getInt("id")] = NpcData(results1)
-                        }
-                        logger.info("Loaded {} Npc Definitions", amount)
-                    }
-                }
-            }
+            val definitions = NpcDataRepository.loadDefinitions()
+            data.clear()
+            data.putAll(definitions)
+            logger.info("Loaded {} Npc Definitions", definitions.size)
         } catch (e: Exception) {
             println("Error loading NPC definitions: $e")
             e.printStackTrace()
         }
 
         try {
-            DbAsyncRepository.withConnection { conn2 ->
-                conn2.createStatement().use { statement2 ->
-                    statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DROPS}").use { results2 ->
-                        var amount = 0
-                        while (results2.next()) {
-                            if (results2.getInt("npcid") > 0) {
-                                amount++
-                                val id = results2.getInt("npcid")
-                                if (data.containsKey(id)) {
-                                    data[id]!!.addDrop(
-                                        results2.getInt("itemid"),
-                                        results2.getInt("amt_min"),
-                                        results2.getInt("amt_max"),
-                                        results2.getDouble("percent"),
-                                        results2.getBoolean("rareShout"),
-                                    )
-                                } else {
-                                    logger.warn("Invalid NPC ID for drop: {}", id)
-                                }
-                            }
-                        }
-                        logger.info("Loaded {} Npc Drops", amount)
-                    }
+            val dropsByNpc = NpcDataRepository.loadAllDropsByNpcId()
+            var amount = 0
+            for ((id, drops) in dropsByNpc) {
+                val definition = data[id]
+                if (definition == null) {
+                    logger.warn("Invalid NPC ID for drop: {}", id)
+                    continue
+                }
+                for (drop in drops) {
+                    amount++
+                    definition.addDrop(drop.itemId, drop.amountMin, drop.amountMax, drop.percent, drop.rareShout)
                 }
             }
+            logger.info("Loaded {} Npc Drops", amount)
         } catch (e: Exception) {
             println("Error loading NPC drops: $e")
             e.printStackTrace()

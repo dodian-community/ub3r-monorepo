@@ -18,7 +18,7 @@ class EntityProcessorPlayerTickIntegrationTest {
     }
 
     @Test
-    fun `player main phase posts exactly one player tick event per active player`() {
+    fun `player main phase does not post player tick events`() {
         val eventsSeen = AtomicInteger(0)
         GameEventBus.on<PlayerTickEvent>(
             action = {
@@ -32,8 +32,8 @@ class EntityProcessorPlayerTickIntegrationTest {
         player.initialized = true
         PlayerRegistry.playersOnline[1L] = player
 
-        EntityProcessor().runPlayerMainPhase()
+        EntityProcessor().runPlayerMainPhase(System.currentTimeMillis())
 
-        assertEquals(1, eventsSeen.get())
+        assertEquals(0, eventsSeen.get())
     }
 }

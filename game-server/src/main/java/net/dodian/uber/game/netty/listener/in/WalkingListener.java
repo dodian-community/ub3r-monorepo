@@ -62,8 +62,6 @@ public final class WalkingListener implements PacketListener {
             client.resetWalkingQueue();
             return;
         }
-        if (opcode != 98) client.setWalkToTask(null);
-
         // Auto-decline trade/duel when walking
         if (client.inTrade && (opcode == 164 || opcode == 248)) client.declineTrade();
         else if (client.inDuel && !client.duelFight && (opcode == 164 || opcode == 248)) client.declineDuel();

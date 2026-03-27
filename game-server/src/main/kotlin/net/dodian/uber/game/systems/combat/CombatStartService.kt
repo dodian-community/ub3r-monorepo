@@ -1,8 +1,6 @@
 package net.dodian.uber.game.systems.combat
 
 import net.dodian.uber.game.systems.combat.getAttackStyle
-import net.dodian.uber.game.event.GameEventScheduler
-import net.dodian.uber.game.model.WalkToTask
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -18,25 +16,7 @@ object CombatStartService {
         target: Client,
         intent: CombatIntent = CombatIntent.ATTACK_PLAYER,
     ) {
-        val policy = policyFor(client, intent)
-        if (canAttackNow(client, target, policy)) {
-            beginAttackNow(client, target, intent)
-            return
-        }
-
-        val task = WalkToTask(WalkToTask.Action.ATTACK_PLAYER, target.slot, target.position)
-        client.walkToTask = task
-        scheduleWalkToAttack(client, task) {
-            if (target.disconnected) {
-                return@scheduleWalkToAttack false
-            }
-            if (canAttackNow(client, target, policy)) {
-                beginAttackNow(client, target, intent)
-                client.walkToTask = null
-                return@scheduleWalkToAttack false
-            }
-            true
-        }
+        beginAttackNow(client, target, intent)
     }
 
     @JvmStatic
@@ -45,31 +25,12 @@ object CombatStartService {
         target: Npc,
         intent: CombatIntent = CombatIntent.ATTACK_NPC,
     ) {
-        val policy = policyFor(client, intent)
-        if (canAttackNow(client, target, policy)) {
-            beginAttackNow(client, target, intent)
-            return
-        }
-
         if (intent == CombatIntent.ATTACK_NPC) {
             val interactionIntent = NpcInteractionIntent(72, GameCycleClock.currentCycle(), target.slot, 5)
             InteractionTaskScheduler.schedule(client, interactionIntent, NpcInteractionTask(client, interactionIntent))
             return
         }
-
-        val task = WalkToTask(WalkToTask.Action.ATTACK_NPC, target.slot, target.position)
-        client.walkToTask = task
-        scheduleWalkToAttack(client, task) {
-            if (!target.alive) {
-                return@scheduleWalkToAttack false
-            }
-            if (canAttackNow(client, target, policy)) {
-                beginAttackNow(client, target, intent)
-                client.walkToTask = null
-                return@scheduleWalkToAttack false
-            }
-            true
-        }
+        beginAttackNow(client, target, intent)
     }
 
     @JvmStatic
@@ -104,7 +65,6 @@ object CombatStartService {
         }
 
         client.resetWalkingQueue()
-        client.walkToTask = null
         client.target = target
         if (target is Npc) {
             client.faceNpc(target.slot)
@@ -178,16 +138,4 @@ object CombatStartService {
         policy: CombatStartPolicy,
     ): Boolean = client.goodDistanceEntity(target, policy.attackDistance)
 
-    private fun scheduleWalkToAttack(
-        client: Client,
-        task: WalkToTask,
-        step: () -> Boolean,
-    ) {
-        GameEventScheduler.runRepeatingMs(600) {
-            if (client.disconnected || client.walkToTask != task) {
-                return@runRepeatingMs false
-            }
-            step()
-        }
-    }
 }

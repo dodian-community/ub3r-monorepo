@@ -19,7 +19,6 @@ object PlayerLifecycleTickService {
         val combatTimer: Int,
         val stunTimer: Int,
         val snareTimer: Int,
-        val actionTimer: Int,
     )
 
     data class PrayerDrainStep(
@@ -37,14 +36,12 @@ object PlayerLifecycleTickService {
         combatTimer: Int,
         stunTimer: Int,
         snareTimer: Int,
-        actionTimer: Int,
     ): TimerSnapshot =
         TimerSnapshot(
             lastCombat = maxOf(lastCombat - 1, 0),
             combatTimer = maxOf(combatTimer - 1, 0),
             stunTimer = maxOf(stunTimer - 1, 0),
             snareTimer = maxOf(snareTimer - 1, 0),
-            actionTimer = if (actionTimer > 0) actionTimer - 1 else 0,
         )
 
     internal fun nextPrayerDrainStep(
@@ -113,7 +110,6 @@ object PlayerLifecycleTickService {
                 combatTimer = player.combatTimer,
                 stunTimer = player.stunTimer,
                 snareTimer = player.snareTimer,
-                actionTimer = player.actionTimer,
             )
         player.lastCombat = decremented.lastCombat
         player.combatTimer = decremented.combatTimer
@@ -126,7 +122,6 @@ object PlayerLifecycleTickService {
             SkillingRandomEventService.show(player)
         }
 
-        player.actionTimer = decremented.actionTimer
         PyramidPlunderService.tick(player)
 
         if (player.getPositionName(player.position) == positions.DESERT && !player.effects.isEmpty() && player.effects[0] == -1) {

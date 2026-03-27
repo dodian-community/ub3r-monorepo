@@ -41,15 +41,4 @@ class CoreModelParityTest {
         assertEquals(0x42, flags.getMask(Entity.Type.NPC))
     }
 
-    @Test
-    fun `walk to task equality is type-safe and preserves identity semantics for position`() {
-        val shared = Position(3000, 3000, 0)
-        val taskA = WalkToTask(WalkToTask.Action.ATTACK_NPC, 5, shared)
-        val taskB = WalkToTask(WalkToTask.Action.ATTACK_NPC, 5, shared)
-        val taskC = WalkToTask(WalkToTask.Action.ATTACK_NPC, 5, Position(3000, 3000, 0))
-
-        assertTrue(taskA == taskB)
-        assertFalse(taskA == taskC)
-        assertFalse(taskA.equals("not-a-task"))
-    }
 }

@@ -14,14 +14,12 @@ class PlayerLifecycleTickServiceTest {
                 combatTimer = 0,
                 stunTimer = 2,
                 snareTimer = 0,
-                actionTimer = 1,
             )
 
         assertEquals(0, timers.lastCombat)
         assertEquals(0, timers.combatTimer)
         assertEquals(1, timers.stunTimer)
         assertEquals(0, timers.snareTimer)
-        assertEquals(0, timers.actionTimer)
     }
 
     @Test

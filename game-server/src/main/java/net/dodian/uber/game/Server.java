@@ -26,7 +26,7 @@ import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
-import net.dodian.uber.game.persistence.db.DbTables;
+import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
 import net.dodian.uber.game.config.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +45,6 @@ import static net.dodian.uber.game.config.DotEnvKt.*;
 import static net.dodian.uber.game.persistence.db.DatabaseKt.closeConnectionPool;
 import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
@@ -170,15 +167,9 @@ public class Server {
 
 
     public static void loadObjects() {
-        String sql = "SELECT id, x, y, type FROM " + DbTables.GAME_OBJECT_DEFINITIONS;
-
-        try (java.sql.Connection conn = getDbConnection();
-             Statement statement = conn.createStatement();
-             ResultSet results = statement.executeQuery(sql)) {
-
-            while (results.next()) {
-                objects.add(new RS2Object(results.getInt("id"), results.getInt("x"), results.getInt("y"), results.getInt("type")));
-            }
+        try {
+            objects.clear();
+            objects.addAll(ObjectDefinitionRepository.loadObjects());
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,7 +1,6 @@
 package net.dodian.uber.game.systems.combat
 
 import net.dodian.uber.game.systems.combat.attackTarget
-import net.dodian.uber.game.model.WalkToTask
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -64,7 +63,6 @@ object CombatRuntimeService {
             return
         }
 
-        player.walkToTask = null
         player.resetWalkingQueue()
         if (cycleNow < state.nextAttackCycle) {
             return
@@ -101,7 +99,6 @@ object CombatRuntimeService {
         reason: CombatCancellationReason,
     ) {
         player.combatCancellationReason = reason
-        player.walkToTask = null
         player.resetWalkingQueue()
         player.resetAttack()
     }
@@ -131,7 +128,6 @@ object CombatRuntimeService {
             return
         }
         player.combatCancellationReason = reason
-        player.walkToTask = null
         player.resetWalkingQueue()
         player.faceTarget(-1)
         player.resetAttack()
@@ -171,7 +167,7 @@ object CombatRuntimeService {
             state.lastFollowCycle != cycleNow &&
                 (state.lastFollowTargetX != target.position.x ||
                     state.lastFollowTargetY != target.position.y ||
-                    player.walkToTask == null)
+                    player.wQueueReadPtr == player.wQueueWritePtr)
 
         if (!state.autoFollowEnabled) {
             cancel(player, CombatCancellationReason.OUT_OF_RANGE)
@@ -180,12 +176,6 @@ object CombatRuntimeService {
 
         if (refreshed) {
             player.AddToRunCords(target.position.x, target.position.y, 0)
-            player.walkToTask =
-                WalkToTask(
-                    if (target is Npc) WalkToTask.Action.ATTACK_NPC else WalkToTask.Action.ATTACK_PLAYER,
-                    target.slot,
-                    target.position,
-                )
         }
         if (target is Npc) {
             player.faceNpc(target.slot)

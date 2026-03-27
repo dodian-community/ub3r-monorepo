@@ -273,6 +273,14 @@ class ArchitectureBoundaryTest {
                     (normalized.endsWith("/systems/action/SmithingActionService.kt") ||
                         normalized.endsWith("/content/skills/smithing/SmeltingActionService.kt")) &&
                         trimmed.contains("PlayerActionController.start(")
+                val isRemovedInteractionRuntimeSymbol =
+                    trimmed.contains("WalkToTask") ||
+                        trimmed.contains("walkToTask")
+                val isRemovedLegacyActionTimerSymbol =
+                    trimmed.contains("actionTimer")
+                val isRemovedPlayerTickPosting =
+                    trimmed.contains("post(PlayerTickEvent(") ||
+                        trimmed.contains("GameEventBus.post(PlayerTickEvent(")
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
                         trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
@@ -296,7 +304,10 @@ class ArchitectureBoundaryTest {
                         isHardCutLegacyNaming ||
                         isLegacyFrameApiUsage ||
                         isLegacyClientItemHelperUsage
-                        || isManualCoreSkillControllerMarker
+                        || isManualCoreSkillControllerMarker ||
+                        isRemovedInteractionRuntimeSymbol ||
+                        isRemovedLegacyActionTimerSymbol ||
+                        isRemovedPlayerTickPosting
                 if (!isLegacyRef) return@mapIndexedNotNull null
                 "${file}:${idx + 1} -> $trimmed"
             }

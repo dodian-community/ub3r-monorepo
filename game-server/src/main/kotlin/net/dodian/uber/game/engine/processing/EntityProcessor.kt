@@ -9,8 +9,6 @@ import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.sync.util.IntHashSet
 import net.dodian.uber.game.engine.sync.util.LongHashSet
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
-import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.event.events.PlayerTickEvent
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.chunk.ChunkRepository
@@ -20,6 +18,7 @@ import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.content.events.partyroom.Balloons
+import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatRuntimeService
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
@@ -39,7 +38,7 @@ class EntityProcessor : Runnable {
         GameThreadTaskQueue.drain()
         runInboundPacketPhase()
         runNpcMainPhase(now)
-        runPlayerMainPhase()
+        runPlayerMainPhase(now)
         runMovementFinalizePhase()
         runHousekeepingPhase(now)
     }
@@ -90,8 +89,8 @@ class EntityProcessor : Runnable {
         }
     }
 
-    fun runPlayerMainPhase() {
-        PlayerRegistry.forEachActivePlayer { processPlayer(it) }
+    fun runPlayerMainPhase(wallClockNow: Long) {
+        PlayerRegistry.forEachActivePlayer { processPlayer(it, wallClockNow) }
     }
 
     fun runMovementFinalizePhase() {
@@ -407,18 +406,21 @@ class EntityProcessor : Runnable {
         }
     }
 
-    private fun processPlayer(player: Client) {
+    private fun processPlayer(
+        player: Client,
+        wallClockNow: Long,
+    ) {
         if (!player.initialized) {
             player.initialize()
             player.initialized = true
         }
         player.currentGameCycle = GameCycleClock.currentCycle()
+        PlayerLifecycleTickService.processBeforeCombat(player)
         val startingHealth = player.currentHealth
         val startingPrayer = player.currentPrayer
         val startingX = player.position.x
         val startingY = player.position.y
         val startingZ = player.position.z
-        GameEventBus.post(PlayerTickEvent(player, player.currentGameCycle, System.currentTimeMillis()))
         player.processedGameCycle = player.currentGameCycle
         player.lastProcessedCycle = player.processedGameCycle
         GameTaskRuntime.cyclePlayer(player)
@@ -438,6 +440,8 @@ class EntityProcessor : Runnable {
             player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.POSITION.mask)
         }
 
+        PlayerLifecycleTickService.processAfterCombat(player, wallClockNow)
+        PlayerLifecycleTickService.processEffectsPeriodicPersistence(player, wallClockNow)
         player.postProcessing()
         player.getNextPlayerMovement()
     }

@@ -26,7 +26,8 @@ import net.dodian.uber.game.content.skills.farming.FarmingState;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.persistence.db.DbTables;
+import net.dodian.uber.game.persistence.player.RefundRecord;
+import net.dodian.uber.game.persistence.player.RefundRepository;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
@@ -77,10 +78,6 @@ import net.dodian.utilities.*;
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
@@ -89,7 +86,6 @@ import io.netty.channel.Channel;
 import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
-import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 import static net.dodian.uber.game.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -4757,15 +4753,15 @@ public class Client extends Player implements Runnable {
 
     public int refundSlot = -1;
     public ArrayList<RewardItem> rewardList = new ArrayList<>();
+    private final ArrayList<String> refundDates = new ArrayList<>();
 
     public void setRefundList() {
         rewardList.clear();
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            while (result.next()) {
-                rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
+        refundDates.clear();
+        try {
+            for (RefundRecord refund : RefundRepository.loadUnclaimed(dbId)) {
+                rewardList.add(new RewardItem(refund.getItemId(), refund.getAmount()));
+                refundDates.add(refund.getDate());
             }
         } catch (Exception e) {
             logger.warn("Error in checking sql!! {}", e.getMessage(), e);
@@ -4792,18 +4788,19 @@ public class Client extends Player implements Runnable {
 
     public void reclaim(int position) {
         int slot = refundSlot + position;
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            String date = "";
-            RewardItem item = rewardList.get(slot - 1);
-            while (result.next() && date.isEmpty()) {
-                if (result.getRow() == slot) {
-                    date = result.getString("date");
-                }
+        try {
+            int rowIndex = slot - 1;
+            if (rowIndex < 0 || rowIndex >= rewardList.size() || rowIndex >= refundDates.size()) {
+                sendMessage("That refund entry is no longer available.");
+                setRefundList();
+                return;
             }
-            stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET claimed='" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "' where date='" + date + "'");
+            RewardItem item = rewardList.get(rowIndex);
+            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
+                sendMessage("That refund entry was already claimed.");
+                setRefundList();
+                return;
+            }
             /* Set back options! */
             setRefundList();
             if (!rewardList.isEmpty()) {

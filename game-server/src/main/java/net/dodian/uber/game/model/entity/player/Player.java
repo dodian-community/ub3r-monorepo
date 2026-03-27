@@ -6,7 +6,6 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.WalkToTask;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
@@ -86,7 +85,6 @@ public abstract class Player extends Entity {
     public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
-    private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember = 1;
     public int[] playerBonus = new int[12];
@@ -101,7 +99,6 @@ public abstract class Player extends Entity {
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
-    public int actionTimer = 0;
     public String connectedFrom = "";
     public int ip = 0;
     public String UUID = "";
@@ -567,14 +564,6 @@ public abstract class Player extends Entity {
 
     public ArrayList<String> getDailyReward() {
         return accountState.getDailyReward();
-    }
-
-    public WalkToTask getWalkToTask() {
-        return this.walkToTask;
-    }
-
-    public void setWalkToTask(WalkToTask walkToTask) {
-        this.walkToTask = walkToTask;
     }
 
     public int mapRegionX, mapRegionY; // the map region the player is
