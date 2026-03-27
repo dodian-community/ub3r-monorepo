@@ -28,6 +28,20 @@ class ArchitectureBoundaryTest {
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
                     if (!trimmed.contains("net.dodian.uber.game.engine.")) return@mapIndexedNotNull null
+                    val allowedRuntimeBridge =
+                        (
+                            normalizedPath.endsWith("/content/skills/core/runtime/GatheringTask.kt") &&
+                                (
+                                    trimmed == "import net.dodian.uber.game.engine.tasking.GameTaskRuntime" ||
+                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskHandle" ||
+                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
+                                    )
+                            ) ||
+                            (
+                                normalizedPath.endsWith("/content/skills/core/runtime/SkillingActionDsl.kt") &&
+                                    trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
+                                )
+                    if (allowedRuntimeBridge) return@mapIndexedNotNull null
                     if (trimmed in (temporaryAllowListByFile[normalizedPath] ?: emptySet())) return@mapIndexedNotNull null
                     "${file}:${idx + 1} -> $trimmed"
                 }
@@ -171,6 +185,7 @@ class ArchitectureBoundaryTest {
             "REQUIRED_HARDCODED_NPC_NAMES",
             "repairRequiredHardcodedDefinitions",
         )
+        val removedSkillSymbols = setOf("SkillWIP", "skillById(", "skillByName(", "skillsEnabled(")
 
         val legacyPackageViolations = sourceFiles.mapNotNull { file ->
             val packageLine = Files.readAllLines(file)
@@ -206,6 +221,7 @@ class ArchitectureBoundaryTest {
                     normalized.endsWith("/net/dodian/uber/game/skills/farming/FarmingProcessor.kt") ||
                     normalized.endsWith("/net/dodian/uber/game/skills/thieving/plunder/PlunderDoorProcessor.kt") ||
                     normalized.contains("src/main/java/net/dodian/jobs/") ||
+                    normalized.endsWith("/net/dodian/uber/game/SkillWIP.kt") ||
                     normalized.endsWith("/net/dodian/utilities/Database.kt") ||
                     normalized.endsWith("/net/dodian/utilities/DatabaseConfig.kt") ||
                     normalized.endsWith("/net/dodian/utilities/DatabaseInitializer.kt") ||
@@ -215,8 +231,20 @@ class ArchitectureBoundaryTest {
         }
 
         val legacyReferenceViolations = sourceFiles.flatMap { file ->
+            val normalized = file.invariantSeparatorsPathString
             Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                 val trimmed = line.trim()
+                val isLegacyLoopMarker =
+                    (normalized.endsWith("/content/skills/woodcutting/WoodcuttingService.kt") ||
+                        normalized.endsWith("/content/skills/mining/MiningService.kt")) &&
+                        (trimmed.contains("nextSwingAnimationCycle") ||
+                            trimmed.contains("nextResourceCycle") ||
+                            trimmed.contains("PlayerActionController.start("))
+                val isWave2LegacyLoopMarker =
+                    normalized.endsWith("/systems/action/SkillingActionService.kt") &&
+                        (trimmed.contains("type = PlayerActionType.FISHING") ||
+                            trimmed.contains("type = PlayerActionType.FLETCHING") ||
+                            trimmed.contains("type = PlayerActionType.COOKING"))
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
                         trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
@@ -224,13 +252,18 @@ class ArchitectureBoundaryTest {
                         trimmed.contains("net.dodian.utilities.DatabaseKt") ||
                         trimmed.contains("net.dodian.utilities.DatabaseInitializerKt") ||
                         trimmed.contains("net.dodian.utilities.DotEnvKt") ||
+                        removedSkillSymbols.any { symbol ->
+                            trimmed.contains(symbol)
+                        } ||
+                        isLegacyLoopMarker ||
                         removedNpcManagerSymbols.any { symbol ->
                             trimmed.contains(symbol)
                         } ||
                         removedToggleSymbols.any { symbol ->
                             trimmed.contains("import net.dodian.uber.game.config.$symbol") ||
                                 trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
-                        }
+                        } ||
+                        isWave2LegacyLoopMarker
                 if (!isLegacyRef) return@mapIndexedNotNull null
                 "${file}:${idx + 1} -> $trimmed"
             }
@@ -240,6 +273,46 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Legacy repackaged namespaces/paths must not remain.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `plugin index generation uses top-level ksp processor`() {
+        val repoRoot = Paths.get("..").normalize().toAbsolutePath()
+        val rootSettings = repoRoot.resolve("settings.gradle.kts")
+        val serverBuild = repoRoot.resolve("game-server/build.gradle.kts")
+        val legacyModuleDir = repoRoot.resolve("game-plugin-index-processor")
+        val generatedIndexSource = repoRoot.resolve("game-server/src/main/kotlin/net/dodian/uber/game/plugin/GeneratedPluginModuleIndex.kt")
+
+        val settingsText = Files.readString(rootSettings)
+        val serverBuildText = Files.readString(serverBuild)
+
+        val violations = mutableListOf<String>()
+        if (!settingsText.contains("include(\":ksp-processor\")")) {
+            violations += "settings.gradle.kts must include :ksp-processor"
+        }
+        if (settingsText.contains("include(\":game-plugin-index-processor\")")) {
+            violations += "settings.gradle.kts must not include :game-plugin-index-processor"
+        }
+        if (!serverBuildText.contains("id(\"com.google.devtools.ksp\")")) {
+            violations += "game-server/build.gradle.kts must apply com.google.devtools.ksp"
+        }
+        if (!serverBuildText.contains("ksp(project(\":ksp-processor\"))")) {
+            violations += "game-server/build.gradle.kts must depend on ksp(project(\":ksp-processor\"))"
+        }
+        if (serverBuildText.contains("generatePluginModuleIndex")) {
+            violations += "legacy JavaExec generatePluginModuleIndex task must be removed"
+        }
+        if (Files.exists(legacyModuleDir)) {
+            violations += "legacy module directory game-plugin-index-processor must not exist"
+        }
+        if (Files.exists(generatedIndexSource)) {
+            violations += "GeneratedPluginModuleIndex.kt must not be hand-maintained under src/main"
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Plugin index generation must be KSP-driven.\n${violations.joinToString("\n")}",
         )
     }
 }

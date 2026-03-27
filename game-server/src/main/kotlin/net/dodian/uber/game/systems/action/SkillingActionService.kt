@@ -13,14 +13,26 @@ import net.dodian.uber.game.content.skills.cooking.CookingService
 import net.dodian.uber.game.content.skills.fishing.FishingDefinitions
 import net.dodian.uber.game.content.skills.fishing.FishingService
 import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService
+import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.content.skills.core.runtime.CycleSignal
+import net.dodian.uber.game.content.skills.core.runtime.RunningGatheringAction
+import net.dodian.uber.game.content.skills.core.runtime.RunningProductionAction
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.content.skills.core.events.SkillActionCompleteEvent
 import net.dodian.uber.game.content.skills.core.events.SkillActionStartEvent
 import net.dodian.uber.game.content.skills.core.runtime.SkillingInterruptService
+import net.dodian.uber.game.content.skills.core.runtime.gatheringAction
+import net.dodian.uber.game.content.skills.core.runtime.productionAction
+import java.util.Collections
+import java.util.WeakHashMap
 
 object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L
     private const val REAPPLY_ANIMATION_DELAY_MS = 1800L
+    private val fletchingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningProductionAction>())
+    private val fishingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningGatheringAction>())
+    private val cookingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningProductionAction>())
 
     private fun postStarted(player: Client, name: String) {
         GameEventBus.post(SkillingActionStartedEvent(player, name))
@@ -65,24 +77,27 @@ object SkillingActionService {
 
     @JvmStatic
     fun startFletching(client: Client) {
-        postStarted(client, "fletching")
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.FLETCHING,
-            onStop = { player, result ->
-                player.clearFletchingState()
-                SkillingInterruptService.postStopped(player, "fletching", (result as? PlayerActionStopResult.Cancelled)?.reason)
-            },
-        ) {
-            while ((player.fletchingState?.remaining ?: 0) > 0) {
-                if (!isActive()) return@start
-                postCycle(player, "fletching")
-                FletchingService.performBowCycle(player)
-                postSucceeded(player, "fletching")
-                if ((player.fletchingState?.remaining ?: 0) <= 0) return@start
-                wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
+        stopFletchingTask(client, ActionStopReason.USER_INTERRUPT)
+        val action =
+            productionAction("fletching") {
+                delay { GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS) }
+                onCycleWhile {
+                    if ((fletchingState?.remaining ?: 0) <= 0) {
+                        return@onCycleWhile false
+                    }
+                    FletchingService.performBowCycle(this)
+                    (fletchingState?.remaining ?: 0) > 0
+                }
+                onStop {
+                    fletchingTasks.remove(this)
+                    clearFletchingState()
+                }
             }
+        val running = action.start(client) ?: run {
+            client.clearFletchingState()
+            return
         }
+        fletchingTasks[client] = running
     }
 
     @JvmStatic
@@ -131,62 +146,74 @@ object SkillingActionService {
 
     @JvmStatic
     fun startFishing(client: Client) {
-        postStarted(client, "fishing")
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.FISHING,
-            onStop = { player, _ ->
-                player.clearFishingState()
-                player.lastFishAction = 0
-                SkillingInterruptService.postStopped(player, "fishing", player.activeActionCancelReason)
-            },
-        ) {
-            var nextCatchCycle = currentCycle() + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(player))
-            var nextAnimationCycle = currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
-            while (player.fishingState != null) {
-                if (!isActive()) return@start
-                val cycle = currentCycle()
-                if (cycle >= nextAnimationCycle) {
-                    val fishIndex = player.fishingState?.spotIndex ?: return@start
-                    val spot = FishingDefinitions.byIndex(fishIndex)
-                    if (spot != null) {
-                        player.requestAnim(spot.animationId, 0)
+        stopFishingTask(client, ActionStopReason.USER_INTERRUPT)
+        var nextCatchCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(client))
+        var nextAnimationCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+
+        val action =
+            gatheringAction("fishing") {
+                delay(1)
+                onCycleSignal {
+                    if (fishingState == null) {
+                        return@onCycleSignal CycleSignal.stop()
                     }
+                    val cycle = ContentTiming.currentCycle()
+                    if (cycle >= nextAnimationCycle) {
+                        val fishIndex = fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
+                        val spot = FishingDefinitions.byIndex(fishIndex)
+                        if (spot != null) {
+                            requestAnim(spot.animationId, 0)
+                        }
+                        nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+                    }
+                    if (cycle < nextCatchCycle) {
+                        return@onCycleSignal CycleSignal.continueWithoutSuccess()
+                    }
+                    FishingService.performCycle(this)
+                    if (fishingState == null) {
+                        return@onCycleSignal CycleSignal.stop()
+                    }
+                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(this))
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+                    CycleSignal.success()
                 }
-                if (cycle >= nextCatchCycle) {
-                    postCycle(player, "fishing")
-                    FishingService.performCycle(player)
-                    postSucceeded(player, "fishing")
-                    if (player.fishingState == null) return@start
-                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(player))
-                    nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+                onStop {
+                    fishingTasks.remove(this)
+                    clearFishingState()
+                    lastFishAction = 0
                 }
-                wait(1)
             }
+        val running = action.start(client) ?: run {
+            client.clearFishingState()
+            client.lastFishAction = 0
+            return
         }
+        fishingTasks[client] = running
     }
 
     @JvmStatic
     fun startCooking(client: Client) {
-        postStarted(client, "cooking")
-        PlayerActionController.start(
-            player = client,
-            type = PlayerActionType.COOKING,
-            onStop = { player, result ->
-                player.clearCookingState()
-                SkillingInterruptService.postStopped(player, "cooking", (result as? PlayerActionStopResult.Cancelled)?.reason)
-            },
-        ) {
-            while ((player.cookingState?.remaining ?: 0) > 0) {
-                if (!isActive()) return@start
-                postCycle(player, "cooking")
-                CookingService.performCycle(player)
-                postSucceeded(player, "cooking")
-                if ((player.cookingState?.remaining ?: 0) <= 0) return@start
-                wait(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
+        stopCookingTask(client, ActionStopReason.USER_INTERRUPT)
+        val action =
+            productionAction("cooking") {
+                delay { GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS) }
+                onCycleWhile {
+                    if ((cookingState?.remaining ?: 0) <= 0) {
+                        return@onCycleWhile false
+                    }
+                    CookingService.performCycle(this)
+                    (cookingState?.remaining ?: 0) > 0
+                }
+                onStop {
+                    cookingTasks.remove(this)
+                    clearCookingState()
+                }
             }
+        val running = action.start(client) ?: run {
+            client.clearCookingState()
+            return
         }
+        cookingTasks[client] = running
     }
 
     @JvmStatic
@@ -209,5 +236,32 @@ object SkillingActionService {
                 wait(3)
             }
         }
+    }
+
+    @JvmStatic
+    fun stopFletchingFromReset(client: Client, fullReset: Boolean) {
+        stopFletchingTask(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    @JvmStatic
+    fun stopFishingFromReset(client: Client, fullReset: Boolean) {
+        stopFishingTask(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    @JvmStatic
+    fun stopCookingFromReset(client: Client, fullReset: Boolean) {
+        stopCookingTask(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    private fun stopFletchingTask(client: Client, reason: ActionStopReason) {
+        fletchingTasks.remove(client)?.cancel(reason)
+    }
+
+    private fun stopFishingTask(client: Client, reason: ActionStopReason) {
+        fishingTasks.remove(client)?.cancel(reason)
+    }
+
+    private fun stopCookingTask(client: Client, reason: ActionStopReason) {
+        cookingTasks.remove(client)?.cancel(reason)
     }
 }

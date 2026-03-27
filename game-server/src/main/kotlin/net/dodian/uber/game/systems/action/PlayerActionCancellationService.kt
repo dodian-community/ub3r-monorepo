@@ -44,6 +44,9 @@ object PlayerActionCancellationService {
         player.clearPendingSmeltingBarId()
         player.clearPrayerOfferingState()
         player.clearCraftingState()
+        SkillingActionService.stopFletchingFromReset(player, fullResetAnimation)
+        SkillingActionService.stopFishingFromReset(player, fullResetAnimation)
+        SkillingActionService.stopCookingFromReset(player, fullResetAnimation)
         player.clearFletchingState()
         player.clearFishingState()
         player.resourcesGathered = 0

@@ -1,0 +1,210 @@
+package net.dodian.uber.game.plugin.processor
+
+import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
+
+private data class DiscoveredSymbol(
+    val packageName: String,
+    val objectName: String,
+) {
+    val fqcn: String = "$packageName.$objectName"
+}
+
+class PluginModuleIndexSymbolProcessor(
+    private val codeGenerator: CodeGenerator,
+    private val logger: KSPLogger,
+) : SymbolProcessor {
+
+    private var generated = false
+
+    override fun process(resolver: Resolver): List<com.google.devtools.ksp.symbol.KSAnnotated> {
+        if (generated) {
+            return emptyList()
+        }
+
+        val allObjects = resolver.getAllFiles().flatMap { file ->
+            file.declarations.filterIsInstance<KSClassDeclaration>()
+                .filter { it.classKind == ClassKind.OBJECT }
+                .map { file to it }
+        }.toList()
+
+        val interfaceButtons = discoverInterfaceButtons(allObjects)
+        val objectContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.objects.ObjectContent")
+        val itemContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.items.ItemContent")
+        val npcModules = discoverNpcModules(allObjects)
+        val eventBootstraps = discoverEventBootstraps(allObjects)
+
+        val output = buildOutput(interfaceButtons, objectContents, itemContents, npcModules, eventBootstraps)
+        val outputFile =
+            codeGenerator.createNewFile(
+                dependencies = Dependencies(aggregating = true, *resolver.getAllFiles().toList().toTypedArray()),
+                packageName = "net.dodian.uber.game.plugin",
+                fileName = "GeneratedPluginModuleIndex",
+            )
+        outputFile.bufferedWriter().use { it.write(output) }
+        generated = true
+        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps.")
+        return emptyList()
+    }
+
+    private fun discoverInterfaceButtons(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        val interfaceButtonsType = "net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent"
+        return allObjects
+            .filter { (file, declaration) ->
+                file.packageName.asString().startsWith("net.dodian.uber.game.content.interfaces") &&
+                    declaration.implementsInterface(interfaceButtonsType)
+            }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
+    private fun discoverObjectsByInterface(
+        allObjects: List<Pair<KSFile, KSClassDeclaration>>,
+        interfaceFqcn: String,
+    ): List<DiscoveredSymbol> {
+        return allObjects
+            .mapNotNull { (_, declaration) ->
+                if (declaration.implementsInterface(interfaceFqcn)) {
+                    declaration.toDiscoveredSymbol()
+                } else {
+                    null
+                }
+            }
+            .sortedBy { it.fqcn }
+    }
+
+    private fun discoverNpcModules(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        val excludedNames =
+            setOf(
+                "BankerGenerated",
+                "NpcClickMetrics",
+                "NpcContent",
+                "NpcContentDispatcher",
+                "NpcContentRegistry",
+                "NpcDataPreset",
+                "NpcDialogueDsl",
+                "NpcInteractionActionService",
+                "NpcJsonSpawnOverlayLoader",
+                "NpcModuleDefinitionBuilder",
+                "NpcPluginDsl",
+                "NpcPluginModels",
+                "NpcSpawnDef",
+                "SpawnGroups",
+            )
+
+        return allObjects
+            .filter { (file, declaration) ->
+                file.packageName.asString().startsWith("net.dodian.uber.game.content.npcs.spawns") &&
+                    declaration.simpleName.asString() !in excludedNames
+            }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
+    private fun discoverEventBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        return allObjects
+            .filter { (file, declaration) ->
+                file.packageName.asString().startsWith("net.dodian.uber.game.event.bootstrap") &&
+                    declaration.simpleName.asString().endsWith("Bootstrap") &&
+                    declaration.simpleName.asString() != "CoreEventBusBootstrap"
+            }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
+    private fun KSClassDeclaration.implementsInterface(interfaceFqcn: String): Boolean {
+        return getAllSuperTypes().any { superType ->
+            superType.declaration.qualifiedName?.asString() == interfaceFqcn
+        }
+    }
+
+    private fun KSClassDeclaration.toDiscoveredSymbol(): DiscoveredSymbol {
+        val packageName = packageName.asString()
+        val objectName = simpleName.asString()
+        return DiscoveredSymbol(packageName = packageName, objectName = objectName)
+    }
+
+    private fun buildOutput(
+        interfaceButtons: List<DiscoveredSymbol>,
+        objectContents: List<DiscoveredSymbol>,
+        itemContents: List<DiscoveredSymbol>,
+        npcModules: List<DiscoveredSymbol>,
+        eventBootstraps: List<DiscoveredSymbol>,
+    ): String {
+        val out = StringBuilder()
+        out.appendLine("package net.dodian.uber.game.plugin")
+        out.appendLine()
+        out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
+        out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcContentDefinition")
+        out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcModuleDefinitionBuilder")
+        out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
+        out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
+        out.appendLine()
+        out.appendLine("object GeneratedPluginModuleIndex {")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val interfaceButtons: List<InterfaceButtonContent> = listOf(")
+        if (interfaceButtons.isNotEmpty()) {
+            interfaceButtons.forEachIndexed { index, symbol ->
+                val suffix = if (index == interfaceButtons.lastIndex) "" else ","
+                out.appendLine("        ${symbol.fqcn}$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val objectContents: List<Pair<String, ObjectContent>> = listOf(")
+        if (objectContents.isNotEmpty()) {
+            objectContents.forEachIndexed { index, symbol ->
+                val suffix = if (index == objectContents.lastIndex) "" else ","
+                out.appendLine("        \"${symbol.objectName}\" to ${symbol.fqcn}$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val itemContents: List<ItemContent> = listOf(")
+        if (itemContents.isNotEmpty()) {
+            itemContents.forEachIndexed { index, symbol ->
+                val suffix = if (index == itemContents.lastIndex) "" else ","
+                out.appendLine("        ${symbol.fqcn}$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val npcContents: List<NpcContentDefinition> = listOf(")
+        if (npcModules.isNotEmpty()) {
+            npcModules.forEachIndexed { index, symbol ->
+                val suffix = if (index == npcModules.lastIndex) "" else ","
+                out.appendLine("        NpcModuleDefinitionBuilder.fromModule(module = ${symbol.fqcn}, explicitName = \"\", ownsSpawnDefinitions = false)$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val eventBootstraps: List<() -> Unit> = listOf(")
+        if (eventBootstraps.isNotEmpty()) {
+            eventBootstraps.forEachIndexed { index, symbol ->
+                val suffix = if (index == eventBootstraps.lastIndex) "" else ","
+                out.appendLine("        { ${symbol.fqcn}.bootstrap() }$suffix")
+            }
+        }
+        out.appendLine("    )")
+
+        out.appendLine("}")
+        return out.toString()
+    }
+}

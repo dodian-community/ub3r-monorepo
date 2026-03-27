@@ -8,28 +8,7 @@ import net.dodian.uber.game.content.skills.core.events.SkillActionInterruptEvent
 
 object SkillingInterruptService {
     @JvmStatic
-    fun stopReason(reason: PlayerActionCancelReason?): ActionStopReason =
-        when (reason) {
-            null -> ActionStopReason.COMPLETED
-            PlayerActionCancelReason.NEW_ACTION,
-            PlayerActionCancelReason.MANUAL_RESET,
-            PlayerActionCancelReason.ITEM_INTERACTION,
-            PlayerActionCancelReason.OBJECT_INTERACTION,
-            PlayerActionCancelReason.NPC_INTERACTION,
-            PlayerActionCancelReason.PLAYER_INTERACTION,
-            PlayerActionCancelReason.GROUND_ITEM_INTERACTION,
-            -> ActionStopReason.USER_INTERRUPT
-            PlayerActionCancelReason.MOVEMENT -> ActionStopReason.MOVED_AWAY
-            PlayerActionCancelReason.INTERFACE_CLOSED -> ActionStopReason.USER_INTERRUPT
-            PlayerActionCancelReason.DIALOGUE_OPENED -> ActionStopReason.BUSY
-            PlayerActionCancelReason.LOGOUT,
-            PlayerActionCancelReason.DISCONNECTED,
-            -> ActionStopReason.DISCONNECTED
-            PlayerActionCancelReason.DEATH,
-            PlayerActionCancelReason.TELEPORT,
-            PlayerActionCancelReason.COMBAT_INTERRUPTED,
-            -> ActionStopReason.INVALID_TARGET
-        }
+    fun stopReason(reason: PlayerActionCancelReason?): ActionStopReason = ActionStopReasonMapper.fromCancelReason(reason)
 
     @JvmStatic
     fun postStopped(player: Client, actionName: String, reason: PlayerActionCancelReason?) {

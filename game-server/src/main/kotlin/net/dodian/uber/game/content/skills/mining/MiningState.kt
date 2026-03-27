@@ -6,7 +6,5 @@ data class MiningState(
     val rockObjectId: Int,
     val rockPosition: Position,
     val startedCycle: Long,
-    val nextSwingAnimationCycle: Long,
-    val nextResourceCycle: Long,
     val resourcesGathered: Int,
 )

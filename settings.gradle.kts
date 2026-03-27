@@ -1,6 +1,7 @@
 rootProject.name = "ub3r"
 
 include(":game-server")
+include(":ksp-processor")
 include(":game-client")
 include(":mystic-updatedclient")
 include(":game-launcher")

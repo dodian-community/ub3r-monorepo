@@ -41,7 +41,7 @@ class GroundItem {
             type = 1
         }
         if (dropper > 0 && Server.playerHandler.validClient(dropper)) {
-            val owner = Server.playerHandler.getClient(dropper)
+            val owner = Server.playerHandler.getClient(dropper) ?: return
             playerId = owner.dbId
             sendOwnerCreate(owner)
         }
@@ -75,7 +75,7 @@ class GroundItem {
             type = 1
         }
         if (drop[0] >= 0 && Server.playerHandler.validClient(drop[0])) {
-            val owner = Server.playerHandler.getClient(drop[0])
+            val owner = Server.playerHandler.getClient(drop[0]) ?: return
             playerId = owner.dbId
             sendOwnerCreate(owner)
         }

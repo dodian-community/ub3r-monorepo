@@ -8,7 +8,5 @@ data class WoodcuttingState(
     val treePosition: Position,
     val objectData: GameObjectData?,
     val startedCycle: Long,
-    val nextSwingAnimationCycle: Long,
-    val nextResourceCycle: Long,
     val resourcesGathered: Int,
 )

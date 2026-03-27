@@ -13,6 +13,10 @@ fun interface Requirement {
 class RequirementBuilder {
     private val requirements = ArrayList<Requirement>()
 
+    fun requirement(requirement: Requirement) {
+        requirements += requirement
+    }
+
     fun level(skill: Skill, minimumLevel: Int, message: String? = null) {
         requirements += HasLevelRequirement(skill, minimumLevel, message)
     }
