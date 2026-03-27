@@ -6,18 +6,18 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.`object`.DoorHandler
+import net.dodian.uber.game.model.`object`.DoorRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object DoorToggleObjects : ObjectContent {
     override fun bindings(): List<ObjectBinding> {
-        val dynamicDoorBindings = DoorHandler.doorId.indices
+        val dynamicDoorBindings = DoorRegistry.doorId.indices
             .asSequence()
             .map { index ->
-                val id = DoorHandler.doorId[index]
-                val x = DoorHandler.doorX[index]
-                val y = DoorHandler.doorY[index]
-                val z = DoorHandler.doorHeight[index]
+                val id = DoorRegistry.doorId[index]
+                val x = DoorRegistry.doorX[index]
+                val y = DoorRegistry.doorY[index]
+                val z = DoorRegistry.doorHeight[index]
                 if (id <= 0 || x <= 0 || y <= 0) {
                     null
                 } else {
@@ -51,11 +51,11 @@ object DoorToggleObjects : ObjectContent {
         }
 
         val matchingIndices = mutableListOf<Int>()
-        for (index in DoorHandler.doorId.indices) {
-            if (DoorHandler.doorId[index] == objectId &&
-                DoorHandler.doorX[index] == position.x &&
-                DoorHandler.doorY[index] == position.y &&
-                DoorHandler.doorHeight[index] == position.z
+        for (index in DoorRegistry.doorId.indices) {
+            if (DoorRegistry.doorId[index] == objectId &&
+                DoorRegistry.doorX[index] == position.x &&
+                DoorRegistry.doorY[index] == position.y &&
+                DoorRegistry.doorHeight[index] == position.z
             ) {
                 matchingIndices += index
             }
@@ -69,23 +69,23 @@ object DoorToggleObjects : ObjectContent {
         client.lastDoor = System.currentTimeMillis()
 
         for (index in matchingIndices) {
-            val newFace = if (DoorHandler.doorState[index] == 0) {
-                DoorHandler.doorState[index] = 1
-                DoorHandler.doorFaceOpen[index]
+            val newFace = if (DoorRegistry.doorState[index] == 0) {
+                DoorRegistry.doorState[index] = 1
+                DoorRegistry.doorFaceOpen[index]
             } else {
-                DoorHandler.doorState[index] = 0
-                DoorHandler.doorFaceClosed[index]
+                DoorRegistry.doorState[index] = 0
+                DoorRegistry.doorFaceClosed[index]
             }
-            DoorHandler.doorFace[index] = newFace
+            DoorRegistry.doorFace[index] = newFace
             for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue
                 if (other.playerName == null) continue
                 if (other.position.z != client.position.z) continue
                 if (other.disconnected || other.position.y <= 0 || other.position.x <= 0 || other.dbId <= 0) continue
                 other.ReplaceObject(
-                    DoorHandler.doorX[index],
-                    DoorHandler.doorY[index],
-                    DoorHandler.doorId[index],
+                    DoorRegistry.doorX[index],
+                    DoorRegistry.doorY[index],
+                    DoorRegistry.doorId[index],
                     newFace,
                     0,
                 )

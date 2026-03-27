@@ -1,6 +1,6 @@
 package net.dodian.uber.game.netty.listener.out;
 
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
@@ -27,16 +27,16 @@ public class ResetShop implements OutgoingPacket {
         // Interface ID for shop items container
         message.putInt(3900); // matches client.readInt()
         // Number of shop slots we are sending
-        message.putShort(ShopHandler.MaxShopItems);
+        message.putShort(ShopManager.MaxShopItems);
 
-        for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
-            int amount = ShopHandler.ShopItemsN[shopId][i];
+        for (int i = 0; i < ShopManager.MaxShopItems; i++) {
+            int amount = ShopManager.ShopItemsN[shopId][i];
 
             // Write amount as full int to match incoming.readInt()
             message.putInt(amount);
 
             if (amount != 0) {
-                int itemId = ShopHandler.ShopItems[shopId][i]; // already stored as container id (id + 1)
+                int itemId = ShopManager.ShopItems[shopId][i]; // already stored as container id (id + 1)
                 if (itemId < 0) {
                     itemId = 0;
                 }

@@ -100,7 +100,7 @@ public class ObjectInteractionListener implements PacketListener {
         ObjectClickIntent intent =
                 new ObjectClickIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         option,
                         objectId,
                         targetPosition,
@@ -137,7 +137,7 @@ public class ObjectInteractionListener implements PacketListener {
         ItemOnObjectIntent intent =
                 new ItemOnObjectIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         interfaceId,
                         itemSlot,
                         itemId,
@@ -171,7 +171,7 @@ public class ObjectInteractionListener implements PacketListener {
         MagicOnObjectIntent intent =
                 new MagicOnObjectIntent(
                         packet.opcode(),
-                        net.dodian.uber.game.model.entity.player.PlayerHandler.cycle,
+                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
                         spellId,
                         objectId,
                         targetPosition,

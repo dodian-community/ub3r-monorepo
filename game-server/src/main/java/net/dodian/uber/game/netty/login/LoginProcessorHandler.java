@@ -8,11 +8,10 @@ import io.netty.util.AttributeKey;
 import net.dodian.utilities.ISAACCipher;
 import net.dodian.utilities.Utils;
 import net.dodian.uber.game.Constants;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.entity.player.PlayerInitializer;
 import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
@@ -46,8 +45,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private static final AttributeKey<ISAACCipher> IN_CIPHER_KEY  = AttributeKey.valueOf("inCipher");
     private static final AttributeKey<ISAACCipher> OUT_CIPHER_KEY = AttributeKey.valueOf("outCipher");
 
-    private final PlayerHandler playerHandler;
-
     private long   clientSessionKey;
     private long   serverSessionKey;
     private String username;
@@ -56,9 +53,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private int  reservedSlot = -1;
     private boolean loginFinished = false;
 
-    public LoginProcessorHandler(PlayerHandler playerHandler) {
-        this.playerHandler = playerHandler;
-    }
+    public LoginProcessorHandler() {}
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, LoginPayload payloadHolder) {
@@ -124,9 +119,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     /* --------------- Login logic --------------- */
     private void processLogin(ChannelHandlerContext ctx) {
         final long acceptedAtNanos = System.nanoTime();
-        PlayerHandler ph = playerHandler != null ? playerHandler : Server.playerHandler;
-
-        if (PlayerHandler.isPlayerOn(username)) {
+        if (PlayerRegistry.isPlayerOn(username)) {
             sendAndClose(ctx, 5); // already online
             return;
         }
@@ -164,7 +157,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             sendAndClose(ctx, 13);
             return;
         }
-        client.handler = ph;
         client.setPlayerName(Utils.capitalize(username.replace('_', ' ')));
         client.playerPass = password;
         // Canonical name hash used across online maps/friends.
@@ -173,12 +165,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             InetSocketAddress isa = (InetSocketAddress) ctx.channel().remoteAddress();
             client.connectedFrom = isa.getAddress().getHostAddress();
         } catch (Exception ignored) {}
-
-        //client.inStreamDecryption  = inCipher;
-       // client.outStreamDecryption = outCipher;
-        // Legacy Stream encryption setup - no longer needed with pure Netty
-        // if (client.getOutputStream() != null) client.getOutputStream().packetEncryption = outCipher;
-        // if (client.getInputStream()  != null) client.getInputStream().packetEncryption  = inCipher;
 
         final int slotCopy = reservedSlot;
         AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
@@ -241,7 +227,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         ctx.channel().attr(AttributeKey.valueOf("activeClient")).set(client);
 
         // Finish registration + initialization on the game thread. This avoids cross-thread mutation
-        // of PlayerHandler players[]/playersOnline and reduces login-related sync spikes.
+        // of PlayerRegistry players[]/playersOnline and reduces login-related sync spikes.
         final io.netty.channel.Channel channel = ctx.channel();
         final int slotCopy = slot;
         final long finalizerQueuedAtNanos = System.nanoTime();
@@ -251,8 +237,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             if (!channel.isActive() || client.disconnected) {
                 long failures = LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE.incrementAndGet();
                 // Channel died before the game thread could register the player; release the reserved slot.
-                synchronized (PlayerHandler.SLOT_LOCK) {
-                    PlayerHandler.usedSlots.clear(slotCopy);
+                synchronized (PlayerRegistry.slotLock) {
+                    PlayerRegistry.usedSlots.clear(slotCopy);
                     net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = null;
                 }
                 logger.warn(
@@ -265,7 +251,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             }
 
             net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = client;
-            PlayerHandler.playersOnline.put(client.longName, client);
+            PlayerRegistry.playersOnline.put(client.longName, client);
 
             long initializerDurationMs = 0L;
             try {
@@ -311,10 +297,10 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     /* Slot helpers */
     private int reserveSlot() {
-        synchronized (PlayerHandler.SLOT_LOCK) {
+        synchronized (PlayerRegistry.slotLock) {
             for (int i = 1; i <= Constants.maxPlayers; i++) {
-                if (!PlayerHandler.usedSlots.get(i)) {
-                    PlayerHandler.usedSlots.set(i);
+                if (!PlayerRegistry.usedSlots.get(i)) {
+                    PlayerRegistry.usedSlots.set(i);
                     return i;
                 }
             }
@@ -324,8 +310,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     private void releaseSlot(int slot) {
         if (slot <= 0) return;
-        synchronized (PlayerHandler.SLOT_LOCK) {
-            PlayerHandler.usedSlots.clear(slot);
+        synchronized (PlayerRegistry.slotLock) {
+            PlayerRegistry.usedSlots.clear(slot);
             net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot] = null;
         }
     }

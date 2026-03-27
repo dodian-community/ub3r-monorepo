@@ -20,6 +20,7 @@ import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
 import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -236,7 +237,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
 
         if (Server.chunkManager == null) {
-            java.util.List<Player> candidates = PlayerHandler.getLocalPlayers(player);
+            java.util.List<Player> candidates = PlayerRegistry.getLocalPlayers(player);
             if (candidates.isEmpty()) {
                 return;
             }
@@ -918,7 +919,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private java.util.BitSet toBitSet(int[] slots, int count) {
-        java.util.BitSet set = new java.util.BitSet(PlayerHandler.players.length);
+        java.util.BitSet set = new java.util.BitSet(PlayerRegistry.players.length);
         int limit = Math.min(count, slots.length);
         for (int i = 0; i < limit; i++) {
             int slot = slots[i];
@@ -930,7 +931,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     private Player resolvePlayerSlot(int slot) {
-        if (slot < 0 || slot >= PlayerHandler.players.length) {
+        if (slot < 0 || slot >= PlayerRegistry.players.length) {
             return null;
         }
         return net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];

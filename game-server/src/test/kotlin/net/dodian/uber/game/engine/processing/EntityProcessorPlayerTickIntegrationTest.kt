@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.PlayerTickEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.PlayerHandler
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 class EntityProcessorPlayerTickIntegrationTest {
     @AfterEach
     fun tearDown() {
-        PlayerHandler.playersOnline.clear()
+        PlayerRegistry.playersOnline.clear()
         GameEventBus.clear()
     }
 
@@ -30,7 +30,7 @@ class EntityProcessorPlayerTickIntegrationTest {
         val player = Client(EmbeddedChannel(), 1)
         player.isActive = true
         player.initialized = true
-        PlayerHandler.playersOnline[1L] = player
+        PlayerRegistry.playersOnline[1L] = player
 
         EntityProcessor().runPlayerMainPhase()
 

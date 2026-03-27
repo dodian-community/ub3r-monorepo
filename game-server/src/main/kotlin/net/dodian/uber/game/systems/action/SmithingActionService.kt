@@ -59,7 +59,7 @@ object SmithingActionService {
             stop(player)
             return null
         }
-        if (!player.GoodDistance(request.anvilX, request.anvilY, player.position.x, player.position.y, 1)) {
+        if (!player.isWithinDistance(request.anvilX, request.anvilY, player.position.x, player.position.y, 1)) {
             stop(player)
             return null
         }

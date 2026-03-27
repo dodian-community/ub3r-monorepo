@@ -13,6 +13,7 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.combat.CombatIntent;
 import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class MagicOnPlayerListener implements PacketListener {
             return;
         }
 
-        Client victim = Server.playerHandler.getClient(victimIndex);
+        Client victim = PlayerRegistry.getClient(victimIndex);
         if (victim == null) {
             return;
         }

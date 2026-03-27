@@ -1,34 +1,34 @@
 package net.dodian.uber.game.engine.processing
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.ShopHandler
+import net.dodian.uber.game.model.ShopManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 class ShopProcessor : Runnable {
     override fun run() {
         var didUpdate = false
-        for (i in 1..ShopHandler.MaxShops) {
-            if (ShopHandler.ShopItemsDelay.size > i) {
-                if (ShopHandler.ShopItemsDelay[i] >= ShopHandler.MaxShowDelay) {
-                    for (j in 0 until ShopHandler.MaxShopItems) {
-                        if (ShopHandler.ShopItems[i][j] > 0) {
-                            if (j < ShopHandler.ShopItemsStandard[i] && ShopHandler.ShopItemsN[i][j] != ShopHandler.ShopItemsSN[i][j]) {
-                                if (ShopHandler.ShopItemsN[i][j] < ShopHandler.ShopItemsSN[i][j]) {
-                                    val restockAmount = (ShopHandler.ShopItemsSN[i][j] - ShopHandler.ShopItemsN[i][j]) * 0.05
-                                    ShopHandler.ShopItemsN[i][j] += if (restockAmount > 1) restockAmount.toInt() else 1
+        for (i in 1..ShopManager.MaxShops) {
+            if (ShopManager.ShopItemsDelay.size > i) {
+                if (ShopManager.ShopItemsDelay[i] >= ShopManager.MaxShowDelay) {
+                    for (j in 0 until ShopManager.MaxShopItems) {
+                        if (ShopManager.ShopItems[i][j] > 0) {
+                            if (j < ShopManager.ShopItemsStandard[i] && ShopManager.ShopItemsN[i][j] != ShopManager.ShopItemsSN[i][j]) {
+                                if (ShopManager.ShopItemsN[i][j] < ShopManager.ShopItemsSN[i][j]) {
+                                    val restockAmount = (ShopManager.ShopItemsSN[i][j] - ShopManager.ShopItemsN[i][j]) * 0.05
+                                    ShopManager.ShopItemsN[i][j] += if (restockAmount > 1) restockAmount.toInt() else 1
                                 } else {
-                                    Server.shopHandler.DiscountItem(i, j)
+                                    Server.shopManager.DiscountItem(i, j)
                                 }
                             }
-                            if (j >= ShopHandler.ShopItemsStandard[i]) {
-                                Server.shopHandler.DiscountItem(i, j)
+                            if (j >= ShopManager.ShopItemsStandard[i]) {
+                                Server.shopManager.DiscountItem(i, j)
                             }
                             didUpdate = true
                         }
                     }
                 } else {
-                    ShopHandler.ShopItemsDelay[i]++
+                    ShopManager.ShopItemsDelay[i]++
                 }
             }
 
@@ -38,7 +38,7 @@ class ShopProcessor : Runnable {
                         (player as Client).checkItemUpdate()
                     }
                 }
-                ShopHandler.ShopItemsDelay[i] = 0
+                ShopManager.ShopItemsDelay[i] = 0
                 didUpdate = false
             }
         }

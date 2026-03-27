@@ -435,7 +435,7 @@ public class Npc extends Entity {
                         if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
                             continue;
                         if(isActivelyTargetingThisNpc((Client) e)) {
-                            enemy = Server.playerHandler.getClient(e.getSlot());
+                            enemy = PlayerRegistry.getClient(e.getSlot());
                             int hitDiff = 0;
                             if (type == 1) {
                                 sendArrow(enemy, -1, 448); //446 = old, 448 = new!

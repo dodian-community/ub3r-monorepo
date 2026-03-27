@@ -48,7 +48,7 @@ class RootPlayerInfoService {
                 }
                 if (viewer.disconnected) {
                     viewer.println_debug("\nRemove disconnected player " + viewer.playerName)
-                    Server.playerHandler.removePlayer(viewer)
+                    PlayerRegistry.removePlayer(viewer)
                     viewer.disconnected = false
                     PlayerRegistry.players[viewer.slot] = null
                     return@forEach

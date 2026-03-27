@@ -6,7 +6,7 @@ import java.io.FileReader
 import java.io.IOException
 import net.dodian.utilities.Utils
 
-class ShopHandler {
+class ShopManager {
     init {
         for (i in 0 until MaxShops) {
             for (j in 0 until MaxShopItems) {

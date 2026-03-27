@@ -2,7 +2,7 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -34,7 +34,7 @@ public class UpdateChatListener implements PacketListener {
         client.Privatechat = priv;
 
         // Notify friends so their list icon updates
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
+        for (int i = 0; i < PlayerRegistry.players.length; i++) {
             Client other = client.getClient(i);
             if (client.validClient(i) && other.hasFriend(Utils.playerNameToInt64(client.getPlayerName()))) {
                 other.refreshFriends();

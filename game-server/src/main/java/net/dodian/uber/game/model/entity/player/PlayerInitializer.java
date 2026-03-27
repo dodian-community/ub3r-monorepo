@@ -12,6 +12,7 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -81,7 +82,7 @@ public class PlayerInitializer {
     }
 
     private void refreshPresenceForInterestedFriends(Client client) {
-        for (Client other : PlayerHandler.playersOnline.values()) {
+        for (Client other : PlayerRegistry.playersOnline.values()) {
             if (other != client && other.hasFriend(client.longName)) {
                 other.refreshFriends();
             }

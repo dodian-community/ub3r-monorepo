@@ -247,8 +247,11 @@ class ArchitectureBoundaryTest {
                             trimmed.contains("type = PlayerActionType.COOKING"))
                 val isLegacyPlayerArrayAccess =
                     trimmed.contains("PlayerHandler.players[") &&
-                        !normalized.endsWith("/model/entity/player/PlayerHandler.kt") &&
                         !normalized.endsWith("/model/entity/player/Client.java")
+                val isHardCutLegacyNaming =
+                    trimmed.contains("PlayerHandler") ||
+                        trimmed.contains("ShopHandler") ||
+                        trimmed.contains("DoorHandler")
                 val isLegacyFrameApiUsage =
                     (
                         trimmed.contains("sendFrame164(") ||
@@ -290,6 +293,7 @@ class ArchitectureBoundaryTest {
                         } ||
                         isWave2LegacyLoopMarker ||
                         isLegacyPlayerArrayAccess ||
+                        isHardCutLegacyNaming ||
                         isLegacyFrameApiUsage ||
                         isLegacyClientItemHelperUsage
                         || isManualCoreSkillControllerMarker

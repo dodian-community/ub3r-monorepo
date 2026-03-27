@@ -5,10 +5,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.AttributeKey;
-import io.netty.util.ReferenceCountUtil;
-import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -81,13 +79,13 @@ public class UpstreamHandler extends ChannelInboundHandlerAdapter {
             // Remove the stale online entry promptly to avoid "already logged in" false-positives during relog.
             try {
                 long key = Utils.playerNameToLong(client.getPlayerName());
-                PlayerHandler.playersOnline.remove(key, client);
+                PlayerRegistry.playersOnline.remove(key, client);
             } catch (Exception ignored) {
                 // If the name isn't available yet, removal will happen during game-thread cleanup.
             }
-            // Enqueue removal onto the game thread to avoid mutating PlayerHandler state off-thread.
+            // Enqueue removal onto the game thread to avoid mutating PlayerRegistry state off-thread.
             GameThreadTaskQueue.submit(() -> {
-                Server.playerHandler.removePlayer(client);
+                PlayerRegistry.removePlayer(client);
             });
         } else {
             logger.debug("[Netty] Channel inactive {}", ctx.channel().remoteAddress());

@@ -5,7 +5,7 @@ import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.cache.`object`.ObjectLoader
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.`object`.DoorHandler
+import net.dodian.uber.game.model.`object`.DoorRegistry
 
 object UtilityGeometry {
     @JvmStatic
@@ -101,8 +101,8 @@ object UtilityGeometry {
         if (cached != null) {
             return cached.def
         }
-        for (i in DoorHandler.doorId.indices) {
-            if (DoorHandler.doorId[i] == objectId && DoorHandler.doorX[i] == x && DoorHandler.doorY[i] == y) {
+        for (i in DoorRegistry.doorId.indices) {
+            if (DoorRegistry.doorId[i] == objectId && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
                 return GameObjectDef(objectId, 2, 0, Position(x, y))
             }
         }

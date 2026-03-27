@@ -1,7 +1,6 @@
 package net.dodian.uber.game.systems.world.player
 
 import net.dodian.uber.game.Constants
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.metrics.MemoryReporter
@@ -35,6 +34,9 @@ object PlayerRegistry {
 
     @JvmField
     var cycle: Int = 1
+
+    @JvmField
+    var lastchatid: Int = 0
 
     @JvmStatic
     fun currentTick(): Long = GameCycleClock.currentCycle()
@@ -112,7 +114,7 @@ object PlayerRegistry {
                 !existing.channel.isActive
         if (stale) {
             playersOnline.remove(playerId, existing)
-            GameThreadTaskQueue.submit { Server.playerHandler.removePlayer(existing) }
+            GameThreadTaskQueue.submit { PlayerRegistry.removePlayer(existing) }
             return false
         }
 

@@ -51,6 +51,7 @@ import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.systems.action.ActiveProductionSelection;
 import net.dodian.uber.game.systems.action.PlayerActionType;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
 import net.dodian.utilities.Misc;
@@ -106,7 +107,6 @@ public abstract class Player extends Entity {
     public String UUID = "";
     public boolean takeAsNote = false;
     public String playerName = null, playerPass = null;
-    public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];

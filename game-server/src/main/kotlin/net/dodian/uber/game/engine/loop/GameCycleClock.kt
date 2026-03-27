@@ -2,7 +2,6 @@ package net.dodian.uber.game.engine.loop
 
 import java.util.concurrent.atomic.AtomicLong
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object GameCycleClock {
@@ -14,14 +13,14 @@ object GameCycleClock {
     @JvmStatic
     fun advance(): Long {
         val next = cycle.incrementAndGet()
-        syncPlayerHandlerCycle(next)
+        syncPlayerRegistryCycle(next)
         return next
     }
 
     @JvmStatic
     fun syncTo(value: Long) {
         cycle.set(value.coerceAtLeast(0L))
-        syncPlayerHandlerCycle(cycle.get())
+        syncPlayerRegistryCycle(cycle.get())
     }
 
     @JvmStatic
@@ -33,9 +32,8 @@ object GameCycleClock {
         return ((durationMs + tickMs - 1L) / tickMs).toInt().coerceAtLeast(1)
     }
 
-    private fun syncPlayerHandlerCycle(value: Long) {
+    private fun syncPlayerRegistryCycle(value: Long) {
         val tick = value.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         PlayerRegistry.cycle = tick
-        PlayerHandler.cycle = tick
     }
 }

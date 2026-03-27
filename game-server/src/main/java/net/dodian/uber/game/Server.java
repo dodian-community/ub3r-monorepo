@@ -6,15 +6,15 @@ import net.dodian.cache.object.ObjectDef;
 import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.item.ItemManager;
-import net.dodian.uber.game.model.object.DoorHandler;
+import net.dodian.uber.game.model.object.DoorRegistry;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.engine.loop.GameLoopService;
@@ -71,8 +71,7 @@ public class Server {
     public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
     public static boolean shutdownServer = false;
-    public static PlayerHandler playerHandler = null;
-    public static ShopHandler shopHandler = null;
+    public static ShopManager shopManager = null;
     public static boolean antiddos = false;
     public static ChunkManager chunkManager = null;
 
@@ -106,7 +105,6 @@ public class Server {
         NpcTimerScheduler.initialize(npcManager.getNpcs());
         logger.info("DONE LOADING NPC CONFIGURATION");
         itemManager = new ItemManager();
-        playerHandler = new PlayerHandler();
         chunkManager = new ChunkManager();
         // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
         // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
@@ -115,7 +113,7 @@ public class Server {
                 npc.syncChunkMembership();
             }
         }
-        shopHandler = new ShopHandler();
+        shopManager = new ShopManager();
         clientHandler = new Server();
         login = new Login();
         Cache.load();
@@ -126,13 +124,13 @@ public class Server {
         objectLoader.load();
         GameObjectData.init();
         loadObjects();
-        new DoorHandler();
+        new DoorRegistry();
         ObjectContentRegistry.bootstrap();
         net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 
-        nettyServer = new NettyGameServer(DotEnvKt.getServerPort(), playerHandler);
+        nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
         logger.info("Starting Netty game server...");
         nettyServer.start();
 
@@ -160,7 +158,7 @@ public class Server {
 
     public static int totalHostConnection(String host) {
         int num = 0;
-        for (int slot = 0; slot < PlayerHandler.players.length; slot++) {
+        for (int slot = 0; slot < PlayerRegistry.players.length; slot++) {
             Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
             if (p != null) {
                 if (host.equals(p.connectedFrom))

@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.`object`.door.DoorDefinitionLoader
 import net.dodian.uber.game.model.`object`.door.DoorDefinitionRepository
 import org.slf4j.LoggerFactory
 
-class DoorHandler @JvmOverloads constructor(
+class DoorRegistry @JvmOverloads constructor(
     private val loader: DoorDefinitionLoader = DoorDefinitionRepository,
 ) {
     init {
@@ -48,7 +48,7 @@ class DoorHandler @JvmOverloads constructor(
 
     companion object {
         private const val DEFAULT_CAPACITY = 100
-        private val logger = LoggerFactory.getLogger(DoorHandler::class.java)
+        private val logger = LoggerFactory.getLogger(DoorRegistry::class.java)
 
         @JvmField
         var doorX: IntArray = IntArray(DEFAULT_CAPACITY)

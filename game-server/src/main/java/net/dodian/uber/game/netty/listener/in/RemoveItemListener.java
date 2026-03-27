@@ -5,7 +5,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
-import net.dodian.uber.game.model.ShopHandler;
+import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -99,15 +99,15 @@ public class RemoveItemListener implements PacketListener {
                 return;
             }
             boolean isIn = false;
-            if (ShopHandler.ShopSModifier[client.MyShopID] > 1) {
-                for (int j = 0; j <= ShopHandler.ShopItemsStandard[client.MyShopID]; j++) {
-                    if (removeID == (ShopHandler.ShopItems[client.MyShopID][j] - 1)) {
+            if (ShopManager.ShopSModifier[client.MyShopID] > 1) {
+                for (int j = 0; j <= ShopManager.ShopItemsStandard[client.MyShopID]; j++) {
+                    if (removeID == (ShopManager.ShopItems[client.MyShopID][j] - 1)) {
                         isIn = true;
                         break;
                     }
                 }
             } else isIn = true;
-            if (!isIn && (ShopHandler.ShopBModifier[client.MyShopID] == 2 && !ShopHandler.findDefaultItem(client.MyShopID, removeID))) {
+            if (!isIn && (ShopManager.ShopBModifier[client.MyShopID] == 2 && !ShopManager.findDefaultItem(client.MyShopID, removeID))) {
                 client.send(new SendMessage("You cannot sell " + client.getItemName(removeID).toLowerCase() + " in this store."));
             } else {
                 int currency = client.MyShopID == 55 ? 11997 : 995;

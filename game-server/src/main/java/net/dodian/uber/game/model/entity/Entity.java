@@ -43,14 +43,10 @@ public abstract class Entity {
         this.type = type;
     }
 
-    public void requestAnim(int id, int delay) {
+    public void performAnimation(int id, int delay) {
         setAnimationId(id);
         setAnimationDelay(delay * 10);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
-    }
-
-    public void performAnimation(int id, int delay) {
-        requestAnim(id, delay);
     }
 
     public void setGfx(int id, int height) {
@@ -77,7 +73,7 @@ public abstract class Entity {
         return text;
     }
 
-    public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
+    public boolean isWithinDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
         return dist <= distance;
     }

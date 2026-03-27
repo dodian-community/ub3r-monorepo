@@ -40,8 +40,8 @@ class GroundItem {
             timeToShow = -1
             type = 1
         }
-        if (dropper > 0 && Server.playerHandler.validClient(dropper)) {
-            val owner = Server.playerHandler.getClient(dropper) ?: return
+        if (dropper > 0 && PlayerRegistry.validClient(dropper)) {
+            val owner = PlayerRegistry.getClient(dropper) ?: return
             playerId = owner.dbId
             sendOwnerCreate(owner)
         }
@@ -74,8 +74,8 @@ class GroundItem {
             timeToShow = -1
             type = 1
         }
-        if (drop[0] >= 0 && Server.playerHandler.validClient(drop[0])) {
-            val owner = Server.playerHandler.getClient(drop[0]) ?: return
+        if (drop[0] >= 0 && PlayerRegistry.validClient(drop[0])) {
+            val owner = PlayerRegistry.getClient(drop[0]) ?: return
             playerId = owner.dbId
             sendOwnerCreate(owner)
         }
@@ -103,7 +103,7 @@ class GroundItem {
 
     fun removeItemDisplay() {
         PlayerRegistry.forEachActivePlayer { c ->
-            if (c.GoodDistance(c.position.x, c.position.y, x, y, 104)) {
+            if (c.isWithinDistance(c.position.x, c.position.y, x, y, 104)) {
                 c.send(RemoveGroundItem(GameItem(id, amount), Position(x, y, z)))
             }
         }
@@ -114,7 +114,7 @@ class GroundItem {
             if (type == 1 && playerId != c.dbId) {
                 return@forEachActivePlayer
             }
-            if (c.GoodDistance(c.position.x, c.position.y, x, y, 104) && c.dbId != playerId && isVisible()) {
+            if (c.isWithinDistance(c.position.x, c.position.y, x, y, 104) && c.dbId != playerId && isVisible()) {
                 c.send(CreateGroundItem(GameItem(id, amount), Position(x, y, z)))
             }
         }

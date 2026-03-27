@@ -127,7 +127,7 @@ object ZoneUpdateBus {
             if (viewer.position.z != position.z) {
                 return false
             }
-            return viewer.GoodDistance(viewer.position.x, viewer.position.y, position.x, position.y, radius)
+            return viewer.isWithinDistance(viewer.position.x, viewer.position.y, position.x, position.y, radius)
         }
 
         override fun deliver(viewer: Client) {
