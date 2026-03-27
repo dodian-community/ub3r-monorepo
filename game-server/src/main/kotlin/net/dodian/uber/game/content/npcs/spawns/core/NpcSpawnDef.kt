@@ -48,3 +48,17 @@ data class NpcSpawnDef(
         magic = magic ?: this.magic,
     )
 }
+
+data class NpcSpawnPoint(
+    val x: Int,
+    val y: Int,
+    val z: Int = 0,
+    val face: Int = 0,
+)
+
+fun point(x: Int, y: Int, z: Int = 0, face: Int = 0): NpcSpawnPoint = NpcSpawnPoint(x = x, y = y, z = z, face = face)
+
+fun spawnEntries(
+    npcId: Int,
+    vararg points: NpcSpawnPoint,
+): List<NpcSpawnDef> = points.map { p -> NpcSpawnDef(npcId = npcId, x = p.x, y = p.y, z = p.z, face = p.face) }

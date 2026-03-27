@@ -3,8 +3,6 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.utilities.Misc;
-
 /**
  * @author Owner
  *
@@ -31,7 +29,7 @@ public class NpcDrop {
      * @return dropping or not
      */
     public boolean drop(boolean wealth) {
-        return (Math.random() * 100) <= (wealth && percent <= 1.0 ? percent * 1.2 : percent < 10.0 ? percent * 1.1 : percent);
+        return NpcDropMath.shouldDrop(percent, wealth);
     }
 
     /**
@@ -56,7 +54,7 @@ public class NpcDrop {
      * @return the amount
      */
     public int getAmount() {
-        return minAmount == maxAmount ? minAmount : minAmount + Misc.random(maxAmount - minAmount);
+        return NpcDropMath.rollAmount(minAmount, maxAmount);
     }
 
     /**

@@ -24,6 +24,13 @@ object PlayerTickThrottleService {
     const val THIEVING_GENERIC: String = "skill:thieving"
 
     @JvmStatic
+    @Deprecated(
+        message = "Use ContentInteraction.tryAcquire for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentInteraction.tryAcquire(player, key, cooldownTicks)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentInteraction"),
+        ),
+    )
     fun tryAcquire(player: Client, key: String, cooldownTicks: Int): Boolean {
         val ticks = cooldownTicks.coerceAtLeast(1).toLong()
         val now = GameCycleClock.currentCycle()
@@ -35,6 +42,13 @@ object PlayerTickThrottleService {
     }
 
     @JvmStatic
+    @Deprecated(
+        message = "Use ContentInteraction.tryAcquireMs for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentInteraction.tryAcquireMs(player, key, cooldownMs)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentInteraction"),
+        ),
+    )
     fun tryAcquireMs(player: Client, key: String, cooldownMs: Long): Boolean {
         return tryAcquire(player, key, GameCycleClock.ticksForDurationMs(cooldownMs))
     }

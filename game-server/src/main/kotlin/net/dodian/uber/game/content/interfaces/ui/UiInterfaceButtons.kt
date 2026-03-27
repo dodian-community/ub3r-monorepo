@@ -4,9 +4,9 @@ import net.dodian.uber.game.content.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
-import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
+import net.dodian.uber.game.runtime.api.content.ContentActionCancelReason
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentSafety
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -43,9 +43,9 @@ object UiInterfaceButtons : InterfaceButtonContent {
                 val wasItemListPreview = client.bankStyleViewOpen
                 val wasPartyInterface = client.isPartyInterface
                 val wasShopping = client.isShopping
-                PlayerActionCancellationService.cancel(
+                ContentActions.cancel(
                     player = client,
-                    reason = PlayerActionCancelReason.INTERFACE_CLOSED,
+                    reason = ContentActionCancelReason.INTERFACE_CLOSED,
                     fullResetAnimation = false,
                     resetCompatibilityState = true,
                 )
@@ -98,8 +98,8 @@ object UiInterfaceButtons : InterfaceButtonContent {
                     client.send(SendMessage("You are unable to logout right now."))
                     return@buttonBinding true
                 }
-                if (CombatLogoutLockService.isLocked(client)) {
-                    val seconds = CombatLogoutLockService.remainingSeconds(client)
+                if (ContentSafety.isLogoutLocked(client)) {
+                    val seconds = ContentSafety.logoutLockRemainingSeconds(client)
                     client.send(SendMessage("You must wait $seconds seconds before you can logout!"))
                     return@buttonBinding true
                 }

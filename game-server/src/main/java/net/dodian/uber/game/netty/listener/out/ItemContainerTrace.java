@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 final class ItemContainerTrace {
     private static final Logger logger = LoggerFactory.getLogger(ItemContainerTrace.class);
-    private static final boolean ENABLED = true;
+    private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("net.trace.opcode53", "false"));
 
     private ItemContainerTrace() {
     }
@@ -15,7 +15,7 @@ final class ItemContainerTrace {
         if (!ENABLED) {
             return;
         }
-        logger.info(
+        logger.debug(
                 "opcode53 writer={} player={} interfaceId={} itemCount={} preview={}",
                 writer,
                 client.getPlayerName(),

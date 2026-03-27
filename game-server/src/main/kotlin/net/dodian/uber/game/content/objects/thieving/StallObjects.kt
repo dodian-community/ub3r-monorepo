@@ -4,7 +4,8 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.skills.thieving.ThievingPlugin
 
 object StallObjects : ObjectContent {
@@ -15,15 +16,11 @@ object StallObjects : ObjectContent {
         objectId: Int,
         position: Position,
         obj: GameObjectData?,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         if (option != 2) {
             return null
         }
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
-            requireMovementSettled = true,
-            settleTicks = 1,
-        )
+        return ContentInteraction.nearestBoundaryCardinalPolicy()
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {

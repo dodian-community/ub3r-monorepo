@@ -3,7 +3,8 @@ package net.dodian.uber.game.content.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteractionType
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -92,14 +93,14 @@ object ObjectContentRegistry {
     fun resolvePolicy(
         objectId: Int,
         position: Position,
-        interactionType: ObjectInteractionPolicy.InteractionType,
+        interactionType: ContentInteractionType,
         option: Int = -1,
         obj: GameObjectData? = null,
         itemId: Int = -1,
         itemSlot: Int = -1,
         interfaceId: Int = -1,
         spellId: Int = -1,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         bootstrap()
         val bucket = byObjectId.getOrNull(objectId).orEmpty()
         for (entry in bucket) {
@@ -108,9 +109,9 @@ object ObjectContentRegistry {
             }
             val policy =
                 when (interactionType) {
-                    ObjectInteractionPolicy.InteractionType.CLICK ->
+                    ContentInteractionType.CLICK ->
                         entry.content.clickInteractionPolicy(option, objectId, position, obj)
-                    ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT ->
+                    ContentInteractionType.ITEM_ON_OBJECT ->
                         entry.content.itemOnObjectInteractionPolicy(
                             objectId = objectId,
                             position = position,
@@ -119,7 +120,7 @@ object ObjectContentRegistry {
                             itemSlot = itemSlot,
                             interfaceId = interfaceId,
                         )
-                    ObjectInteractionPolicy.InteractionType.MAGIC ->
+                    ContentInteractionType.MAGIC ->
                         entry.content.magicOnObjectInteractionPolicy(
                             objectId = objectId,
                             position = position,

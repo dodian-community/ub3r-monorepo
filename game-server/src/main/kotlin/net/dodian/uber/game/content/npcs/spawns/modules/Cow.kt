@@ -9,8 +9,6 @@ import java.util.Date
 internal object Cow {
     // Stats: 2805: r=30 a=1 d=1 s=1 hp=8 rg=0 mg=0
 
-    val npcIds: IntArray = npcIds(5842)
-
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 2805, x = 2604, y = 3114, z = 0, face = 0),
         NpcSpawnDef(npcId = 2805, x = 2609, y = 3115, z = 0, face = 0),
@@ -19,6 +17,7 @@ internal object Cow {
         NpcSpawnDef(npcId = 2805, x = 2601, y = 3113, z = 0, face = 0),
         NpcSpawnDef(npcId = 2805, x = 2605, y = 3116, z = 0, face = 0),
     )
+    val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         val canClaim = Date().before(Date("06/1/2024")) && !client.checkItem(7927)

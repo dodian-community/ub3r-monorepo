@@ -5,6 +5,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CancellationException
 import net.dodian.uber.game.runtime.loop.GameCycleClock
 import net.dodian.uber.game.runtime.tasking.suspension.PredicateCondition
 import net.dodian.uber.game.runtime.tasking.suspension.TaskStep
@@ -44,6 +45,9 @@ class GameTask internal constructor(
         nextStep = null
         control.markCompleted()
         result.exceptionOrNull()?.let { exception ->
+            if (exception is CancellationException) {
+                return
+            }
             logger.error("Game task failed", exception)
         }
     }

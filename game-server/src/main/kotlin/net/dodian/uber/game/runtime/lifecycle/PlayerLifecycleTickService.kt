@@ -15,7 +15,7 @@ import net.dodian.utilities.Misc
 object PlayerLifecycleTickService {
 
     @JvmStatic
-    fun processBeforeCombat(player: Client, wallClockNow: Long) {
+    fun processBeforeCombat(player: Client) {
         if (player.disconnected) {
             PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.DISCONNECTED, false, false, false, true)
         }
@@ -28,12 +28,6 @@ object PlayerLifecycleTickService {
         if (player.genieCombatFlag && !player.isInCombat()) {
             player.genieCombatFlag = false
             SkillingRandomEventService.show(player)
-        }
-
-        if (player.dailyLogin == 0) {
-            player.battlestavesData()
-        } else {
-            player.dailyLogin--
         }
 
         player.actionTimer = if (player.actionTimer > 0) player.actionTimer - 1 else 0
@@ -53,30 +47,6 @@ object PlayerLifecycleTickService {
             player.pray(0)
         }
 
-        if (wallClockNow >= player.walkBlock && player.xLog) {
-            player.UsingAgility = false
-            player.disconnected = true
-        }
-
-        val attemptGround = player.attemptGround
-        if (player.pickupWanted &&
-            attemptGround != null &&
-            player.position.x == attemptGround.x &&
-            player.position.y == attemptGround.y &&
-            player.position.z == attemptGround.z
-        ) {
-            player.pickUpItem(attemptGround.x, attemptGround.y)
-        }
-
-        if (player.inTrade && player.tradeResetNeeded) {
-            val other = player.getClient(player.trade_reqId)
-            if (other.tradeResetNeeded) {
-                player.resetTrade()
-                other.resetTrade()
-            }
-        }
-
-        PlayerPersistenceTickService.process(player, wallClockNow)
     }
 
     @JvmStatic

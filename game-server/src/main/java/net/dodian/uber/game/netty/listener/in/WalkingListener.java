@@ -18,6 +18,7 @@ import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
 import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,7 @@ public final class WalkingListener implements PacketListener {
         if (client.pickupWanted) {
             client.pickupWanted = false;
             client.attemptGround = null;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
         }
 
         ByteBuf buf = packet.payload();

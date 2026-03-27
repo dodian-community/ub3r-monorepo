@@ -8,6 +8,7 @@ import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectInteractionService
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
+import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
@@ -56,11 +57,18 @@ object InteractionProcessor {
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
+            NpcClickMetrics.recordRejected("npc_not_found_runtime", intent.opcode, intent.option, intent.npcIndex, player.playerName)
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
 
         if (player.randomed || player.UsingAgility) {
+            NpcClickMetrics.recordRejected("blocked_state_runtime", intent.opcode, intent.option, intent.npcIndex, player.playerName)
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (intent.option != NPC_ATTACK_OPTION && !npc.isAlive) {
+            NpcClickMetrics.recordRejected("npc_dead", intent.opcode, intent.option, intent.npcIndex, player.playerName)
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -73,7 +81,12 @@ object InteractionProcessor {
         }
 
         val routeStart = System.nanoTime()
-        if (!player.goodDistanceEntity(npc, range) || npc.position.withinDistance(player.position, 0)) {
+        if (!player.goodDistanceEntity(npc, range)) {
+            NpcClickMetrics.recordWait("out_of_range", intent.option, npc.id, intent.npcIndex, player.playerName)
+            return InteractionExecutionResult.WAITING
+        }
+        if (npc.position.withinDistance(player.position, 0)) {
+            NpcClickMetrics.recordWait("overlap_tile", intent.option, npc.id, intent.npcIndex, player.playerName)
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
@@ -87,7 +100,14 @@ object InteractionProcessor {
                 4 -> handleNpcClick4(player, npc)
                 NPC_ATTACK_OPTION -> handleNpcAttack(player, npc)
                 else -> DispatchTiming(false, 0L, 0L, null)
-        }
+            }
+        NpcClickMetrics.recordDispatch(
+            option = intent.option,
+            npcId = npc.id,
+            handled = timing.handled,
+            handlerName = timing.handlerName,
+            playerName = player.playerName,
+        )
         clear(player)
         slowLogIfNeeded(
             player,
@@ -456,6 +476,7 @@ object InteractionProcessor {
 
     private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
+            NpcClickMetrics.recordRejected("player_busy", 21, 3, npc.slot, player.playerName)
             return DispatchTiming(false, 0L, 0L, null)
         }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
@@ -466,6 +487,7 @@ object InteractionProcessor {
 
     private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
+            NpcClickMetrics.recordRejected("player_busy", 18, 4, npc.slot, player.playerName)
             return DispatchTiming(false, 0L, 0L, null)
         }
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)

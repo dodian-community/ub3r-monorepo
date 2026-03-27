@@ -3,8 +3,8 @@ package net.dodian.uber.game.content.interfaces.crafting
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.ProductionActionService
-import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
 import net.dodian.uber.game.skills.crafting.TanningRequest
 import net.dodian.uber.game.skills.crafting.CraftingPlugin
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
@@ -50,7 +50,7 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
                         return@buttonBinding true
                     }
                     val amount = CraftingInterfaceComponents.productionAmountButtons[request.rawButtonId] ?: return@buttonBinding false
-                    ProductionActionService.startPending(client, amount)
+                    ContentActions.startPendingProduction(client, amount)
                     true
                 }
             )
@@ -68,9 +68,9 @@ object CraftingInterfaceButtons : InterfaceButtonContent {
                             return@buttonBinding true
                         }
                         val amount = product.amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                        ProductionActionService.start(
+                        ContentActions.startProduction(
                             client,
-                            ProductionRequest(
+                            ContentProductionRequest(
                                 skillId = Skill.CRAFTING.id,
                                 productId = product.productId,
                                 amountPerCycle = 1,

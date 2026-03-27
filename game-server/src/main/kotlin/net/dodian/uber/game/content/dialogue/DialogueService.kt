@@ -5,9 +5,9 @@ import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
-import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService
+import net.dodian.uber.game.runtime.api.content.ContentActionCancelReason
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
 import java.util.ArrayDeque
 import java.util.Collections
 import java.util.WeakHashMap
@@ -58,13 +58,13 @@ object DialogueService {
 
     @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
-        if (!PlayerInteractionGuardService.canStartDialogue(client)) {
-            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+        if (!ContentInteraction.canStartDialogue(client)) {
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
             return
         }
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
-            reason = PlayerActionCancelReason.DIALOGUE_OPENED,
+            reason = ContentActionCancelReason.DIALOGUE_OPENED,
             fullResetAnimation = false,
             resetCompatibilityState = true,
         )
@@ -103,8 +103,8 @@ object DialogueService {
 
     @JvmStatic
     fun startDialogueId(client: Client, dialogueId: Int, npcId: Int) {
-        if (!PlayerInteractionGuardService.canStartDialogue(client)) {
-            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+        if (!ContentInteraction.canStartDialogue(client)) {
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
             return
         }
         sessions.remove(client)

@@ -13,6 +13,13 @@ import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 
 object ProductionActionService {
     @JvmStatic
+    @Deprecated(
+        message = "Use ContentActions.queueProductionSelection for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentActions.queueProductionSelection(client, request, interfaceModelZoom, titleLineBreaks)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentActions"),
+        ),
+    )
     fun queueSelection(
         client: Client,
         request: ProductionRequest,
@@ -27,6 +34,13 @@ object ProductionActionService {
     }
 
     @JvmStatic
+    @Deprecated(
+        message = "Use ContentActions.startPendingProduction for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentActions.startPendingProduction(client, cycleCount)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentActions"),
+        ),
+    )
     fun startPending(client: Client, cycleCount: Int): Boolean {
         val selection = client.getPendingProductionSelection() ?: return false
         client.send(RemoveInterfaces())
@@ -35,6 +49,13 @@ object ProductionActionService {
     }
 
     @JvmStatic
+    @Deprecated(
+        message = "Use ContentActions.startProduction for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentActions.startProduction(client, request, cycleCount)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentActions"),
+        ),
+    )
     fun start(
         client: Client,
         request: ProductionRequest,

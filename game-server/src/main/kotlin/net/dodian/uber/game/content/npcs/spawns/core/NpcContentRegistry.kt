@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object NpcContentRegistry {
     private val logger = LoggerFactory.getLogger(NpcContentRegistry::class.java)
+    private val strictDslHandlers = readFlag("npc.content.requireDslHandlers", false)
 
     private val bootstrapped = AtomicBoolean(false)
     @Volatile
@@ -31,6 +32,16 @@ object NpcContentRegistry {
                 interactiveModules,
                 interactiveIds,
             )
+            val legacyModules = definitions.filter { it.hasInteractionHandlers() && it.interactionSource == NpcInteractionSource.LEGACY_REFLECTION }
+            if (legacyModules.isNotEmpty()) {
+                logger.warn(
+                    "Legacy reflection NPC modules still active ({}): {}",
+                    legacyModules.size,
+                    legacyModules.joinToString(",") { it.name },
+                )
+            }
+            emitCapabilityReport()
+            emitSpawnDiagnostics()
         }
     }
 
@@ -54,6 +65,9 @@ object NpcContentRegistry {
         }
         require(!content.hasInteractionHandlers() || content.npcIds.isNotEmpty()) {
             "NpcContent ${content.name} has click handlers but no declared npcIds."
+        }
+        if (strictDslHandlers && content.hasInteractionHandlers() && content.interactionSource == NpcInteractionSource.LEGACY_REFLECTION) {
+            error("NpcContent ${content.name} must use DSL option bindings (definition/plugin) for interactive handlers.")
         }
 
         if (content.ownsSpawnDefinitions && content.entries.isEmpty()) {
@@ -121,6 +135,48 @@ object NpcContentRegistry {
         definitions.clear()
     }
 
+    private fun emitCapabilityReport() {
+        val rows = ArrayList<String>()
+        definitions
+            .asSequence()
+            .filter { it.hasInteractionHandlers() }
+            .forEach { def ->
+                def.npcIds.sorted().forEach { npcId ->
+                    val options = buildOptions(def)
+                    rows += "npc=$npcId source=kotlin module=${def.name} options=$options"
+                }
+            }
+        if (rows.isEmpty()) {
+            logger.info("NPC capability report: no interactive entries loaded.")
+            return
+        }
+        logger.info("NPC capability report entries={}", rows.size)
+        rows.sorted().forEach { logger.info("NPC capability {}", it) }
+    }
+
+    private fun emitSpawnDiagnostics() {
+        val banker = definitions.firstOrNull { it.name.equals("Banker", ignoreCase = true) } ?: return
+        val bankerEntries = banker.entries.filter { it.npcId in setOf(394, 395, 7677) }
+        val yanilleExpected = setOf(Pair(2615, 3094), Pair(2615, 3092), Pair(2615, 3091))
+        val yanilleFound = bankerEntries.filter { (it.x to it.y) in yanilleExpected }
+        logger.info(
+            "NPC spawn diagnostic family=Banker totalEntries={} bankerEntries={} yanilleBankers={}",
+            banker.entries.size,
+            bankerEntries.size,
+            yanilleFound.size,
+        )
+    }
+
+    private fun buildOptions(def: NpcContentDefinition): String {
+        val options = ArrayList<String>(5)
+        if (def.onFirstClick !== NO_CLICK_HANDLER) options += "1:${def.optionLabel(1) ?: "first"}"
+        if (def.onSecondClick !== NO_CLICK_HANDLER) options += "2:${def.optionLabel(2) ?: "second"}"
+        if (def.onThirdClick !== NO_CLICK_HANDLER) options += "3:${def.optionLabel(3) ?: "third"}"
+        if (def.onFourthClick !== NO_CLICK_HANDLER) options += "4:${def.optionLabel(4) ?: "fourth"}"
+        if (def.onAttack !== NO_CLICK_HANDLER) options += "5:${def.optionLabel(5) ?: "attack"}"
+        return options.joinToString("|")
+    }
+
     private fun rebuildLookupLocked() {
         val maxNpcId = definitions.asSequence().flatMap { it.npcIds.asSequence() }.maxOrNull() ?: -1
         val rebuilt = arrayOfNulls<NpcContentDefinition>(maxNpcId + 1)
@@ -145,5 +201,17 @@ object NpcContentRegistry {
 
     private fun spawnKey(spawn: NpcSpawnDef): String {
         return "${spawn.npcId}:${spawn.x}:${spawn.y}:${spawn.z}"
+    }
+
+    private fun readFlag(property: String, defaultValue: Boolean): Boolean {
+        val prop = System.getProperty(property)?.trim()
+        if (!prop.isNullOrEmpty()) {
+            return prop.equals("true", ignoreCase = true)
+        }
+        val env = System.getenv(property.uppercase().replace('.', '_'))?.trim()
+        if (!env.isNullOrEmpty()) {
+            return env.equals("true", ignoreCase = true)
+        }
+        return defaultValue
     }
 }

@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.interfaces.trade
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 import org.slf4j.LoggerFactory
@@ -16,7 +16,7 @@ object TradeInterfaceButtons : InterfaceButtonContent {
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||
-                        !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 600L)
+                        !ContentInteraction.tryAcquireMs(client, ContentInteraction.TRADE_CONFIRM_STAGE_ONE, 600L)
                     ) {
                         return@buttonBinding true
                     }
@@ -47,7 +47,7 @@ object TradeInterfaceButtons : InterfaceButtonContent {
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||
-                        !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 600L)
+                        !ContentInteraction.tryAcquireMs(client, ContentInteraction.TRADE_CONFIRM_STAGE_TWO, 600L)
                     ) {
                         return@buttonBinding true
                     }

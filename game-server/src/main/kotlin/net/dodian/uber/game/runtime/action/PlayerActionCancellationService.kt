@@ -8,6 +8,13 @@ import net.dodian.uber.game.skills.smithing.SmithingInterfaceService
 object PlayerActionCancellationService {
     @JvmStatic
     @JvmOverloads
+    @Deprecated(
+        message = "Use ContentActions.cancel for content-facing calls.",
+        replaceWith = ReplaceWith(
+            expression = "ContentActions.cancel(player, reason, fullResetAnimation, clearDialogue, closeInterfaces, resetCompatibilityState)",
+            imports = arrayOf("net.dodian.uber.game.runtime.api.content.ContentActions"),
+        ),
+    )
     fun cancel(
         player: Client,
         reason: PlayerActionCancelReason,

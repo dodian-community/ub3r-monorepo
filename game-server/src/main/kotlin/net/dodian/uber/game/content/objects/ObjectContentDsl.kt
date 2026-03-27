@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 
 class ObjectContentBuilder {
     private val bindings = mutableListOf<ObjectBinding>()
@@ -18,7 +18,7 @@ class ObjectContentBuilder {
     private var onMagic:
         (Client, Int, Position, GameObjectData?, Int) -> Boolean =
         { _, _, _, _, _ -> false }
-    private var clickPolicy: (Int, Int, Position, GameObjectData?) -> ObjectInteractionPolicy? = { _, _, _, _ -> null }
+    private var clickPolicy: (Int, Int, Position, GameObjectData?) -> ContentObjectInteractionPolicy? = { _, _, _, _ -> null }
 
     fun bind(vararg objectIds: Int) {
         objectIds.sorted().forEach { objectId -> bindings += ObjectBinding(objectId = objectId) }
@@ -52,7 +52,7 @@ class ObjectContentBuilder {
         onMagic = handler
     }
 
-    fun clickInteractionPolicy(handler: (Int, Int, Position, GameObjectData?) -> ObjectInteractionPolicy?) {
+    fun clickInteractionPolicy(handler: (Int, Int, Position, GameObjectData?) -> ContentObjectInteractionPolicy?) {
         clickPolicy = handler
     }
 
@@ -99,7 +99,7 @@ class ObjectContentBuilder {
                 objectId: Int,
                 position: Position,
                 obj: GameObjectData?,
-            ): ObjectInteractionPolicy? = clickPolicy(option, objectId, position, obj)
+            ): ContentObjectInteractionPolicy? = clickPolicy(option, objectId, position, obj)
         }
     }
 }

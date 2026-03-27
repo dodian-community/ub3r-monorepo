@@ -20,6 +20,56 @@ class NpcOptionsBuilder internal constructor(
 
     fun attack(label: String, handler: (Client, Npc) -> Boolean) = bind(NpcOptionSlot.ATTACK, label, handler)
 
+    fun first(
+        label: String,
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = bind(NpcOptionSlot.FIRST, label, buildSequentialHandler(init))
+
+    fun second(
+        label: String,
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = bind(NpcOptionSlot.SECOND, label, buildSequentialHandler(init))
+
+    fun third(
+        label: String,
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = bind(NpcOptionSlot.THIRD, label, buildSequentialHandler(init))
+
+    fun fourth(
+        label: String,
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = bind(NpcOptionSlot.FOURTH, label, buildSequentialHandler(init))
+
+    fun attack(
+        label: String,
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = bind(NpcOptionSlot.ATTACK, label, buildSequentialHandler(init))
+
+    fun talkTo(
+        label: String = "talk-to",
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = first(label, init)
+
+    fun trade(
+        label: String = "trade",
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = second(label, init)
+
+    fun teleportOption(
+        label: String = "teleport",
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = third(label, init)
+
+    fun option4(
+        label: String = "option-4",
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = fourth(label, init)
+
+    fun attackOption(
+        label: String = "attack",
+        init: NpcSequentialOptionBuilder.() -> Unit,
+    ) = attack(label, init)
+
     fun firstState(label: String, handler: NpcClickHandlerWithState) = bindWithState(NpcOptionSlot.FIRST, label, handler)
 
     fun secondState(label: String, handler: NpcClickHandlerWithState) = bindWithState(NpcOptionSlot.SECOND, label, handler)
@@ -33,6 +83,7 @@ class NpcOptionsBuilder internal constructor(
     internal fun build(): List<NpcOptionBinding> = bindings.toList()
 
     private fun bindWithState(slot: NpcOptionSlot, label: String, handler: NpcClickHandlerWithState) {
+        require(bindings.none { it.slot == slot }) { "Duplicate option binding for slot=$slot label='$label'." }
         bindings += NpcOptionBinding(slot, label) { client, npc ->
             val context = NpcPluginContext(client = client, stateNamespace = stateNamespace)
             handler(context, client, npc)
@@ -40,6 +91,7 @@ class NpcOptionsBuilder internal constructor(
     }
 
     private fun bind(slot: NpcOptionSlot, label: String, handler: (Client, Npc) -> Boolean) {
+        require(bindings.none { it.slot == slot }) { "Duplicate option binding for slot=$slot label='$label'." }
         bindings += NpcOptionBinding(slot, label, handler)
     }
 }

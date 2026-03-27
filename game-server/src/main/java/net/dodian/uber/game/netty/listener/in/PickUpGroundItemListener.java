@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
 import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
 import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +59,14 @@ public class PickUpGroundItemListener implements PacketListener {
         client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.getPosition().getZ());
         if (client.attemptGround == null) {
             client.pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
             return;
         }
         if (client.getPosition().getX() != itemX || client.getPosition().getY() != itemY) {
             client.pickupWanted = true;
+            PlayerDeferredLifecycleService.scheduleGroundPickupArrivalWatch(client, client.attemptGround);
         } else {
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
             client.pickUpItem(itemX, itemY);
         }
 

@@ -86,6 +86,8 @@ internal fun NpcPluginDefinition.toContentDefinition(
         npcIds = npcIds,
         ownsSpawnDefinitions = ownsSpawnDefinitionsFlag || ownsSpawnDefinitions,
         entries = entries,
+        optionLabels = optionBindings.associate { it.slot.toOptionId() to it.label },
+        interactionSource = NpcInteractionSource.DSL,
         onFirstClick = combined(NpcOptionSlot.FIRST),
         onSecondClick = combined(NpcOptionSlot.SECOND),
         onThirdClick = combined(NpcOptionSlot.THIRD),
@@ -93,3 +95,12 @@ internal fun NpcPluginDefinition.toContentDefinition(
         onAttack = combined(NpcOptionSlot.ATTACK),
     )
 }
+
+private fun NpcOptionSlot.toOptionId(): Int =
+    when (this) {
+        NpcOptionSlot.FIRST -> 1
+        NpcOptionSlot.SECOND -> 2
+        NpcOptionSlot.THIRD -> 3
+        NpcOptionSlot.FOURTH -> 4
+        NpcOptionSlot.ATTACK -> 5
+    }

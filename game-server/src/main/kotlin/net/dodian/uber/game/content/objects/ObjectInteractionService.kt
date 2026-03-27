@@ -7,7 +7,7 @@ import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.ObjectClickEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.interaction.DispatchTiming
+import net.dodian.uber.game.runtime.api.content.ContentDispatchTiming
 import org.slf4j.LoggerFactory
 
 object ObjectInteractionService {
@@ -65,11 +65,11 @@ object ObjectInteractionService {
     }
 
     @JvmStatic
-    fun tryHandleTimed(context: ObjectInteractionContext): DispatchTiming {
+    fun tryHandleTimed(context: ObjectInteractionContext): ContentDispatchTiming {
         val key = buildReentrancyKey(context)
         val active = reentrancyGuard.get()
         if (!active.add(key)) {
-            return DispatchTiming(false, 0L, 0L, null)
+            return ContentDispatchTiming(false, 0L, 0L, null)
         }
 
         try {
@@ -84,7 +84,7 @@ object ObjectInteractionService {
                     ),
                 )
             ) {
-                return DispatchTiming(true, 0L, 0L, "GameEventBus")
+                return ContentDispatchTiming(true, 0L, 0L, "GameEventBus")
             }
 
             val resolveStart = System.nanoTime()
@@ -92,7 +92,7 @@ object ObjectInteractionService {
             val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
                 ObjectClickLoggingService.log(logger, context, resolution = null, handled = false)
-                return DispatchTiming(false, resolveNs, 0L, null)
+                return ContentDispatchTiming(false, resolveNs, 0L, null)
             }
 
             var handlerNs = 0L
@@ -133,7 +133,7 @@ object ObjectInteractionService {
                     if (handled) {
                         handlerName = content::class.java.name
                         ObjectClickLoggingService.log(logger, context, resolution = resolution, handled = true)
-                        return DispatchTiming(true, resolveNs, handlerNs, handlerName)
+                        return ContentDispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
                 } catch (e: Exception) {
                     logger.error(
@@ -147,7 +147,7 @@ object ObjectInteractionService {
                 }
             }
             ObjectClickLoggingService.log(logger, context, resolution = candidates.firstOrNull(), handled = false)
-            return DispatchTiming(false, resolveNs, handlerNs, handlerName)
+            return ContentDispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
             active.remove(key)
             if (active.isEmpty()) {

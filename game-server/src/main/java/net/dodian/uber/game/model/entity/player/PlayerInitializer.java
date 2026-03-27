@@ -10,6 +10,7 @@ import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -63,6 +64,8 @@ public class PlayerInitializer {
         long hourJitterMs = (client.dbId > 0 ? (client.dbId % 3600L) : (client.getSlot() % 3600L)) * 1000L;
         client.lastSave = now + minuteJitterMs;
         client.lastProgressSave = now + hourJitterMs;
+        PlayerDeferredLifecycleService.schedulePeriodicPersistence(client);
+        PlayerDeferredLifecycleService.scheduleDailyResetTrigger(client);
     }
 
     public void initializeDeferredPostLoginState(Client client) {

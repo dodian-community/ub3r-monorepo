@@ -12,8 +12,8 @@ import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.skills.thieving.ThievingPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Utils
 
@@ -25,15 +25,11 @@ object ChestObjects : ObjectContent {
         objectId: Int,
         position: Position,
         obj: GameObjectData?,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         if (option != 1 && option != 2) {
             return null
         }
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
-            requireMovementSettled = true,
-            settleTicks = 1,
-        )
+        return ContentInteraction.nearestBoundaryCardinalPolicy()
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
@@ -53,7 +49,7 @@ object ChestObjects : ObjectContent {
                 client.send(SendMessage("You need atleast one free inventory slot!"))
                 return true
             }
-            if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.YANILLE_CHEST, 1200L)) {
+            if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.YANILLE_CHEST, 1200L)) {
                 return true
             }
             val emptyObj = GameObject(378, position.x, position.y, client.position.z, 10, 2, objectId)
@@ -99,7 +95,7 @@ object ChestObjects : ObjectContent {
                 client.send(SendMessage("You need atleast one free inventory slot!"))
                 return true
             }
-            if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.LEGENDS_CHEST, 1200L)) {
+            if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.LEGENDS_CHEST, 1200L)) {
                 return true
             }
             val emptyObj = GameObject(378, position.x, position.y, position.z, 11, -1, objectId)

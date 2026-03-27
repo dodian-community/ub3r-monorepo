@@ -70,6 +70,7 @@ import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
 import net.dodian.uber.game.runtime.combat.CombatStartService;
 import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.utilities.*;
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
@@ -628,6 +629,7 @@ public class Client extends Player implements Runnable {
 
     @Override
     public void destruct() {
+        PlayerDeferredLifecycleService.cancelAll(this);
         clearVerticalTravelState();
         releaseQueuedInboundPackets();
         releaseQueuedOutboundPackets();
@@ -1011,11 +1013,13 @@ public class Client extends Player implements Runnable {
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
+                PlayerDeferredLifecycleService.scheduleXLogExpiry(this, walkBlock);
             }
             isLoggingOut = false;
             return;
         }
 
+        PlayerDeferredLifecycleService.cancelAll(this);
         // Save player data before disconnecting
         saveStats(PlayerSaveReason.LOGOUT, true, true);
 
@@ -1564,22 +1568,26 @@ public class Client extends Player implements Runnable {
             dropAllItems();
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
         GroundItem target = attemptGround;
         if (target == null) {
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
         if (target.x != x || target.y != y || target.z != getPosition().getZ()) {
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
         if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
@@ -1587,6 +1595,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Your inventory is full!"));
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
@@ -1594,6 +1603,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You must be a premium member to use this item"));
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
@@ -1604,6 +1614,7 @@ public class Client extends Player implements Runnable {
         }
         attemptGround = null;
         pickupWanted = false;
+        PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
     }
 
     public void openUpBank() {
@@ -2074,7 +2085,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         long now = System.currentTimeMillis();
-        PlayerLifecycleTickService.processBeforeCombat(this, now);
+        PlayerLifecycleTickService.processBeforeCombat(this);
         PlayerLifecycleTickService.processAfterCombat(this, now);
         // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
         // and always on final save/logout.
@@ -3596,6 +3607,7 @@ public class Client extends Player implements Runnable {
                     TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
                 send(new RemoveInterfaces());
                 tradeResetNeeded = true;
+                PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);
                 saveStats(PlayerSaveReason.TRADE, false, false);
                 tradeSuccessful = true;
                 faceTarget(-1);

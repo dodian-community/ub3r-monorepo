@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.NpcClickEvent
-import net.dodian.uber.game.runtime.interaction.DispatchTiming
+import net.dodian.uber.game.runtime.api.content.ContentDispatchTiming
 import org.slf4j.LoggerFactory
 
 object NpcContentDispatcher {
@@ -21,15 +21,16 @@ object NpcContentDispatcher {
     }
 
     @JvmStatic
-    fun tryHandleClickTimed(client: Client, option: Int, npc: Npc): DispatchTiming {
+    fun tryHandleClickTimed(client: Client, option: Int, npc: Npc): ContentDispatchTiming {
         if (GameEventBus.postWithResult(NpcClickEvent(client, option, npc))) {
-            return DispatchTiming(true, 0L, 0L, "GameEventBus")
+            return ContentDispatchTiming(true, 0L, 0L, "GameEventBus")
         }
+        var resolveNs = 0L
         val resolveStart = System.nanoTime()
         val content = NpcContentRegistry.get(npc.id)
-        val resolveNs = System.nanoTime() - resolveStart
+        resolveNs += (System.nanoTime() - resolveStart)
         if (content == null) {
-            return DispatchTiming(false, resolveNs, 0L, null)
+            return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
         val handled =
@@ -52,16 +53,17 @@ object NpcContentDispatcher {
                 false
             }
         val handlerNs = System.nanoTime() - handlerStart
-        return DispatchTiming(handled, resolveNs, handlerNs, content.name)
+        return ContentDispatchTiming(handled, resolveNs, handlerNs, content.name)
     }
 
     @JvmStatic
-    fun tryHandleAttackTimed(client: Client, npc: Npc): DispatchTiming {
+    fun tryHandleAttackTimed(client: Client, npc: Npc): ContentDispatchTiming {
+        var resolveNs = 0L
         val resolveStart = System.nanoTime()
         val content = NpcContentRegistry.get(npc.id)
-        val resolveNs = System.nanoTime() - resolveStart
+        resolveNs += (System.nanoTime() - resolveStart)
         if (content == null) {
-            return DispatchTiming(false, resolveNs, 0L, null)
+            return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
         val handled =
@@ -77,6 +79,6 @@ object NpcContentDispatcher {
                 false
             }
         val handlerNs = System.nanoTime() - handlerStart
-        return DispatchTiming(handled, resolveNs, handlerNs, content.name)
+        return ContentDispatchTiming(handled, resolveNs, handlerNs, content.name)
     }
 }

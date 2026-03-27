@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.interfaces.duel
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -18,7 +18,7 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                 client.toggleDuelBodyRule(ruleIndex)
             },
             buttonBinding(-1, 2, "duel.confirm.stage_two", intArrayOf(DuelComponents.CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
-                if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 1000L)) {
+                if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.DUEL_CONFIRM_STAGE_TWO, 1000L)) {
                     return@buttonBinding true
                 }
                 val other = client.getClient(client.duel_with)
@@ -55,7 +55,7 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                     }
                     return@buttonBinding true
                 }
-                if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 1000L)) {
+                if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.DUEL_CONFIRM_STAGE_ONE, 1000L)) {
                     return@buttonBinding true
                 }
                 if (!client.validClient(client.duel_with)) {

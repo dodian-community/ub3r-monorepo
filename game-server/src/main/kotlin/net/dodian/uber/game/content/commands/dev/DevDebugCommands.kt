@@ -7,6 +7,10 @@ import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
+import net.dodian.uber.game.runtime.tasking.coroutine.gameClock
+import net.dodian.uber.game.runtime.tasking.coroutine.npcTaskCoroutine
+import net.dodian.uber.game.runtime.tasking.coroutine.playerTaskCoroutine
+import net.dodian.uber.game.runtime.tasking.coroutine.worldTaskCoroutine
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.party.Balloons
@@ -18,6 +22,7 @@ object DevDebugCommands : CommandContent {
             command(
                 "npca", "loot", "death", "damage", "dharok", "heal", "farm", "immune", "rehp",
                 "split", "party", "event", "gem", "rune", "boost_on", "boost_off",
+                "wcor", "pcor", "ncor",
             ) {
                 handleDevDebug(this)
             }
@@ -190,6 +195,49 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     client.boostedLevel[i] = 0
                     Skill.getSkill(i)?.let { SkillProgressionService.refresh(client, it) }
                 }
+            }
+        }
+        "wcor" -> {
+            context.reply("Scheduled world coroutine demo.")
+            worldTaskCoroutine {
+                client.send(SendMessage("[${gameClock()}] world: start"))
+                delay(3)
+                client.send(SendMessage("[${gameClock()}] world: step-2"))
+                delay(7)
+                client.send(SendMessage("[${gameClock()}] world: stop"))
+                stop()
+            }
+        }
+        "pcor" -> {
+            context.reply("Scheduled player coroutine demo.")
+            playerTaskCoroutine(client) {
+                player.send(SendMessage("[${gameClock()}] player: start"))
+                delay(2)
+                player.send(SendMessage("[${gameClock()}] player: step-2"))
+                delay(2)
+                player.send(SendMessage("[${gameClock()}] player: stop"))
+                stop()
+            }
+        }
+        "ncor" -> {
+            val targetNpc =
+                Server.npcManager
+                    .getNpcs()
+                    .firstOrNull { npc ->
+                        npc.position.withinDistance(client.position, 8)
+                    }
+            if (targetNpc == null) {
+                context.reply("No nearby npc in range 8 for npc coroutine demo.")
+                return true
+            }
+            context.reply("Scheduled npc coroutine demo on npc ${targetNpc.id} (${targetNpc.position}).")
+            npcTaskCoroutine(targetNpc) {
+                npc.setText("[${gameClock()}] npc coroutine start")
+                delay(2)
+                npc.setText("[${gameClock()}] npc coroutine step-2")
+                delay(2)
+                npc.setText("[${gameClock()}] npc coroutine stop")
+                stop()
             }
         }
         else -> return false

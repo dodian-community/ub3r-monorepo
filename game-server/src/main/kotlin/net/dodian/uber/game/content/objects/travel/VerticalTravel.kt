@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.loop.GameThreadTimers
+import net.dodian.uber.game.runtime.api.content.ContentTiming
 
 data class VerticalTravelStyle(
     val animationId: Int = -1,
@@ -33,7 +33,7 @@ object VerticalTravel {
         val token = client.beginVerticalTransition(style.delayMs)
         val debugContext =
             "player=${client.playerName} token=$token destination=$destination state=${client.verticalTransitionDebugSummary()}"
-        GameThreadTimers.schedule("vertical-travel", style.delayMs, debugContext) {
+        ContentTiming.scheduleGameThread("vertical-travel", style.delayMs, debugContext) {
             client.finishVerticalTransition(token, destination)
         }
         return true

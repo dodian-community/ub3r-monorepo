@@ -9,8 +9,8 @@ import net.dodian.uber.game.content.items.combination.HerbloreItemCombinationHan
 import net.dodian.uber.game.content.items.combination.NoveltyItemCombinationHandler
 import net.dodian.uber.game.content.items.combination.RepairPlaceholderItemCombinationHandler
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason
+import net.dodian.uber.game.runtime.api.content.ContentActionCancelReason
+import net.dodian.uber.game.runtime.api.content.ContentActions
 
 object ItemCombinationService {
     private const val MAX_INVENTORY_SLOT = 28
@@ -28,9 +28,9 @@ object ItemCombinationService {
             return
         }
 
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             client,
-            PlayerActionCancelReason.ITEM_INTERACTION,
+            ContentActionCancelReason.ITEM_INTERACTION,
             false,
             false,
             false,

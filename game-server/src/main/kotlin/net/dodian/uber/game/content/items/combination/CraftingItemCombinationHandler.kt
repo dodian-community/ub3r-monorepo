@@ -5,9 +5,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.runtime.action.ProductionActionService
-import net.dodian.uber.game.runtime.action.ProductionMode
-import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
 import net.dodian.uber.game.skills.crafting.CraftingDefinitions
 import net.dodian.uber.game.skills.crafting.GoldJewelryService
 import net.dodian.uber.game.skills.crafting.CraftingPlugin
@@ -50,9 +49,9 @@ object CraftingItemCombinationHandler {
                     client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to cut this."))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.CRAFTING.id,
                         productId = definition.cutId,
                         amountPerCycle = 1,
@@ -75,9 +74,9 @@ object CraftingItemCombinationHandler {
                     client.send(SendMessage("You need a crafting level of ${definition.requiredLevel} to make this."))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.CRAFTING.id,
                         productId = definition.staffId,
                         amountPerCycle = 1,
@@ -127,9 +126,9 @@ object CraftingItemCombinationHandler {
                 client.send(SendMessage("You cannot string this item with wool!"))
                 return true
             }
-            ProductionActionService.queueSelection(
+            ContentActions.queueProductionSelection(
                 client,
-                ProductionRequest(
+                ContentProductionRequest(
                     skillId = Skill.CRAFTING.id,
                     productId = strung,
                     amountPerCycle = 1,

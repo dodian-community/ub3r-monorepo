@@ -2,7 +2,8 @@ package net.dodian.uber.game.content.objects.agility
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.skills.agility.AgilityCourseService
 import net.dodian.uber.game.content.objects.dsl.FirstClickDslObjectContent
 import net.dodian.uber.game.content.objects.dsl.firstClickObjectActions
@@ -60,14 +61,10 @@ object GnomeCourseObjectBindings : FirstClickDslObjectContent(
         objectId: Int,
         position: Position,
         obj: GameObjectData?,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         if (option != 1 || objectId !in objectIds) {
             return null
         }
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.LEGACY_OBJECT_DISTANCE,
-            requireMovementSettled = true,
-            settleTicks = 1,
-        )
+        return ContentInteraction.legacyObjectDistancePolicy()
     }
 }

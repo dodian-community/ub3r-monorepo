@@ -1,8 +1,8 @@
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.model.UpdateFlag;
 
 /**
  * Stateless Luna-style NPC update block encoder.
@@ -18,7 +18,7 @@ final class NpcUpdateBlockSet {
         }
         SynchronizationContext.recordNpcBlockCacheHit(false);
 
-        int mask = computeMask(npc);
+        int mask = NpcUpdateMaskService.computeMask(npc);
         if (mask == 0) {
             return;
         }
@@ -34,16 +34,4 @@ final class NpcUpdateBlockSet {
         if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updating.appendFaceCoordinates(npc, out);
     }
 
-    private int computeMask(Npc npc) {
-        int updateMask = 0;
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updateMask |= UpdateFlag.ANIM.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updateMask |= UpdateFlag.GRAPHICS.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updateMask |= UpdateFlag.HIT2.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updateMask |= UpdateFlag.FACE_CHARACTER.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)) updateMask |= UpdateFlag.FORCED_CHAT.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT)) updateMask |= UpdateFlag.HIT.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) updateMask |= UpdateFlag.APPEARANCE.getMask(npc.getType());
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updateMask |= UpdateFlag.FACE_COORDINATE.getMask(npc.getType());
-        return updateMask;
-    }
 }

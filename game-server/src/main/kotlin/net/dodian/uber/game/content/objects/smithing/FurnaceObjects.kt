@@ -8,9 +8,9 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.ProductionActionService
-import net.dodian.uber.game.runtime.action.ProductionMode
-import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentProductionMode
+import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
 import net.dodian.uber.game.skills.crafting.CraftingPlugin
 import net.dodian.uber.game.skills.smithing.SmithingPlugin
 import net.dodian.utilities.Utils
@@ -52,9 +52,9 @@ object FurnaceObjects : ObjectContent {
                 client.send(SendMessage("You need one bucket of sand and one soda ash"))
                 return true
             }
-            ProductionActionService.queueSelection(
+            ContentActions.queueProductionSelection(
                 client,
-                ProductionRequest(
+                ContentProductionRequest(
                     skillId = Skill.CRAFTING.id,
                     productId = 1775,
                     amountPerCycle = 1,
@@ -64,7 +64,7 @@ object FurnaceObjects : ObjectContent {
                     animationId = 899,
                     tickDelay = 3,
                     completionMessage = "You smelt soda ash with the sand and made molten glass.",
-                    mode = ProductionMode.MOLTEN_GLASS,
+                    mode = ContentProductionMode.MOLTEN_GLASS,
                 ),
             )
             return true
@@ -104,9 +104,9 @@ object FurnaceObjects : ObjectContent {
             client.send(SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."))
             return true
         }
-        ProductionActionService.queueSelection(
+        ContentActions.queueProductionSelection(
             client,
-            ProductionRequest(
+            ContentProductionRequest(
                 skillId = Skill.MAGIC.id,
                 productId = resultItem,
                 amountPerCycle = 1,
@@ -116,7 +116,7 @@ object FurnaceObjects : ObjectContent {
                 animationId = 726,
                 tickDelay = 5,
                 completionMessage = message,
-                mode = ProductionMode.CHARGED_ORB,
+                mode = ContentProductionMode.CHARGED_ORB,
             ),
         )
         return true

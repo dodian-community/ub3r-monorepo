@@ -6,6 +6,11 @@ import net.dodian.uber.game.model.entity.player.Client
 typealias NpcClickHandler = (Client, Npc) -> Boolean
 internal val NO_CLICK_HANDLER: NpcClickHandler = { _, _ -> false }
 
+enum class NpcInteractionSource {
+    DSL,
+    LEGACY_REFLECTION,
+}
+
 fun npcIds(vararg ids: Int): IntArray = ids.distinct().toIntArray()
 
 fun npcIdsFromEntries(entries: List<NpcSpawnDef>): IntArray = entries
@@ -25,12 +30,16 @@ data class NpcContentDefinition(
     val npcIds: IntArray,
     val ownsSpawnDefinitions: Boolean = false,
     val entries: List<NpcSpawnDef> = emptyList(),
+    val optionLabels: Map<Int, String> = emptyMap(),
+    val interactionSource: NpcInteractionSource = NpcInteractionSource.DSL,
     val onFirstClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onSecondClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onThirdClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
     val onAttack: NpcClickHandler = NO_CLICK_HANDLER,
 )
+
+fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]
 
 internal fun NpcContentDefinition.hasInteractionHandlers(): Boolean {
     return onFirstClick !== NO_CLICK_HANDLER ||

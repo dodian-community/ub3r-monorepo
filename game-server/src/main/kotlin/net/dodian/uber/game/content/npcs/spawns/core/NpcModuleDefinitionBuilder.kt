@@ -38,6 +38,7 @@ object NpcModuleDefinitionBuilder {
             npcIds = npcIds,
             ownsSpawnDefinitions = ownsSpawnDefinitions,
             entries = entries,
+            interactionSource = if (hasClickHandlers) NpcInteractionSource.LEGACY_REFLECTION else NpcInteractionSource.DSL,
             onFirstClick = readHandler(moduleClass, module, "onFirstClick"),
             onSecondClick = readHandler(moduleClass, module, "onSecondClick"),
             onThirdClick = readHandler(moduleClass, module, "onThirdClick"),

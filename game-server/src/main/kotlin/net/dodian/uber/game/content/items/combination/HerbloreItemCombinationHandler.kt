@@ -3,9 +3,9 @@ package net.dodian.uber.game.content.items.combination
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.ProductionActionService
-import net.dodian.uber.game.runtime.action.ProductionMode
-import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentProductionMode
+import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
 import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
 
 object HerbloreItemCombinationHandler {
@@ -25,9 +25,9 @@ object HerbloreItemCombinationHandler {
                     return true
                 }
                 val xp = if (client.premium || !definition.premiumOnly) definition.cleaningExperience else 0
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.HERBLORE.id,
                         productId = definition.unfinishedPotionId,
                         amountPerCycle = 1,
@@ -55,9 +55,9 @@ object HerbloreItemCombinationHandler {
                     client.send(SendMessage("Requires herblore level ${recipe.requiredLevel}"))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.HERBLORE.id,
                         productId = recipe.finishedPotionId,
                         amountPerCycle = 1,
@@ -99,9 +99,9 @@ object HerbloreItemCombinationHandler {
                 client.send(SendMessage("You need level 88 herblore to mix a super combat potion!"))
                 return true
             }
-            ProductionActionService.queueSelection(
+            ContentActions.queueProductionSelection(
                 client,
-                ProductionRequest(
+                ContentProductionRequest(
                     skillId = Skill.HERBLORE.id,
                     productId = 12695,
                     amountPerCycle = 1,
@@ -111,7 +111,7 @@ object HerbloreItemCombinationHandler {
                     animationId = 363,
                     tickDelay = 3,
                     completionMessage = "You mix the ingredients together and made a super combat potion.",
-                    mode = ProductionMode.SUPER_COMBAT,
+                    mode = ContentProductionMode.SUPER_COMBAT,
                 ),
             )
             return true
@@ -130,9 +130,9 @@ object HerbloreItemCombinationHandler {
                 client.send(SendMessage("You need level 93 herblore to mix an overload potion!"))
                 return true
             }
-            ProductionActionService.queueSelection(
+            ContentActions.queueProductionSelection(
                 client,
-                ProductionRequest(
+                ContentProductionRequest(
                     skillId = Skill.HERBLORE.id,
                     productId = 11730,
                     amountPerCycle = 1,
@@ -142,7 +142,7 @@ object HerbloreItemCombinationHandler {
                     animationId = 363,
                     tickDelay = 3,
                     completionMessage = "You mix the ingredients together and made an overload potion.",
-                    mode = ProductionMode.OVERLOAD,
+                    mode = ContentProductionMode.OVERLOAD,
                 ),
             )
             return true

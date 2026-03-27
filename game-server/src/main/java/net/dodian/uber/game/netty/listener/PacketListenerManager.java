@@ -103,7 +103,6 @@ public final class PacketListenerManager {
             // Register no-op handlers for unused opcodes
             repository.registerNoOp(77);  // Currently unused
             repository.registerNoOp(202); // Client idle logout (not used)
-            repository.registerNoOp(230); // Anti-cheat/checks for 2nd click npc (not used)
             repository.registerNoOp(86);  // Camera movement (unused)
             repository.registerNoOp(229); // Client plane/update side packet (non-gameplay)
             

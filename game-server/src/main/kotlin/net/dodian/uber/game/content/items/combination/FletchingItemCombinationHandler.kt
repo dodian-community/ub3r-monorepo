@@ -3,8 +3,8 @@ package net.dodian.uber.game.content.items.combination
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.action.ProductionActionService
-import net.dodian.uber.game.runtime.action.ProductionRequest
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentProductionRequest
 import net.dodian.uber.game.skills.fletching.FletchingDefinitions
 import net.dodian.uber.game.skills.crafting.CraftingPlugin
 import net.dodian.uber.game.skills.fletching.FletchingPlugin
@@ -18,9 +18,9 @@ object FletchingItemCombinationHandler {
             return true
         }
         if ((itemUsed == 314 || otherItem == 314) && (itemUsed == 52 || otherItem == 52)) {
-            ProductionActionService.queueSelection(
+            ContentActions.queueProductionSelection(
                 client,
-                ProductionRequest(
+                ContentProductionRequest(
                     skillId = Skill.FLETCHING.id,
                     productId = 53,
                     amountPerCycle = 15,
@@ -44,9 +44,9 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.FLETCHING.id,
                         productId = recipe.dartId,
                         amountPerCycle = 10,
@@ -71,9 +71,9 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Your inventory is full!"))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.FLETCHING.id,
                         productId = recipe.arrowId,
                         amountPerCycle = 15,
@@ -101,9 +101,9 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Requires level ${bowLog.shortLevelRequired} fletching"))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.FLETCHING.id,
                         productId = bowLog.shortbowId,
                         amountPerCycle = 1,
@@ -125,9 +125,9 @@ object FletchingItemCombinationHandler {
                     client.send(SendMessage("Requires level ${bowLog.longLevelRequired} fletching"))
                     return true
                 }
-                ProductionActionService.queueSelection(
+                ContentActions.queueProductionSelection(
                     client,
-                    ProductionRequest(
+                    ContentProductionRequest(
                         skillId = Skill.FLETCHING.id,
                         productId = bowLog.longbowId,
                         amountPerCycle = 1,

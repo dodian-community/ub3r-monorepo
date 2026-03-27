@@ -7,12 +7,13 @@ import net.dodian.uber.game.content.objects.travel.VerticalTravelStyle
 import net.dodian.uber.game.content.objects.travel.VerticalTravelStyles
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 
 data class VerticalTravelAction(
     val option: Int,
     val objectIds: IntArray,
-    val policy: ObjectInteractionPolicy,
+    val policy: ContentObjectInteractionPolicy,
     val handler: (Client, Int, Position, GameObjectData?) -> Boolean,
 )
 
@@ -21,19 +22,19 @@ class VerticalTravelActionBuilder internal constructor() {
 
     fun firstClick(
         vararg objectIds: Int,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         handler: (Client, Int, Position, GameObjectData?) -> Boolean,
     ) = action(1, objectIds, policy, handler)
 
     fun secondClick(
         vararg objectIds: Int,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         handler: (Client, Int, Position, GameObjectData?) -> Boolean,
     ) = action(2, objectIds, policy, handler)
 
     fun thirdClick(
         vararg objectIds: Int,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         handler: (Client, Int, Position, GameObjectData?) -> Boolean,
     ) = action(3, objectIds, policy, handler)
 
@@ -41,7 +42,7 @@ class VerticalTravelActionBuilder internal constructor() {
         vararg objectIds: Int,
         option: Int = 1,
         style: VerticalTravelStyle,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = action(option, objectIds, policy) { client, objectId, position, obj ->
         val resolved = destination(client, objectId, position, obj) ?: return@action false
@@ -52,84 +53,84 @@ class VerticalTravelActionBuilder internal constructor() {
         vararg objectIds: Int,
         option: Int = 1,
         style: VerticalTravelStyle,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = style, policy = policy) { _, _, _, _ -> destination }
 
     fun ladderUp(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
 
     fun ladderUp(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
 
     fun ladderDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
 
     fun ladderDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.LADDER, policy = policy, destination = destination)
 
     fun stairsUp(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
 
     fun stairsUp(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
 
     fun stairsDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
 
     fun stairsDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.STAIRS, policy = policy, destination = destination)
 
     fun trapdoorDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: (Client, Int, Position, GameObjectData?) -> Position?,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.TRAPDOOR, policy = policy, destination = destination)
 
     fun trapdoorDown(
         vararg objectIds: Int,
         option: Int = 1,
-        policy: ObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
+        policy: ContentObjectInteractionPolicy = DEFAULT_VERTICAL_POLICY,
         destination: Position,
     ) = verticalLink(*objectIds, option = option, style = VerticalTravelStyles.TRAPDOOR, policy = policy, destination = destination)
 
     private fun action(
         option: Int,
         objectIds: IntArray,
-        policy: ObjectInteractionPolicy,
+        policy: ContentObjectInteractionPolicy,
         handler: (Client, Int, Position, GameObjectData?) -> Boolean,
     ) {
         require(objectIds.isNotEmpty()) { "Vertical travel action requires at least one object id" }
@@ -149,7 +150,7 @@ abstract class VerticalTravelDslObjectContent(
     actions: List<VerticalTravelAction>,
 ) : ObjectContent {
     private val handlers = HashMap<Int, HashMap<Int, MutableList<(Client, Int, Position, GameObjectData?) -> Boolean>>>()
-    private val policies = HashMap<Int, HashMap<Int, ObjectInteractionPolicy>>()
+    private val policies = HashMap<Int, HashMap<Int, ContentObjectInteractionPolicy>>()
 
     final override val objectIds: IntArray
 
@@ -181,7 +182,7 @@ abstract class VerticalTravelDslObjectContent(
         objectId: Int,
         position: Position,
         obj: GameObjectData?,
-    ): ObjectInteractionPolicy? = policies[option]?.get(objectId)
+    ): ContentObjectInteractionPolicy? = policies[option]?.get(objectId)
 
     private fun dispatch(
         option: Int,
@@ -202,8 +203,4 @@ abstract class VerticalTravelDslObjectContent(
 }
 
 val DEFAULT_VERTICAL_POLICY =
-    ObjectInteractionPolicy(
-        distanceRule = ObjectInteractionPolicy.DistanceRule.LEGACY_OBJECT_DISTANCE,
-        requireMovementSettled = true,
-        settleTicks = 1,
-    )
+    ContentInteraction.legacyObjectDistancePolicy()

@@ -8,7 +8,8 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.Misc
 
@@ -20,15 +21,11 @@ object PlunderObjects : ObjectContent {
         objectId: Int,
         position: Position,
         obj: GameObjectData?,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         if (option != 1 && option != 2) {
             return null
         }
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
-            requireMovementSettled = true,
-            settleTicks = 1,
-        )
+        return ContentInteraction.nearestBoundaryCardinalPolicy()
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
