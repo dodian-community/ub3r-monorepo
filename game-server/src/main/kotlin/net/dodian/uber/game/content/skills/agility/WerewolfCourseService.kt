@@ -1,6 +1,5 @@
 package net.dodian.uber.game.content.skills.agility
 
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -10,6 +9,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
 class WerewolfCourseService(private val c: Client) {
@@ -47,19 +47,21 @@ class WerewolfCourseService(private val c: Client) {
         }
         if (pos.x == 3538 && pos.y == 9875 && c.position.x == 3538 && c.position.y == 9873) {
             c.UsingAgility = true
-            val npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn)
+            val npc = NpcSpawnLocator.werewolfCourseNpc(0)
             c.requestAnim(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             val x = 3533 + Misc.random(4)
             val y = 9910 + Misc.random(2)
-            val offsetX = x - npc.position.y
-            val offsetY = y - npc.position.x
+            val originY = npc?.position?.y ?: c.position.y
+            val originX = npc?.position?.x ?: c.position.x
+            val offsetX = x - originY
+            val offsetY = y - originX
             val distance = c.distanceToPoint(x, y)
-            npc.requestAnim(6547, 0)
-            npc.text = "Go fetch!"
+            npc?.requestAnim(6547, 0)
+            npc?.text = "Go fetch!"
             c.createProjectile(
-                npc.position.y,
-                npc.position.x,
+                originY,
+                originX,
                 offsetY,
                 offsetX,
                 50,
@@ -141,8 +143,8 @@ class WerewolfCourseService(private val c: Client) {
         }
         if (pos.x in 3537..3543 && pos.y == 9893 && c.position.x in 3537..3543 && c.position.y == 9892) {
             c.UsingAgility = true
-            val npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 1)
-            npc.text = "GO GO GO!"
+            val npc = NpcSpawnLocator.werewolfCourseNpc(1)
+            npc?.text = "GO GO GO!"
             c.setFocus(pos.x, pos.y)
             c.requestAnim(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
@@ -192,8 +194,8 @@ class WerewolfCourseService(private val c: Client) {
         }
         if ((pos.x == 3538 || pos.x == 3541 || pos.x == 3544) && pos.y == 9905 && c.position.x == pos.x && c.position.y == pos.y - 1) {
             c.UsingAgility = true
-            val npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 2)
-            npc.text = "You smell good!!"
+            val npc = NpcSpawnLocator.werewolfCourseNpc(2)
+            npc?.text = "You smell good!!"
             c.setWalkAnim(746)
             c.AddToWalkCords(0, 6, 3600)
             var part = 0
@@ -229,8 +231,8 @@ class WerewolfCourseService(private val c: Client) {
         }
         if (pos.x == 3532 && pos.y in 9909..9911 && c.position.x == pos.x + 1 && c.position.y in 9909..9911) {
             c.UsingAgility = true
-            val npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 3)
-            npc.text = "You fetch good... Now bleed!"
+            val npc = NpcSpawnLocator.werewolfCourseNpc(3)
+            npc?.text = "You fetch good... Now bleed!"
             c.setWalkAnim(737)
             c.AddToWalkCords(-3, 0, 1800)
             runLater(1800) {
@@ -254,9 +256,9 @@ class WerewolfCourseService(private val c: Client) {
         if (pos.x in 3527..3529 && pos.y in 9909..9911 && c.position.x == 3528 && (c.position.y == 9910 || c.position.y == 9909)) {
             c.UsingAgility = true
             c.setFocus(3528, 9908)
-            val npc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 4)
-            val lastNpc = Server.npcManager.getNpc(Server.npcManager.werewolfSpawn + 5)
-            npc.text = "Run adventurer.. RUN!!!"
+            val npc = NpcSpawnLocator.werewolfCourseNpc(4)
+            val lastNpc = NpcSpawnLocator.werewolfCourseNpc(5)
+            npc?.text = "Run adventurer.. RUN!!!"
             c.setRunAnim(904)
             val time = 22800 / 2
             c.AddToRunCords(0, -38, time.toLong())
@@ -266,7 +268,7 @@ class WerewolfCourseService(private val c: Client) {
                 }
                 c.requestWeaponAnims()
                 giveEndExperience(1500, true)
-                lastNpc.text = "Hand in that juicy stick to me!"
+                lastNpc?.text = "Hand in that juicy stick to me!"
                 c.UsingAgility = false
             }
         }

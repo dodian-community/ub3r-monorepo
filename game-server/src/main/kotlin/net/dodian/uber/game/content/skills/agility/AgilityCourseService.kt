@@ -1,6 +1,5 @@
 package net.dodian.uber.game.content.skills.agility
 
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
@@ -10,6 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
 class AgilityCourseService(private val c: Client) {
@@ -77,7 +77,7 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomeNet1() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(0)
         if (isBusy()) {
             return
         }
@@ -85,7 +85,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         c.UsingAgility = true
-        npc.text = "My mom is faster than you!"
+        npc?.text = "My mom is faster than you!"
         c.requestAnim(828, 0)
         scheduleVerticalMove(Position(2473, 3424, 1)) {
             giveEndExperience(150)
@@ -95,12 +95,12 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomeTree1() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn + 1)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(1)
         if (isBusy()) {
             return
         }
         c.UsingAgility = true
-        npc.text = "Haha you suck at this simple obstacle!"
+        npc?.text = "Haha you suck at this simple obstacle!"
         c.requestAnim(828, 0)
         c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
         scheduleVerticalMove(Position(2473, 3420, 2)) {
@@ -111,7 +111,7 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomeRope() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn + 2)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(2)
         if (isBusy()) {
             return
         }
@@ -119,7 +119,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         c.UsingAgility = true
-        npc.text = "I do not know why you bother. HAHA!"
+        npc?.text = "I do not know why you bother. HAHA!"
         c.setWalkAnim(762)
         val time = 4800
         c.AddToWalkCords(6, 0, time.toLong())
@@ -132,12 +132,12 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomeTreebranch2() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn + 3)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(3)
         if (isBusy()) {
             return
         }
         c.UsingAgility = true
-        npc.text = "To darn easy."
+        npc?.text = "To darn easy."
         c.requestAnim(828, 0)
         scheduleVerticalMove(Position(2485, 3421, 0)) {
             giveEndExperience(50)
@@ -147,7 +147,7 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomeNet2() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn + 4)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(4)
         if (isBusy()) {
             return
         }
@@ -155,7 +155,7 @@ class AgilityCourseService(private val c: Client) {
             return
         }
         c.UsingAgility = true
-        npc.text = "net profit of zero effort."
+        npc?.text = "net profit of zero effort."
         c.requestAnim(828, 0)
         c.walkBlock = System.currentTimeMillis() + 600
         runLater(600) {
@@ -167,13 +167,13 @@ class AgilityCourseService(private val c: Client) {
     }
 
     fun GnomePipe() {
-        val npc = Server.npcManager.getNpc(Server.npcManager.gnomeSpawn + 5)
+        val npc = NpcSpawnLocator.gnomeCourseNpc(5)
         if (isBusy()) {
             return
         }
         c.resetWalkingQueue()
         c.UsingAgility = true
-        npc.text = "Pipe it down...You are nothing special!"
+        npc?.text = "Pipe it down...You are nothing special!"
         c.setWalkAnim(746)
         c.AddToWalkCords(0, 7, 4200)
         var part = 0

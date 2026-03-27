@@ -25,6 +25,7 @@ import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.uber.game.systems.combat.CombatCancellationReason;
 import net.dodian.uber.game.systems.combat.CombatRuntimeService;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
+import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator;
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -82,14 +83,11 @@ public class Npc extends Entity {
                 level[i] = data.getLevel()[i];
             }
             CalculateMaxHit(true);
-            if(slot == Server.npcManager.dagaRex || slot == Server.npcManager.dagaSupreme) { //Not sure yet if it will work!
-                int dagaHealth = data.getHP();
-                int otherIndex = slot == Server.npcManager.dagaRex ? Server.npcManager.dagaSupreme : Server.npcManager.dagaRex;
-                if(otherIndex != -1) {
-                    dagaHealth += Server.npcManager.getNpc(otherIndex).currentHealth;
-                    Server.npcManager.getNpc(otherIndex).currentHealth = dagaHealth;
-                    Server.npcManager.getNpc(otherIndex).maxHealth = dagaHealth;
-                }
+            Npc dagannothTwin = NpcSpawnLocator.dagannothTwinFor(this);
+            if (dagannothTwin != null) {
+                int dagaHealth = data.getHP() + dagannothTwin.currentHealth;
+                dagannothTwin.currentHealth = dagaHealth;
+                dagannothTwin.maxHealth = dagaHealth;
                 this.currentHealth = dagaHealth;
                 this.maxHealth = dagaHealth;
             } else {
@@ -376,17 +374,17 @@ public class Npc extends Entity {
         appendHit(hitDiff, type);
         currentHealth -= hitDiff;
         /* Daganoth kings mechanic dodian style! */
-        int otherIndex = this == Server.npcManager.getNpc(Server.npcManager.dagaRex) ? Server.npcManager.dagaSupreme : this == Server.npcManager.getNpc(Server.npcManager.dagaSupreme) ? Server.npcManager.dagaRex : -1;
-        if(otherIndex != -1) {
+        Npc otherNpc = NpcSpawnLocator.dagannothTwinFor(this);
+        if (otherNpc != null) {
             int dmg = hitDiff;
-            Server.npcManager.getNpc(otherIndex).currentHealth -= hitDiff;
+            otherNpc.currentHealth -= hitDiff;
             if (validClient(client)) {
-                if (Server.npcManager.getNpc(otherIndex).getDamage().containsKey(client)) {
-                    dmg += Server.npcManager.getNpc(otherIndex).getDamage().get(client);
-                    Server.npcManager.getNpc(otherIndex).getDamage().remove(client);
+                if (otherNpc.getDamage().containsKey(client)) {
+                    dmg += otherNpc.getDamage().get(client);
+                    otherNpc.getDamage().remove(client);
                 }
-                Server.npcManager.getNpc(otherIndex).getDamage().put(client, dmg);
-                Server.npcManager.getNpc(otherIndex).fighting = true;
+                otherNpc.getDamage().put(client, dmg);
+                otherNpc.fighting = true;
             }
         }
         /* Dmg profile! */
@@ -400,8 +398,8 @@ public class Npc extends Entity {
             fighting = true;
         }
         if (currentHealth < 1) die();
-        if(otherIndex != -1 && Server.npcManager.getNpc(otherIndex).currentHealth < 1) //Daganoth kings!
-            Server.npcManager.getNpc(otherIndex).die();
+        if (otherNpc != null && otherNpc.currentHealth < 1) //Daganoth kings!
+            otherNpc.die();
     }
 
     public void attack() {

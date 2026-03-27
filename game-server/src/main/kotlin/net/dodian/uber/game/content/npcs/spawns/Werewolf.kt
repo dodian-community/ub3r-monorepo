@@ -6,6 +6,12 @@ internal object Werewolf {
     // Stats: 2593: r=60 a=72 d=70 s=80 hp=105 rg=1 mg=1
 
     val entries: List<NpcSpawnDef> = listOf(
+        NpcSpawnDef(npcId = 5924, x = 3540, y = 9873, z = 0, face = 0),
+        NpcSpawnDef(npcId = 5926, x = 3540, y = 9890, z = 0, face = 0),
+        NpcSpawnDef(npcId = 5926, x = 3537, y = 9903, z = 0, face = 0),
+        NpcSpawnDef(npcId = 5926, x = 3533, y = 9908, z = 0, face = 0),
+        NpcSpawnDef(npcId = 5926, x = 3528, y = 9913, z = 0, face = 0),
+        NpcSpawnDef(npcId = 5927, x = 3527, y = 9865, z = 0, face = 0),
         NpcSpawnDef(npcId = 2593, x = 3496, y = 3498, z = 0, face = 0),
         NpcSpawnDef(npcId = 2593, x = 3494, y = 3495, z = 0, face = 0),
         NpcSpawnDef(npcId = 2593, x = 3491, y = 3493, z = 0, face = 0),

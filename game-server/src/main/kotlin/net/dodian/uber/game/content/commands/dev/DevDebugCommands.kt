@@ -41,7 +41,12 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         "npca" -> {
             return try {
                 val id = cmd[1].toInt()
-                Server.npcManager.getData(id).attackEmote = cmd[2].toInt()
+                val data = Server.npcManager.getData(id)
+                if (data == null) {
+                    context.reply("No npc definition found for id $id.")
+                    return true
+                }
+                data.attackEmote = cmd[2].toInt()
                 true
             } catch (_: Exception) {
                 context.usage("Wrong usage.. ::${cmd[0]} npcid animationId")

@@ -1,13 +1,13 @@
 package net.dodian.uber.game.engine.phases
 
-import net.dodian.jobs.impl.ActionProcessor
-import net.dodian.jobs.impl.ItemProcessor
-import net.dodian.jobs.impl.PlunderDoor
-import net.dodian.jobs.impl.ShopProcessor
+import net.dodian.uber.game.engine.processing.ActionProcessor
+import net.dodian.uber.game.engine.processing.ItemProcessor
+import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
+import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.systems.world.WorldMaintenanceService
 
 class WorldMaintenancePhase(
-    private val plunderDoor: PlunderDoor,
+    private val plunderDoor: PlunderDoorProcessor,
     private val actionProcessor: ActionProcessor,
     private val itemProcessor: ItemProcessor,
     private val shopProcessor: ShopProcessor,

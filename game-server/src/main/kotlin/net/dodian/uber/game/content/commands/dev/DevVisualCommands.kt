@@ -70,8 +70,8 @@ private fun handleDevVisual(context: CommandContext): Boolean {
             return try {
                 val face = cmd[1].toInt()
                 var found: Npc? = null
-                for (npc in Server.npcManager.npcs) {
-                    if (npc != null && client.position == npc.position) {
+                for (npc in Server.npcManager.npcMap.values) {
+                    if (client.position == npc.position) {
                         found = npc
                     }
                 }

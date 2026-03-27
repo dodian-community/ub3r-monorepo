@@ -7,10 +7,10 @@ class ItemProcessor : Runnable {
         if (Ground.tradeable_items.isNotEmpty()) {
             for (item in Ground.tradeable_items) {
                 item.reduceTime()
-                if (!item.isTaken && !item.isVisible && item.timeToShow < 1) {
+                if (!item.isTaken() && !item.isVisible() && item.timeToShow < 1) {
                     item.visible = true
                     item.itemDisplay()
-                } else if (item.despawnTime < 1) {
+                } else if (item.getDespawnTime() < 1) {
                     Ground.deleteItem(item)
                 }
             }
@@ -19,7 +19,7 @@ class ItemProcessor : Runnable {
         if (Ground.untradeable_items.isNotEmpty()) {
             for (item in Ground.untradeable_items) {
                 item.reduceTime()
-                if (item.despawnTime < 1) {
+                if (item.getDespawnTime() < 1) {
                     Ground.deleteItem(item)
                 }
             }
@@ -27,11 +27,11 @@ class ItemProcessor : Runnable {
 
         if (Ground.ground_items.isNotEmpty()) {
             for (item in Ground.ground_items) {
-                if (item.isVisible || !item.isTaken) {
+                if (item.isVisible() || !item.isTaken()) {
                     continue
                 }
                 item.reduceTime()
-                if (item.despawnTime < 1) {
+                if (item.getDespawnTime() < 1) {
                     item.setTaken(false)
                     item.visible = true
                     item.timeToDespawn = item.display

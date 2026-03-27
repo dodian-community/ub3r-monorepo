@@ -30,7 +30,7 @@ import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
 import net.dodian.uber.game.engine.net.OutboundSessionQueue;
-import net.dodian.jobs.impl.EntityProcessor;
+import net.dodian.uber.game.engine.processing.EntityProcessor;
 import net.dodian.uber.game.content.skills.mining.MiningService;
 import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingService;
 import net.dodian.uber.game.content.skills.fletching.FletchingService;

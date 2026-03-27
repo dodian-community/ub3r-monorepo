@@ -1,18 +1,18 @@
 package net.dodian.uber.game.systems.world
 
 import kotlin.system.measureNanoTime
-import net.dodian.jobs.impl.PlunderDoor
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
+import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
 import net.dodian.uber.game.config.gameWorldId
 import net.dodian.uber.game.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
-    private val plunderDoor: PlunderDoor,
+    private val plunderDoor: PlunderDoorProcessor,
 ) {
     private val logger = LoggerFactory.getLogger(WorldMaintenanceService::class.java)
     private val playerIndex = OnlinePlayerIndex()

@@ -1,16 +1,22 @@
 package net.dodian.uber.game.content.npcs.spawns
 
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
 import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 
 internal object GnomeTrainer {
     // Stats: 6080: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
+        NpcSpawnDef(npcId = 6080, x = 2475, y = 3428, z = 0, face = 0),
+        NpcSpawnDef(npcId = 6080, x = 2476, y = 3423, z = 1, face = 0),
+        NpcSpawnDef(npcId = 6080, x = 2475, y = 3419, z = 2, face = 0),
+        NpcSpawnDef(npcId = 6080, x = 2485, y = 3421, z = 2, face = 0),
+        NpcSpawnDef(npcId = 6080, x = 2487, y = 3423, z = 0, face = 0),
+        NpcSpawnDef(npcId = 6080, x = 2486, y = 3430, z = 0, face = 0),
         NpcSpawnDef(npcId = 6080, x = 2474, y = 3439, z = 0, face = 0),
         NpcSpawnDef(npcId = 6080, x = 3002, y = 3931, z = 0, face = 0),
         NpcSpawnDef(npcId = 6080, x = 2547, y = 3554, z = 0, face = 0),
@@ -19,7 +25,7 @@ internal object GnomeTrainer {
     val npcIds: IntArray = npcIdsFromEntries(entries)
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        if (npc.slot >= Server.npcManager.gnomeSpawn) {
+        if (NpcSpawnLocator.isGnomeCourseNpc(npc)) {
             return false
         }
         DialogueService.start(client) {

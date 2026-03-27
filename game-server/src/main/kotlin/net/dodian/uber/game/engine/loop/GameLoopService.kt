@@ -8,11 +8,11 @@ import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureNanoTime
-import net.dodian.jobs.impl.ActionProcessor
-import net.dodian.jobs.impl.EntityProcessor
-import net.dodian.jobs.impl.ItemProcessor
-import net.dodian.jobs.impl.PlunderDoor
-import net.dodian.jobs.impl.ShopProcessor
+import net.dodian.uber.game.engine.processing.ActionProcessor
+import net.dodian.uber.game.engine.processing.EntityProcessor
+import net.dodian.uber.game.engine.processing.ItemProcessor
+import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
+import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.engine.metrics.TickPhaseTimer
@@ -32,7 +32,7 @@ class GameLoopService(
     private val outboundPacketProcessor: OutboundPacketProcessor = OutboundPacketProcessor(),
     private val itemProcessor: ItemProcessor = ItemProcessor(),
     private val shopProcessor: ShopProcessor = ShopProcessor(),
-    private val plunderDoor: PlunderDoor = PlunderDoor(),
+    private val plunderDoor: PlunderDoorProcessor = PlunderDoorProcessor(),
 ) {
     private val logger = LoggerFactory.getLogger(GameLoopService::class.java)
     private val running = AtomicBoolean(false)

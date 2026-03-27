@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.phases
 
-import net.dodian.jobs.impl.EntityProcessor
+import net.dodian.uber.game.engine.processing.EntityProcessor
 
 class NpcMainPhase(private val entityProcessor: EntityProcessor) {
     fun run(now: Long) {

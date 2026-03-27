@@ -162,6 +162,15 @@ class ArchitectureBoundaryTest {
             "inboundOpcodeProfilingEnabled",
             "inboundOpcodeProfilingWarnMs",
         )
+        val removedNpcManagerSymbols = setOf(
+            "gnomeSpawn",
+            "werewolfSpawn",
+            "dagaRex",
+            "dagaSupreme",
+            "REQUIRED_HARDCODED_NPC_DEFINITIONS",
+            "REQUIRED_HARDCODED_NPC_NAMES",
+            "repairRequiredHardcodedDefinitions",
+        )
 
         val legacyPackageViolations = sourceFiles.mapNotNull { file ->
             val packageLine = Files.readAllLines(file)
@@ -175,6 +184,9 @@ class ArchitectureBoundaryTest {
                 packageName.startsWith("net.dodian.uber.game.content.entities") ||
                     packageName.startsWith("net.dodian.uber.game.systems.ui.interfaces") ||
                     packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules") ||
+                    (packageName == "net.dodian.uber.game.skills.farming" && fileName == "FarmingProcessor.kt") ||
+                    (packageName == "net.dodian.uber.game.skills.thieving.plunder" && fileName == "PlunderDoorProcessor.kt") ||
+                    packageName.startsWith("net.dodian.jobs") ||
                     (packageName == "net.dodian.utilities" && (
                         fileName == "Database.kt" ||
                             fileName == "DatabaseConfig.kt" ||
@@ -188,9 +200,12 @@ class ArchitectureBoundaryTest {
         val legacyPathViolations = sourceFiles.mapNotNull { file ->
             val normalized = file.invariantSeparatorsPathString
             val isLegacyPath =
-                normalized.contains("/net/dodian/uber/game/content/entities/") ||
+                    normalized.contains("/net/dodian/uber/game/content/entities/") ||
                     normalized.contains("/net/dodian/uber/game/systems/ui/interfaces/") ||
                     normalized.contains("/net/dodian/uber/game/systems/ui/dialogue/modules/") ||
+                    normalized.endsWith("/net/dodian/uber/game/skills/farming/FarmingProcessor.kt") ||
+                    normalized.endsWith("/net/dodian/uber/game/skills/thieving/plunder/PlunderDoorProcessor.kt") ||
+                    normalized.contains("src/main/java/net/dodian/jobs/") ||
                     normalized.endsWith("/net/dodian/utilities/Database.kt") ||
                     normalized.endsWith("/net/dodian/utilities/DatabaseConfig.kt") ||
                     normalized.endsWith("/net/dodian/utilities/DatabaseInitializer.kt") ||
@@ -203,9 +218,15 @@ class ArchitectureBoundaryTest {
             Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                 val trimmed = line.trim()
                 val isLegacyRef =
-                    trimmed.contains("net.dodian.utilities.DatabaseKt") ||
+                    trimmed.contains("net.dodian.jobs.") ||
+                        trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
+                        trimmed.contains("net.dodian.uber.game.skills.thieving.plunder.PlunderDoorProcessor") ||
+                        trimmed.contains("net.dodian.utilities.DatabaseKt") ||
                         trimmed.contains("net.dodian.utilities.DatabaseInitializerKt") ||
                         trimmed.contains("net.dodian.utilities.DotEnvKt") ||
+                        removedNpcManagerSymbols.any { symbol ->
+                            trimmed.contains(symbol)
+                        } ||
                         removedToggleSymbols.any { symbol ->
                             trimmed.contains("import net.dodian.uber.game.config.$symbol") ||
                                 trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")

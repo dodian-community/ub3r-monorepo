@@ -43,8 +43,8 @@ private fun handleDevNpc(context: CommandContext): Boolean {
             val id = cmd[1].toInt()
             var found = 0
             var shown = 0
-            for (npc in Server.npcManager.npcs) {
-                if (npc == null || npc.id != id) continue
+            for (npc in Server.npcManager.npcMap.values) {
+                if (npc.id != id) continue
                 found++
                 if (shown < 20) {
                     val pos = npc.position
@@ -64,8 +64,8 @@ private fun handleDevNpc(context: CommandContext): Boolean {
     }
     if (command.startsWith("telemob") && context.specialRights) {
         val mobId = cmd[1].toInt()
-        for (npc in Server.npcManager.npcs) {
-            if (npc != null && npc.id == mobId) {
+        for (npc in Server.npcManager.npcMap.values) {
+            if (npc.id == mobId) {
                 client.triggerTele(npc.position.x, npc.position.y, npc.position.z, false)
                 return true
             }
@@ -74,8 +74,7 @@ private fun handleDevNpc(context: CommandContext): Boolean {
     }
     if (command.startsWith("findmob") && context.specialRights) {
         val npcName = command.substring(cmd[0].length + 1).replace("_", " ")
-        for (npc in Server.npcManager.npcs) {
-            if (npc == null) continue
+        for (npc in Server.npcManager.npcMap.values) {
             val npcCheckName = npc.npcName().replace("_", " ")
             if (npcName.equals(npcCheckName, true)) {
                 context.reply("Found $npcCheckName (${npc.id}) at ${npc.position}")
@@ -186,7 +185,10 @@ private fun handleDevNpc(context: CommandContext): Boolean {
                 return true
             }
             val npcId = client.playerNpc
-            val npcData: NpcData = Server.npcManager.getData(npcId)
+            val npcData: NpcData = Server.npcManager.getData(npcId) ?: run {
+                context.reply("Npc with id $npcId is missing from definitions.")
+                return true
+            }
             if (!npcData.drops.isEmpty()) {
                 context.reply("-----------DROPS FOR ${Server.npcManager.getName(client.playerNpc).uppercase()}-----------")
                 for (drop in npcData.drops) {
