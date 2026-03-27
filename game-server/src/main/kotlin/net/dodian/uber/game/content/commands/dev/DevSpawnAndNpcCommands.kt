@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.command.CommandDbService
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.config.gameWorldId
 
 object DevSpawnAndNpcCommands : CommandContent {
     override fun definitions() =

@@ -15,12 +15,6 @@ import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
 import net.dodian.uber.game.engine.sync.SynchronizationContext
-import net.dodian.utilities.syncPlayerAdmissionQueueEnabled
-import net.dodian.utilities.syncPlayerDesiredLocalsEnabled
-import net.dodian.utilities.syncPlayerIncrementalAddsEnabled
-import net.dodian.utilities.syncPlayerFragmentReuseEnabled
-import net.dodian.utilities.syncPlayerSelfOnlyEnabled
-import net.dodian.utilities.syncPlayerStateValidationEnabled
 import org.slf4j.LoggerFactory
 
 class RootPlayerInfoService {
@@ -44,9 +38,6 @@ class RootPlayerInfoService {
                 viewers = activePlayers,
                 viewportIndex = cycle.viewportIndex,
             )
-        if (syncPlayerFragmentReuseEnabled) {
-            fragmentCache.movement.clear()
-        }
         pruneViewerStates(activePlayers)
 
         activePlayers.forEach { viewer ->
@@ -136,7 +127,7 @@ class RootPlayerInfoService {
         }
 
         val recoveryReason =
-            if (syncPlayerStateValidationEnabled && !teleport && !mapRegionChanged && !buildAreaChanged) {
+            if (!teleport && !mapRegionChanged && !buildAreaChanged) {
                 validator.validate(viewer, state)
             } else {
                 null
@@ -146,41 +137,11 @@ class RootPlayerInfoService {
         val currentLocalCount = copyCurrentLocals(viewer, desiredState.currentLocalSlots)
         desiredState.currentLocalCount = currentLocalCount
         val candidates = candidatePlayers(viewer, cycle)
-        val desiredLocalSet =
-            if (syncPlayerDesiredLocalsEnabled) {
-                planner.build(viewer, desiredState.currentLocalSlots, currentLocalCount, candidates, MAX_LOCAL_PLAYERS)
-            } else {
-                DesiredLocalSet(desiredState.currentLocalSlots, currentLocalCount, desiredState.currentLocalSlots.contentHashCode(), currentLocalCount >= MAX_LOCAL_PLAYERS)
-            }
+        val desiredLocalSet = planner.build(viewer, desiredState.currentLocalSlots, currentLocalCount, candidates, MAX_LOCAL_PLAYERS)
         val diff = planner.diff(desiredState.currentLocalSlots, currentLocalCount, desiredLocalSet)
         val queueSignature = admissionQueueSignature(desiredLocalSet.signature, diff)
-        val pendingCount =
-            if (syncPlayerAdmissionQueueEnabled) {
-                admissionQueue.rebuildPending(desiredState, diff, queueSignature)
-            } else {
-                diff.totalAdmissionsCount
-            }
-        val admissionBatch =
-            if (syncPlayerIncrementalAddsEnabled) {
-                if (syncPlayerAdmissionQueueEnabled) {
-                    admissionQueue.drainPending(desiredState, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
-                } else {
-                    val directAdmissions = admissionQueue.rebuildPending(diff, desiredState.currentLocalSlots)
-                    val sentCount = minOf(directAdmissions.size, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
-                    val sentSlots = if (sentCount == directAdmissions.size) directAdmissions else directAdmissions.copyOf(sentCount)
-                    LocalAdmissionBatch(
-                        sentSlots = sentSlots,
-                        pendingCount = (directAdmissions.size - sentCount).coerceAtLeast(0),
-                        progress = AdmissionProgressState(
-                            totalPending = directAdmissions.size,
-                            sentCount = sentCount,
-                            deferredCount = (directAdmissions.size - sentCount).coerceAtLeast(0),
-                        ),
-                    )
-                }
-            } else {
-                LocalAdmissionBatch(EMPTY_INT_ARRAY, pendingCount, AdmissionProgressState(pendingCount, 0, pendingCount))
-            }
+        val pendingCount = admissionQueue.rebuildPending(desiredState, diff, queueSignature)
+        val admissionBatch = admissionQueue.drainPending(desiredState, MAX_LOCAL_PLAYER_ADDS_PER_TICK)
         val visibleSignature = computeVisibleSignature(viewer, candidates)
 
         if (recoveryReason != null) {
@@ -232,27 +193,22 @@ class RootPlayerInfoService {
                     selfBlockChanged = false,
                 )
             }
-            if (syncPlayerSelfOnlyEnabled) {
-                return RootPlayerInfoPlan(
-                    mode = PlayerPacketMode.SELF_ONLY,
-                    buildReason = if (selfBlockChanged) PlayerPacketBuildReason.SELF_BLOCK else PlayerPacketBuildReason.SELF_MOVEMENT,
-                    skipReason = null,
-                    visibleSignature = visibleSignature,
-                    diff = diff,
-                    desiredLocalSet = desiredLocalSet,
-                    pendingAddCount = 0,
-                    actualAdditions = EMPTY_INT_ARRAY,
-                    deferredAdditionCount = 0,
-                    selfMovementChanged = selfMovementChanged,
-                    selfBlockChanged = selfBlockChanged,
-                )
-            }
+            return RootPlayerInfoPlan(
+                mode = PlayerPacketMode.SELF_ONLY,
+                buildReason = if (selfBlockChanged) PlayerPacketBuildReason.SELF_BLOCK else PlayerPacketBuildReason.SELF_MOVEMENT,
+                skipReason = null,
+                visibleSignature = visibleSignature,
+                diff = diff,
+                desiredLocalSet = desiredLocalSet,
+                pendingAddCount = 0,
+                actualAdditions = EMPTY_INT_ARRAY,
+                deferredAdditionCount = 0,
+                selfMovementChanged = selfMovementChanged,
+                selfBlockChanged = selfBlockChanged,
+            )
         }
 
         if (pendingCount > 0) {
-            if (!syncPlayerIncrementalAddsEnabled) {
-                return fullRebuildPlan(PlayerPacketBuildReason.LOCAL_ADMISSION_PENDING, visibleSignature, diff, desiredLocalSet, pendingCount, admissionBatch)
-            }
             return RootPlayerInfoPlan(
                 mode = PlayerPacketMode.INCREMENTAL_ADMISSION,
                 buildReason = PlayerPacketBuildReason.LOCAL_ADMISSION_PENDING,

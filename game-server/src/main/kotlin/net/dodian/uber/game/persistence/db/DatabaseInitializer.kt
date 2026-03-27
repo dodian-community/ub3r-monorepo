@@ -1,4 +1,4 @@
-package net.dodian.utilities
+package net.dodian.uber.game.persistence.db
 
 import org.apache.ibatis.jdbc.ScriptRunner
 import java.nio.file.Path

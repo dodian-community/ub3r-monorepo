@@ -118,6 +118,51 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `legacy repackaged namespaces are removed`() {
+        val removedToggleSymbols = setOf(
+            "gameLoopEnabled",
+            "interactionPipelineEnabled",
+            "updatePrepEnabled",
+            "synchronizationEnabled",
+            "syncRootBlockCacheEnabled",
+            "syncViewportSnapshotEnabled",
+            "syncSkipEmptyNpcPacketEnabled",
+            "syncPlayerActivityIndexEnabled",
+            "syncSkipEmptyPlayerPacketEnabled",
+            "syncPlayerTemplateCacheEnabled",
+            "syncScratchBufferReuseEnabled",
+            "syncAppearanceCacheEnabled",
+            "playerSynchronizationEnabled",
+            "syncPlayerRootDiffEnabled",
+            "syncPlayerSelfOnlyEnabled",
+            "syncPlayerIncrementalBuildEnabled",
+            "syncPlayerFullRebuildFallbackEnabled",
+            "syncPlayerReasonMetricsEnabled",
+            "syncPlayerDesiredLocalsEnabled",
+            "syncPlayerAdmissionQueueEnabled",
+            "syncPlayerIncrementalAddsEnabled",
+            "syncPlayerMovementFragmentCacheEnabled",
+            "syncPlayerAllocationLightEnabled",
+            "syncPlayerFragmentReuseEnabled",
+            "syncPlayerStateValidationEnabled",
+            "syncNpcActivityIndexEnabled",
+            "farmingSchedulerEnabled",
+            "zoneUpdateBatchingEnabled",
+            "queueTasksEnabled",
+            "opcode248HasExtra14ByteSuffix",
+            "clientUiDeltaProcessorEnabled",
+            "databaseConnectionProxyEnabled",
+            "runtimePhaseTimingEnabled",
+            "runtimeCycleLogEnabled",
+            "clientUiTraceEnabled",
+            "clientPacketTraceEnabled",
+            "combatReactionDebugEnabled",
+            "buttonTraceEnabled",
+            "objectTraceEnabled",
+            "smeltingTraceEnabled",
+            "inboundOpcodeProfilingEnabled",
+            "inboundOpcodeProfilingWarnMs",
+        )
+
         val legacyPackageViolations = sourceFiles.mapNotNull { file ->
             val packageLine = Files.readAllLines(file)
                 .asSequence()
@@ -125,10 +170,17 @@ class ArchitectureBoundaryTest {
                 .firstOrNull { it.startsWith("package ") }
                 ?: return@mapNotNull null
             val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
+            val fileName = file.fileName.toString()
             val isLegacy =
                 packageName.startsWith("net.dodian.uber.game.content.entities") ||
                     packageName.startsWith("net.dodian.uber.game.systems.ui.interfaces") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules")
+                    packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules") ||
+                    (packageName == "net.dodian.utilities" && (
+                        fileName == "Database.kt" ||
+                            fileName == "DatabaseConfig.kt" ||
+                            fileName == "DatabaseInitializer.kt" ||
+                            fileName == "DotEnv.kt"
+                        ))
             if (!isLegacy) return@mapNotNull null
             "${file} -> $packageName"
         }
@@ -138,12 +190,32 @@ class ArchitectureBoundaryTest {
             val isLegacyPath =
                 normalized.contains("/net/dodian/uber/game/content/entities/") ||
                     normalized.contains("/net/dodian/uber/game/systems/ui/interfaces/") ||
-                    normalized.contains("/net/dodian/uber/game/systems/ui/dialogue/modules/")
+                    normalized.contains("/net/dodian/uber/game/systems/ui/dialogue/modules/") ||
+                    normalized.endsWith("/net/dodian/utilities/Database.kt") ||
+                    normalized.endsWith("/net/dodian/utilities/DatabaseConfig.kt") ||
+                    normalized.endsWith("/net/dodian/utilities/DatabaseInitializer.kt") ||
+                    normalized.endsWith("/net/dodian/utilities/DotEnv.kt")
             if (!isLegacyPath) return@mapNotNull null
             normalized
         }
 
-        val violations = legacyPackageViolations + legacyPathViolations
+        val legacyReferenceViolations = sourceFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                val isLegacyRef =
+                    trimmed.contains("net.dodian.utilities.DatabaseKt") ||
+                        trimmed.contains("net.dodian.utilities.DatabaseInitializerKt") ||
+                        trimmed.contains("net.dodian.utilities.DotEnvKt") ||
+                        removedToggleSymbols.any { symbol ->
+                            trimmed.contains("import net.dodian.uber.game.config.$symbol") ||
+                                trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
+                        }
+                if (!isLegacyRef) return@mapIndexedNotNull null
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        val violations = legacyPackageViolations + legacyPathViolations + legacyReferenceViolations
         assertTrue(
             violations.isEmpty(),
             "Legacy repackaged namespaces/paths must not remain.\n${violations.joinToString("\n")}",

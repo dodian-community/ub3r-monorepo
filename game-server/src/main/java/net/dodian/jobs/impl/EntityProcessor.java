@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
+import static net.dodian.uber.game.config.DotEnvKt.getRuntimePhaseWarnMs;
 
 public class EntityProcessor implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EntityProcessor.class);

@@ -7,8 +7,8 @@ import net.dodian.uber.game.content.items.spawn.GlobalGroundSpawnContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.db.dbConnection
 import org.slf4j.LoggerFactory
 
 open class ItemManager @JvmOverloads constructor(

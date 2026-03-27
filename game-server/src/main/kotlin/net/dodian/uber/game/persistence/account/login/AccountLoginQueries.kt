@@ -1,7 +1,7 @@
 package net.dodian.uber.game.persistence.account.login
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.utilities.DbTables
+import net.dodian.uber.game.persistence.db.DbTables
 
 internal object AccountLoginQueries {
     val webUserSelect =

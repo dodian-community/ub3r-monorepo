@@ -6,9 +6,9 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.serverDebugMode
-import net.dodian.utilities.serverEnv
+import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.config.serverDebugMode
+import net.dodian.uber.game.config.serverEnv
 
 object AccountLoginService {
     const val FINAL_SAVE_PENDING_INTERNAL = 98

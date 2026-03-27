@@ -28,8 +28,8 @@ import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
-import net.dodian.utilities.DbTables;
-import net.dodian.utilities.DotEnvKt;
+import net.dodian.uber.game.persistence.db.DbTables;
+import net.dodian.uber.game.config.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -45,11 +45,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.api.WebApiKt.launchWebApi;
-import static net.dodian.utilities.DotEnvKt.*;
-import static net.dodian.utilities.DatabaseKt.closeConnectionPool;
-import static net.dodian.utilities.DatabaseInitializerKt.initializeDatabase;
-import static net.dodian.utilities.DatabaseInitializerKt.isDatabaseInitialized;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.game.config.DotEnvKt.*;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.closeConnectionPool;
+import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.initializeDatabase;
+import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.isDatabaseInitialized;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
@@ -147,19 +147,7 @@ public class Server {
 
 
         /* Processor for various stuff */
-        if (getGameLoopEnabled()) {
-            gameLoopService.start();
-        } else {
-            gameTickScheduler.registerTask("EntityProcessor", TICK, new EntityProcessor());
-            gameTickScheduler.registerTask("ActionProcessor", TICK, new ActionProcessor());
-            gameTickScheduler.registerTask("OutboundPacketProcessor", TICK, new OutboundPacketProcessor());
-            gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
-            gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
-            gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-            gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
-            gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
-            gameTickScheduler.start();
-        }
+        gameLoopService.start();
         System.gc();
         Login.banUid();
         logger.info("Server is now running on world " + getGameWorldId() + "!");
@@ -206,11 +194,7 @@ public class Server {
             return;
         }
 
-        if (getGameLoopEnabled()) {
-            gameLoopService.stop(Duration.ofSeconds(10));
-        } else {
-            gameTickScheduler.stop();
-        }
+        gameLoopService.stop(Duration.ofSeconds(10));
 
         try {
             AccountPersistenceService.shutdownAndDrain(Duration.ofSeconds(30));

@@ -4,8 +4,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
-import net.dodian.uber.game.systems.zone.ZoneUpdateBus
-import net.dodian.utilities.zoneUpdateBatchingEnabled
 
 object GlobalObject {
     private val globalObjects = CopyOnWriteArrayList<Object>()
@@ -15,15 +13,6 @@ object GlobalObject {
 
     @JvmStatic
     fun updateNewObject(worldObject: Object) {
-        if (zoneUpdateBatchingEnabled) {
-            ZoneUpdateBus.queueGlobalObjectNew(
-                Position(worldObject.x, worldObject.y, worldObject.z),
-                worldObject.id,
-                worldObject.face,
-                worldObject.type,
-            )
-            return
-        }
         for (player in PlayerHandler.players) {
             val client = player as? Client ?: continue
             if (!client.isActive) {
@@ -42,15 +31,6 @@ object GlobalObject {
 
     @JvmStatic
     fun updateOldObject(worldObject: Object) {
-        if (zoneUpdateBatchingEnabled) {
-            ZoneUpdateBus.queueGlobalObjectOld(
-                Position(worldObject.x, worldObject.y, worldObject.z),
-                worldObject.oldId,
-                worldObject.face,
-                worldObject.type,
-            )
-            return
-        }
         for (player in PlayerHandler.players) {
             val client = player as? Client ?: continue
             if (!client.isActive) {

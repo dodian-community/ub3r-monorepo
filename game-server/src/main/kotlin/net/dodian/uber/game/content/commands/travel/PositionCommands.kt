@@ -5,6 +5,7 @@ import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.content.commands.isBetaWorld
+import net.dodian.uber.game.config.gameWorldId
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
@@ -30,7 +31,7 @@ private fun handlePosition(context: CommandContext): Boolean {
         client.send(SendMessage("You set your height to ${client.position.z}"))
         return true
     }
-    if ((context.alias == "bank" || context.alias == "b") && client.playerRights > 1 && net.dodian.utilities.gameWorldId < 2) {
+    if ((context.alias == "bank" || context.alias == "b") && client.playerRights > 1 && gameWorldId < 2) {
         client.openUpBank()
         return true
     }

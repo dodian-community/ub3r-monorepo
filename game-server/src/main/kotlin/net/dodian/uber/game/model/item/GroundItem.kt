@@ -6,8 +6,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem
-import net.dodian.uber.game.systems.zone.ZoneUpdateBus
-import net.dodian.utilities.zoneUpdateBatchingEnabled
 
 class GroundItem {
     @JvmField var x: Int
@@ -104,10 +102,6 @@ class GroundItem {
     fun getDespawnTime(): Int = if (timeToShow < 1) timeToDespawn else timeToShow + timeToDespawn
 
     fun removeItemDisplay() {
-        if (zoneUpdateBatchingEnabled) {
-            ZoneUpdateBus.queueGroundItemRemove(id, amount, Position(x, y, z))
-            return
-        }
         PlayerHandler.forEachActivePlayer { c ->
             if (c.GoodDistance(c.position.x, c.position.y, x, y, 104)) {
                 c.send(RemoveGroundItem(GameItem(id, amount), Position(x, y, z)))
@@ -116,12 +110,6 @@ class GroundItem {
     }
 
     fun itemDisplay() {
-        if (zoneUpdateBatchingEnabled) {
-            val onlyDbId = if (type == 1) playerId else null
-            val excludeDbId = if (type == 1 || !isVisible()) null else playerId
-            ZoneUpdateBus.queueGroundItemCreate(id, amount, Position(x, y, z), onlyDbId, excludeDbId)
-            return
-        }
         PlayerHandler.forEachActivePlayer { c ->
             if (type == 1 && playerId != c.dbId) {
                 return@forEachActivePlayer
@@ -133,10 +121,6 @@ class GroundItem {
     }
 
     private fun sendOwnerCreate(owner: Client) {
-        if (zoneUpdateBatchingEnabled) {
-            ZoneUpdateBus.queueGroundItemCreate(id, amount, Position(x, y, z), playerId, null)
-        } else {
-            owner.send(CreateGroundItem(GameItem(id, amount), Position(x, y, z)))
-        }
+        owner.send(CreateGroundItem(GameItem(id, amount), Position(x, y, z)))
     }
 }

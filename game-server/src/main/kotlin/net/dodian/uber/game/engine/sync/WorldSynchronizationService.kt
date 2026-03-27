@@ -23,12 +23,7 @@ import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.systems.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 import net.dodian.uber.game.systems.zone.ZoneUpdateBus
-import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.playerSynchronizationEnabled
-import net.dodian.utilities.syncPlayerTemplateCacheEnabled
-import net.dodian.utilities.syncRootBlockCacheEnabled
-import net.dodian.utilities.syncSkipEmptyPlayerPacketEnabled
-import net.dodian.utilities.syncSkipEmptyNpcPacketEnabled
+import net.dodian.uber.game.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldSynchronizationService {
@@ -107,9 +102,6 @@ class WorldSynchronizationService {
     }
 
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
-        if (!syncRootBlockCacheEnabled) {
-            return
-        }
         activePlayers.forEach { player ->
             rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
             if (player.updateFlags.isUpdateRequired) {
@@ -119,9 +111,6 @@ class WorldSynchronizationService {
     }
 
     private fun buildNpcRootCache(activeNpcs: Collection<Npc>, rootCache: RootSynchronizationCache) {
-        if (!syncRootBlockCacheEnabled) {
-            return
-        }
         activeNpcs.forEach { npc ->
             if (npc.updateFlags.isUpdateRequired) {
                 rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc))
@@ -130,67 +119,17 @@ class WorldSynchronizationService {
     }
 
     private fun encodePlayers(activePlayers: List<Client>) {
-        if (playerSynchronizationEnabled) {
-            rootPlayerInfoService.sync(activePlayers)
-            return
-        }
-        activePlayers.forEach { player ->
-            try {
-                if (player.timeOutCounter.get() >= 84) {
-                    player.disconnected = true
-                    player.println_debug("\nRemove non-responding " + player.playerName + " after 60 seconds of disconnect! ")
-                }
-
-                if (player.disconnected) {
-                    player.println_debug("\nRemove disconnected player " + player.playerName)
-                    Server.playerHandler.removePlayer(player)
-                    player.disconnected = false
-                    PlayerHandler.players[player.slot] = null
-                    return@forEach
-                }
-
-                val decision = playerUpdating.shouldSkipPlayerSync(player)
-                if (decision == PlayerSyncDecision.SKIP) {
-                    if (syncSkipEmptyPlayerPacketEnabled) {
-                        SynchronizationContext.recordPlayerPacketSkipped(player.playerListSize)
-                        updateViewerSyncState(player)
-                        return@forEach
-                    }
-                    if (syncPlayerTemplateCacheEnabled) {
-                        val key = playerUpdating.buildPlayerSyncTemplateKey(player)
-                        val template =
-                            SynchronizationContext.getPlayerTemplate(key)
-                                ?: playerUpdating.buildPlayerSyncTemplate(player).also {
-                                    SynchronizationContext.putPlayerTemplate(key, it)
-                                }
-                        sendPlayerTemplate(player, template.payload)
-                        SynchronizationContext.recordPlayerPacketTemplated(player.playerListSize)
-                        updateViewerSyncState(player)
-                        return@forEach
-                    }
-                }
-                player.sendPlayerSynchronization()
-                updateViewerSyncState(player)
-            } catch (throwable: Throwable) {
-                handleViewerSyncFailure("player-sync-compat", player, throwable)
-            }
-        }
+        rootPlayerInfoService.sync(activePlayers)
     }
 
     private fun encodeNpcs(activePlayers: List<Client>) {
-        val trackActivityStamps = syncSkipEmptyNpcPacketEnabled
         activePlayers.forEach { player ->
             try {
-                val state = if (trackActivityStamps) SynchronizationContext.getViewerNpcSyncState(player) else null
-                val chunkStamp = if (trackActivityStamps) SynchronizationContext.getNpcChunkActivityStamp(player) else 0L
-                val localActivityStamp = if (trackActivityStamps) SynchronizationContext.getNpcLocalActivityStamp(player) else 0L
-                val membershipRevision = if (trackActivityStamps) player.localNpcMembershipRevision else 0L
-                val decision =
-                    if (trackActivityStamps) {
-                        shouldSkipNpcSync(player, state, chunkStamp, localActivityStamp, membershipRevision)
-                    } else {
-                        NpcSyncDecision.BUILD
-                    }
+                val state = SynchronizationContext.getViewerNpcSyncState(player)
+                val chunkStamp = SynchronizationContext.getNpcChunkActivityStamp(player)
+                val localActivityStamp = SynchronizationContext.getNpcLocalActivityStamp(player)
+                val membershipRevision = player.localNpcMembershipRevision
+                val decision = shouldSkipNpcSync(player, state, chunkStamp, localActivityStamp, membershipRevision)
                 if (decision == NpcSyncDecision.SKIP) {
                     SynchronizationContext.recordNpcPacketSkipped(player.localNpcs.size)
                     SynchronizationContext.recordViewer(player.playerListSize, player.localNpcs.size)
@@ -383,10 +322,9 @@ class WorldSynchronizationService {
 
     private fun updateViewerSyncState(player: Client) {
         val state: ViewerPlayerSyncState = playerRevisionIndex.viewerState(player)
-        val trackActivityStamps = syncSkipEmptyPlayerPacketEnabled
-        val chunkStamp = if (trackActivityStamps) SynchronizationContext.getPlayerChunkActivityStamp(player) else 0L
-        val localActivityStamp = if (trackActivityStamps) SynchronizationContext.getPlayerLocalActivityStamp(player) else 0L
-        val membershipRevision = if (trackActivityStamps) player.localPlayerMembershipRevision else 0L
+        val chunkStamp = SynchronizationContext.getPlayerChunkActivityStamp(player)
+        val localActivityStamp = SynchronizationContext.getPlayerLocalActivityStamp(player)
+        val membershipRevision = player.localPlayerMembershipRevision
         state.lastPlayerSyncTick = tick
         state.lastSelfMovementRevision = playerRevisionIndex.movementRevision(player)
         state.lastSelfBlockRevision = playerRevisionIndex.blockRevision(player)

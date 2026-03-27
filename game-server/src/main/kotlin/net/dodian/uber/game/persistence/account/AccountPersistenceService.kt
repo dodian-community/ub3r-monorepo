@@ -15,8 +15,8 @@ import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import org.slf4j.LoggerFactory
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.db.dbConnection
 
 object AccountPersistenceService {
     private val logger = LoggerFactory.getLogger(AccountPersistenceService::class.java)

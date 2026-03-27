@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.commands.boss
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.config.gameWorldId
 
 object BossCommands : CommandContent {
     override fun definitions() =

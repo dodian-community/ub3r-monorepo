@@ -7,8 +7,8 @@ import java.util.function.Consumer
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.persistence.DbDispatchers
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.db.dbConnection
 
 object CommandDbService {
     @Suppress("UNUSED_PARAMETER")

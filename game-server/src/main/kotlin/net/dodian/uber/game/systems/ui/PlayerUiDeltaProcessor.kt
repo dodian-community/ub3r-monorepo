@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.model.player.quests.QuestSend
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
 
 object PlayerUiDeltaProcessor {

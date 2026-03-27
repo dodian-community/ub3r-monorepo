@@ -4,12 +4,8 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.loop.GameCycleClock
-import net.dodian.utilities.combatReactionDebugEnabled
-import org.slf4j.LoggerFactory
 
 object CombatDefenderReaction {
-    private val logger = LoggerFactory.getLogger(CombatDefenderReaction::class.java)
-
     @JvmStatic
     fun playBlockAnimation(
         defender: Client,
@@ -36,17 +32,6 @@ object CombatDefenderReaction {
 
         val animationId = PlayerBlockAnimationService.resolve(defender)
         defender.lastBlockAnimationCycle = cycle
-        if (combatReactionDebugEnabled) {
-            logger.info(
-                "combat-reaction defender={} slot={} damage={} type={} anim={} cycle={}",
-                defender.playerName,
-                defender.slot,
-                damage,
-                damageType,
-                animationId,
-                cycle,
-            )
-        }
         PlayerAnimationService.requestBlockReaction(defender, animationId)
     }
 }

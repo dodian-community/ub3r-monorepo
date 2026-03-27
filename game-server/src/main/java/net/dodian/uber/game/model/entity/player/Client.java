@@ -25,6 +25,7 @@ import net.dodian.uber.game.content.skills.farming.FarmingService;
 import net.dodian.uber.game.content.skills.farming.FarmingState;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.persistence.db.DbTables;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
@@ -87,8 +88,8 @@ import io.netty.channel.Channel;
 import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
+import static net.dodian.uber.game.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -502,10 +503,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        if (!getClientPacketTraceEnabled() && !getClientUiTraceEnabled()) {
-            return;
-        }
-        logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
+        return;
     }
 
     public void print_debug(String str) {
@@ -735,25 +733,11 @@ public class Client extends Player implements Runnable {
                         getPlayerName()
                 );
             }
-            if (sample || getInboundOpcodeProfilingEnabled()) {
+            if (sample) {
                 long startNs = System.nanoTime();
                 listener.handle(this, packet);
                 long elapsedNs = System.nanoTime() - startNs;
-                if (sample) {
-                    net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
-                }
-                if (getInboundOpcodeProfilingEnabled()) {
-                    long elapsedMs = elapsedNs / 1_000_000L;
-                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
-                        println_debug(
-                                "Slow inbound opcode " + packet.opcode() +
-                                        " size=" + packet.size() +
-                                        " player=" + getPlayerName() +
-                                        " listener=" + listener.getClass().getSimpleName() +
-                                        " took=" + elapsedMs + "ms"
-                        );
-                    }
-                }
+                net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
             } else {
                 listener.handle(this, packet);
             }
@@ -2542,9 +2526,7 @@ public class Client extends Player implements Runnable {
             amount = Math.min(amount, playerItemsN[fromSlot]);
         Client other = getClient(trade_reqId);
         if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            if (getClientPacketTraceEnabled()) {
-                logger.debug("declining in tradeItem() for {}", getPlayerName());
-            }
+            
             declineTrade();
             return;
         }
@@ -4026,9 +4008,7 @@ public class Client extends Player implements Runnable {
         if (speed.length != 3) { //Need atleast 3 values!
             return;
         }
-        if (getClientPacketTraceEnabled()) {
-            logger.debug("x = {}, y = {}", startPos.getX(), startPos.getY());
-        }
+        
         int startX = startPos.getX();
         int startY = startPos.getY();
         int endX = endPos.getX();

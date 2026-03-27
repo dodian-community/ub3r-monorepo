@@ -24,8 +24,6 @@ import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.utilities.DotEnvKt.getSyncAppearanceCacheEnabled;
-import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author blakeman8192
@@ -772,8 +770,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public byte[] getAppearanceBytes(Player player) {
-        if (getSyncAppearanceCacheEnabled()
-                && !player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)
+        if (!player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)
                 && player.isCachedAppearanceValid()) {
             SynchronizationContext.recordPlayerAppearanceCacheHit(true);
             return player.getCachedAppearanceBytes();
@@ -868,9 +865,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             playerProps.put(player.determineCombatLevel()); // combat level
             playerProps.putShort(0); // incase != 0, writes skill-%d
             byte[] appearanceBytes = playerProps.toByteArray();
-            if (getSyncAppearanceCacheEnabled()) {
-                player.cacheAppearanceBytes(appearanceBytes);
-            }
+            player.cacheAppearanceBytes(appearanceBytes);
             SynchronizationContext.recordPlayerAppearanceCacheHit(false);
             return appearanceBytes;
         } finally {
@@ -879,33 +874,22 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public ByteMessage withScratchUpdateBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.playerUpdateBlock();
-        }
-        return ByteMessage.raw(8192);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.playerUpdateBlock();
     }
 
     private ByteMessage withAppearanceScratch() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.appearanceBlock();
-        }
-        return ByteMessage.raw(256);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.appearanceBlock();
     }
 
     private ByteMessage withSharedBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            SynchronizationContext.recordPlayerScratchReuse();
-            return ThreadLocalSyncScratch.sharedBlock();
-        }
-        return ByteMessage.raw(512);
+        SynchronizationContext.recordPlayerScratchReuse();
+        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
-        if (!getSyncScratchBufferReuseEnabled()) {
-            message.releaseAll();
-        }
+        // Scratch buffers are reused from thread-local storage.
     }
 
     private int movementMode(Player player) {

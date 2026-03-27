@@ -3,7 +3,7 @@ package net.dodian.uber.game.persistence.player
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.persistence.player.PlayerSaveRepository
 import net.dodian.uber.game.persistence.player.PlayerSaveSnapshot
-import net.dodian.utilities.DbTables
+import net.dodian.uber.game.persistence.db.DbTables
 
 class PlayerSaveSqlRepository(
     private val delegate: PlayerSaveRepository = PlayerSaveRepository(),

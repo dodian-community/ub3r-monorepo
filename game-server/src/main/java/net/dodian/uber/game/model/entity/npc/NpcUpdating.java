@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author Dashboard
@@ -173,23 +172,15 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     private ByteMessage withUpdateBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.npcUpdateBlock();
-        }
-        return ByteMessage.raw(16384);
+        return ThreadLocalSyncScratch.npcUpdateBlock();
     }
 
     private ByteMessage withSharedBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.sharedBlock();
-        }
-        return ByteMessage.raw(512);
+        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
-        if (!getSyncScratchBufferReuseEnabled()) {
-            message.releaseAll();
-        }
+        // Scratch buffers are reused from thread-local storage.
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {

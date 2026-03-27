@@ -6,11 +6,11 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.audit.AsyncSqlService
-import net.dodian.utilities.DbTables
+import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.config.gameWorldId
 
 class SlotMachine {
     @JvmField var slotsGames: Int = -1

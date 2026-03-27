@@ -1,4 +1,4 @@
-package net.dodian.utilities
+package net.dodian.uber.game.persistence.db
 
 internal fun buildDatabaseJdbcUrl(
     host: String,

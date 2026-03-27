@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
-import static net.dodian.utilities.DotEnvKt.getQueueTasksEnabled;
 
 /**
  * Opcode 73 – player attacking another player.

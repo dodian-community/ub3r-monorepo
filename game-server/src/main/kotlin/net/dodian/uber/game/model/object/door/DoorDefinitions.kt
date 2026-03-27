@@ -1,8 +1,8 @@
 package net.dodian.uber.game.model.`object`.door
 
 import java.sql.ResultSet
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.db.dbConnection
 
 data class DoorDefinition(
     val x: Int,

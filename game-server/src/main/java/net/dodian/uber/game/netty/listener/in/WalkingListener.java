@@ -23,7 +23,6 @@ import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderServic
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
-import static net.dodian.utilities.DotEnvKt.getOpcode248HasExtra14ByteSuffix;
 
 
 
@@ -200,12 +199,12 @@ public final class WalkingListener implements PacketListener {
     }
 
     static int resolveEffectiveSize(int opcode, int packetSize) {
-        return resolveEffectiveSize(opcode, packetSize, getOpcode248HasExtra14ByteSuffix());
+        return resolveEffectiveSize(opcode, packetSize, false);
     }
 
-    static int resolveEffectiveSize(int opcode, int packetSize, boolean opcode248HasExtra14ByteSuffix) {
+    static int resolveEffectiveSize(int opcode, int packetSize, boolean hasMinimapSuffix) {
         if (opcode == OP_MINIMAP_WALK) {
-            return opcode248HasExtra14ByteSuffix ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
+            return hasMinimapSuffix ? packetSize - MINIMAP_TRAILING_BYTES : packetSize;
         }
         return packetSize;
     }

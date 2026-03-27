@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.utilities.DbTables
+import net.dodian.uber.game.persistence.db.DbTables
 
 data class PlayerSaveSnapshot(
     val sequence: Long,

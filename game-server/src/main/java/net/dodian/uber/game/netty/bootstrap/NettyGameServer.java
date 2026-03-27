@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.utilities.DotEnvKt.getNettyLeakDetection;
+import static net.dodian.uber.game.config.DotEnvKt.getNettyLeakDetection;
 
 /**
  * Clean Netty bootstrap that binds the socket and wires the new {@link GameChannelInitializer}.

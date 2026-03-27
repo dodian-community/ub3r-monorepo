@@ -371,21 +371,11 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("[player-{}]: {}", getSlot(), str);
-        }
+        return;
     }
 
     public void println(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        logger.info("[player-{}]: {}", getSlot(), str);
+        return;
     }
 
     public String getSongUnlockedSaveText() {

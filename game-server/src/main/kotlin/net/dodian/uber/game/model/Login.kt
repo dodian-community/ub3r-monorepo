@@ -3,9 +3,9 @@ package net.dodian.uber.game.model
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileWriter
-import net.dodian.utilities.DbTables
-import net.dodian.utilities.dbConnection
-import net.dodian.utilities.gameWorldId
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.config.gameWorldId
 
 class Login {
     @Synchronized

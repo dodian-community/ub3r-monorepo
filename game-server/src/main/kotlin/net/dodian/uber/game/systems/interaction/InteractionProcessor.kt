@@ -23,7 +23,7 @@ import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionExecutionResult
 import net.dodian.uber.game.content.skills.fishing.FishingNpcInteractionService
 import net.dodian.utilities.Misc
-import net.dodian.utilities.runtimePhaseWarnMs
+import net.dodian.uber.game.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 

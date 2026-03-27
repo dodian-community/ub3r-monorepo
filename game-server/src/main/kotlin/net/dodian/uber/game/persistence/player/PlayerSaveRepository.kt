@@ -2,7 +2,7 @@ package net.dodian.uber.game.persistence.player
 
 import java.sql.Connection
 import java.sql.SQLException
-import net.dodian.utilities.dbConnection
+import net.dodian.uber.game.persistence.db.dbConnection
 
 class PlayerSaveRepository(
     private val connectionProvider: ConnectionProvider = ConnectionProvider { defaultConnection() },

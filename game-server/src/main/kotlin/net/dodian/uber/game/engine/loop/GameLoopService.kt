@@ -24,9 +24,7 @@ import net.dodian.uber.game.engine.phases.OutboundPacketProcessor
 import net.dodian.uber.game.engine.phases.PlayerMainPhase
 import net.dodian.uber.game.engine.phases.WorldMaintenancePhase
 import org.slf4j.LoggerFactory
-import net.dodian.utilities.runtimeCycleLogEnabled
-import net.dodian.utilities.runtimePhaseTimingEnabled
-import net.dodian.utilities.runtimePhaseWarnMs
+import net.dodian.uber.game.config.runtimePhaseWarnMs
 
 class GameLoopService(
     private val entityProcessor: EntityProcessor = EntityProcessor(),
@@ -155,10 +153,6 @@ class GameLoopService(
     }
 
     private fun timed(phase: GamePhase, block: () -> Unit) {
-        if (!runtimePhaseTimingEnabled) {
-            block()
-            return
-        }
         phaseTimer.measure(phase) {
             val gcBefore = gcTracker.snapshot()
             val elapsed = measureNanoTime(block)
@@ -182,9 +176,6 @@ class GameLoopService(
     }
 
     private fun maybeLogCycle(elapsedMillis: Long) {
-        if (!runtimeCycleLogEnabled) {
-            return
-        }
         debugTick++
         accumulatedCycleTimeMs += elapsedMillis
         accumulatedLoggedMillis += GAME_TICK_INTERVAL_MS

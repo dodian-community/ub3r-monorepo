@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.content.skills.core.events.SkillProgressAppliedEvent
-import net.dodian.utilities.gameMultiplierGlobalXp
+import net.dodian.uber.game.config.gameMultiplierGlobalXp
 
 object SkillProgressionService {
     private const val MAX_XP = 200_000_000

@@ -1,12 +1,20 @@
-package net.dodian.utilities
+package net.dodian.uber.game.persistence.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import net.dodian.uber.game.config.databaseHost
+import net.dodian.uber.game.config.databaseName
+import net.dodian.uber.game.config.databasePassword
+import net.dodian.uber.game.config.databasePoolConnectionTimeout
+import net.dodian.uber.game.config.databasePoolIdleTimeout
+import net.dodian.uber.game.config.databasePoolMaxLifetime
+import net.dodian.uber.game.config.databasePoolMaxSize
+import net.dodian.uber.game.config.databasePoolMinSize
+import net.dodian.uber.game.config.databasePort
+import net.dodian.uber.game.config.databaseTablePrefix
+import net.dodian.uber.game.config.databaseUsername
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
@@ -69,7 +77,7 @@ private fun createDataSource(): HikariDataSource {
         logger.info("  - Max connections: ${config.maximumPoolSize}")
         logger.info("  - Connection timeout: ${config.connectionTimeout}ms")
         logger.info("  - Leak detection: ${config.leakDetectionThreshold}ms (This will show where leaking connections are acquired)")
-        logger.info("  - Connection proxy: ${if (databaseConnectionProxyEnabled) "enabled" else "disabled"}")
+        logger.info("  - Connection proxy: disabled")
         logger.info("  - Database: ${config.jdbcUrl}")
 
         // Start pool monitoring
@@ -80,23 +88,9 @@ private fun createDataSource(): HikariDataSource {
 val dbConnection: Connection
     get() {
         return try {
-            val connection = dataSource.connection.apply {
+            dataSource.connection.apply {
                 autoCommit = true
             }
-
-            logger.debug("Connection obtained from pool (Active: ${(dataSource.hikariPoolMXBean.activeConnections)}/${(dataSource.hikariPoolMXBean.totalConnections)})")
-
-            if (!databaseConnectionProxyEnabled) {
-                connection
-            } else {
-                val acquisitionStackTrace = Thread.currentThread().stackTrace
-                Proxy.newProxyInstance(
-                    Connection::class.java.classLoader,
-                    arrayOf(Connection::class.java),
-                    ConnectionInvocationHandler(connection, acquisitionStackTrace)
-                ) as Connection
-            }
-
         } catch (e: SQLException) {
             logger.error("Failed to get connection from pool: ${e.message}", e)
             val poolStats = dataSource.hikariPoolMXBean
@@ -167,48 +161,6 @@ fun closeConnectionPool() {
 
     dataSource.close()
     logger.info("Connection pool closed")
-}
-
-/**
- * A dynamic proxy handler that wraps a JDBC Connection. It intercepts the 'close' method
- * to add enhanced logging, but delegates all other calls to the original connection.
- *
- * @param connection The real JDBC Connection object.
- * @param acquisitionStackTrace The stack trace captured when this connection was acquired from the pool.
- */
-private class ConnectionInvocationHandler(
-    private val connection: Connection,
-    private val acquisitionStackTrace: Array<StackTraceElement>
-) : InvocationHandler {
-
-    override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
-        // Intercept the 'close()' method call.
-        if (method.name == "close") {
-            // Log where the connection was acquired from, useful for debugging.
-            // Use a helper function to format the stack trace for readability.
-            logger.debug("Connection closed. Acquired at:\n${formatStackTrace(acquisitionStackTrace)}")
-        }
-
-        // Delegate the actual method call to the original connection object.
-        return try {
-            // The 'args ?: emptyArray()' handles methods with no arguments.
-            method.invoke(connection, *(args ?: emptyArray()))
-        } catch (e: Exception) {
-            // Log any exceptions that occur during method invocation on the connection.
-            logger.error("Exception in connection proxy method '${method.name}': ${e.message}", e)
-            throw e
-        }
-    }
-
-    /**
-     * Formats the stack trace for clean logging, skipping the initial irrelevant frames.
-     */
-    private fun formatStackTrace(stackTrace: Array<StackTraceElement>): String {
-        // Skips the first few elements of the stack trace which are internal to the proxy and this class.
-        return stackTrace
-            .drop(3) // Adjust this number as needed to get to the calling code.
-            .joinToString("\n\t") { "at $it" }
-    }
 }
 
 

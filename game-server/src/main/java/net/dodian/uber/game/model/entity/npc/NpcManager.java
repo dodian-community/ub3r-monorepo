@@ -8,7 +8,7 @@ import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.utilities.DbTables;
+import net.dodian.uber.game.persistence.db.DbTables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
+import static net.dodian.uber.game.persistence.db.DatabaseKt.getDbConnection;
 
 public class NpcManager {
     private static final Logger logger = LoggerFactory.getLogger(NpcManager.class);

@@ -10,8 +10,6 @@ import net.dodian.uber.game.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.engine.loop.GameCycleClock
-import net.dodian.uber.game.engine.scheduler.QueueTaskService
-import net.dodian.utilities.queueTasksEnabled
 
 object CombatStartService {
     @JvmStatic
@@ -185,16 +183,6 @@ object CombatStartService {
         task: WalkToTask,
         step: () -> Boolean,
     ) {
-        if (queueTasksEnabled) {
-            QueueTaskService.schedule(1, 1) {
-                if (client.disconnected || client.walkToTask != task) {
-                    return@schedule false
-                }
-                step()
-            }
-            return
-        }
-
         GameEventScheduler.runRepeatingMs(600) {
             if (client.disconnected || client.walkToTask != task) {
                 return@runRepeatingMs false

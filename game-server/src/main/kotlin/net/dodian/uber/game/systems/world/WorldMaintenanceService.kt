@@ -7,8 +7,8 @@ import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
-import net.dodian.utilities.gameWorldId
-import net.dodian.utilities.runtimePhaseWarnMs
+import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
