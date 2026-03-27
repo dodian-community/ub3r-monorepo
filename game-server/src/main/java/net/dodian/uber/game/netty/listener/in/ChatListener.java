@@ -2,7 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.model.ChatLine;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -68,10 +67,6 @@ public class ChatListener implements PacketListener {
         client.invalidateCachedUpdateBlock();
         client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true);
         ChatLog.recordPublicChat(client, chat);
-
-        // Add to global chat history (same as legacy)
-        Server.chat.add(new ChatLine(client.getPlayerName(), client.dbId, 2, chat,
-                client.getPosition().getX(), client.getPosition().getY()));
 
         if (logger.isDebugEnabled()) {
             logger.debug("Chat from {}: {}", client.getPlayerName(), chat);

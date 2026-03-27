@@ -42,7 +42,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.api.WebApiKt.launchWebApi;
@@ -65,7 +64,6 @@ public class Server {
     public static ArrayList connections = new ArrayList<>();
     public static ArrayList banned = new ArrayList<>();
 
-    public static CopyOnWriteArrayList chat = new CopyOnWriteArrayList<>();
     public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
@@ -148,7 +146,6 @@ public class Server {
         }));
 
 
-        new Thread(login).start();
         /* Processor for various stuff */
         if (getGameLoopEnabled()) {
             gameLoopService.start();

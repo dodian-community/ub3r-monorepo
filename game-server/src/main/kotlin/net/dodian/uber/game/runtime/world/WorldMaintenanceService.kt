@@ -50,7 +50,6 @@ class WorldMaintenanceService(
         }
         timed(WorldMaintenanceStage.WORLD_DB_APPLY) {
             pollApplier.apply(pendingWorldPollResult, playerIndex)
-            Server.chat.clear()
         }
         pendingWorldPollResult = WorldPollResult.EMPTY
         worldDbDueCycle = Long.MIN_VALUE

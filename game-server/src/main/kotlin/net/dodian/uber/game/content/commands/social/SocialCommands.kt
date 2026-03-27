@@ -4,7 +4,6 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
-import net.dodian.uber.game.model.ChatLine
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ChatLog
 
@@ -44,7 +43,6 @@ private fun handleSocial(context: CommandContext): Boolean {
                 }
             }
             val yell = text.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-            Server.chat.add(ChatLine(client.playerName, client.dbId, 1, yell, client.position.x, client.position.y))
             when {
                 client.playerRights == 0 -> client.yell("[YELL]<col=000000>${client.playerName}<col=0000ff>: $yell")
                 client.playerRights == 1 -> client.yell("<col=0B610B>${client.playerName}<col=000000>: <col=0B610B>$yell@cr1@")
