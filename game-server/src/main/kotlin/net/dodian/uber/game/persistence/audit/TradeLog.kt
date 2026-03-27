@@ -5,7 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
 
@@ -28,7 +28,7 @@ object TradeLog {
 
         AsyncSqlService.execute("trade-log", Runnable {
             try {
-                dbConnection.use { connection ->
+                DbAsyncRepository.withConnection { connection ->
                     connection.prepareStatement(insertTradeSql, Statement.RETURN_GENERATED_KEYS).use { tradeStatement ->
                         tradeStatement.setInt(1, p1)
                         tradeStatement.setInt(2, p2)

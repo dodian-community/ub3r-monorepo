@@ -3,7 +3,7 @@ package net.dodian.uber.game.persistence.audit
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
 
@@ -18,7 +18,7 @@ object CommandLog {
 
         AsyncSqlService.execute("command-log", Runnable {
             try {
-                dbConnection.use { connection ->
+                DbAsyncRepository.withConnection { connection ->
                     connection.prepareStatement(insertSql).use { statement ->
                         statement.setInt(1, player.dbId)
                         statement.setString(2, player.playerName)

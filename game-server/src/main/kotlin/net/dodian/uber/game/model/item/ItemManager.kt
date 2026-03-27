@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
 
 open class ItemManager @JvmOverloads constructor(
@@ -194,7 +194,7 @@ open class ItemManager @JvmOverloads constructor(
         val loaded = LinkedHashMap<Int, Item>()
         val query = "SELECT * FROM ${DbTables.GAME_ITEM_DEFINITIONS} ORDER BY id ASC"
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 connection.createStatement().use { statement: Statement ->
                     statement.executeQuery(query).use { rows ->
                         while (rows.next()) {

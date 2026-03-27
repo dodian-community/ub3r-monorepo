@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.`object`.door
 
 import java.sql.ResultSet
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 
 data class DoorDefinition(
     val x: Int,
@@ -60,7 +60,7 @@ object DoorDefinitionRepository : DoorDefinitionLoader {
 
     override fun load(): List<DoorDefinition> {
         val loaded = ArrayList<DoorDefinition>()
-        dbConnection.use { connection ->
+        DbAsyncRepository.withConnection { connection ->
             connection.prepareStatement(QUERY).use { statement ->
                 statement.executeQuery().use { rows ->
                     while (rows.next()) {

@@ -55,7 +55,10 @@ fun Client.attackTarget(): CombatAttackResult? {
         }
     }
     if(target is Player) { //Pvp checks (duel and wilderness)
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = resolveCombatTargetPlayer(target.slot) ?: run {
+            resetAttack()
+            return null
+        }
         if (duelFight && attackStyle == 0 && duelRule[1]) {
             send(SendMessage("Melee has been disabled for this duel!"))
             resetAttack()

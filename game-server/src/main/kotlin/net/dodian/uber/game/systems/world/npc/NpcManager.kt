@@ -11,7 +11,7 @@ import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
 
 class NpcManager {
@@ -165,21 +165,23 @@ class NpcManager {
     }
 
     fun reloadDrops(c: Client, id: Int) {
-        var statement: Statement? = null
-        var results: ResultSet? = null
         try {
             if (data.containsKey(id)) {
                 data[id]!!.drops.clear()
-                statement = dbConnection.createStatement()
-                results = statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DROPS} where npcid='$id'")
-                while (results.next()) {
-                    data[id]!!.addDrop(
-                        results.getInt("itemid"),
-                        results.getInt("amt_min"),
-                        results.getInt("amt_max"),
-                        results.getDouble("percent"),
-                        results.getBoolean("rareShout"),
-                    )
+                DbAsyncRepository.withConnection { connection ->
+                    connection.createStatement().use { statement ->
+                        statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DROPS} where npcid='$id'").use { results ->
+                            while (results.next()) {
+                                data[id]!!.addDrop(
+                                    results.getInt("itemid"),
+                                    results.getInt("amt_min"),
+                                    results.getInt("amt_max"),
+                                    results.getDouble("percent"),
+                                    results.getBoolean("rareShout"),
+                                )
+                            }
+                        }
+                    }
                 }
                 c.send(SendMessage("Finished reloading all drops for ${data[id]!!.name}"))
             } else {
@@ -187,27 +189,22 @@ class NpcManager {
             }
         } catch (e: Exception) {
             println("npc drop wrong during drop reload..$e")
-        } finally {
-            try {
-                results?.close()
-                statement?.close()
-            } catch (e: Exception) {
-                println("Error closing resources in reloadDrops: $e")
-            }
         }
     }
 
     fun reloadAllData(c: Client, id: Int) {
-        var statement: Statement? = null
-        var results: ResultSet? = null
         try {
-            statement = dbConnection.createStatement()
-            results = statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'")
-            if (results.next()) {
-                data[results.getInt("id")] = NpcData(results)
-                for (n in npcMap.values) {
-                    if (n.id == id) {
-                        n.reloadData()
+            DbAsyncRepository.withConnection { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'").use { results ->
+                        if (results.next()) {
+                            data[results.getInt("id")] = NpcData(results)
+                            for (n in npcMap.values) {
+                                if (n.id == id) {
+                                    n.reloadData()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -215,47 +212,36 @@ class NpcManager {
             c.send(SendMessage("Finished updating all '${getData(id)?.name}' npcs!"))
         } catch (e: Exception) {
             println("npc drop wrong during reload of data..$e")
-        } finally {
-            try {
-                results?.close()
-                statement?.close()
-            } catch (e: Exception) {
-                println("Error closing resources in reloadAllData: $e")
-            }
         }
     }
 
     fun reloadNpcConfig(c: Client, id: Int, table: String, value: String) {
         if (!data.containsKey(id)) {
-            var statement1: Statement? = null
-            var statement2: Statement? = null
-            var results: ResultSet? = null
             try {
-                statement1 = dbConnection.createStatement()
-                statement1.executeUpdate("INSERT INTO ${DbTables.GAME_NPC_DEFINITIONS}(id, name, examine, size) VALUES($id, 'no_name', 'no_examine', '1')")
-                statement2 = dbConnection.createStatement()
-                results = statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'")
-                if (results.next()) {
-                    data[results.getInt("id")] = NpcData(results)
-                    c.send(SendMessage("Added default config values to the npc!"))
+                DbAsyncRepository.withConnection { connection ->
+                    connection.createStatement().use { statement1 ->
+                        statement1.executeUpdate("INSERT INTO ${DbTables.GAME_NPC_DEFINITIONS}(id, name, examine, size) VALUES($id, 'no_name', 'no_examine', '1')")
+                    }
+                    connection.createStatement().use { statement2 ->
+                        statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS} where id='$id'").use { results ->
+                            if (results.next()) {
+                                data[results.getInt("id")] = NpcData(results)
+                                c.send(SendMessage("Added default config values to the npc!"))
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 println("error? $e")
-            } finally {
-                try {
-                    results?.close()
-                    statement1?.close()
-                    statement2?.close()
-                } catch (e: Exception) {
-                    println("Error closing resources in reloadNpcConfig: $e")
-                }
             }
         } else if (!table.equals("new npc", ignoreCase = true)) {
-            var statement: Statement? = null
             try {
-                statement = dbConnection.createStatement()
-                val query = "UPDATE ${DbTables.GAME_NPC_DEFINITIONS} SET $table = '$value' WHERE id = '$id'"
-                statement.executeUpdate(query)
+                DbAsyncRepository.withConnection { connection ->
+                    connection.createStatement().use { statement ->
+                        val query = "UPDATE ${DbTables.GAME_NPC_DEFINITIONS} SET $table = '$value' WHERE id = '$id'"
+                        statement.executeUpdate(query)
+                    }
+                }
                 c.send(SendMessage("You updated '$table' with value '$value'!"))
                 reloadAllData(c, id)
             } catch (e: Exception) {
@@ -266,19 +252,13 @@ class NpcManager {
                         c.send(SendMessage("row name '$table' need a int value!"))
                     else -> println("npc drop wrong during config reload..$e")
                 }
-            } finally {
-                try {
-                    statement?.close()
-                } catch (e: Exception) {
-                    println("Error closing resources in reloadNpcConfig: $e")
-                }
             }
         }
     }
 
     fun loadData() {
         try {
-            dbConnection.use { conn1 ->
+            DbAsyncRepository.withConnection { conn1 ->
                 conn1.createStatement().use { statement1 ->
                     statement1.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DEFINITIONS}").use { results1 ->
                         var amount = 0
@@ -296,7 +276,7 @@ class NpcManager {
         }
 
         try {
-            dbConnection.use { conn2 ->
+            DbAsyncRepository.withConnection { conn2 ->
                 conn2.createStatement().use { statement2 ->
                     statement2.executeQuery("SELECT * FROM ${DbTables.GAME_NPC_DROPS}").use { results2 ->
                         var amount = 0

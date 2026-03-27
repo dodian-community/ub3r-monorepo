@@ -7,9 +7,9 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.audit.AsyncSqlService
 import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
-import net.dodian.uber.game.persistence.db.dbConnection
 import net.dodian.uber.game.config.gameWorldId
 
 class SlotMachine {
@@ -126,7 +126,7 @@ class SlotMachine {
             "slot-machine-load-gamble",
             Runnable {
                 try {
-                    dbConnection.use { conn ->
+                    DbAsyncRepository.withConnection { conn ->
                         conn.createStatement().use { stmt ->
                             stmt.executeQuery("SELECT * FROM ${DbTables.GAME_PETE_CO}").use { results ->
                                 var winBillions = 0
@@ -189,7 +189,7 @@ class SlotMachine {
             "slot-machine-track-dice",
             Runnable {
                 try {
-                    dbConnection.use { conn ->
+                    DbAsyncRepository.withConnection { conn ->
                         conn.createStatement().use { stmt ->
                             stmt.executeUpdate(query)
                         }

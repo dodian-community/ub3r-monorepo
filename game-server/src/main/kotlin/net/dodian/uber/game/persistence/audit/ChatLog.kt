@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.config.gameWorldId
 import org.slf4j.LoggerFactory
 
@@ -110,7 +110,7 @@ object ChatLog {
         if (batch.isEmpty()) return 0
 
         return try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 connection.prepareStatement(insertSql).use { statement ->
                     val timestamp = LogEntry.getTimeStamp()
                     for (message in batch) {
@@ -140,7 +140,7 @@ object ChatLog {
 
     private fun saveMessage(message: ChatMessage) {
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 saveMessage(connection, message, LogEntry.getTimeStamp())
             }
         } catch (exception: java.sql.SQLException) {

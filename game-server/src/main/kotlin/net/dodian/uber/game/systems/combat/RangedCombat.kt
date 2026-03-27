@@ -132,7 +132,7 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
         }
     }
     if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(getbattleTimer(equipment[Equipment.Slot.WEAPON.id]))
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if (!landHit) hit = 0

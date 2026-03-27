@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 
 object CommandDbService {
     @Suppress("UNUSED_PARAMETER")
@@ -38,17 +38,20 @@ object CommandDbService {
     @Throws(Exception::class)
     fun loadOfflineContainerView(playerName: String, columnName: String): OfflineContainerViewResult {
         val containerColumn = validateContainerColumn(columnName)
-        dbConnection.use { connection ->
+        return DbAsyncRepository.withConnection { connection ->
             val userId = loadUserId(connection, playerName)
-            if (userId < 0) return OfflineContainerViewResult.usernameNotFound(playerName)
-            val query = "SELECT $containerColumn FROM ${DbTables.GAME_CHARACTERS} WHERE id = ?"
-            connection.prepareStatement(query).use { statement ->
-                statement.setInt(1, userId)
-                statement.executeQuery().use { results ->
-                    return if (!results.next()) {
-                        OfflineContainerViewResult.characterNotFound(playerName)
-                    } else {
-                        OfflineContainerViewResult.ready(playerName, toGameItems(parseContainerEntries(results.getString(containerColumn))))
+            if (userId < 0) {
+                OfflineContainerViewResult.usernameNotFound(playerName)
+            } else {
+                val query = "SELECT $containerColumn FROM ${DbTables.GAME_CHARACTERS} WHERE id = ?"
+                connection.prepareStatement(query).use { statement ->
+                    statement.setInt(1, userId)
+                    statement.executeQuery().use { results ->
+                        if (!results.next()) {
+                            OfflineContainerViewResult.characterNotFound(playerName)
+                        } else {
+                            OfflineContainerViewResult.ready(playerName, toGameItems(parseContainerEntries(results.getString(containerColumn))))
+                        }
                     }
                 }
             }
@@ -59,24 +62,30 @@ object CommandDbService {
     @Throws(Exception::class)
     fun removeOfflineExperience(playerName: String, skillName: String, xp: Int): OfflineSkillMutationResult {
         val skillColumn = validateSkillColumn(skillName)
-        dbConnection.use { connection ->
+        return DbAsyncRepository.withConnection { connection ->
             val userId = loadUserId(connection, playerName)
-            if (userId < 0) return OfflineSkillMutationResult.notFound(playerName, skillColumn)
-            val select = "SELECT $skillColumn, totalxp, total FROM ${DbTables.GAME_CHARACTERS_STATS} WHERE uid = ?"
-            connection.prepareStatement(select).use { statement ->
-                statement.setInt(1, userId)
-                statement.executeQuery().use { results ->
-                    if (!results.next()) return OfflineSkillMutationResult.notFound(playerName, skillColumn)
-                    val computation = computeSkillMutation(results.getInt(skillColumn), results.getInt("totalxp"), results.getInt("total"), xp)
-                    val update = "UPDATE ${DbTables.GAME_CHARACTERS_STATS} SET $skillColumn = ?, totalxp = ?, total = ? WHERE uid = ?"
-                    connection.prepareStatement(update).use { updateStatement ->
-                        updateStatement.setInt(1, computation.newXp)
-                        updateStatement.setInt(2, computation.newTotalXp)
-                        updateStatement.setInt(3, computation.newTotalLevel)
-                        updateStatement.setInt(4, userId)
-                        updateStatement.executeUpdate()
+            if (userId < 0) {
+                OfflineSkillMutationResult.notFound(playerName, skillColumn)
+            } else {
+                val select = "SELECT $skillColumn, totalxp, total FROM ${DbTables.GAME_CHARACTERS_STATS} WHERE uid = ?"
+                connection.prepareStatement(select).use { statement ->
+                    statement.setInt(1, userId)
+                    statement.executeQuery().use { results ->
+                        if (!results.next()) {
+                            OfflineSkillMutationResult.notFound(playerName, skillColumn)
+                        } else {
+                            val computation = computeSkillMutation(results.getInt(skillColumn), results.getInt("totalxp"), results.getInt("total"), xp)
+                            val update = "UPDATE ${DbTables.GAME_CHARACTERS_STATS} SET $skillColumn = ?, totalxp = ?, total = ? WHERE uid = ?"
+                            connection.prepareStatement(update).use { updateStatement ->
+                                updateStatement.setInt(1, computation.newXp)
+                                updateStatement.setInt(2, computation.newTotalXp)
+                                updateStatement.setInt(3, computation.newTotalLevel)
+                                updateStatement.setInt(4, userId)
+                                updateStatement.executeUpdate()
+                            }
+                            OfflineSkillMutationResult.ready(playerName, skillColumn, computation.currentXp, computation.removedXp)
+                        }
                     }
-                    return OfflineSkillMutationResult.ready(playerName, skillColumn, computation.currentXp, computation.removedXp)
                 }
             }
         }
@@ -85,33 +94,39 @@ object CommandDbService {
     @JvmStatic
     @Throws(Exception::class)
     fun removeOfflineItems(playerName: String, itemId: Int, amount: Int): OfflineItemRemovalResult {
-        dbConnection.use { connection ->
+        return DbAsyncRepository.withConnection { connection ->
             val userId = loadUserId(connection, playerName)
-            if (userId < 0) return OfflineItemRemovalResult.notFound(playerName, itemId)
-            val query = "SELECT bank, inventory, equipment FROM ${DbTables.GAME_CHARACTERS} WHERE id = ?"
-            connection.prepareStatement(query).use { statement ->
-                statement.setInt(1, userId)
-                statement.executeQuery().use { results ->
-                    if (!results.next()) return OfflineItemRemovalResult.notFound(playerName, itemId)
-                    var remaining = amount
-                    var totalRemoved = 0
-                    val bankMutation = applyItemRemoval(results.getString("bank"), itemId, remaining)
-                    remaining = bankMutation.remainingAmount
-                    totalRemoved += bankMutation.removedAmount
-                    val inventoryMutation = applyItemRemoval(results.getString("inventory"), itemId, remaining)
-                    remaining = inventoryMutation.remainingAmount
-                    totalRemoved += inventoryMutation.removedAmount
-                    val equipmentMutation = applyItemRemoval(results.getString("equipment"), itemId, remaining)
-                    totalRemoved += equipmentMutation.removedAmount
-                    val update = "UPDATE ${DbTables.GAME_CHARACTERS} SET equipment = ?, inventory = ?, bank = ? WHERE id = ?"
-                    connection.prepareStatement(update).use { updateStatement ->
-                        updateStatement.setString(1, equipmentMutation.updatedText)
-                        updateStatement.setString(2, inventoryMutation.updatedText)
-                        updateStatement.setString(3, bankMutation.updatedText)
-                        updateStatement.setInt(4, userId)
-                        updateStatement.executeUpdate()
+            if (userId < 0) {
+                OfflineItemRemovalResult.notFound(playerName, itemId)
+            } else {
+                val query = "SELECT bank, inventory, equipment FROM ${DbTables.GAME_CHARACTERS} WHERE id = ?"
+                connection.prepareStatement(query).use { statement ->
+                    statement.setInt(1, userId)
+                    statement.executeQuery().use { results ->
+                        if (!results.next()) {
+                            OfflineItemRemovalResult.notFound(playerName, itemId)
+                        } else {
+                            var remaining = amount
+                            var totalRemoved = 0
+                            val bankMutation = applyItemRemoval(results.getString("bank"), itemId, remaining)
+                            remaining = bankMutation.remainingAmount
+                            totalRemoved += bankMutation.removedAmount
+                            val inventoryMutation = applyItemRemoval(results.getString("inventory"), itemId, remaining)
+                            remaining = inventoryMutation.remainingAmount
+                            totalRemoved += inventoryMutation.removedAmount
+                            val equipmentMutation = applyItemRemoval(results.getString("equipment"), itemId, remaining)
+                            totalRemoved += equipmentMutation.removedAmount
+                            val update = "UPDATE ${DbTables.GAME_CHARACTERS} SET equipment = ?, inventory = ?, bank = ? WHERE id = ?"
+                            connection.prepareStatement(update).use { updateStatement ->
+                                updateStatement.setString(1, equipmentMutation.updatedText)
+                                updateStatement.setString(2, inventoryMutation.updatedText)
+                                updateStatement.setString(3, bankMutation.updatedText)
+                                updateStatement.setInt(4, userId)
+                                updateStatement.executeUpdate()
+                            }
+                            OfflineItemRemovalResult.ready(playerName, itemId, totalRemoved)
+                        }
                     }
-                    return OfflineItemRemovalResult.ready(playerName, itemId, totalRemoved)
                 }
             }
         }
@@ -228,10 +243,10 @@ object CommandDbService {
     }
 
     private fun executeWrite(query: String, bind: (PreparedStatement) -> Unit): CommandWriteResult {
-        dbConnection.use { connection ->
+        return DbAsyncRepository.withConnection { connection ->
             connection.prepareStatement(query).use { statement ->
                 bind(statement)
-                return CommandWriteResult(statement.executeUpdate())
+                CommandWriteResult(statement.executeUpdate())
             }
         }
     }

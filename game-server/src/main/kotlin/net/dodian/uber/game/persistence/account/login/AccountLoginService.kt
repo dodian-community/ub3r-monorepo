@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
-import net.dodian.uber.game.persistence.db.dbConnection
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.config.serverDebugMode
 import net.dodian.uber.game.config.serverEnv
 
@@ -16,7 +16,7 @@ object AccountLoginService {
     @JvmStatic
     fun loadCharacterGame(player: Client, playerName: String, playerPass: String): Int =
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 loadCharacterGame(
                     player = player,
                     playerName = playerName,
@@ -34,7 +34,7 @@ object AccountLoginService {
     @JvmStatic
     fun loadGame(player: Client, playerName: String, playerPass: String): Int =
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 loadGame(
                     player = player,
                     playerName = playerName,
@@ -53,7 +53,7 @@ object AccountLoginService {
     @JvmStatic
     fun updatePlayerForumRegistration(player: Client) {
         try {
-            dbConnection.use { connection ->
+            DbAsyncRepository.withConnection { connection ->
                 AccountLoginRepository.updateForumRegistration(connection, player.dbId, "40")
             }
         } catch (exception: Exception) {
@@ -64,7 +64,7 @@ object AccountLoginService {
 
     @JvmStatic
     fun isBanned(id: Int): Boolean =
-        dbConnection.use { connection ->
+        DbAsyncRepository.withConnection { connection ->
             AccountLoginRepository.isBanned(connection, id)
         }
 

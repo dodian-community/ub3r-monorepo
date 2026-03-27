@@ -18,7 +18,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import org.slf4j.LoggerFactory
 import net.dodian.uber.game.persistence.db.DbTables
-import net.dodian.uber.game.persistence.db.dbConnection
 
 object AccountPersistenceService {
     private val logger = LoggerFactory.getLogger(AccountPersistenceService::class.java)
@@ -107,15 +106,13 @@ object AccountPersistenceService {
         }
         scope.launch {
             val hasUnclaimedResult =
-                DbAsyncRepository.suspendRead(dispatcher) {
-                    dbConnection.use { conn ->
-                        conn.prepareStatement(
-                            "SELECT 1 FROM ${DbTables.GAME_REFUND_ITEMS} " +
-                                "WHERE receivedBy=? AND message='0' AND claimed IS NULL LIMIT 1",
-                        ).use { ps ->
-                            ps.setInt(1, dbId)
-                            ps.executeQuery().use { rs -> rs.next() }
-                        }
+                DbAsyncRepository.suspendReadConnection(dispatcher) { conn ->
+                    conn.prepareStatement(
+                        "SELECT 1 FROM ${DbTables.GAME_REFUND_ITEMS} " +
+                            "WHERE receivedBy=? AND message='0' AND claimed IS NULL LIMIT 1",
+                    ).use { ps ->
+                        ps.setInt(1, dbId)
+                        ps.executeQuery().use { rs -> rs.next() }
                     }
                 }
             val hasUnclaimed =
@@ -132,15 +129,13 @@ object AccountPersistenceService {
             }
 
             val updateResult =
-                DbAsyncRepository.suspendRead(dispatcher) {
-                    dbConnection.use { conn ->
-                        conn.prepareStatement(
-                            "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' " +
-                                "WHERE receivedBy=? AND message='0' AND claimed IS NULL",
-                        ).use { ps ->
-                            ps.setInt(1, dbId)
-                            ps.executeUpdate()
-                        }
+                DbAsyncRepository.suspendReadConnection(dispatcher) { conn ->
+                    conn.prepareStatement(
+                        "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' " +
+                            "WHERE receivedBy=? AND message='0' AND claimed IS NULL",
+                    ).use { ps ->
+                        ps.setInt(1, dbId)
+                        ps.executeUpdate()
                     }
                     true
                 }

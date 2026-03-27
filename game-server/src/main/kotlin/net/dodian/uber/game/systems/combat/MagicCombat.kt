@@ -116,7 +116,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,

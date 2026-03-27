@@ -126,7 +126,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
             }
         }
         if (target is Player) {
-            val player = Server.playerHandler.getClient(target.slot)
+            val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(getbattleTimer(equipment[Equipment.Slot.WEAPON.id]))
             if (landCrit && landHit) hit + Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
             if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) (hit * 0.6).toInt()
@@ -248,7 +248,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
             else -> PlayerAnimationService.requestAttack(this, emote)
         }
     } else if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = resolveCombatTargetPlayer(target.slot) ?: return false
         when (equipment[Equipment.Slot.WEAPON.id]) {
             1215 -> {
                 hit = (hit * 1.1).toInt()
