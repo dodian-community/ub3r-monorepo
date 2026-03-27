@@ -115,4 +115,38 @@ class ArchitectureBoundaryTest {
             "Source file paths must align with declared package paths.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `legacy repackaged namespaces are removed`() {
+        val legacyPackageViolations = sourceFiles.mapNotNull { file ->
+            val packageLine = Files.readAllLines(file)
+                .asSequence()
+                .map { it.trim() }
+                .firstOrNull { it.startsWith("package ") }
+                ?: return@mapNotNull null
+            val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
+            val isLegacy =
+                packageName.startsWith("net.dodian.uber.game.content.entities") ||
+                    packageName.startsWith("net.dodian.uber.game.systems.ui.interfaces") ||
+                    packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules")
+            if (!isLegacy) return@mapNotNull null
+            "${file} -> $packageName"
+        }
+
+        val legacyPathViolations = sourceFiles.mapNotNull { file ->
+            val normalized = file.invariantSeparatorsPathString
+            val isLegacyPath =
+                normalized.contains("/net/dodian/uber/game/content/entities/") ||
+                    normalized.contains("/net/dodian/uber/game/systems/ui/interfaces/") ||
+                    normalized.contains("/net/dodian/uber/game/systems/ui/dialogue/modules/")
+            if (!isLegacyPath) return@mapNotNull null
+            normalized
+        }
+
+        val violations = legacyPackageViolations + legacyPathViolations
+        assertTrue(
+            violations.isEmpty(),
+            "Legacy repackaged namespaces/paths must not remain.\n${violations.joinToString("\n")}",
+        )
+    }
 }

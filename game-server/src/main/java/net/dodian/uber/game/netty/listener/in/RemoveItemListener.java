@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
-import net.dodian.uber.game.systems.ui.interfaces.skilling.SkillingInterfaceItemService;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;

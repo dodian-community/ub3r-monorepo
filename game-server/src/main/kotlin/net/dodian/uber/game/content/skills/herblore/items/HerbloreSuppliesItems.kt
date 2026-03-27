@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.herblore.items
 
-import net.dodian.uber.game.content.entities.items.ItemContent
+import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.model.entity.player.Client
 
 object HerbloreSuppliesItems : ItemContent {

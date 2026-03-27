@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.interaction.scheduler
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.entities.npcs.spawns.NpcClickMetrics
+import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
 import net.dodian.uber.game.systems.interaction.InteractionIntent
 import net.dodian.uber.game.systems.interaction.InteractionProcessor
 import net.dodian.uber.game.systems.interaction.NpcInteractionIntent

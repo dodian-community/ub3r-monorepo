@@ -7,8 +7,8 @@ import net.dodian.uber.game.systems.combat.getAttackStyle
 import net.dodian.uber.game.content.objects.ObjectContentRegistry
 import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectInteractionService
-import net.dodian.uber.game.content.entities.npcs.spawns.NpcContentDispatcher
-import net.dodian.uber.game.content.entities.npcs.spawns.NpcClickMetrics
+import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
+import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.herblore
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.content.entities.npcs.spawns.HerbloreNpcDialogue
+import net.dodian.uber.game.content.npcs.spawns.HerbloreNpcDialogue
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 

@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.commands.dev
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
-import net.dodian.uber.game.content.entities.npcs.spawns.NpcClickMetrics
+import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
 
 object DevNpcContentCommands : CommandContent {
     override fun definitions() =

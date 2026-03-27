@@ -1,14 +1,14 @@
 package net.dodian.uber.game.systems.ui.dialogue.core
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.systems.ui.dialogue.modules.BrimhavenEntryDialogueModule
-import net.dodian.uber.game.systems.ui.dialogue.modules.PyramidPlunderDialogueModule
-import net.dodian.uber.game.systems.ui.dialogue.modules.RockshellDialogueModule
-import net.dodian.uber.game.systems.ui.dialogue.modules.SettingsDialogueModule
-import net.dodian.uber.game.content.entities.npcs.spawns.DukeHoracio
-import net.dodian.uber.game.content.entities.npcs.spawns.PartyPete
-import net.dodian.uber.game.content.entities.npcs.spawns.UnknownNpc1597
-import net.dodian.uber.game.content.entities.npcs.spawns.Watcher
+import net.dodian.uber.game.content.dialogue.modules.BrimhavenEntryDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.PyramidPlunderDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.RockshellDialogueModule
+import net.dodian.uber.game.content.dialogue.modules.SettingsDialogueModule
+import net.dodian.uber.game.content.npcs.spawns.DukeHoracio
+import net.dodian.uber.game.content.npcs.spawns.PartyPete
+import net.dodian.uber.game.content.npcs.spawns.UnknownNpc1597
+import net.dodian.uber.game.content.npcs.spawns.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueRenderRegistry {
