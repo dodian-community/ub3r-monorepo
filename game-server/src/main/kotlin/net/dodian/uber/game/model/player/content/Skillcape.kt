@@ -2,13 +2,14 @@ package net.dodian.uber.game.model.player.content
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.utilities.Misc
+import kotlin.jvm.JvmName
 
 enum class Skillcape(
-    private val untrimmed: Int,
-    private val trimmed: Int,
-    private val emote: Int,
-    private val gfx: Int,
-    private val skill: Skill,
+    private val untrimmedIdRaw: Int,
+    private val trimmedIdRaw: Int,
+    private val emoteRaw: Int,
+    private val gfxRaw: Int,
+    private val skillRaw: Skill,
 ) {
     ATTACK_CAPE(9747, 9748, 4959, 823, Skill.ATTACK),
     STRENGTH_CAPE(9750, 9751, 4981, 828, Skill.STRENGTH),
@@ -32,15 +33,31 @@ enum class Skillcape(
     WOODCUTTING_CAPE(9807, 9808, 4957, 822, Skill.WOODCUTTING),
     ;
 
-    fun getUntrimmedId(): Int = untrimmed
+    fun getUntrimmedId(): Int = untrimmedIdRaw
 
-    fun getTrimmedId(): Int = trimmed
+    @get:JvmName("getUntrimmedIdValue")
+    val untrimmedId: Int
+        get() = getUntrimmedId()
 
-    fun getEmote(): Int = emote
+    fun getTrimmedId(): Int = trimmedIdRaw
 
-    fun getGfx(): Int = gfx
+    @get:JvmName("getTrimmedIdValue")
+    val trimmedId: Int
+        get() = getTrimmedId()
 
-    fun getSkill(): Skill = skill
+    fun getEmote(): Int = emoteRaw
+
+    @get:JvmName("getEmoteKotlin")
+    val emote: Int
+        get() = getEmote()
+
+    fun getGfx(): Int = gfxRaw
+
+    @get:JvmName("getGfxKotlin")
+    val gfx: Int
+        get() = getGfx()
+
+    fun getSkill(): Skill = skillRaw
 
     companion object {
         @JvmStatic
