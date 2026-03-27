@@ -18,14 +18,14 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
-import net.dodian.uber.game.skills.core.runtime.SkillingRandomEventService;
-import net.dodian.uber.game.skills.slayer.SlayerService;
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService;
+import net.dodian.uber.game.content.skills.slayer.SlayerService;
 import net.dodian.uber.game.persistence.audit.ItemLog;
-import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
-import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
-import net.dodian.uber.game.runtime.tasking.GameTaskSet;
-import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.systems.combat.CombatRuntimeService;
+import net.dodian.uber.game.engine.tasking.GameTaskSet;
+import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -604,7 +604,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        net.dodian.uber.game.skills.slayer.SlayerTaskDefinition task = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(id);
+        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition task = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(id);
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);

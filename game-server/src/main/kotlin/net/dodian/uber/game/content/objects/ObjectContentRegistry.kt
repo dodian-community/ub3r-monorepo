@@ -3,8 +3,8 @@ package net.dodian.uber.game.content.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.runtime.api.content.ContentInteractionType
-import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.api.content.ContentInteractionType
+import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

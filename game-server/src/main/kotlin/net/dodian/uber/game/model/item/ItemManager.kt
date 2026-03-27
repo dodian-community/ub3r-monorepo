@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.item
 import java.sql.Statement
 import java.util.HashMap
 import java.util.LinkedHashMap
-import net.dodian.uber.game.content.items.spawn.GlobalGroundSpawnContent
+import net.dodian.uber.game.content.entities.items.spawn.GlobalGroundSpawnContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage

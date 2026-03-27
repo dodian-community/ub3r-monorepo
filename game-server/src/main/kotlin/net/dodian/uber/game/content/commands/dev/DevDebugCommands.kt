@@ -7,11 +7,11 @@ import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.runtime.tasking.coroutine.gameClock
-import net.dodian.uber.game.runtime.tasking.coroutine.npcTaskCoroutine
-import net.dodian.uber.game.runtime.tasking.coroutine.playerTaskCoroutine
-import net.dodian.uber.game.runtime.tasking.coroutine.worldTaskCoroutine
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.engine.tasking.coroutine.gameClock
+import net.dodian.uber.game.engine.tasking.coroutine.npcTaskCoroutine
+import net.dodian.uber.game.engine.tasking.coroutine.playerTaskCoroutine
+import net.dodian.uber.game.engine.tasking.coroutine.worldTaskCoroutine
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.party.Balloons
 import net.dodian.utilities.Misc
@@ -96,10 +96,10 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     4 -> {
                         client.cancelFarmDebugTask()
                         val farmConfig = intArrayOf(0)
-                        client.farmDebugTaskHandle = net.dodian.uber.game.runtime.scheduler.QueueTaskHandle.from(
-                            net.dodian.uber.game.runtime.tasking.GameTaskRuntime.queuePlayerRepeating(
+                        client.farmDebugTaskHandle = net.dodian.uber.game.engine.scheduler.QueueTaskHandle.from(
+                            net.dodian.uber.game.engine.tasking.GameTaskRuntime.queuePlayerRepeating(
                                 client,
-                                net.dodian.uber.game.runtime.tasking.TaskPriority.STANDARD,
+                                net.dodian.uber.game.engine.tasking.TaskPriority.STANDARD,
                                 1,
                                 1,
                             ) {

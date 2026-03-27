@@ -20,59 +20,59 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.skills.slayer.SlayerService;
-import net.dodian.uber.game.skills.farming.FarmingService;
-import net.dodian.uber.game.skills.farming.FarmingState;
+import net.dodian.uber.game.content.skills.slayer.SlayerService;
+import net.dodian.uber.game.content.skills.farming.FarmingService;
+import net.dodian.uber.game.content.skills.farming.FarmingState;
 import net.dodian.uber.game.persistence.command.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.runtime.net.InboundPacketMailbox;
-import net.dodian.uber.game.runtime.net.OutboundSessionQueue;
+import net.dodian.uber.game.engine.net.InboundPacketMailbox;
+import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.jobs.impl.EntityProcessor;
-import net.dodian.uber.game.skills.mining.MiningService;
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingService;
-import net.dodian.uber.game.skills.fletching.FletchingService;
-import net.dodian.uber.game.skills.fletching.FletchingState;
-import net.dodian.uber.game.skills.fishing.FishingService;
-import net.dodian.uber.game.skills.fishing.FishingState;
-import net.dodian.uber.game.skills.cooking.CookingService;
-import net.dodian.uber.game.skills.cooking.CookingState;
-import net.dodian.uber.game.skills.crafting.CraftingService;
-import net.dodian.uber.game.skills.crafting.CraftingMode;
-import net.dodian.uber.game.skills.crafting.CraftingState;
-import net.dodian.uber.game.skills.crafting.GoldJewelryService;
-import net.dodian.uber.game.skills.crafting.TanningRequest;
-import net.dodian.uber.game.skills.crafting.TanningService;
-import net.dodian.uber.game.skills.prayer.PrayerInteractionService;
-import net.dodian.uber.game.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingDefinitions;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingPouchService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.content.dialogue.DialogueOptionService;
-import net.dodian.uber.game.content.dialogue.DialogueDisplayService;
-import net.dodian.uber.game.content.dialogue.DialogueService;
-import net.dodian.uber.game.skills.smithing.SmithingDefinitions;
-import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
-import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.content.skills.mining.MiningService;
+import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingService;
+import net.dodian.uber.game.content.skills.fletching.FletchingService;
+import net.dodian.uber.game.content.skills.fletching.FletchingState;
+import net.dodian.uber.game.content.skills.fishing.FishingService;
+import net.dodian.uber.game.content.skills.fishing.FishingState;
+import net.dodian.uber.game.content.skills.cooking.CookingService;
+import net.dodian.uber.game.content.skills.cooking.CookingState;
+import net.dodian.uber.game.content.skills.crafting.CraftingService;
+import net.dodian.uber.game.content.skills.crafting.CraftingMode;
+import net.dodian.uber.game.content.skills.crafting.CraftingState;
+import net.dodian.uber.game.content.skills.crafting.GoldJewelryService;
+import net.dodian.uber.game.content.skills.crafting.TanningRequest;
+import net.dodian.uber.game.content.skills.crafting.TanningService;
+import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService;
+import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingDefinitions;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingPouchService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueOptionService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.party.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
-import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
-import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
-import net.dodian.uber.game.runtime.action.PlayerActionType;
-import net.dodian.uber.game.runtime.action.ProductionActionService;
-import net.dodian.uber.game.runtime.action.SkillingActionService;
-import net.dodian.uber.game.runtime.action.SmithingActionService;
-import net.dodian.uber.game.runtime.action.TeleportActionService;
-import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
-import net.dodian.uber.game.runtime.combat.CombatStartService;
-import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
-import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
-import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
+import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.systems.action.PlayerActionType;
+import net.dodian.uber.game.systems.action.ProductionActionService;
+import net.dodian.uber.game.systems.action.SkillingActionService;
+import net.dodian.uber.game.systems.action.SmithingActionService;
+import net.dodian.uber.game.systems.action.TeleportActionService;
+import net.dodian.uber.game.systems.animation.PlayerAnimationService;
+import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.utilities.*;
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -84,8 +84,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
-import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
+import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
+import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 import static net.dodian.utilities.DotEnvKt.*;
@@ -724,7 +724,7 @@ public class Client extends Player implements Runnable {
         net.dodian.uber.game.netty.listener.PacketListener listener =
                 net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
-            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
+            boolean sample = net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.shouldSample();
             if (logger.isDebugEnabled() && isNpcTraceOpcode(packet.opcode())) {
                 logger.debug(
                         "Inbound npc-trace opcode={} size={} preview={} recent={} player={}",
@@ -740,7 +740,7 @@ public class Client extends Player implements Runnable {
                 listener.handle(this, packet);
                 long elapsedNs = System.nanoTime() - startNs;
                 if (sample) {
-                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
+                    net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
                 }
                 if (getInboundOpcodeProfilingEnabled()) {
                     long elapsedMs = elapsedNs / 1_000_000L;
@@ -1850,7 +1850,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.content.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1871,7 +1871,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(this);
+            net.dodian.uber.game.content.skills.slayer.SlayerPlugin.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -2464,7 +2464,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -2533,7 +2533,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -3073,7 +3073,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -3153,7 +3153,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -3468,7 +3468,7 @@ public class Client extends Player implements Runnable {
             }
         }
         Client other = (Client) PlayerHandler.players[id];
-        String tradeBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
+        String tradeBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
         if (tradeBlockMessage != null) {
             send(new SendMessage(tradeBlockMessage));
             return;
@@ -3494,7 +3494,7 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
+        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
             send(new SendMessage("Sending trade request..."));
@@ -3617,7 +3617,7 @@ public class Client extends Player implements Runnable {
     public void duelReq(int pid) {
         facePlayer(pid);
         Client other = getClient(pid);
-        String duelBlockMessage = net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
+        String duelBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
         if (duelBlockMessage != null) {
             send(new SendMessage(duelBlockMessage));
             return;
@@ -3626,9 +3626,9 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
-        if (net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
-                || net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(other)) {
-            send(new SendMessage(net.dodian.uber.game.runtime.combat.CombatLogoutLockService.isLocked(this)
+        if (net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
                     ? "You can't duel while in combat."
                     : other.getPlayerName() + " can't duel while in combat."));
             return;
@@ -3809,7 +3809,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
-                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
+                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -3829,7 +3829,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelBodyRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
-                || !net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
+                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -4193,7 +4193,7 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (!net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
+            if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
             }
             Client other = getClient(duel_with);
@@ -4441,7 +4441,7 @@ public class Client extends Player implements Runnable {
 
     public boolean bowWeapon(int weaponId) {
         boolean bow = false;
-        if (net.dodian.uber.game.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
+        if (net.dodian.uber.game.content.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
             bow = true;
         }
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||

@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.SynchronizationContext;
 
 /**
  * Stateless Luna-style player update block encoder.

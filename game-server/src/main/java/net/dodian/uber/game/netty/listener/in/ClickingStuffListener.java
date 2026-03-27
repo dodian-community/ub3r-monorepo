@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

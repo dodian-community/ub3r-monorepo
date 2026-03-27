@@ -1,17 +1,17 @@
 package net.dodian.uber.game.content.commands.dev
 
 import java.util.LinkedHashSet
-import net.dodian.uber.game.skills.cooking.CookingDefinitions
-import net.dodian.uber.game.skills.crafting.CraftingDefinitions
-import net.dodian.uber.game.skills.farming.FarmingDefinitions
-import net.dodian.uber.game.skills.fishing.FishingDefinitions
-import net.dodian.uber.game.skills.fletching.FletchingDefinitions
-import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
-import net.dodian.uber.game.skills.mining.MiningDefinitions
-import net.dodian.uber.game.skills.smithing.SmithingFrameDefinitions
-import net.dodian.uber.game.skills.smithing.SmithingDefinitions
-import net.dodian.uber.game.skills.thieving.ThievingService
-import net.dodian.uber.game.skills.woodcutting.WoodcuttingDefinitions
+import net.dodian.uber.game.content.skills.cooking.CookingDefinitions
+import net.dodian.uber.game.content.skills.crafting.CraftingDefinitions
+import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
+import net.dodian.uber.game.content.skills.fishing.FishingDefinitions
+import net.dodian.uber.game.content.skills.fletching.FletchingDefinitions
+import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.content.skills.mining.MiningDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingFrameDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.content.skills.thieving.ThievingService
+import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingDefinitions
 
 object SkillTestItemCatalog {
     private val categories: LinkedHashMap<String, List<Int>> =
@@ -255,7 +255,7 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        net.dodian.uber.game.skills.thieving.ThievingDefinitions.all.forEach { data ->
+        net.dodian.uber.game.content.skills.thieving.ThievingDefinitions.all.forEach { data ->
             data.item.forEach { addIfValid(items, it) }
         }
         return items.toList()

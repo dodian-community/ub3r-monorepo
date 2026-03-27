@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.runtime.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.SynchronizationContext;
 import net.dodian.uber.game.model.UpdateFlag;
 
 /**

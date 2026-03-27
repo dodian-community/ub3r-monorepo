@@ -8,8 +8,8 @@ import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skills.core.progression.SkillAdminService
-import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService
+import net.dodian.uber.game.content.skills.core.progression.SkillAdminService
+import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService
 import net.dodian.utilities.gameWorldId
 
 object BetaOnlyCommands : CommandContent {

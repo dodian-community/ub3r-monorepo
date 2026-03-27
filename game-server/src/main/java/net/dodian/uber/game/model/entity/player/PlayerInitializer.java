@@ -5,12 +5,12 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 
 import java.sql.ResultSet;
 import java.sql.Statement;

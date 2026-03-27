@@ -1,7 +1,7 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.content.dialogue.DialogueService;
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.PlayerTickEvent;
 import net.dodian.uber.game.model.EntityType;
@@ -11,14 +11,14 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
-import net.dodian.uber.game.runtime.loop.GameCycleClock;
-import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
-import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
-import net.dodian.uber.game.runtime.sync.util.IntHashSet;
-import net.dodian.uber.game.runtime.sync.util.LongHashSet;
-import net.dodian.uber.game.runtime.tasking.GameTaskRuntime;
-import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.engine.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.engine.loop.GameCycleClock;
+import net.dodian.uber.game.systems.animation.PlayerAnimationService;
+import net.dodian.uber.game.systems.combat.CombatRuntimeService;
+import net.dodian.uber.game.engine.sync.util.IntHashSet;
+import net.dodian.uber.game.engine.sync.util.LongHashSet;
+import net.dodian.uber.game.engine.tasking.GameTaskRuntime;
+import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.netty.NetworkConstants;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
@@ -304,7 +304,7 @@ public class EntityProcessor implements Runnable {
     }
 
     private void processInboundPackets() {
-        net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.beginTick();
+        net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.beginTick();
         long startNs = System.nanoTime();
         ArrayList<Client> readyPlayers = new ArrayList<>();
         for (;;) {
@@ -387,7 +387,7 @@ public class EntityProcessor implements Runnable {
                     totalPendingAfter,
                     maxPendingBefore,
                     maxPendingAfter,
-                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.top3Summary()
+                    net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.top3Summary()
             );
         }
     }

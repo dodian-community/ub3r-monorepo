@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.event.GameEventScheduler;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -10,8 +10,8 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.runtime.combat.CombatDefenderReaction;
-import net.dodian.uber.game.runtime.combat.CombatLogoutLockService;
+import net.dodian.uber.game.systems.combat.CombatDefenderReaction;
+import net.dodian.uber.game.systems.combat.CombatLogoutLockService;
 import net.dodian.utilities.Misc;
 
 class PlayerCombatState {

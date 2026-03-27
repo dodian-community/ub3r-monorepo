@@ -11,14 +11,14 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.scheduler.QueueTask;
-import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
-import net.dodian.uber.game.runtime.combat.CombatIntent;
-import net.dodian.uber.game.runtime.combat.CombatStartService;
+import net.dodian.uber.game.engine.scheduler.QueueTask;
+import net.dodian.uber.game.engine.scheduler.QueueTaskService;
+import net.dodian.uber.game.systems.combat.CombatIntent;
+import net.dodian.uber.game.systems.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dodian.uber.game.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
 import static net.dodian.utilities.DotEnvKt.getQueueTasksEnabled;
 
 /**

@@ -1,0 +1,81 @@
+package net.dodian.uber.game.content.skills.cooking
+
+import net.dodian.uber.game.Server
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.item.Equipment
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.action.SkillingActionService
+
+object CookingService {
+    @JvmStatic
+    fun start(client: Client, itemId: Int) {
+        if (client.isBusy) {
+            client.send(SendMessage("You are currently busy to be cooking!"))
+            return
+        }
+        val recipe = CookingDefinitions.findRecipe(itemId) ?: run {
+            return
+        }
+        start(client, CookingRequest(itemId, CookingDefinitions.recipes.indexOf(recipe), client.getInvAmt(itemId)))
+    }
+
+    @JvmStatic
+    fun start(client: Client, request: CookingRequest) {
+        client.cookingState = CookingState(request.itemId, request.cookIndex, request.amount)
+        SkillingActionService.startCooking(client)
+    }
+
+    @JvmStatic
+    fun performCycle(client: Client) {
+        val state = client.cookingState
+        if (client.isBusy || state == null || state.remaining < 1) {
+            client.resetAction(true)
+            return
+        }
+        val cookIndex = state.cookIndex
+        val itemId = state.itemId
+        val recipe = CookingDefinitions.recipeByIndex(cookIndex) ?: run {
+            client.resetAction(true)
+            return
+        }
+        if (!client.playerHasItem(itemId)) {
+            client.send(SendMessage("You are out of fish"))
+            client.resetAction(true)
+            return
+        }
+        if (client.getLevel(Skill.COOKING) < recipe.requiredLevel) {
+            client.send(SendMessage("You need ${recipe.requiredLevel} cooking to cook the ${Server.itemManager.getName(itemId).lowercase()}."))
+            client.resetAction(true)
+            return
+        }
+
+        var ran = recipe.burnRollBase - client.getLevel(Skill.COOKING)
+        if (client.equipment[Equipment.Slot.HANDS.id] == 775) ran -= 4
+        if (client.equipment[Equipment.Slot.HEAD.id] == 1949) ran -= 4
+        if (client.equipment[Equipment.Slot.HEAD.id] == 1949 && client.equipment[Equipment.Slot.HANDS.id] == 775) ran -= 2
+        ran = ran.coerceIn(0, 100)
+        val burn = 1 + net.dodian.utilities.Utils.random(99) <= ran
+
+        if (recipe.experience <= 0) {
+            client.resetAction(true)
+            return
+        }
+        client.cookingState = state.copy(remaining = state.remaining - 1)
+        client.deleteItem(itemId, 1)
+        client.setFocus(client.interactionAnchorX, client.interactionAnchorY)
+        client.requestAnim(883, 0)
+        if (!burn) {
+            client.addItem(recipe.cookedItemId, 1)
+            client.send(SendMessage("You cook the ${client.GetItemName(itemId)}"))
+            SkillProgressionService.gainXp(client, recipe.experience, Skill.COOKING)
+        } else {
+            client.addItem(recipe.burntItemId, 1)
+            client.send(SendMessage("You burn the ${client.GetItemName(itemId)}"))
+        }
+        client.checkItemUpdate()
+        SkillingRandomEventService.trigger(client, recipe.experience)
+    }
+}

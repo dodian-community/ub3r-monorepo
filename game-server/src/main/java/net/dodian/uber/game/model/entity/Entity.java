@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.UpdateFlags;
-import net.dodian.uber.game.combat.style.CombatStyle;
+import net.dodian.uber.game.systems.combat.style.CombatStyle;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;

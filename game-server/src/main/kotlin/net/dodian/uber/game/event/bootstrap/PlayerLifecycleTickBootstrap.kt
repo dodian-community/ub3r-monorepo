@@ -2,7 +2,7 @@ package net.dodian.uber.game.event.bootstrap
 
 import net.dodian.uber.game.event.GameEventBus
 import net.dodian.uber.game.event.events.PlayerTickEvent
-import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService
+import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 
 object PlayerLifecycleTickBootstrap {
     @JvmStatic

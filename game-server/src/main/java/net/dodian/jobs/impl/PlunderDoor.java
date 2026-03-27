@@ -1,7 +1,7 @@
 package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService;
+import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService;
 import net.dodian.utilities.Misc;
 
 import java.util.ArrayList;

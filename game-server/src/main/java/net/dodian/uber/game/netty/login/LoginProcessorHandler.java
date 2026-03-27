@@ -18,7 +18,7 @@ import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
-import net.dodian.uber.game.runtime.loop.GameThreadIngress;
+import net.dodian.uber.game.engine.loop.GameThreadIngress;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

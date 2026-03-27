@@ -1,15 +1,15 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.content.items.ItemDispatcher;
+import net.dodian.uber.game.content.entities.items.ItemDispatcher;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin;
+import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem
-import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
+import net.dodian.uber.game.systems.zone.ZoneUpdateBus
 import net.dodian.utilities.zoneUpdateBatchingEnabled
 
 class GroundItem {

@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.commands.player
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.combat.getRangedStr
-import net.dodian.uber.game.combat.magicBonusDamage
-import net.dodian.uber.game.combat.meleeMaxHit
-import net.dodian.uber.game.combat.rangedMaxHit
+import net.dodian.uber.game.systems.combat.getRangedStr
+import net.dodian.uber.game.systems.combat.magicBonusDamage
+import net.dodian.uber.game.systems.combat.meleeMaxHit
+import net.dodian.uber.game.systems.combat.rangedMaxHit
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands

@@ -2,8 +2,8 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.combat.PlayerAttackCombatKt;
-import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics;
+import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.content.entities.npcs.spawns.NpcClickMetrics;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
@@ -14,11 +14,11 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
-import net.dodian.uber.game.runtime.interaction.scheduler.InteractionTaskScheduler;
-import net.dodian.uber.game.runtime.interaction.scheduler.NpcInteractionTask;
-import net.dodian.uber.game.runtime.combat.CombatIntent;
-import net.dodian.uber.game.runtime.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.NpcInteractionIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.systems.combat.CombatIntent;
+import net.dodian.uber.game.systems.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

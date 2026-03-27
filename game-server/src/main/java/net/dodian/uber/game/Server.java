@@ -19,10 +19,10 @@ import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.runtime.loop.GameLoopService;
-import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
+import net.dodian.uber.game.engine.loop.GameLoopService;
+import net.dodian.uber.game.engine.phases.OutboundPacketProcessor;
 import net.dodian.uber.game.event.GameEventBus;
-import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
@@ -130,7 +130,7 @@ public class Server {
         loadObjects();
         new DoorHandler();
         ObjectContentRegistry.bootstrap();
-        net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
+        net.dodian.uber.game.content.entities.npcs.spawns.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 

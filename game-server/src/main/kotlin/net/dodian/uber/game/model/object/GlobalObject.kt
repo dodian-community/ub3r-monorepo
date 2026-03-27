@@ -4,7 +4,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
-import net.dodian.uber.game.runtime.zone.ZoneUpdateBus
+import net.dodian.uber.game.systems.zone.ZoneUpdateBus
 import net.dodian.utilities.zoneUpdateBatchingEnabled
 
 object GlobalObject {

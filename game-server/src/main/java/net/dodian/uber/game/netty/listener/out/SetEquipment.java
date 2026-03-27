@@ -5,7 +5,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.combat.style.CombatStyleService;
+import net.dodian.uber.game.systems.combat.style.CombatStyleService;
 
 /**
  * Sent to update a player's equipment in a specific slot.

@@ -9,7 +9,7 @@ import io.netty.util.ReferenceCountUtil;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.engine.loop.GameThreadTaskQueue;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,0 +1,34 @@
+package net.dodian.uber.game.content.skills.core.events
+
+import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.content.skills.core.progression.SkillProgressionMode
+import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+
+data class SkillActionStartEvent(
+    val client: Client,
+    val actionName: String,
+) : GameEvent
+
+data class SkillActionInterruptEvent(
+    val client: Client,
+    val actionName: String,
+    val reason: ActionStopReason,
+) : GameEvent
+
+data class SkillActionCompleteEvent(
+    val client: Client,
+    val actionName: String,
+) : GameEvent
+
+data class SkillProgressAppliedEvent(
+    val client: Client,
+    val skill: Skill,
+    val mode: SkillProgressionMode,
+    val oldExperience: Int,
+    val newExperience: Int,
+    val oldLevel: Int,
+    val newLevel: Int,
+    val appliedAmount: Int,
+) : GameEvent

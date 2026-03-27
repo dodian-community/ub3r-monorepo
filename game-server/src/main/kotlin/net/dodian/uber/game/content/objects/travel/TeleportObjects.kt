@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.dialogue.DialogueService
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -240,7 +240,7 @@ object TeleportObjects : ObjectContent {
                     (objectId == 6452 && client.position.y == 9376)
                 ) {
                     if (client.position.x == 3305) {
-                        val agi = net.dodian.uber.game.skills.agility.AgilityCourseService(client)
+                        val agi = net.dodian.uber.game.content.skills.agility.AgilityCourseService(client)
                         agi.kbdEntrance()
                     } else {
                         DialogueService.setDialogueId(client, 536)

@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.comm.Memory;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.engine.loop.GameThreadTaskQueue;
 import net.dodian.utilities.Utils;
 
 import java.nio.channels.SocketChannel;

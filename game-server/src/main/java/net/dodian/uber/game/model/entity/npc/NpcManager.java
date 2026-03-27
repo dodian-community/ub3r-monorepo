@@ -3,8 +3,8 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef;
-import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry;
+import net.dodian.uber.game.content.entities.npcs.spawns.NpcSpawnDef;
+import net.dodian.uber.game.content.entities.npcs.spawns.NpcContentRegistry;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;

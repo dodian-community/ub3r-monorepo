@@ -1,6 +1,6 @@
 package net.dodian.jobs.impl;
 
-import net.dodian.uber.game.runtime.scheduler.QueueTaskService;
+import net.dodian.uber.game.engine.scheduler.QueueTaskService;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.event.events.WorldTickEvent;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
