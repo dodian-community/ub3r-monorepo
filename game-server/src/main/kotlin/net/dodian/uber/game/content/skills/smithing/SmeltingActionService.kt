@@ -4,10 +4,10 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.action.PlayerActionController
 import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.action.dsl.playerAction
 import net.dodian.utilities.Range
 
 object SmeltingActionService {
@@ -17,25 +17,23 @@ object SmeltingActionService {
     @JvmStatic
     fun start(client: Client) {
         val selection = client.getSmeltingSelection() ?: return
-        PlayerActionController.start(
+        playerAction(
             player = client,
             type = PlayerActionType.SMELTING,
+            actionName = "smelting",
             onStop = { player, _ -> player.clearSmeltingSelection() },
         ) {
             var remaining = selection.amount
             while (remaining > 0) {
-                if (!isActive()) {
-                    return@start
-                }
-                val current = player.getSmeltingSelection() ?: return@start
+                val current = player.getSmeltingSelection() ?: return@playerAction
                 if (!performCycle(player, current.recipe)) {
-                    return@start
+                    return@playerAction
                 }
                 remaining--
                 if (remaining <= 0) {
-                    return@start
+                    return@playerAction
                 }
-                wait(SMELT_DELAY_TICKS)
+                waitTicks(SMELT_DELAY_TICKS)
             }
         }
     }

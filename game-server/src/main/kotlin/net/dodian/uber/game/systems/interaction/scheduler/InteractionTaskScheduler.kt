@@ -42,7 +42,12 @@ object InteractionTaskScheduler {
             is ObjectClickIntent,
             is ItemOnObjectIntent,
             is MagicOnObjectIntent -> PlayerActionCancelReason.OBJECT_INTERACTION
-            is NpcInteractionIntent -> PlayerActionCancelReason.NPC_INTERACTION
+            is NpcInteractionIntent ->
+                if (intent.option == 5) {
+                    PlayerActionCancelReason.NEW_ACTION
+                } else {
+                    PlayerActionCancelReason.NPC_INTERACTION
+                }
             is PlayerInteractionIntent -> PlayerActionCancelReason.PLAYER_INTERACTION
             is GroundItemInteractionIntent -> PlayerActionCancelReason.GROUND_ITEM_INTERACTION
             else -> PlayerActionCancelReason.NEW_ACTION

@@ -4,6 +4,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService
+import net.dodian.uber.game.systems.combat.CombatPreemptionPolicy
 
 object PlayerActionCancellationService {
     @JvmStatic
@@ -29,6 +30,7 @@ object PlayerActionCancellationService {
         if (clearDialogue) {
             DialogueService.closeBlockingDialogue(player, closeInterfaces = false)
         }
+        CombatPreemptionPolicy.preemptCombatIfNeeded(player, reason)
         PlayerActionController.cancel(player, reason)
         if (resetCompatibilityState) {
             resetCompatibilityState(player, fullResetAnimation)

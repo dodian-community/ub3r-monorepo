@@ -15,8 +15,6 @@ import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
-import net.dodian.uber.game.engine.metrics.TickPhaseTimer
-import net.dodian.uber.game.engine.metrics.GcStallTracker
 import net.dodian.uber.game.engine.phases.InboundPacketPhase
 import net.dodian.uber.game.engine.phases.MovementFinalizePhase
 import net.dodian.uber.game.engine.phases.NpcMainPhase
@@ -24,7 +22,6 @@ import net.dodian.uber.game.engine.phases.OutboundPacketProcessor
 import net.dodian.uber.game.engine.phases.PlayerMainPhase
 import net.dodian.uber.game.engine.phases.WorldMaintenancePhase
 import org.slf4j.LoggerFactory
-import net.dodian.uber.game.config.runtimePhaseWarnMs
 
 class GameLoopService(
     private val entityProcessor: EntityProcessor = EntityProcessor(),
@@ -41,8 +38,6 @@ class GameLoopService(
         Executors.newSingleThreadScheduledExecutor(ThreadFactory { runnable ->
             Thread(runnable, "GameTickScheduler").apply { isDaemon = true }
         })
-    private val phaseTimer = TickPhaseTimer()
-    private val gcTracker = GcStallTracker()
 
     private val inboundPhase = InboundPacketPhase(entityProcessor)
     private val worldMaintenancePhase = WorldMaintenancePhase(plunderDoor, actionProcessor, itemProcessor, shopProcessor)
@@ -129,50 +124,24 @@ class GameLoopService(
     private fun runTick() {
         currentCycle = GameCycleClock.advance()
         val now = System.currentTimeMillis()
-        phaseTimer.clear()
         GameThreadTimers.drainDue()
-        timed(GamePhase.LOGIN_INGRESS) { GameThreadIngress.drainTickIngress() }
-        timed(GamePhase.INBOUND_PACKETS) { inboundPhase.run() }
-        timed(GamePhase.WORLD_DB_INPUT_BUILD) { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
-        timed(GamePhase.WORLD_DB_RESULT_READ) { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
-        timed(GamePhase.WORLD_DB_APPLY) { worldMaintenancePhase.runWorldDbApply(currentCycle) }
-        timed(GamePhase.FARMING_TICK) { worldMaintenancePhase.runFarming(currentCycle) }
-        timed(GamePhase.PLUNDER_DOOR) { worldMaintenancePhase.runPlunder(now) }
-        timed(GamePhase.NPC_MAIN) { npcMainPhase.run(now) }
-        timed(GamePhase.PLAYER_MAIN) { playerMainPhase.run() }
-        timed(GamePhase.WORLD_TASKS) {
-            worldMaintenancePhase.runWorldTasks()
-            CombatHitQueueService.process(currentCycle)
-        }
-        timed(GamePhase.GROUND_ITEMS) { worldMaintenancePhase.runGroundItems() }
-        timed(GamePhase.SHOPS) { worldMaintenancePhase.runShops() }
-        timed(GamePhase.MOVEMENT_FINALIZE) { movementFinalizePhase.run() }
-        timed(GamePhase.OUTBOUND_SYNC) { outboundPacketProcessor.run() }
-        timed(GamePhase.HOUSEKEEPING) { entityProcessor.runHousekeepingPhase(now) }
+        GameThreadIngress.drainTickIngress()
+        inboundPhase.run()
+        worldMaintenancePhase.runWorldDbInputBuild(currentCycle)
+        worldMaintenancePhase.runWorldDbResultRead(currentCycle)
+        worldMaintenancePhase.runWorldDbApply(currentCycle)
+        worldMaintenancePhase.runFarming(currentCycle)
+        worldMaintenancePhase.runPlunder(now)
+        npcMainPhase.run(now)
+        playerMainPhase.run()
+        worldMaintenancePhase.runWorldTasks()
+        CombatHitQueueService.process(currentCycle)
+        worldMaintenancePhase.runGroundItems()
+        worldMaintenancePhase.runShops()
+        movementFinalizePhase.run()
+        outboundPacketProcessor.run()
+        entityProcessor.runHousekeepingPhase(now)
         GameThreadTimers.drainDue()
-    }
-
-    private fun timed(phase: GamePhase, block: () -> Unit) {
-        phaseTimer.measure(phase) {
-            val gcBefore = gcTracker.snapshot()
-            val elapsed = measureNanoTime(block)
-            val gcAfter = gcTracker.snapshot()
-            val gcDelta = gcTracker.delta(gcBefore, gcAfter)
-            val elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsed)
-            if (elapsedMs >= runtimePhaseWarnMs) {
-                if (gcDelta.collectionTimeMs > 0L || gcDelta.collectionCount > 0L) {
-                    logger.warn(
-                        "Phase {} took {}ms (gc={}ms/{} collections)",
-                        phase,
-                        elapsedMs,
-                        gcDelta.collectionTimeMs,
-                        gcDelta.collectionCount,
-                    )
-                } else {
-                    logger.warn("Phase {} took {}ms", phase, elapsedMs)
-                }
-            }
-        }
     }
 
     private fun maybeLogCycle(elapsedMillis: Long) {

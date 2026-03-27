@@ -8,6 +8,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.action.dsl.playerAction
 
 object SmithingActionService {
     private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
@@ -24,13 +25,14 @@ object SmithingActionService {
                 request.anvilY,
             ),
         )
-        PlayerActionController.start(
+        playerAction(
             player = client,
             type = PlayerActionType.SMITHING,
+            actionName = "smithing",
             onStop = { player, _ -> stop(player) },
         ) {
             if (resolveSpec(player, request) == null) {
-                return@start
+                return@playerAction
             }
             player.setFocus(request.anvilX, request.anvilY)
             player.send(SendMessage("You start hammering the bar..."))
@@ -38,17 +40,14 @@ object SmithingActionService {
             var remaining = request.amount
 
             while (remaining > 0) {
-                val spec = resolveSpec(player, request) ?: return@start
-                wait(spec.delayTicks)
-                if (!isActive()) {
-                    return@start
-                }
+                val spec = resolveSpec(player, request) ?: return@playerAction
+                waitTicks(spec.delayTicks)
                 if (!performSmith(player, spec)) {
-                    return@start
+                    return@playerAction
                 }
                 remaining--
                 if (remaining <= 0) {
-                    return@start
+                    return@playerAction
                 }
             }
         }

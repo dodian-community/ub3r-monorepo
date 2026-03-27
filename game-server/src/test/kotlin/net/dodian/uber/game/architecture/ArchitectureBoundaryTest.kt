@@ -245,6 +245,16 @@ class ArchitectureBoundaryTest {
                         (trimmed.contains("type = PlayerActionType.FISHING") ||
                             trimmed.contains("type = PlayerActionType.FLETCHING") ||
                             trimmed.contains("type = PlayerActionType.COOKING"))
+                val isCoreSkillLegacyLoopMarker =
+                    normalized.endsWith("/systems/action/SkillingActionService.kt") &&
+                        (trimmed.contains("type = PlayerActionType.SHAFTING") ||
+                            trimmed.contains("type = PlayerActionType.SPINNING") ||
+                            trimmed.contains("type = PlayerActionType.CRAFTING") ||
+                            trimmed.contains("type = PlayerActionType.ALTAR_BONES"))
+                val isManualCoreSkillControllerMarker =
+                    (normalized.endsWith("/systems/action/SmithingActionService.kt") ||
+                        normalized.endsWith("/content/skills/smithing/SmeltingActionService.kt")) &&
+                        trimmed.contains("PlayerActionController.start(")
                 val isLegacyRef =
                     trimmed.contains("net.dodian.jobs.") ||
                         trimmed.contains("net.dodian.uber.game.skills.farming.FarmingProcessor") ||
@@ -264,6 +274,8 @@ class ArchitectureBoundaryTest {
                                 trimmed.contains("import static net.dodian.uber.game.config.DotEnvKt.get${symbol.replaceFirstChar { c -> c.uppercaseChar() }}")
                         } ||
                         isWave2LegacyLoopMarker
+                        || isCoreSkillLegacyLoopMarker
+                        || isManualCoreSkillControllerMarker
                 if (!isLegacyRef) return@mapIndexedNotNull null
                 "${file}:${idx + 1} -> $trimmed"
             }
@@ -332,6 +344,28 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "IntelliJ tools rollback must be complete.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `combat preemption is centralized in cancellation service`() {
+        val cancellationService = sourceRoot.resolve("kotlin/net/dodian/uber/game/systems/action/PlayerActionCancellationService.kt")
+        val interactionScheduler = sourceRoot.resolve("kotlin/net/dodian/uber/game/systems/interaction/scheduler/InteractionTaskScheduler.kt")
+
+        val cancellationSource = Files.readString(cancellationService)
+        val schedulerSource = Files.readString(interactionScheduler)
+        val violations = mutableListOf<String>()
+
+        if (!cancellationSource.contains("CombatPreemptionPolicy.preemptCombatIfNeeded(player, reason)")) {
+            violations += "PlayerActionCancellationService must call CombatPreemptionPolicy.preemptCombatIfNeeded"
+        }
+        if (!schedulerSource.contains("if (intent.option == 5)")) {
+            violations += "InteractionTaskScheduler must preserve NPC attack option behavior when choosing cancel reason"
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Combat preemption routing must stay centralized and attack-safe.\n${violations.joinToString("\n")}",
         )
     }
 

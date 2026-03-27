@@ -7,4 +7,5 @@ enum class CombatCancellationReason {
     TARGET_INVALID,
     OUT_OF_RANGE,
     MOVEMENT_INTERRUPTED,
+    INTERACTION_PREEMPTED,
 }
