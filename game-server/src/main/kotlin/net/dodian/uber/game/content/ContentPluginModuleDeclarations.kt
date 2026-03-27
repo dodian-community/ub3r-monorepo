@@ -68,6 +68,7 @@ import net.dodian.uber.game.content.objects.travel.VerticalTeleportObjects
 import net.dodian.uber.game.content.objects.travel.WebObstacleObjects
 import net.dodian.uber.game.content.objects.woodcutting.WoodcuttingTreesObjects
 import net.dodian.uber.game.event.bootstrap.EventBusProbeBootstrap
+import net.dodian.uber.game.event.bootstrap.PlayerLifecycleTickBootstrap
 import net.dodian.uber.game.plugin.annotations.RegisterEventBootstrap
 import net.dodian.uber.game.plugin.annotations.RegisterInterfaceButtons
 import net.dodian.uber.game.plugin.annotations.RegisterItemContent
@@ -141,4 +142,5 @@ import net.dodian.uber.game.plugin.annotations.RegisterObjectContent
 @RegisterItemContent(EventInfoItems::class)
 @RegisterItemContent(EventPackageItems::class)
 @RegisterEventBootstrap(module = EventBusProbeBootstrap::class)
+@RegisterEventBootstrap(module = PlayerLifecycleTickBootstrap::class)
 object ContentPluginModuleDeclarations

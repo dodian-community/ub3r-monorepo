@@ -2,6 +2,8 @@ package net.dodian.jobs.impl;
 
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.dialogue.DialogueService;
+import net.dodian.uber.game.event.GameEventBus;
+import net.dodian.uber.game.event.events.PlayerTickEvent;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.chunk.ChunkRepository;
@@ -518,7 +520,7 @@ public class EntityProcessor implements Runnable {
         int startingX = player.getPosition().getX();
         int startingY = player.getPosition().getY();
         int startingZ = player.getPosition().getZ();
-        player.process();
+        GameEventBus.post(new PlayerTickEvent(player, player.getCurrentGameCycle(), System.currentTimeMillis()));
         player.setProcessedGameCycle(player.getCurrentGameCycle());
         player.setLastProcessedCycle(player.getProcessedGameCycle());
         GameTaskRuntime.cyclePlayer(player);

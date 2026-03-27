@@ -1,0 +1,39 @@
+package net.dodian.jobs.impl
+
+import io.netty.channel.embedded.EmbeddedChannel
+import java.util.concurrent.atomic.AtomicInteger
+import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.events.PlayerTickEvent
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.PlayerHandler
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class EntityProcessorPlayerTickIntegrationTest {
+    @AfterEach
+    fun tearDown() {
+        PlayerHandler.playersOnline.clear()
+        GameEventBus.clear()
+    }
+
+    @Test
+    fun `player main phase posts exactly one player tick event per active player`() {
+        val eventsSeen = AtomicInteger(0)
+        GameEventBus.on<PlayerTickEvent>(
+            action = {
+                eventsSeen.incrementAndGet()
+                true
+            },
+        )
+
+        val player = Client(EmbeddedChannel(), 1)
+        player.isActive = true
+        player.initialized = true
+        PlayerHandler.playersOnline[1L] = player
+
+        EntityProcessor().runPlayerMainPhase()
+
+        assertEquals(1, eventsSeen.get())
+    }
+}

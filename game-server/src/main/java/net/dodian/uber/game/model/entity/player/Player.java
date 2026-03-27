@@ -817,8 +817,6 @@ public abstract class Player extends Entity {
     public int getFaceTarget() {
         return updateState.getFaceTarget();
     }
-    public abstract void process(); //Send every 600 ms
-
     public void markSaveDirty(int segmentMask) {
         accountState.markSaveDirty(segmentMask);
     }

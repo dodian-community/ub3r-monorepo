@@ -71,7 +71,6 @@ import net.dodian.uber.game.runtime.combat.CombatStartService;
 import net.dodian.uber.game.runtime.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.runtime.interaction.InteractionAnchorState;
 import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
-import net.dodian.uber.game.runtime.lifecycle.PlayerLifecycleTickService;
 import net.dodian.utilities.*;
 import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
 
@@ -2080,28 +2079,12 @@ public class Client extends Player implements Runnable {
 
     public boolean canAttack = true;
 
-    public void process() {// is being called regularily every 600 ms
-        if (disconnected || isLoggingOut) {
-            return;
-        }
-        long now = System.currentTimeMillis();
-        PlayerLifecycleTickService.processBeforeCombat(this);
-        PlayerLifecycleTickService.processAfterCombat(this, now);
-        // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
-        // and always on final save/logout.
-        if (!effects.isEmpty()) {
-            boolean hasActiveEffect = false;
-            for (int i = 0; i < effects.size(); i++) {
-                if (effects.get(i) != null && effects.get(i) > 0) {
-                    hasActiveEffect = true;
-                    break;
-                }
-            }
-            if (hasActiveEffect && now - lastEffectsPeriodicDirtyAtMs >= 10_000L) {
-                markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
-                lastEffectsPeriodicDirtyAtMs = now;
-            }
-        }
+    public long getLastEffectsPeriodicDirtyAtMs() {
+        return lastEffectsPeriodicDirtyAtMs;
+    }
+
+    public void setLastEffectsPeriodicDirtyAtMs(long atMillis) {
+        lastEffectsPeriodicDirtyAtMs = atMillis;
     }
 
 
