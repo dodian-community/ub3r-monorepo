@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.engine.loop.GameThreadTimers
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.utilities.Misc
@@ -35,7 +35,7 @@ class AgilityCourseService(private val c: Client) {
     ) {
         val token = c.beginVerticalTransition(delayMs)
         c.walkBlock = System.currentTimeMillis() + delayMs
-        GameThreadTimers.schedule(
+        ContentTiming.scheduleGameThread(
             "agility-vertical",
             delayMs,
             "player=${c.playerName} destination=$destination pos=${c.position}",
@@ -43,7 +43,7 @@ class AgilityCourseService(private val c: Client) {
             if (c.disconnected) {
                 c.clearVerticalTransition()
                 c.UsingAgility = false
-                return@schedule
+                return@scheduleGameThread
             }
             c.finishVerticalTransition(token, destination)
             onComplete()

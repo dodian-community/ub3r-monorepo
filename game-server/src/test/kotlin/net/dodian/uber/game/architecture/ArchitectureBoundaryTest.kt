@@ -19,32 +19,7 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `content layer does not import engine sync or net internals`() {
-        val temporaryAllowListByFile = mapOf(
-            "src/main/kotlin/net/dodian/uber/game/content/commands/dev/DevDebugCommands.kt" to setOf(
-                "import net.dodian.uber.game.engine.tasking.coroutine.gameClock",
-                "import net.dodian.uber.game.engine.tasking.coroutine.npcTaskCoroutine",
-                "import net.dodian.uber.game.engine.tasking.coroutine.playerTaskCoroutine",
-                "import net.dodian.uber.game.engine.tasking.coroutine.worldTaskCoroutine",
-            ),
-            "src/main/kotlin/net/dodian/uber/game/content/objects/services/PersonalObjectService.kt" to setOf(
-                "import net.dodian.uber.game.engine.scheduler.QueueTask",
-                "import net.dodian.uber.game.engine.scheduler.QueueTaskService",
-            ),
-            "src/main/kotlin/net/dodian/uber/game/content/skills/agility/AgilityCourseService.kt" to setOf(
-                "import net.dodian.uber.game.engine.loop.GameThreadTimers",
-            ),
-            "src/main/kotlin/net/dodian/uber/game/content/skills/core/runtime/GatheringTask.kt" to setOf(
-                "import net.dodian.uber.game.engine.scheduler.QueueTaskHandle",
-                "import net.dodian.uber.game.engine.tasking.GameTaskRuntime",
-                "import net.dodian.uber.game.engine.tasking.TaskPriority",
-            ),
-            "src/main/kotlin/net/dodian/uber/game/content/skills/mining/MiningService.kt" to setOf(
-                "import net.dodian.uber.game.engine.loop.GameCycleClock",
-            ),
-            "src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/WoodcuttingService.kt" to setOf(
-                "import net.dodian.uber.game.engine.loop.GameCycleClock",
-            ),
-        )
+        val temporaryAllowListByFile = emptyMap<String, Set<String>>()
         val violations = sourceFiles
             .filter { it.toString().contains("/net/dodian/uber/game/content/") }
             .flatMap { file ->
@@ -59,7 +34,7 @@ class ArchitectureBoundaryTest {
             }
         assertTrue(
             violations.isEmpty(),
-            "Content must not import engine internals (except explicit temporary allow-list).\n${violations.joinToString("\n")}",
+            "Content must not import engine internals.\n${violations.joinToString("\n")}",
         )
     }
 

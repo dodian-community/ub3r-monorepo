@@ -23,7 +23,7 @@ import net.dodian.uber.game.systems.action.PlayerActionInterruptPolicy
 import net.dodian.uber.game.systems.action.PlayerActionStopResult
 import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.interaction.ObjectInteractionDistance
-import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
 import net.dodian.utilities.Misc
@@ -66,14 +66,14 @@ object WoodcuttingService {
             client.send(SendMessage("You moved too far away from the tree."))
             return true
         }
-        val startedCycle = GameCycleClock.currentCycle()
+        val startedCycle = ContentTiming.currentCycle()
         client.woodcuttingState =
             WoodcuttingState(
                 treeObjectId = objectId,
                 treePosition = position.copy(),
                 objectData = obj,
                 startedCycle = startedCycle,
-                nextSwingAnimationCycle = startedCycle + GameCycleClock.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
+                nextSwingAnimationCycle = startedCycle + ContentTiming.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
                 nextResourceCycle = startedCycle + computeInitialWoodcuttingDelayTicks(client, tree, axe),
                 resourcesGathered = 0,
             )
@@ -138,7 +138,7 @@ object WoodcuttingService {
 
     @JvmStatic
     fun computeWoodcuttingDelayTicks(client: Client, tree: TreeDef, axe: AxeDef): Int {
-        return GameCycleClock.ticksForDurationMs(computeWoodcuttingDelayMs(client, tree, axe))
+        return ContentTiming.ticksForDurationMs(computeWoodcuttingDelayMs(client, tree, axe))
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -176,11 +176,11 @@ object WoodcuttingService {
             return stopWoodcuttingInternal(client, ActionStopReason.REQUIREMENT_FAILED).let { false }
         }
 
-        val cycle = GameCycleClock.currentCycle()
+        val cycle = ContentTiming.currentCycle()
         if (cycle >= state.nextSwingAnimationCycle) {
             client.requestAnim(activeAxe.animationId, 0)
             client.woodcuttingState =
-                state.copy(nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
+                state.copy(nextSwingAnimationCycle = cycle + ContentTiming.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
         }
 
         if (cycle >= state.nextResourceCycle) {
@@ -201,7 +201,7 @@ object WoodcuttingService {
             client.woodcuttingState =
                 state.copy(
                     resourcesGathered = gathered,
-                    nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
+                    nextSwingAnimationCycle = cycle + ContentTiming.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
                     nextResourceCycle = cycle + computeWoodcuttingDelayTicks(client, activeTree, activeAxe),
                 )
             GameEventBus.post(SkillingActionCycleEvent(client, "Woodcutting"))
@@ -253,6 +253,6 @@ object WoodcuttingService {
         axe: AxeDef,
     ): Int {
         val remainingDelayMs = computeWoodcuttingDelayMs(client, tree, axe) - INITIAL_SWING_DELAY_MS
-        return if (remainingDelayMs <= 0L) 0 else GameCycleClock.ticksForDurationMs(remainingDelayMs)
+        return if (remainingDelayMs <= 0L) 0 else ContentTiming.ticksForDurationMs(remainingDelayMs)
     }
 }

@@ -9,7 +9,7 @@ import net.dodian.uber.game.content.skills.core.progression.SkillProgressionServ
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionController
@@ -71,14 +71,14 @@ object MiningService {
         }
 
         val pickaxe = resolveBestPickaxe(client) ?: return true
-        val startedCycle = GameCycleClock.currentCycle()
+        val startedCycle = ContentTiming.currentCycle()
         val initialDelayTicks = computeInitialMiningDelayTicks(client, rock, pickaxe)
         client.miningState =
             MiningState(
                 rockObjectId = rock.objectIds.first(),
                 rockPosition = position.copy(),
                 startedCycle = startedCycle,
-                nextSwingAnimationCycle = startedCycle + GameCycleClock.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
+                nextSwingAnimationCycle = startedCycle + ContentTiming.ticksForDurationMs(INITIAL_SWING_DELAY_MS),
                 nextResourceCycle = startedCycle + initialDelayTicks,
                 resourcesGathered = 0,
             )
@@ -137,7 +137,7 @@ object MiningService {
 
     @JvmStatic
     fun computeMiningDelayTicks(client: Client, rock: MiningRockDef, pickaxe: PickaxeDef): Int {
-        return GameCycleClock.ticksForDurationMs(computeMiningDelayMs(client, rock, pickaxe))
+        return ContentTiming.ticksForDurationMs(computeMiningDelayMs(client, rock, pickaxe))
     }
 
     internal fun computeMiningDelayMs(
@@ -184,11 +184,11 @@ object MiningService {
             tryAwardRandomGem(client)
         }
 
-        val cycle = GameCycleClock.currentCycle()
+        val cycle = ContentTiming.currentCycle()
         val updatedState =
             state.copy(
                 resourcesGathered = state.resourcesGathered + 1,
-                nextSwingAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
+                nextSwingAnimationCycle = cycle + ContentTiming.ticksForDurationMs(SWING_REPEAT_DELAY_MS),
                 nextResourceCycle = cycle + computeMiningDelayTicks(client, rock, pickaxe),
             )
         client.miningState = updatedState
@@ -215,7 +215,7 @@ object MiningService {
 
         client.requestAnim(pickaxe.animationId, 0)
         client.miningState =
-            state.copy(nextSwingAnimationCycle = GameCycleClock.currentCycle() + GameCycleClock.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
+            state.copy(nextSwingAnimationCycle = ContentTiming.currentCycle() + ContentTiming.ticksForDurationMs(SWING_REPEAT_DELAY_MS))
         return true
     }
 
@@ -269,7 +269,7 @@ object MiningService {
             return stopMiningInternal(client, MiningStopReason.NO_PICKAXE)
         }
 
-        val cycle = GameCycleClock.currentCycle()
+        val cycle = ContentTiming.currentCycle()
         if (cycle >= state.nextSwingAnimationCycle && !reapplyMiningAnimation(client)) {
             return false
         }
@@ -322,7 +322,7 @@ object MiningService {
         pickaxe: PickaxeDef,
     ): Int {
         val remainingDelayMs = computeMiningDelayMs(client, rock, pickaxe) - INITIAL_SWING_DELAY_MS
-        return if (remainingDelayMs <= 0L) 0 else GameCycleClock.ticksForDurationMs(remainingDelayMs)
+        return if (remainingDelayMs <= 0L) 0 else ContentTiming.ticksForDurationMs(remainingDelayMs)
     }
 
 }

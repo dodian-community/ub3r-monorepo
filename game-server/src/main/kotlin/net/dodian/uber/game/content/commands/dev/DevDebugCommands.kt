@@ -4,14 +4,16 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
+import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.engine.tasking.coroutine.gameClock
-import net.dodian.uber.game.engine.tasking.coroutine.npcTaskCoroutine
-import net.dodian.uber.game.engine.tasking.coroutine.playerTaskCoroutine
-import net.dodian.uber.game.engine.tasking.coroutine.worldTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.gameClock
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.npcTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.playerTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentCoroutines.worldTaskCoroutine
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.party.Balloons
 import net.dodian.utilities.Misc
@@ -96,13 +98,10 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     4 -> {
                         client.cancelFarmDebugTask()
                         val farmConfig = intArrayOf(0)
-                        client.farmDebugTaskHandle = net.dodian.uber.game.engine.scheduler.QueueTaskHandle.from(
-                            net.dodian.uber.game.engine.tasking.GameTaskRuntime.queuePlayerRepeating(
-                                client,
-                                net.dodian.uber.game.engine.tasking.TaskPriority.STANDARD,
-                                1,
-                                1,
-                            ) {
+                        client.farmDebugTaskHandle = GameEventScheduler.schedule(
+                            1,
+                            1,
+                            BooleanSupplier {
                                 if (client.disconnected || !client.isActive) {
                                     client.farmDebugTaskHandle = null
                                     false

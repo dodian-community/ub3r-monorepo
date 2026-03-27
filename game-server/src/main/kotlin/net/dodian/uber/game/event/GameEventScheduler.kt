@@ -19,6 +19,13 @@ object GameEventScheduler {
     ): QueueTaskHandle = QueueTaskService.schedule(delayTicks, intervalTicks, task)
 
     @JvmStatic
+    fun schedule(
+        delayTicks: Int,
+        intervalTicks: Int = 0,
+        action: BooleanSupplier,
+    ): QueueTaskHandle = QueueTaskService.schedule(delayTicks, intervalTicks, QueueTask { action.asBoolean })
+
+    @JvmStatic
     fun runLater(delayTicks: Int, action: Runnable): TaskHandle {
         return GameTaskRuntime.queueWorld {
             wait(delayTicks.coerceAtLeast(0))

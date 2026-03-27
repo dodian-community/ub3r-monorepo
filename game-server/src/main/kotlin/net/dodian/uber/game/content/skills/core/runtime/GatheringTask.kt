@@ -3,6 +3,7 @@ package net.dodian.uber.game.content.skills.core.runtime
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.event.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
 import net.dodian.uber.game.event.events.skilling.SkillingActionStoppedEvent
@@ -12,9 +13,7 @@ import net.dodian.uber.game.content.skills.core.events.SkillActionInterruptEvent
 import net.dodian.uber.game.content.skills.core.events.SkillActionStartEvent
 import net.dodian.uber.game.content.skills.core.requirements.Requirement
 import net.dodian.uber.game.content.skills.core.requirements.ValidationResult
-import net.dodian.uber.game.engine.scheduler.QueueTaskHandle
-import net.dodian.uber.game.engine.tasking.GameTaskRuntime
-import net.dodian.uber.game.engine.tasking.TaskPriority
+import java.util.function.BooleanSupplier
 
 abstract class GatheringTask(
     private val actionName: String,
@@ -22,10 +21,7 @@ abstract class GatheringTask(
     private val cycleDelayTicks: Int,
     private val requirements: List<Requirement>,
 ) {
-    protected open val priority: TaskPriority = TaskPriority.WEAK
-
     fun start(
-        onHandle: (QueueTaskHandle) -> Unit,
         beforeStart: () -> Unit = {},
     ): Boolean {
         val validation = validateRequirements()
@@ -39,26 +35,23 @@ abstract class GatheringTask(
         GameEventBus.post(SkillingActionStartedEvent(client, actionName))
         GameEventBus.post(SkillActionStartEvent(client, actionName))
 
-        val handle =
-            GameTaskRuntime.queuePlayer(client, priority) {
-                while (true) {
-                    if (!client.isActive || client.disconnected) {
-                        stop(ActionStopReason.DISCONNECTED)
-                        return@queuePlayer
-                    }
-                    val check = validateRequirements()
-                    if (check is ValidationResult.Failed) {
-                        client.send(SendMessage(check.message))
-                        stop(ActionStopReason.REQUIREMENT_FAILED)
-                        return@queuePlayer
-                    }
-                    if (!onTick()) {
-                        return@queuePlayer
-                    }
-                    wait(cycleDelayTicks)
+        GameEventScheduler.runRepeating(
+            delayTicks = 0,
+            intervalTicks = cycleDelayTicks.coerceAtLeast(1),
+            action = BooleanSupplier {
+                if (!client.isActive || client.disconnected) {
+                    stop(ActionStopReason.DISCONNECTED)
+                    return@BooleanSupplier false
                 }
-            }
-        onHandle(QueueTaskHandle.from(handle))
+                val check = validateRequirements()
+                if (check is ValidationResult.Failed) {
+                    client.send(SendMessage(check.message))
+                    stop(ActionStopReason.REQUIREMENT_FAILED)
+                    return@BooleanSupplier false
+                }
+                onTick()
+            },
+        )
         return true
     }
 

@@ -2,9 +2,16 @@ package net.dodian.uber.game.systems.api.content
 
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTimers
 
 object ContentTiming {
+    @JvmStatic
+    fun currentCycle(): Long = GameCycleClock.currentCycle()
+
+    @JvmStatic
+    fun ticksForDurationMs(durationMs: Long): Int = GameCycleClock.ticksForDurationMs(durationMs)
+
     @JvmStatic
     fun scheduleGameThread(
         label: String,

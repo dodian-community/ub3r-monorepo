@@ -3,8 +3,6 @@ package net.dodian.uber.game.content.objects.services
 import net.dodian.uber.game.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.engine.scheduler.QueueTask
-import net.dodian.uber.game.engine.scheduler.QueueTaskService
 import net.dodian.uber.game.systems.zone.ZoneUpdateBus
 import net.dodian.utilities.queueTasksEnabled
 import net.dodian.utilities.zoneUpdateBatchingEnabled
@@ -71,10 +69,10 @@ object PersonalObjectService {
 
         if (queueTasksEnabled) {
             val ticks = ((durationMs + 599L) / 600L).toInt().coerceAtLeast(1)
-            QueueTaskService.schedule(ticks, 0, QueueTask {
+            GameEventScheduler.runLater(ticks, Runnable {
                 if (client.disconnected) {
                     perPlayerObjects.remove(key(client, position))
-                    return@QueueTask false
+                    return@Runnable
                 }
                 if (zoneUpdateBatchingEnabled) {
                     ZoneUpdateBus.queuePersonalObject(client.dbId, position, revertObjectId, revertFace, revertType)
@@ -82,7 +80,6 @@ object PersonalObjectService {
                     client.ReplaceObject2(position, revertObjectId, revertFace, revertType)
                 }
                 perPlayerObjects.remove(key(client, position))
-                false
             })
             return
         }
