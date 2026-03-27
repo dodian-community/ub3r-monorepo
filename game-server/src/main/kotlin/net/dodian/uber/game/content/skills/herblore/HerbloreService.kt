@@ -31,7 +31,7 @@ object HerbloreService {
     @JvmStatic
     fun processBatch(client: Client, request: HerbloreBatchRequest) {
         var amount = request.amount
-        val id = client.herbOptions[request.slot].id
+        val id = client.herbOptions[request.slot].getId()
         val grimy = client.GetItemName(id).lowercase().contains("grimy")
         val coins = client.getInvAmt(995)
 

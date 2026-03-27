@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.RewardItem;
 
 /**
  * Sent to update the menu items in an interface.

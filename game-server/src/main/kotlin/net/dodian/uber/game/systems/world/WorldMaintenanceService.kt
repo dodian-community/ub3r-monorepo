@@ -62,12 +62,13 @@ class WorldMaintenanceService(
         }
         val pulseNow = System.currentTimeMillis()
         playerIndex.refresh()
-        val refreshStats = farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
+        val activePlayers = playerIndex.snapshot()
+        val refreshStats = farmingScheduler.refreshActivePlayers(activePlayers, cycle)
         val runStats: net.dodian.uber.game.systems.world.farming.FarmingRunStats
         val elapsed = measureNanoTime {
             runStats = farmingScheduler.runDue(cycle)
         }
-        playerIndex.snapshot().forEach { client ->
+        activePlayers.forEach { client ->
             client.farmingJson.lastGlobalPulseAtMillis = pulseNow
         }
         val elapsedMs = elapsed / 1_000_000L

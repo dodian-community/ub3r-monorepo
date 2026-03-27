@@ -58,7 +58,7 @@ import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
 import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason;

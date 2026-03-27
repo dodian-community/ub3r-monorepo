@@ -7,7 +7,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.party.Balloons
+import net.dodian.uber.game.content.events.partyroom.Balloons
 
 enum class NpcDialogueFinishMode {
     FINISH,

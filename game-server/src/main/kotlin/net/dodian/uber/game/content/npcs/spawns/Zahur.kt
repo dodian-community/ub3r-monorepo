@@ -6,7 +6,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.party.RewardItem
+import net.dodian.uber.game.content.events.partyroom.RewardItem
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions

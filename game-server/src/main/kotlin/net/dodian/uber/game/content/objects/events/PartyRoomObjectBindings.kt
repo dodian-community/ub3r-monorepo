@@ -4,7 +4,7 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.party.Balloons
+import net.dodian.uber.game.content.events.partyroom.Balloons
 
 object PartyRoomObjectBindings : ObjectContent {
     override val objectIds: IntArray = PartyRoomObjectComponents.allObjects

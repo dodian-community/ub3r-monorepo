@@ -19,7 +19,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.netty.NetworkConstants
-import net.dodian.uber.game.party.Balloons
+import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatRuntimeService
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService

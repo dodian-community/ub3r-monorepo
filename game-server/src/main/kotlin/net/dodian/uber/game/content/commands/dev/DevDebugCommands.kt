@@ -15,7 +15,7 @@ import net.dodian.uber.game.systems.api.content.ContentCoroutines.worldTaskCorou
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.party.Balloons
+import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.utilities.Misc
 
 object DevDebugCommands : CommandContent {

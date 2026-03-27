@@ -35,6 +35,7 @@ class WorldSynchronizationService {
     private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
     private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
     private val sharedNpcActivityIndex = NpcChunkActivityIndex()
+    private val activePlayerBuffer = ArrayList<Client>(512)
     private var tick = 0L
 
     fun run() {
@@ -89,7 +90,18 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun currentActivePlayers(): List<Client> = PlayerHandler.snapshotActivePlayers()
+    private fun currentActivePlayers(): List<Client> {
+        activePlayerBuffer.clear()
+        for (player in PlayerHandler.playersOnline.values) {
+            if (player.isActive && !player.disconnected) {
+                val channel = player.channel
+                if (channel != null && channel.isActive) {
+                    activePlayerBuffer += player
+                }
+            }
+        }
+        return activePlayerBuffer
+    }
 
     private fun currentActiveNpcs(): List<Npc> {
         val npcs = ArrayList<Npc>()
