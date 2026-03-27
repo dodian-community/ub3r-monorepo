@@ -4,9 +4,10 @@ import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.utilities.Utils
+import net.dodian.uber.game.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.skills.core.progression.SkillReadService
 
 object PotionItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(
@@ -24,6 +25,7 @@ object PotionItems : ItemContent {
         2452, 2454, 2456, 2458, // Anti-fire potion
     )
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         if (!client.playerHasItem(itemId)) {
             return false
@@ -77,7 +79,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.requestAnim(1327, 0)
                 client.boost(5 + (levelFor(client, Skill.DEFENCE) * 0.15).toInt(), Skill.DEFENCE)
-                client.refreshSkill(Skill.DEFENCE)
+                SkillProgressionService.refresh(client, Skill.DEFENCE)
                 nextId = nextDose(itemId)
                 client.send(SendMessage(if (nextId == 229) "You empty the super defense potion." else "You drink the super defense potion."))
             }
@@ -94,7 +96,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.requestAnim(1327, 0)
                 client.pray(8 + (client.maxPrayer * 0.25).toInt())
-                client.refreshSkill(Skill.PRAYER)
+                SkillProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
                 client.send(SendMessage(if (nextId == 229) "You empty the prayer potion." else "You drink the prayer potion."))
             }
@@ -103,7 +105,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.requestAnim(1327, 0)
                 client.pray(10 + (client.maxPrayer * 0.28).toInt())
-                client.refreshSkill(Skill.PRAYER)
+                SkillProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
                 client.send(SendMessage(if (nextId == 229) "You empty the restore potion." else "You drink the restore potion."))
             }
@@ -152,16 +154,16 @@ object PotionItems : ItemContent {
     }
 
     private fun levelFor(client: Client, skill: Skill): Int {
-        return Skills.getLevelForExperience(client.getExperience(skill))
+        return SkillReadService.baseLevel(client, skill)
     }
 
     private fun nextDose(itemId: Int): Int {
-        for (index in Utils.pot_4_dose.indices) {
+        for (definition in HerbloreDefinitions.potionDoseDefinitions) {
             when (itemId) {
-                Utils.pot_4_dose[index] -> return Utils.pot_3_dose[index]
-                Utils.pot_3_dose[index] -> return Utils.pot_2_dose[index]
-                Utils.pot_2_dose[index] -> return Utils.pot_1_dose[index]
-                Utils.pot_1_dose[index] -> return 229
+                definition.fourDoseId -> return definition.threeDoseId
+                definition.threeDoseId -> return definition.twoDoseId
+                definition.twoDoseId -> return definition.oneDoseId
+                definition.oneDoseId -> return 229
             }
         }
         return -1

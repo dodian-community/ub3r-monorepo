@@ -2,11 +2,9 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 import java.util.Collection;
 
@@ -41,27 +39,26 @@ public class TradeItemsUpdate implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-
-        // Write interface ID as int (4 bytes) - matches client's incoming.readInt()
         message.putInt(interfaceId);
-
-        // Write item count as short (2 bytes) - matches client's incoming.readShort()
         message.putShort(items.size());
 
-        // Write each item
+        StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
             int amount = item.getAmount();
-            // Amount as int (4 bytes) - matches client's incoming.readInt()
             message.putInt(amount);
-
-            // Item ID only if amount > 0 - matches client's conditional read
             if (amount != 0) {
                 int itemId = item.getId() < 0 ? -1 : item.getId() + 1;
-                // Item id as big-endian short - matches client's incoming.readShort()
                 message.putShort(itemId);
+            }
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item.getId()).append('x').append(amount);
             }
         }
 
+        ItemContainerTrace.log(client, "TradeItemsUpdate", interfaceId, items.size(), preview.toString());
         client.send(message);
     }
 }

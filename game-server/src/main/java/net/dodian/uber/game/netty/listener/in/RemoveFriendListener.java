@@ -19,7 +19,7 @@ public class RemoveFriendListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         long friend = buf.readLong(); // big-endian qword
         logger.debug("RemoveFriendListener: {} removes {}", client.getPlayerName(), friend);
         client.removeFriend(friend);

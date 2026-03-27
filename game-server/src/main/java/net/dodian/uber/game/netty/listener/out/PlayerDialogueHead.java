@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class PlayerDialogueHead implements OutgoingPacket {
 
-    private int mainFrame;
+    private final int mainFrame;
 
     public PlayerDialogueHead(int mainFrame) {
         this.mainFrame = mainFrame;

@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.player.content.Skillcape;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -19,27 +22,17 @@ public class DropItemListener implements PacketListener {
     static { PacketListenerManager.register(87, new DropItemListener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(DropItemListener.class);
-
-    // --- stream helpers ---
-    private static int readSignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int val = (high << 8) | low;
-        if (val > 32767) val -= 0x10000;
-        return val;
-    }
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 6;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
-        int droppedItem = readSignedWordA(buf);
-        /* interfaceId */ readUnsignedWordA(buf);
-        int slot = readUnsignedWordA(buf);
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
+        int droppedItem = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
+        ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int slot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
         logger.debug("DropItemListener: item {} slot {}", droppedItem, slot);
 

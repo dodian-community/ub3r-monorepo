@@ -14,6 +14,12 @@ import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.combat.CombatCancellationReason;
+import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.skills.thieving.plunder.PyramidPlunderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,15 +52,19 @@ public final class WalkingListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int opcode = packet.getOpcode();
-        int size   = packet.getSize();
+        int opcode = packet.opcode();
+        int size   = packet.size();
         long now   = System.currentTimeMillis();
 
         if (client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient
                 || !client.pLoaded || now < client.walkBlock) {
             return;
         }
-        if (client.doingTeleport() || client.getPlunder.looting) return;
+        if (client.doingTeleport() || PyramidPlunderService.isLooting(client)) return;
+        if (client.isVerticalTransitionActive()) {
+            client.resetWalkingQueue();
+            return;
+        }
         if (opcode != 98) client.setWalkToTask(null);
 
         // Auto-decline trade/duel when walking
@@ -81,9 +91,10 @@ public final class WalkingListener implements PacketListener {
         if (client.pickupWanted) {
             client.pickupWanted = false;
             client.attemptGround = null;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
         }
 
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int effectiveSize = resolveEffectiveSize(opcode, size);
         if (effectiveSize < MIN_WALK_PACKET_SIZE) {
             rejectMalformedWalkPacket(client, opcode, size, -1, -1, "effective size below minimum");
@@ -109,23 +120,23 @@ public final class WalkingListener implements PacketListener {
             return;
         }
 
-        int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.BIG);
+        int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.LITTLE);
         int firstStepX = firstStepXAbs - client.mapRegionX * 8;
 
         for (int i = 1; i < client.newWalkCmdSteps; i++) {
-            client.newWalkCmdX[i] = readSignedByte(buf);
-            client.newWalkCmdY[i] = readSignedByte(buf);
+            client.newWalkCmdX[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
+            client.newWalkCmdY[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
             client.tmpNWCX[i] = client.newWalkCmdX[i];
             client.tmpNWCY[i] = client.newWalkCmdY[i];
         }
 
-        int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.BIG);
+        int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.LITTLE);
         int firstStepY = firstStepYAbs - client.mapRegionY * 8;
         if (!isValidWorldCoordinate(firstStepXAbs) || !isValidWorldCoordinate(firstStepYAbs)) {
             rejectMalformedWalkPacket(client, opcode, size, firstStepXAbs, firstStepYAbs, "first step out of world bounds");
             return;
         }
-        client.newWalkCmdIsRunning = (readSignedByteC(buf) == 1);
+        client.newWalkCmdIsRunning = (ByteBufReader.readSignedByte(buf, ValueType.NEGATE) == 1);
 
         client.newWalkCmdX[0] = client.newWalkCmdY[0] = client.tmpNWCX[0] = client.tmpNWCY[0] = 0;
 
@@ -139,8 +150,7 @@ public final class WalkingListener implements PacketListener {
 
         if (client.newWalkCmdSteps > 0) {
             // Any movement cancels active dialogue sessions and paging.
-            DialoguePagingService.clear(client);
-            DialogueService.clear(client, false);
+            DialogueService.closeBlockingDialogue(client, false);
 
             if (client.inDuel) {
                 if (opcode != 98) client.send(new SendMessage("You cannot move during this duel!"));
@@ -155,23 +165,20 @@ public final class WalkingListener implements PacketListener {
                 client.send(new RemoveInterfaces());
             }
             client.rerequestAnim();
-            client.resetAction();
+            PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.MOVEMENT, true, false, false, true);
             client.discord = false;
-            client.playerSkillAction.clear();
             if (client.checkInv) { client.checkInv = false; client.resetItems(3214);}            
-            if (opcode != 98 && (client.attackingNpc || client.attackingPlayer)) client.resetAttack();
+            if (opcode != 98 && CombatRuntimeService.hasActiveCombat(client)) {
+                client.setCombatCancellationReason(CombatCancellationReason.MOVEMENT_INTERRUPTED);
+                client.resetAttack();
+            }
             client.faceTarget(65535);
         }
 
         if (client.chestEventOccur && opcode != 98) client.chestEventOccur = false;
-        if (client.stairs > 0) client.resetStairs();
-        if (client.NpcDialogue == 1001) client.clearWalkableInterface();
         client.convoId = -1;
-        if (client.NpcDialogue > 0) {
-            client.NpcDialogue = 0;
-            client.NpcTalkTo = 0;
-            client.NpcDialogueSend = false;
-            client.send(new RemoveInterfaces());
+        if (DialogueService.hasBlockingDialogue(client)) {
+            DialogueService.closeBlockingDialogue(client, true);
         }
         if (client.refundSlot != -1) client.refundSlot = -1;
         if (client.herbMaking != -1) client.herbMaking = -1;
@@ -182,31 +189,6 @@ public final class WalkingListener implements PacketListener {
         if (client.isShopping()) { client.MyShopID = -1; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
 
         // done – movement queue will be processed in Client.process()
-    }
-
-    /* ------------- Helpers replicating Stream methods ------------- */
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low  = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int val  = (high << 8) | low;
-        if (val > 32767) val -= 65536;
-        return val;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low  = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int val  = (high << 8) | low;
-        if (val > 32767) val -= 65536;
-        return val;
-    }
-
-    private static int readSignedByte(ByteBuf buf) {
-        return buf.readByte();
-    }
-
-    private static int readSignedByteC(ByteBuf buf) {
-        return -buf.readByte();
     }
 
     private static void safeRegister(int opcode, WalkingListener handler) {

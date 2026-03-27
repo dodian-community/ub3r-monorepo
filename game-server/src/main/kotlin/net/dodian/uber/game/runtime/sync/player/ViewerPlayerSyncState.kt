@@ -12,4 +12,5 @@ data class ViewerPlayerSyncState(
     var lastKnownTeleportState: Boolean = false,
     var lastChunkActivityStamp: Long = 0L,
     var lastLocalActivityStamp: Long = 0L,
+    var lastLocalMembershipRevision: Long = 0L,
 )

@@ -9,4 +9,5 @@ data class ViewerNpcSyncState(
     var lastKnownPlane: Int = Int.MIN_VALUE,
     var lastChunkActivityStamp: Long = 0L,
     var lastLocalNpcActivityStamp: Long = 0L,
+    var lastLocalNpcMembershipRevision: Long = 0L,
 )

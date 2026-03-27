@@ -1,19 +1,25 @@
 package net.dodian.jobs.impl;
 
-import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.content.dialogue.DialogueService;
+import net.dodian.uber.game.event.GameEventBus;
+import net.dodian.uber.game.event.events.PlayerTickEvent;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.chunk.ChunkRepository;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.PlayerHandler;
+import net.dodian.uber.game.model.object.GlobalObject;
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.runtime.loop.GameCycleClock;
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService;
+import net.dodian.uber.game.runtime.combat.CombatRuntimeService;
 import net.dodian.uber.game.runtime.sync.util.IntHashSet;
 import net.dodian.uber.game.runtime.sync.util.LongHashSet;
+import net.dodian.uber.game.runtime.tasking.GameTaskRuntime;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.netty.NetworkConstants;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.party.Balloons;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
@@ -21,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static net.dodian.utilities.DotEnvKt.getInteractionPipelineEnabled;
 import static net.dodian.utilities.DotEnvKt.getRuntimePhaseWarnMs;
 
 public class EntityProcessor implements Runnable {
@@ -37,9 +43,17 @@ public class EntityProcessor implements Runnable {
     private final LongHashSet activeNpcChunks = new LongHashSet(128);
     private final IntHashSet activeNpcSlots = new IntHashSet(256);
     private static volatile Npc[] SPAWN_ALWAYS_ACTIVE = null;
+    private static final ConcurrentLinkedQueue<Client> READY_INBOUND_PLAYERS = new ConcurrentLinkedQueue<>();
+
+    public static void enqueueInboundReady(Client player) {
+        if (player != null) {
+            READY_INBOUND_PLAYERS.add(player);
+        }
+    }
 
     @Override
     public void run() {
+        GameCycleClock.advance();
         long now = System.currentTimeMillis();
         GameThreadTaskQueue.drain();
         runInboundPacketPhase();
@@ -67,9 +81,19 @@ public class EntityProcessor implements Runnable {
         long collectNs = System.nanoTime() - collectNsStart;
         long npcLoopNsStart = System.nanoTime();
         for (Npc npc : activeNpcs) {
-            processNpc(now, npc, activeNpcChunks);
-            // Keep chunk membership current for active NPCs; avoids full-world chunk-sync scans.
-            npc.syncChunkMembership();
+            try {
+                processNpc(now, npc, activeNpcChunks);
+                // Keep chunk membership current for active NPCs; avoids full-world chunk-sync scans.
+                npc.syncChunkMembership();
+            } catch (Throwable throwable) {
+                logger.error(
+                        "NPC_MAIN actor failed slot={} id={} pos={}",
+                        npc != null ? npc.getSlot() : -1,
+                        npc != null ? npc.getId() : -1,
+                        npc != null ? npc.getPosition() : null,
+                        throwable
+                );
+            }
         }
         long npcLoopNs = System.nanoTime() - npcLoopNsStart;
 
@@ -109,6 +133,7 @@ public class EntityProcessor implements Runnable {
         if (!shouldProcessNpc(npc, activeNpcChunks)) {
             return;
         }
+        npc.setCurrentGameCycle(GameCycleClock.currentCycle());
 
         // Keep static NPCs facing their configured spawn direction, but do not
         // force roaming NPCs back to spawn-facing every tick.
@@ -128,6 +153,8 @@ public class EntityProcessor implements Runnable {
         handleNpcRoaming(npc);
         npc.effectChange();
         handleNpcRandomActions(npc);
+        npc.setProcessedGameCycle(npc.getCurrentGameCycle());
+        GameTaskRuntime.cycleNpc(npc);
     }
 
     private boolean shouldProcessNpc(Npc npc, LongHashSet activeNpcChunks) {
@@ -279,24 +306,56 @@ public class EntityProcessor implements Runnable {
     private void processInboundPackets() {
         net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.beginTick();
         long startNs = System.nanoTime();
-        int activePlayers = 0;
+        ArrayList<Client> readyPlayers = new ArrayList<>();
+        for (;;) {
+            Client player = READY_INBOUND_PLAYERS.poll();
+            if (player == null) {
+                break;
+            }
+            readyPlayers.add(player);
+        }
+
+        int readyPlayersBefore = readyPlayers.size();
+        int readyPlayersProcessed = 0;
         int processedPackets = 0;
+        int processedWalkPackets = 0;
+        int processedMousePackets = 0;
+        int replacedWalkPackets = 0;
+        int replacedMousePackets = 0;
+        int droppedFifoPackets = 0;
         int totalPendingBefore = 0;
         int totalPendingAfter = 0;
-        int backlogPlayers = 0;
+        int deferredPlayers = 0;
         int maxPendingBefore = 0;
         int maxPendingAfter = 0;
 
-        for (Client player : PlayerHandler.snapshotActivePlayers()) {
-            activePlayers++;
+        for (Client player : readyPlayers) {
+            if (player == null) {
+                continue;
+            }
+            player.clearInboundReadyFlag();
+            if (player.disconnected || !player.isActive) {
+                continue;
+            }
 
             int pendingBefore = player.getPendingInboundPacketCount();
+            if (pendingBefore <= 0) {
+                continue;
+            }
+
+            readyPlayersProcessed++;
             totalPendingBefore += pendingBefore;
             if (pendingBefore > maxPendingBefore) {
                 maxPendingBefore = pendingBefore;
             }
 
-            processedPackets += player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
+            Client.InboundProcessResult result = player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK);
+            processedPackets += result.processedPackets();
+            processedWalkPackets += result.walkPacketsProcessed();
+            processedMousePackets += result.mousePacketsProcessed();
+            replacedWalkPackets += result.walkPacketsReplaced();
+            replacedMousePackets += result.mousePacketsReplaced();
+            droppedFifoPackets += result.fifoPacketsDropped();
 
             int pendingAfter = player.getPendingInboundPacketCount();
             totalPendingAfter += pendingAfter;
@@ -304,18 +363,26 @@ public class EntityProcessor implements Runnable {
                 maxPendingAfter = pendingAfter;
             }
             if (pendingAfter > 0) {
-                backlogPlayers++;
+                deferredPlayers++;
+                player.markInboundReadyIfNeeded();
             }
         }
 
         long elapsedMs = (System.nanoTime() - startNs) / 1_000_000L;
         if (elapsedMs >= getRuntimePhaseWarnMs()) {
             logger.warn(
-                    "INBOUND_PACKETS slow: total={}ms activePlayers={} processedPackets={} backlogPlayers={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
+                    "INBOUND_PACKETS slow: total={}ms readyPlayers={} processedReadyPlayers={} processedPackets={} walkProcessed={} mouseProcessed={} walkReplaced={} mouseReplaced={} fifoDropped={} deferredPlayers={} readyAfter={} pendingBeforeTotal={} pendingAfterTotal={} maxBefore={} maxAfter={} top={}",
                     elapsedMs,
-                    activePlayers,
+                    readyPlayersBefore,
+                    readyPlayersProcessed,
                     processedPackets,
-                    backlogPlayers,
+                    processedWalkPackets,
+                    processedMousePackets,
+                    replacedWalkPackets,
+                    replacedMousePackets,
+                    droppedFifoPackets,
+                    deferredPlayers,
+                    READY_INBOUND_PLAYERS.size(),
                     totalPendingBefore,
                     totalPendingAfter,
                     maxPendingBefore,
@@ -432,17 +499,14 @@ public class EntityProcessor implements Runnable {
     }
 
     private void handleServerCycles() {
-        if (PlayerHandler.cycle % 10 == 0) {
+        long cycle = GameCycleClock.currentCycle();
+        if (cycle % 10 == 0) {
             Server.connections.clear();
             Server.nullConnections = 0;
         }
-        if (PlayerHandler.cycle % 100 == 0) {
+        if (cycle % 100 == 0) {
             Server.banned.clear();
         }
-        if (PlayerHandler.cycle > 10000) {
-            PlayerHandler.cycle = 0;
-        }
-        PlayerHandler.cycle++;
     }
 
     private void processPlayer(Client player) {
@@ -450,8 +514,29 @@ public class EntityProcessor implements Runnable {
             player.initialize();
             player.initialized = true;
         }
-        player.setLastProcessedCycle(PlayerHandler.cycle);
-        player.process();
+        player.setCurrentGameCycle(GameCycleClock.currentCycle());
+        int startingHealth = player.getCurrentHealth();
+        int startingPrayer = player.getCurrentPrayer();
+        int startingX = player.getPosition().getX();
+        int startingY = player.getPosition().getY();
+        int startingZ = player.getPosition().getZ();
+        GameEventBus.post(new PlayerTickEvent(player, player.getCurrentGameCycle(), System.currentTimeMillis()));
+        player.setProcessedGameCycle(player.getCurrentGameCycle());
+        player.setLastProcessedCycle(player.getProcessedGameCycle());
+        GameTaskRuntime.cyclePlayer(player);
+        DialogueService.flushIndexedIfNeeded(player);
+        CombatRuntimeService.process(player, player.getProcessedGameCycle());
+        PlayerAnimationService.flush(player, player.getProcessedGameCycle());
+        GlobalObject.updateObject(player);
+
+        if (startingHealth != player.getCurrentHealth() || startingPrayer != player.getCurrentPrayer()) {
+            player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.STATS.getMask()
+                    | net.dodian.uber.game.persistence.player.PlayerSaveSegment.EFFECTS.getMask()
+                    | net.dodian.uber.game.persistence.player.PlayerSaveSegment.META.getMask());
+        }
+        if (startingX != player.getPosition().getX() || startingY != player.getPosition().getY() || startingZ != player.getPosition().getZ()) {
+            player.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.POSITION.getMask());
+        }
 
         player.postProcessing();
         player.getNextPlayerMovement();

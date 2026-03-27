@@ -105,7 +105,7 @@ public final class PacketRepository implements Iterable<PacketListener> {
     public void registerNoOp(int opcode) {
         register(opcode, (client, packet) -> {
             // Consume the packet payload to prevent unhandled packet warnings
-            packet.getPayload().skipBytes(packet.getPayload().readableBytes());
+            packet.payload().skipBytes(packet.payload().readableBytes());
         });
     }
 

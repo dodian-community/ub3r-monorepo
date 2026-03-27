@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.combat.CombatAttackResult
 
 fun Client.canAttackNpc(npcId: Int): Boolean {
     if(npcId == 6610 && getAttackStyle() != 2) {
@@ -43,14 +44,14 @@ fun Client.getAttackStyle() : Int {
     return 0
 }
 
-fun Client.attackTarget(): Boolean {
+fun Client.attackTarget(): CombatAttackResult? {
     var attackStyle = getAttackStyle()
     /* Do checks each tick for player + npc */
     if(target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
-        if (npc.currentHealth < 1 || deathTimer > 0 || !canAttackNpc(npc.id)) {
+        if (npc.currentHealth < 1 || isDeathSequenceActive() || !canAttackNpc(npc.id)) {
             resetAttack()
-            return false
+            return null
         }
     }
     if(target is Player) { //Pvp checks (duel and wilderness)
@@ -58,32 +59,32 @@ fun Client.attackTarget(): Boolean {
         if (duelFight && attackStyle == 0 && duelRule[1]) {
             send(SendMessage("Melee has been disabled for this duel!"))
             resetAttack()
-            return false
+            return null
         }
         if (duelFight && attackStyle == 1 && duelRule[0]) {
             send(SendMessage("Ranged has been disabled for this duel!"))
             resetAttack()
-            return false
+            return null
         }
         if (duelFight && attackStyle == 2 && duelRule[2]) {
             send(SendMessage("Magic has been disabled for this duel!"))
             resetAttack()
-            return false
+            return null
         }
         if (!(duelFight && duel_with == target.slot) && !Server.pking) {
-            send(SendMessage("Pking has been disabled"));
+            send(SendMessage("Pking has been disabled"))
             resetAttack()
-            return false
+            return null
         }
         if (!canAttack) {
-            send(SendMessage("You cannot attack your oppenent yet!"));
+            send(SendMessage("You cannot attack your oppenent yet!"))
             resetAttack()
-            return false
+            return null
         }
         if (!(duelFight && duel_with == target.slot) && (!player.inWildy() || !inWildy())) {
-            send(SendMessage("You can't attack that player!"));
+            send(SendMessage("You can't attack that player!"))
             resetAttack()
-            return false
+            return null
         }
     }
     /*int diff = Math.abs(castOnPlayer.determineCombatLevel() - client.determineCombatLevel());
@@ -93,11 +94,11 @@ if (!((castOnPlayer.inWildy() && diff <= client.wildyLevel && diff <= castOnPlay
     return;
 }*/ //TODO: Fix wildy checks if we release wilderness!
     /* Style check to attack! */
-    if(attackStyle == 2 && handleMagicAttack() == 1)
-        return true
-    if(attackStyle == 1 && handleRangedAttack() == 1)
-        return true
-    if(attackStyle == 0 && handleMeleeAttack() == 1)
-        return true
-    return false
+    if(attackStyle == 2)
+        return handleMagicAttack()
+    if(attackStyle == 1)
+        return handleRangedAttack()
+    if(attackStyle == 0)
+        return handleMeleeAttack()
+    return null
 }

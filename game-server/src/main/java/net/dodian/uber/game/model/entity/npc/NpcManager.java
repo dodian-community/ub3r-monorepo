@@ -3,7 +3,6 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
-import net.dodian.uber.game.content.npcs.spawns.SpawnGroups;
 import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef;
 import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry;
 import net.dodian.uber.game.model.Position;
@@ -15,17 +14,35 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class NpcManager {
     private static final Logger logger = LoggerFactory.getLogger(NpcManager.class);
+    private static final Set<Integer> REQUIRED_HARDCODED_NPC_DEFINITIONS =
+            new HashSet<>(Arrays.asList(6080, 5924, 5926, 5927, 2267, 2265, 394, 395, 7677));
+    private static final Map<Integer, String> REQUIRED_HARDCODED_NPC_NAMES = new HashMap<>();
+    static {
+        REQUIRED_HARDCODED_NPC_NAMES.put(6080, "Gnome_balloon_pilot");
+        REQUIRED_HARDCODED_NPC_NAMES.put(5924, "Agility_werewolf");
+        REQUIRED_HARDCODED_NPC_NAMES.put(5926, "Agility_werewolf");
+        REQUIRED_HARDCODED_NPC_NAMES.put(5927, "Agility_werewolf_master");
+        REQUIRED_HARDCODED_NPC_NAMES.put(2267, "Dagannoth_Rex");
+        REQUIRED_HARDCODED_NPC_NAMES.put(2265, "Dagannoth_Supreme");
+        REQUIRED_HARDCODED_NPC_NAMES.put(394, "Banker");
+        REQUIRED_HARDCODED_NPC_NAMES.put(395, "Banker");
+        REQUIRED_HARDCODED_NPC_NAMES.put(7677, "Banker");
+    }
 
     Map<Integer, Npc> npcs = new HashMap<>();
     Map<Integer, NpcData> data = new HashMap<>();
@@ -64,27 +81,51 @@ public class NpcManager {
 //            e.printStackTrace();
 //        }
         logger.info("Skipping database NPC spawn loading");
+        repairRequiredHardcodedDefinitions();
 
         // The rest of the logic for hardcoded/extra spawns remains the same.
         int hardcodedSpawns = 0;
+        Map<Integer, Integer> skippedHardcodedMissingData = new TreeMap<>();
         gnomeSpawn = nextIndex;
         for (Position position : gnomePosition) {
+            if (getData(6080) == null) {
+                skippedHardcodedMissingData.merge(6080, 1, Integer::sum);
+                continue;
+            }
             createNpc(6080, position, 0);
             hardcodedSpawns++;
         }
 
         werewolfSpawn = nextIndex;
         for (int i = 0; i < werewolfPosition.length; i++) {
-            createNpc(i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926, werewolfPosition[i], 0);
+            int npcId = i == 0 ? 5924 : i == werewolfPosition.length - 1 ? 5927 : 5926;
+            if (getData(npcId) == null) {
+                skippedHardcodedMissingData.merge(npcId, 1, Integer::sum);
+                continue;
+            }
+            createNpc(npcId, werewolfPosition[i], 0);
             hardcodedSpawns++;
         }
 
         /* Daganoth kings */
         dagaRex = nextIndex;
-        createNpc(2267, new Position(3248, 2794, 0), 2);
+        if (getData(2267) != null) {
+            createNpc(2267, new Position(3248, 2794, 0), 2);
+            hardcodedSpawns++;
+        } else {
+            skippedHardcodedMissingData.merge(2267, 1, Integer::sum);
+        }
         dagaSupreme = nextIndex;
-        createNpc(2265, new Position(3251, 2794, 0), 2);
-        hardcodedSpawns += 2;
+        if (getData(2265) != null) {
+            createNpc(2265, new Position(3251, 2794, 0), 2);
+            hardcodedSpawns++;
+        } else {
+            skippedHardcodedMissingData.merge(2265, 1, Integer::sum);
+        }
+
+        if (!skippedHardcodedMissingData.isEmpty()) {
+            logger.warn("Skipped hardcoded NPC spawns with missing definitions: {}", formatMissingNpcCounts(skippedHardcodedMissingData));
+        }
 
         int contentSpawns = loadContentSpawns();
         int totalSpawns = hardcodedSpawns + contentSpawns;
@@ -98,19 +139,24 @@ public class NpcManager {
     }
 
     private int loadContentSpawns() {
-        List<NpcSpawnDef> functionSpawns = NpcContentRegistry.allSpawns();
-        java.util.Set<Integer> functionOwnedNpcIds = NpcContentRegistry.spawnSourceNpcIds();
-        List<NpcSpawnDef> generatedSpawns = SpawnGroups.all();
-        int total = functionSpawns.size() + generatedSpawns.size();
+        List<NpcSpawnDef> contentSpawns = NpcContentRegistry.allSpawns();
+        int total = contentSpawns.size();
         int loaded = 0;
         int skipped = 0;
-        int skippedFunctionOwned = 0;
         int skippedDuplicatePosition = 0;
+        int skippedMissingData = 0;
         int failed = 0;
+        Map<Integer, Integer> missingDataByNpcId = new TreeMap<>();
         Set<String> seen = new HashSet<>(total);
 
-        for (NpcSpawnDef spawn : functionSpawns) {
+        for (NpcSpawnDef spawn : contentSpawns) {
             try {
+                if (getData(spawn.getNpcId()) == null) {
+                    skipped++;
+                    skippedMissingData++;
+                    missingDataByNpcId.merge(spawn.getNpcId(), 1, Integer::sum);
+                    continue;
+                }
                 Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
                 String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
                 if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
@@ -143,7 +189,7 @@ public class NpcManager {
             } catch (Exception e) {
                 failed++;
                 logger.error(
-                        "Failed to create function-owned NPC spawn (id={}, x={}, y={}, z={}).",
+                        "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
                         spawn.getNpcId(),
                         spawn.getX(),
                         spawn.getY(),
@@ -153,65 +199,146 @@ public class NpcManager {
             }
         }
 
-        for (NpcSpawnDef spawn : generatedSpawns) {
-            try {
-                if (functionOwnedNpcIds.contains(spawn.getNpcId())) {
-                    skipped++;
-                    skippedFunctionOwned++;
-                    continue;
-                }
-                Position position = new Position(spawn.getX(), spawn.getY(), spawn.getZ());
-                String key = spawn.getNpcId() + ":" + spawn.getX() + ":" + spawn.getY() + ":" + spawn.getZ();
-                if (!seen.add(key) || hasSpawnAt(spawn.getNpcId(), position)) {
-                    skipped++;
-                    skippedDuplicatePosition++;
-                    continue;
-                }
-                Npc npc = createNpc(spawn.getNpcId(), position, spawn.getFace());
-                if (npc == null) {
-                    failed++;
-                    continue;
-                }
-                // Keep base combat stats from MySQL npc definitions unless explicit spawn overrides are provided.
-                npc.applySpawnOverrides(
-                        spawn.getRespawnTicks(),
-                        spawn.getAttack(),
-                        spawn.getDefence(),
-                        spawn.getStrength(),
-                        spawn.getHitpoints(),
-                        spawn.getRanged(),
-                        spawn.getMagic()
-                );
-                npc.applySpawnBehaviorOverrides(
-                        spawn.getWalkRadius(),
-                        spawn.getAttackRange(),
-                        spawn.getAlwaysActive(),
-                        spawn.getCondition()
-                );
-                loaded++;
-            } catch (Exception e) {
-                failed++;
-                logger.error(
-                        "Failed to create generated NPC spawn (id={}, x={}, y={}, z={}).",
-                        spawn.getNpcId(),
-                        spawn.getX(),
-                        spawn.getY(),
-                        spawn.getZ(),
-                        e
-                );
-            }
+        if (!missingDataByNpcId.isEmpty()) {
+            logger.warn(
+                    "Skipped {} content NPC spawns with missing NPC definitions: {}",
+                    skippedMissingData,
+                    formatMissingNpcCounts(missingDataByNpcId)
+            );
         }
 
         logger.info(
-                "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, function-owned {}, failed {}).",
+                "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, missing-data {}, failed {}).",
                 loaded,
                 total,
                 skipped,
                 skippedDuplicatePosition,
-                skippedFunctionOwned,
+                skippedMissingData,
                 failed
         );
         return loaded;
+    }
+
+    private void repairRequiredHardcodedDefinitions() {
+        if (!readBooleanFlag("npc.hardcoded.definitions.repair.enabled", true)) {
+            return;
+        }
+        List<Integer> missing = REQUIRED_HARDCODED_NPC_DEFINITIONS.stream()
+                .filter(id -> getData(id) == null)
+                .sorted()
+                .collect(Collectors.toList());
+        if (missing.isEmpty()) {
+            return;
+        }
+        logger.warn("Missing required hardcoded NPC definitions at startup: {}", missing);
+        List<Integer> repaired = new java.util.ArrayList<>();
+        List<Integer> unresolved = new java.util.ArrayList<>(missing);
+
+        try (java.sql.Connection conn = getDbConnection()) {
+            String placeholders = String.join(",", java.util.Collections.nCopies(missing.size(), "?"));
+            String selectSql = "SELECT id FROM " + DbTables.GAME_NPC_DEFINITIONS + " WHERE id IN (" + placeholders + ")";
+            Set<Integer> existing = new HashSet<>();
+            try (PreparedStatement select = conn.prepareStatement(selectSql)) {
+                int idx = 1;
+                for (int id : missing) {
+                    select.setInt(idx++, id);
+                }
+                try (ResultSet rs = select.executeQuery()) {
+                    while (rs.next()) {
+                        existing.add(rs.getInt("id"));
+                    }
+                }
+            }
+
+            String insertSql =
+                    "INSERT INTO " + DbTables.GAME_NPC_DEFINITIONS +
+                            " (id,name,examine,combat,attackEmote,deathEmote,hitpoints,respawn,size,attack,strength,defence,ranged,magic) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            try (PreparedStatement insert = conn.prepareStatement(insertSql)) {
+                for (int id : missing) {
+                    if (existing.contains(id)) {
+                        continue;
+                    }
+                    insert.setInt(1, id);
+                    insert.setString(2, REQUIRED_HARDCODED_NPC_NAMES.getOrDefault(id, "Npc_" + id));
+                    insert.setString(3, "Auto repaired startup definition for hardcoded spawn.");
+                    insert.setInt(4, 0);
+                    insert.setInt(5, 806);
+                    insert.setInt(6, 836);
+                    insert.setInt(7, 1);
+                    insert.setInt(8, 60);
+                    insert.setInt(9, 1);
+                    insert.setInt(10, 0);
+                    insert.setInt(11, 0);
+                    insert.setInt(12, 0);
+                    insert.setInt(13, 0);
+                    insert.setInt(14, 0);
+                    insert.addBatch();
+                }
+                insert.executeBatch();
+            }
+
+            for (int id : missing) {
+                if (reloadDefinition(conn, id)) {
+                    repaired.add(id);
+                }
+            }
+            unresolved.removeAll(repaired);
+        } catch (Exception e) {
+            logger.warn("Failed to repair required hardcoded NPC definitions: {}", missing, e);
+        }
+
+        if (!repaired.isEmpty()) {
+            logger.info("Auto-repaired hardcoded NPC definitions: {}", repaired);
+        }
+        if (!unresolved.isEmpty()) {
+            logger.warn("Hardcoded NPC definitions still unresolved after repair attempt: {}", unresolved);
+            if (readBooleanFlag("npc.hardcoded.definitions.repair.strict", false)) {
+                throw new IllegalStateException("Unresolved required hardcoded NPC definitions: " + unresolved);
+            }
+        }
+    }
+
+    private boolean reloadDefinition(java.sql.Connection conn, int id) {
+        String query = "SELECT * FROM " + DbTables.GAME_NPC_DEFINITIONS + " where id=?";
+        try (PreparedStatement statement = conn.prepareStatement(query)) {
+            statement.setInt(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                data.put(id, new NpcData(rs));
+                return true;
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to reload NPC definition for id={}", id, e);
+            return false;
+        }
+    }
+
+    private String formatMissingNpcCounts(Map<Integer, Integer> missingDataByNpcId) {
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<Integer, Integer> entry : missingDataByNpcId.entrySet()) {
+            if (!first) {
+                builder.append(", ");
+            }
+            builder.append(entry.getKey()).append("x").append(entry.getValue());
+            first = false;
+        }
+        return builder.toString();
+    }
+
+    private boolean readBooleanFlag(String property, boolean defaultValue) {
+        String prop = System.getProperty(property);
+        if (prop != null && !prop.trim().isEmpty()) {
+            return "true".equalsIgnoreCase(prop.trim());
+        }
+        String env = System.getenv(property.toUpperCase().replace('.', '_'));
+        if (env != null && !env.trim().isEmpty()) {
+            return "true".equalsIgnoreCase(env.trim());
+        }
+        return defaultValue;
     }
 
     private boolean hasSpawnAt(int npcId, Position position) {

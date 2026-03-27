@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask
+import net.dodian.uber.game.skills.slayer.SlayerService
 import net.dodian.utilities.Utils
 
 fun Client.distance(entity: Entity) = Utils.getDistance(position.x, position.y, entity.position.x, entity.position.y)
@@ -51,11 +51,11 @@ fun Client.slayerLevelRequired(npcId: Int): Boolean {
 }
 
 fun Client.checkSlayerTask(npcId: Int): Boolean {
-    val slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId)
+    val slayerTask = net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.forNpc(npcId)
     val slayExceptions = (slayerTask == null)
-            || (slayerTask == SlayerTask.slayerTasks.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
+            || (slayerTask == net.dodian.uber.game.skills.slayer.SlayerTaskDefinition.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
 
-    if (!slayExceptions && slayerTask.isSlayerOnly && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
+    if (!slayExceptions && slayerTask?.slayerOnly == true && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
         send(SendMessage("You need a slayer task to kill this monster."))
         resetAttack()
         return false

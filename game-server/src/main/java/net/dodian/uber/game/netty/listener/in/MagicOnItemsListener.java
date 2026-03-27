@@ -1,12 +1,16 @@
 package net.dodian.uber.game.netty.listener.in;
 
+import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.skills.core.runtime.RuneCostService;
+import net.dodian.uber.game.skills.smithing.SmithingPlugin;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -28,15 +32,19 @@ public class MagicOnItemsListener implements PacketListener {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(MagicOnItemsListener.class);
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.getPayload());
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
         // decode order based on client build: slot (big), itemId (little+ADD), dummy (big), spellId (little+ADD)
-        int castOnSlot = msg.getShort(true, ByteOrder.BIG, ValueType.NORMAL);
-        int castOnItem = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
-        msg.getShort(true, ByteOrder.BIG, ValueType.NORMAL); // unused / interface id
-        int castSpell = msg.getShort(false, ByteOrder.BIG, ValueType.ADD);
+        int castOnSlot = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL);
+        int castOnItem = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.NORMAL); // unused / interface id
+        int castSpell = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
 
         // quick sanity
         if (castOnSlot < 0 || castOnSlot > 28) {
@@ -44,7 +52,7 @@ public class MagicOnItemsListener implements PacketListener {
             return;
         }
 
-        int value = (int) Server.itemManager.getAlchemy(castOnItem);
+        int value = Server.itemManager.getAlchemy(castOnItem);
 
         if (System.currentTimeMillis() - client.lastMagic < 1800 || !client.playerHasItem(castOnItem) || client.playerItems[castOnSlot] != castOnItem + 1) {
             client.send(new SendSideTab(6));
@@ -57,7 +65,7 @@ public class MagicOnItemsListener implements PacketListener {
         // Superheat
         if (castSpell == 1173) {
             if (!checkLevel(client, 43)) return;
-            client.superHeat(castOnItem);
+            SmithingPlugin.castSuperheat(client, castOnItem);
             return;
         }
 
@@ -111,7 +119,7 @@ public class MagicOnItemsListener implements PacketListener {
                 return false;
         }
         if (!checkLevel(client, reqLevel)) return true;
-        if (client.hasRunes(new int[]{564}, new int[]{runeCost})) { // 564 = cosmic
+        if (RuneCostService.isMissingAny(client, new int[]{564}, new int[]{runeCost})) { // 564 = cosmic
             client.send(new SendMessage("You need " + runeCost + " cosmic runes to cast this spell!"));
             return true;
         }
@@ -121,13 +129,13 @@ public class MagicOnItemsListener implements PacketListener {
         }
         client.lastMagic = System.currentTimeMillis();
         client.deleteItem(itemId, 1);
-        client.deleteRunes(new int[]{564}, new int[]{runeCost});
+        RuneCostService.consume(client, new int[]{564}, new int[]{runeCost});
         client.addItem(resultItem, 1);
         client.checkItemUpdate();
         client.requestAnim(720, 0);
         client.callGfxMask(115, 100);
         client.send(new SendSideTab(6));
-        client.giveExperience(exp, Skill.MAGIC);
+        SkillProgressionService.gainXp(client, exp, Skill.MAGIC);
         return true;
     }
 
@@ -145,7 +153,7 @@ public class MagicOnItemsListener implements PacketListener {
         client.deleteItem(561, 1);
         client.addItem(995, value);
         client.checkItemUpdate();
-        client.giveExperience(600, Skill.MAGIC);
+        SkillProgressionService.gainXp(client, 600, Skill.MAGIC);
         client.requestAnim(713, 0);
         client.callGfxMask(113, 100);
         client.send(new SendSideTab(6));

@@ -6,7 +6,8 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 
 public class Frame171 implements OutgoingPacket {
 
-    private int mainFrame, subFrame;
+    private final int mainFrame;
+    private final int subFrame;
 
     public Frame171(int mainFrame, int subFrame) {
         this.mainFrame = mainFrame;

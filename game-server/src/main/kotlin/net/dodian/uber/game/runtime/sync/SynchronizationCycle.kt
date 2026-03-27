@@ -6,10 +6,10 @@ import net.dodian.uber.game.runtime.sync.npc.NpcChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.npc.RootNpcDeltaIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerChunkActivityIndex
 import net.dodian.uber.game.runtime.sync.player.PlayerSyncRevisionIndex
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketBuildReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketMode
-import net.dodian.uber.game.runtime.sync.player.root.PlayerSyncRecoveryReason
-import net.dodian.uber.game.runtime.sync.player.root.PlayerPacketSkipReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketBuildReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketMode
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerSyncRecoveryReason
+import net.dodian.uber.game.runtime.sync.playerinfo.dispatch.PlayerPacketSkipReason
 import net.dodian.uber.game.runtime.sync.viewport.ViewportIndex
 import net.dodian.uber.game.runtime.sync.template.PlayerSyncTemplateCache
 
@@ -54,6 +54,8 @@ class SynchronizationCycle(
         private set
     var playerPacketsTemplated: Int = 0
         private set
+    var playerPacketsIdleTemplated: Int = 0
+        private set
     var playerScratchReuseCount: Int = 0
         private set
     var playerAppearanceCacheHits: Int = 0
@@ -94,6 +96,12 @@ class SynchronizationCycle(
         private set
     var playerLocalAdditionDeferredCount: Int = 0
         private set
+    var playerTeleportReinsertCount: Int = 0
+        private set
+    var playerTeleportReinsertSentCount: Int = 0
+        private set
+    var playerTeleportReinsertDeferredCount: Int = 0
+        private set
     var playerHardRebuildRecoveryCount: Int = 0
         private set
     var npcPacketsBuilt: Int = 0
@@ -103,6 +111,20 @@ class SynchronizationCycle(
     var npcLocalScans: Int = 0
         private set
     var npcLocalsSkipped: Int = 0
+        private set
+    var npcBuildNoStateCount: Int = 0
+        private set
+    var npcBuildMapRegionOrTeleportCount: Int = 0
+        private set
+    var npcBuildLocalCountChangedCount: Int = 0
+        private set
+    var npcBuildPendingViewportCount: Int = 0
+        private set
+    var npcBuildChunkActivityChangedCount: Int = 0
+        private set
+    var npcBuildLocalActivityChangedCount: Int = 0
+        private set
+    var npcBuildLocalMembershipChangedCount: Int = 0
         private set
 
     fun recordStage(stage: SynchronizationStage, durationNanos: Long) {
@@ -157,6 +179,11 @@ class SynchronizationCycle(
         playerTemplatedLocalCoverage += localCount
     }
 
+    fun recordPlayerPacketIdleTemplated(localCount: Int) {
+        playerPacketsIdleTemplated++
+        playerTemplatedLocalCoverage += localCount
+    }
+
     fun recordPlayerScratchReuse() {
         playerScratchReuseCount++
     }
@@ -177,6 +204,34 @@ class SynchronizationCycle(
     fun recordNpcPacketSkipped(localCount: Int) {
         npcPacketsSkipped++
         npcLocalsSkipped += localCount
+    }
+
+    fun recordNpcBuildNoState() {
+        npcBuildNoStateCount++
+    }
+
+    fun recordNpcBuildMapRegionOrTeleport() {
+        npcBuildMapRegionOrTeleportCount++
+    }
+
+    fun recordNpcBuildLocalCountChanged() {
+        npcBuildLocalCountChangedCount++
+    }
+
+    fun recordNpcBuildPendingViewport() {
+        npcBuildPendingViewportCount++
+    }
+
+    fun recordNpcBuildChunkActivityChanged() {
+        npcBuildChunkActivityChangedCount++
+    }
+
+    fun recordNpcBuildLocalActivityChanged() {
+        npcBuildLocalActivityChangedCount++
+    }
+
+    fun recordNpcBuildLocalMembershipChanged() {
+        npcBuildLocalMembershipChangedCount++
     }
 
     fun recordPlayerPacketMode(mode: PlayerPacketMode) {
@@ -229,6 +284,12 @@ class SynchronizationCycle(
 
     fun recordPlayerLocalAdditionDeferred(count: Int) {
         playerLocalAdditionDeferredCount += count
+    }
+
+    fun recordPlayerTeleportReinserts(total: Int, sent: Int, deferred: Int) {
+        playerTeleportReinsertCount += total
+        playerTeleportReinsertSentCount += sent
+        playerTeleportReinsertDeferredCount += deferred
     }
 
     fun recordPlayerRecovery(reason: PlayerSyncRecoveryReason) {

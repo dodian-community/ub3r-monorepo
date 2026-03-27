@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 private val logger: Logger = LogManager.getLogger("Database")
-private val jdbcUrl = "jdbc:mysql://$databaseHost:$databasePort/$databaseName?serverTimezone=UTC&autoReconnect=true"
+private val databaseJdbcUrl = buildDatabaseJdbcUrl(databaseHost, databasePort, databaseName)
 
 private val dataSourceLazy = lazy { createDataSource() }
 private val schedulerLazy = lazy { Executors.newScheduledThreadPool(1) }
@@ -23,8 +23,9 @@ private val dataSource: HikariDataSource
 
 private fun createDataSource(): HikariDataSource {
     logger.info("Initializing MySQL connection pool...")
+    validateDatabaseConfig(databaseHost, databaseName, databaseUsername)
     val config = HikariConfig().apply {
-        jdbcUrl = net.dodian.utilities.jdbcUrl
+        jdbcUrl = databaseJdbcUrl
         username = databaseUsername
         password = databasePassword
         driverClassName = "com.mysql.cj.jdbc.Driver"
@@ -58,6 +59,8 @@ private fun createDataSource(): HikariDataSource {
         // Connection init SQL for debugging
         connectionInitSql = "SELECT 1"
     }
+
+    logger.info("Database target: {}", sanitizedJdbcTarget(databaseHost, databasePort, databaseName))
 
     return HikariDataSource(config).also { hikariDataSource ->
         logger.info("Connection pool initialized:")

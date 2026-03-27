@@ -1,9 +1,13 @@
 package net.dodian.uber.game.netty.listener.in;
 
+import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -27,14 +31,18 @@ public class RemoveItemListener implements PacketListener {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveItemListener.class);
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteMessage msg = ByteMessage.wrap(packet.getPayload());
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
         // mystic client sends: int interfaceId, then two unsigned shorts with ADD transform
-        int interfaceID = msg.getInt();
-        int removeSlot = msg.getShort(false, ValueType.ADD);
-        int removeID = msg.getShort(false, ValueType.ADD);
+        int interfaceID = ByteBufReader.readInt(buf);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int removeID = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int bankSlot = removeSlot;
 
         if ((interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) && client.bankStyleViewOpen) {
@@ -80,8 +88,7 @@ public class RemoveItemListener implements PacketListener {
             client.tradeItem(removeID, removeSlot, 1);
         } else if (interfaceID == 3415 && client.inTrade && client.canOffer) { // trade -> bag
             client.fromTrade(removeID, removeSlot, 1);
-        } else if (interfaceID >= 4233 && interfaceID <= 4257) { // gold crafting
-            client.startGoldCrafting(interfaceID, removeSlot, 1);
+        } else if (SkillingInterfaceItemService.handleContainerAmount(client, interfaceID, removeID, removeSlot, 1)) {
         } else if (interfaceID == 3823) { // shop sell value
             if (!Server.shopping || client.tradeLocked) {
                 client.send(new SendMessage(client.tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
@@ -115,14 +122,6 @@ public class RemoveItemListener implements PacketListener {
             shopValue = client.MyShopID >= 9 && client.MyShopID <= 11 ? (int) (shopValue * 1.5) : shopValue;
             String shopAdd = formatValueSuffix(shopValue);
             client.send(new SendMessage(client.GetItemName(removeID) + ": currently costs " + shopValue + " " + client.GetItemName(currency).toLowerCase() + shopAdd));
-        } else if (interfaceID >= 1119 && interfaceID <= 1123) { // smithing selection
-            if (client.smithing[2] > 0) {
-                client.smithing[4] = removeID;
-                client.smithing[5] = 1;
-                client.send(new RemoveInterfaces());
-            } else {
-                client.send(new SendMessage("Illigal Smithing !"));
-            }
         }
         client.CheckGear();
     }

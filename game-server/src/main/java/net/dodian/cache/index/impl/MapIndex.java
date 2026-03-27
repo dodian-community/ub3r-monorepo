@@ -12,17 +12,17 @@ public class MapIndex extends Index {
     /**
      * The map file.
      */
-    private int mapFile;
+    private final int mapFile;
 
     /**
      * The landscape file.
      */
-    private int landscapeFile;
+    private final int landscapeFile;
 
     /**
      * Members only flag.
      */
-    private boolean members;
+    private final boolean members;
 
     /**
      * Creates the index.

@@ -14,8 +14,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
-import net.dodian.uber.game.persistence.PlayerSaveReason
-import net.dodian.uber.game.persistence.PlayerSaveSnapshot
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveSnapshot
 import org.slf4j.LoggerFactory
 
 object PlayerSaveService {
@@ -30,7 +30,7 @@ object PlayerSaveService {
     private val oldestQueuedAt = AtomicLong(0)
     private val lastWriteDurationMs = AtomicLong(0)
     private val totalRetries = AtomicLong(0)
-    private val repository = PlayerSaveRepository()
+    private val repository = PlayerSaveSqlRepository()
 
     @Volatile
     private var worker: Job? = null

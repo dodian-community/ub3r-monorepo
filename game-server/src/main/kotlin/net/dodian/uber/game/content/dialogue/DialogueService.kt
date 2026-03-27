@@ -4,6 +4,10 @@ import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.runtime.api.content.ContentActionCancelReason
+import net.dodian.uber.game.runtime.api.content.ContentActions
+import net.dodian.uber.game.runtime.api.content.ContentInteraction
 import java.util.ArrayDeque
 import java.util.Collections
 import java.util.WeakHashMap
@@ -22,15 +26,50 @@ object DialogueService {
         var currentOptions: DialogueStep.Options? = null,
     )
 
+    private data class IndexedDialogueState(
+        var dialogueId: Int = 0,
+        var npcId: Int = 0,
+        var nextDialogueId: Int = -1,
+        var sent: Boolean = false,
+    )
+
     private val sessions = Collections.synchronizedMap(WeakHashMap<Client, DialogueSession>())
+    private val indexedStates = Collections.synchronizedMap(WeakHashMap<Client, IndexedDialogueState>())
 
     @JvmStatic
     fun hasActiveSession(client: Client): Boolean = sessions.containsKey(client)
 
     @JvmStatic
+    fun hasBlockingDialogue(client: Client): Boolean {
+        return hasActiveSession(client) ||
+            DialoguePagingService.hasActivePaging(client) ||
+            hasIndexedDialogue(client)
+    }
+
+    @JvmStatic
+    fun flushIndexedIfNeeded(client: Client) {
+        if (hasActiveSession(client)) {
+            return
+        }
+        if (currentDialogueId(client) > 0 && !isDialogueSent(client)) {
+            DialogueDisplayService.updateNpcChat(client)
+        }
+    }
+
+    @JvmStatic
     fun start(client: Client, builder: DialogueFactory.() -> Unit) {
+        if (!ContentInteraction.canStartDialogue(client)) {
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            return
+        }
+        ContentActions.cancel(
+            player = client,
+            reason = ContentActionCancelReason.DIALOGUE_OPENED,
+            fullResetAnimation = false,
+            resetCompatibilityState = true,
+        )
         clear(client, closeInterfaces = false)
-        clearLegacyDialogueState(client)
+        clearIndexedDialogueState(client)
 
         val factory = DialogueFactory().apply(builder)
         val session = DialogueSession(queue = ArrayDeque(factory.steps))
@@ -42,10 +81,97 @@ object DialogueService {
     fun clear(client: Client, closeInterfaces: Boolean = true) {
         sessions.remove(client)
         DialoguePagingService.clear(client)
+        clearIndexedDialogueState(client)
         if (closeInterfaces) {
             client.send(RemoveInterfaces())
         }
     }
+
+    @JvmStatic
+    fun closeBlockingDialogue(client: Client, closeInterfaces: Boolean = true) {
+        val dialogueId = currentDialogueId(client)
+        sessions.remove(client)
+        DialoguePagingService.clear(client)
+        clearIndexedDialogueState(client)
+        if (dialogueId == 1001) {
+            client.clearWalkableInterface()
+        }
+        if (closeInterfaces) {
+            client.send(RemoveInterfaces())
+        }
+    }
+
+    @JvmStatic
+    fun startDialogueId(client: Client, dialogueId: Int, npcId: Int) {
+        if (!ContentInteraction.canStartDialogue(client)) {
+            ContentInteraction.blockingInteractionMessage(client)?.let { client.send(SendMessage(it)) }
+            return
+        }
+        sessions.remove(client)
+        DialoguePagingService.clear(client)
+        setDialogueId(client, dialogueId)
+        setActiveNpcId(client, npcId)
+        setDialogueSent(client, false)
+        setNextDialogueId(client, -1)
+        DialogueDisplayService.updateNpcChat(client)
+    }
+
+    @JvmStatic
+    fun showNpcChat(
+        client: Client,
+        npcId: Int,
+        emote: Int,
+        text: Array<String>,
+        nextDialogueId: Int? = null,
+    ) {
+        setActiveNpcId(client, npcId)
+        client.showNPCChat(npcId, emote, text)
+        setDialogueSent(client, true)
+        if (nextDialogueId != null) {
+            setNextDialogueId(client, nextDialogueId)
+        }
+    }
+
+    @JvmStatic
+    fun showPlayerChat(
+        client: Client,
+        text: Array<String>,
+        emote: Int,
+        nextDialogueId: Int? = null,
+    ) {
+        client.showPlayerChat(text, emote)
+        setDialogueSent(client, true)
+        if (nextDialogueId != null) {
+            setNextDialogueId(client, nextDialogueId)
+        }
+    }
+
+    @JvmStatic
+    fun resetDialogueState(client: Client) {
+        setDialogueId(client, -1)
+        setDialogueSent(client, false)
+        setNextDialogueId(client, -1)
+    }
+
+    @JvmStatic
+    fun showCompatNpcChat(
+        client: Client,
+        npcId: Int,
+        emote: Int,
+        text: Array<String>,
+        nextDialogueId: Int? = null,
+    ) = showNpcChat(client, npcId, emote, text, nextDialogueId)
+
+    @JvmStatic
+    fun showCompatPlayerChat(
+        client: Client,
+        text: Array<String>,
+        emote: Int,
+        nextDialogueId: Int? = null,
+    ) = showPlayerChat(client, text, emote, nextDialogueId)
+
+    @JvmStatic
+    fun captureCompatibilityState(client: Client) = Unit
 
     /**
      * @return true if the continue click was consumed (paging or active session).
@@ -61,6 +187,44 @@ object DialogueService {
 
         session.awaiting = Awaiting.NONE
         execute(client, session)
+        return true
+    }
+
+    @JvmStatic
+    fun onIndexedContinue(client: Client): Boolean {
+        val dialogueId = currentDialogueId(client)
+        if (dialogueId <= 0 && nextDialogueId(client) <= 0) {
+            return false
+        }
+
+        when (dialogueId) {
+            1, 3, 5, 21 -> {
+                setDialogueId(client, dialogueId + 1)
+                setDialogueSent(client, false)
+            }
+
+            6, 7 -> {
+                clearIndexedDialogueState(client)
+                client.send(RemoveInterfaces())
+            }
+
+            23 -> {
+                setDialogueId(client, dialogueId + 2)
+                setDialogueSent(client, false)
+            }
+
+            else -> {
+                val nextDialogueId = nextDialogueId(client)
+                if (nextDialogueId > 0) {
+                    setDialogueId(client, nextDialogueId)
+                    setDialogueSent(client, false)
+                    setNextDialogueId(client, -1)
+                } else if (dialogueId != 48054) {
+                    clearIndexedDialogueState(client)
+                    client.send(RemoveInterfaces())
+                }
+            }
+        }
         return true
     }
 
@@ -138,14 +302,100 @@ object DialogueService {
                     clear(client, closeInterfaces = step.closeInterfaces)
                     return
                 }
+
+                is DialogueStep.FinishThen -> {
+                    clear(client, closeInterfaces = step.closeInterfaces)
+                    step.action(client)
+                    return
+                }
             }
         }
     }
 
-    private fun clearLegacyDialogueState(client: Client) {
+    @JvmStatic
+    fun currentDialogueId(client: Client): Int {
+        return indexedStates[client]?.dialogueId ?: 0
+    }
+
+    @JvmStatic
+    fun setDialogueId(client: Client, dialogueId: Int) {
+        indexedState(client).dialogueId = dialogueId
+        client.NpcDialogue = dialogueId
+    }
+
+    @JvmStatic
+    fun activeNpcId(client: Client): Int {
+        return indexedStates[client]?.npcId ?: 0
+    }
+
+    @JvmStatic
+    fun setActiveNpcId(client: Client, npcId: Int) {
+        indexedState(client).npcId = npcId
+        client.NpcTalkTo = npcId
+    }
+
+    @JvmStatic
+    fun nextDialogueId(client: Client): Int {
+        return indexedStates[client]?.nextDialogueId ?: -1
+    }
+
+    @JvmStatic
+    fun setNextDialogueId(client: Client, dialogueId: Int) {
+        indexedState(client).nextDialogueId = dialogueId
+        client.nextDiag = dialogueId
+    }
+
+    @JvmStatic
+    fun isDialogueSent(client: Client): Boolean {
+        return indexedStates[client]?.sent == true
+    }
+
+    @JvmStatic
+    fun setDialogueSent(client: Client, sent: Boolean) {
+        indexedState(client).sent = sent
+        client.NpcDialogueSend = sent
+    }
+
+    @JvmStatic
+    fun setCompatDialogueSent(client: Client, sent: Boolean) = setDialogueSent(client, sent)
+
+    @JvmStatic
+    fun compatDialogueId(client: Client): Int = currentDialogueId(client)
+
+    @JvmStatic
+    fun setCompatDialogueId(client: Client, dialogueId: Int) = setDialogueId(client, dialogueId)
+
+    @JvmStatic
+    fun compatNpcId(client: Client): Int = activeNpcId(client)
+
+    @JvmStatic
+    fun setCompatNpcId(client: Client, npcId: Int) = setActiveNpcId(client, npcId)
+
+    @JvmStatic
+    fun compatNextDialogueId(client: Client): Int = nextDialogueId(client)
+
+    @JvmStatic
+    fun setCompatNextDialogueId(client: Client, dialogueId: Int) = setNextDialogueId(client, dialogueId)
+
+    @JvmStatic
+    fun isCompatDialogueSent(client: Client): Boolean = isDialogueSent(client)
+
+    @JvmStatic
+    fun hasIndexedDialogue(client: Client): Boolean {
+        val state = indexedStates[client] ?: return false
+        return state.dialogueId > 0 || state.nextDialogueId > 0 || state.sent
+    }
+
+    private fun clearIndexedDialogueState(client: Client) {
+        indexedStates.remove(client)
         client.NpcDialogue = 0
+        client.NpcTalkTo = 0
         client.NpcDialogueSend = false
         client.nextDiag = -1
+    }
+
+    private fun indexedState(client: Client): IndexedDialogueState {
+        return indexedStates.getOrPut(client) { IndexedDialogueState() }
     }
 }
 
@@ -168,6 +418,11 @@ sealed interface DialogueStep {
     data class Restart(val steps: List<DialogueStep>) : DialogueStep
 
     data class Finish(
+        val closeInterfaces: Boolean,
+        val action: (Client) -> Unit,
+    ) : DialogueStep
+
+    data class FinishThen(
         val closeInterfaces: Boolean,
         val action: (Client) -> Unit,
     ) : DialogueStep

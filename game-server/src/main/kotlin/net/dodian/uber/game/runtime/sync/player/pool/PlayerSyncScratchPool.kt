@@ -13,6 +13,7 @@ class PlayerSyncScratchPool(
 
     val desiredSlots = IntArray(maxLocals)
     val additions = IntArray(maxLocals)
+    val reinserts = IntArray(maxLocals)
     val removals = IntArray(maxLocals)
     val retains = IntArray(maxLocals)
     val changedRetained = IntArray(maxLocals)

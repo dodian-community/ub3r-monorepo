@@ -9,9 +9,9 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class ObjectAnimation implements OutgoingPacket {
 
-    private GameObjectDef def;
-    private Position position;
-    private int animation;
+    private final GameObjectDef def;
+    private final Position position;
+    private final int animation;
 
     public ObjectAnimation(GameObjectDef object, int animation) {
         this.def = object;

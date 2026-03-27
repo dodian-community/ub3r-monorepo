@@ -10,7 +10,6 @@ class PlayerChunkActivityIndex {
     private var sequence = 0L
 
     fun clear() {
-        sequence = 0L
         chunkStamps.clear()
     }
 

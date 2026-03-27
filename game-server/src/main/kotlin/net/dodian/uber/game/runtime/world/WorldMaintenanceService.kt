@@ -1,23 +1,17 @@
 package net.dodian.uber.game.runtime.world
 
 import kotlin.system.measureNanoTime
-import net.dodian.jobs.impl.FarmingProcess
 import net.dodian.jobs.impl.PlunderDoor
-import net.dodian.jobs.impl.WorldProcessor
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.persistence.WorldPollResult
+import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.runtime.world.farming.FarmingScheduler
-import net.dodian.utilities.farmingSchedulerEnabled
 import net.dodian.utilities.gameWorldId
 import net.dodian.utilities.runtimePhaseWarnMs
-import net.dodian.utilities.worldMaintenanceEnabled
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(
-    private val legacyWorldProcessor: WorldProcessor,
-    private val legacyFarmingProcess: FarmingProcess,
     private val plunderDoor: PlunderDoor,
 ) {
     private val logger = LoggerFactory.getLogger(WorldMaintenanceService::class.java)
@@ -27,17 +21,9 @@ class WorldMaintenanceService(
     private var lastPlunderRunMs = 0L
     private var worldDbDueCycle = Long.MIN_VALUE
     private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
-    private var legacyWorldDbHandledForCycle = Long.MIN_VALUE
 
     fun runWorldDbInputBuild(cycle: Long) {
         if (!isMaintenanceDue(cycle)) {
-            return
-        }
-        if (!worldMaintenanceEnabled) {
-            if (legacyWorldDbHandledForCycle != cycle) {
-                legacyWorldProcessor.run()
-                legacyWorldDbHandledForCycle = cycle
-            }
             return
         }
         playerIndex.refresh()
@@ -49,7 +35,7 @@ class WorldMaintenanceService(
     }
 
     fun runWorldDbResultRead(cycle: Long) {
-        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+        if (worldDbDueCycle != cycle) {
             return
         }
         pendingWorldPollResult =
@@ -59,12 +45,11 @@ class WorldMaintenanceService(
     }
 
     fun runWorldDbApply(cycle: Long) {
-        if (!worldMaintenanceEnabled || worldDbDueCycle != cycle) {
+        if (worldDbDueCycle != cycle) {
             return
         }
         timed(WorldMaintenanceStage.WORLD_DB_APPLY) {
             pollApplier.apply(pendingWorldPollResult, playerIndex)
-            Server.chat.clear()
         }
         pendingWorldPollResult = WorldPollResult.EMPTY
         worldDbDueCycle = Long.MIN_VALUE
@@ -74,14 +59,23 @@ class WorldMaintenanceService(
         if (cycle % MAINTENANCE_INTERVAL_TICKS != 0L) {
             return
         }
-        if (!farmingSchedulerEnabled) {
-            legacyFarmingProcess.run()
-            return
-        }
         playerIndex.refresh()
-        farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
-        timed(WorldMaintenanceStage.FARMING_TICK) {
-            farmingScheduler.runDue(cycle)
+        val refreshStats = farmingScheduler.refreshActivePlayers(playerIndex.snapshot(), cycle)
+        val runStats: net.dodian.uber.game.runtime.world.farming.FarmingRunStats
+        val elapsed = measureNanoTime {
+            runStats = farmingScheduler.runDue(cycle)
+        }
+        val elapsedMs = elapsed / 1_000_000L
+        if (elapsedMs >= runtimePhaseWarnMs) {
+            logger.warn(
+                "World maintenance stage {} took {}ms activePlayers={} duePlayers={} processedPlayers={} maxBucketSize={}",
+                WorldMaintenanceStage.FARMING_TICK,
+                elapsedMs,
+                refreshStats.activePlayers,
+                runStats.duePlayers,
+                runStats.processedPlayers,
+                runStats.maxBucketSize,
+            )
         }
     }
 
@@ -98,11 +92,12 @@ class WorldMaintenanceService(
     private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldPollSnapshot =
         WorldPollSnapshot(gameWorldId, playerIndex.playerCount(), playerIndex.dbIdsArray())
 
+    @Suppress("UNCHECKED_CAST", "VARIABLE_WITH_REDUNDANT_INITIALIZER")
     private fun <T> timed(
         stage: WorldMaintenanceStage,
         block: () -> T,
     ): T {
-        var result: T? = null
+        var result: Any? = null
         val elapsed = measureNanoTime {
             result = block()
         }

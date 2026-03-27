@@ -5,7 +5,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
+import net.dodian.uber.game.combat.style.CombatStyleService;
 
 /**
  * Sent to update a player's equipment in a specific slot.
@@ -48,7 +48,7 @@ public class SetEquipment implements OutgoingPacket {
         // Additional equipment-related updates
         if (targetSlot == 3) { // 3 is the weapon slot
             client.CheckGear();
-            CombatStyleHandler.setWeaponHandler(client);
+            CombatStyleService.refreshWeaponStyleUi(client);
             client.requestWeaponAnims();
         }
         

@@ -38,7 +38,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener");
             // Load UseItemOnNpcListener for opcode 57
             Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnNpcListener");
-            // Load LegacyBridge then ItemOnItem so listener overwrites any bridge registration
+            // Load the compatibility bridge before ItemOnItem so the concrete listener wins registration
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnItemListener");
             // Load ClickItem2Listener for opcode 16
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");
@@ -103,8 +103,8 @@ public final class PacketListenerManager {
             // Register no-op handlers for unused opcodes
             repository.registerNoOp(77);  // Currently unused
             repository.registerNoOp(202); // Client idle logout (not used)
-            repository.registerNoOp(230); // Anti-cheat/checks for 2nd click npc (not used)
             repository.registerNoOp(86);  // Camera movement (unused)
+            repository.registerNoOp(229); // Client plane/update side packet (non-gameplay)
             
             // Note: WalkingListener registers itself for opcodes 248, 164, 98 in its static block
             

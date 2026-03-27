@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.uber.game.persistence.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
 
 data class ItemSlotEntry(
     val slot: Int,
@@ -30,7 +30,7 @@ data class PlayerSaveEnvelope(
     val segments: List<PlayerSaveSegmentSnapshot>,
 ) {
     companion object {
-        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled }
+        private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled() }
 
         @JvmStatic
         fun fromClient(
@@ -123,7 +123,7 @@ data class PlayerSaveEnvelope(
             if (has(PlayerSaveSegment.FARMING)) {
                 val rewards = ArrayList<String>(client.dailyReward.size)
                 rewards.addAll(client.dailyReward)
-                segments += FarmingSegmentSnapshot(farming = client.farmingJson.farmingSave(), dailyReward = rewards)
+                segments += FarmingSegmentSnapshot(farming = client.farmingJson.farmingSaveSnapshot(), dailyReward = rewards)
             }
             if (has(PlayerSaveSegment.EFFECTS)) {
                 segments += EffectsSegmentSnapshot(client.effects.toList())

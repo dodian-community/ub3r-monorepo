@@ -4,24 +4,36 @@ import com.google.gson.JsonArray
 import java.util.IdentityHashMap
 import java.util.TreeMap
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skills.FarmingData
-import net.dodian.uber.game.skills.FarmingJson
+import net.dodian.uber.game.skills.farming.FarmingState
+import net.dodian.uber.game.skills.farming.FarmingDefinitions
 import net.dodian.uber.game.model.entity.player.PlayerHandler
+
+data class FarmingRefreshStats(
+    val activePlayers: Int,
+)
+
+data class FarmingRunStats(
+    val duePlayers: Int,
+    val processedPlayers: Int,
+    val maxBucketSize: Int,
+)
 
 class FarmingScheduler {
     private val scheduled = IdentityHashMap<Client, Long>()
     private val buckets = TreeMap<Long, FarmingTickBucket>()
+    private val waterSaplingIds =
+        FarmingDefinitions.sapling.values().mapTo(HashSet()) { it.waterId + 1 }
 
     fun refreshActivePlayers(
         activePlayers: List<Client>,
         currentCycle: Long,
-    ) {
+    ): FarmingRefreshStats {
         val activeSet = IdentityHashMap<Client, Boolean>(activePlayers.size)
         activePlayers.forEach { client ->
             activeSet[client] = true
             if (!scheduled.containsKey(client)) {
-                val delay = if (hasActiveWork(client)) ACTIVE_INTERVAL_TICKS else IDLE_RECHECK_INTERVAL_TICKS
-                schedule(client, currentCycle + delay)
+                val interval = if (hasActiveWork(client)) ACTIVE_INTERVAL_TICKS else IDLE_RECHECK_INTERVAL_TICKS
+                schedule(client, alignedCycle(client, currentCycle, interval))
             }
         }
 
@@ -44,15 +56,17 @@ class FarmingScheduler {
             }
             iterator.remove()
         }
+        return FarmingRefreshStats(activePlayers.size)
     }
 
     fun noteActivity(player: Client, currentCycle: Long = PlayerHandler.cycle.toLong()) {
-        schedule(player, currentCycle + ACTIVE_INTERVAL_TICKS)
+        schedule(player, alignedCycle(player, currentCycle, ACTIVE_INTERVAL_TICKS))
     }
 
-    fun runDue(currentCycle: Long): Pair<Int, Int> {
+    fun runDue(currentCycle: Long): FarmingRunStats {
         var dueCount = 0
         var processed = 0
+        var maxBucketSize = 0
         while (buckets.isNotEmpty()) {
             val entry = buckets.firstEntry()
             if (entry.key > currentCycle) {
@@ -60,6 +74,9 @@ class FarmingScheduler {
             }
             buckets.pollFirstEntry()
             val players = entry.value.duePlayers.drain()
+            if (players.size > maxBucketSize) {
+                maxBucketSize = players.size
+            }
             dueCount += players.size
             players.forEach { client ->
                 scheduled.remove(client)
@@ -68,11 +85,11 @@ class FarmingScheduler {
                 }
                 client.farming.run { client.updateFarming() }
                 processed++
-                val delay = if (hasActiveWork(client)) ACTIVE_INTERVAL_TICKS else IDLE_RECHECK_INTERVAL_TICKS
-                schedule(client, currentCycle + delay)
+                val interval = if (hasActiveWork(client)) ACTIVE_INTERVAL_TICKS else IDLE_RECHECK_INTERVAL_TICKS
+                schedule(client, alignedCycle(client, currentCycle, interval))
             }
         }
-        return dueCount to processed
+        return FarmingRunStats(dueCount, processed, maxBucketSize)
     }
 
     private fun schedule(
@@ -104,27 +121,41 @@ class FarmingScheduler {
     }
 
     private fun hasPendingSaplings(client: Client): Boolean {
-        val waterIds = FarmingData.sapling.values().map { it.waterId + 1 }.toSet()
         for (item in client.playerItems) {
-            if (item in waterIds) {
+            if (item in waterSaplingIds) {
                 return true
             }
         }
         for (item in client.bankItems) {
-            if (item in waterIds) {
+            if (item in waterSaplingIds) {
                 return true
             }
         }
         return false
     }
 
-    private fun hasActiveCompost(farmingJson: FarmingJson): Boolean {
-        for (compost in FarmingData.compostBin.values()) {
+    private fun alignedCycle(player: Client, currentCycle: Long, interval: Long): Long {
+        val stableId = when {
+            player.dbId > 0 -> player.dbId
+            player.slot >= 0 -> player.slot
+            else -> System.identityHashCode(player)
+        }
+        val offset = Math.floorMod(stableId, interval.toInt()).toLong()
+        val base = (currentCycle / interval) * interval
+        var target = base + offset
+        if (target <= currentCycle) {
+            target += interval
+        }
+        return target
+    }
+
+    private fun hasActiveCompost(farmingJson: FarmingState): Boolean {
+        for (compost in FarmingDefinitions.compostBin.values()) {
             val value = farmingJson.getCompostData().get(compost.name)?.asJsonArray ?: continue
             val state = value.get(1).asString
             if (
-                state.equals(FarmingData.compostState.CLOSED.toString(), true) ||
-                state.equals(FarmingData.compostState.FILLED.toString(), true)
+                state.equals(FarmingDefinitions.compostState.CLOSED.toString(), true) ||
+                state.equals(FarmingDefinitions.compostState.FILLED.toString(), true)
             ) {
                 return true
             }
@@ -132,8 +163,8 @@ class FarmingScheduler {
         return false
     }
 
-    private fun hasActivePatches(farmingJson: FarmingJson): Boolean {
-        for (patch in FarmingData.patches.values()) {
+    private fun hasActivePatches(farmingJson: FarmingState): Boolean {
+        for (patch in FarmingDefinitions.patches.values()) {
             val values = farmingJson.getPatchData().get(patch.name)?.asJsonArray ?: continue
             for (slot in 0 until patch.objectId.size) {
                 val checkPos = slot * farmingJson.PATCHAMOUNT
@@ -143,7 +174,7 @@ class FarmingScheduler {
                 if (itemId != -1) {
                     return true
                 }
-                if (!state.equals(FarmingData.patchState.WEED.toString(), true)) {
+                if (!state.equals(FarmingDefinitions.patchState.WEED.toString(), true)) {
                     return true
                 }
                 if (stage > 0) {

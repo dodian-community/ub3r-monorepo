@@ -1,6 +1,6 @@
 package net.dodian.uber.game.persistence.player
 
-import net.dodian.uber.game.persistence.PlayerSaveSnapshot
+import net.dodian.uber.game.persistence.player.PlayerSaveSnapshot
 
 data class PlayerSaveRequest(
     val envelope: PlayerSaveEnvelope,

@@ -7,15 +7,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 /**
  * @author Dashboard
  */
-public class Sound implements OutgoingPacket {
-
-    public final int soundId, delay, volume;
-
-    public Sound(int soundId, int volume, int delay) {
-        this.soundId = soundId;
-        this.volume = volume;
-        this.delay = delay;
-    }
+public record Sound(int soundId, int volume, int delay) implements OutgoingPacket {
 
     public Sound(int soundId, int delay) {
         this(soundId, 4, delay);

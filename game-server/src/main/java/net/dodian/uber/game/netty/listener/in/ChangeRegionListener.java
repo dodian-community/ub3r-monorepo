@@ -27,7 +27,7 @@ public class ChangeRegionListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
         // No payload to read; ensure we consume any bytes if size>0 just in case
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.isReadable()) {
             buf.skipBytes(buf.readableBytes());
         }
@@ -39,7 +39,7 @@ public class ChangeRegionListener implements PacketListener {
             client.refreshFriends();
             client.IsPMLoaded = true;
         }
-        if (packet.getOpcode() == 121) {
+        if (packet.opcode() == 121) {
             // Loads new area => spawn custom objects
             client.customObjects();
         }

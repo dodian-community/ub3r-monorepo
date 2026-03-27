@@ -1,17 +1,16 @@
 package net.dodian.uber.game.persistence.account
 
 import java.time.Duration
-import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import java.util.function.IntConsumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.dodian.uber.comm.LoginManager
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.persistence.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.DbDispatchers
+import net.dodian.uber.game.persistence.account.login.AccountLoginService
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue
@@ -27,24 +26,28 @@ object AccountPersistenceService {
     @JvmField
     val scope = CoroutineScope(SupervisorJob() + dispatcher)
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     @JvmStatic
     fun submitLoginLoad(
         client: Client,
         username: String,
         password: String,
-        onComplete: IntConsumer,
+        onComplete: Consumer<LoginLoadResult>,
     ) {
         scope.launch {
-            val result =
+            val startedAt = System.nanoTime()
+            var pendingRetries = 0
+            val code =
                 try {
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalCode = 13
                     while (true) {
-                        val code = Server.loginManager.loadgame(client, username, password)
-                        if (code != LoginManager.FINAL_SAVE_PENDING_INTERNAL) {
-                            finalCode = code
+                        val loadCode = AccountLoginService.loadGame(client, username, password)
+                        if (loadCode != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
+                            finalCode = loadCode
                             break
                         }
+                        pendingRetries++
                         if (System.currentTimeMillis() >= deadline) {
                             finalCode = 5
                             break
@@ -56,8 +59,19 @@ object AccountPersistenceService {
                     logger.warn("Account load failed for {}", username, exception)
                     13
                 }
-            onComplete.accept(result)
+            val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+            onComplete.accept(LoginLoadResult(code, durationMs, pendingRetries))
         }
+    }
+
+    @JvmStatic
+    fun submitLoginLoadCodeOnly(
+        client: Client,
+        username: String,
+        password: String,
+        onComplete: IntConsumer,
+    ) {
+        submitLoginLoad(client, username, password) { result -> onComplete.accept(result.code) }
     }
 
     @JvmStatic
@@ -138,4 +152,10 @@ object AccountPersistenceService {
         PlayerSaveService.shutdownAndDrain(timeout)
         DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }
+
+    data class LoginLoadResult(
+        val code: Int,
+        val durationMs: Long,
+        val pendingRetries: Int,
+    )
 }

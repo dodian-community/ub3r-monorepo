@@ -16,15 +16,15 @@ import net.dodian.uber.game.model.entity.player.PlayerHandler;
 import net.dodian.uber.game.model.entity.player.PlayerInitializer;
 import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
-import net.dodian.uber.game.netty.game.GamePacketEncoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
-import net.dodian.uber.game.runtime.loop.GameThreadTaskQueue;
+import net.dodian.uber.game.runtime.loop.GameThreadIngress;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Processes the full second-stage login payload and, on success, creates the
@@ -33,6 +33,10 @@ import java.net.InetSocketAddress;
 public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayload> {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginProcessorHandler.class);
+    private static final AtomicLong LOGIN_SLOT_FAILURES = new AtomicLong();
+    private static final AtomicLong LOGIN_LOAD_FAILURES = new AtomicLong();
+    private static final AtomicLong LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE = new AtomicLong();
+    private static final AtomicLong LOGIN_INITIALIZER_FAILURES = new AtomicLong();
 
     private static final int LOGIN_SUCCESS_CODE = 2;
     private static final int RSA_MAGIC          = 255;
@@ -58,7 +62,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, LoginPayload payloadHolder) {
-        ByteBuf in = payloadHolder.getPayload();
+        ByteBuf in = payloadHolder.payload();
         try {
             if (!parseLogin(ctx, in)) {
                 return; // parseLogin already handled failure
@@ -119,6 +123,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
     /* --------------- Login logic --------------- */
     private void processLogin(ChannelHandlerContext ctx) {
+        final long acceptedAtNanos = System.nanoTime();
         PlayerHandler ph = playerHandler != null ? playerHandler : Server.playerHandler;
 
         if (PlayerHandler.isPlayerOn(username)) {
@@ -126,11 +131,15 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             return;
         }
 
+        final long slotReserveStart = System.nanoTime();
         reservedSlot = reserveSlot();
         if (reservedSlot == -1) {
+            long failures = LOGIN_SLOT_FAILURES.incrementAndGet();
+            logger.warn("Login slot reservation failed for {} failures={}", username, failures);
             sendAndClose(ctx, 7); // world full
             return;
         }
+        final long slotReserveDurationMs = (System.nanoTime() - slotReserveStart) / 1_000_000L;
 
         // Configure ISAAC
         int[] seed = new int[]{
@@ -173,18 +182,33 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
         final int slotCopy = reservedSlot;
         AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
-                ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, loadResult, slotCopy)));
-        return;
+                ctx.channel().eventLoop().execute(() -> finishLogin(ctx, client, loadResult, slotCopy, acceptedAtNanos, slotReserveDurationMs)));
     }
 
         /**
      * Completes login after the blocking account load has finished.
      * Runs on the Netty event loop thread.
      */
-    private void finishLogin(ChannelHandlerContext ctx, Client client, int loadResult, int slot) {
-        if (loadResult != 0) {
+    private void finishLogin(
+            ChannelHandlerContext ctx,
+            Client client,
+            AccountPersistenceService.LoginLoadResult loadResult,
+            int slot,
+            long acceptedAtNanos,
+            long slotReserveDurationMs
+    ) {
+        if (loadResult.getCode() != 0) {
+            long failures = LOGIN_LOAD_FAILURES.incrementAndGet();
+            logger.warn(
+                    "Login load failed for {} code={} load={}ms pendingRetries={} failures={}",
+                    client.getPlayerName(),
+                    loadResult.getCode(),
+                    loadResult.getDurationMs(),
+                    loadResult.getPendingRetries(),
+                    failures
+            );
             releaseSlot(slot);
-            sendAndClose(ctx, loadResult);
+            sendAndClose(ctx, loadResult.getCode());
             return;
         }
 
@@ -220,35 +244,69 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         // of PlayerHandler players[]/playersOnline and reduces login-related sync spikes.
         final io.netty.channel.Channel channel = ctx.channel();
         final int slotCopy = slot;
-        GameThreadTaskQueue.submit(() -> {
+        final long finalizerQueuedAtNanos = System.nanoTime();
+        GameThreadIngress.submitCritical("login-finalize", () -> {
+            long finalizerStartedAtNanos = System.nanoTime();
+            long queueWaitMs = (finalizerStartedAtNanos - finalizerQueuedAtNanos) / 1_000_000L;
             if (!channel.isActive() || client.disconnected) {
+                long failures = LOGIN_CHANNEL_CLOSES_BEFORE_FINALIZE.incrementAndGet();
                 // Channel died before the game thread could register the player; release the reserved slot.
                 synchronized (PlayerHandler.SLOT_LOCK) {
                     PlayerHandler.usedSlots.clear(slotCopy);
                     PlayerHandler.players[slotCopy] = null;
                 }
+                logger.warn(
+                        "Login channel closed before game-thread finalization for {} queueWait={}ms failures={}",
+                        client.getPlayerName(),
+                        queueWaitMs,
+                        failures
+                );
                 return;
             }
 
             PlayerHandler.players[slotCopy] = client;
             PlayerHandler.playersOnline.put(client.longName, client);
 
+            long initializerDurationMs = 0L;
             try {
-                new PlayerInitializer().initializePlayer(client);
+                long initializerStartNanos = System.nanoTime();
+                PlayerInitializer initializer = new PlayerInitializer();
+                initializer.initializeCriticalLoginState(client);
+                initializerDurationMs = (System.nanoTime() - initializerStartNanos) / 1_000_000L;
                 client.initialized = true;
+
+                client.isActive = true;
+                if (client.getUpdateFlags() != null) {
+                    client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+                }
+                client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+
+                final PlayerInitializer postInitializer = initializer;
+                GameThreadIngress.submitDeferred("login-post-init", () -> {
+                    if (!client.disconnected) {
+                        postInitializer.initializeDeferredPostLoginState(client);
+                    }
+                });
             } catch (Exception ex) {
-                logger.warn("[GameThread] PlayerInitializer error for {}: {}", client.getPlayerName(), ex.getMessage());
+                long failures = LOGIN_INITIALIZER_FAILURES.incrementAndGet();
+                logger.warn(
+                        "[GameThread] PlayerInitializer error for {} failures={}",
+                        client.getPlayerName(),
+                        failures,
+                        ex
+                );
             }
 
-            client.isActive = true;
-            if (client.getUpdateFlags() != null) {
-                client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-            }
-            client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
         });
 
         loginFinished = true;
-        logger.info("[Netty] Login finished for {} slot {} (async)", client.getPlayerName(), slot);
+        logger.info(
+                "[Netty] Login finished for {} slot {} (async) load={}ms pendingRetries={}",
+                client.getPlayerName(),
+                slot,
+                loadResult.getDurationMs(),
+                loadResult.getPendingRetries()
+        );
     }
 
     /* Slot helpers */

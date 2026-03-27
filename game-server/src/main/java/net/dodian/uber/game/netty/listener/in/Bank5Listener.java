@@ -3,6 +3,12 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -23,34 +29,22 @@ public class Bank5Listener implements PacketListener {
     static { PacketListenerManager.register(117, new Bank5Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(Bank5Listener.class);
-
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
-
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
-        return value;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         // Mystic sends (ItemContainerOption2):
         // int interfaceId (putInt)
         // short nodeId (writeSignedBigEndian)
         // short slot   (writeUnsignedWordBigEndian)
-        int interfaceId = buf.readInt();
-        int removeId = readSignedWordBigEndianA(buf);
-        int removeSlot = readSignedWordBigEndian(buf) & 0xFFFF;
+        int interfaceId = ByteBufReader.readInt(buf);
+        int removeId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         int bankSlot = removeSlot;
 
         if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
@@ -117,27 +111,16 @@ public class Bank5Listener implements PacketListener {
 
     private void handleSpecialInterfaces(Client client, int interfaceId, int removeId, int removeSlot) {
         final int amount = 5;
-        if (interfaceId >= 4233 && interfaceId <= 4257) { // Gold crafting
-            client.startGoldCrafting(interfaceId, removeSlot, amount);
+        if (SkillingInterfaceItemService.handleContainerAmount(client, interfaceId, removeId, removeSlot, amount)) {
         } else if (interfaceId == 3823) { // sell to shop (sells 1)
             client.sellItem(removeId, removeSlot, 1);
         } else if (interfaceId == 3900) { // buy from shop (buys 1)
             client.buyItem(removeId, removeSlot, 1);
-        } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing
-            if (client.smithing[2] > 0) {
-                client.smithing[4] = removeId;
-                client.smithing[0] = 1;
-                client.smithing[5] = amount;
-                client.send(new RemoveInterfaces());
-            } else {
-                client.send(new SendMessage("Illigal Smithing !"));
-                logger.debug("Illegal Smith attempt by {}", client.getPlayerName());
-            }
         } else if (interfaceId == 1688) { // operate equipment – animations and special chats
             if (removeId == 4566) {
                 client.requestAnim(1835, 0);
             } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                net.dodian.uber.game.model.player.skills.slayer.SlayerTask.sendTask(client);
+                net.dodian.uber.game.skills.slayer.SlayerPlugin.sendCurrentTask(client);
             }
         }
     }

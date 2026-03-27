@@ -19,7 +19,7 @@ public class RemoveIgnoreListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         long ign = buf.readLong();
         logger.debug("RemoveIgnoreListener: {} unignores {}", client.getPlayerName(), ign);
         client.removeIgnore(ign);

@@ -19,7 +19,7 @@ public class AddFriendListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         long friend = buf.readLong(); // big-endian QWord
         logger.debug("AddFriendListener: {} adds {}", client.getPlayerName(), friend);
         client.addFriend(friend);

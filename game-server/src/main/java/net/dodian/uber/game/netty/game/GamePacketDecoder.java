@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.AttributeKey;
 import net.dodian.utilities.ISAACCipher;
-import net.dodian.uber.game.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,33 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
     private int opcode = -1;
     private int size   = 0;
 
+    private boolean isNpcTraceOpcode(int opcode) {
+        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 72;
+    }
+
+    private String preview(ByteBuf payload, int maxBytes) {
+        if (payload == null || !payload.isReadable() || maxBytes <= 0) {
+            return "[]";
+        }
+        int count = Math.min(maxBytes, payload.readableBytes());
+        int start = payload.readerIndex();
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                builder.append(' ');
+            }
+            int value = payload.getUnsignedByte(start + i);
+            if (value < 0x10) {
+                builder.append('0');
+            }
+            builder.append(Integer.toHexString(value).toUpperCase());
+        }
+        if (payload.readableBytes() > count) {
+            builder.append(" ...");
+        }
+        return builder.append(']').toString();
+    }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         ISAACCipher cipher = ctx.channel().attr(IN_CIPHER_KEY).get();
@@ -48,7 +74,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                 int dec = (raw - cipher.getNextKey()) & 0xFF;
                 opcode = dec;
                 //logger.info("Raw byte {} decrypted opcode {}", raw, opcode);
-                if (opcode < 0 || opcode >= Constants.PACKET_SIZES.length) {
+                if (opcode < 0 || opcode > 0xFF) {
                     logger.debug("[Netty] Invalid packet opcode {} from {}", opcode, ctx.channel().remoteAddress());
                     ctx.close();
                     return;
@@ -90,6 +116,15 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
             }
 
             ByteBuf payload = in.readSlice(size).retain();
+            if (logger.isDebugEnabled() && isNpcTraceOpcode(opcode)) {
+                logger.debug(
+                        "[Netty] npc-trace decode opcode={} size={} preview={} remote={}",
+                        opcode,
+                        size,
+                        preview(payload, 4),
+                        ctx.channel().remoteAddress()
+                );
+            }
             out.add(new GamePacket(opcode, size, payload));
 
             opcode = -1;

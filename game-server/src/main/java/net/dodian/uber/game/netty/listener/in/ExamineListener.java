@@ -7,7 +7,6 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,10 +24,10 @@ public final class ExamineListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         try {
-            ByteBuf buf = packet.getPayload();
+            ByteBuf buf = packet.payload();
 
-            if (packet.getSize() < 5 || buf.readableBytes() < 5) { //Not sure what correct size!
-                logger.warn("ExamineItem packet too small (size={}) from {}", packet.getSize(), client.getPlayerName());
+            if (packet.size() < 5 || buf.readableBytes() < 5) { //Not sure what correct size!
+                logger.warn("ExamineItem packet too small (size={}) from {}", packet.size(), client.getPlayerName());
                 return;
             }
 

@@ -29,7 +29,7 @@ public class ChangeAppearanceListener implements PacketListener {
     // Packet is a fixed 13 bytes (each a signed byte in legacy stream)
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 13) {
             logger.warn("ChangeAppearance packet too short from {} ({} bytes)", client.getPlayerName(), buf.readableBytes());
             return;

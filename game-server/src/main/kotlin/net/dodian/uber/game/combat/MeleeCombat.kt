@@ -9,6 +9,11 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatAttackResult
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
+import net.dodian.uber.game.runtime.combat.UnarmedAttackAnimationService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
@@ -16,18 +21,17 @@ import net.dodian.utilities.Utils
 var hit = 0
 var hit2 = 0
 
-fun Client.handleMeleeAttack(): Int {
+fun Client.handleMeleeAttack(): CombatAttackResult? {
     if (hasStaff() && (autocast_spellIndex >= 0 || magicId >= 0))
-        return -1
+        return null
     else if (!hasStaff() && magicId >= 0)
-        return -1
+        return null
     else if (usingBow)
-        return -1
-    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
-        return 0
+        return null
+    if (stunTimer > 0 || target == null)
+        return null
 
-        combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
-        lastCombat = 16
+        CombatLogoutLockService.refreshInteraction(this, target)
         setFocus(target.position.x, target.position.y)
         var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
@@ -105,20 +109,20 @@ fun Client.handleMeleeAttack(): Int {
             if(hit > 0) {
                 if (fightType == 3) {
                     val xp = (13 * hit)
-                    giveExperience(xp, Skill.ATTACK)
-                    giveExperience(xp, Skill.DEFENCE)
-                    giveExperience(xp, Skill.STRENGTH)
-                } else giveExperience(40 * hit, Skill.getSkill(fightType))
-                giveExperience(13 * hit, Skill.HITPOINTS)
+                    SkillProgressionService.gainXp(this, xp, Skill.ATTACK)
+                    SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
+                    SkillProgressionService.gainXp(this, xp, Skill.STRENGTH)
+                } else SkillProgressionService.gainXp(this, 40 * hit, Skill.getSkill(fightType) ?: Skill.ATTACK)
+                SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
             }
             if(hit2 > 0) {
                 if (fightType == 3) {
                     val xp = (13 * hit2)
-                    giveExperience(xp, Skill.ATTACK)
-                    giveExperience(xp, Skill.DEFENCE)
-                    giveExperience(xp, Skill.STRENGTH)
-                } else giveExperience(40 * hit2, Skill.getSkill(fightType))
-                giveExperience(13 * hit2, Skill.HITPOINTS)
+                    SkillProgressionService.gainXp(this, xp, Skill.ATTACK)
+                    SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
+                    SkillProgressionService.gainXp(this, xp, Skill.STRENGTH)
+                } else SkillProgressionService.gainXp(this, 40 * hit2, Skill.getSkill(fightType) ?: Skill.ATTACK)
+                SkillProgressionService.gainXp(this, 13 * hit2, Skill.HITPOINTS)
             }
         }
         if (target is Player) {
@@ -143,8 +147,9 @@ fun Client.handleMeleeAttack(): Int {
                 player.dealDamage(this, hit2, Entity.hitType.STANDARD)
             }
         }
-        if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
-    return 1
+        val nextDelay = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
+        if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay"))
+    return CombatAttackResult(nextDelay)
 }
 
 fun highestAttackBonus(p: Client): Int {
@@ -221,10 +226,10 @@ fun landHit(p: Client, t: Entity): Boolean {
 }
 
 fun Client.handleSpecial(crit: Boolean): Boolean {
-    val emote = Server.itemManager.getAttackAnim(equipment[Equipment.Slot.WEAPON.id])
+    val emote = UnarmedAttackAnimationService.resolve(this)
     val chance = Range(1, 8).value
     if(chance != 1 || hit == 0) { //Do not occur special attack if hit a 0 or chance is 0!
-        sendAnimation(emote)
+        PlayerAnimationService.requestAttack(this, emote)
     } else if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         when (equipment[Equipment.Slot.WEAPON.id]) {
@@ -232,7 +237,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
                 callGfxMask(252, 100)
-                sendAnimation(1062)
+                PlayerAnimationService.requestAttack(this, 1062)
                 /* Damage portion! */
                 if(hit >= npc.currentHealth) hit = npc.currentHealth
                     npc.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
@@ -240,7 +245,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                     npc.dealDamage(this, hit2, Entity.hitType.STANDARD)
                 return true
             }
-            else -> sendAnimation(emote)
+            else -> PlayerAnimationService.requestAttack(this, emote)
         }
     } else if (target is Player) {
         val player = Server.playerHandler.getClient(target.slot)
@@ -249,7 +254,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                 hit = (hit * 1.1).toInt()
                 hit2 = Range(1, hit / 2).value
                 callGfxMask(252, 100)
-                sendAnimation(1062)
+                PlayerAnimationService.requestAttack(this, 1062)
                 /* Damage portion! */
                 if(hit >= player.currentHealth) hit = player.currentHealth
                     player.dealDamage(this, hit, if(crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
@@ -257,7 +262,7 @@ fun Client.handleSpecial(crit: Boolean): Boolean {
                     player.dealDamage(this, hit2, Entity.hitType.STANDARD)
                 return true
             }
-            else ->  sendAnimation(emote)
+            else ->  PlayerAnimationService.requestAttack(this, emote)
         }
     }
     return false

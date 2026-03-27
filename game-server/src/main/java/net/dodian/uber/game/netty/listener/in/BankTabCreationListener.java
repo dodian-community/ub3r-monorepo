@@ -5,7 +5,6 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.netty.listener.out.SendCurrentBankTab;
 
 /**
  * Handles Mystic bank tab creation/select packet (opcode 216).
@@ -18,7 +17,7 @@ public class BankTabCreationListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 7) {
             return;
         }

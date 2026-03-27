@@ -12,17 +12,17 @@ public class CacheFile {
     /**
      * The cache id.
      */
-    private int cache;
+    private final int cache;
 
     /**
      * The file id.
      */
-    private int file;
+    private final int file;
 
     /**
      * The file data.
      */
-    private ByteBuffer data;
+    private final ByteBuffer data;
 
     /**
      * Creates a cache file.

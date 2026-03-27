@@ -7,7 +7,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class InventoryInterface implements OutgoingPacket {
 
-    private int interfaceId, inventoryId;
+    private final int interfaceId;
+    private final int inventoryId;
 
     public InventoryInterface(int interfaceId, int inventoryId) {
         this.interfaceId = interfaceId;

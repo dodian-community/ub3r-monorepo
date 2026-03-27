@@ -14,13 +14,13 @@ import java.util.ArrayList;
 public class DropParty implements Runnable {
 
     private int minutes;
-    private long startTime;
+    private final long startTime;
     private boolean started;
     ArrayList<GameItem> dropItems;
 
     public DropParty(int minutes) {
         this.setMinutes(minutes);
-        this.startTime = System.currentTimeMillis() + (minutes * 60000);
+        this.startTime = System.currentTimeMillis() + (minutes * 60000L);
         Client.publicyell("<col=FF0000>[S] There will be a drop party @ Ardougne in aproximately " + minutes + " minutes.");
         dropItems = DropPartyItems.getDropPartyItems();
     }
@@ -78,7 +78,9 @@ public class DropParty implements Runnable {
                 8), RUNE_SCIMITAR(1333, 1, 4), COAL(454, 100, 5), ADAMANT_BOOTS(4129, 1, 5), DRAGON_BONES(537, 45,
                 2), IRON_BARS(2352, 50, 4), CASH(995, 175000, 20);
 
-        private int id, amount, occurances;
+        private final int id;
+        private final int amount;
+        private final int occurances;
 
         DropPartyItems(int id, int amount, int occurances) {
             this.id = id;

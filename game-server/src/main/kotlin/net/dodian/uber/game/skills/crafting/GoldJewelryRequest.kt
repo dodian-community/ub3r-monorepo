@@ -1,0 +1,7 @@
+package net.dodian.uber.game.skills.crafting
+
+data class GoldJewelryRequest(
+    val interfaceId: Int,
+    val slot: Int,
+    val amount: Int,
+)

@@ -4,8 +4,8 @@ import net.dodian.cache.util.ByteStream;
 
 public class MemoryArchive {
 
-    private ByteStream cache;
-    private ByteStream index;
+    private final ByteStream cache;
+    private final ByteStream index;
     private static final int INDEX_DATA_CHUNK_SIZE = 12;
 
     public MemoryArchive(ByteStream cache, ByteStream index) {

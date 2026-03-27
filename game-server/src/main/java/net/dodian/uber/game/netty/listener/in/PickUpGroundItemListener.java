@@ -7,6 +7,10 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.runtime.action.PlayerActionCancellationService;
+import net.dodian.uber.game.runtime.action.PlayerActionCancelReason;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +27,7 @@ public class PickUpGroundItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         int itemY  = buf.readUnsignedShortLE();   // little-endian as client sends
         int itemId = buf.readUnsignedShort();     // still big-endian for id
         int itemX  = buf.readUnsignedShortLE();   // little-endian
@@ -43,7 +47,7 @@ public class PickUpGroundItemListener implements PacketListener {
         } catch (Exception e) {
             // date parse fallback; ignore
         }
-        if (System.currentTimeMillis() - client.lastAction <= 600 ||
+        if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.PICKUP_GROUND_ITEM, 600L) ||
                 (client.attemptGround != null
                         && client.attemptGround.id == itemId
                         && client.attemptGround.x == itemX
@@ -51,15 +55,18 @@ public class PickUpGroundItemListener implements PacketListener {
                         && client.attemptGround.z == client.getPosition().getZ())) {
             return;
         }
-        client.lastAction = System.currentTimeMillis();
+        PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.GROUND_ITEM_INTERACTION, false, false, false, true);
         client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.getPosition().getZ());
         if (client.attemptGround == null) {
             client.pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
             return;
         }
         if (client.getPosition().getX() != itemX || client.getPosition().getY() != itemY) {
             client.pickupWanted = true;
+            PlayerDeferredLifecycleService.scheduleGroundPickupArrivalWatch(client, client.attemptGround);
         } else {
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
             client.pickUpItem(itemX, itemY);
         }
 

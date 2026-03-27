@@ -22,17 +22,17 @@ public class LandscapeParser {
     /**
      * The cache.
      */
-    private Cache cache;
+    private final Cache cache;
 
     /**
      * The cache file.
      */
-    private int area;
+    private final int area;
 
     /**
      * The listener.
      */
-    private LandscapeListener listener;
+    private final LandscapeListener listener;
 
     /**
      * Creates the parser.

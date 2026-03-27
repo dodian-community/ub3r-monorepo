@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;
 import net.dodian.uber.game.model.UpdateFlags;
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
+import net.dodian.uber.game.combat.style.CombatStyle;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;
@@ -17,25 +17,27 @@ public abstract class Entity {
 
     private final Position position;
     private final Position originalPosition;
-    private final Position facePosition;
     private final int slot;
     private int gfxId, gfxHeight;
     private final Type type;
 
     private final UpdateFlags updateFlags;
 
-    private CombatStyleHandler.CombatStyles combatStyle = CombatStyleHandler.CombatStyles.ACCURATE_MELEE;
+    private CombatStyle combatStyle = CombatStyle.ACCURATE_MELEE;
 
     private int animationDelay;
     private int animationId;
     private String text;
+    private int faceCoordinateX = 1;
+    private int faceCoordinateY = 1;
+    private volatile long currentGameCycle = 0L;
+    private volatile long processedGameCycle = 0L;
 
     private final Map<Entity, Integer> damage = new HashMap<>();
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
         this.originalPosition = position.copy();
-        this.facePosition = new Position(0, 0);
         this.updateFlags = new UpdateFlags();
         this.slot = slot;
         this.type = type;
@@ -77,12 +79,44 @@ public abstract class Entity {
     }
 
     public void setFocus(int focusPointX, int focusPointY) {
-        facePosition.moveTo(2 * focusPointX + 1, 2 * focusPointY + 1);
+        faceCoordinateX = encodeFaceCoordinate(focusPointX);
+        faceCoordinateY = encodeFaceCoordinate(focusPointY);
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 
-    public Position getFacePosition() {
-        return this.facePosition;
+    public int getFaceCoordinateX() {
+        return faceCoordinateX;
+    }
+
+    public int getFaceCoordinateY() {
+        return faceCoordinateY;
+    }
+
+    public long getCurrentGameCycle() {
+        return currentGameCycle;
+    }
+
+    public void setCurrentGameCycle(long currentGameCycle) {
+        this.currentGameCycle = currentGameCycle;
+    }
+
+    public long getProcessedGameCycle() {
+        return processedGameCycle;
+    }
+
+    public void setProcessedGameCycle(long processedGameCycle) {
+        this.processedGameCycle = processedGameCycle;
+    }
+
+    private int encodeFaceCoordinate(int value) {
+        long encoded = (2L * value) + 1L;
+        if (encoded < 0L) {
+            return 0;
+        }
+        if (encoded > 0xFFFFL) {
+            return 0xFFFF;
+        }
+        return (int) encoded;
     }
 
     public int getAnimationDelay() {
@@ -144,11 +178,11 @@ public abstract class Entity {
                 getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
     }
 
-    public CombatStyleHandler.CombatStyles getCombatStyle() {
+    public CombatStyle getCombatStyle() {
         return combatStyle;
     }
 
-    public void setCombatStyle(CombatStyleHandler.CombatStyles combatStyle) {
+    public void setCombatStyle(CombatStyle combatStyle) {
         this.combatStyle = combatStyle;
     }
 

@@ -15,6 +15,6 @@ public interface ObjectDefinitionListener {
      *
      * @param def The definition that was parsed.
      */
-    public void objectDefinitionParsed(GameObjectData def);
+    void objectDefinitionParsed(GameObjectData def);
 
 }

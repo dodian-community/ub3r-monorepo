@@ -60,6 +60,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                     buf.putBits(1, 1);
                     stream.putBits(2, 3); // tells client to remove this npc from list
                     i.remove();
+                    player.bumpLocalNpcMembershipRevision();
                 }
             }
 
@@ -71,6 +72,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 boolean exceptions = removeNpc(player, npc);
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
                 if (player.getLocalNpcs().add(npc)) {
+                    player.bumpLocalNpcMembershipRevision();
                     if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
                         npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
@@ -122,6 +124,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 continue;
             }
             iterator.remove();
+            player.bumpLocalNpcMembershipRevision();
         }
     }
 
@@ -131,9 +134,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (!npc.canBeSeenBy(c)) {
             return true;
         }
-        if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
-            return true;
-        return false;
+        return c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2;
     }
 
 
@@ -264,8 +265,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getFacePosition().getX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getFacePosition().getY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateX(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override
@@ -297,9 +298,19 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         } else {
+            int translatedDirection = translateDirectionToClient(npc);
+            if (translatedDirection == -1) {
+                if (npc.getUpdateFlags().isUpdateRequired()) {
+                    buf.putBits(1, 1);
+                    buf.putBits(2, 0);
+                } else {
+                    buf.putBits(1, 0);
+                }
+                return;
+            }
             buf.putBits(1, 1);
             buf.putBits(2, 1);
-            buf.putBits(3, Utils.xlateDirectionToClient[npc.getDirection()]);
+            buf.putBits(3, translatedDirection);
             if (npc.getUpdateFlags().isUpdateRequired()) {
                 buf.putBits(1, 1);
             } else {
@@ -310,6 +321,15 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
     public static int consumeDebugMovementWriteCounter() {
         return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
+    }
+
+    private int translateDirectionToClient(Npc npc) {
+        int direction = npc.getDirection();
+        if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
+            logger.warn("Invalid npc direction {} for slot={} id={}", direction, npc.getSlot(), npc.getId());
+            return -1;
+        }
+        return Utils.xlateDirectionToClient[direction];
     }
 
 }

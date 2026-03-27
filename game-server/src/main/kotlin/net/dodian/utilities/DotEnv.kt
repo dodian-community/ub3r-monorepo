@@ -3,8 +3,13 @@ package net.dodian.utilities
 import io.github.cdimascio.dotenv.dotenv
 
 private val dotenv = dotenv()
-private fun requiredEnv(key: String): String = dotenv[key]
-    ?: throw IllegalStateException("Missing required environment variable: $key")
+private fun requiredEnv(key: String): String =
+    dotenv[key]
+        ?: throw IllegalStateException("Missing required environment variable: $key")
+
+private fun requiredNonBlankEnv(key: String): String =
+    requiredEnv(key).takeIf { it.isNotBlank() }
+        ?: throw IllegalStateException("Missing required environment variable: $key")
 
 // Server Settings
 val serverName = dotenv["SERVER_NAME"] ?: "Dodian"
@@ -14,12 +19,12 @@ val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
 val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
 
 // Database Settings
-val databaseHost = requiredEnv("DATABASE_HOST")
+val databaseHost = requiredNonBlankEnv("DATABASE_HOST")
 val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
-val databaseName = requiredEnv("DATABASE_NAME")
+val databaseName = requiredNonBlankEnv("DATABASE_NAME")
 val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
-val databaseUsername = requiredEnv("DATABASE_USERNAME")
-val databasePassword = requiredEnv("DATABASE_PASSWORD")
+val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
+val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
 // Game Settings - Various
@@ -42,7 +47,7 @@ val updatePrepEnabled = dotenv["UPDATE_PREP_ENABLED"]?.toBoolean() ?: false
 val synchronizationEnabled = dotenv["SYNCHRONIZATION_ENABLED"]?.toBoolean() ?: true
 val syncRootBlockCacheEnabled = dotenv["SYNC_ROOT_BLOCK_CACHE_ENABLED"]?.toBoolean() ?: true
 val syncViewportSnapshotEnabled = dotenv["SYNC_VIEWPORT_SNAPSHOT_ENABLED"]?.toBoolean() ?: true
-val syncSkipEmptyNpcPacketEnabled = dotenv["SYNC_SKIP_EMPTY_NPC_PACKET_ENABLED"]?.toBoolean() ?: false
+val syncSkipEmptyNpcPacketEnabled = true
 val syncPlayerActivityIndexEnabled = dotenv["SYNC_PLAYER_ACTIVITY_INDEX_ENABLED"]?.toBoolean() ?: true
 val syncSkipEmptyPlayerPacketEnabled = dotenv["SYNC_SKIP_EMPTY_PLAYER_PACKET_ENABLED"]?.toBoolean() ?: true
 val syncPlayerTemplateCacheEnabled = dotenv["SYNC_PLAYER_TEMPLATE_CACHE_ENABLED"]?.toBoolean() ?: false
@@ -62,7 +67,6 @@ val syncPlayerAllocationLightEnabled = dotenv["SYNC_PLAYER_ALLOCATION_LIGHT_ENAB
 val syncPlayerFragmentReuseEnabled = dotenv["SYNC_PLAYER_FRAGMENT_REUSE_ENABLED"]?.toBoolean() ?: false
 val syncPlayerStateValidationEnabled = dotenv["SYNC_PLAYER_STATE_VALIDATION_ENABLED"]?.toBoolean() ?: true
 val syncNpcActivityIndexEnabled = dotenv["SYNC_NPC_ACTIVITY_INDEX_ENABLED"]?.toBoolean() ?: true
-val worldMaintenanceEnabled = dotenv["WORLD_MAINTENANCE_ENABLED"]?.toBoolean() ?: true
 val farmingSchedulerEnabled = dotenv["FARMING_SCHEDULER_ENABLED"]?.toBoolean() ?: true
 val zoneUpdateBatchingEnabled = dotenv["ZONE_UPDATE_BATCHING_ENABLED"]?.toBoolean() ?: false
 val queueTasksEnabled = dotenv["QUEUE_TASKS_ENABLED"]?.toBoolean() ?: false
@@ -74,7 +78,10 @@ val runtimePhaseWarnMs = dotenv["RUNTIME_PHASE_WARN_MS"]?.toLong() ?: 300L
 val runtimeCycleLogEnabled = dotenv["RUNTIME_CYCLE_LOG_ENABLED"]?.toBoolean() ?: true
 val clientUiTraceEnabled = dotenv["CLIENT_UI_TRACE_ENABLED"]?.toBoolean() ?: false
 val clientPacketTraceEnabled = dotenv["CLIENT_PACKET_TRACE_ENABLED"]?.toBoolean() ?: false
+val combatReactionDebugEnabled = dotenv["COMBAT_REACTION_DEBUG_ENABLED"]?.toBoolean() ?: false
 val buttonTraceEnabled = dotenv["BUTTON_TRACE_ENABLED"]?.toBoolean() ?: false
+val objectTraceEnabled = dotenv["OBJECT_TRACE_ENABLED"]?.toBoolean() ?: false
+val smeltingTraceEnabled = dotenv["SMELTING_TRACE_ENABLED"]?.toBoolean() ?: false
 
 // Inbound packet profiling (debug-only; keep disabled in production unless investigating spikes)
 val inboundOpcodeProfilingEnabled = dotenv["INBOUND_OPCODE_PROFILING_ENABLED"]?.toBoolean() ?: false

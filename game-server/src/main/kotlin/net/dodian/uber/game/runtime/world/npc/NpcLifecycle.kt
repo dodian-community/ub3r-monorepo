@@ -14,7 +14,7 @@ import net.dodian.utilities.Misc
 object NpcLifecycle {
     @JvmStatic
     fun processDeathFloor(npc: Npc) {
-        npc.setVisible(false)
+        npc.isVisible = false
         npc.drop()
         val player = npc.getTarget(false)
         npc.removeEnemy(player)
@@ -35,12 +35,11 @@ object NpcLifecycle {
         npc: Npc,
         initialTarget: Client?,
     ) {
-        var target = initialTarget
         for (i in 1..4) {
             if (npc.damage.isEmpty()) {
                 break
             }
-            target = npc.getTarget(false)
+            val target = if (i == 1) initialTarget ?: npc.getTarget(false) else npc.getTarget(false)
             if (target != null) {
                 handleLootRoll(npc, target)
             }

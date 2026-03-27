@@ -109,7 +109,7 @@ public class GameObjectData {
     /**
      * The id.
      */
-    private int id;
+    private final int id;
 
     /**
      * The name.
@@ -119,7 +119,7 @@ public class GameObjectData {
     /**
      * The description.
      */
-    private String desc;
+    private final String desc;
 
     /**
      * X size.
@@ -129,28 +129,28 @@ public class GameObjectData {
     /**
      * Y size.
      */
-    private int sizeY;
+    private final int sizeY;
 
     /**
      * Solid flag.
      */
-    private boolean solid;
+    private final boolean solid;
 
     /**
      * Walkable flag.
      */
-    private boolean walkable;
+    private final boolean walkable;
 
     /**
      * 'Has actions' flag.
      */
-    private boolean hasActions;
+    private final boolean hasActions;
 
-    private boolean unknown;
+    private final boolean unknown;
 
-    private boolean rangeAble;
+    private final boolean rangeAble;
 
-    private boolean canShootThru;
+    private final boolean canShootThru;
 
     /**
      * Creates the definition.

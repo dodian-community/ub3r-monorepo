@@ -10,12 +10,17 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.runtime.animation.PlayerAnimationService
+import net.dodian.uber.game.runtime.combat.CombatAttackResult
+import net.dodian.uber.game.runtime.combat.CombatHitQueueService
+import net.dodian.uber.game.runtime.combat.CombatLogoutLockService
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
-fun Client.handleRangedAttack(): Int {
-    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
-        return 0
+fun Client.handleRangedAttack(): CombatAttackResult? {
+    if (stunTimer > 0 || target == null)
+        return null
     if(goodDistanceEntity(target, 5))
         resetWalkingQueue()
 
@@ -23,7 +28,7 @@ fun Client.handleRangedAttack(): Int {
         deleteequiment(equipment[Equipment.Slot.ARROWS.id], Equipment.Slot.ARROWS.id)
         resetAttack()
         send(SendMessage("You're out of arrows!"))
-        return 0
+        return null
     }
 
     val arrows = mapOf(
@@ -46,23 +51,23 @@ fun Client.handleRangedAttack(): Int {
         arrowPullGfx = -1 //Not right but believe there is no real gfx for this!
     }
 
-    combatTimer = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
-    lastCombat = 16
+    CombatLogoutLockService.refreshInteraction(this, target)
     setFocus(target.position.x, target.position.y)
+    val distance = distanceToPoint(target.position.x, target.position.y)
+    val hitDelay = getDistanceDelay(distance, false).toLong()
     if (DeleteArrow()) {
-        val distance = distanceToPoint(target.position.x, target.position.y)
         if(target is Npc) {
             val offsetX = (position.y - target.position.y) * 1
             val offsetY = (position.x - target.position.x) * 1
-            requestAnim(-1, 0)
-            sendAnimation(emote)
+            PlayerAnimationService.requestResetClear(this)
+            PlayerAnimationService.requestAttack(this, emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, target.slot + 1, 51, 16)
         } else {
             val offsetX = (position.y - target.position.y) * -1
             val offsetY = (position.x - target.position.x) * -1
-            requestAnim(-1, 0)
-            sendAnimation(emote)
+            PlayerAnimationService.requestResetClear(this)
+            PlayerAnimationService.requestAttack(this, emote)
             callGfxMask(arrowPullGfx, 100)
             arrowGfx(offsetY, offsetX, 50, 50 + (distance * 5), arrowGfx, 43, 35, -(target.slot + 1), 51, 16)
         }
@@ -85,33 +90,45 @@ fun Client.handleRangedAttack(): Int {
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if(!landHit) hit = 0
-        if(hit >= npc.currentHealth) hit = npc.currentHealth
-        npc.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        CombatHitQueueService.enqueue(
+            currentGameCycle + hitDelay,
+            this,
+            npc,
+            hit,
+            if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+            Entity.damageType.RANGED,
+        )
 
         var hit2 = hit
         val chance = Misc.chance(8) == 1 && armourSet("karil")
         if(chance && hit2 > 0) { //Karil effect!
             stillgfx(401, npc.position, 100)
             hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
-            if(hit2 >= npc.currentHealth) hit2 = npc.currentHealth
-            npc.dealDamage(this, hit2, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+            CombatHitQueueService.enqueue(
+                currentGameCycle + hitDelay,
+                this,
+                npc,
+                hit2,
+                if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+                Entity.damageType.RANGED,
+            )
         }
         /* Experience */
         if(hit > 0) {
             if (fightType == 1) {
                 val xp = (20 * hit)
-                giveExperience(xp, Skill.DEFENCE)
-                giveExperience(xp, Skill.RANGED)
-            } else giveExperience(40 * hit, Skill.RANGED)
-            giveExperience(13 * hit, Skill.HITPOINTS)
+                SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
+                SkillProgressionService.gainXp(this, xp, Skill.RANGED)
+            } else SkillProgressionService.gainXp(this, 40 * hit, Skill.RANGED)
+            SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
         }
         if(hit2 > 0) {
             if (fightType == 1) {
                 val xp = (20 * hit2)
-                giveExperience(xp, Skill.DEFENCE)
-                giveExperience(xp, Skill.RANGED)
-            } else giveExperience(40 * hit2, Skill.RANGED)
-            giveExperience(13 * hit2, Skill.HITPOINTS)
+                SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
+                SkillProgressionService.gainXp(this, xp, Skill.RANGED)
+            } else SkillProgressionService.gainXp(this, 40 * hit2, Skill.RANGED)
+            SkillProgressionService.gainXp(this, 13 * hit2, Skill.HITPOINTS)
         }
     }
     if (target is Player) {
@@ -119,22 +136,33 @@ fun Client.handleRangedAttack(): Int {
         if (landCrit && landHit)
             hit + Utils.dRandom2(extra).toInt()
         else if (!landHit) hit = 0
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) (hit * 0.6).toInt()
-        if (hit >= player.currentHealth) hit = player.currentHealth
-        player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        CombatHitQueueService.enqueue(
+            currentGameCycle + hitDelay,
+            this,
+            player,
+            hit,
+            if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+            Entity.damageType.RANGED,
+        )
 
         var hit2 = hit
         val chance = Misc.chance(8) == 1 && armourSet("karil")
         if (chance && hit2 > 0) { //Karil effect!
             stillgfx(401, player.position, 100)
             hit2 = (hit2 * (Skills.getLevelForExperience(getExperience(Skill.RANGED)).toDouble() / 100.0)).toInt()
-            if (hit2 >= player.currentHealth) hit2 = player.currentHealth
-            //player.dealDamage(this, hit2, landCrit)
-            player.dealDamage(this, hit2, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+            CombatHitQueueService.enqueue(
+                currentGameCycle + hitDelay,
+                this,
+                player,
+                hit2,
+                if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+                Entity.damageType.RANGED,
+            )
         }
     }
-        if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
-    return 1
+    val nextDelay = getbattleTimer(equipment[Equipment.Slot.WEAPON.id])
+    if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay, hitDelay = $hitDelay"))
+    return CombatAttackResult(nextDelay)
 }
 
 fun landHitRanged(p: Client, t: Entity): Boolean {

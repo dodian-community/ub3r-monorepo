@@ -2,7 +2,7 @@ package net.dodian.cache.util;
 
 public class ByteStream {
 
-    private byte[] buffer;
+    private final byte[] buffer;
     private int offset;
 
     public ByteStream(byte[] buffer) {
@@ -51,8 +51,8 @@ public class ByteStream {
     }
 
     public long getLong() {
-        return (getUByte() << 56) + (getUByte() << 48) + (getUByte() << 40) + (getUByte() << 32) + (getUByte() << 24)
-                + (getUByte() << 16) + (getUByte() << 8) + getUByte();
+        return ((long) getUByte() << 56) + ((long) getUByte() << 48) + ((long) getUByte() << 40) + ((long) getUByte() << 32) + ((long) getUByte() << 24)
+                + ((long) getUByte() << 16) + ((long) getUByte() << 8) + getUByte();
     }
 
     public int getUSmart() {
@@ -67,7 +67,6 @@ public class ByteStream {
     public String getNString() {
         int i = offset;
         while (buffer[offset++] != 0) {
-            ;
         }
         return new String(buffer, i, offset - i - 1);
     }
@@ -75,10 +74,9 @@ public class ByteStream {
     public byte[] getBytes() {
         int i = offset;
         while (buffer[offset++] != 10) {
-            ;
         }
-        byte abyte0[] = new byte[offset - i - 1];
-        System.arraycopy(buffer, i, abyte0, i - i, offset - 1 - i);
+        byte[] abyte0 = new byte[offset - i - 1];
+        System.arraycopy(buffer, i, abyte0, 0, offset - 1 - i);
         return abyte0;
     }
 

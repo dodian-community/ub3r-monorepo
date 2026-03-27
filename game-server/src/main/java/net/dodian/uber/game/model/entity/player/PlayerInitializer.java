@@ -5,10 +5,12 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
+import net.dodian.uber.game.skills.core.progression.SkillProgressionService;
 import net.dodian.utilities.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
+import net.dodian.uber.game.runtime.lifecycle.PlayerDeferredLifecycleService;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -16,9 +18,13 @@ import java.sql.Statement;
 import static net.dodian.utilities.DatabaseKt.getDbConnection;
 
 public class PlayerInitializer {
-    
-
     public void initializePlayer(Client client) {
+        initializeCriticalLoginState(client);
+        initializeDeferredPostLoginState(client);
+    }
+
+    public void initializeCriticalLoginState(Client client) {
+        client.clearVerticalTravelState();
         /* Login write settings */
         client.send(new PlayerDetails(client.playerIsMember, client.getSlot()));
         client.send(new CameraReset()); // Resets the camera position
@@ -34,7 +40,7 @@ public class PlayerInitializer {
 
         // Now that interface structure is set up, refresh all skills including HP
         Skill.enabledSkills().forEach(skill -> {
-            client.refreshSkill(skill);
+            SkillProgressionService.refresh(client, skill);
         });
 
         if (client.lookNeeded) {
@@ -48,18 +54,7 @@ public class PlayerInitializer {
         for (int i = 0; i < Equipment.SIZE; i++) { // Equipment
             client.setEquipment(client.getEquipment()[i], client.getEquipmentN()[i], i);
         }
-        
-        /* Friend configs */
-        for (Client c : PlayerHandler.playersOnline.values()) {
-            if (c.hasFriend(client.longName)) {
-                c.refreshFriends();
-            }
-        }
-        
-        initializeInterfaceTexts(client);
-        client.onPostLoginUiInit();
 
-        
         client.loaded = true;
         //TODO everyone is premium for now
         client.premium = true;
@@ -69,12 +64,26 @@ public class PlayerInitializer {
         long hourJitterMs = (client.dbId > 0 ? (client.dbId % 3600L) : (client.getSlot() % 3600L)) * 1000L;
         client.lastSave = now + minuteJitterMs;
         client.lastProgressSave = now + hourJitterMs;
-        
-        /* Note: player registration (playersOnline/players[]) is owned by the game-thread login finalizer. */
+        PlayerDeferredLifecycleService.schedulePeriodicPersistence(client);
+        PlayerDeferredLifecycleService.scheduleDailyResetTrigger(client);
+    }
+
+    public void initializeDeferredPostLoginState(Client client) {
+        initializeInterfaceTexts(client);
+        client.onPostLoginUiInit();
+        client.refreshFriends();
+        refreshPresenceForInterestedFriends(client);
         sendWelcomeMessages(client);
         // Refund checks are account-db owned to avoid blocking the game thread.
         AccountPersistenceService.submitRefundCheck(client);
+    }
 
+    private void refreshPresenceForInterestedFriends(Client client) {
+        for (Client other : PlayerHandler.playersOnline.values()) {
+            if (other != client && other.hasFriend(client.longName)) {
+                other.refreshFriends();
+            }
+        }
     }
     
     /**
@@ -96,27 +105,6 @@ public class PlayerInitializer {
     }
     
     /**
-     * Checks for any  refunded items the player needs to claim.
-     */
-    private void checkRefundedItems(Client client) {
-        String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + client.dbId +
-                      "' AND message='0' AND claimed IS NULL ORDER BY date ASC";
-        
-        try (java.sql.Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-             ResultSet rs = stm.executeQuery(query)) {
-            
-            boolean gotResult = rs.next();
-            if (gotResult) {
-                client.send(new SendMessage("<col=4C4B73>You have some unclaimed items to claim!"));
-                stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET message='1' where message='0'");
-            }
-        } catch (Exception e) {
-            System.out.println("Error in checking sql!!" + e.getMessage() + ", " + e);
-        }
-    }
-    
-    /**
      * Sends welcome messages to the player upon login.
      */
     private void sendWelcomeMessages(Client client) {
@@ -129,6 +117,4 @@ public class PlayerInitializer {
             client.send(new SendMessage("If you still can't find it, contact a staff member."));
         }
     }
-    
-
 }

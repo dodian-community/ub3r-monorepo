@@ -1,23 +1,21 @@
 package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 /**
  * Sets gold crafting items in an interface slot.
  * This replaces the legacy setGoldItems() method with proper Netty implementation.
  * 
- * Packet structure:
+ * Packet structure (must match Mystic's SEND_UPDATE_ITEMS handler):
  * - Opcode: 53 (variable size word)
- * - Interface ID: 2 bytes (slot ID)
+ * - Interface ID: 4 bytes (int)
  * - Item count: 2 bytes
  * - For each item:
- *   - Amount: 1 byte (always 1)
- *   - Item ID: 2 bytes (writeWordBigEndianA - item ID + 1)
+ *   - Amount: 4 bytes (always 1)
+ *   - Item ID: 2 bytes (item ID + 1)
  */
 public class SetGoldItems implements OutgoingPacket {
 
@@ -38,19 +36,23 @@ public class SetGoldItems implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        
-        // Write interface slot ID
-        message.putShort(slot);
-        
-        // Write item count
+
+        message.putInt(slot);
         message.putShort(items.length);
-        
-        // Write each item
+
+        StringBuilder preview = new StringBuilder();
         for (int item : items) {
-            message.put(1); // amount (always 1)
-            message.putShort(item + 1, ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
+            message.putInt(1);
+            message.putShort(item + 1);
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item).append("x1");
+            }
         }
-        
+
+        ItemContainerTrace.log(client, "SetGoldItems", slot, items.length, preview.toString());
         client.send(message);
     }
 }

@@ -17,11 +17,14 @@ class RootNpcDeltaIndex {
         val seen = IdentityHashMap<Npc, Boolean>(npcs.size)
         npcs.forEach { npc ->
             val state = subjectStates.computeIfAbsent(npc) { SubjectState() }
+            val currentX = npc.position?.x ?: Int.MIN_VALUE
+            val currentY = npc.position?.y ?: Int.MIN_VALUE
             val currentChunk = npc.position?.chunk
             val currentLevel = npc.position?.z ?: 0
             val moved =
-                npc.direction != -1 ||
-                    currentChunk == null ||
+                currentChunk == null ||
+                    state.lastX != currentX ||
+                    state.lastY != currentY ||
                     state.lastChunkX != currentChunk.x ||
                     state.lastChunkY != currentChunk.y ||
                     state.lastLevel != currentLevel
@@ -39,6 +42,8 @@ class RootNpcDeltaIndex {
             if (moved || updated || visibilityChanged) {
                 activityIndex.bump(npc.position)
             }
+            state.lastX = currentX
+            state.lastY = currentY
             state.lastChunkX = currentChunk?.x ?: Int.MIN_VALUE
             state.lastChunkY = currentChunk?.y ?: Int.MIN_VALUE
             state.lastLevel = currentLevel
@@ -75,6 +80,8 @@ class RootNpcDeltaIndex {
     private class SubjectState {
         var movementRevision: Long = 0L
         var blockRevision: Long = 0L
+        var lastX: Int = Int.MIN_VALUE
+        var lastY: Int = Int.MIN_VALUE
         var lastChunkX: Int = Int.MIN_VALUE
         var lastChunkY: Int = Int.MIN_VALUE
         var lastLevel: Int = Int.MIN_VALUE

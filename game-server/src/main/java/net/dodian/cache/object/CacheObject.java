@@ -12,7 +12,7 @@ public class CacheObject {
     /**
      * The definition.
      */
-    private GameObjectDef def;
+    private final GameObjectDef def;
 
     /**
      * The type.

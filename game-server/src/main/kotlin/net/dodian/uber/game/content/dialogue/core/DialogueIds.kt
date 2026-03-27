@@ -3,6 +3,14 @@ package net.dodian.uber.game.content.dialogue.core
 object DialogueIds {
 
     object Legacy {
+        const val GAMBLER_GREETING = Classic.GAMBLER_GREETING
+        const val GAMBLER_OPTIONS = Classic.GAMBLER_OPTIONS
+        const val GAMBLER_BUSY = Classic.GAMBLER_BUSY
+        const val MAGE_ARENA_OPTIONS = Classic.MAGE_ARENA_OPTIONS
+        const val WATCHER_MESSAGE = Classic.WATCHER_MESSAGE
+    }
+
+    object Classic {
         const val BANK_GREETING = 1
         const val BANK_OPTIONS = 2
         const val RUNE_SHOP_GREETING = 3

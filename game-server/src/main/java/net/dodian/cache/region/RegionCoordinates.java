@@ -10,12 +10,12 @@ public class RegionCoordinates {
     /**
      * X coordinate.
      */
-    private int x;
+    private final int x;
 
     /**
      * Y coordinate.
      */
-    private int y;
+    private final int y;
 
     /**
      * Creates the region coordinate.
@@ -70,10 +70,7 @@ public class RegionCoordinates {
         if (x != other.x) {
             return false;
         }
-        if (y != other.y) {
-            return false;
-        }
-        return true;
+        return y == other.y;
     }
 
 }

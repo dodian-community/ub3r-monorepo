@@ -1,8 +1,10 @@
 package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.ContentModuleIndex
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.runtime.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.runtime.api.content.ContentInteractionType
+import net.dodian.uber.game.runtime.api.content.ContentObjectInteractionPolicy
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -13,6 +15,13 @@ object ObjectContentRegistry {
         val moduleName: String,
         val content: ObjectContent,
         val binding: ObjectBinding,
+    )
+
+    data class ObjectResolution(
+        val moduleName: String,
+        val content: ObjectContent,
+        val binding: ObjectBinding,
+        val bindingKey: String,
     )
 
     private val bootstrapped = AtomicBoolean(false)
@@ -31,7 +40,7 @@ object ObjectContentRegistry {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            definitions += builtinDefinitions()
+            definitions += ContentModuleIndex.objectContents
             rebuildIndexLocked()
             bootstrapped.set(true)
         }
@@ -52,37 +61,46 @@ object ObjectContentRegistry {
 
     @JvmStatic
     fun resolve(objectId: Int, position: Position): ObjectContent? {
-        bootstrap()
-        val bucket = byObjectId.getOrNull(objectId) ?: return null
-        return bucket
-            ?.firstOrNull { it.binding.matcher.matches(position) }
-            ?.content
+        return resolveCandidates(objectId, position).firstOrNull()?.content
     }
 
     @JvmStatic
     fun resolveAll(objectId: Int, position: Position): List<ObjectContent> {
+        return resolveCandidates(objectId, position)
+            .map { it.content }
+            .distinctBy { it::class.java.name }
+    }
+
+    @JvmStatic
+    fun resolveCandidates(objectId: Int, position: Position): List<ObjectResolution> {
         bootstrap()
-        val resolved = byObjectId.getOrNull(objectId)
+        return byObjectId.getOrNull(objectId)
             .orEmpty()
             .asSequence()
             .filter { it.binding.matcher.matches(position) }
-            .map { it.content }
+            .map {
+                ObjectResolution(
+                    moduleName = it.moduleName,
+                    content = it.content,
+                    binding = it.binding,
+                    bindingKey = "${it.moduleName}:${it.binding.objectId}:${it.binding.matcher.describe()}:${it.binding.priority}",
+                )
+            }
             .toList()
-        return resolved.distinctBy { it::class.java.name }
     }
 
     @JvmStatic
     fun resolvePolicy(
         objectId: Int,
         position: Position,
-        interactionType: ObjectInteractionPolicy.InteractionType,
+        interactionType: ContentInteractionType,
         option: Int = -1,
         obj: GameObjectData? = null,
         itemId: Int = -1,
         itemSlot: Int = -1,
         interfaceId: Int = -1,
         spellId: Int = -1,
-    ): ObjectInteractionPolicy? {
+    ): ContentObjectInteractionPolicy? {
         bootstrap()
         val bucket = byObjectId.getOrNull(objectId).orEmpty()
         for (entry in bucket) {
@@ -91,9 +109,9 @@ object ObjectContentRegistry {
             }
             val policy =
                 when (interactionType) {
-                    ObjectInteractionPolicy.InteractionType.CLICK ->
+                    ContentInteractionType.CLICK ->
                         entry.content.clickInteractionPolicy(option, objectId, position, obj)
-                    ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT ->
+                    ContentInteractionType.ITEM_ON_OBJECT ->
                         entry.content.itemOnObjectInteractionPolicy(
                             objectId = objectId,
                             position = position,
@@ -102,7 +120,7 @@ object ObjectContentRegistry {
                             itemSlot = itemSlot,
                             interfaceId = interfaceId,
                         )
-                    ObjectInteractionPolicy.InteractionType.MAGIC ->
+                    ContentInteractionType.MAGIC ->
                         entry.content.magicOnObjectInteractionPolicy(
                             objectId = objectId,
                             position = position,
@@ -186,40 +204,6 @@ object ObjectContentRegistry {
         }
         byObjectId = rebuilt
     }
-
-    private fun builtinDefinitions(): List<Pair<String, ObjectContent>> =
-        listOf(
-            "AltarObjects" to net.dodian.uber.game.content.objects.impl.prayer.AltarObjects,
-            "AnvilObjects" to net.dodian.uber.game.content.objects.impl.smithing.AnvilObjects,
-            "BarbarianCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.BarbarianCourseObjects,
-            "BankBoothObjects" to net.dodian.uber.game.content.objects.impl.banking.BankBoothObjects,
-            "BankChestObjects" to net.dodian.uber.game.content.objects.impl.banking.BankChestObjects,
-            "ChestObjects" to net.dodian.uber.game.content.objects.impl.thieving.ChestObjects,
-            "CompostBinObjects" to net.dodian.uber.game.content.objects.impl.farming.CompostBinObjects,
-            "DoorToggleObjects" to net.dodian.uber.game.content.objects.impl.doors.DoorToggleObjects,
-            "FarmingPatchObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchObjects,
-            "FurnaceObjects" to net.dodian.uber.game.content.objects.impl.smithing.FurnaceObjects,
-            "FarmingPatchGuideObjects" to net.dodian.uber.game.content.objects.impl.farming.FarmingPatchGuideObjects,
-            "GemRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.GemRocksObjects,
-            "GnomeCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.GnomeCourseObjects,
-            "LadderObjects" to net.dodian.uber.game.content.objects.impl.travel.LadderObjects,
-            "MiningRocksObjects" to net.dodian.uber.game.content.objects.impl.mining.MiningRocksObjects,
-            "PassageObjects" to net.dodian.uber.game.content.objects.impl.travel.PassageObjects,
-            "PartyRoomObjects" to net.dodian.uber.game.content.objects.impl.events.PartyRoomObjects,
-            "PlunderObjects" to net.dodian.uber.game.content.objects.impl.thieving.PlunderObjects,
-            "RangeObjects" to net.dodian.uber.game.content.objects.impl.cooking.RangeObjects,
-            "ResourceFillingObjects" to net.dodian.uber.game.content.objects.impl.crafting.ResourceFillingObjects,
-            "RunecraftingObjects" to net.dodian.uber.game.content.objects.impl.runecrafting.RunecraftingObjects,
-            "SpecialMiningObjects" to net.dodian.uber.game.content.objects.impl.mining.SpecialMiningObjects,
-            "SpinningWheelObjects" to net.dodian.uber.game.content.objects.impl.crafting.SpinningWheelObjects,
-            "StaircaseObjects" to net.dodian.uber.game.content.objects.impl.travel.StaircaseObjects,
-            "StallObjects" to net.dodian.uber.game.content.objects.impl.thieving.StallObjects,
-            "TeleportObjects" to net.dodian.uber.game.content.objects.impl.travel.TeleportObjects,
-            "WebObstacleObjects" to net.dodian.uber.game.content.objects.impl.travel.WebObstacleObjects,
-            "WerewolfCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WerewolfCourseObjects,
-            "WildernessCourseObjects" to net.dodian.uber.game.content.objects.impl.agility.WildernessCourseObjects,
-            "WoodcuttingTreesObjects" to net.dodian.uber.game.content.objects.impl.woodcutting.WoodcuttingTreesObjects,
-        )
 
     private fun validateInternalOverlaps(name: String, entries: List<RegisteredBinding>) {
         val grouped = entries.groupBy { it.binding.objectId }

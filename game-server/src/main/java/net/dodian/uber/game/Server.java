@@ -7,11 +7,9 @@ import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
 import net.dodian.jobs.GameTickScheduler;
 import net.dodian.jobs.impl.*;
-import net.dodian.uber.comm.LoginManager;
 import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopHandler;
 import net.dodian.uber.game.model.chunk.ChunkManager;
-import net.dodian.uber.game.content.buttons.ButtonContentRegistry;
 import net.dodian.uber.game.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.model.entity.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -21,16 +19,15 @@ import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorHandler;
 import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
-import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
 import net.dodian.uber.game.runtime.loop.GameLoopService;
-import net.dodian.uber.game.model.player.skills.thieving.Thieving;
+import net.dodian.uber.game.runtime.phases.OutboundPacketProcessor;
 import net.dodian.uber.game.event.GameEventBus;
 import net.dodian.uber.game.runtime.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.persistence.WorldDbPollService;
+import net.dodian.uber.game.persistence.world.WorldDbPollService;
 import net.dodian.uber.game.persistence.WorldPollPublisher;
-import net.dodian.uber.game.security.AsyncSqlService;
-import net.dodian.uber.game.security.ChatLog;
+import net.dodian.uber.game.persistence.audit.AsyncSqlService;
+import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.utilities.DbTables;
 import net.dodian.utilities.DotEnvKt;
 import net.dodian.utilities.Rangable;
@@ -45,7 +42,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.api.WebApiKt.launchWebApi;
@@ -68,20 +64,16 @@ public class Server {
     public static ArrayList connections = new ArrayList<>();
     public static ArrayList banned = new ArrayList<>();
 
-    public static CopyOnWriteArrayList chat = new CopyOnWriteArrayList<>();
     public static ArrayList<RS2Object> objects = new ArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
-    public static LoginManager loginManager = null;
-    public static PyramidPlunder entryObject = null;
     public static SlotMachine slots = new SlotMachine();
     public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
     public static boolean shutdownServer = false;
     public static PlayerHandler playerHandler = null;
-    public static Thieving thieving = null;
     public static ShopHandler shopHandler = null;
     public static boolean antiddos = false;
     public static ChunkManager chunkManager = null;
@@ -125,9 +117,7 @@ public class Server {
                 npc.syncChunkMembership();
             }
         }
-        loginManager = new LoginManager();
         shopHandler = new ShopHandler();
-        thieving = new Thieving();
         clientHandler = new Server();
         login = new Login();
         Cache.load();
@@ -139,7 +129,6 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorHandler();
-        ButtonContentRegistry.bootstrap();
         ObjectContentRegistry.bootstrap();
         net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry.bootstrap();
         GameEventBus.bootstrap();
@@ -157,9 +146,7 @@ public class Server {
         }));
 
 
-        new Thread(login).start();
         /* Processor for various stuff */
-        entryObject = new PyramidPlunder();
         if (getGameLoopEnabled()) {
             gameLoopService.start();
         } else {
@@ -169,7 +156,6 @@ public class Server {
             gameTickScheduler.registerTask("ItemProcessor", TICK, new ItemProcessor());
             gameTickScheduler.registerTask("ShopProcessor", TICK, new ShopProcessor());
             gameTickScheduler.registerTask("ObjectProcess", TICK, new ObjectProcess());
-            gameTickScheduler.registerTask("WorldProcessor", TICK * 100L, new WorldProcessor());
             gameTickScheduler.registerTask("FarmingProcess", TICK * 100L, new FarmingProcess());
             gameTickScheduler.registerTask("PlunderDoor", 900_000L, new PlunderDoor());
             gameTickScheduler.start();

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.dialogue
 
 import net.dodian.uber.game.content.dialogue.text.DialoguePagingService
-import net.dodian.uber.game.content.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.content.dialogue.core.DialogueRenderRegistry
 import net.dodian.uber.game.content.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -9,7 +9,9 @@ object DialogueDisplayService {
 
     @JvmStatic
     fun updateNpcChat(client: Client) {
-        DialogueRegistry.render(client)
+        DialogueService.captureCompatibilityState(client)
+        DialogueRenderRegistry.render(client)
+        DialogueService.captureCompatibilityState(client)
     }
 
     @JvmStatic

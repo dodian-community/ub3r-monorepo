@@ -12,7 +12,7 @@ public class StandardIndex extends Index {
     /**
      * The file.
      */
-    private int file;
+    private final int file;
 
     /**
      * Creates the index.

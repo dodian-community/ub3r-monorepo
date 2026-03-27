@@ -6,8 +6,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerHandler
 import net.dodian.uber.game.model.player.quests.QuestSend
 import net.dodian.utilities.gameWorldId
+import org.slf4j.LoggerFactory
 
 object PlayerUiDeltaProcessor {
+    private val logger = LoggerFactory.getLogger(PlayerUiDeltaProcessor::class.java)
     private val states = IdentityHashMap<Client, PlayerUiState>()
     private val globalUiPublisher = GlobalUiPublisher()
 
@@ -17,10 +19,20 @@ object PlayerUiDeltaProcessor {
         val now = System.currentTimeMillis()
         val globalPayload = globalUiPublisher.publish(now)
         activePlayers.forEach { player ->
-            val state = states.computeIfAbsent(player) { PlayerUiState() }
-            processQuestTab(player, state, globalPayload)
-            processOverlay(player, state, now, globalPayload)
-            processContextMenu(player, state)
+            try {
+                val state = states.computeIfAbsent(player) { PlayerUiState() }
+                processQuestTab(player, state, globalPayload)
+                processOverlay(player, state, now, globalPayload)
+                processContextMenu(player, state)
+            } catch (throwable: Throwable) {
+                logger.error(
+                    "Player UI delta failed player={} slot={}",
+                    player.playerName,
+                    player.slot,
+                    throwable,
+                )
+                player.disconnected = true
+            }
         }
     }
 

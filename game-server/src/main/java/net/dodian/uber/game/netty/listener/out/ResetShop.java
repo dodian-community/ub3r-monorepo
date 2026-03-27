@@ -11,7 +11,6 @@ import net.dodian.uber.game.netty.codec.ValueType;
 public class ResetShop implements OutgoingPacket {
 
     private final int shopId;
-    private static final ShopHandler shopHandler = new ShopHandler();
 
     public ResetShop(int shopId) {
         this.shopId = shopId;

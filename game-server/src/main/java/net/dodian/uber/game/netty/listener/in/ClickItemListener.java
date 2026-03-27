@@ -8,6 +8,8 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.runtime.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.skills.runecrafting.RunecraftingPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,7 @@ public class ClickItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Faithful replication of legacy decoding order with the corrected item ID read.
         int interfaceId = buf.readUnsignedShort();
@@ -37,7 +39,7 @@ public class ClickItemListener implements PacketListener {
         // Debug line to confirm packet data is now being read correctly.
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 
-        if (client.fillEssencePouch(itemId)) {
+        if (RunecraftingPlugin.fillPouch(client, itemId)) {
             return;
         }
 
@@ -59,9 +61,8 @@ public class ClickItemListener implements PacketListener {
         boolean isHerb = (itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051;
         if (isHerb) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-        } else if (System.currentTimeMillis() - client.lastAction > 100) {
+        } else if (PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CLICK_ITEM, 100L)) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-            client.lastAction = System.currentTimeMillis();
         }
     }
 
@@ -83,7 +84,6 @@ public class ClickItemListener implements PacketListener {
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate();
-            return;
         }
     }
 }

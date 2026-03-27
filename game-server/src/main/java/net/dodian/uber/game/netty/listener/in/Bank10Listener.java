@@ -3,6 +3,12 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;
+import net.dodian.uber.game.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.skills.smithing.SmithingInterfaceService;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
+import net.dodian.uber.game.netty.codec.ByteOrder;
+import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -24,27 +30,19 @@ public class Bank10Listener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(Bank10Listener.class);
 
-    /* ---------------- Stream helper equivalence ---------------- */
-    private static int readUnsignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();  // first byte (low)
-        int high = buf.readUnsignedByte(); // second byte (high)
-        return (high << 8) | low;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
-    }
+    private static final int MIN_PAYLOAD_BYTES = 8;
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
 
         // Mystic sends: int interfaceId, short nodeId (WordA), short slot (WordA)
-        int interfaceId = buf.readInt();
-        int removeId = readUnsignedWordA(buf);
-        int removeSlot = readUnsignedWordA(buf);
+        int interfaceId = ByteBufReader.readInt(buf);
+        int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
+        int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int bankSlot = removeSlot;
 
         if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
@@ -110,22 +108,11 @@ public class Bank10Listener implements PacketListener {
     }
 
     private void handleSpecialInterfaces(Client client, int interfaceId, int removeId, int removeSlot) {
-        if (interfaceId >= 4233 && interfaceId <= 4257) { // Gold crafting quantity 10
-            client.startGoldCrafting(interfaceId, removeSlot, 10);
+        if (SkillingInterfaceItemService.handleContainerAmount(client, interfaceId, removeId, removeSlot, interfaceId >= 1119 && interfaceId <= 1123 ? client.getInvAmt(removeId) : 10)) {
         } else if (interfaceId == 3823) { // sell 5 to shop (legacy behaviour)
             client.sellItem(removeId, removeSlot, 5);
         } else if (interfaceId == 3900) { // buy 5 from shop
             client.buyItem(removeId, removeSlot, 5);
-        } else if (interfaceId >= 1119 && interfaceId <= 1123) { // smithing quantity depends on inv
-            if (client.smithing[2] > 0) {
-                client.smithing[4] = removeId;
-                client.smithing[0] = 1;
-                client.smithing[5] = client.smithing[3] != -1 ? client.getInvAmt(client.smithing[3]) : 10;
-                client.send(new RemoveInterfaces());
-            } else {
-                client.send(new SendMessage("Illigal Smithing !"));
-                logger.debug("Illegal Smith attempt by {}", client.getPlayerName());
-            }
         }
     }
 }
