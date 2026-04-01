@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.core.events
 
-import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.engine.event.GameEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionMode

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.event.bootstrap
+package net.dodian.uber.game.engine.event.bootstrap
 
 import net.dodian.uber.game.content.ContentModuleIndex
 

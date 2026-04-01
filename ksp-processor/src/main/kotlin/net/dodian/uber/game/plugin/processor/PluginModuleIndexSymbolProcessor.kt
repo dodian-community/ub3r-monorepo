@@ -111,7 +111,7 @@ class PluginModuleIndexSymbolProcessor(
     private fun discoverEventBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
         return allObjects
             .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.event.bootstrap") &&
+                file.packageName.asString().startsWith("net.dodian.uber.game.engine.event.bootstrap") &&
                     declaration.simpleName.asString().endsWith("Bootstrap") &&
                     declaration.simpleName.asString() != "CoreEventBusBootstrap"
             }

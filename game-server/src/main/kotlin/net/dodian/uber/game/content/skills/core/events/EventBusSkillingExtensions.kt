@@ -1,16 +1,16 @@
 package net.dodian.uber.game.content.skills.core.events
 
 import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
-import net.dodian.uber.game.event.GameEvent
-import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.event.events.skilling.SkillingActionStartedEvent
-import net.dodian.uber.game.event.events.skilling.SkillingActionStoppedEvent
+import net.dodian.uber.game.engine.event.GameEvent
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
+import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
 
 inline fun <reified E : GameEvent> onSkillingEvent(
     noinline condition: (E) -> Boolean = { true },
     noinline action: (E) -> Boolean,
 ) {
-    GameEventBus.on(E::class.java, net.dodian.uber.game.event.EventListener(condition, action, {}))
+    GameEventBus.on(E::class.java, net.dodian.uber.game.engine.event.EventListener(condition, action, {}))
 }
 
 fun onSkillStart(

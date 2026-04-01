@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.thieving
 
-import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject

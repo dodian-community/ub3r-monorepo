@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.agility
 
-import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client

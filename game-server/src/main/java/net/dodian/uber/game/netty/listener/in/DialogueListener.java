@@ -6,8 +6,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.event.GameEventBus;
-import net.dodian.uber.game.event.events.DialogueContinueEvent;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.DialogueContinueEvent;
 
 /**
  * Netty implementation of legacy {@code Dialogue} (opcode 40).

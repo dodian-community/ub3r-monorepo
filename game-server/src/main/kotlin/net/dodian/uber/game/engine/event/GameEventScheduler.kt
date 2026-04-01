@@ -1,4 +1,4 @@
-package net.dodian.uber.game.event
+package net.dodian.uber.game.engine.event
 
 import java.util.function.BooleanSupplier
 import kotlin.math.max

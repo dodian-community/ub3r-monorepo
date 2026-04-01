@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.lifecycle
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.function.BooleanSupplier
-import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GroundItem
 import net.dodian.uber.game.persistence.player.PlayerSaveReason

@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.interfaces.dialogue
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
-import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.event.events.DialogueOptionEvent
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.DialogueOptionEvent
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27

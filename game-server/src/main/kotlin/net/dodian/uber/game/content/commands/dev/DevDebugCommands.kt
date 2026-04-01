@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
-import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills

@@ -4,7 +4,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.GameEventScheduler;
+import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.UpdateFlag;

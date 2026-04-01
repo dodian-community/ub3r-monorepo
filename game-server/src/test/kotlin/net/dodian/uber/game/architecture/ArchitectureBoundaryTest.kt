@@ -19,36 +19,61 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `content layer does not import engine sync or net internals`() {
-        val temporaryAllowListByFile = emptyMap<String, Set<String>>()
         val violations = sourceFiles
             .filter { it.toString().contains("/net/dodian/uber/game/content/") }
             .flatMap { file ->
-                val normalizedPath = file.invariantSeparatorsPathString
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
-                    if (!trimmed.contains("net.dodian.uber.game.engine.")) return@mapIndexedNotNull null
-                    val allowedRuntimeBridge =
-                        (
-                            normalizedPath.endsWith("/content/skills/core/runtime/GatheringTask.kt") &&
-                                (
-                                    trimmed == "import net.dodian.uber.game.engine.tasking.GameTaskRuntime" ||
-                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskHandle" ||
-                                        trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
-                                    )
-                            ) ||
-                            (
-                                normalizedPath.endsWith("/content/skills/core/runtime/SkillingActionDsl.kt") &&
-                                    trimmed == "import net.dodian.uber.game.engine.tasking.TaskPriority"
-                                )
-                    if (allowedRuntimeBridge) return@mapIndexedNotNull null
-                    if (trimmed in (temporaryAllowListByFile[normalizedPath] ?: emptySet())) return@mapIndexedNotNull null
+                    val forbidden = trimmed.contains("net.dodian.uber.game.engine.sync") ||
+                        trimmed.contains("net.dodian.uber.game.engine.net")
+                    if (!forbidden) return@mapIndexedNotNull null
                     "${file}:${idx + 1} -> $trimmed"
                 }
             }
         assertTrue(
             violations.isEmpty(),
             "Content must not import engine internals.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `content layer does not import netty or sql APIs`() {
+        val violations = sourceFiles
+            .filter { it.toString().contains("/net/dodian/uber/game/content/") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
+                    val forbidden =
+                        trimmed.contains("import io.netty") ||
+                            trimmed.contains("import java.sql") ||
+                            trimmed.contains("import javax.sql")
+                    if (!forbidden) return@mapIndexedNotNull null
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+        assertTrue(
+            violations.isEmpty(),
+            "Content must not import netty/sql APIs.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `content layer depth is capped during migration`() {
+        val contentRoot = sourceRoot.resolve("kotlin/net/dodian/uber/game/content")
+        val violations = sourceFiles
+            .filter { it.toString().contains("/net/dodian/uber/game/content/") }
+            .mapNotNull { file ->
+                if (!file.toString().endsWith(".kt")) return@mapNotNull null
+                val relative = contentRoot.relativize(file)
+                val depth = relative.nameCount - 1
+                if (depth <= 3) return@mapNotNull null
+                "$file depth=$depth"
+            }
+        assertTrue(
+            violations.isEmpty(),
+            "Content path depth must stay <= 3 until flattening phases are complete.\n${violations.joinToString("\n")}",
         )
     }
 

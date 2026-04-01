@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.GameEventScheduler;
+import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.UpdateFlag;

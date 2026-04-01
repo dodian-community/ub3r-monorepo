@@ -2,8 +2,8 @@ package net.dodian.uber.game.engine.processing
 
 import io.netty.channel.embedded.EmbeddedChannel
 import java.util.concurrent.atomic.AtomicInteger
-import net.dodian.uber.game.event.GameEventBus
-import net.dodian.uber.game.event.events.PlayerTickEvent
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.PlayerTickEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach

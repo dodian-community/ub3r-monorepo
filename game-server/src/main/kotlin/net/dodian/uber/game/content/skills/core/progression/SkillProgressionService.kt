@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.core.progression
 
-import net.dodian.uber.game.event.GameEventBus
+import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill

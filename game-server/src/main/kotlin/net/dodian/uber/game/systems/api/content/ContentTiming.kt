@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.api.content
 
 import java.util.function.BooleanSupplier
-import net.dodian.uber.game.event.GameEventScheduler
+import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTimers
 

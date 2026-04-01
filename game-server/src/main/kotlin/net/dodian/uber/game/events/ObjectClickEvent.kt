@@ -1,9 +1,9 @@
-package net.dodian.uber.game.event.events
+package net.dodian.uber.game.events
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.engine.event.GameEvent
 
 data class ObjectClickEvent(
     val client: Client,

@@ -19,7 +19,7 @@ import net.dodian.uber.game.model.object.RS2Object;
 import net.dodian.uber.game.model.player.casino.SlotMachine;
 import net.dodian.uber.game.engine.loop.GameLoopService;
 import net.dodian.uber.game.engine.loop.GameTickScheduler;
-import net.dodian.uber.game.event.GameEventBus;
+import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
