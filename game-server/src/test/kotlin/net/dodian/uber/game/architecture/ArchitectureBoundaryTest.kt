@@ -601,10 +601,8 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
-    fun `core skill runtime imports are bridge-only outside core package`() {
+    fun `no source imports removed core skills runtime package`() {
         val violations = sourceFiles
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
@@ -620,15 +618,13 @@ class ArchitectureBoundaryTest {
 
         assertTrue(
             violations.isEmpty(),
-            "Only content.skills.core and systems.skills bridges may import core runtime packages.\n${violations.joinToString("\n")}",
+            "Legacy core runtime package must not be imported.\n${violations.joinToString("\n")}",
         )
     }
 
     @Test
-    fun `core skill progression imports are bridge-only outside core package`() {
+    fun `no source imports removed core skills progression package`() {
         val violations = sourceFiles
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
@@ -644,15 +640,13 @@ class ArchitectureBoundaryTest {
 
         assertTrue(
             violations.isEmpty(),
-            "Only content.skills.core and systems.skills bridges may import core progression packages.\n${violations.joinToString("\n")}",
+            "Legacy core progression package must not be imported.\n${violations.joinToString("\n")}",
         )
     }
 
     @Test
-    fun `core skill resource imports are bridge-only outside core package`() {
+    fun `no source imports removed core skills resource package`() {
         val violations = sourceFiles
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
-            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
             .flatMap { file ->
                 Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                     val trimmed = line.trim()
@@ -668,7 +662,7 @@ class ArchitectureBoundaryTest {
 
         assertTrue(
             violations.isEmpty(),
-            "Only content.skills.core and systems.skills bridges may import core resource packages.\n${violations.joinToString("\n")}",
+            "Legacy core resource package must not be imported.\n${violations.joinToString("\n")}",
         )
     }
 

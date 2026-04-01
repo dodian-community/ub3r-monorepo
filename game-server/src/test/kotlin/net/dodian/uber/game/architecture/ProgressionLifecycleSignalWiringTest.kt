@@ -34,7 +34,7 @@ class ProgressionLifecycleSignalWiringTest {
     @Test
     fun `skill progression posts level-up event on level transitions`() {
         val progressionFile =
-            sourceRoot.resolve("net/dodian/uber/game/content/skills/core/progression/SkillProgressionService.kt")
+            sourceRoot.resolve("net/dodian/uber/game/systems/skills/SkillProgressionService.kt")
         val content = Files.readString(progressionFile)
 
         assertTrue(

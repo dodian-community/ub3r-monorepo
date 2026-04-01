@@ -1,3 +1,8 @@
 package net.dodian.uber.game.systems.skills
 
-typealias SkillProgressionMode = net.dodian.uber.game.content.skills.core.progression.SkillProgressionMode
+enum class SkillProgressionMode {
+    GAIN_XP,
+    SET_XP,
+    SET_LEVEL,
+    REFRESH_ONLY,
+}
