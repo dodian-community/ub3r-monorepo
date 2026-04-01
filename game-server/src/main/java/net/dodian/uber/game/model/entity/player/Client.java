@@ -88,7 +88,7 @@ import io.netty.channel.Channel;
 import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
-import static net.dodian.uber.game.config.DotEnvKt.*;
+import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

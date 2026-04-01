@@ -23,7 +23,7 @@ import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.systems.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 import net.dodian.uber.game.systems.zone.ZoneUpdateBus
-import net.dodian.uber.game.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldSynchronizationService {

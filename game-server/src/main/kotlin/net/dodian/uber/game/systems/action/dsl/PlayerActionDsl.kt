@@ -9,7 +9,7 @@ import net.dodian.uber.game.content.skills.core.events.SkillActionInterruptEvent
 import net.dodian.uber.game.content.skills.core.events.SkillActionStartEvent
 import net.dodian.uber.game.content.skills.core.requirements.Requirement
 import net.dodian.uber.game.content.skills.core.requirements.ValidationResult
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.content.skills.core.runtime.ActionStopReasonMapper
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.skilling.SkillingActionCycleEvent

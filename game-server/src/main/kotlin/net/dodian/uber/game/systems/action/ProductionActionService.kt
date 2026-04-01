@@ -2,7 +2,7 @@ package net.dodian.uber.game.systems.action
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.content.skills.core.runtime.sendFilterMessage
@@ -185,7 +185,7 @@ object ProductionActionService {
         val xp = request.experiencePerUnit * amount
         val skill = Skill.getSkill(request.skillId)
         if (skill != null) {
-            SkillProgressionService.gainXp(client, xp, skill)
+            ProgressionService.addXp(client, xp, skill)
         }
         SkillingRandomEventService.trigger(client, xp)
         client.setActiveProductionSelection(active.copy(remainingCycles = active.remainingCycles - 1))

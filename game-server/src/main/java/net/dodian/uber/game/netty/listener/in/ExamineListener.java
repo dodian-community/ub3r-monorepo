@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.uber.game.config.DotEnvKt.getGameWorldId;
+import static net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId;
 
 @PacketHandler(opcode = 2)
 public final class ExamineListener implements PacketListener {

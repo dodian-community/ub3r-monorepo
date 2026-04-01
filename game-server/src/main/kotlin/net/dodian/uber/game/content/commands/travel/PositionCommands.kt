@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.commands.CommandContent
 import net.dodian.uber.game.content.commands.CommandContext
 import net.dodian.uber.game.content.commands.commands
 import net.dodian.uber.game.content.commands.isBetaWorld
-import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.SendMessage
 

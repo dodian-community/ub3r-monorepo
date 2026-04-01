@@ -6,10 +6,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
-import net.dodian.uber.game.content.skills.core.requirements.Requirement
-import net.dodian.uber.game.content.skills.core.requirements.RequirementBuilder
-import net.dodian.uber.game.content.skills.core.requirements.ValidationResult
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.systems.skills.requirements.Requirement
+import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
+import net.dodian.uber.game.systems.skills.requirements.ValidationResult
+import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason

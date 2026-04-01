@@ -10,12 +10,14 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.combat.CombatCancellationReason
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.events.DeathEvent
 import net.dodian.utilities.Misc
 
 object PlayerDeathTickService {
@@ -60,6 +62,7 @@ object PlayerDeathTickService {
         player.deathTimer = wallClockNow
         player.deathStartedCycle = player.currentGameCycle
         player.deathTaskState = DeathTaskState(player.currentGameCycle, player.currentGameCycle + RESPAWN_DELAY_TICKS)
+        GameEventBus.post(DeathEvent(player = player, cycle = player.currentGameCycle))
         player.prayerManager.reset()
         player.sendMessage("Oh dear you have died!")
     }

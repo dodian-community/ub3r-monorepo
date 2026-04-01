@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.engine.config.gameWorldId
 
 object PlayerUtilityCommands : CommandContent {
     override fun definitions() =

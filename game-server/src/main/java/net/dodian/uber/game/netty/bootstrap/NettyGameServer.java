@@ -9,7 +9,7 @@ import io.netty.util.ResourceLeakDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.dodian.uber.game.config.DotEnvKt.getNettyLeakDetection;
+import static net.dodian.uber.game.engine.config.DotEnvKt.getNettyLeakDetection;
 
 public class NettyGameServer {
 

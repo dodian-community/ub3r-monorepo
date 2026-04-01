@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.systems.action.dsl.playerAction
 
@@ -108,7 +108,7 @@ object SmithingActionService {
         repeat(spec.barsRequired) {
             player.deleteItem(spec.barId, 1)
         }
-        SkillProgressionService.gainXp(player, spec.experience, Skill.SMITHING)
+        ProgressionService.addXp(player, spec.experience, Skill.SMITHING)
         player.addItem(spec.targetItem, spec.outputCount)
         player.checkItemUpdate()
         player.sendMessage("You smith a ${player.getItemName(spec.targetItem)}")

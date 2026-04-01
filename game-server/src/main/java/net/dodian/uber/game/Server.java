@@ -27,7 +27,7 @@ import net.dodian.uber.game.persistence.WorldPollPublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
-import net.dodian.uber.game.config.DotEnvKt;
+import net.dodian.uber.game.engine.config.DotEnvKt;
 import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.webapi.WebApiKt.launchWebApi;
-import static net.dodian.uber.game.config.DotEnvKt.*;
+import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import static net.dodian.uber.game.persistence.db.DatabaseKt.closeConnectionPool;
 import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.initializeDatabase;
 import static net.dodian.uber.game.persistence.db.DatabaseInitializerKt.isDatabaseInitialized;

@@ -2,7 +2,7 @@ package net.dodian.uber.game.events.skilling
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.event.GameEvent
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.systems.skills.ActionStopReason
 
 data class SkillingActionStartedEvent(
     val client: Client,

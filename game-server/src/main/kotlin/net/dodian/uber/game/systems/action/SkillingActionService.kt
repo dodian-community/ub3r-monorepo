@@ -9,7 +9,7 @@ import net.dodian.uber.game.content.skills.cooking.CookingService
 import net.dodian.uber.game.content.skills.fishing.FishingDefinitions
 import net.dodian.uber.game.content.skills.fishing.FishingService
 import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.content.skills.core.runtime.CycleSignal
 import net.dodian.uber.game.content.skills.core.runtime.RunningGatheringAction
 import net.dodian.uber.game.content.skills.core.runtime.RunningProductionAction

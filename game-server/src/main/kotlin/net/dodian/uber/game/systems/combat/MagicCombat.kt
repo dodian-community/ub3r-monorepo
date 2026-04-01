@@ -13,7 +13,7 @@ import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatAttackResult
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.RuneCostService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
@@ -112,8 +112,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
                 npc.inflictEffect(1, true, getSlot(), slot/4 + 1, 5)
         }
         /* Give experience */
-        SkillProgressionService.gainXp(this, 40 * hit, Skill.MAGIC)
-        SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
+        ProgressionService.addXp(this, 40 * hit, Skill.MAGIC)
+        ProgressionService.addXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
         val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])

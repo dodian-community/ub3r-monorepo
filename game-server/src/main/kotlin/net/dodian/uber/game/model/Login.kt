@@ -5,7 +5,7 @@ import java.io.FileNotFoundException
 import java.io.FileWriter
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
-import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.engine.config.gameWorldId
 
 class Login {
     @Synchronized

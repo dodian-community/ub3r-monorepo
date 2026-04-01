@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
-import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 
 object ItemLog {

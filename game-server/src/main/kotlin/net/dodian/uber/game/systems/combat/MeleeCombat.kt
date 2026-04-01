@@ -13,7 +13,7 @@ import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatAttackResult
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.systems.combat.UnarmedAttackAnimationService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Range
 import net.dodian.utilities.Utils
@@ -109,20 +109,20 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
             if(hit > 0) {
                 if (fightType == 3) {
                     val xp = (13 * hit)
-                    SkillProgressionService.gainXp(this, xp, Skill.ATTACK)
-                    SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
-                    SkillProgressionService.gainXp(this, xp, Skill.STRENGTH)
-                } else SkillProgressionService.gainXp(this, 40 * hit, Skill.getSkill(fightType) ?: Skill.ATTACK)
-                SkillProgressionService.gainXp(this, 13 * hit, Skill.HITPOINTS)
+                    ProgressionService.addXp(this, xp, Skill.ATTACK)
+                    ProgressionService.addXp(this, xp, Skill.DEFENCE)
+                    ProgressionService.addXp(this, xp, Skill.STRENGTH)
+                } else ProgressionService.addXp(this, 40 * hit, Skill.getSkill(fightType) ?: Skill.ATTACK)
+                ProgressionService.addXp(this, 13 * hit, Skill.HITPOINTS)
             }
             if(hit2 > 0) {
                 if (fightType == 3) {
                     val xp = (13 * hit2)
-                    SkillProgressionService.gainXp(this, xp, Skill.ATTACK)
-                    SkillProgressionService.gainXp(this, xp, Skill.DEFENCE)
-                    SkillProgressionService.gainXp(this, xp, Skill.STRENGTH)
-                } else SkillProgressionService.gainXp(this, 40 * hit2, Skill.getSkill(fightType) ?: Skill.ATTACK)
-                SkillProgressionService.gainXp(this, 13 * hit2, Skill.HITPOINTS)
+                    ProgressionService.addXp(this, xp, Skill.ATTACK)
+                    ProgressionService.addXp(this, xp, Skill.DEFENCE)
+                    ProgressionService.addXp(this, xp, Skill.STRENGTH)
+                } else ProgressionService.addXp(this, 40 * hit2, Skill.getSkill(fightType) ?: Skill.ATTACK)
+                ProgressionService.addXp(this, 13 * hit2, Skill.HITPOINTS)
             }
         }
         if (target is Player) {

@@ -11,7 +11,7 @@ import net.dodian.uber.game.netty.listener.out.ObjectAnimation
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.config.gameWorldId
+import net.dodian.uber.game.engine.config.gameWorldId
 
 object DevVisualCommands : CommandContent {
     override fun definitions() =

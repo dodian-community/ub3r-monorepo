@@ -1,4 +1,4 @@
-package net.dodian.uber.game.config
+package net.dodian.uber.game.engine.config
 
 import io.github.cdimascio.dotenv.dotenv
 

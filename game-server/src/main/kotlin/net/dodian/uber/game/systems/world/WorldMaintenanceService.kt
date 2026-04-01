@@ -8,8 +8,8 @@ import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.systems.world.farming.FarmingScheduler
 import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
-import net.dodian.uber.game.config.gameWorldId
-import net.dodian.uber.game.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
 class WorldMaintenanceService(

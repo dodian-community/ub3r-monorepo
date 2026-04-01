@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.processing
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.sync.util.IntHashSet

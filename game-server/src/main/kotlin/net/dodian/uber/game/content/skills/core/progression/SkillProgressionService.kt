@@ -10,7 +10,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.content.skills.core.events.SkillProgressAppliedEvent
-import net.dodian.uber.game.config.gameMultiplierGlobalXp
+import net.dodian.uber.game.engine.config.gameMultiplierGlobalXp
+import net.dodian.uber.game.events.LevelUpEvent
 
 object SkillProgressionService {
     private const val MAX_XP = 200_000_000
@@ -97,6 +98,16 @@ object SkillProgressionService {
         var animation = -1
 
         if (newLevel > oldLevel) {
+            GameEventBus.post(
+                LevelUpEvent(
+                    client = client,
+                    skill = request.skill,
+                    oldLevel = oldLevel,
+                    newLevel = newLevel,
+                    oldExperience = oldXp,
+                    newExperience = newXp,
+                ),
+            )
             animation = 199
             if (newLevel == 99) {
                 animation = 623

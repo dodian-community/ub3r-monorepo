@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.core.events
 
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReason
+import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.engine.event.GameEvent
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
