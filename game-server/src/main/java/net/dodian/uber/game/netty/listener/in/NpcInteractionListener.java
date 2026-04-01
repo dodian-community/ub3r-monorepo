@@ -2,7 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -17,8 +16,6 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.NpcInteractionIntent;
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
-import net.dodian.uber.game.systems.combat.CombatIntent;
-import net.dodian.uber.game.systems.combat.CombatStartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,13 +143,6 @@ public class NpcInteractionListener implements PacketListener {
         }
         if (client.randomed || client.UsingAgility) {
             NpcClickMetrics.recordRejected("blocked_state", packet.opcode(), 5, npcIndex, client.getPlayerName());
-            return;
-        }
-
-        boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
-        if ((rangedAttack && client.goodDistanceEntity(npc, 5)) || client.goodDistanceEntity(npc, 1)) {
-            CombatStartService.startNpcAttack(client, npc, CombatIntent.ATTACK_NPC);
-            NpcClickMetrics.recordScheduled(packet.opcode(), 5, npc.getId(), npcIndex, client.getPlayerName());
             return;
         }
 
