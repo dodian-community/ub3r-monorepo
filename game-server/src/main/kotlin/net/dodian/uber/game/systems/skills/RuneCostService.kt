@@ -1,21 +1,35 @@
 package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object RuneCostService {
     @JvmStatic
-    fun hasAll(client: Client, runes: IntArray, amounts: IntArray): Boolean =
-        net.dodian.uber.game.content.skills.core.runtime.RuneCostService.hasAll(client, runes, amounts)
+    fun hasAll(client: Client, runes: IntArray, amounts: IntArray): Boolean {
+        for (index in runes.indices) {
+            if (!client.playerHasItem(runes[index], amounts[index])) {
+                return false
+            }
+        }
+        return true
+    }
 
     @JvmStatic
-    fun isMissingAny(client: Client, runes: IntArray, amounts: IntArray): Boolean =
-        net.dodian.uber.game.content.skills.core.runtime.RuneCostService.isMissingAny(client, runes, amounts)
+    fun isMissingAny(client: Client, runes: IntArray, amounts: IntArray): Boolean = !hasAll(client, runes, amounts)
 
     @JvmStatic
-    fun consume(client: Client, runes: IntArray, amounts: IntArray) =
-        net.dodian.uber.game.content.skills.core.runtime.RuneCostService.consume(client, runes, amounts)
+    fun consume(client: Client, runes: IntArray, amounts: IntArray) {
+        for (index in runes.indices) {
+            client.deleteItem(runes[index], amounts[index])
+        }
+    }
 
     @JvmStatic
-    fun ensureBloodRune(client: Client): Boolean =
-        net.dodian.uber.game.content.skills.core.runtime.RuneCostService.ensureBloodRune(client)
+    fun ensureBloodRune(client: Client): Boolean {
+        if (client.playerHasItem(565)) {
+            return true
+        }
+        client.sendMessage("This spell requires 1 blood rune")
+        return false
+    }
 }

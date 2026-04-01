@@ -649,6 +649,30 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `core skill resource imports are bridge-only outside core package`() {
+        val violations = sourceFiles
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) {
+                        return@mapIndexedNotNull null
+                    }
+                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.resource")) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Only content.skills.core and systems.skills bridges may import core resource packages.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `java callers use only approved systems skills wrappers`() {
         val approvedJavaSkillApis = setOf(
             "net.dodian.uber.game.systems.skills.ProgressionService",

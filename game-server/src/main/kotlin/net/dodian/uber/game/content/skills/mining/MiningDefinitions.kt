@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.mining
 
-import net.dodian.uber.game.content.skills.core.resource.ResourceSkillContent
-import net.dodian.uber.game.content.skills.core.resource.resourceSkillContent
+import net.dodian.uber.game.systems.skills.resource.ResourceSkillContent
+import net.dodian.uber.game.systems.skills.resource.resourceSkillContent
 
 enum class RockCategory {
     STANDARD,
