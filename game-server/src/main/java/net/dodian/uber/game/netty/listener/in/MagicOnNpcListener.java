@@ -2,6 +2,8 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.MagicOnNpcEvent;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -41,6 +43,9 @@ public class MagicOnNpcListener implements PacketListener {
         Npc npc = Server.npcManager.getNpc(npcIndex);
         if (npc == null) return;
         if (client.randomed || client.UsingAgility) return;
+        if (GameEventBus.postWithResult(new MagicOnNpcEvent(client, magicId, npcIndex, npc))) {
+            return;
+        }
 
         CombatStartService.startNpcAttack(client, npc, CombatIntent.MAGIC_ON_NPC);
 

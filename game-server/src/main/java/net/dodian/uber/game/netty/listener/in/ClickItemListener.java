@@ -2,6 +2,8 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.content.items.ItemDispatcher;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.ItemClickEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -81,6 +83,10 @@ public class ClickItemListener implements PacketListener {
                 client.send(new SendMessage("This item cannot be used in a duel!"));
                 return;
             }
+        }
+        if (GameEventBus.postWithResult(new ItemClickEvent(client, item, slot, interfaceId))) {
+            client.checkItemUpdate();
+            return;
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate();

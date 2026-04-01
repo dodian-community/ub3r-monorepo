@@ -2,6 +2,8 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.content.items.ItemCombinationService;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.ItemOnItemEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -32,6 +34,17 @@ public class ItemOnItemListener implements PacketListener {
         buf.readUnsignedShort();
         buf.readUnsignedShort();
 
+        if (usedWithSlot < 0 || usedWithSlot >= client.playerItems.length || itemUsedSlot < 0 || itemUsedSlot >= client.playerItems.length) {
+            return;
+        }
+        int usedWithId = client.playerItems[usedWithSlot] - 1;
+        int itemUsedId = client.playerItems[itemUsedSlot] - 1;
+        if (usedWithId < 0 || itemUsedId < 0) {
+            return;
+        }
+        if (GameEventBus.postWithResult(new ItemOnItemEvent(client, itemUsedSlot, usedWithSlot, itemUsedId, usedWithId))) {
+            return;
+        }
         ItemCombinationService.handle(client, usedWithSlot, itemUsedSlot);
     }
 }

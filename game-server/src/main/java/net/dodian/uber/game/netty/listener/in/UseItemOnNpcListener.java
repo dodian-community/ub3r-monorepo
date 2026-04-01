@@ -3,6 +3,8 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.content.items.ItemOnNpcContentService;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.ItemOnNpcEvent;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -51,6 +53,9 @@ public class UseItemOnNpcListener implements PacketListener {
 
         Npc npc = Server.npcManager.getNpc(npcIndex);
         if (npc == null) return;
+        if (GameEventBus.postWithResult(new ItemOnNpcEvent(client, itemId, slot, npcIndex, npc))) {
+            return;
+        }
         ItemOnNpcContentService.handle(client, itemId, slot, npcIndex, npc);
     }
 }
