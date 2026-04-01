@@ -4,7 +4,9 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
+import net.dodian.uber.game.events.PlayerLogoutEvent;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.UpdateFlag;
@@ -647,6 +649,7 @@ public class Client extends Player implements Runnable {
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
+            GameEventBus.post(new PlayerLogoutEvent(this, PlayerSaveReason.DISCONNECT));
             saveStats(PlayerSaveReason.DISCONNECT, true, true);
         }
 
@@ -1010,6 +1013,7 @@ public class Client extends Player implements Runnable {
 
         PlayerDeferredLifecycleService.cancelAll(this);
         // Save player data before disconnecting
+        GameEventBus.post(new PlayerLogoutEvent(this, PlayerSaveReason.LOGOUT));
         saveStats(PlayerSaveReason.LOGOUT, true, true);
 
         // Send the logout packet

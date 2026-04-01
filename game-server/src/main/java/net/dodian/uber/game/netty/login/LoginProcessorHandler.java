@@ -17,7 +17,9 @@ import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
 import net.dodian.uber.game.netty.game.GamePacketHandler;
 import net.dodian.uber.game.netty.util.ConnectionLoggingHandler;
+import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.loop.GameThreadIngress;
+import net.dodian.uber.game.events.PlayerLoginEvent;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -266,6 +268,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                     client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
                 }
                 client.transport(new Position(client.getPosition().getX(), client.getPosition().getY(), client.getPosition().getZ()));
+                GameEventBus.post(new PlayerLoginEvent(client));
 
                 final PlayerInitializer postInitializer = initializer;
                 GameThreadIngress.submitDeferred("login-post-init", () -> {
