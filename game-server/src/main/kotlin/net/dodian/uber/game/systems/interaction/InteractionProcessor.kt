@@ -9,6 +9,11 @@ import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectInteractionService
 import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher
 import net.dodian.uber.game.content.npcs.spawns.NpcClickMetrics
+import net.dodian.uber.game.content.items.ItemOnNpcContentService
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.ItemOnNpcEvent
+import net.dodian.uber.game.events.MagicOnNpcEvent
+import net.dodian.uber.game.events.MagicOnPlayerEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
@@ -46,6 +51,9 @@ object InteractionProcessor {
             is ObjectClickIntent -> processObjectClick(player, intent)
             is ItemOnObjectIntent -> processItemOnObject(player, intent)
             is MagicOnObjectIntent -> processMagicOnObject(player, intent)
+            is ItemOnNpcIntent -> processItemOnNpc(player, intent)
+            is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
+            is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
             else -> {
                 clear(player)
                 InteractionExecutionResult.CANCELLED
@@ -449,6 +457,143 @@ object InteractionProcessor {
             timing.resolveNs,
             timing.handlerNs,
             timing.handlerName,
+            startNs,
+        )
+        return InteractionExecutionResult.COMPLETE
+    }
+
+    private fun processItemOnNpc(player: Client, intent: ItemOnNpcIntent): InteractionExecutionResult {
+        val startNs = System.nanoTime()
+        val npc = Server.npcManager.getNpc(intent.npcIndex)
+        if (npc == null) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.disconnected || player.randomed || player.UsingAgility) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.pendingInteraction !== intent) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (intent.itemSlot < 0 || intent.itemSlot >= player.playerItems.size) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.playerItems[intent.itemSlot] - 1 != intent.itemId) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
+        val routeStart = System.nanoTime()
+        if (!player.goodDistanceEntity(npc, 1)) {
+            return InteractionExecutionResult.WAITING
+        }
+        val routeNs = System.nanoTime() - routeStart
+
+        player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
+        player.faceNpc(intent.npcIndex)
+        val handled = GameEventBus.postWithResult(ItemOnNpcEvent(player, intent.itemId, intent.itemSlot, intent.npcIndex, npc))
+        if (!handled) {
+            ItemOnNpcContentService.handle(player, intent.itemId, intent.itemSlot, intent.npcIndex, npc)
+        }
+        clear(player)
+        slowLogIfNeeded(
+            player,
+            intent,
+            npc.id,
+            -1,
+            routeNs,
+            0L,
+            0L,
+            if (handled) "GameEventBus" else ItemOnNpcContentService::class.java.name,
+            startNs,
+        )
+        return InteractionExecutionResult.COMPLETE
+    }
+
+    private fun processMagicOnNpc(player: Client, intent: MagicOnNpcIntent): InteractionExecutionResult {
+        val startNs = System.nanoTime()
+        val npc = Server.npcManager.getNpc(intent.npcIndex)
+        if (npc == null) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.disconnected || player.randomed || player.UsingAgility || player.deathStage >= 1) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.pendingInteraction !== intent) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
+        val routeStart = System.nanoTime()
+        if (!player.goodDistanceEntity(npc, 5)) {
+            return InteractionExecutionResult.WAITING
+        }
+        val routeNs = System.nanoTime() - routeStart
+
+        player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
+        player.magicId = intent.spellId
+        val handled = GameEventBus.postWithResult(MagicOnNpcEvent(player, intent.spellId, intent.npcIndex, npc))
+        if (!handled) {
+            CombatStartService.startNpcAttack(player, npc, CombatIntent.MAGIC_ON_NPC)
+        }
+        clear(player)
+        slowLogIfNeeded(
+            player,
+            intent,
+            npc.id,
+            -1,
+            routeNs,
+            0L,
+            0L,
+            if (handled) "GameEventBus" else CombatStartService::class.java.name,
+            startNs,
+        )
+        return InteractionExecutionResult.COMPLETE
+    }
+
+    private fun processMagicOnPlayer(player: Client, intent: MagicOnPlayerIntent): InteractionExecutionResult {
+        val startNs = System.nanoTime()
+        val victim = PlayerRegistry.getClient(intent.victimIndex)
+        if (victim == null) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.disconnected || player.randomed || player.UsingAgility || player.deathStage >= 1) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.pendingInteraction !== intent) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
+        val routeStart = System.nanoTime()
+        if (!player.goodDistanceEntity(victim, 5)) {
+            return InteractionExecutionResult.WAITING
+        }
+        val routeNs = System.nanoTime() - routeStart
+
+        player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
+        player.magicId = intent.spellId
+        val handled = GameEventBus.postWithResult(MagicOnPlayerEvent(player, intent.spellId, intent.victimIndex, victim))
+        if (!handled) {
+            CombatStartService.startPlayerAttack(player, victim, CombatIntent.MAGIC_ON_PLAYER)
+        }
+        clear(player)
+        slowLogIfNeeded(
+            player,
+            intent,
+            victim.slot,
+            -1,
+            routeNs,
+            0L,
+            0L,
+            if (handled) "GameEventBus" else CombatStartService::class.java.name,
             startNs,
         )
         return InteractionExecutionResult.COMPLETE

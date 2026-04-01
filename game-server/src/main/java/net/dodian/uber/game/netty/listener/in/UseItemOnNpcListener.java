@@ -2,9 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.content.items.ItemOnNpcContentService;
-import net.dodian.uber.game.engine.event.GameEventBus;
-import net.dodian.uber.game.events.ItemOnNpcEvent;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -13,6 +10,10 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,9 +54,8 @@ public class UseItemOnNpcListener implements PacketListener {
 
         Npc npc = Server.npcManager.getNpc(npcIndex);
         if (npc == null) return;
-        if (GameEventBus.postWithResult(new ItemOnNpcEvent(client, itemId, slot, npcIndex, npc))) {
-            return;
-        }
-        ItemOnNpcContentService.handle(client, itemId, slot, npcIndex, npc);
+
+        ItemOnNpcIntent intent = new ItemOnNpcIntent(packet.opcode(), PlayerRegistry.cycle, itemId, slot, npcIndex);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
     }
 }

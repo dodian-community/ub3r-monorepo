@@ -2,8 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.engine.event.GameEventBus;
-import net.dodian.uber.game.events.MagicOnNpcEvent;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -12,8 +10,10 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.combat.CombatIntent;
-import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.MagicOnNpcIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +43,8 @@ public class MagicOnNpcListener implements PacketListener {
         Npc npc = Server.npcManager.getNpc(npcIndex);
         if (npc == null) return;
         if (client.randomed || client.UsingAgility) return;
-        if (GameEventBus.postWithResult(new MagicOnNpcEvent(client, magicId, npcIndex, npc))) {
-            return;
-        }
-
-        CombatStartService.startNpcAttack(client, npc, CombatIntent.MAGIC_ON_NPC);
+        MagicOnNpcIntent intent = new MagicOnNpcIntent(packet.opcode(), PlayerRegistry.cycle, magicId, npcIndex);
+        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
 
         logger.debug("MagicOnNpcListener: magic {} on npc {}", magicId, npcIndex);
     }

@@ -1,8 +1,6 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.engine.event.GameEventBus;
-import net.dodian.uber.game.events.MagicOnPlayerEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -10,8 +8,9 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.combat.CombatIntent;
-import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.MagicOnPlayerIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +53,7 @@ public class MagicOnPlayerListener implements PacketListener {
         if (client.randomed || client.UsingAgility) {
             return;
         }
-        if (GameEventBus.postWithResult(new MagicOnPlayerEvent(client, magicId, victimIndex, victim))) {
-            return;
-        }
-
-        CombatStartService.startPlayerAttack(client, victim, CombatIntent.MAGIC_ON_PLAYER);
+        MagicOnPlayerIntent intent = new MagicOnPlayerIntent(packet.opcode(), PlayerRegistry.cycle, magicId, victimIndex);
+        InteractionTaskScheduler.schedule(client, intent, new PlayerInteractionTask(client, intent));
     }
 }
