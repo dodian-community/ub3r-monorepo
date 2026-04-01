@@ -4,13 +4,14 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
-import net.dodian.uber.game.content.skills.core.events.SkillActionCompleteEvent
-import net.dodian.uber.game.content.skills.core.events.SkillActionInterruptEvent
-import net.dodian.uber.game.content.skills.core.events.SkillActionStartEvent
+import net.dodian.uber.game.events.skilling.SkillActionCompleteEvent
+import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
+import net.dodian.uber.game.events.skilling.SkillActionStartEvent
 import net.dodian.uber.game.systems.skills.requirements.Requirement
-import net.dodian.uber.game.content.skills.core.requirements.ValidationResult
+import net.dodian.uber.game.systems.skills.requirements.ValidationResult
+import net.dodian.uber.game.systems.skills.requirements.failureMessageOrNull
 import net.dodian.uber.game.systems.skills.ActionStopReason
-import net.dodian.uber.game.content.skills.core.runtime.ActionStopReasonMapper
+import net.dodian.uber.game.systems.skills.ActionStopReasonMapper
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
@@ -69,8 +70,9 @@ class ActionScope internal constructor(
         failureReason: ActionStopReason = ActionStopReason.REQUIREMENT_FAILED,
     ): Boolean {
         val result = requirement.validate(player)
-        if (result is ValidationResult.Failed) {
-            player.sendMessage(result.message)
+        val failureMessage = result.failureMessageOrNull()
+        if (failureMessage != null) {
+            player.sendMessage(failureMessage)
             stop(failureReason)
         }
         return true

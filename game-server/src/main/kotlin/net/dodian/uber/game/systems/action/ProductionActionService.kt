@@ -5,11 +5,9 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.content.skills.core.runtime.sendFilterMessage
-import net.dodian.uber.game.content.skills.core.runtime.ProductionSpec
-import net.dodian.uber.game.content.skills.core.runtime.ProductionTask
-import net.dodian.uber.game.content.skills.core.runtime.RuneCostService
-import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.sendFilterMessage
+import net.dodian.uber.game.systems.skills.RuneCostService
+import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 
 object ProductionActionService {
     @JvmStatic
@@ -160,22 +158,15 @@ object ProductionActionService {
             if (client.getInvAmt(itemOne) < amount || (itemTwo != -1 && client.getInvAmt(itemTwo) < amount)) {
                 amount = if (itemTwo == -1) client.getInvAmt(itemOne) else minOf(client.getInvAmt(itemOne), client.getInvAmt(itemTwo))
             }
-            val spec =
-                ProductionSpec(
-                    actionName = "Production",
-                    skillId = request.skillId,
-                    productId = itemMake,
-                    amountPerCycle = amount,
-                    primaryItemId = itemOne,
-                    secondaryItemId = itemTwo,
-                    experiencePerUnit = request.experiencePerUnit,
-                    animationId = request.animationId,
-                    tickDelay = request.tickDelay,
-                )
-            if (!ProductionCycleTask(client, spec).runCycle()) {
+            if (amount <= 0) {
                 client.resetAction()
                 return false
             }
+            client.deleteItem(itemOne, amount)
+            if (itemTwo != -1) {
+                client.deleteItem(itemTwo, amount)
+            }
+            client.addItem(itemMake, amount)
         }
 
         client.checkItemUpdate()
@@ -193,22 +184,5 @@ object ProductionActionService {
             client.sendFilterMessage(request.completionMessage)
         }
         return true
-    }
-
-    private class ProductionCycleTask(
-        client: Client,
-        spec: ProductionSpec,
-    ) : ProductionTask(client, spec) {
-        override fun performCycle(): Boolean {
-            if (spec.amountPerCycle <= 0) {
-                return false
-            }
-            client.deleteItem(spec.primaryItemId, spec.amountPerCycle)
-            if (spec.secondaryItemId != -1) {
-                client.deleteItem(spec.secondaryItemId, spec.amountPerCycle)
-            }
-            client.addItem(spec.productId, spec.amountPerCycle)
-            return true
-        }
     }
 }

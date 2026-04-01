@@ -14,7 +14,7 @@ import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.command.CommandDbService
-import net.dodian.uber.game.content.skills.core.progression.SkillAdminService
+import net.dodian.uber.game.systems.skills.SkillAdminService
 import net.dodian.uber.game.systems.skills.ProgressionService
 
 object DevAccountAndStateCommands : CommandContent {

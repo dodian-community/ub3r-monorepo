@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.listener.out.RefreshSkill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.content.skills.core.events.SkillProgressAppliedEvent
+import net.dodian.uber.game.events.skilling.SkillProgressAppliedEvent
 import net.dodian.uber.game.engine.config.gameMultiplierGlobalXp
 import net.dodian.uber.game.events.LevelUpEvent
 
@@ -82,13 +82,21 @@ object SkillProgressionService {
 
         val oldXp = client.getExperience(request.skill)
         val oldLevel = Skills.getLevelForExperience(oldXp)
-        val requested = if (request.applyGlobalMultiplier) request.amount * gameMultiplierGlobalXp else request.amount
-        val targetXp = if (request.capExperience) minOf(oldXp + requested, MAX_XP) else (oldXp + requested)
-        val applied = when {
-            oldXp < MAX_XP && targetXp == MAX_XP -> MAX_XP - oldXp
-            targetXp == MAX_XP -> 0
-            else -> requested
+        val requestedLong =
+            request.amount.toLong() *
+                (if (request.applyGlobalMultiplier) gameMultiplierGlobalXp.toLong() else 1L)
+        if (requestedLong < 1L) {
+            return SkillProgressionResult(false, request.mode, request.skill, oldXp, oldXp, oldLevel, oldLevel, 0)
         }
+        val oldXpLong = oldXp.toLong()
+        val targetLong =
+            if (request.capExperience) {
+                (oldXpLong + requestedLong).coerceAtMost(MAX_XP.toLong())
+            } else {
+                oldXpLong + requestedLong
+            }
+        val appliedLong = targetLong - oldXpLong
+        val applied = appliedLong.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
         client.addExperience(applied, request.skill)
         client.markSaveDirty(PlayerSaveSegment.STATS.mask)

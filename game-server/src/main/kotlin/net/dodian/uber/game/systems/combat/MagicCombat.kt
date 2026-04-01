@@ -14,7 +14,7 @@ import net.dodian.uber.game.systems.combat.CombatAttackResult
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.core.runtime.RuneCostService
+import net.dodian.uber.game.systems.skills.RuneCostService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min

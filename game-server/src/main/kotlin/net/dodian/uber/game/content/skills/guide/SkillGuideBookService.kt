@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.guide
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.content.skills.core.runtime.sendFilterMessage
+import net.dodian.uber.game.systems.skills.sendFilterMessage
 
 object SkillGuideBookService {
     @JvmStatic

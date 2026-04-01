@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 
 object ThievingService {
     const val PICKPOCKET_EMOTE: Int = 881

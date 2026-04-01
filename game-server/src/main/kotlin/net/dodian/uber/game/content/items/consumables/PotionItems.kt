@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.core.progression.SkillReadService
+import net.dodian.uber.game.systems.skills.SkillReadService
 
 object PotionItems : ItemContent {
     override val itemIds: IntArray = intArrayOf(

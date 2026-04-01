@@ -7,9 +7,9 @@ import net.dodian.uber.game.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.events.skilling.SkillingActionSucceededEvent
-import net.dodian.uber.game.content.skills.core.events.SkillActionCompleteEvent
-import net.dodian.uber.game.content.skills.core.events.SkillActionInterruptEvent
-import net.dodian.uber.game.content.skills.core.events.SkillActionStartEvent
+import net.dodian.uber.game.events.skilling.SkillActionCompleteEvent
+import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
+import net.dodian.uber.game.events.skilling.SkillActionStartEvent
 import net.dodian.uber.game.content.skills.core.requirements.Requirement
 import net.dodian.uber.game.content.skills.core.requirements.ValidationResult
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime

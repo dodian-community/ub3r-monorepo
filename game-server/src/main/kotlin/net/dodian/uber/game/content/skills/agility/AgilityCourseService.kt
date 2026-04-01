@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 

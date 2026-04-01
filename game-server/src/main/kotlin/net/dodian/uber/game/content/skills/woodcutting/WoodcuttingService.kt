@@ -10,7 +10,7 @@ import net.dodian.uber.game.systems.skills.requirements.Requirement
 import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
 import net.dodian.uber.game.systems.skills.requirements.ValidationResult
 import net.dodian.uber.game.systems.skills.ActionStopReason
-import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService

@@ -19,7 +19,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.systems.skills.ProgressionService;
-import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService;
+import net.dodian.uber.game.systems.skills.SkillingRandomEventService;
 import net.dodian.uber.game.content.skills.slayer.SlayerService;
 import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.uber.game.systems.combat.CombatCancellationReason;

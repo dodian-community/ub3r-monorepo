@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.skills.cooking
 
-import net.dodian.uber.game.content.skills.core.runtime.SkillActionRequest
+import net.dodian.uber.game.systems.skills.SkillActionRequest
 
 data class CookingRequest(
     val itemId: Int,

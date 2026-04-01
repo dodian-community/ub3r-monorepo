@@ -489,4 +489,193 @@ class ArchitectureBoundaryTest {
             "Legacy config namespace must not be used.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `legacy skill core events package is removed`() {
+        val violations = sourceFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                val referencesLegacySkillEvents = trimmed.contains("net.dodian.uber.game.content.skills.core.events")
+                if (!referencesLegacySkillEvents) {
+                    return@mapIndexedNotNull null
+                }
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Legacy skill event package must not be used.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `low-level event listener internals are infra-only`() {
+        val violations = sourceFiles.flatMap { file ->
+            val normalized = file.invariantSeparatorsPathString
+            val isInfraFile =
+                normalized.contains("/net/dodian/uber/game/engine/event/")
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                val usesLowLevelListenerInternals =
+                    trimmed.contains("import net.dodian.uber.game.engine.event.EventListener") ||
+                        trimmed.contains("import net.dodian.uber.game.engine.event.EventFilter") ||
+                        trimmed.contains("import net.dodian.uber.game.engine.event.ReturnableEventListener")
+                if (!usesLowLevelListenerInternals || isInfraFile) {
+                    return@mapIndexedNotNull null
+                }
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Event listener/filter internals should stay inside event infrastructure packages.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `legacy game event package is removed`() {
+        val packageViolations = sourceFiles.mapNotNull { file ->
+            val packageLine = Files.readAllLines(file)
+                .asSequence()
+                .map { it.trim() }
+                .firstOrNull { it.startsWith("package ") }
+                ?: return@mapNotNull null
+            val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
+            val isLegacyEventPackage =
+                packageName == "net.dodian.uber.game.event" ||
+                    packageName.startsWith("net.dodian.uber.game.event.")
+            if (!isLegacyEventPackage) {
+                return@mapNotNull null
+            }
+            "${file} -> $packageName"
+        }
+
+        val importViolations = sourceFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                if (!trimmed.startsWith("import ")) {
+                    return@mapIndexedNotNull null
+                }
+                if (
+                    !trimmed.contains("net.dodian.uber.game.event.") &&
+                    !trimmed.contains("net.dodian.uber.game.event;")
+                ) {
+                    return@mapIndexedNotNull null
+                }
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        val violations = packageViolations + importViolations
+        assertTrue(
+            violations.isEmpty(),
+            "Legacy event namespace must not be used.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `events package stays payload only`() {
+        val violations = sourceFiles
+            .filter { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/events/") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    val hasBusWiringLogic =
+                        trimmed.contains("GameEventBus.") ||
+                            trimmed.contains("EventListener(") ||
+                            trimmed.contains("EventFilter(") ||
+                            trimmed.contains("ReturnableEventListener(")
+                    if (!hasBusWiringLogic) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "game.events should contain payload definitions, not event bus wiring.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `core skill runtime imports are bridge-only outside core package`() {
+        val violations = sourceFiles
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) {
+                        return@mapIndexedNotNull null
+                    }
+                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.runtime")) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Only content.skills.core and systems.skills bridges may import core runtime packages.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `core skill progression imports are bridge-only outside core package`() {
+        val violations = sourceFiles
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/core/") }
+            .filterNot { it.invariantSeparatorsPathString.contains("/net/dodian/uber/game/systems/skills/") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) {
+                        return@mapIndexedNotNull null
+                    }
+                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.progression")) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Only content.skills.core and systems.skills bridges may import core progression packages.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `java callers use only approved systems skills wrappers`() {
+        val approvedJavaSkillApis = setOf(
+            "net.dodian.uber.game.systems.skills.ProgressionService",
+            "net.dodian.uber.game.systems.skills.RuneCostService",
+            "net.dodian.uber.game.systems.skills.SkillingRandomEventService",
+            "net.dodian.uber.game.systems.skills.SkillAdminService",
+            "net.dodian.uber.game.systems.skills.SkillReadService",
+        )
+        val violations = sourceFiles
+            .filter { it.invariantSeparatorsPathString.endsWith(".java") }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import net.dodian.uber.game.systems.skills.")) {
+                        return@mapIndexedNotNull null
+                    }
+                    val importedType = trimmed.removePrefix("import ").removeSuffix(";").trim()
+                    if (importedType in approvedJavaSkillApis) {
+                        return@mapIndexedNotNull null
+                    }
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Java interop must use explicit systems.skills wrapper APIs only.\n${violations.joinToString("\n")}",
+        )
+    }
 }

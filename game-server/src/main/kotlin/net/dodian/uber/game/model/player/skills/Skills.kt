@@ -3,15 +3,16 @@ package net.dodian.uber.game.model.player.skills
 object Skills {
     @JvmStatic
     fun getLevelForExperience(exp: Int): Int {
-        var output = 0.0
-        var playerLevel = 0
-        var lvl = 2
-        while (lvl <= 100 && output.toInt() <= exp) {
-            output += kotlin.math.floor((lvl - 1) + 300 * Math.pow(2.0, (lvl - 1).toDouble() / 7.0)) / 4.0
-            playerLevel++
-            lvl++
+        val safeExp = exp.coerceAtLeast(0)
+        var points = 0.0
+        for (level in 1..99) {
+            points += kotlin.math.floor(level + 300.0 * Math.pow(2.0, level.toDouble() / 7.0))
+            val xpForLevel = kotlin.math.floor(points / 4).toInt()
+            if (safeExp < xpForLevel) {
+                return level
+            }
         }
-        return playerLevel
+        return 99
     }
 
     @JvmStatic
