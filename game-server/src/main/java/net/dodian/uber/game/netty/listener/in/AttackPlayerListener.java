@@ -8,8 +8,9 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.combat.CombatIntent;
-import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.systems.interaction.AttackPlayerIntent;
+import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
+import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ public class AttackPlayerListener implements PacketListener {
         if (plr == null) return;
         if (client.randomed || client.UsingAgility) return;
 
-        CombatStartService.startPlayerAttack(client, plr, CombatIntent.ATTACK_PLAYER);
+        AttackPlayerIntent intent = new AttackPlayerIntent(packet.opcode(), PlayerRegistry.cycle, victimSlot);
+        InteractionTaskScheduler.schedule(client, intent, new PlayerInteractionTask(client, intent));
     }
 }

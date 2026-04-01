@@ -2,6 +2,7 @@ package net.dodian.uber.game.systems.interaction.scheduler
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.InteractionIntent
+import net.dodian.uber.game.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.systems.interaction.GroundItemInteractionIntent
 import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent
 import net.dodian.uber.game.systems.interaction.ItemOnObjectIntent
@@ -47,6 +48,7 @@ object InteractionTaskScheduler {
             is MagicOnObjectIntent -> PlayerActionCancelReason.OBJECT_INTERACTION
             is ItemOnNpcIntent,
             is MagicOnNpcIntent -> PlayerActionCancelReason.NPC_INTERACTION
+            is AttackPlayerIntent,
             is MagicOnPlayerIntent -> PlayerActionCancelReason.PLAYER_INTERACTION
             is NpcInteractionIntent ->
                 if (intent.option == 5) {

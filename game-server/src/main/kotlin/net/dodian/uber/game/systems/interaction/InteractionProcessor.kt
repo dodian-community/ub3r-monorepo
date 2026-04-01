@@ -54,6 +54,7 @@ object InteractionProcessor {
             is ItemOnNpcIntent -> processItemOnNpc(player, intent)
             is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
             is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
+            is AttackPlayerIntent -> processAttackPlayer(player, intent)
             else -> {
                 clear(player)
                 InteractionExecutionResult.CANCELLED
@@ -594,6 +595,39 @@ object InteractionProcessor {
             0L,
             0L,
             if (handled) "GameEventBus" else CombatStartService::class.java.name,
+            startNs,
+        )
+        return InteractionExecutionResult.COMPLETE
+    }
+
+    private fun processAttackPlayer(player: Client, intent: AttackPlayerIntent): InteractionExecutionResult {
+        val startNs = System.nanoTime()
+        val victim = PlayerRegistry.getClient(intent.victimIndex)
+        if (victim == null) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.disconnected || player.randomed || player.UsingAgility || player.deathStage >= 1) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+        if (player.pendingInteraction !== intent) {
+            clear(player)
+            return InteractionExecutionResult.CANCELLED
+        }
+
+        player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
+        CombatStartService.startPlayerAttack(player, victim, CombatIntent.ATTACK_PLAYER)
+        clear(player)
+        slowLogIfNeeded(
+            player,
+            intent,
+            victim.slot,
+            -1,
+            0L,
+            0L,
+            0L,
+            CombatStartService::class.java.name,
             startNs,
         )
         return InteractionExecutionResult.COMPLETE
