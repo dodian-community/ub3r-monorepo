@@ -16,6 +16,10 @@ object ProgressionService {
     fun refresh(player: Client, skill: Skill) = SkillProgressionService.refresh(player, skill)
 
     @JvmStatic
+    fun setSkillLevel(player: Client, skill: Skill, currentLevel: Int, experience: Int) =
+        SkillProgressionService.setSkillLevel(player, skill, currentLevel, experience)
+
+    @JvmStatic
     fun levelForXp(experience: Int): Int = Skills.getLevelForExperience(experience)
 
     @JvmStatic

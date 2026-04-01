@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 
 object ThievingService {
@@ -59,7 +59,7 @@ object ThievingService {
                 player.sendMessage("You don't have enough inventory space!")
                 return@runLaterMs
             }
-            SkillProgressionService.gainXp(player, data.receivedExperience, Skill.THIEVING)
+            ProgressionService.addXp(player, data.receivedExperience, Skill.THIEVING)
             player.canPreformAction = false
             if (data.item.size > 1) {
                 val rollChance = (Math.random() * 100).toInt()

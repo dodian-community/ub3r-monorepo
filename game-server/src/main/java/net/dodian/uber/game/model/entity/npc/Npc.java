@@ -18,7 +18,7 @@ import net.dodian.uber.game.model.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.systems.skills.ProgressionService;
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService;
 import net.dodian.uber.game.content.skills.slayer.SlayerService;
 import net.dodian.uber.game.persistence.audit.ItemLog;
@@ -606,7 +606,7 @@ public class Npc extends Entity {
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);
-                SkillProgressionService.gainXp(p, maxHealth * 11, Skill.SLAYER);
+                ProgressionService.addXp(p, maxHealth * 11, Skill.SLAYER);
                 SkillingRandomEventService.trigger(p, maxHealth * 11);
                     if(p.getSlayerData().get(3) == 0) { // Finish task!
                         p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
@@ -618,7 +618,7 @@ public class Npc extends Entity {
                         for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
                             if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
                                 bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;
-                                SkillProgressionService.gainXp(p, bonusXp, Skill.SLAYER);
+                                ProgressionService.addXp(p, bonusXp, Skill.SLAYER);
                                 p.send(new SendMessage("<col=FF8C00>You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
                             }
                     }

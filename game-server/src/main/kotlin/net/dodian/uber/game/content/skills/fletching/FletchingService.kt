@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.fletching
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -97,7 +97,7 @@ object FletchingService {
         client.deleteItem(bowLog.logItemId, 1)
         client.addItem(state.productId, 1)
         client.checkItemUpdate()
-        SkillProgressionService.gainXp(client, state.experience, Skill.FLETCHING)
+        ProgressionService.addXp(client, state.experience, Skill.FLETCHING)
         SkillingRandomEventService.trigger(client, state.experience)
         client.fletchingState = state.copy(remaining = state.remaining - 1)
     }

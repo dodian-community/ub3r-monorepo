@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendSideTab
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.RuneCostService
 import net.dodian.utilities.Misc
 
@@ -74,11 +74,11 @@ object SuperheatService {
             net.dodian.utilities.Range(1, 100).value <= recipe.successChancePercent + ((client.getLevel(Skill.SMITHING) + 1) / 4)
         if (success) {
             client.addItem(recipe.barId, 1)
-            SkillProgressionService.gainXp(client, recipe.experience, Skill.SMITHING)
-            SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
+            ProgressionService.addXp(client, recipe.experience, Skill.SMITHING)
+            ProgressionService.addXp(client, MAGIC_XP, Skill.MAGIC)
         } else if (recipe.failureMessage != null) {
             client.sendMessage(recipe.failureMessage)
-            SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
+            ProgressionService.addXp(client, MAGIC_XP, Skill.MAGIC)
         }
         client.checkItemUpdate()
         client.send(SendSideTab(6))
@@ -116,8 +116,8 @@ object SuperheatService {
             }
         }
         client.checkItemUpdate()
-        SkillProgressionService.gainXp(client, count * 40, Skill.CRAFTING)
-        SkillProgressionService.gainXp(client, MAGIC_XP, Skill.MAGIC)
+        ProgressionService.addXp(client, count * 40, Skill.CRAFTING)
+        ProgressionService.addXp(client, MAGIC_XP, Skill.MAGIC)
         client.send(SendSideTab(6))
     }
 

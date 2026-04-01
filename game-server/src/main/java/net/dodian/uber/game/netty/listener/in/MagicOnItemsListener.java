@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.systems.skills.ProgressionService;
 import net.dodian.uber.game.content.skills.core.runtime.RuneCostService;
 import net.dodian.uber.game.content.skills.smithing.SmithingPlugin;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -135,7 +135,7 @@ public class MagicOnItemsListener implements PacketListener {
         client.performAnimation(720, 0);
         client.callGfxMask(115, 100);
         client.send(new SendSideTab(6));
-        SkillProgressionService.gainXp(client, exp, Skill.MAGIC);
+        ProgressionService.addXp(client, exp, Skill.MAGIC);
         return true;
     }
 
@@ -153,7 +153,7 @@ public class MagicOnItemsListener implements PacketListener {
         client.deleteItem(561, 1);
         client.addItem(995, value);
         client.checkItemUpdate();
-        SkillProgressionService.gainXp(client, 600, Skill.MAGIC);
+        ProgressionService.addXp(client, 600, Skill.MAGIC);
         client.performAnimation(713, 0);
         client.callGfxMask(113, 100);
         client.send(new SendSideTab(6));

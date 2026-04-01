@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.skills.fishing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
@@ -100,7 +100,7 @@ object FishingService {
         val random = Misc.random(6)
         val itemId = if (fishIndex == 1 && client.getLevel(Skill.FISHING) >= 30 && random < 3) 331 else spot.fishItemId
         if (spot.featherConsumed) client.deleteItem(314, 1)
-        SkillProgressionService.gainXp(client, if (itemId == 331) spot.experience + 100 else spot.experience, Skill.FISHING)
+        ProgressionService.addXp(client, if (itemId == 331) spot.experience + 100 else spot.experience, Skill.FISHING)
         client.addItem(itemId, 1)
         client.checkItemUpdate()
         ItemLog.playerGathering(client, itemId, 1, client.position.copy(), "Fishing")

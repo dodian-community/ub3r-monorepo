@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.items.combination
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.api.content.ContentActions
@@ -115,7 +115,7 @@ object CraftingItemCombinationHandler {
             client.deleteItem(6667, slot, 1)
             client.addItemSlot(7534, 1, slot)
             client.checkItemUpdate()
-            SkillProgressionService.gainXp(client, 60, Skill.CRAFTING)
+            ProgressionService.addXp(client, 60, Skill.CRAFTING)
             client.sendMessage("You chisel the fishbowl into a helmet.")
             return true
         }

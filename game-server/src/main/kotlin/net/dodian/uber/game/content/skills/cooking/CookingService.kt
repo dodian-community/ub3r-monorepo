@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.SkillingActionService
@@ -70,7 +70,7 @@ object CookingService {
         if (!burn) {
             client.addItem(recipe.cookedItemId, 1)
             client.sendMessage("You cook the ${client.getItemName(itemId)}")
-            SkillProgressionService.gainXp(client, recipe.experience, Skill.COOKING)
+            ProgressionService.addXp(client, recipe.experience, Skill.COOKING)
         } else {
             client.addItem(recipe.burntItemId, 1)
             client.sendMessage("You burn the ${client.getItemName(itemId)}")

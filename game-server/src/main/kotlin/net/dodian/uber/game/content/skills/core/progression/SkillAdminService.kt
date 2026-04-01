@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.command.CommandDbService
+import net.dodian.uber.game.systems.skills.ProgressionService
 
 object SkillAdminService {
     @JvmStatic
@@ -16,7 +17,7 @@ object SkillAdminService {
         if (level != null) {
             SkillProgressionService.apply(client, SkillProgressionRequest.setLevel(skill = skill, amount = level))
         } else if (experience != null) {
-            SkillProgressionService.refresh(client, skill)
+            ProgressionService.refresh(client, skill)
         }
     }
 

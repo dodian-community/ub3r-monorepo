@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.content.skills.thieving.ThievingPlugin
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -71,7 +71,7 @@ object ChestObjects : ObjectContent {
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
             if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                SkillProgressionService.gainXp(client, 300, Skill.THIEVING)
+                ProgressionService.addXp(client, 300, Skill.THIEVING)
             }
             client.checkItemUpdate()
             client.chestEvent++
@@ -117,7 +117,7 @@ object ChestObjects : ObjectContent {
                 ItemLog.playerGathering(client, 995, coins, client.position.copy(), "Thieving")
             }
             if (client.equipment[Equipment.Slot.HEAD.id] == 2631) {
-                SkillProgressionService.gainXp(client, 500, Skill.THIEVING)
+                ProgressionService.addXp(client, 500, Skill.THIEVING)
             }
             client.checkItemUpdate()
             client.chestEvent++

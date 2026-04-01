@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.interfaces.rewards
 
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -26,7 +26,7 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                         client.checkItemUpdate()
                         val level = Skills.getLevelForExperience(client.getExperience(trainedSkill))
                         val experience = 100 * level
-                        SkillProgressionService.gainXp(client, experience, trainedSkill)
+                        ProgressionService.addXp(client, experience, trainedSkill)
                         client.sendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}.")
                     } else {
                         client.sendMessage("Experience for ${trainedSkill.getName()} is disabled until 10th of July!")
@@ -46,7 +46,7 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                     client.checkItemUpdate()
                     val level = Skills.getLevelForExperience(client.getExperience(trainedSkill))
                     val experience = 250 * level
-                    SkillProgressionService.gainXp(client, experience, trainedSkill)
+                    ProgressionService.addXp(client, experience, trainedSkill)
                     client.sendMessage("You rub the lamp and gained $experience experience in ${trainedSkill.getName()}.")
                     return@buttonBinding true
                 }

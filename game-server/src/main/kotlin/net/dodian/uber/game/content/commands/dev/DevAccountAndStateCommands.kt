@@ -15,7 +15,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.command.CommandDbService
 import net.dodian.uber.game.content.skills.core.progression.SkillAdminService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 
 object DevAccountAndStateCommands : CommandContent {
     override fun definitions() =
@@ -179,7 +179,7 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
             val skillType = Skill.getSkill(skill) ?: return true
             if (xp + client.getExperience(skillType) > 200000000 || xp < 1) return true
             SkillAdminService.addXp(client, skillType, xp)
-            SkillProgressionService.refresh(client, skillType)
+            ProgressionService.refresh(client, skillType)
             return true
         }
         command.equals("reset", true) && client.playerRights > 1 -> {

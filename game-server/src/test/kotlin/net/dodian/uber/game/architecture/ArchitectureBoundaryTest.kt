@@ -454,4 +454,39 @@ class ArchitectureBoundaryTest {
             "Hot paths must not access database directly.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `legacy game config package is removed`() {
+        val packageViolations = sourceFiles.mapNotNull { file ->
+            val packageLine = Files.readAllLines(file)
+                .asSequence()
+                .map { it.trim() }
+                .firstOrNull { it.startsWith("package ") }
+                ?: return@mapNotNull null
+            val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
+            if (!packageName.startsWith("net.dodian.uber.game.config")) {
+                return@mapNotNull null
+            }
+            "${file} -> $packageName"
+        }
+
+        val importViolations = sourceFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                if (!trimmed.startsWith("import ")) {
+                    return@mapIndexedNotNull null
+                }
+                if (!trimmed.contains("net.dodian.uber.game.config")) {
+                    return@mapIndexedNotNull null
+                }
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        val violations = packageViolations + importViolations
+        assertTrue(
+            violations.isEmpty(),
+            "Legacy config namespace must not be used.\n${violations.joinToString("\n")}",
+        )
+    }
 }

@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.skills.prayer
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -15,7 +15,7 @@ object PrayerInteractionService {
         val bone = Bones.getBone(itemId) ?: return false
         if (!client.playerHasItem(itemId)) return false
         client.performAnimation(827, 0)
-        SkillProgressionService.gainXp(client, bone.getExperience(), Skill.PRAYER)
+        ProgressionService.addXp(client, bone.getExperience(), Skill.PRAYER)
         client.deleteItem(itemId, itemSlot, 1)
         client.checkItemUpdate()
         client.sendMessage("You bury the ${client.getItemName(itemId).lowercase()}")
@@ -37,7 +37,7 @@ object PrayerInteractionService {
         val extra = (client.getLevel(Skill.FIREMAKING) + 1).toDouble() / 100
         val chance = 2.0 + extra
         val experience = (bone.getExperience() * chance).toInt()
-        SkillProgressionService.gainXp(client, experience, Skill.PRAYER)
+        ProgressionService.addXp(client, experience, Skill.PRAYER)
         client.send(
             SendMessage(
                 "You sacrifice the ${client.getItemName(itemId).lowercase()} and your multiplier was $chance (${(chance * 100).toInt()}%)"

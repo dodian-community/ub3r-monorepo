@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.crafting
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -32,7 +32,7 @@ object CraftingService {
             client.addItem(52, 15)
             client.checkItemUpdate()
             client.performAnimation(1248, 0)
-            SkillProgressionService.gainXp(client, 50, Skill.FLETCHING)
+            ProgressionService.addXp(client, 50, Skill.FLETCHING)
             SkillingRandomEventService.trigger(client, 50)
         } else {
             client.resetAction()
@@ -50,12 +50,12 @@ object CraftingService {
         if (client.playerHasItem(1779)) {
             client.deleteItem(1779, 1)
             client.addItem(1777, 1)
-            SkillProgressionService.gainXp(client, 50, Skill.CRAFTING)
+            ProgressionService.addXp(client, 50, Skill.CRAFTING)
             SkillingRandomEventService.trigger(client, 50)
         } else if (client.playerHasItem(1737)) {
             client.deleteItem(1737, 1)
             client.addItem(1759, 1)
-            SkillProgressionService.gainXp(client, 100, Skill.CRAFTING)
+            ProgressionService.addXp(client, 100, Skill.CRAFTING)
             SkillingRandomEventService.trigger(client, 100)
         } else {
             client.sendMessage("You do not have anything to spin!")
@@ -199,7 +199,7 @@ object CraftingService {
         client.sendMessage("You crafted a ${client.getItemName(state.productId).lowercase()}")
         client.addItem(state.productId, 1)
         client.checkItemUpdate()
-        SkillProgressionService.gainXp(client, state.experience, Skill.CRAFTING)
+        ProgressionService.addXp(client, state.experience, Skill.CRAFTING)
         val updated = state.copy(remaining = state.remaining - 1)
         client.craftingState = updated
         if (updated.remaining < 1) {

@@ -12,7 +12,7 @@ import net.dodian.uber.game.systems.api.content.ContentCoroutines.gameClock
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.npcTaskCoroutine
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.playerTaskCoroutine
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.worldTaskCoroutine
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.events.partyroom.Balloons
@@ -197,7 +197,7 @@ private fun handleDevDebug(context: CommandContext): Boolean {
             for (i in 0 until 7) {
                 if (i != 3 && i != 5) {
                     client.boostedLevel[i] = 0
-                    Skill.getSkill(i)?.let { SkillProgressionService.refresh(client, it) }
+                    Skill.getSkill(i)?.let { ProgressionService.refresh(client, it) }
                 }
             }
         }

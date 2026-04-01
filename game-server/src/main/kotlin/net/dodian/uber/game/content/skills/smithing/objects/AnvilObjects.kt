@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.skills.smithing.objects
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -54,7 +54,7 @@ object AnvilObjects : ObjectContent {
                 client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
                 client.addItemSlot(11284, 1, itemSlot)
                 client.checkItemUpdate()
-                SkillProgressionService.gainXp(client, 15000, Skill.SMITHING)
+                ProgressionService.addXp(client, 15000, Skill.SMITHING)
                 client.sendMessage("Your smithing craft made a Dragonfire shield out of the visage.")
             }
             return true

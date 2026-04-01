@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.requirements.Requirement
 import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
 import net.dodian.uber.game.systems.skills.requirements.ValidationResult
@@ -119,7 +119,7 @@ object WoodcuttingService {
                 player.addItem(activeTree.logItemId, 1)
                 player.checkItemUpdate()
                 ItemLog.playerGathering(player, activeTree.logItemId, 1, position.copy(), "Woodcutting")
-                SkillProgressionService.gainXp(player, activeTree.experience, Skill.WOODCUTTING)
+                ProgressionService.addXp(player, activeTree.experience, Skill.WOODCUTTING)
                 SkillingRandomEventService.trigger(player, activeTree.experience)
                 emitCycleSuccess("Woodcutting")
 

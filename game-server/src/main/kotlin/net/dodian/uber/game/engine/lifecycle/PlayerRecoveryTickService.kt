@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 
 object PlayerRecoveryTickService {
     private const val RECOVERY_EFFECT_TICKS = 25
@@ -50,7 +50,7 @@ object PlayerRecoveryTickService {
             }
 
             if (changed) {
-                SkillProgressionService.refresh(player, skill)
+                ProgressionService.refresh(player, skill)
                 player.markSaveDirty(PlayerSaveSegment.STATS.mask)
             }
         }

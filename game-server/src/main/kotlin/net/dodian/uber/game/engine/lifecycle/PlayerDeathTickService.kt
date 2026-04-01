@@ -16,7 +16,7 @@ import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.combat.CombatCancellationReason
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.events.DeathEvent
 import net.dodian.utilities.Misc
 
@@ -90,7 +90,7 @@ object PlayerDeathTickService {
                 player.boostedLevel[i] = 0
             }
             val skill = Skill.getSkill(i) ?: continue
-            SkillProgressionService.refresh(player, skill)
+            ProgressionService.refresh(player, skill)
         }
 
         if (player.inWildy()) {

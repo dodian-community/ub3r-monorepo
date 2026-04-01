@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.runecrafting
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.runtime.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
@@ -44,7 +44,7 @@ object RunecraftingService {
         client.addItem(request.runeId, crafted)
         client.checkItemUpdate()
         val xp = request.experiencePerEssence * essenceCount
-        SkillProgressionService.gainXp(client, xp, Skill.RUNECRAFTING)
+        ProgressionService.addXp(client, xp, Skill.RUNECRAFTING)
         SkillingRandomEventService.trigger(client, xp)
         client.runecraftingState = RunecraftingState(lastAltarCraftAtMillis = System.currentTimeMillis())
         return true

@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.core.progression.SkillReadService
 
 object PotionItems : ItemContent {
@@ -79,7 +79,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.performAnimation(1327, 0)
                 client.boost(5 + (levelFor(client, Skill.DEFENCE) * 0.15).toInt(), Skill.DEFENCE)
-                SkillProgressionService.refresh(client, Skill.DEFENCE)
+                ProgressionService.refresh(client, Skill.DEFENCE)
                 nextId = nextDose(itemId)
                 client.sendMessage(if (nextId == 229) "You empty the super defense potion." else "You drink the super defense potion.")
             }
@@ -96,7 +96,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.performAnimation(1327, 0)
                 client.pray(8 + (client.maxPrayer * 0.25).toInt())
-                SkillProgressionService.refresh(client, Skill.PRAYER)
+                ProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
                 client.sendMessage(if (nextId == 229) "You empty the prayer potion." else "You drink the prayer potion.")
             }
@@ -105,7 +105,7 @@ object PotionItems : ItemContent {
                 if (blockedByDeathOrDuel) return true
                 client.performAnimation(1327, 0)
                 client.pray(10 + (client.maxPrayer * 0.28).toInt())
-                SkillProgressionService.refresh(client, Skill.PRAYER)
+                ProgressionService.refresh(client, Skill.PRAYER)
                 nextId = nextDose(itemId)
                 client.sendMessage(if (nextId == 229) "You empty the restore potion." else "You drink the restore potion.")
             }

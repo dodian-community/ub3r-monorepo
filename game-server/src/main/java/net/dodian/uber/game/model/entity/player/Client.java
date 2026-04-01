@@ -77,7 +77,7 @@ import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.utilities.*;
-import net.dodian.uber.game.content.skills.core.progression.SkillProgressionService;
+import net.dodian.uber.game.systems.skills.ProgressionService;
 
 import java.io.IOException;
 import java.util.*;
@@ -248,7 +248,7 @@ public class Client extends Player implements Runnable {
      */
     @Deprecated
     public void refreshSkill(Skill skill) {
-        SkillProgressionService.refresh(this, skill);
+        ProgressionService.refresh(this, skill);
     }
 
     public void sendCachedString(String text, int lineId) {
@@ -983,7 +983,7 @@ public class Client extends Player implements Runnable {
 
     @Deprecated
     public void setSkillLevel(Skill skill, int currentLevel, int XP) {
-        SkillProgressionService.setSkillLevel(this, skill, currentLevel, XP);
+        ProgressionService.setSkillLevel(this, skill, currentLevel, XP);
     }
 
 
@@ -1217,7 +1217,7 @@ public class Client extends Player implements Runnable {
 
     @Deprecated
     public boolean giveExperience(int amount, Skill skill) {
-        return SkillProgressionService.gainXp(this, amount, skill);
+        return ProgressionService.addXp(this, amount, skill);
     }
 
     public void bankItem(int itemID, int fromSlot, int amount) {
@@ -3755,7 +3755,7 @@ public class Client extends Player implements Runnable {
         GetBonus(true); //Set bonus due to blessing!
         for (int i = 0; i < boostedLevel.length; i++) {
             boostedLevel[i] = 0;
-            SkillProgressionService.refresh(this, Skill.getSkill(i));
+            ProgressionService.refresh(this, Skill.getSkill(i));
         }
         Client other = getClient(duel_with);
         for (GameItem item : other.offeredItems) {
@@ -4421,7 +4421,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You must hand in at least 10 tickets at once"));
         } else {
             int amount = playerItemsN[slot];
-            SkillProgressionService.gainXp(this, amount * 700, Skill.AGILITY);
+            ProgressionService.addXp(this, amount * 700, Skill.AGILITY);
             send(new SendMessage("You exchange your " + amount + " agility tickets"));
             deleteItem(2996, playerItemsN[slot]);
             checkItemUpdate();
