@@ -59,7 +59,6 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.content.events.partyroom.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;

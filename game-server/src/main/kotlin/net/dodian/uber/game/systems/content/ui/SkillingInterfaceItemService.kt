@@ -21,7 +21,7 @@ object SkillingInterfaceItemService {
                 true
             }
             interfaceId in 1119..1123 -> {
-                Smithing.startSmithing(client, itemId, amount)
+                SmithingInterface.startSmithingFromInterfaceSelection(client, interfaceId, itemId, slot, amount)
                 true
             }
             interfaceId in 4233..4257 -> {

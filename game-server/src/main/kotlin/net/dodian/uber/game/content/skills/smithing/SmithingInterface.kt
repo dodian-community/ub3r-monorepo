@@ -7,8 +7,10 @@ import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SetSmithing
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
+import org.slf4j.LoggerFactory
 
 object SmithingInterface {
+    private val logger = LoggerFactory.getLogger(SmithingInterface::class.java)
     private val frameIds = intArrayOf(1119, 1120, 1121, 1122, 1123)
     private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
     private val furnaceFrameIds = SmithingData.frameIds()
@@ -93,30 +95,64 @@ object SmithingInterface {
     fun canSmithProduct(itemId: Int): Boolean = SmithingData.findTierForProduct(itemId) != null
 
     @JvmStatic
-    fun startSmithingFromInterfaceItem(client: Client, itemId: Int, amount: Int): Boolean {
+    fun startSmithingFromInterfaceSelection(
+        client: Client,
+        interfaceId: Int,
+        itemId: Int,
+        slot: Int,
+        amount: Int,
+    ): Boolean {
         val selection = client.getActiveSmithingSelection()
-        if (selection == null) {
-            client.sendMessage("Illigal Smithing !")
+        var tier = selection?.let { SmithingData.findSmithingTierByTypeId(it.tierId) }
+        var product = tier?.let { resolveProductFromInterface(it, interfaceId, itemId, slot) }
+        if (tier == null || product == null) {
+            val fallback = resolveAcrossTiers(interfaceId, itemId, slot)
+            if (fallback != null) {
+                tier = fallback.tier
+                product = fallback.product
+            }
+        }
+        val anchorX = client.interactionAnchorX
+        val anchorY = client.interactionAnchorY
+        val hasAnchor = anchorX >= 0 && anchorY >= 0
+        if (client.playerRights >= 2 || client.debug) {
+            logger.info(
+                "smithing-select iface={} item={} slot={} selectedTier={} resolvedTier={} resolved={} anchor=({}, {})",
+                interfaceId,
+                itemId,
+                slot,
+                selection?.tierId ?: "null",
+                tier?.typeId ?: "null",
+                product?.itemId ?: "null",
+                anchorX,
+                anchorY,
+            )
+        }
+        if (tier == null || product == null || (selection == null && !hasAnchor)) {
+            client.sendMessage("Illegal smithing!")
             return true
         }
-        val tier = SmithingData.findSmithingTierByTypeId(selection.tierId)
-        val product = tier?.products?.firstOrNull { it.itemId == itemId }
-        if (tier == null || product == null) {
-            client.sendMessage("Illigal Smithing !")
-            return true
+        val anvilX = selection?.anvilX ?: anchorX
+        val anvilY = selection?.anvilY ?: anchorY
+        if (selection == null || selection.tierId != tier.typeId || selection.anvilX != anvilX || selection.anvilY != anvilY) {
+            client.setActiveSmithingSelection(ActiveSmithingSelection(tier.typeId, tier.barId, anvilX, anvilY))
         }
         val request = SmithingRequest(
             tierId = tier.typeId,
             product = product,
             amount = amount.coerceAtLeast(1),
             barId = tier.barId,
-            anvilX = selection.anvilX,
-            anvilY = selection.anvilY,
+            anvilX = anvilX,
+            anvilY = anvilY,
         )
         client.send(RemoveInterfaces())
         net.dodian.uber.game.systems.action.SmithingActionService.startSmithing(client, request)
         return true
     }
+
+    @JvmStatic
+    fun startSmithingFromInterfaceItem(client: Client, itemId: Int, amount: Int): Boolean =
+        startSmithingFromInterfaceSelection(client, client.activeInterfaceId, itemId, -1, amount)
 
     @JvmStatic
     fun firstBarInInventory(client: Client): Int = possibleBars.firstOrNull(client::contains) ?: -1
@@ -126,6 +162,59 @@ object SmithingInterface {
         client.clearActiveSmithingSelection()
         client.IsAnvil = false
     }
+
+    private fun resolveProductFromInterface(
+        tier: SmithingTier,
+        interfaceId: Int,
+        itemId: Int,
+        slot: Int,
+    ): SmithingProduct? {
+        tier.products.firstOrNull { it.itemId == itemId }?.let { return it }
+        if (itemId > 0) {
+            tier.products.firstOrNull { it.itemId == itemId + 1 }?.let { return it }
+        }
+        if (itemId > 0) {
+            tier.products.firstOrNull { it.itemId == itemId - 1 }?.let { return it }
+        }
+        if (slot >= 0) {
+            tier.products.getOrNull(slot)?.let { return it }
+            if (slot > 0) {
+                tier.products.getOrNull(slot - 1)?.let { return it }
+            }
+        }
+        if (interfaceId in frameIds && slot >= 0) {
+            val displayItems = SmithingData.displayItemsForFrame(tier, interfaceId)
+            val fallbackItemIds = listOfNotNull(
+                displayItems.getOrNull(slot)?.itemId,
+                if (slot > 0) displayItems.getOrNull(slot - 1)?.itemId else null,
+            )
+            for (fallbackItemId in fallbackItemIds) {
+                if (fallbackItemId > 0) {
+                    tier.products.firstOrNull { it.itemId == fallbackItemId }?.let { return it }
+                }
+            }
+        }
+        return null
+    }
+
+    private fun resolveAcrossTiers(
+        interfaceId: Int,
+        itemId: Int,
+        slot: Int,
+    ): ResolvedSmithingSelection? {
+        for (candidateTier in SmithingData.smithingTiers) {
+            val resolvedProduct = resolveProductFromInterface(candidateTier, interfaceId, itemId, slot)
+            if (resolvedProduct != null) {
+                return ResolvedSmithingSelection(candidateTier, resolvedProduct)
+            }
+        }
+        return null
+    }
+
+    private data class ResolvedSmithingSelection(
+        val tier: SmithingTier,
+        val product: SmithingProduct,
+    )
 
     private fun startSmelting(client: Client, request: SmeltingRequest): Boolean {
         if (client.getLevel(Skill.SMITHING) < request.recipe.levelRequired) {

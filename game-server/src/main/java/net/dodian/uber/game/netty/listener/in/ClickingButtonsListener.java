@@ -63,7 +63,8 @@ public class ClickingButtonsListener implements PacketListener {
             client.actionButtonId = actionButton;
         }
         boolean preserveSmeltingSelection = client.activeInterfaceId == 2400 && SmithingData.isSmeltingInterfaceButton(actionButton);
-        if (!preserveSmeltingSelection && actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
+        boolean preserveSmithingSelection = client.activeInterfaceId >= 1119 && client.activeInterfaceId <= 1123;
+        if (!preserveSmeltingSelection && !preserveSmithingSelection && actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
             client.resetAction(false);
         }
 
