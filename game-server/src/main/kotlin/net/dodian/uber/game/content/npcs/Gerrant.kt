@@ -5,7 +5,7 @@ package net.dodian.uber.game.content.npcs
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Gerrant {
+internal object Gerrant : NpcModule {
     // Stats: 1027: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -14,6 +14,13 @@ internal object Gerrant {
         NpcSpawnDef(npcId = 1027, x = 2597, y = 3401, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Gerrant",
+        entries = entries,
+        onSecondClick = ::onSecondClick,
+    )
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {

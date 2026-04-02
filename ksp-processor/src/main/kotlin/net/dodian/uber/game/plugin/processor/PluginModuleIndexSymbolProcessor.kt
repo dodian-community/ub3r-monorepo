@@ -98,28 +98,11 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverNpcModules(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val excludedNames =
-            setOf(
-                "BankerGenerated",
-                "NpcClickMetrics",
-                "NpcContent",
-                "NpcContentDispatcher",
-                "NpcContentRegistry",
-                "NpcDataPreset",
-                "NpcDialogueDsl",
-                "NpcInteractionActionService",
-                "NpcJsonSpawnOverlayLoader",
-                "NpcModuleDefinitionBuilder",
-                "NpcPluginDsl",
-                "NpcPluginModels",
-                "NpcSpawnDef",
-                "SpawnGroups",
-            )
-
+        val npcModuleType = "net.dodian.uber.game.content.npcs.NpcModule"
         return allObjects
             .filter { (file, declaration) ->
                 file.packageName.asString().startsWith("net.dodian.uber.game.content.npcs") &&
-                    declaration.simpleName.asString() !in excludedNames
+                    declaration.implementsInterface(npcModuleType)
             }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
@@ -186,7 +169,6 @@ class PluginModuleIndexSymbolProcessor(
         out.appendLine("import net.dodian.uber.game.systems.content.commands.CommandContent")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
-        out.appendLine("import net.dodian.uber.game.content.npcs.NpcModuleDefinitionBuilder")
         out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
         out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
         out.appendLine()
@@ -242,7 +224,7 @@ class PluginModuleIndexSymbolProcessor(
         if (npcModules.isNotEmpty()) {
             npcModules.forEachIndexed { index, symbol ->
                 val suffix = if (index == npcModules.lastIndex) "" else ","
-                out.appendLine("        NpcModuleDefinitionBuilder.fromModule(module = ${symbol.fqcn}, explicitName = \"\", ownsSpawnDefinitions = false)$suffix")
+                out.appendLine("        ${symbol.fqcn}.definition$suffix")
             }
         }
         out.appendLine("    )")

@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.skills.agility.AgilityPlugin
 
-internal object RugMerchant {
+internal object RugMerchant : NpcModule {
     // Stats: 17: r=60 a=0 d=0 s=0 hp=18 rg=0 mg=0; 22: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 20: r=10 a=0 d=0 s=0 hp=99 rg=0 mg=0; 19: r=60 a=0 d=0 s=0 hp=52 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -18,6 +18,14 @@ internal object RugMerchant {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "RugMerchant",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

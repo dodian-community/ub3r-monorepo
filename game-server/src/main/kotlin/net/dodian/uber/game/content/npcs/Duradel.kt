@@ -12,7 +12,7 @@ import net.dodian.uber.game.content.skills.slayer.SlayerPlugin
 import net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition
 import net.dodian.utilities.Misc
 
-internal object Duradel {
+internal object Duradel : NpcModule {
     // Stats: 405: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -20,6 +20,15 @@ internal object Duradel {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Duradel",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+        onThirdClick = ::onThirdClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         SlayerMasterDialogue.startIntro(client, npc.id)

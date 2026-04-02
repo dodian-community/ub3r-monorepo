@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import java.util.Date
 
-internal object Cow {
+internal object Cow : NpcModule {
     // Stats: 2805: r=30 a=1 d=1 s=1 hp=8 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -18,6 +18,13 @@ internal object Cow {
         NpcSpawnDef(npcId = 2805, x = 2605, y = 3116, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Cow",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         val canClaim = Date().before(Date("06/1/2024")) && !client.checkItem(7927)

@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
 
-internal object Aubury {
+internal object Aubury : NpcModule {
     // Stats: 637: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> =
@@ -12,7 +12,7 @@ internal object Aubury {
             point(3253, 3402),
         )
     val npcIds: IntArray = npcIdsFromEntries(entries)
-    val definition =
+    override val definition =
         npcPlugin("Aubury") {
             ids(*npcIds)
             spawns(entries)
@@ -48,5 +48,5 @@ internal object Aubury {
                     }
                 }
             }
-        }
+        }.toContentDefinition("Aubury", false)
 }

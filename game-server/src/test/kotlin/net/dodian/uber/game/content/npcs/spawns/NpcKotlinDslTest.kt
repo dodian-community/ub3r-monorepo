@@ -46,7 +46,7 @@ class NpcKotlinDslTest {
 
     @Test
     fun `aubury module owns slots one through three only`() {
-        val labels = Aubury.definition.toContentDefinition("", false).optionLabels
+        val labels = Aubury.definition.optionLabels
         assertEquals("talk-to", labels[1])
         assertEquals("trade", labels[2])
         assertEquals("teleport", labels[3])
@@ -55,8 +55,8 @@ class NpcKotlinDslTest {
 
     @Test
     fun `banker and shopkeeper expose second-click handlers`() {
-        val banker = Banker.definition.toContentDefinition("", false)
-        val shopKeeper = ShopKeeper.definition.toContentDefinition("", false)
+        val banker = Banker.definition
+        val shopKeeper = ShopKeeper.definition
         assertTrue(banker.onSecondClick !== NO_CLICK_HANDLER)
         assertTrue(shopKeeper.onSecondClick !== NO_CLICK_HANDLER)
     }
@@ -106,8 +106,8 @@ class NpcKotlinDslTest {
 
     @Test
     fun `banker and shopkeeper use rsps alias slot labels with no slot four`() {
-        val bankerLabels = Banker.definition.toContentDefinition("", false).optionLabels
-        val shopKeeperLabels = ShopKeeper.definition.toContentDefinition("", false).optionLabels
+        val bankerLabels = Banker.definition.optionLabels
+        val shopKeeperLabels = ShopKeeper.definition.optionLabels
 
         assertEquals("talk-to", bankerLabels[1])
         assertEquals("bank", bankerLabels[2])

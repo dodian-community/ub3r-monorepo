@@ -8,7 +8,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
 import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 
-internal object TzhaarMejJal {
+internal object TzhaarMejJal : NpcModule {
     // Stats: 2180: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -16,6 +16,14 @@ internal object TzhaarMejJal {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "TzhaarMejJal",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

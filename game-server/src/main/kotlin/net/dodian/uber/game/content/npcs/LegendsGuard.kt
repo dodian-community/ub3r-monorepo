@@ -5,7 +5,7 @@ package net.dodian.uber.game.content.npcs
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object LegendsGuard {
+internal object LegendsGuard : NpcModule {
     // Stats: 3951: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -13,6 +13,13 @@ internal object LegendsGuard {
         NpcSpawnDef(npcId = 3951, x = 2730, y = 3349, z = 0, face = SOUTH),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "LegendsGuard",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

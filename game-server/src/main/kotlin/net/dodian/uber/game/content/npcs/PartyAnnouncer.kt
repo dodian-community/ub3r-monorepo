@@ -6,13 +6,20 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
-internal object PartyAnnouncer {
+internal object PartyAnnouncer : NpcModule {
     // Stats: 5792: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 5792, x = 3090, y = 3492, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "PartyAnnouncer",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

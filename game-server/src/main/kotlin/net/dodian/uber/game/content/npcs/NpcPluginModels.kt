@@ -62,7 +62,7 @@ object NpcPluginStateStore {
     }
 }
 
-internal fun NpcPluginDefinition.toContentDefinition(
+fun NpcPluginDefinition.toContentDefinition(
     explicitName: String,
     ownsSpawnDefinitionsFlag: Boolean,
 ): NpcContentDefinition {

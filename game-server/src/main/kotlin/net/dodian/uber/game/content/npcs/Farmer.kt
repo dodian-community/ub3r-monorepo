@@ -6,13 +6,20 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.skills.thieving.ThievingPlugin
 
-internal object Farmer {
+internal object Farmer : NpcModule {
     // Stats: 3086: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 3086, x = 2590, y = 3102, z = 0, face = 4),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Farmer",
+        entries = entries,
+        onSecondClick = ::onSecondClick,
+    )
 
     @Suppress("UNUSED_PARAMETER")
     fun onSecondClick(client: Client, npc: Npc): Boolean {

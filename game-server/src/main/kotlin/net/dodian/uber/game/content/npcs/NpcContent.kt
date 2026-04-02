@@ -8,7 +8,10 @@ internal val NO_CLICK_HANDLER: NpcClickHandler = { _, _ -> false }
 
 enum class NpcInteractionSource {
     DSL,
-    LEGACY_REFLECTION,
+}
+
+interface NpcModule {
+    val definition: NpcContentDefinition
 }
 
 fun npcIds(vararg ids: Int): IntArray = ids.distinct().toIntArray()

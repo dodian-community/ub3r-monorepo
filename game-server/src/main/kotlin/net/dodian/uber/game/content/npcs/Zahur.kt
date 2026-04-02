@@ -11,7 +11,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
 
-internal object Zahur {
+internal object Zahur : NpcModule {
     // Stats: 4753: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -19,6 +19,16 @@ internal object Zahur {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Zahur",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+        onThirdClick = ::onThirdClick,
+        onFourthClick = ::onFourthClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

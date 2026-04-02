@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 object NpcContentRegistry : ContentBootstrap {
     override val id: String = "npcs.registry"
     private val logger = LoggerFactory.getLogger(NpcContentRegistry::class.java)
-    private val strictDslHandlers = readFlag("npc.content.requireDslHandlers", false)
 
     private val bootstrapped = AtomicBoolean(false)
     @Volatile
@@ -39,14 +38,6 @@ object NpcContentRegistry : ContentBootstrap {
                 interactiveModules,
                 interactiveIds,
             )
-            val legacyModules = definitions.filter { it.hasInteractionHandlers() && it.interactionSource == NpcInteractionSource.LEGACY_REFLECTION }
-            if (legacyModules.isNotEmpty()) {
-                logger.warn(
-                    "Legacy reflection NPC modules still active ({}): {}",
-                    legacyModules.size,
-                    legacyModules.joinToString(",") { it.name },
-                )
-            }
             emitCapabilityReport()
             emitSpawnDiagnostics()
         }
@@ -73,8 +64,8 @@ object NpcContentRegistry : ContentBootstrap {
         require(!content.hasInteractionHandlers() || content.npcIds.isNotEmpty()) {
             "NpcContent ${content.name} has click handlers but no declared npcIds."
         }
-        if (strictDslHandlers && content.hasInteractionHandlers() && content.interactionSource == NpcInteractionSource.LEGACY_REFLECTION) {
-            error("NpcContent ${content.name} must use DSL option bindings (definition/plugin) for interactive handlers.")
+        if (content.interactionSource != NpcInteractionSource.DSL) {
+            error("NpcContent ${content.name} must use DSL option bindings (definition/plugin).")
         }
 
         if (content.ownsSpawnDefinitions && content.entries.isEmpty()) {
@@ -183,30 +174,27 @@ object NpcContentRegistry : ContentBootstrap {
             for (npcId in definition.npcIds) {
                 if (npcId < 0) continue
                 val existing = rebuilt[npcId]
-                if (existing != null && existing !== definition) {
-                    logger.error(
-                        "Duplicate NpcContentDefinition for npcId={} (existing={}, new={})",
-                        npcId,
-                        existing.name,
-                        definition.name,
-                    )
-                } else {
+                if (existing == null || existing === definition) {
                     rebuilt[npcId] = definition
+                    continue
                 }
+
+                val existingInteractive = existing.hasInteractionHandlers()
+                val incomingInteractive = definition.hasInteractionHandlers()
+
+                if (!existingInteractive && incomingInteractive) {
+                    rebuilt[npcId] = definition
+                    continue
+                }
+
+                if (existingInteractive != incomingInteractive) {
+                    continue
+                }
+
+                error("Duplicate NpcContentDefinition for npcId=$npcId (existing=${existing.name}, new=${definition.name})")
             }
         }
         byNpcId = rebuilt
     }
 
-    private fun readFlag(property: String, defaultValue: Boolean): Boolean {
-        val prop = System.getProperty(property)?.trim()
-        if (!prop.isNullOrEmpty()) {
-            return prop.equals("true", ignoreCase = true)
-        }
-        val env = System.getenv(property.uppercase().replace('.', '_'))?.trim()
-        if (!env.isNullOrEmpty()) {
-            return env.equals("true", ignoreCase = true)
-        }
-        return defaultValue
-    }
 }

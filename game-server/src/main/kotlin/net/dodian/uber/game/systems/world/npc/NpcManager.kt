@@ -1,13 +1,13 @@
 package net.dodian.uber.game.systems.world.npc
 
 import java.util.TreeMap
-import net.dodian.uber.game.systems.content.npcs.NpcContentRegistry
 import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.world.npc.NpcDataRepository
+import net.dodian.uber.game.systems.content.npcs.NpcContentRegistry
 import org.slf4j.LoggerFactory
 
 class NpcManager {
@@ -24,12 +24,11 @@ class NpcManager {
     fun getNpcData(): Collection<NpcData> = data.values
 
     fun loadSpawns() {
-        logger.info("Loading NPC spawns from content registry only")
+        logger.info("Loading NPC spawns from content registry modules")
         val contentSpawns = NpcContentRegistry.allSpawns()
         ensureDefinitionsForSpawnNpcIds(contentSpawns)
-        validateRequiredContentSpawns(contentSpawns)
         val loaded = loadContentSpawns(contentSpawns)
-        logger.info("Loaded {} content NPC spawns.", loaded)
+        logger.info("Loaded {} content NPC spawns from modules.", loaded)
     }
 
     private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
@@ -51,18 +50,18 @@ class NpcManager {
                     stillMissing += npcId
                 }
             } catch (e: Exception) {
-                logger.error("Failed to backfill missing NPC definition for spawn npcId={}", npcId, e)
+                logger.error("Failed to upsert missing NPC definition for spawn npcId={}", npcId, e)
                 stillMissing += npcId
             }
         }
 
         logger.warn(
-            "Backfilled {} missing NPC definitions required by content spawns ({} requested).",
+            "Auto-upserted {} missing NPC definitions for content spawns ({} requested).",
             inserted,
             missingIds.size,
         )
         if (stillMissing.isNotEmpty()) {
-            logger.warn("NPC definitions still missing after backfill attempt: {}", stillMissing.joinToString(","))
+            logger.error("NPC definitions still missing after auto-upsert attempt: {}", stillMissing.joinToString(","))
         }
     }
 
@@ -70,6 +69,7 @@ class NpcManager {
         val total = contentSpawns.size
         var loaded = 0
         var skipped = 0
+        var skippedInactive = 0
         var skippedDuplicatePosition = 0
         var skippedMissingData = 0
         var failed = 0
@@ -79,6 +79,11 @@ class NpcManager {
 
         for (spawn in contentSpawns) {
             try {
+                if (!spawn.live) {
+                    skipped++
+                    skippedInactive++
+                    continue
+                }
                 if (getData(spawn.npcId) == null) {
                     skipped++
                     skippedMissingData++
@@ -107,7 +112,7 @@ class NpcManager {
                     spawn.magic,
                 )
                 npc.applySpawnBehaviorOverrides(
-                    spawn.walkRadius,
+                    effectiveWalkRadius(spawn),
                     spawn.attackRange,
                     spawn.alwaysActive,
                     spawn.condition,
@@ -135,10 +140,11 @@ class NpcManager {
         }
 
         logger.info(
-            "Loaded {}/{} content NPC spawns (skipped {}, duplicate {}, missing-data {}, failed {}).",
+            "Loaded {}/{} content NPC spawns (skipped {}, inactive {}, duplicate {}, missing-data {}, failed {}).",
             loaded,
             total,
             skipped,
+            skippedInactive,
             skippedDuplicatePosition,
             skippedMissingData,
             failed,
@@ -146,22 +152,12 @@ class NpcManager {
         return loaded
     }
 
-    private fun validateRequiredContentSpawns(contentSpawns: List<NpcSpawnDef>) {
-        val missingDefinitions = REQUIRED_CONTENT_NPC_DEFINITIONS.filter { getData(it) == null }.sorted()
-        if (missingDefinitions.isNotEmpty()) {
-            throw IllegalStateException("Missing required NPC definitions for content spawns: $missingDefinitions")
+    private fun effectiveWalkRadius(spawn: NpcSpawnDef): Int {
+        if (spawn.walkRadius > 0) {
+            return spawn.walkRadius
         }
-
-        val available = HashSet<SpawnKey>(contentSpawns.size)
-        for (spawn in contentSpawns) {
-            available += SpawnKey(spawn.npcId, spawn.x, spawn.y, spawn.z)
-        }
-        val missingSpawns = REQUIRED_CONTENT_SPAWNS.filterNot { it in available }
-        if (missingSpawns.isNotEmpty()) {
-            throw IllegalStateException(
-                "Missing required content NPC spawns: ${missingSpawns.joinToString { "${it.npcId}@(${it.x},${it.y},${it.z})" }}",
-            )
-        }
+        val radial = maxOf(kotlin.math.abs(spawn.rx), kotlin.math.abs(spawn.ry), kotlin.math.abs(spawn.rx2), kotlin.math.abs(spawn.ry2))
+        return maxOf(0, radial)
     }
 
     private fun formatMissingNpcCounts(
@@ -329,31 +325,7 @@ class NpcManager {
 
     fun getData(id: Int): NpcData? = data[id]
 
-    private data class SpawnKey(
-        val npcId: Int,
-        val x: Int,
-        val y: Int,
-        val z: Int,
-    )
-
     companion object {
         private val logger = LoggerFactory.getLogger(NpcManager::class.java)
-        private val REQUIRED_CONTENT_NPC_DEFINITIONS = setOf(6080, 5924, 5926, 5927, 2267, 2265)
-        private val REQUIRED_CONTENT_SPAWNS = setOf(
-            SpawnKey(6080, 2475, 3428, 0),
-            SpawnKey(6080, 2476, 3423, 1),
-            SpawnKey(6080, 2475, 3419, 2),
-            SpawnKey(6080, 2485, 3421, 2),
-            SpawnKey(6080, 2487, 3423, 0),
-            SpawnKey(6080, 2486, 3430, 0),
-            SpawnKey(5924, 3540, 9873, 0),
-            SpawnKey(5926, 3540, 9890, 0),
-            SpawnKey(5926, 3537, 9903, 0),
-            SpawnKey(5926, 3533, 9908, 0),
-            SpawnKey(5926, 3528, 9913, 0),
-            SpawnKey(5927, 3527, 9865, 0),
-            SpawnKey(2267, 3248, 2794, 0),
-            SpawnKey(2265, 3251, 2794, 0),
-        )
     }
 }

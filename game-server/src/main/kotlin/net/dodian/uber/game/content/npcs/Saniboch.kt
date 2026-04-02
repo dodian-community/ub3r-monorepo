@@ -6,7 +6,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Saniboch {
+internal object Saniboch : NpcModule {
     // Stats: 2345: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -14,6 +14,14 @@ internal object Saniboch {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Saniboch",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

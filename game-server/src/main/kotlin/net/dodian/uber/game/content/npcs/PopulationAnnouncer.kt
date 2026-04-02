@@ -7,13 +7,20 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
-internal object PopulationAnnouncer {
+internal object PopulationAnnouncer : NpcModule {
     // Stats: 3306: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
         NpcSpawnDef(npcId = 3306, x = 3086, y = 3506, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "PopulationAnnouncer",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {

@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 
-internal object PiratePete {
+internal object PiratePete : NpcModule {
     // Stats: 2825: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -15,6 +15,13 @@ internal object PiratePete {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "PiratePete",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         DialogueService.start(client) {

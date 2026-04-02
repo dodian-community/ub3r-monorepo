@@ -121,4 +121,5 @@ object NpcDataRepository {
                         }
                 }
         }
+
 }

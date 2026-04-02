@@ -5,7 +5,7 @@ package net.dodian.uber.game.content.npcs
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Zogre {
+internal object Zogre : NpcModule {
     // Stats: 867: r=60 a=0 d=0 s=0 hp=50 rg=0 mg=0; 2053: r=60 a=0 d=0 s=0 hp=72 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -20,6 +20,13 @@ internal object Zogre {
         NpcSpawnDef(npcId = 2053, x = 2652, y = 3294, z = 0, face = 0),
     )
     val npcIds: IntArray = npcIds(2053)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "Zogre",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         if (npc.id != 2053) {

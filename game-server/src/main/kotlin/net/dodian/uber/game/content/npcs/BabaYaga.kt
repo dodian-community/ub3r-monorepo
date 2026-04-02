@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 
-internal object BabaYaga {
+internal object BabaYaga : NpcModule {
     // Stats: 3837: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -16,6 +16,14 @@ internal object BabaYaga {
     )
 
     val npcIds: IntArray = npcIdsFromEntries(entries)
+
+
+    override val definition = legacyNpcDefinition(
+        name = "BabaYaga",
+        entries = entries,
+        onFirstClick = ::onFirstClick,
+        onSecondClick = ::onSecondClick,
+    )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         val staffCounting = if (client.dailyReward.isEmpty()) 0 else Integer.parseInt(client.dailyReward[2])
