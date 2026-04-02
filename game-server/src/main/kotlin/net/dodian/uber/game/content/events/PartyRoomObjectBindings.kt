@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.events
+package net.dodian.uber.game.content.events
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent

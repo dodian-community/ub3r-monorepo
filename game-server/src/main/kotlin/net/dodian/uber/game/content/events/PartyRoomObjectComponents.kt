@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.events
+package net.dodian.uber.game.content.events
 
 object PartyRoomObjectComponents {
     val balloonObjects = intArrayOf(115, 116, 117, 118, 119, 120, 121, 122)

@@ -60,6 +60,42 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `content infrastructure registries and dispatchers live in systems layer`() {
+        val forbiddenContentFiles = setOf(
+            "src/main/kotlin/net/dodian/uber/game/content/items/ItemContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/items/ItemDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcContentDispatcher.kt",
+        )
+        val missingSystemsFiles = setOf(
+            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcContentDispatcher.kt",
+        )
+
+        val forbidden = sourceFiles
+            .map { it.invariantSeparatorsPathString }
+            .filter { path -> forbiddenContentFiles.any { path.endsWith(it) } }
+
+        val existing = sourceFiles
+            .map { it.invariantSeparatorsPathString }
+            .toSet()
+        val missing = missingSystemsFiles.filterNot { expected ->
+            existing.any { it.endsWith(expected) }
+        }
+
+        assertTrue(
+            forbidden.isEmpty(),
+            "Infrastructure registries/dispatchers must not live in content layer.\n${forbidden.joinToString("\n")}",
+        )
+        assertTrue(
+            missing.isEmpty(),
+            "Expected infrastructure under systems.content.\n${missing.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `content layer depth is capped during migration`() {
         val contentRoot = sourceRoot.resolve("kotlin/net/dodian/uber/game/content")
         val violations = sourceFiles

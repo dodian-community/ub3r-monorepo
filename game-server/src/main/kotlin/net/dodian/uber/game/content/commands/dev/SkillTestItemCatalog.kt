@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.commands.dev
+package net.dodian.uber.game.content.commands
 
 import java.util.LinkedHashSet
 import net.dodian.uber.game.content.skills.cooking.CookingDefinitions

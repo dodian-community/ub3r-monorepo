@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.dsl
+package net.dodian.uber.game.systems.interaction
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent

@@ -1,6 +1,13 @@
-package net.dodian.uber.game.content.npcs
+package net.dodian.uber.game.systems.content.npcs
 
 import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.content.npcs.NO_CLICK_HANDLER
+import net.dodian.uber.game.content.npcs.NpcContentDefinition
+import net.dodian.uber.game.content.npcs.NpcInteractionSource
+import net.dodian.uber.game.content.npcs.NpcJsonSpawnOverlayLoader
+import net.dodian.uber.game.content.npcs.NpcSpawnDef
+import net.dodian.uber.game.content.npcs.hasInteractionHandlers
+import net.dodian.uber.game.content.npcs.optionLabel
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

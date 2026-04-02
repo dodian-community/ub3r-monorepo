@@ -1,6 +1,7 @@
-package net.dodian.uber.game.content.items
+package net.dodian.uber.game.systems.content.items
 
 import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.content.items.ItemContent
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean

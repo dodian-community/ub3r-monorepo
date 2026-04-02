@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.commands.dev
+package net.dodian.uber.game.content.commands
 
 import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.content.commands.CommandContent

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.commands.dev
+package net.dodian.uber.game.content.commands
 
 import java.text.DecimalFormat
 import net.dodian.uber.game.Server

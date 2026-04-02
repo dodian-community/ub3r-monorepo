@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.banking
+package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent

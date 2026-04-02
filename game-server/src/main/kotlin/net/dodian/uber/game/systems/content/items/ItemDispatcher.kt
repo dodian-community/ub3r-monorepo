@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.items
+package net.dodian.uber.game.systems.content.items
 
 import net.dodian.uber.game.model.entity.player.Client
 import org.slf4j.LoggerFactory
@@ -29,4 +29,3 @@ object ItemDispatcher {
         }
     }
 }
-

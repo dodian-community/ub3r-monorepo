@@ -1,10 +1,10 @@
-package net.dodian.uber.game.content.objects.dsl
+package net.dodian.uber.game.systems.interaction
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.content.objects.travel.VerticalTravel
-import net.dodian.uber.game.content.objects.travel.VerticalTravelStyle
-import net.dodian.uber.game.content.objects.travel.VerticalTravelStyles
+import net.dodian.uber.game.content.objects.VerticalTravel
+import net.dodian.uber.game.content.objects.VerticalTravelStyle
+import net.dodian.uber.game.content.objects.VerticalTravelStyles
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.api.content.ContentInteraction

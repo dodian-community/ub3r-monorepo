@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.skills.agility
 
 import net.dodian.uber.game.content.skills.agility.AgilityCourseService
-import net.dodian.uber.game.content.objects.dsl.FirstClickDslObjectContent
-import net.dodian.uber.game.content.objects.dsl.firstClickObjectActions
+import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
+import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 
 object BarbarianCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {

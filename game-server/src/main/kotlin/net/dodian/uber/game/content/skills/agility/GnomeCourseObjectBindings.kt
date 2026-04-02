@@ -5,8 +5,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.content.skills.agility.AgilityCourseService
-import net.dodian.uber.game.content.objects.dsl.FirstClickDslObjectContent
-import net.dodian.uber.game.content.objects.dsl.firstClickObjectActions
+import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
+import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 
 object GnomeCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {

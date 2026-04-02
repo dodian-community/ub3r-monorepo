@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs
+package net.dodian.uber.game.systems.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client

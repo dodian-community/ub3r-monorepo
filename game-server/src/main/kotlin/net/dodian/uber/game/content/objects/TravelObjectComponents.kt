@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.travel
+package net.dodian.uber.game.content.objects
 
 object TravelObjectComponents {
     val passageObjects = intArrayOf(

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects.travel
+package net.dodian.uber.game.content.objects
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client

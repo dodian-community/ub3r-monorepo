@@ -1,8 +1,10 @@
-package net.dodian.uber.game.content.objects.travel
+package net.dodian.uber.game.content.objects
 
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.objects.dsl.VerticalTravelDslObjectContent
-import net.dodian.uber.game.content.objects.dsl.verticalTravelActions
+import net.dodian.uber.game.systems.interaction.VerticalTravelDslObjectContent
+import net.dodian.uber.game.systems.interaction.verticalTravelActions
+import net.dodian.uber.game.content.objects.VerticalTravel
+import net.dodian.uber.game.content.objects.VerticalTravelStyles
 
 object VerticalTeleportObjects : VerticalTravelDslObjectContent(
     verticalTravelActions {
