@@ -105,11 +105,11 @@ object SmithingInterface {
         val selection = client.getActiveSmithingSelection()
         var tier = selection?.let { SmithingData.findSmithingTierByTypeId(it.tierId) }
         var product = tier?.let { resolveProductFromInterface(it, interfaceId, itemId, slot) }
-        if (tier == null || product == null) {
-            val fallback = resolveAcrossTiers(interfaceId, itemId, slot)
-            if (fallback != null) {
-                tier = fallback.tier
-                product = fallback.product
+        if (product == null) {
+            val fallbackByItemId = resolveAcrossTiersByItemId(itemId)
+            if (fallbackByItemId != null) {
+                tier = fallbackByItemId.tier
+                product = fallbackByItemId.product
             }
         }
         val anchorX = client.interactionAnchorX
@@ -169,13 +169,7 @@ object SmithingInterface {
         itemId: Int,
         slot: Int,
     ): SmithingProduct? {
-        tier.products.firstOrNull { it.itemId == itemId }?.let { return it }
-        if (itemId > 0) {
-            tier.products.firstOrNull { it.itemId == itemId + 1 }?.let { return it }
-        }
-        if (itemId > 0) {
-            tier.products.firstOrNull { it.itemId == itemId - 1 }?.let { return it }
-        }
+        resolveProductByItemId(tier, itemId)?.let { return it }
         if (slot >= 0) {
             tier.products.getOrNull(slot)?.let { return it }
             if (slot > 0) {
@@ -197,13 +191,23 @@ object SmithingInterface {
         return null
     }
 
-    private fun resolveAcrossTiers(
-        interfaceId: Int,
+    private fun resolveProductByItemId(
+        tier: SmithingTier,
         itemId: Int,
-        slot: Int,
+    ): SmithingProduct? {
+        tier.products.firstOrNull { it.itemId == itemId }?.let { return it }
+        if (itemId > 0) {
+            tier.products.firstOrNull { it.itemId == itemId + 1 }?.let { return it }
+            tier.products.firstOrNull { it.itemId == itemId - 1 }?.let { return it }
+        }
+        return null
+    }
+
+    private fun resolveAcrossTiersByItemId(
+        itemId: Int,
     ): ResolvedSmithingSelection? {
         for (candidateTier in SmithingData.smithingTiers) {
-            val resolvedProduct = resolveProductFromInterface(candidateTier, interfaceId, itemId, slot)
+            val resolvedProduct = resolveProductByItemId(candidateTier, itemId)
             if (resolvedProduct != null) {
                 return ResolvedSmithingSelection(candidateTier, resolvedProduct)
             }
