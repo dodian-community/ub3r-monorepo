@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.event.bootstrap
 
-import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 
 object CoreEventBusBootstrap {
     @JvmStatic

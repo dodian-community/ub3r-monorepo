@@ -77,6 +77,13 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/content/commands/CommandLogging.kt",
             "src/main/kotlin/net/dodian/uber/game/content/commands/CommandParsing.kt",
             "src/main/kotlin/net/dodian/uber/game/content/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/items/ItemCombinationService.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/items/ItemOnNpcContentService.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcInteractionActionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcJsonSpawnOverlayLoader.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcClickMetrics.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt",
         )
         val missingSystemsFiles = setOf(
             "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemContentRegistry.kt",
@@ -94,6 +101,13 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandLogging.kt",
             "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandParsing.kt",
             "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemCombinationService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemOnNpcContentService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcInteractionActionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcJsonSpawnOverlayLoader.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcClickMetrics.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/content/ContentModuleIndex.kt",
         )
 
         val forbidden = sourceFiles

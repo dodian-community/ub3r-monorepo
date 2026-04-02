@@ -1,5 +1,15 @@
-package net.dodian.uber.game.content.items
+package net.dodian.uber.game.systems.content.items
 
+import net.dodian.uber.game.content.items.CraftingItemCombinationHandler
+import net.dodian.uber.game.content.items.DialogueGateItemCombinationHandler
+import net.dodian.uber.game.content.items.EquipmentAssemblyItemCombinationHandler
+import net.dodian.uber.game.content.items.FiremakingItemCombinationHandler
+import net.dodian.uber.game.content.items.FletchingItemCombinationHandler
+import net.dodian.uber.game.content.items.HerbloreItemCombinationHandler
+import net.dodian.uber.game.content.items.NoveltyItemCombinationHandler
+import net.dodian.uber.game.content.items.PotatoInteractionState
+import net.dodian.uber.game.content.items.RepairPlaceholderItemCombinationHandler
+import net.dodian.uber.game.content.items.SaplingItemCombinationHandler
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.api.content.ContentActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions

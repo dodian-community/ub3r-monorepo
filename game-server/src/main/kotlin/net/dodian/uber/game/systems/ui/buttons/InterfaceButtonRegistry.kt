@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.ui.buttons
 
-import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.model.entity.player.Client
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

@@ -1,17 +1,19 @@
 package net.dodian.uber.game.systems.content.npcs
 
-import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.content.npcs.NO_CLICK_HANDLER
 import net.dodian.uber.game.content.npcs.NpcContentDefinition
 import net.dodian.uber.game.content.npcs.NpcInteractionSource
-import net.dodian.uber.game.content.npcs.NpcJsonSpawnOverlayLoader
+import net.dodian.uber.game.systems.content.npcs.NpcJsonSpawnOverlayLoader
 import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import net.dodian.uber.game.content.npcs.hasInteractionHandlers
 import net.dodian.uber.game.content.npcs.optionLabel
+import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-object NpcContentRegistry {
+object NpcContentRegistry : ContentBootstrap {
+    override val id: String = "npcs.registry"
     private val logger = LoggerFactory.getLogger(NpcContentRegistry::class.java)
     private val strictDslHandlers = readFlag("npc.content.requireDslHandlers", false)
 
@@ -20,8 +22,7 @@ object NpcContentRegistry {
     private var byNpcId: Array<NpcContentDefinition?> = emptyArray()
     private val definitions = mutableListOf<NpcContentDefinition>()
 
-    @JvmStatic
-    fun bootstrap() {
+    override fun bootstrap() {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return

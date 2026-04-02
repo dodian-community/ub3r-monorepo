@@ -1,7 +1,9 @@
-package net.dodian.uber.game.content.npcs
+package net.dodian.uber.game.systems.content.npcs
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import net.dodian.uber.game.content.npcs.MYSQL_DEFAULT_STAT
+import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path

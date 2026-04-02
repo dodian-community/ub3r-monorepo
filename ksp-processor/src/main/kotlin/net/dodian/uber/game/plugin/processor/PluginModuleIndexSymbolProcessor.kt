@@ -38,10 +38,24 @@ class PluginModuleIndexSymbolProcessor(
         val interfaceButtons = discoverInterfaceButtons(allObjects)
         val objectContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.objects.ObjectContent")
         val itemContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.items.ItemContent")
+        val commandContents = discoverCommandContents(allObjects)
         val npcModules = discoverNpcModules(allObjects)
         val eventBootstraps = discoverEventBootstraps(allObjects)
+        val contentBootstraps = discoverContentBootstraps(allObjects)
 
-        val output = buildOutput(interfaceButtons, objectContents, itemContents, npcModules, eventBootstraps)
+        if (
+            interfaceButtons.isEmpty() &&
+            objectContents.isEmpty() &&
+            itemContents.isEmpty() &&
+            commandContents.isEmpty() &&
+            npcModules.isEmpty() &&
+            eventBootstraps.isEmpty() &&
+            contentBootstraps.isEmpty()
+        ) {
+            return emptyList()
+        }
+
+        val output = buildOutput(interfaceButtons, objectContents, itemContents, commandContents, npcModules, eventBootstraps, contentBootstraps)
         val outputFile =
             codeGenerator.createNewFile(
                 dependencies = Dependencies(aggregating = true, *resolver.getAllFiles().toList().toTypedArray()),
@@ -50,7 +64,7 @@ class PluginModuleIndexSymbolProcessor(
             )
         outputFile.bufferedWriter().use { it.write(output) }
         generated = true
-        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps.")
+        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${commandContents.size} command modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps, ${contentBootstraps.size} content bootstraps.")
         return emptyList()
     }
 
@@ -111,12 +125,34 @@ class PluginModuleIndexSymbolProcessor(
             .sortedBy { it.fqcn }
     }
 
+    private fun discoverCommandContents(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        val commandContentType = "net.dodian.uber.game.systems.content.commands.CommandContent"
+        return allObjects
+            .filter { (file, declaration) ->
+                file.packageName.asString().startsWith("net.dodian.uber.game.content.commands") &&
+                    declaration.implementsInterface(commandContentType)
+            }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
     private fun discoverEventBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
         return allObjects
             .filter { (file, declaration) ->
                 file.packageName.asString().startsWith("net.dodian.uber.game.engine.event.bootstrap") &&
                     declaration.simpleName.asString().endsWith("Bootstrap") &&
                     declaration.simpleName.asString() != "CoreEventBusBootstrap"
+            }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
+    private fun discoverContentBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        val bootstrapType = "net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap"
+        return allObjects
+            .filter { (file, declaration) ->
+                file.packageName.asString().startsWith("net.dodian.uber.game.systems.content") &&
+                    declaration.implementsInterface(bootstrapType)
             }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
@@ -138,12 +174,16 @@ class PluginModuleIndexSymbolProcessor(
         interfaceButtons: List<DiscoveredSymbol>,
         objectContents: List<DiscoveredSymbol>,
         itemContents: List<DiscoveredSymbol>,
+        commandContents: List<DiscoveredSymbol>,
         npcModules: List<DiscoveredSymbol>,
         eventBootstraps: List<DiscoveredSymbol>,
+        contentBootstraps: List<DiscoveredSymbol>,
     ): String {
         val out = StringBuilder()
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
+        out.appendLine("import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap")
+        out.appendLine("import net.dodian.uber.game.systems.content.commands.CommandContent")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcModuleDefinitionBuilder")
@@ -187,6 +227,17 @@ class PluginModuleIndexSymbolProcessor(
         out.appendLine()
 
         out.appendLine("    @JvmField")
+        out.appendLine("    val commandContents: List<CommandContent> = listOf(")
+        if (commandContents.isNotEmpty()) {
+            commandContents.forEachIndexed { index, symbol ->
+                val suffix = if (index == commandContents.lastIndex) "" else ","
+                out.appendLine("        ${symbol.fqcn}$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
         out.appendLine("    val npcContents: List<NpcContentDefinition> = listOf(")
         if (npcModules.isNotEmpty()) {
             npcModules.forEachIndexed { index, symbol ->
@@ -203,6 +254,17 @@ class PluginModuleIndexSymbolProcessor(
             eventBootstraps.forEachIndexed { index, symbol ->
                 val suffix = if (index == eventBootstraps.lastIndex) "" else ","
                 out.appendLine("        { ${symbol.fqcn}.bootstrap() }$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val contentBootstraps: List<ContentBootstrap> = listOf(")
+        if (contentBootstraps.isNotEmpty()) {
+            contentBootstraps.forEachIndexed { index, symbol ->
+                val suffix = if (index == contentBootstraps.lastIndex) "" else ","
+                out.appendLine("        ${symbol.fqcn}$suffix")
             }
         }
         out.appendLine("    )")

@@ -5,7 +5,7 @@ import net.dodian.uber.game.systems.content.commands.*
 import net.dodian.uber.game.systems.content.commands.CommandContent
 import net.dodian.uber.game.systems.content.commands.CommandContext
 import net.dodian.uber.game.systems.content.commands.commands
-import net.dodian.uber.game.content.npcs.NpcClickMetrics
+import net.dodian.uber.game.systems.content.npcs.NpcClickMetrics
 
 object DevNpcContentCommands : CommandContent {
     override fun definitions() =

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.npcs
+package net.dodian.uber.game.systems.content.npcs
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap

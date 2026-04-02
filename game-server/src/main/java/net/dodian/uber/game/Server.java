@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.Login;
 import net.dodian.uber.game.model.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.systems.content.objects.ObjectContentRegistry;
+import net.dodian.uber.game.systems.content.ContentModuleIndex;
+import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -122,8 +124,9 @@ public class Server {
         GameObjectData.init();
         loadObjects();
         new DoorRegistry();
-        ObjectContentRegistry.bootstrap();
-        net.dodian.uber.game.systems.content.npcs.NpcContentRegistry.bootstrap();
+        for (ContentBootstrap bootstrap : ContentModuleIndex.contentBootstraps) {
+            bootstrap.bootstrap();
+        }
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 

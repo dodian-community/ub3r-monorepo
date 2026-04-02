@@ -1,18 +1,20 @@
 package net.dodian.uber.game.systems.content.items
 
-import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.content.items.ItemContent
+import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-object ItemContentRegistry {
+object ItemContentRegistry : ContentBootstrap {
+    override val id: String = "items.registry"
     private val logger = LoggerFactory.getLogger(ItemContentRegistry::class.java)
 
     private val loaded = AtomicBoolean(false)
     private val byItemId = ConcurrentHashMap<Int, ItemContent>()
 
-    fun ensureLoaded() {
+    override fun bootstrap() {
         if (!loaded.compareAndSet(false, true)) return
         ContentModuleIndex.itemContents.forEach(::register)
     }
@@ -32,7 +34,7 @@ object ItemContentRegistry {
     }
 
     fun get(itemId: Int): ItemContent? {
-        ensureLoaded()
+        bootstrap()
         return byItemId[itemId]
     }
 }

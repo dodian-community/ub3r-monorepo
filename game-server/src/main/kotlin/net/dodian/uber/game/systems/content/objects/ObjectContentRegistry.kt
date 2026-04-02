@@ -1,16 +1,18 @@
 package net.dodian.uber.game.systems.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.api.content.ContentInteractionType
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-object ObjectContentRegistry {
+object ObjectContentRegistry : ContentBootstrap {
+    override val id: String = "objects.registry"
     private val logger = LoggerFactory.getLogger(ObjectContentRegistry::class.java)
 
     private data class RegisteredBinding(
@@ -37,8 +39,7 @@ object ObjectContentRegistry {
         .thenBy { it.moduleName }
         .thenBy { it.binding.matcher.describe() }
 
-    @JvmStatic
-    fun bootstrap() {
+    override fun bootstrap() {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return

@@ -1,20 +1,12 @@
 package net.dodian.uber.game.systems.content.commands
 
 import java.util.concurrent.atomic.AtomicBoolean
-import net.dodian.uber.game.content.commands.admin.BossCommands
-import net.dodian.uber.game.content.commands.admin.StaffCommands
-import net.dodian.uber.game.content.commands.beta.BetaOnlyCommands
-import net.dodian.uber.game.content.commands.dev.DevAccountAndStateCommands
-import net.dodian.uber.game.content.commands.dev.DevDebugCommands
-import net.dodian.uber.game.content.commands.dev.DevNpcContentCommands
-import net.dodian.uber.game.content.commands.dev.DevSpawnAndNpcCommands
-import net.dodian.uber.game.content.commands.dev.DevVisualCommands
-import net.dodian.uber.game.content.commands.player.PlayerCommands
-import net.dodian.uber.game.content.commands.player.SocialCommands
-import net.dodian.uber.game.content.commands.player.TravelCommands
+import net.dodian.uber.game.systems.content.ContentModuleIndex
+import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
 import org.slf4j.LoggerFactory
 
-object CommandContentRegistry {
+object CommandContentRegistry : ContentBootstrap {
+    override val id: String = "commands.registry"
     private val logger = LoggerFactory.getLogger(CommandContentRegistry::class.java)
     private val bootstrapped = AtomicBoolean(false)
     private val contents = mutableListOf<CommandContent>()
@@ -22,8 +14,7 @@ object CommandContentRegistry {
     @Volatile
     private var byAlias: Map<String, List<CommandDefinition>> = emptyMap()
 
-    @JvmStatic
-    fun bootstrap() {
+    override fun bootstrap() {
         if (bootstrapped.get()) {
             return
         }
@@ -64,20 +55,7 @@ object CommandContentRegistry {
         }
     }
 
-    private fun defaultContents(): List<CommandContent> =
-        listOf(
-            DevDebugCommands,
-            DevNpcContentCommands,
-            DevVisualCommands,
-            DevSpawnAndNpcCommands,
-            DevAccountAndStateCommands,
-            StaffCommands,
-            PlayerCommands,
-            SocialCommands,
-            BossCommands,
-            TravelCommands,
-            BetaOnlyCommands,
-        )
+    private fun defaultContents(): List<CommandContent> = ContentModuleIndex.commandContents
 
     private fun rebuildLocked() {
         val rebuilt = LinkedHashMap<String, MutableList<CommandDefinition>>()

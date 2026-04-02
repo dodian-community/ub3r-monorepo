@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.ui
+package net.dodian.uber.game.systems.content.ui
 
 import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
 import net.dodian.uber.game.content.skills.crafting.GoldJewelryRequest

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.items
+package net.dodian.uber.game.systems.content.items
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
