@@ -1,7 +1,9 @@
-package net.dodian.uber.game.content.objects
+package net.dodian.uber.game.systems.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.ContentModuleIndex
+import net.dodian.uber.game.content.objects.ObjectBinding
+import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.api.content.ContentInteractionType
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy

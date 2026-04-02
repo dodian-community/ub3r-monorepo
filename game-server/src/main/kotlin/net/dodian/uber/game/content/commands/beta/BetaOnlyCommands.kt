@@ -1,9 +1,16 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.content.commands.beta
+
+import net.dodian.uber.game.systems.content.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.commands.CommandContent
-import net.dodian.uber.game.content.commands.CommandContext
-import net.dodian.uber.game.content.commands.commands
+import net.dodian.uber.game.systems.content.commands.CommandContent
+import net.dodian.uber.game.systems.content.commands.CommandContext
+import net.dodian.uber.game.systems.content.commands.commands
+import net.dodian.uber.game.content.commands.dev.handleFarmTest
+import net.dodian.uber.game.content.commands.dev.handleSkillBank
+import net.dodian.uber.game.content.commands.dev.handleSkillSet
+import net.dodian.uber.game.content.commands.dev.handleSkillTools
+import net.dodian.uber.game.content.commands.dev.handleSlayerTest
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills

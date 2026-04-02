@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.objects
+package net.dodian.uber.game.systems.content.objects
 
 import net.dodian.uber.game.systems.interaction.ObjectInteractionContext
 import org.slf4j.Logger

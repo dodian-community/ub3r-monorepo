@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.systems.content.commands
 
 fun interface CommandHandler {
     fun handle(context: CommandContext): Boolean

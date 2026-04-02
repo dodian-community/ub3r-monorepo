@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.systems.content.commands
 
 import net.dodian.uber.game.model.entity.player.Client
 

@@ -1,7 +1,9 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.content.commands.dev
+
+import net.dodian.uber.game.systems.content.commands.*
 
 import java.util.Arrays
-import net.dodian.uber.game.content.commands.CommandContext
+import net.dodian.uber.game.systems.content.commands.CommandContext
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.bank.PlayerBankService
 import net.dodian.uber.game.model.player.skills.Skill

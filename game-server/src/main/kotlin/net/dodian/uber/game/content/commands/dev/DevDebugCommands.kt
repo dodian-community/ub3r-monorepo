@@ -1,9 +1,11 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.content.commands.dev
+
+import net.dodian.uber.game.systems.content.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.commands.CommandContent
-import net.dodian.uber.game.content.commands.CommandContext
-import net.dodian.uber.game.content.commands.commands
+import net.dodian.uber.game.systems.content.commands.CommandContent
+import net.dodian.uber.game.systems.content.commands.CommandContext
+import net.dodian.uber.game.systems.content.commands.commands
 import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill

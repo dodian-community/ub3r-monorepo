@@ -1,9 +1,11 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.content.commands.player
+
+import net.dodian.uber.game.systems.content.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.commands.CommandContent
-import net.dodian.uber.game.content.commands.CommandContext
-import net.dodian.uber.game.content.commands.commands
+import net.dodian.uber.game.systems.content.commands.CommandContent
+import net.dodian.uber.game.systems.content.commands.CommandContext
+import net.dodian.uber.game.systems.content.commands.commands
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ChatLog
 

@@ -1,13 +1,17 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.systems.content.commands
 
 import java.util.concurrent.atomic.AtomicBoolean
-import net.dodian.uber.game.content.commands.BossCommands
-import net.dodian.uber.game.content.commands.BetaOnlyCommands
-import net.dodian.uber.game.content.commands.DevAccountAndStateCommands
-import net.dodian.uber.game.content.commands.DevDebugCommands
-import net.dodian.uber.game.content.commands.DevNpcContentCommands
-import net.dodian.uber.game.content.commands.DevSpawnAndNpcCommands
-import net.dodian.uber.game.content.commands.DevVisualCommands
+import net.dodian.uber.game.content.commands.admin.BossCommands
+import net.dodian.uber.game.content.commands.admin.StaffCommands
+import net.dodian.uber.game.content.commands.beta.BetaOnlyCommands
+import net.dodian.uber.game.content.commands.dev.DevAccountAndStateCommands
+import net.dodian.uber.game.content.commands.dev.DevDebugCommands
+import net.dodian.uber.game.content.commands.dev.DevNpcContentCommands
+import net.dodian.uber.game.content.commands.dev.DevSpawnAndNpcCommands
+import net.dodian.uber.game.content.commands.dev.DevVisualCommands
+import net.dodian.uber.game.content.commands.player.PlayerCommands
+import net.dodian.uber.game.content.commands.player.SocialCommands
+import net.dodian.uber.game.content.commands.player.TravelCommands
 import org.slf4j.LoggerFactory
 
 object CommandContentRegistry {

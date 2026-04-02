@@ -1,4 +1,6 @@
-package net.dodian.uber.game.content.commands
+package net.dodian.uber.game.content.commands.admin
+
+import net.dodian.uber.game.systems.content.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Login
