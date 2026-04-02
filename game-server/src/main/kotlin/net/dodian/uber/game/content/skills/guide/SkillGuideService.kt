@@ -23,7 +23,7 @@ object SkillGuideService {
             return
         }
 
-        val definition = SkillGuideDefinitions.find(skillId) ?: return
+        val definition = SkillGuideData.find(skillId) ?: return
         val skill = Skill.getSkill(skillId) ?: return
 
         clearInterface(client)

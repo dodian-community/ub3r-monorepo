@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.ButtonClickEvent;
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions;
+import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.systems.ui.buttons.ButtonClickLoggingService;
 import net.dodian.uber.game.systems.ui.buttons.ButtonClickRequest;
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonBinding;
@@ -62,7 +62,7 @@ public class ClickingButtonsListener implements PacketListener {
         if (!(actionButton >= 9157 && actionButton <= 9194)) {
             client.actionButtonId = actionButton;
         }
-        boolean preserveSmeltingSelection = client.activeInterfaceId == 2400 && SmithingDefinitions.isSmeltingInterfaceButton(actionButton);
+        boolean preserveSmeltingSelection = client.activeInterfaceId == 2400 && SmithingData.isSmeltingInterfaceButton(actionButton);
         if (!preserveSmeltingSelection && actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
             client.resetAction(false);
         }

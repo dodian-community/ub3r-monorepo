@@ -1,14 +1,14 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface as SmithingSkillInterface
+import net.dodian.uber.game.content.skills.smithing.SmithingData
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
 object SmithingInterface : InterfaceButtonContent {
     override val bindings =
         buildList {
-            SmithingDefinitions.smeltingButtonMappings
+            SmithingData.smeltingButtonMappings
                 .groupBy { it.barId to it.amount }
                 .forEach { (key, mappings) ->
                     val (barId, amount) = key
@@ -22,13 +22,13 @@ object SmithingInterface : InterfaceButtonContent {
                             rawButtonIds = rawButtonIds,
                             requiredInterfaceId = 2400,
                         ) { client, _ ->
-                            SmeltingInterfaceService.startFromMapping(client, primary)
+                            SmithingSkillInterface.startFromMapping(client, primary)
                             true
                         },
                     )
                 }
-            SmithingDefinitions.smeltingRecipes.forEachIndexed { index, recipe ->
-                val frameButtonId = SmithingDefinitions.frameIds()[index]
+            SmithingData.smeltingRecipes.forEachIndexed { index, recipe ->
+                val frameButtonId = SmithingData.frameIds()[index]
                 add(
                     buttonBinding(
                         interfaceId = 2400,
@@ -37,7 +37,7 @@ object SmithingInterface : InterfaceButtonContent {
                         rawButtonIds = intArrayOf(frameButtonId),
                         requiredInterfaceId = 2400,
                     ) { client, _ ->
-                        SmeltingInterfaceService.selectPendingRecipe(client, recipe.barId)
+                        SmithingSkillInterface.selectPendingRecipe(client, recipe.barId)
                         true
                     },
                 )

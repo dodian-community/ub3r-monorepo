@@ -1,33 +1,33 @@
 package net.dodian.uber.game.content.skills.agility
 
-import net.dodian.uber.game.content.skills.agility.AgilityCourseService
+import net.dodian.uber.game.content.skills.agility.Agility
 import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
 import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 
 object BarbarianCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {
         objectAction(BarbarianCourseObjectComponents.ROPE_SWING) { client, _, _, _ ->
-            AgilityCourseService(client).BarbRope()
+            Agility(client).BarbRope()
             true
         }
         objectAction(BarbarianCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
-            AgilityCourseService(client).BarbLog()
+            Agility(client).BarbLog()
             true
         }
         objectAction(BarbarianCourseObjectComponents.NET) { client, _, _, _ ->
-            AgilityCourseService(client).BarbNet()
+            Agility(client).BarbNet()
             true
         }
         objectAction(BarbarianCourseObjectComponents.LEDGE) { client, _, _, _ ->
-            AgilityCourseService(client).BarbLedge()
+            Agility(client).BarbLedge()
             true
         }
         objectAction(BarbarianCourseObjectComponents.STAIRS) { client, _, _, _ ->
-            AgilityCourseService(client).BarbStairs()
+            Agility(client).BarbStairs()
             true
         }
         objectAction(BarbarianCourseObjectComponents.CRUMBLING_WALL) { client, _, position, _ ->
-            val agility = AgilityCourseService(client)
+            val agility = Agility(client)
             when {
                 position.x == 2536 && position.y == 3553 -> agility.BarbFirstWall()
                 position.x == 2539 && position.y == 3553 -> agility.BarbSecondWall()
@@ -37,11 +37,11 @@ object BarbarianCourseObjectBindings : FirstClickDslObjectContent(
             true
         }
         objectAction(BarbarianCourseObjectComponents.ORANGE_BAR) { client, _, _, _ ->
-            AgilityCourseService(client).orangeBar()
+            Agility(client).orangeBar()
             true
         }
         objectAction(BarbarianCourseObjectComponents.YELLOW_LEDGE) { client, _, _, _ ->
-            AgilityCourseService(client).yellowLedge()
+            Agility(client).yellowLedge()
             true
         }
     },

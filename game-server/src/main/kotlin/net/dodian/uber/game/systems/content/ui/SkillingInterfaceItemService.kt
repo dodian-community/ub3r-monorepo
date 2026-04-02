@@ -1,9 +1,9 @@
 package net.dodian.uber.game.systems.content.ui
 
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
 import net.dodian.uber.game.content.skills.crafting.GoldJewelryRequest
-import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface
+import net.dodian.uber.game.content.skills.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 
 object SkillingInterfaceItemService {
@@ -16,16 +16,16 @@ object SkillingInterfaceItemService {
         amount: Int,
     ): Boolean {
         return when {
-            SmeltingInterfaceService.isSmeltingInterfaceFrame(interfaceId) -> {
-                SmithingPlugin.startSmeltingFromItem(client, itemId, amount)
+            SmithingInterface.isSmeltingInterfaceFrame(interfaceId) -> {
+                Smithing.startSmeltingFromItem(client, itemId, amount)
                 true
             }
             interfaceId in 1119..1123 -> {
-                SmithingPlugin.startSmithing(client, itemId, amount)
+                Smithing.startSmithing(client, itemId, amount)
                 true
             }
             interfaceId in 4233..4257 -> {
-                CraftingPlugin.startGoldJewelry(client, GoldJewelryRequest(interfaceId, slot, amount))
+                Crafting.startGoldJewelry(client, GoldJewelryRequest(interfaceId, slot, amount))
                 true
             }
             else -> false

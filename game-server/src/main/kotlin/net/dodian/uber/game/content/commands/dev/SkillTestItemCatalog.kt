@@ -3,17 +3,17 @@ package net.dodian.uber.game.content.commands.dev
 import net.dodian.uber.game.systems.content.commands.*
 
 import java.util.LinkedHashSet
-import net.dodian.uber.game.content.skills.cooking.CookingDefinitions
-import net.dodian.uber.game.content.skills.crafting.CraftingDefinitions
-import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
-import net.dodian.uber.game.content.skills.fishing.FishingDefinitions
-import net.dodian.uber.game.content.skills.fletching.FletchingDefinitions
-import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
-import net.dodian.uber.game.content.skills.mining.MiningDefinitions
+import net.dodian.uber.game.content.skills.cooking.CookingData
+import net.dodian.uber.game.content.skills.crafting.CraftingData
+import net.dodian.uber.game.content.skills.farming.FarmingData
+import net.dodian.uber.game.content.skills.fishing.FishingData
+import net.dodian.uber.game.content.skills.fletching.FletchingData
+import net.dodian.uber.game.content.skills.herblore.HerbloreData
+import net.dodian.uber.game.content.skills.mining.MiningData
 import net.dodian.uber.game.content.skills.smithing.SmithingFrameDefinitions
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
-import net.dodian.uber.game.content.skills.thieving.ThievingService
-import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingData
+import net.dodian.uber.game.content.skills.thieving.Thieving
+import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingData
 
 object SkillTestItemCatalog {
     private val categories: LinkedHashMap<String, List<Int>> =
@@ -68,17 +68,17 @@ object SkillTestItemCatalog {
 
     private fun woodcuttingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        WoodcuttingDefinitions.axesDescending.forEach { addIfValid(items, it.itemId) }
-        WoodcuttingDefinitions.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
+        WoodcuttingData.axesDescending.forEach { addIfValid(items, it.itemId) }
+        WoodcuttingData.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
         addAll(items, 590, 946)
         return items.toList()
     }
 
     private fun miningItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        MiningDefinitions.pickaxesDescending.forEach { addIfValid(items, it.itemId) }
-        MiningDefinitions.rocks.forEach { addIfValid(items, it.oreItemId) }
-        MiningDefinitions.randomGemDropTable.forEach { addIfValid(items, it) }
+        MiningData.pickaxesDescending.forEach { addIfValid(items, it.itemId) }
+        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningData.randomGemDropTable.forEach { addIfValid(items, it) }
         addAll(items, 1755, 1436)
         return items.toList()
     }
@@ -86,13 +86,13 @@ object SkillTestItemCatalog {
     private fun smithingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 2347)
-        SmithingDefinitions.smeltingRecipes.forEach { addIfValid(items, it.barId) }
+        SmithingData.smeltingRecipes.forEach { addIfValid(items, it.barId) }
         for (row in SmithingFrameDefinitions.smithingFrame) {
             for (entry in row) {
                 addIfValid(items, entry.itemId)
             }
         }
-        MiningDefinitions.rocks.forEach { addIfValid(items, it.oreItemId) }
+        MiningData.rocks.forEach { addIfValid(items, it.oreItemId) }
         addAll(items, 436, 438, 440, 444, 447, 449, 451, 453)
         return items.toList()
     }
@@ -100,18 +100,18 @@ object SkillTestItemCatalog {
     private fun fletchingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 946, 314, 52, 1777, 1779)
-        FletchingDefinitions.bowLogs.forEach {
+        FletchingData.bowLogs.forEach {
             addIfValid(items, it.logItemId)
             addIfValid(items, it.unstrungShortbowId)
             addIfValid(items, it.shortbowId)
             addIfValid(items, it.unstrungLongbowId)
             addIfValid(items, it.longbowId)
         }
-        FletchingDefinitions.arrowRecipes.forEach {
+        FletchingData.arrowRecipes.forEach {
             addIfValid(items, it.headId)
             addIfValid(items, it.arrowId)
         }
-        FletchingDefinitions.dartRecipes.forEach {
+        FletchingData.dartRecipes.forEach {
             addIfValid(items, it.tipId)
             addIfValid(items, it.dartId)
         }
@@ -120,11 +120,11 @@ object SkillTestItemCatalog {
 
     private fun fishingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        FishingDefinitions.fishingSpots.forEach {
+        FishingData.fishingSpots.forEach {
             addIfValid(items, it.toolItemId)
             addIfValid(items, it.fishItemId)
         }
-        CookingDefinitions.recipes.forEach {
+        CookingData.recipes.forEach {
             addIfValid(items, it.rawItemId)
             addIfValid(items, it.cookedItemId)
             addIfValid(items, it.burntItemId)
@@ -135,7 +135,7 @@ object SkillTestItemCatalog {
 
     private fun cookingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        CookingDefinitions.recipes.forEach {
+        CookingData.recipes.forEach {
             addIfValid(items, it.rawItemId)
             addIfValid(items, it.cookedItemId)
             addIfValid(items, it.burntItemId)
@@ -146,22 +146,22 @@ object SkillTestItemCatalog {
     private fun firemakingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addIfValid(items, 590)
-        WoodcuttingDefinitions.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
+        WoodcuttingData.treeByObjectId.values.forEach { addIfValid(items, it.logItemId) }
         return items.toList()
     }
 
     private fun craftingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 1733, 1734, 1755, 1592, 1595, 1597, 11065, 2357, 1783, 1781, 401, 1775, 1779, 1777, 1712)
-        CraftingDefinitions.gemDefinitions.forEach {
+        CraftingData.gemDefinitions.forEach {
             addIfValid(items, it.uncutId)
             addIfValid(items, it.cutId)
         }
-        CraftingDefinitions.orbDefinitions.forEach {
+        CraftingData.orbDefinitions.forEach {
             addIfValid(items, it.orbId)
             addIfValid(items, it.staffId)
         }
-        CraftingDefinitions.hideDefinitions.forEach {
+        CraftingData.hideDefinitions.forEach {
             addIfValid(items, it.itemId)
             addIfValid(items, it.glovesId)
             addIfValid(items, it.chapsId)
@@ -183,16 +183,16 @@ object SkillTestItemCatalog {
     private fun herbloreItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 227, 228, 229, 233)
-        HerbloreDefinitions.herbDefinitions.forEach {
+        HerbloreData.herbDefinitions.forEach {
             addIfValid(items, it.grimyId)
             addIfValid(items, it.cleanId)
             addIfValid(items, it.unfinishedPotionId)
         }
-        HerbloreDefinitions.potionRecipes.forEach {
+        HerbloreData.potionRecipes.forEach {
             addIfValid(items, it.secondaryId)
             addIfValid(items, it.finishedPotionId)
         }
-        HerbloreDefinitions.potionDoseDefinitions.forEach {
+        HerbloreData.potionDoseDefinitions.forEach {
             addIfValid(items, it.oneDoseId)
             addIfValid(items, it.twoDoseId)
             addIfValid(items, it.threeDoseId)
@@ -204,44 +204,44 @@ object SkillTestItemCatalog {
 
     private fun farmingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        FarmingDefinitions.allotmentPatch.values().forEach {
+        FarmingData.allotmentPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.flowerPatch.values().forEach {
+        FarmingData.flowerPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.herbPatch.values().forEach {
+        FarmingData.herbPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.bushPatch.values().forEach {
+        FarmingData.bushPatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.fruitTreePatch.values().forEach {
+        FarmingData.fruitTreePatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.treePatch.values().forEach {
+        FarmingData.treePatch.values().forEach {
             addIfValid(items, it.seed)
             addIfValid(items, it.harvestItem)
         }
-        FarmingDefinitions.sapling.values().forEach {
+        FarmingData.sapling.values().forEach {
             addIfValid(items, it.treeSeed)
             addIfValid(items, it.plantedId)
             addIfValid(items, it.waterId)
             addIfValid(items, it.saplingId)
         }
-        FarmingDefinitions.compost.values().forEach { addIfValid(items, it.itemId) }
-        FarmingDefinitions().regularCompostItems.forEach { addIfValid(items, it) }
-        FarmingDefinitions().superCompostItems.forEach { addIfValid(items, it) }
+        FarmingData.compost.values().forEach { addIfValid(items, it.itemId) }
+        FarmingData().regularCompostItems.forEach { addIfValid(items, it) }
+        FarmingData().superCompostItems.forEach { addIfValid(items, it) }
         addAll(
             items,
-            FarmingDefinitions().BUCKET, FarmingDefinitions().SPADE, FarmingDefinitions().RAKE, FarmingDefinitions().SEED_DIBBER, FarmingDefinitions().TROWEL,
-            FarmingDefinitions().FILLED_PLANT_POT, FarmingDefinitions().EMPTY_PLANT_POT, FarmingDefinitions().SECATEURS, FarmingDefinitions().MAGIC_SECATEURS,
-            FarmingDefinitions().PLANT_CURE, FarmingDefinitions().VOLCANIC_ASH
+            FarmingData().BUCKET, FarmingData().SPADE, FarmingData().RAKE, FarmingData().SEED_DIBBER, FarmingData().TROWEL,
+            FarmingData().FILLED_PLANT_POT, FarmingData().EMPTY_PLANT_POT, FarmingData().SECATEURS, FarmingData().MAGIC_SECATEURS,
+            FarmingData().PLANT_CURE, FarmingData().VOLCANIC_ASH
         )
         return items.toList()
     }
@@ -257,7 +257,7 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        net.dodian.uber.game.content.skills.thieving.ThievingDefinitions.all.forEach { data ->
+        net.dodian.uber.game.content.skills.thieving.ThievingData.all.forEach { data ->
             data.item.forEach { addIfValid(items, it) }
         }
         return items.toList()

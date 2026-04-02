@@ -5,10 +5,10 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.content.npcs.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.content.skills.cooking.CookingInputService;
+import net.dodian.uber.game.content.skills.cooking.Cooking;
 import net.dodian.uber.game.systems.content.ui.SkillingInterfaceItemService;
-import net.dodian.uber.game.content.skills.herblore.HerbloreService;
-import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.content.skills.herblore.Herblore;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
@@ -50,7 +50,7 @@ public class BankX2Listener implements PacketListener {
                 Server.slots.rollDice(client, enteredAmount);
                 return;
             }
-            if (HerbloreService.handleEnteredAmount(client, enteredAmount)) {
+            if (Herblore.handleEnteredAmount(client, enteredAmount)) {
                 return;
             }
             if (client.XinterfaceID == 3838) { // Claim battlestaffs
@@ -78,11 +78,11 @@ public class BankX2Listener implements PacketListener {
                         client.send(new SendMessage("Cannot cook in duel or trade"));
                         return;
                     }
-                    CookingInputService.startFromEnteredAmount(client, enteredAmount);
+                    Cooking.startFromEnteredAmount(client, enteredAmount);
                     return;
                 } else if (client.enterAmountId == 2) { // smelting amt
                     client.send(new RemoveInterfaces());
-                    SmeltingInterfaceService.startFromPending(client, enteredAmount);
+                    SmithingInterface.startFromPending(client, enteredAmount);
                     return;
                 }
             }
@@ -119,10 +119,10 @@ public class BankX2Listener implements PacketListener {
                 client.sellItem(id, slot, enteredAmount);
                 client.checkItemUpdate();
                 client.send(new InventoryInterface(3824, 3822));
-            } else if (SmeltingInterfaceService.isSmeltingInterfaceFrame(client.XinterfaceID)) { // smelting X
+            } else if (SmithingInterface.isSmeltingInterfaceFrame(client.XinterfaceID)) { // smelting X
                 logger.warn("Smelting interface item click amount=X({}) interfaceId={} itemId={} slot={} player={}",
                         enteredAmount, client.XinterfaceID, client.XremoveID, client.XremoveSlot, client.getPlayerName());
-                SmeltingInterfaceService.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
+                SmithingInterface.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
             } else if (SkillingInterfaceItemService.handleContainerAmount(client, client.XinterfaceID, client.XremoveID, client.XremoveSlot, enteredAmount)) {
             } else if (client.XinterfaceID == 3322 && client.inTrade && client.canOffer) { // bag to trade window
                 client.tradeItem(client.XremoveID, client.XremoveSlot, enteredAmount);

@@ -5,7 +5,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.agility.AgilityPlugin
+import net.dodian.uber.game.content.skills.agility.AgilityTravel
 
 internal object RugMerchant : NpcModule {
     // Stats: 17: r=60 a=0 d=0 s=0 hp=18 rg=0 mg=0; 22: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0; 20: r=10 a=0 d=0 s=0 hp=99 rg=0 mg=0; 19: r=60 a=0 d=0 s=0 hp=52 rg=0 mg=0
@@ -89,7 +89,7 @@ internal object RugMerchant : NpcModule {
             return
         }
 
-        val carpet = AgilityPlugin.desertCarpet(client)
+        val carpet = AgilityTravel(client)
         when (npcId) {
             17 -> carpet.sophanem(choice)
             19 -> carpet.bedabinCamp(choice)

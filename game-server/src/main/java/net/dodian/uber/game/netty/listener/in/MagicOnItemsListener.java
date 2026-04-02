@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.systems.skills.ProgressionService;
 import net.dodian.uber.game.systems.skills.RuneCostService;
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin;
+import net.dodian.uber.game.content.skills.smithing.Smithing;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -65,7 +65,7 @@ public class MagicOnItemsListener implements PacketListener {
         // Superheat
         if (castSpell == 1173) {
             if (!checkLevel(client, 43)) return;
-            SmithingPlugin.castSuperheat(client, castOnItem);
+            Smithing.castSuperheat(client, castOnItem);
             return;
         }
 

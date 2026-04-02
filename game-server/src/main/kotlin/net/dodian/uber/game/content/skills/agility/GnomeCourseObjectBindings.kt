@@ -4,54 +4,54 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.content.skills.agility.AgilityCourseService
+import net.dodian.uber.game.content.skills.agility.Agility
 import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
 import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 
 object GnomeCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {
         objectAction(GnomeCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
-            AgilityCourseService(client).GnomeLog()
+            Agility(client).GnomeLog()
             true
         }
         objectAction(GnomeCourseObjectComponents.NET_ONE) { client, _, position, _ ->
             if (client.distanceToPoint(position.x, position.y) >= 2) {
                 return@objectAction false
             }
-            AgilityCourseService(client).GnomeNet1()
+            Agility(client).GnomeNet1()
             true
         }
         objectAction(GnomeCourseObjectComponents.TREE_BRANCH_UP) { client, _, _, _ ->
-            AgilityCourseService(client).GnomeTree1()
+            Agility(client).GnomeTree1()
             true
         }
         objectAction(GnomeCourseObjectComponents.ROPE_SWING) { client, _, _, _ ->
-            AgilityCourseService(client).GnomeRope()
+            Agility(client).GnomeRope()
             true
         }
         objectAction(*GnomeCourseObjectComponents.TREE_BRANCH_DOWN) { client, _, _, _ ->
-            AgilityCourseService(client).GnomeTreebranch2()
+            Agility(client).GnomeTreebranch2()
             true
         }
         objectAction(GnomeCourseObjectComponents.NET_TWO) { client, _, position, _ ->
             if (client.distanceToPoint(position.x, position.y) >= 3) {
                 return@objectAction false
             }
-            AgilityCourseService(client).GnomeNet2()
+            Agility(client).GnomeNet2()
             true
         }
         objectAction(GnomeCourseObjectComponents.PIPE_ENTRY_ONE) { client, _, position, _ ->
             if (client.position.x != 2484 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
                 return@objectAction false
             }
-            AgilityCourseService(client).GnomePipe()
+            Agility(client).GnomePipe()
             true
         }
         objectAction(GnomeCourseObjectComponents.PIPE_ENTRY_TWO) { client, _, position, _ ->
             if (client.position.x != 2487 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
                 return@objectAction false
             }
-            AgilityCourseService(client).GnomePipe()
+            Agility(client).GnomePipe()
             true
         }
     },

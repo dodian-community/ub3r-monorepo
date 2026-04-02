@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.utilities.Misc
 
 object PlunderObjects : ObjectContent {
@@ -43,7 +43,7 @@ object PlunderObjects : ObjectContent {
                     )
                     return true
                 }
-                if (PyramidPlunderService.isEntryDoor(position)) {
+                if (PyramidPlunder.isEntryDoor(position)) {
                     val chance = Misc.random(255)
                     if (chance <= (client.getLevel(Skill.THIEVING) * 2.5).toInt()) {
                         client.transport(Position(1934, 4450, 2))
@@ -57,20 +57,20 @@ object PlunderObjects : ObjectContent {
                 true
             }
             objectId in 26618..26621 -> {
-                if (PyramidPlunderService.roomNumber(client) + 1 == 8) {
+                if (PyramidPlunder.roomNumber(client) + 1 == 8) {
                     return true
                 }
-                if (PyramidPlunderService.canOpenNextRoomDoor(client, objectId)) {
-                    PyramidPlunderService.advanceRoom(client)
-                } else if (PyramidPlunderService.openDoor(client, objectId)) {
+                if (PyramidPlunder.canOpenNextRoomDoor(client, objectId)) {
+                    PyramidPlunder.advanceRoom(client)
+                } else if (PyramidPlunder.openDoor(client, objectId)) {
                     client.sendMessage("This tomb door lead nowhere.")
                 } else {
-                    PyramidPlunderService.toggleObstacle(client, objectId)
+                    PyramidPlunder.toggleObstacle(client, objectId)
                 }
                 true
             }
             objectId == 20932 -> {
-                client.transport(PyramidPlunderService.endPosition(client))
+                client.transport(PyramidPlunder.endPosition(client))
                 true
             }
             objectId == 20931 -> {
@@ -79,11 +79,11 @@ object PlunderObjects : ObjectContent {
                 true
             }
             objectId == 26616 || objectId == 26626 -> {
-                PyramidPlunderService.toggleObstacle(client, objectId)
+                PyramidPlunder.toggleObstacle(client, objectId)
                 true
             }
             objectId == 26580 || objectId in 26600..26613 -> {
-                PyramidPlunderService.toggleObstacle(client, objectId)
+                PyramidPlunder.toggleObstacle(client, objectId)
                 true
             }
             objectId == 20275 -> {
@@ -102,7 +102,7 @@ object PlunderObjects : ObjectContent {
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId == 20931) {
-            PyramidPlunderService.reset(client)
+            PyramidPlunder.reset(client)
             return true
         }
         return false

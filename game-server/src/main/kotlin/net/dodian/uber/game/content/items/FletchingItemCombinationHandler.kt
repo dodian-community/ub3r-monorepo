@@ -5,16 +5,16 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
-import net.dodian.uber.game.content.skills.fletching.FletchingDefinitions
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
-import net.dodian.uber.game.content.skills.fletching.FletchingPlugin
+import net.dodian.uber.game.content.skills.fletching.FletchingData
+import net.dodian.uber.game.content.skills.crafting.Crafting
+import net.dodian.uber.game.content.skills.fletching.Fletching
 
 object FletchingItemCombinationHandler {
     @JvmStatic
     fun handle(client: Client, itemUsed: Int, otherItem: Int, knife: Boolean): Boolean {
         if (knife && (itemUsed == 1511 || otherItem == 1511)) {
             client.resetAction()
-            CraftingPlugin.startShafting(client)
+            Crafting.startShafting(client)
             return true
         }
         if ((itemUsed == 314 || otherItem == 314) && (itemUsed == 52 || otherItem == 52)) {
@@ -33,7 +33,7 @@ object FletchingItemCombinationHandler {
             )
             return true
         }
-        for (recipe in FletchingDefinitions.dartRecipes) {
+        for (recipe in FletchingData.dartRecipes) {
             if ((itemUsed == recipe.tipId || otherItem == recipe.tipId) && (itemUsed == 314 || otherItem == 314)) {
                 client.resetAction()
                 if (client.getLevel(Skill.FLETCHING) < recipe.requiredLevel) {
@@ -60,7 +60,7 @@ object FletchingItemCombinationHandler {
                 return true
             }
         }
-        for (recipe in FletchingDefinitions.arrowRecipes) {
+        for (recipe in FletchingData.arrowRecipes) {
             if ((itemUsed == recipe.headId || otherItem == recipe.headId) && (itemUsed == 53 || otherItem == 53)) {
                 client.resetAction()
                 if (client.getLevel(Skill.FLETCHING) < recipe.requiredLevel) {
@@ -88,13 +88,13 @@ object FletchingItemCombinationHandler {
                 return true
             }
         }
-        FletchingDefinitions.bowLogs.forEachIndexed { index, bowLog ->
+        FletchingData.bowLogs.forEachIndexed { index, bowLog ->
             if ((itemUsed == bowLog.logItemId || otherItem == bowLog.logItemId) && knife) {
-                FletchingPlugin.open(client, index)
+                Fletching.open(client, index)
                 return true
             }
         }
-        for (bowLog in FletchingDefinitions.bowLogs) {
+        for (bowLog in FletchingData.bowLogs) {
             if ((itemUsed == bowLog.unstrungShortbowId || otherItem == bowLog.unstrungShortbowId) && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction()
                 if (client.getLevel(Skill.FLETCHING) < bowLog.shortLevelRequired) {
@@ -118,7 +118,7 @@ object FletchingItemCombinationHandler {
                 return true
             }
         }
-        for (bowLog in FletchingDefinitions.bowLogs) {
+        for (bowLog in FletchingData.bowLogs) {
             if ((itemUsed == bowLog.unstrungLongbowId || otherItem == bowLog.unstrungLongbowId) && (itemUsed == 1777 || otherItem == 1777)) {
                 client.resetAction()
                 if (client.getLevel(Skill.FLETCHING) < bowLog.longLevelRequired) {

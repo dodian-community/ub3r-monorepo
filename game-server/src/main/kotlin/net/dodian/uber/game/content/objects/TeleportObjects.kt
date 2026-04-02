@@ -241,7 +241,7 @@ object TeleportObjects : ObjectContent {
                     (objectId == 6452 && client.position.y == 9376)
                 ) {
                     if (client.position.x == 3305) {
-                        val agi = net.dodian.uber.game.content.skills.agility.AgilityCourseService(client)
+                        val agi = net.dodian.uber.game.content.skills.agility.Agility(client)
                         agi.kbdEntrance()
                     } else {
                         DialogueService.setDialogueId(client, 536)

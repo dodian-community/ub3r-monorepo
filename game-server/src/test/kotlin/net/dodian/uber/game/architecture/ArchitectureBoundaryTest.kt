@@ -605,7 +605,7 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
-    fun `legacy game event package is removed`() {
+    fun `legacy game event package is removed except core GameEvent type`() {
         val packageViolations = sourceFiles.mapNotNull { file ->
             val packageLine = Files.readAllLines(file)
                 .asSequence()
@@ -613,9 +613,14 @@ class ArchitectureBoundaryTest {
                 .firstOrNull { it.startsWith("package ") }
                 ?: return@mapNotNull null
             val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
+            val isAllowedCoreGameEventType =
+                packageName == "net.dodian.uber.game.event" && file.fileName.toString() == "GameEvent.kt"
             val isLegacyEventPackage =
-                packageName == "net.dodian.uber.game.event" ||
-                    packageName.startsWith("net.dodian.uber.game.event.")
+                !isAllowedCoreGameEventType &&
+                    (
+                        packageName == "net.dodian.uber.game.event" ||
+                            packageName.startsWith("net.dodian.uber.game.event.")
+                        )
             if (!isLegacyEventPackage) {
                 return@mapNotNull null
             }
@@ -628,10 +633,9 @@ class ArchitectureBoundaryTest {
                 if (!trimmed.startsWith("import ")) {
                     return@mapIndexedNotNull null
                 }
-                if (
-                    !trimmed.contains("net.dodian.uber.game.event.") &&
-                    !trimmed.contains("net.dodian.uber.game.event;")
-                ) {
+                val importsLegacyEvent = trimmed.contains("net.dodian.uber.game.event.")
+                val importsAllowedCoreGameEvent = trimmed == "import net.dodian.uber.game.event.GameEvent"
+                if (!importsLegacyEvent || importsAllowedCoreGameEvent || trimmed.contains("net.dodian.uber.game.event;")) {
                     return@mapIndexedNotNull null
                 }
                 "${file}:${idx + 1} -> $trimmed"

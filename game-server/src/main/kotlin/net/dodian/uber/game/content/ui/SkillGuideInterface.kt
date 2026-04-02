@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.content.skills.guide.SkillGuidePlugin
+import net.dodian.uber.game.content.skills.guide.SkillGuide
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
@@ -69,7 +69,7 @@ object SkillGuideInterface : InterfaceButtonContent {
                         componentKey = group.componentKey,
                         rawButtonIds = group.rawButtonIds,
                     ) { client, _ ->
-                        SkillGuidePlugin.open(client, group.skillId, 0)
+                        SkillGuide.open(client, group.skillId, 0)
                         true
                     },
                 )
@@ -84,11 +84,11 @@ object SkillGuideInterface : InterfaceButtonContent {
                         rawButtonIds = subTab.rawButtonIds,
                     ) { client, _ ->
                         when (subTab.targetTab) {
-                            0 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.ATTACK.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 0)
-                            1 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.DEFENCE.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 1)
-                            2 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.RANGED.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 2)
-                            3 -> if (client.currentSkill < 2) client.sendMessage("Coming soon!") else SkillGuidePlugin.open(client, client.currentSkill, 3)
-                            else -> SkillGuidePlugin.open(client, client.currentSkill, subTab.targetTab)
+                            0 -> if (client.currentSkill < 2) SkillGuide.open(client, Skill.ATTACK.id, 0) else SkillGuide.open(client, client.currentSkill, 0)
+                            1 -> if (client.currentSkill < 2) SkillGuide.open(client, Skill.DEFENCE.id, 0) else SkillGuide.open(client, client.currentSkill, 1)
+                            2 -> if (client.currentSkill < 2) SkillGuide.open(client, Skill.RANGED.id, 0) else SkillGuide.open(client, client.currentSkill, 2)
+                            3 -> if (client.currentSkill < 2) client.sendMessage("Coming soon!") else SkillGuide.open(client, client.currentSkill, 3)
+                            else -> SkillGuide.open(client, client.currentSkill, subTab.targetTab)
                         }
                         true
                     },

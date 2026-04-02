@@ -2,30 +2,30 @@ package net.dodian.uber.game.content.skills.agility
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.agility.WerewolfCourseService
+import net.dodian.uber.game.content.skills.agility.AgilityWerewolf
 import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
 import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 
 object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {
         objectAction(WerewolfCourseObjectComponents.STEPPING_STONE) { client, _, position, _ ->
-            WerewolfCourseService(client).StepStone(position)
+            AgilityWerewolf(client).StepStone(position)
             true
         }
         objectAction(WerewolfCourseObjectComponents.HURDLE) { client, _, position, _ ->
-            WerewolfCourseService(client).hurdle(position)
+            AgilityWerewolf(client).hurdle(position)
             true
         }
         objectAction(WerewolfCourseObjectComponents.PIPE) { client, _, position, _ ->
-            WerewolfCourseService(client).pipe(position)
+            AgilityWerewolf(client).pipe(position)
             true
         }
         objectAction(WerewolfCourseObjectComponents.SLOPE) { client, _, position, _ ->
-            WerewolfCourseService(client).slope(position)
+            AgilityWerewolf(client).slope(position)
             true
         }
         objectAction(*WerewolfCourseObjectComponents.ZIPLINE) { client, _, position, _ ->
-            WerewolfCourseService(client).zipLine(position)
+            AgilityWerewolf(client).zipLine(position)
             true
         }
         objectAction(WerewolfCourseObjectComponents.ENTRY_GATE) { client, _, position, _ ->

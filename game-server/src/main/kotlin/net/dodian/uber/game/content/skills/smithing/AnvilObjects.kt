@@ -2,9 +2,9 @@ package net.dodian.uber.game.content.skills.smithing
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
+import net.dodian.uber.game.content.skills.smithing.Smithing
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -17,10 +17,10 @@ object AnvilObjects : ObjectContent {
         if (objectId != 2097) {
             return false
         }
-        val barId = SmithingInterfaceService.firstBarInInventory(client)
+        val barId = SmithingInterface.firstBarInInventory(client)
         if (barId != -1) {
             client.setInteractionAnchor(position.x, position.y, position.z)
-            SmithingPlugin.openSmithing(client, barId, position.x, position.y)
+            Smithing.openSmithing(client, barId, position.x, position.y)
         } else {
             client.sendMessage("You do not have any bars to smith!")
         }
@@ -59,9 +59,9 @@ object AnvilObjects : ObjectContent {
             }
             return true
         }
-        if (SmithingInterfaceService.resolveTierId(itemId) != -1) {
+        if (SmithingInterface.resolveTierId(itemId) != -1) {
             client.setInteractionAnchor(position.x, position.y, position.z)
-            SmithingPlugin.openSmithing(client, itemId, position.x, position.y)
+            Smithing.openSmithing(client, itemId, position.x, position.y)
             return true
         }
         return false

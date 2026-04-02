@@ -1,6 +1,6 @@
 package net.dodian.uber.game.events
 
-import net.dodian.uber.game.engine.event.GameEvent
+import net.dodian.uber.game.event.GameEvent
 
 data class WorldTickEvent(
     val cycle: Int,

@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.content.skills.herblore.HerbloreData
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillReadService
 
@@ -158,7 +158,7 @@ object PotionItems : ItemContent {
     }
 
     private fun nextDose(itemId: Int): Int {
-        for (definition in HerbloreDefinitions.potionDoseDefinitions) {
+        for (definition in HerbloreData.potionDoseDefinitions) {
             when (itemId) {
                 definition.fourDoseId -> return definition.threeDoseId
                 definition.threeDoseId -> return definition.twoDoseId

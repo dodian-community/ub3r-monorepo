@@ -1,14 +1,14 @@
 package net.dodian.uber.game.systems.action
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.smithing.SmeltingActionService
-import net.dodian.uber.game.content.skills.fletching.FletchingService
-import net.dodian.uber.game.content.skills.crafting.CraftingService
+import net.dodian.uber.game.content.skills.smithing.Smithing
+import net.dodian.uber.game.content.skills.fletching.Fletching
+import net.dodian.uber.game.content.skills.crafting.Crafting
 import net.dodian.uber.game.content.skills.crafting.CraftingMode
-import net.dodian.uber.game.content.skills.cooking.CookingService
-import net.dodian.uber.game.content.skills.fishing.FishingDefinitions
-import net.dodian.uber.game.content.skills.fishing.FishingService
-import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService
+import net.dodian.uber.game.content.skills.cooking.Cooking
+import net.dodian.uber.game.content.skills.fishing.FishingData
+import net.dodian.uber.game.content.skills.fishing.Fishing
+import net.dodian.uber.game.content.skills.prayer.Prayer
 import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.systems.skills.CycleSignal
 import net.dodian.uber.game.systems.skills.RunningGatheringAction
@@ -30,7 +30,7 @@ object SkillingActionService {
 
     @JvmStatic
     fun startSmelting(client: Client) {
-        SmeltingActionService.start(client)
+        Smithing.start(client)
     }
 
     @JvmStatic
@@ -44,7 +44,7 @@ object SkillingActionService {
             },
         ) {
             while (player.craftingState?.mode == CraftingMode.SHAFTING) {
-                CraftingService.performShaft(player)
+                Crafting.performShaft(player)
                 emitCycleSuccess("shafting")
                 if (player.craftingState?.mode != CraftingMode.SHAFTING) return@playerAction
                 waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
@@ -62,7 +62,7 @@ object SkillingActionService {
                     if ((fletchingState?.remaining ?: 0) <= 0) {
                         return@onCycleWhile false
                     }
-                    FletchingService.performBowCycle(this)
+                    Fletching.performBowCycle(this)
                     (fletchingState?.remaining ?: 0) > 0
                 }
                 onStop {
@@ -88,10 +88,10 @@ object SkillingActionService {
             },
         ) {
             while (player.craftingState?.mode == CraftingMode.SPINNING) {
-                CraftingService.performSpin(player)
+                Crafting.performSpin(player)
                 emitCycleSuccess("spinning")
                 if (player.craftingState?.mode != CraftingMode.SPINNING) return@playerAction
-                waitTicks(GameCycleClock.ticksForDurationMs(CraftingService.spinDelayMs(player)))
+                waitTicks(GameCycleClock.ticksForDurationMs(Crafting.spinDelayMs(player)))
             }
         }
     }
@@ -107,7 +107,7 @@ object SkillingActionService {
             },
         ) {
             while ((player.craftingState?.remaining ?: 0) > 0 && player.craftingState?.mode == CraftingMode.LEATHER) {
-                CraftingService.performCraft(player)
+                Crafting.performCraft(player)
                 emitCycleSuccess("crafting")
                 if ((player.craftingState?.remaining ?: 0) <= 0 || player.craftingState?.mode != CraftingMode.LEATHER) return@playerAction
                 waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
@@ -118,7 +118,7 @@ object SkillingActionService {
     @JvmStatic
     fun startFishing(client: Client) {
         stopFishingTask(client, ActionStopReason.USER_INTERRUPT)
-        var nextCatchCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(client))
+        var nextCatchCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(Fishing.cycleDelayMs(client))
         var nextAnimationCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
 
         val action =
@@ -131,7 +131,7 @@ object SkillingActionService {
                     val cycle = ContentTiming.currentCycle()
                     if (cycle >= nextAnimationCycle) {
                         val fishIndex = fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
-                        val spot = FishingDefinitions.byIndex(fishIndex)
+                        val spot = FishingData.byIndex(fishIndex)
                         if (spot != null) {
                             performAnimation(spot.animationId, 0)
                         }
@@ -140,11 +140,11 @@ object SkillingActionService {
                     if (cycle < nextCatchCycle) {
                         return@onCycleSignal CycleSignal.continueWithoutSuccess()
                     }
-                    FishingService.performCycle(this)
+                    Fishing.performCycle(this)
                     if (fishingState == null) {
                         return@onCycleSignal CycleSignal.stop()
                     }
-                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(FishingService.cycleDelayMs(this))
+                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(Fishing.cycleDelayMs(this))
                     nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
                     CycleSignal.success()
                 }
@@ -172,7 +172,7 @@ object SkillingActionService {
                     if ((cookingState?.remaining ?: 0) <= 0) {
                         return@onCycleWhile false
                     }
-                    CookingService.performCycle(this)
+                    Cooking.performCycle(this)
                     (cookingState?.remaining ?: 0) > 0
                 }
                 onStop {
@@ -200,7 +200,7 @@ object SkillingActionService {
             while (player.prayerOfferingState != null) {
                 val boneItemId = player.prayerOfferingState?.boneItemId ?: return@playerAction
                 emitCycle("altar_bones")
-                if (!PrayerInteractionService.altarBones(player, boneItemId)) return@playerAction
+                if (!Prayer.altarBones(player, boneItemId)) return@playerAction
                 emitSuccess("altar_bones")
                 waitTicks(3)
             }

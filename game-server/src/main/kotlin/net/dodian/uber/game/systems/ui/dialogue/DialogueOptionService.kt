@@ -4,11 +4,11 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.agility.AgilityDefinitions
-import net.dodian.uber.game.content.skills.agility.AgilityCourseService
-import net.dodian.uber.game.content.skills.agility.DesertCarpetService
-import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
+import net.dodian.uber.game.content.skills.agility.AgilityData
+import net.dodian.uber.game.content.skills.agility.Agility
+import net.dodian.uber.game.content.skills.agility.AgilityTravel
+import net.dodian.uber.game.content.skills.herblore.HerbloreData
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -160,7 +160,7 @@ object DialogueOptionService {
                 c.checkItemUpdate()
             }
 
-            val carpet = DesertCarpetService(c)
+            val carpet = AgilityTravel(c)
             if (button >= 4) {
                 c.showPlayerChat(arrayOf("No, thank you."), 614)
             } else if (amount < 5000) {
@@ -447,33 +447,33 @@ object DialogueOptionService {
         } else if (dialogueId == 536) {
             if (button == 1) {
                 val amount = c.getInvAmt(536).toLong() + c.getInvAmt(537) + c.getBankAmt(536)
-                    var amt = AgilityDefinitions.KBD_ENTRANCE_BONE_AMOUNT
+                    var amt = AgilityData.KBD_ENTRANCE_BONE_AMOUNT
                 if (amount >= 5) {
                     while (amt > 0) {
                         for (slot in 0 until 28) {
                             if (amt <= 0) break
-                            if (c.playerItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_BONE_ID) {
-                                c.deleteItem(AgilityDefinitions.KBD_ENTRANCE_BONE_ID, slot, 1)
+                            if (c.playerItems[slot] - 1 == AgilityData.KBD_ENTRANCE_BONE_ID) {
+                                c.deleteItem(AgilityData.KBD_ENTRANCE_BONE_ID, slot, 1)
                                 amt--
                             }
                         }
                         for (slot in 0 until 28) {
-                            if (c.playerItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_NOTED_BONE_ID) {
+                            if (c.playerItems[slot] - 1 == AgilityData.KBD_ENTRANCE_NOTED_BONE_ID) {
                                 val toDelete = min(c.playerItemsN[slot], amt)
-                                c.deleteItem(AgilityDefinitions.KBD_ENTRANCE_NOTED_BONE_ID, slot, toDelete)
+                                c.deleteItem(AgilityData.KBD_ENTRANCE_NOTED_BONE_ID, slot, toDelete)
                                 amt -= toDelete
                                 break
                             }
                         }
                         for (slot in c.bankItems.indices) {
-                            if (c.bankItems[slot] - 1 == AgilityDefinitions.KBD_ENTRANCE_BONE_ID) {
+                            if (c.bankItems[slot] - 1 == AgilityData.KBD_ENTRANCE_BONE_ID) {
                                 c.bankItemsN[slot] -= amt
                                 break
                             }
                         }
                         amt = 0
                     }
-                    val agi = AgilityCourseService(c)
+                    val agi = Agility(c)
                     agi.kbdEntrance()
                     c.checkItemUpdate()
                     c.sendMessage("You sacrifice 5 dragon bones!")
@@ -507,7 +507,7 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
                 resetDialogue()
-                val doseDefinitions = HerbloreDefinitions.potionDoseDefinitions
+                val doseDefinitions = HerbloreData.potionDoseDefinitions
                 val amount = LongArray(doseDefinitions.size)
                 val vials = LongArray(doseDefinitions.size)
                 for (i in doseDefinitions.indices) {
@@ -582,7 +582,7 @@ object DialogueOptionService {
             }
         } else if (dialogueId == 20931) {
             if (button == 1) {
-                PyramidPlunderService.reset(c)
+                PyramidPlunder.reset(c)
             }
             c.send(RemoveInterfaces())
         } else if (dialogueId == 48054) {

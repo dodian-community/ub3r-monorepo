@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingRequest
-import net.dodian.uber.game.content.skills.prayer.PrayerPlugin
+import net.dodian.uber.game.content.skills.prayer.Prayer
 
 object AltarObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(409, 20377)
@@ -39,7 +39,7 @@ object AltarObjects : ObjectContent {
             return false
         }
         client.setInteractionAnchor(position.x, position.y, position.z)
-        PrayerPlugin.startOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
+        Prayer.startOffering(client, PrayerOfferingRequest(itemId, position.x, position.y))
         return true
     }
 }

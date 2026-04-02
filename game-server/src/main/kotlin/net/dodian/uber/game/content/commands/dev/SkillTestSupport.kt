@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.player.bank.PlayerBankService
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
+import net.dodian.uber.game.content.skills.farming.FarmingData
 import net.dodian.uber.game.content.skills.farming.FarmingState
 import net.dodian.uber.game.systems.skills.SkillAdminService
 
@@ -116,10 +116,10 @@ internal fun handleFarmTest(context: CommandContext): Boolean {
 
     clearInventory(client)
     intArrayOf(
-        FarmingDefinitions().RAKE,
-        FarmingDefinitions().SPADE,
-        FarmingDefinitions().SEED_DIBBER,
-        FarmingDefinitions().SECATEURS,
+        FarmingData().RAKE,
+        FarmingData().SPADE,
+        FarmingData().SEED_DIBBER,
+        FarmingData().SECATEURS,
         6032,
         6034,
         6036,

@@ -34,20 +34,20 @@ class FarmingState {
         val farmJson = JsonParser().parse(farmString)
         var farmPatch: JsonArray
         if(new) {
-            for(compost in FarmingDefinitions.compostBin.values()) { /* Compost default values */
+            for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 val farmCompost = JsonArray()
-                farmCompost.add(FarmingDefinitions.compost.NONE.toString()) //Compost!
-                farmCompost.add(FarmingDefinitions.compostState.EMPTY.toString()) //State
+                farmCompost.add(FarmingData.compost.NONE.toString()) //Compost!
+                farmCompost.add(FarmingData.compostState.EMPTY.toString()) //State
                 farmCompost.add(0) //Timer/Amount
                 farmCompost.add(-1) //Date
                 farmingCompostValues.add(compost.name, farmCompost)
             }
-            for (patch in FarmingDefinitions.patches.values()) { /* Patches default values */
+            for (patch in FarmingData.patches.values()) { /* Patches default values */
                 farmPatch = JsonArray()
                 repeat((0 until patch.objectId.size).count()) {
                     farmPatch.add(-1) //ItemId of planted seed :D
-                    farmPatch.add(FarmingDefinitions.patchState.WEED.toString()) //State (Included Protection!)
-                    farmPatch.add(FarmingDefinitions.compost.NONE.toString()) //Compost
+                    farmPatch.add(FarmingData.patchState.WEED.toString()) //State (Included Protection!)
+                    farmPatch.add(FarmingData.compost.NONE.toString()) //Compost
                     farmPatch.add(0) //Stages
                     farmPatch.add(0) //Timer
                     farmPatch.add(-1) //Planted at Date
@@ -59,12 +59,12 @@ class FarmingState {
             }
         } else { /* Values from save! */
             farmingCompostValues = farmJson.asJsonArray.get(0) as JsonObject
-            for(compost in FarmingDefinitions.compostBin.values()) { /* Compost default values */
+            for(compost in FarmingData.compostBin.values()) { /* Compost default values */
                 if(farmingCompostValues.get(compost.name) == null) {
-                    for(compostType in FarmingDefinitions.compostBin.values()) { /* Compost default values */
+                    for(compostType in FarmingData.compostBin.values()) { /* Compost default values */
                         val farmCompost = JsonArray()
-                        farmCompost.add(FarmingDefinitions.compost.NONE.toString()) //Amount
-                        farmCompost.add(FarmingDefinitions.compostState.EMPTY.toString()) //State
+                        farmCompost.add(FarmingData.compost.NONE.toString()) //Amount
+                        farmCompost.add(FarmingData.compostState.EMPTY.toString()) //State
                         farmCompost.add(0) //Timer
                         farmCompost.add(-1) //Date
                         farmingCompostValues.add(compostType.name, farmCompost)
@@ -81,13 +81,13 @@ class FarmingState {
             if (!farmingMetaValues.has("lastGlobalPulseAtMillis")) {
                 farmingMetaValues.addProperty("lastGlobalPulseAtMillis", System.currentTimeMillis())
             }
-            for (patch in FarmingDefinitions.patches.values()) { /* Patches default values */
+            for (patch in FarmingData.patches.values()) { /* Patches default values */
                 if (farmingPatchValues.get(patch.name) == null) {
                     farmPatch = JsonArray()
                     repeat((0 until patch.objectId.size).count()) {
                         farmPatch.add(-1)
-                        farmPatch.add(FarmingDefinitions.patchState.WEED.toString()) //State (Included Protection!)
-                        farmPatch.add(FarmingDefinitions.compost.NONE.toString()) //Compost
+                        farmPatch.add(FarmingData.patchState.WEED.toString()) //State (Included Protection!)
+                        farmPatch.add(FarmingData.compost.NONE.toString()) //Compost
                         farmPatch.add(0) //Stages
                         farmPatch.add(0) //Timer
                         farmPatch.add(-1) //Planted at Date

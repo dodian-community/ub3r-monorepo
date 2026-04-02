@@ -16,7 +16,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.skills.SkillAdminService
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BetaOnlyCommands : CommandContent {
@@ -109,20 +109,20 @@ private fun handleBeta(context: CommandContext): Boolean {
             return true
         }
         context.alias == "plunder" -> {
-            PyramidPlunderService.start(client)
+            PyramidPlunder.start(client)
             return true
         }
         context.alias == "p_start" -> {
-            client.transport(PyramidPlunderService.startPosition())
+            client.transport(PyramidPlunder.startPosition())
             return true
         }
         context.alias == "p_tele" -> {
-            PyramidPlunderService.currentDoor()?.let(client::transport)
+            PyramidPlunder.currentDoor()?.let(client::transport)
             return true
         }
         context.alias == "p_next" -> {
-            PyramidPlunderService.advanceRoom(client)
-            context.reply("You are now at floor ${PyramidPlunderService.roomNumber(client) + 1}")
+            PyramidPlunder.advanceRoom(client)
+            context.reply("You are now at floor ${PyramidPlunder.roomNumber(client) + 1}")
             return true
         }
         context.alias == "barrows" -> {

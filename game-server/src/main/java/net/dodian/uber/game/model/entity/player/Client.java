@@ -22,8 +22,8 @@ import net.dodian.uber.game.model.player.quests.QuestSend;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.content.skills.slayer.SlayerService;
-import net.dodian.uber.game.content.skills.farming.FarmingService;
+import net.dodian.uber.game.content.skills.slayer.Slayer;
+import net.dodian.uber.game.content.skills.farming.Farming;
 import net.dodian.uber.game.content.skills.farming.FarmingState;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.command.CommandDbService;
@@ -35,32 +35,32 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
 import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
-import net.dodian.uber.game.content.skills.mining.MiningService;
-import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingService;
-import net.dodian.uber.game.content.skills.fletching.FletchingService;
+import net.dodian.uber.game.content.skills.mining.Mining;
+import net.dodian.uber.game.content.skills.woodcutting.Woodcutting;
+import net.dodian.uber.game.content.skills.fletching.Fletching;
 import net.dodian.uber.game.content.skills.fletching.FletchingState;
-import net.dodian.uber.game.content.skills.fishing.FishingService;
+import net.dodian.uber.game.content.skills.fishing.Fishing;
 import net.dodian.uber.game.content.skills.fishing.FishingState;
-import net.dodian.uber.game.content.skills.cooking.CookingService;
+import net.dodian.uber.game.content.skills.cooking.Cooking;
 import net.dodian.uber.game.content.skills.cooking.CookingState;
-import net.dodian.uber.game.content.skills.crafting.CraftingService;
+import net.dodian.uber.game.content.skills.crafting.Crafting;
 import net.dodian.uber.game.content.skills.crafting.CraftingMode;
 import net.dodian.uber.game.content.skills.crafting.CraftingState;
 import net.dodian.uber.game.content.skills.crafting.GoldJewelryService;
 import net.dodian.uber.game.content.skills.crafting.TanningRequest;
 import net.dodian.uber.game.content.skills.crafting.TanningService;
-import net.dodian.uber.game.content.skills.prayer.PrayerInteractionService;
+import net.dodian.uber.game.content.skills.prayer.Prayer;
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.content.skills.runecrafting.RunecraftingDefinitions;
+import net.dodian.uber.game.content.skills.runecrafting.RunecraftingData;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingPouchService;
-import net.dodian.uber.game.content.skills.runecrafting.RunecraftingService;
+import net.dodian.uber.game.content.skills.runecrafting.Runecrafting;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueOptionService;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions;
-import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService;
-import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService;
+import net.dodian.uber.game.content.skills.smithing.SmithingData;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.content.events.partyroom.RewardItem;
 import net.dodian.uber.game.persistence.audit.*;
@@ -108,7 +108,7 @@ public class Client extends Player implements Runnable {
     private int recentInboundWriteIndex = 0;
     private int recentInboundCount = 0;
 
-    public FarmingService farming = new FarmingService();
+    public Farming farming = new Farming();
     public FarmingState farmingJson = new FarmingState();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
@@ -1844,7 +1844,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (net.dodian.uber.game.content.skills.runecrafting.RunecraftingPlugin.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.content.skills.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1865,7 +1865,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.content.skills.slayer.SlayerPlugin.sendCurrentTask(this);
+            net.dodian.uber.game.content.skills.slayer.Slayer.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -4439,7 +4439,7 @@ public class Client extends Player implements Runnable {
 
     public boolean bowWeapon(int weaponId) {
         boolean bow = false;
-        if (net.dodian.uber.game.content.skills.fletching.FletchingDefinitions.isBowWeapon(weaponId)) {
+        if (net.dodian.uber.game.content.skills.fletching.FletchingData.isBowWeapon(weaponId)) {
             bow = true;
         }
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||

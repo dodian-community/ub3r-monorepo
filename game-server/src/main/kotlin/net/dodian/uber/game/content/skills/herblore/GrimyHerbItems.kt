@@ -6,13 +6,13 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.content.skills.herblore.HerbloreData
 
 object GrimyHerbItems : ItemContent {
-    override val itemIds: IntArray = HerbloreDefinitions.herbDefinitions.map { it.grimyId }.toIntArray()
+    override val itemIds: IntArray = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        val herb = HerbloreDefinitions.findHerbDefinitionByGrimy(itemId)
+        val herb = HerbloreData.findHerbDefinitionByGrimy(itemId)
         if (herb != null) {
             val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
             val requiredLevel = herb.requiredLevel

@@ -7,9 +7,9 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
-import net.dodian.uber.game.content.skills.crafting.CraftingDefinitions
+import net.dodian.uber.game.content.skills.crafting.CraftingData
 import net.dodian.uber.game.content.skills.crafting.GoldJewelryService
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
 
 object CraftingItemCombinationHandler {
     @JvmStatic
@@ -34,16 +34,16 @@ object CraftingItemCombinationHandler {
             client.openInterface(2311)
             return true
         }
-        for ((index, hide) in CraftingDefinitions.hideDefinitions.withIndex()) {
+        for ((index, hide) in CraftingData.hideDefinitions.withIndex()) {
             if ((itemUsed == 1733 || otherItem == 1733) && (itemUsed == hide.itemId || otherItem == hide.itemId)) {
-                CraftingPlugin.open(client, index)
+                Crafting.open(client, index)
                 client.cIndex = index
                 return true
             }
         }
         if (itemUsed == 1755 || otherItem == 1755) {
             val gem = if (itemUsed == 1755) otherItem else itemUsed
-            val definition = CraftingDefinitions.findGemDefinition(gem)
+            val definition = CraftingData.findGemDefinition(gem)
             if (definition != null) {
                 if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
                     client.sendMessage("You need a crafting level of ${definition.requiredLevel} to cut this.")
@@ -68,7 +68,7 @@ object CraftingItemCombinationHandler {
         }
         if (itemUsed == 1391 || otherItem == 1391) {
             val orb = if (itemUsed == 1391) otherItem else itemUsed
-            val definition = CraftingDefinitions.findOrbDefinition(orb)
+            val definition = CraftingData.findOrbDefinition(orb)
             if (definition != null) {
                 if (definition.requiredLevel > client.getLevel(Skill.CRAFTING)) {
                     client.sendMessage("You need a crafting level of ${definition.requiredLevel} to make this.")

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.action
 
-import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
+import net.dodian.uber.game.content.skills.smithing.SmithingData
 import net.dodian.uber.game.content.skills.smithing.SmithingRequest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -84,7 +84,7 @@ object SmithingActionService {
             return null
         }
 
-        val tierIndex = SmithingDefinitions.findSmithingTierByTypeId(request.tierId)?.let { it.typeId - 1 } ?: 0
+        val tierIndex = SmithingData.findSmithingTierByTypeId(request.tierId)?.let { it.typeId - 1 } ?: 0
         val xpBase = barXp.getOrElse(tierIndex) { 13 }
         val requiredLevel = barLevelRequired.getOrElse(tierIndex) { 1 }
         val diff = player.getLevel(Skill.SMITHING) - requiredLevel

@@ -5,6 +5,7 @@ package net.dodian.uber.game.engine.event
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.engine.event.bootstrap.CoreEventBusBootstrap
+import net.dodian.uber.game.event.GameEvent
 import org.slf4j.LoggerFactory
 
 object GameEventBus {

@@ -1,0 +1,25 @@
+package net.dodian.uber.game.content.skills.firemaking
+
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.skills.ProgressionService
+
+object Firemaking {
+    private const val TINDERBOX = 590
+
+    @JvmStatic
+    fun handleItemCombination(client: Client, itemUsed: Int, useWith: Int): Boolean {
+        if (itemUsed != TINDERBOX && useWith != TINDERBOX) {
+            return false
+        }
+        val log = FiremakingData.findLog(itemUsed, useWith) ?: return false
+        if (client.getLevel(Skill.FIREMAKING) < log.level) {
+            client.sendMessage("You need a firemaking level of ${log.level} to burn ${log.name}.")
+            return true
+        }
+        client.deleteItem(log.itemId, 1)
+        ProgressionService.addXp(client, log.xp, Skill.FIREMAKING)
+        client.resetAction()
+        return true
+    }
+}

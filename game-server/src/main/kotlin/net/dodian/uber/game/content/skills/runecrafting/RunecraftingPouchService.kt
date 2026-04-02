@@ -27,10 +27,10 @@ object RunecraftingPouchService {
         }
 
         val max = client.runePouchesMaxAmount[slot] - client.runePouchesAmount[slot]
-        val amount = minOf(client.getInvAmt(RunecraftingDefinitions.RUNE_ESSENCE_ID), max)
+        val amount = minOf(client.getInvAmt(RunecraftingData.RUNE_ESSENCE_ID), max)
         if (amount > 0) {
             repeat(amount) {
-                client.deleteItem(RunecraftingDefinitions.RUNE_ESSENCE_ID, 1)
+                client.deleteItem(RunecraftingData.RUNE_ESSENCE_ID, 1)
             }
             client.runePouchesAmount[slot] += amount
             client.checkItemUpdate()
@@ -55,7 +55,7 @@ object RunecraftingPouchService {
         amount = minOf(amount, client.runePouchesAmount[slot])
         if (amount > 0) {
             repeat(amount) {
-                client.addItem(RunecraftingDefinitions.RUNE_ESSENCE_ID, 1)
+                client.addItem(RunecraftingData.RUNE_ESSENCE_ID, 1)
             }
             client.runePouchesAmount[slot] -= amount
             client.checkItemUpdate()

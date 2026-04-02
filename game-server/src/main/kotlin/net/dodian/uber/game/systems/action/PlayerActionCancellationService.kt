@@ -3,7 +3,7 @@ package net.dodian.uber.game.systems.action
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.content.skills.smithing.SmithingInterfaceService
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface
 import net.dodian.uber.game.systems.combat.CombatPreemptionPolicy
 
 object PlayerActionCancellationService {
@@ -56,7 +56,7 @@ object PlayerActionCancellationService {
         player.clearMiningState()
         player.clearWoodcuttingState()
         if (player.getActiveSmithingSelection() != null || player.IsAnvil) {
-            SmithingInterfaceService.resetRuntimeState(player)
+            SmithingInterface.resetRuntimeState(player)
             player.send(RemoveInterfaces())
         }
         player.clearPendingProductionSelection()

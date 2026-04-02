@@ -24,7 +24,7 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.content.skills.slayer.SlayerService;
+import net.dodian.uber.game.content.skills.slayer.Slayer;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.content.events.partyroom.Balloons;
 import net.dodian.uber.game.content.events.partyroom.RewardItem;
@@ -1988,12 +1988,12 @@ public abstract class Player extends Entity {
     }
 
     public boolean rejectTeleport() {
-        return net.dodian.uber.game.content.skills.thieving.PyramidPlunderService.hindersTeleport(((Client) this));
+        return net.dodian.uber.game.content.skills.thieving.PyramidPlunder.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            net.dodian.uber.game.content.skills.thieving.PyramidPlunderService.reset(((Client) this));
+            net.dodian.uber.game.content.skills.thieving.PyramidPlunder.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {

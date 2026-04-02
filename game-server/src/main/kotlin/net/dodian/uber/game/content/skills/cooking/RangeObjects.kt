@@ -5,8 +5,6 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.skills.cooking.CookingPlugin
-
 object RangeObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(26181, 2728, 2781)
 
@@ -31,7 +29,7 @@ object RangeObjects : ObjectContent {
         }
 
         client.setInteractionAnchor(position.x, position.y, position.z)
-        CookingPlugin.attempt(client, itemId)
+        Cooking.attempt(client, itemId)
         return true
     }
 }

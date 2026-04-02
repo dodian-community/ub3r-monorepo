@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
 import net.dodian.uber.game.content.skills.crafting.TanningRequest
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -125,7 +125,7 @@ object CraftingInterface : InterfaceButtonContent {
                 ) { client, request ->
                     val amount = hideCraftGroup.amountByButton[request.rawButtonId] ?: return@buttonBinding false
                     val productGroup = hideCraftGroup.rawButtonIds.indexOf(request.rawButtonId) / 4
-                    CraftingPlugin.startHide(client, productGroup, amount)
+                    Crafting.startHide(client, productGroup, amount)
                     true
                 },
             )
@@ -139,7 +139,7 @@ object CraftingInterface : InterfaceButtonContent {
                 ) { client, request ->
                     val amount = standardCraftGroup.amountByButton[request.rawButtonId] ?: return@buttonBinding false
                     val productIndex = standardCraftGroup.rawButtonIds.indexOf(request.rawButtonId) / 3
-                    CraftingPlugin.startLeather(client, productIndex, amount)
+                    Crafting.startLeather(client, productIndex, amount)
                     true
                 },
             )
@@ -199,7 +199,7 @@ object CraftingInterface : InterfaceButtonContent {
                         rawButtonIds = tanning.rawButtonIds,
                     ) { client, request ->
                         val amount = tanning.amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                        CraftingPlugin.startTanning(client, TanningRequest(tanning.hideType, amount))
+                        Crafting.startTanning(client, TanningRequest(tanning.hideType, amount))
                         true
                     },
                 )

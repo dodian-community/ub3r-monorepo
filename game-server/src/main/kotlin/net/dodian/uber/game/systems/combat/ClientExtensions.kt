@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.uber.game.content.skills.slayer.SlayerService
+import net.dodian.uber.game.content.skills.slayer.Slayer
 import net.dodian.utilities.Utils
 
 fun Client.distance(entity: Entity) = Utils.getDistance(position.x, position.y, entity.position.x, entity.position.y)

@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.smithing
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
+import net.dodian.uber.game.content.skills.smithing.SmithingInterface
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -11,8 +11,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionMode
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
+import net.dodian.uber.game.content.skills.smithing.Smithing
 import net.dodian.utilities.Utils
 
 object FurnaceObjects : ObjectContent {
@@ -22,13 +22,13 @@ object FurnaceObjects : ObjectContent {
         if (objectId !in SmithingObjectComponents.smeltingInterfaceFurnaces) {
             return false
         }
-        SmithingPlugin.openSmelting(client)
+        Smithing.openSmelting(client)
         return true
     }
 
     override fun onSecondClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (objectId in SmithingObjectComponents.smeltingInterfaceFurnaces) {
-            SmithingPlugin.openSmelting(client)
+            Smithing.openSmelting(client)
             return true
         }
         return false
@@ -71,11 +71,11 @@ object FurnaceObjects : ObjectContent {
         }
 
         if (itemId == 2357) {
-            CraftingPlugin.openGoldJewelry(client)
+            Crafting.openGoldJewelry(client)
             return true
         }
-        SmeltingInterfaceService.selectPendingRecipeFromOre(client, itemId)
-        SmithingPlugin.openSmelting(client)
+        SmithingInterface.selectPendingRecipeFromOre(client, itemId)
+        Smithing.openSmelting(client)
         return true
     }
 

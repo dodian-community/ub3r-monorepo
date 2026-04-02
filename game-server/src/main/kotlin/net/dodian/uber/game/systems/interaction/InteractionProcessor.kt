@@ -25,7 +25,7 @@ import net.dodian.uber.game.systems.combat.CombatStartService
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionExecutionResult
-import net.dodian.uber.game.content.skills.fishing.FishingNpcInteractionService
+import net.dodian.uber.game.content.skills.fishing.Fishing
 import net.dodian.utilities.Misc
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -636,8 +636,8 @@ object InteractionProcessor {
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
-        if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 1)) {
-            return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
+        if (Fishing.handleNpcOption(player, npc.id, 1)) {
+            return DispatchTiming(true, 0L, 0L, Fishing::class.java.name)
         }
         return NpcContentDispatcher.tryHandleClickTimed(player, 1, npc)
     }
@@ -646,8 +646,8 @@ object InteractionProcessor {
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
         player.faceNpc(npc.slot)
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)
-        if (FishingNpcInteractionService.handleNpcOption(player, npc.id, 2)) {
-            return DispatchTiming(true, 0L, 0L, FishingNpcInteractionService::class.java.name)
+        if (Fishing.handleNpcOption(player, npc.id, 2)) {
+            return DispatchTiming(true, 0L, 0L, Fishing::class.java.name)
         }
         return NpcContentDispatcher.tryHandleClickTimed(player, 2, npc)
     }

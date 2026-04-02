@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
 
 internal object Tanner : NpcModule {
     // Stats: 5809: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -24,7 +24,7 @@ internal object Tanner : NpcModule {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        CraftingPlugin.openTanning(client)
+        Crafting.openTanning(client)
         return true
     }
 

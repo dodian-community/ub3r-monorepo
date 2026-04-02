@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.events.partyroom.RewardItem
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
+import net.dodian.uber.game.content.skills.herblore.HerbloreData
 
 internal object Zahur : NpcModule {
     // Stats: 4753: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -70,13 +70,13 @@ internal object Zahur : NpcModule {
 }
 
 internal object HerbloreNpcDialogue {
-    private val grimyHerbs: IntArray = HerbloreDefinitions.herbDefinitions.map { it.grimyId }.toIntArray()
-    private val cleanHerbs: IntArray = HerbloreDefinitions.herbDefinitions.map { it.cleanId }.toIntArray()
-    private val unfinishedPotions: IntArray = HerbloreDefinitions.herbDefinitions.map { it.unfinishedPotionId }.toIntArray()
-    private val pot4Dose: IntArray = HerbloreDefinitions.potionDoseDefinitions.map { it.fourDoseId }.toIntArray()
-    private val pot3Dose: IntArray = HerbloreDefinitions.potionDoseDefinitions.map { it.threeDoseId }.toIntArray()
-    private val pot2Dose: IntArray = HerbloreDefinitions.potionDoseDefinitions.map { it.twoDoseId }.toIntArray()
-    private val pot1Dose: IntArray = HerbloreDefinitions.potionDoseDefinitions.map { it.oneDoseId }.toIntArray()
+    private val grimyHerbs: IntArray = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
+    private val cleanHerbs: IntArray = HerbloreData.herbDefinitions.map { it.cleanId }.toIntArray()
+    private val unfinishedPotions: IntArray = HerbloreData.herbDefinitions.map { it.unfinishedPotionId }.toIntArray()
+    private val pot4Dose: IntArray = HerbloreData.potionDoseDefinitions.map { it.fourDoseId }.toIntArray()
+    private val pot3Dose: IntArray = HerbloreData.potionDoseDefinitions.map { it.threeDoseId }.toIntArray()
+    private val pot2Dose: IntArray = HerbloreData.potionDoseDefinitions.map { it.twoDoseId }.toIntArray()
+    private val pot1Dose: IntArray = HerbloreData.potionDoseDefinitions.map { it.oneDoseId }.toIntArray()
 
     @JvmStatic
     fun openDecantDoseOptions(client: Client, npcId: Int) {

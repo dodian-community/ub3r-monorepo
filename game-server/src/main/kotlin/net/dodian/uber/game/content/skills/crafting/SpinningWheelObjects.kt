@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
+import net.dodian.uber.game.content.skills.crafting.Crafting
 
 object SpinningWheelObjects : ObjectContent {
     override val objectIds: IntArray = intArrayOf(14889, 14896, 14909, 25824)
@@ -14,7 +14,7 @@ object SpinningWheelObjects : ObjectContent {
         return when (objectId) {
             14889, 25824 -> {
                 client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                CraftingPlugin.startSpinning(client)
+                Crafting.startSpinning(client)
                 true
             }
             14896, 14909 -> {

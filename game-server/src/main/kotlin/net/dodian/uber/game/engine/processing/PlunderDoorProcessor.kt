@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.processing
 
 import java.util.ArrayList
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.utilities.Misc
 
 class PlunderDoorProcessor : Runnable {
@@ -11,7 +11,7 @@ class PlunderDoorProcessor : Runnable {
     override fun run() {
         hourTick--
         if (hourTick == 0) {
-            val state = PyramidPlunderService.global()
+            val state = PyramidPlunder.global()
             val cloneDoors = ArrayList<Position>(state.allDoors.toList())
             cloneDoors.remove(state.currentDoor)
             if (cloneDoors.isNotEmpty()) {
@@ -20,6 +20,6 @@ class PlunderDoorProcessor : Runnable {
             }
             hourTick = 4
         }
-        PyramidPlunderService.resetGlobalCycleState()
+        PyramidPlunder.resetGlobalCycleState()
     }
 }

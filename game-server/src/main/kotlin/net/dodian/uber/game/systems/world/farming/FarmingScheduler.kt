@@ -5,7 +5,7 @@ import java.util.IdentityHashMap
 import java.util.TreeMap
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.skills.farming.FarmingState
-import net.dodian.uber.game.content.skills.farming.FarmingDefinitions
+import net.dodian.uber.game.content.skills.farming.FarmingData
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
 
@@ -23,7 +23,7 @@ class FarmingScheduler {
     private val scheduled = IdentityHashMap<Client, Long>()
     private val buckets = TreeMap<Long, FarmingTickBucket>()
     private val waterSaplingIds =
-        FarmingDefinitions.sapling.values().mapTo(HashSet()) { it.waterId + 1 }
+        FarmingData.sapling.values().mapTo(HashSet()) { it.waterId + 1 }
 
     fun refreshActivePlayers(
         activePlayers: List<Client>,
@@ -151,12 +151,12 @@ class FarmingScheduler {
     }
 
     private fun hasActiveCompost(farmingJson: FarmingState): Boolean {
-        for (compost in FarmingDefinitions.compostBin.values()) {
+        for (compost in FarmingData.compostBin.values()) {
             val value = farmingJson.getCompostData().get(compost.name)?.asJsonArray ?: continue
             val state = value.get(1).asString
             if (
-                state.equals(FarmingDefinitions.compostState.CLOSED.toString(), true) ||
-                state.equals(FarmingDefinitions.compostState.FILLED.toString(), true)
+                state.equals(FarmingData.compostState.CLOSED.toString(), true) ||
+                state.equals(FarmingData.compostState.FILLED.toString(), true)
             ) {
                 return true
             }
@@ -165,7 +165,7 @@ class FarmingScheduler {
     }
 
     private fun hasActivePatches(farmingJson: FarmingState): Boolean {
-        for (patch in FarmingDefinitions.patches.values()) {
+        for (patch in FarmingData.patches.values()) {
             val values = farmingJson.getPatchData().get(patch.name)?.asJsonArray ?: continue
             for (slot in 0 until patch.objectId.size) {
                 val checkPos = slot * farmingJson.PATCHAMOUNT
@@ -175,7 +175,7 @@ class FarmingScheduler {
                 if (itemId != -1) {
                     return true
                 }
-                if (!state.equals(FarmingDefinitions.patchState.WEED.toString(), true)) {
+                if (!state.equals(FarmingData.patchState.WEED.toString(), true)) {
                     return true
                 }
                 if (stage > 0) {

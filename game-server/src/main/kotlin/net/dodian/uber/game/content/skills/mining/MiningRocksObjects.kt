@@ -6,11 +6,11 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.content.skills.mining.MiningDefinitions
-import net.dodian.uber.game.content.skills.mining.MiningPlugin
+import net.dodian.uber.game.content.skills.mining.MiningData
+import net.dodian.uber.game.content.skills.mining.Mining
 
 object MiningRocksObjects : ObjectContent {
-    override val objectIds: IntArray = MiningDefinitions.allRockObjectIds
+    override val objectIds: IntArray = MiningData.allRockObjectIds
 
     override fun clickInteractionPolicy(
         option: Int,
@@ -25,6 +25,6 @@ object MiningRocksObjects : ObjectContent {
     }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return MiningPlugin.attempt(client, objectId, position)
+        return Mining.attempt(client, objectId, position)
     }
 }

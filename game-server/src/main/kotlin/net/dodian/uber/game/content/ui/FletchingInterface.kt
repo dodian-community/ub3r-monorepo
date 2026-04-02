@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.content.skills.fletching.FletchingPlugin
+import net.dodian.uber.game.content.skills.fletching.Fletching
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
@@ -13,12 +13,12 @@ object FletchingInterface : InterfaceButtonContent {
         listOf(
             buttonBinding(-1, 0, "fletching.bows.longbow", longbowButtons) { client, request ->
                 val amount = amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                FletchingPlugin.start(client, true, amount)
+                Fletching.start(client, true, amount)
                 true
             },
             buttonBinding(-1, 1, "fletching.bows.shortbow", shortbowButtons) { client, request ->
                 val amount = amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                FletchingPlugin.start(client, false, amount)
+                Fletching.start(client, false, amount)
                 true
             },
         )
