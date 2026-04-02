@@ -1,12 +1,17 @@
 package net.dodian.uber.game.content.skills.agility
 
+import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.api.content.ContentInteraction
+import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
+import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
+import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
@@ -671,3 +676,206 @@ class Agility(private val c: Client) {
         }
     }
 }
+
+object GnomeCourseObjectComponents {
+    const val LOG_BALANCE = 23145
+    const val NET_ONE = 23134
+    const val TREE_BRANCH_UP = 23559
+    const val ROPE_SWING = 23557
+    val TREE_BRANCH_DOWN = intArrayOf(23560, 23561)
+    const val NET_TWO = 23135
+    const val PIPE_ENTRY_ONE = 23138
+    const val PIPE_ENTRY_TWO = 23139
+}
+
+object GnomeCourseObjectBindings : FirstClickDslObjectContent(
+    firstClickObjectActions {
+        objectAction(GnomeCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
+            Agility(client).GnomeLog()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.NET_ONE) { client, _, position, _ ->
+            if (client.distanceToPoint(position.x, position.y) >= 2) {
+                return@objectAction false
+            }
+            Agility(client).GnomeNet1()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.TREE_BRANCH_UP) { client, _, _, _ ->
+            Agility(client).GnomeTree1()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.ROPE_SWING) { client, _, _, _ ->
+            Agility(client).GnomeRope()
+            true
+        }
+        objectAction(*GnomeCourseObjectComponents.TREE_BRANCH_DOWN) { client, _, _, _ ->
+            Agility(client).GnomeTreebranch2()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.NET_TWO) { client, _, position, _ ->
+            if (client.distanceToPoint(position.x, position.y) >= 3) {
+                return@objectAction false
+            }
+            Agility(client).GnomeNet2()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.PIPE_ENTRY_ONE) { client, _, position, _ ->
+            if (client.position.x != 2484 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
+                return@objectAction false
+            }
+            Agility(client).GnomePipe()
+            true
+        }
+        objectAction(GnomeCourseObjectComponents.PIPE_ENTRY_TWO) { client, _, position, _ ->
+            if (client.position.x != 2487 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
+                return@objectAction false
+            }
+            Agility(client).GnomePipe()
+            true
+        }
+    },
+) {
+    override fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ): ContentObjectInteractionPolicy? {
+        if (option != 1 || objectId !in objectIds) {
+            return null
+        }
+        return ContentInteraction.legacyObjectDistancePolicy()
+    }
+}
+
+object BarbarianCourseObjectComponents {
+    const val ROPE_SWING = 23131
+    const val LOG_BALANCE = 23144
+    const val NET = 20211
+    const val LEDGE = 23547
+    const val STAIRS = 16682
+    const val CRUMBLING_WALL = 1948
+    const val ORANGE_BAR = 23567
+    const val YELLOW_LEDGE = 23548
+}
+
+object BarbarianCourseObjectBindings : FirstClickDslObjectContent(
+    firstClickObjectActions {
+        objectAction(BarbarianCourseObjectComponents.ROPE_SWING) { client, _, _, _ ->
+            Agility(client).BarbRope()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
+            Agility(client).BarbLog()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.NET) { client, _, _, _ ->
+            Agility(client).BarbNet()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.LEDGE) { client, _, _, _ ->
+            Agility(client).BarbLedge()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.STAIRS) { client, _, _, _ ->
+            Agility(client).BarbStairs()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.CRUMBLING_WALL) { client, _, position, _ ->
+            val agility = Agility(client)
+            when {
+                position.x == 2536 && position.y == 3553 -> agility.BarbFirstWall()
+                position.x == 2539 && position.y == 3553 -> agility.BarbSecondWall()
+                position.x == 2542 && position.y == 3553 -> agility.BarbFinishWall()
+                else -> return@objectAction false
+            }
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.ORANGE_BAR) { client, _, _, _ ->
+            Agility(client).orangeBar()
+            true
+        }
+        objectAction(BarbarianCourseObjectComponents.YELLOW_LEDGE) { client, _, _, _ ->
+            Agility(client).yellowLedge()
+            true
+        }
+    },
+)
+
+object WildernessCourseObjectComponents {
+    const val PIPE = 23137
+    const val ROPE = 23132
+    const val STONES = 23556
+    const val LOG_BALANCE = 23542
+    const val CLIFF = 23640
+}
+
+object WildernessCourseObjectBindings : FirstClickDslObjectContent(
+    firstClickObjectActions {
+        objectAction(WildernessCourseObjectComponents.PIPE) { client, _, _, _ ->
+            Agility(client).WildyPipe()
+            true
+        }
+        objectAction(WildernessCourseObjectComponents.ROPE) { client, _, _, _ ->
+            Agility(client).WildyRope()
+            true
+        }
+        objectAction(WildernessCourseObjectComponents.STONES) { client, _, _, _ ->
+            Agility(client).WildyStones()
+            true
+        }
+        objectAction(WildernessCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
+            Agility(client).WildyLog()
+            true
+        }
+        objectAction(WildernessCourseObjectComponents.CLIFF) { client, _, _, _ ->
+            Agility(client).WildyClimb()
+            true
+        }
+    },
+)
+
+object WerewolfCourseObjectComponents {
+    const val STEPPING_STONE = 11643
+    const val HURDLE = 11638
+    const val PIPE = 11657
+    const val SLOPE = 11641
+    val ZIPLINE = intArrayOf(11644, 11645, 11646)
+    const val ENTRY_GATE = 11636
+}
+
+object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
+    firstClickObjectActions {
+        objectAction(WerewolfCourseObjectComponents.STEPPING_STONE) { client, _, position, _ ->
+            AgilityWerewolf(client).StepStone(position)
+            true
+        }
+        objectAction(WerewolfCourseObjectComponents.HURDLE) { client, _, position, _ ->
+            AgilityWerewolf(client).hurdle(position)
+            true
+        }
+        objectAction(WerewolfCourseObjectComponents.PIPE) { client, _, position, _ ->
+            AgilityWerewolf(client).pipe(position)
+            true
+        }
+        objectAction(WerewolfCourseObjectComponents.SLOPE) { client, _, position, _ ->
+            AgilityWerewolf(client).slope(position)
+            true
+        }
+        objectAction(*WerewolfCourseObjectComponents.ZIPLINE) { client, _, position, _ ->
+            AgilityWerewolf(client).zipLine(position)
+            true
+        }
+        objectAction(WerewolfCourseObjectComponents.ENTRY_GATE) { client, _, position, _ ->
+            if (client.getLevel(Skill.AGILITY) >= 60) {
+                client.ReplaceObject(position.x, position.y, WerewolfCourseObjectComponents.ENTRY_GATE, 2, 10)
+                client.showNPCChat(5928, 601, arrayOf("Welcome to the werewolf agility course!"))
+                client.transport(Position(3549, 9865, 0))
+            } else {
+                client.showNPCChat(5928, 616, arrayOf("Go and train your agility!"))
+            }
+            true
+        }
+    },
+)

@@ -1,6 +1,0 @@
-package net.dodian.uber.game.content.skills.smithing
-
-data class SmeltingRequest(
-    val recipe: SmeltingRecipe,
-    val amount: Int,
-)

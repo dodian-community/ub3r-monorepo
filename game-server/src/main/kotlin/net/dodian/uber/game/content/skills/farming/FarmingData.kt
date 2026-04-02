@@ -1,6 +1,116 @@
 package net.dodian.uber.game.content.skills.farming
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import net.dodian.uber.game.model.Position
+
+class FarmingState {
+    private var farmingCompostValues = JsonObject()
+    private var farmingPatchValues = JsonObject()
+    private var farmingMetaValues = JsonObject()
+    @Volatile
+    private var cachedSaveSnapshot = "[{},\n{},\n{}]"
+
+    var lastGlobalPulseAtMillis: Long
+        get() = farmingMetaValues.get("lastGlobalPulseAtMillis")?.asLong ?: 0L
+        set(value) {
+            farmingMetaValues.addProperty("lastGlobalPulseAtMillis", value)
+        }
+
+    fun farmingSave(): String {
+        return buildSaveSnapshot()
+    }
+
+    fun farmingSaveSnapshot(): String = cachedSaveSnapshot
+
+    fun refreshSaveSnapshot(): String {
+        cachedSaveSnapshot = buildSaveSnapshot()
+        return cachedSaveSnapshot
+    }
+
+    fun farmingLoad(farmString: String) {
+        val isNew = farmString.isEmpty()
+        val farmJson = JsonParser().parse(farmString)
+        var farmPatch: JsonArray
+        if (isNew) {
+            for (compost in FarmingData.compostBin.values()) {
+                val farmCompost = JsonArray()
+                farmCompost.add(FarmingData.compost.NONE.toString())
+                farmCompost.add(FarmingData.compostState.EMPTY.toString())
+                farmCompost.add(0)
+                farmCompost.add(-1)
+                farmingCompostValues.add(compost.name, farmCompost)
+            }
+            for (patch in FarmingData.patches.values()) {
+                farmPatch = JsonArray()
+                repeat((0 until patch.objectId.size).count()) {
+                    farmPatch.add(-1)
+                    farmPatch.add(FarmingData.patchState.WEED.toString())
+                    farmPatch.add(FarmingData.compost.NONE.toString())
+                    farmPatch.add(0)
+                    farmPatch.add(0)
+                    farmPatch.add(-1)
+                }
+                farmingPatchValues.add(patch.name, farmPatch)
+            }
+            farmingMetaValues = JsonObject().apply {
+                addProperty("lastGlobalPulseAtMillis", System.currentTimeMillis())
+            }
+        } else {
+            farmingCompostValues = farmJson.asJsonArray.get(0) as JsonObject
+            for (compost in FarmingData.compostBin.values()) {
+                if (farmingCompostValues.get(compost.name) == null) {
+                    for (compostType in FarmingData.compostBin.values()) {
+                        val farmCompost = JsonArray()
+                        farmCompost.add(FarmingData.compost.NONE.toString())
+                        farmCompost.add(FarmingData.compostState.EMPTY.toString())
+                        farmCompost.add(0)
+                        farmCompost.add(-1)
+                        farmingCompostValues.add(compostType.name, farmCompost)
+                    }
+                }
+            }
+            farmingPatchValues = farmJson.asJsonArray.get(1) as JsonObject
+            farmingMetaValues =
+                if (farmJson.asJsonArray.size() > 2) {
+                    farmJson.asJsonArray.get(2) as JsonObject
+                } else {
+                    JsonObject()
+                }
+            if (!farmingMetaValues.has("lastGlobalPulseAtMillis")) {
+                farmingMetaValues.addProperty("lastGlobalPulseAtMillis", System.currentTimeMillis())
+            }
+            for (patch in FarmingData.patches.values()) {
+                if (farmingPatchValues.get(patch.name) == null) {
+                    farmPatch = JsonArray()
+                    repeat((0 until patch.objectId.size).count()) {
+                        farmPatch.add(-1)
+                        farmPatch.add(FarmingData.patchState.WEED.toString())
+                        farmPatch.add(FarmingData.compost.NONE.toString())
+                        farmPatch.add(0)
+                        farmPatch.add(0)
+                        farmPatch.add(-1)
+                    }
+                    farmingPatchValues.add(patch.name, farmPatch)
+                }
+            }
+        }
+        refreshSaveSnapshot()
+    }
+
+    fun getCompostData(): JsonObject {
+        return farmingCompostValues
+    }
+
+    fun getPatchData(): JsonObject {
+        return farmingPatchValues
+    }
+
+    val PATCHAMOUNT = 6
+
+    private fun buildSaveSnapshot(): String = "[$farmingCompostValues,\n$farmingPatchValues,\n$farmingMetaValues]"
+}
 
 class FarmingData {
     enum class allotmentPatch(val level : Int, val seed: Int, val plantXp : Int, val disease : Int, val config : Int, val stages : Int, val ticks : Int, val harvestXp : Int, val harvestItem : Int) {
