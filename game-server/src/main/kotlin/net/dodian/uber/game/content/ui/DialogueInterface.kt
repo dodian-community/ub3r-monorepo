@@ -1,40 +1,49 @@
-package net.dodian.uber.game.content.interfaces.dialogue
+package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.DialogueOptionEvent
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
-import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
+import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
 
-object DialogueInterfaceButtons : InterfaceButtonContent {
+object DialogueInterface : InterfaceButtonContent {
+    private const val INTERFACE_ID = 0
+
+    private val optionOne = intArrayOf(2461, 9157, 9167, 9178, 9190)
+    private val optionTwo = intArrayOf(2462, 9158, 9168, 9179, 9191)
+    private val optionThree = intArrayOf(9169, 9180, 9192)
+    private val optionFour = intArrayOf(9181, 9193)
+    private val optionFive = intArrayOf(9194)
+    private val toggleSpecialsButtons = intArrayOf(150)
+    private val toggleBossYellButtons = intArrayOf(151)
+
     override val bindings =
         listOf(
-            buttonBinding(DialogueComponents.INTERFACE_ID, 1, "dialogue.option.1", DialogueComponents.optionOne) { client, request ->
+            buttonBinding(INTERFACE_ID, 1, "dialogue.option.1", optionOne) { client, request ->
                 handleOption(client, request.rawButtonId, 1)
             },
-            buttonBinding(DialogueComponents.INTERFACE_ID, 2, "dialogue.option.2", DialogueComponents.optionTwo) { client, request ->
+            buttonBinding(INTERFACE_ID, 2, "dialogue.option.2", optionTwo) { client, request ->
                 handleOption(client, request.rawButtonId, 2)
             },
-            buttonBinding(DialogueComponents.INTERFACE_ID, 3, "dialogue.option.3", DialogueComponents.optionThree) { client, request ->
+            buttonBinding(INTERFACE_ID, 3, "dialogue.option.3", optionThree) { client, request ->
                 handleOption(client, request.rawButtonId, 3)
             },
-            buttonBinding(DialogueComponents.INTERFACE_ID, 4, "dialogue.option.4", DialogueComponents.optionFour) { client, request ->
+            buttonBinding(INTERFACE_ID, 4, "dialogue.option.4", optionFour) { client, request ->
                 handleOption(client, request.rawButtonId, 4)
             },
-            buttonBinding(DialogueComponents.INTERFACE_ID, 5, "dialogue.option.5", DialogueComponents.optionFive) { client, request ->
+            buttonBinding(INTERFACE_ID, 5, "dialogue.option.5", optionFive) { client, request ->
                 handleOption(client, request.rawButtonId, 5)
             },
-            buttonBinding(-1, 6, "dialogue.state.toggle_specials", DialogueComponents.toggleSpecialsButtons) { client, _ ->
+            buttonBinding(-1, 6, "dialogue.state.toggle_specials", toggleSpecialsButtons) { client, _ ->
                 DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_SPECIALS)
                 DialogueService.setDialogueSent(client, false)
                 true
             },
-            buttonBinding(-1, 7, "dialogue.state.toggle_boss_yell", DialogueComponents.toggleBossYellButtons) { client, _ ->
+            buttonBinding(-1, 7, "dialogue.state.toggle_boss_yell", toggleBossYellButtons) { client, _ ->
                 DialogueService.setDialogueId(client, DialogueIds.Classic.TOGGLE_BOSS_YELL)
                 DialogueService.setDialogueSent(client, false)
                 true

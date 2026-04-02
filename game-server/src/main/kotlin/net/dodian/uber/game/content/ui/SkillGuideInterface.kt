@@ -1,18 +1,21 @@
-package net.dodian.uber.game.content.interfaces.skillguide
+package net.dodian.uber.game.content.ui
 
+import net.dodian.uber.game.content.skills.guide.SkillGuidePlugin
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
-object SkillGuideComponents {
-    const val INTERFACE_ID = 8714
+object SkillGuideInterface : InterfaceButtonContent {
+    private const val INTERFACE_ID = 8714
 
-    data class SkillGuideButtonGroup(
+    private data class SkillGuideButtonGroup(
         val skillId: Int,
         val componentId: Int,
         val componentKey: String,
         val rawButtonIds: IntArray,
     )
 
-    val skillButtons =
+    private val skillButtons =
         listOf(
             SkillGuideButtonGroup(Skill.ATTACK.id, 0, "skillguide.attack", intArrayOf(8654, 33206, 94167)),
             SkillGuideButtonGroup(Skill.HITPOINTS.id, 1, "skillguide.hitpoints", intArrayOf(8655, 33207, 94168)),
@@ -37,14 +40,14 @@ object SkillGuideComponents {
             SkillGuideButtonGroup(Skill.FARMING.id, 20, "skillguide.farming", intArrayOf(95068)),
         )
 
-    data class SubTabDefinition(
+    private data class SubTabDefinition(
         val componentId: Int,
         val componentKey: String,
         val rawButtonIds: IntArray,
         val targetTab: Int,
     )
 
-    val subTabs =
+    private val subTabs =
         listOf(
             SubTabDefinition(8846, "skillguide.subtab.0", intArrayOf(8846, 34142), 0),
             SubTabDefinition(8823, "skillguide.subtab.1", intArrayOf(8823, 34119), 1),
@@ -55,5 +58,41 @@ object SkillGuideComponents {
             SubTabDefinition(34139, "skillguide.subtab.6", intArrayOf(34139), 6),
             SubTabDefinition(34155, "skillguide.subtab.7", intArrayOf(34155), 7),
         )
-}
 
+    override val bindings =
+        buildList {
+            skillButtons.forEach { group ->
+                add(
+                    buttonBinding(
+                        interfaceId = INTERFACE_ID,
+                        componentId = group.componentId,
+                        componentKey = group.componentKey,
+                        rawButtonIds = group.rawButtonIds,
+                    ) { client, _ ->
+                        SkillGuidePlugin.open(client, group.skillId, 0)
+                        true
+                    },
+                )
+            }
+
+            subTabs.forEach { subTab ->
+                add(
+                    buttonBinding(
+                        interfaceId = INTERFACE_ID,
+                        componentId = subTab.componentId,
+                        componentKey = subTab.componentKey,
+                        rawButtonIds = subTab.rawButtonIds,
+                    ) { client, _ ->
+                        when (subTab.targetTab) {
+                            0 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.ATTACK.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 0)
+                            1 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.DEFENCE.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 1)
+                            2 -> if (client.currentSkill < 2) SkillGuidePlugin.open(client, Skill.RANGED.id, 0) else SkillGuidePlugin.open(client, client.currentSkill, 2)
+                            3 -> if (client.currentSkill < 2) client.sendMessage("Coming soon!") else SkillGuidePlugin.open(client, client.currentSkill, 3)
+                            else -> SkillGuidePlugin.open(client, client.currentSkill, subTab.targetTab)
+                        }
+                        true
+                    },
+                )
+            }
+        }
+}
