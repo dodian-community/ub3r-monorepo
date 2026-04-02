@@ -9,7 +9,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.skills.SkillAdminService
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BetaOnlyCommands : CommandContent {

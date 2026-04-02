@@ -5,10 +5,10 @@ import net.dodian.uber.game.content.dialogue.BrimhavenEntryDialogueModule
 import net.dodian.uber.game.content.dialogue.PyramidPlunderDialogueModule
 import net.dodian.uber.game.content.dialogue.RockshellDialogueModule
 import net.dodian.uber.game.content.dialogue.SettingsDialogueModule
-import net.dodian.uber.game.content.npcs.spawns.DukeHoracio
-import net.dodian.uber.game.content.npcs.spawns.PartyPete
-import net.dodian.uber.game.content.npcs.spawns.UnknownNpc1597
-import net.dodian.uber.game.content.npcs.spawns.Watcher
+import net.dodian.uber.game.content.npcs.DukeHoracio
+import net.dodian.uber.game.content.npcs.PartyPete
+import net.dodian.uber.game.content.npcs.UnknownNpc1597
+import net.dodian.uber.game.content.npcs.Watcher
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueRenderRegistry {

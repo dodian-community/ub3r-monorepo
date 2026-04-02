@@ -21,7 +21,7 @@ import net.dodian.uber.game.content.skills.cooking.CookingState;
 import net.dodian.uber.game.content.skills.crafting.CraftingState;
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderPlayerState;
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
 import java.util.concurrent.ConcurrentHashMap;
 

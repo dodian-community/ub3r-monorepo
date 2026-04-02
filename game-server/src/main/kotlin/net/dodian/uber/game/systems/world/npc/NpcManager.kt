@@ -1,8 +1,8 @@
 package net.dodian.uber.game.systems.world.npc
 
 import java.util.TreeMap
-import net.dodian.uber.game.content.npcs.spawns.NpcContentRegistry
-import net.dodian.uber.game.content.npcs.spawns.NpcSpawnDef
+import net.dodian.uber.game.content.npcs.NpcContentRegistry
+import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData

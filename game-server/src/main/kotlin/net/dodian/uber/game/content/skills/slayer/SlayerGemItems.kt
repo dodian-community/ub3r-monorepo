@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.slayer
 
 import net.dodian.uber.game.content.items.ItemContent
-import net.dodian.uber.game.content.npcs.spawns.SlayerMasterDialogue
+import net.dodian.uber.game.content.npcs.SlayerMasterDialogue
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.quests.QuestSend
 

@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.processing
 
 import java.util.ArrayList
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
 import net.dodian.utilities.Misc
 
 class PlunderDoorProcessor : Runnable {

@@ -45,7 +45,7 @@ import net.dodian.uber.game.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
 import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
 import net.dodian.uber.game.content.skills.smithing.SmeltingSelection;
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderPlayerState;
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.systems.action.ActiveProductionSelection;
@@ -1988,12 +1988,12 @@ public abstract class Player extends Entity {
     }
 
     public boolean rejectTeleport() {
-        return net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService.hindersTeleport(((Client) this));
+        return net.dodian.uber.game.content.skills.thieving.PyramidPlunderService.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService.reset(((Client) this));
+            net.dodian.uber.game.content.skills.thieving.PyramidPlunderService.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {

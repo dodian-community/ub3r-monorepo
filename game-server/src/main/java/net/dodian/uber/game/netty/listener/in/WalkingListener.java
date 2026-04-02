@@ -17,7 +17,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService;
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicLong;

@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.in;
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
-import net.dodian.uber.game.content.npcs.spawns.HerbloreNpcDialogue;
+import net.dodian.uber.game.content.npcs.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.content.skills.cooking.CookingInputService;
 import net.dodian.uber.game.content.interfaces.skilling.SkillingInterfaceItemService;

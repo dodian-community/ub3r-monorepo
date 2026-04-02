@@ -10,7 +10,7 @@ import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
 import net.dodian.utilities.Misc
 
 object PlayerLifecycleTickService {

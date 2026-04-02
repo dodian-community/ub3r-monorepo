@@ -58,7 +58,10 @@ class PluginModuleIndexSymbolProcessor(
         val interfaceButtonsType = "net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent"
         return allObjects
             .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.content.interfaces") &&
+                (
+                    file.packageName.asString().startsWith("net.dodian.uber.game.content.interfaces") ||
+                        file.packageName.asString().startsWith("net.dodian.uber.game.content.ui")
+                    ) &&
                     declaration.implementsInterface(interfaceButtonsType)
             }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
@@ -101,7 +104,7 @@ class PluginModuleIndexSymbolProcessor(
 
         return allObjects
             .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.content.npcs.spawns") &&
+                file.packageName.asString().startsWith("net.dodian.uber.game.content.npcs") &&
                     declaration.simpleName.asString() !in excludedNames
             }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
@@ -142,8 +145,8 @@ class PluginModuleIndexSymbolProcessor(
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
-        out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcContentDefinition")
-        out.appendLine("import net.dodian.uber.game.content.npcs.spawns.NpcModuleDefinitionBuilder")
+        out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
+        out.appendLine("import net.dodian.uber.game.content.npcs.NpcModuleDefinitionBuilder")
         out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
         out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
         out.appendLine()

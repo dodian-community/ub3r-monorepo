@@ -8,7 +8,7 @@ import net.dodian.uber.game.content.skills.agility.AgilityDefinitions
 import net.dodian.uber.game.content.skills.agility.AgilityCourseService
 import net.dodian.uber.game.content.skills.agility.DesertCarpetService
 import net.dodian.uber.game.content.skills.herblore.HerbloreDefinitions
-import net.dodian.uber.game.content.skills.thieving.plunder.PyramidPlunderService
+import net.dodian.uber.game.content.skills.thieving.PyramidPlunderService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
