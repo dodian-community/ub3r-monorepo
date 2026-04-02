@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.objects
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
-import net.dodian.uber.game.content.objects.services.ObjectInteractionType
+import net.dodian.uber.game.systems.interaction.ObjectInteractionContext
+import net.dodian.uber.game.systems.interaction.ObjectInteractionType
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.ItemOnObjectEvent
 import net.dodian.uber.game.events.MagicOnObjectEvent

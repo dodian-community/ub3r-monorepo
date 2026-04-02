@@ -5,7 +5,6 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.systems.combat.getAttackStyle
 import net.dodian.uber.game.content.objects.ObjectContentRegistry
-import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
 import net.dodian.uber.game.content.objects.ObjectInteractionService
 import net.dodian.uber.game.content.npcs.NpcContentDispatcher
 import net.dodian.uber.game.content.npcs.NpcClickMetrics

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.objects
 
-import net.dodian.uber.game.content.objects.services.ObjectInteractionContext
+import net.dodian.uber.game.systems.interaction.ObjectInteractionContext
 import org.slf4j.Logger
 
 object ObjectClickLoggingService {

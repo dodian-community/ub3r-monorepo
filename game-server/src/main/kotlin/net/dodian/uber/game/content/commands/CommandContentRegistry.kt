@@ -1,18 +1,15 @@
 package net.dodian.uber.game.content.commands
 
 import java.util.concurrent.atomic.AtomicBoolean
-import net.dodian.uber.game.content.commands.boss.BossCommands
+import net.dodian.uber.game.content.commands.BossCommands
 import net.dodian.uber.game.content.commands.dev.BetaOnlyCommands
 import net.dodian.uber.game.content.commands.dev.DevAccountAndStateCommands
 import net.dodian.uber.game.content.commands.dev.DevDebugCommands
 import net.dodian.uber.game.content.commands.dev.DevNpcContentCommands
 import net.dodian.uber.game.content.commands.dev.DevSpawnAndNpcCommands
 import net.dodian.uber.game.content.commands.dev.DevVisualCommands
-import net.dodian.uber.game.content.commands.player.PlayerUtilityCommands
-import net.dodian.uber.game.content.commands.social.SocialCommands
 import net.dodian.uber.game.content.commands.staff.StaffModerationCommands
 import net.dodian.uber.game.content.commands.staff.StaffWorldControlCommands
-import net.dodian.uber.game.content.commands.travel.PositionCommands
 import org.slf4j.LoggerFactory
 
 object CommandContentRegistry {
@@ -74,10 +71,10 @@ object CommandContentRegistry {
             DevAccountAndStateCommands,
             StaffModerationCommands,
             StaffWorldControlCommands,
-            PlayerUtilityCommands,
+            PlayerCommands,
             SocialCommands,
             BossCommands,
-            PositionCommands,
+            TravelCommands,
             BetaOnlyCommands,
         )
 
