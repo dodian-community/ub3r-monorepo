@@ -1,5 +1,8 @@
 package net.dodian.uber.game.content.skills.fishing
 
+import net.dodian.uber.game.systems.skills.SkillActionRequest
+import net.dodian.uber.game.systems.skills.SkillActionState
+
 data class FishingSpotDefinition(
     val index: Int,
     val objectId: Int,
@@ -13,6 +16,15 @@ data class FishingSpotDefinition(
     val premiumOnly: Boolean = false,
     val featherConsumed: Boolean = false,
 )
+
+data class FishingRequest(
+    val spotIndex: Int,
+) : SkillActionRequest
+
+data class FishingState(
+    val spotIndex: Int,
+    val gatheredCount: Int = 0,
+) : SkillActionState
 
 object FishingData {
     @JvmField

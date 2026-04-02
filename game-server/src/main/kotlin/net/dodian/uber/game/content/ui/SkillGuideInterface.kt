@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.content.skills.guide.SkillGuide
+import net.dodian.uber.game.content.skills.skillguide.SkillGuide
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding

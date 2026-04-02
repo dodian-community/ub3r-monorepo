@@ -1,7 +1,17 @@
 package net.dodian.uber.game.content.skills.mining
 
+import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.skills.resource.ResourceSkillContent
 import net.dodian.uber.game.systems.skills.resource.resourceSkillContent
+
+data class MiningState(
+    val rockObjectId: Int,
+    val rockPosition: Position,
+    val startedCycle: Long,
+    val resourcesGathered: Int,
+)
 
 enum class RockCategory {
     STANDARD,
@@ -29,6 +39,49 @@ data class PickaxeDef(
     val animationId: Int,
     val dragonTierBoostEligible: Boolean,
 )
+
+enum class MiningStopReason {
+    USER_INTERRUPT,
+    NO_PICKAXE,
+    FULL_INVENTORY,
+    MOVED_AWAY,
+    BUSY,
+    RESTED,
+    DISCONNECTED,
+    INVALID_ROCK,
+}
+
+data class MiningStartedEvent(
+    val client: Client,
+    val rock: MiningRockDef,
+    val position: Position,
+    val pickaxe: PickaxeDef,
+) : GameEvent
+
+data class MiningSuccessEvent(
+    val client: Client,
+    val rock: MiningRockDef,
+    val oreItemId: Int,
+    val experience: Int,
+    val position: Position,
+) : GameEvent
+
+data class MiningStoppedEvent(
+    val client: Client,
+    val rock: MiningRockDef?,
+    val position: Position?,
+    val reason: MiningStopReason,
+) : GameEvent
+
+object GemRocksObjectComponents {
+    // Current Dodian mining parity does not include gem-rock object behavior.
+    val objectIds: IntArray = intArrayOf()
+}
+
+object SpecialMiningObjectComponents {
+    // Current Dodian mining parity does not include special mining object behavior.
+    val objectIds: IntArray = intArrayOf()
+}
 
 object MiningData {
     private val content: ResourceSkillContent = buildMiningContent()

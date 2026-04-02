@@ -1,5 +1,8 @@
 package net.dodian.uber.game.content.skills.fletching
 
+import net.dodian.uber.game.systems.skills.SkillActionRequest
+import net.dodian.uber.game.systems.skills.SkillActionState
+
 data class FletchingLogDefinition(
     val logItemId: Int,
     val unstrungShortbowId: Int,
@@ -27,6 +30,23 @@ data class DartRecipe(
     val requiredLevel: Int,
     val experience: Int,
 )
+
+data class FletchingRequest(
+    val logIndex: Int,
+    val productId: Int,
+    val experience: Int,
+    val amount: Int,
+) : SkillActionRequest
+
+data class FletchingState(
+    val logIndex: Int,
+    val productId: Int = -1,
+    val experience: Int = 0,
+    val remaining: Int = 0,
+) : SkillActionState {
+    val isActive: Boolean
+        get() = productId > 0 && remaining > 0
+}
 
 object FletchingData {
     @JvmField

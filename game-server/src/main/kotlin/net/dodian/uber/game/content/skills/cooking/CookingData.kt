@@ -1,5 +1,8 @@
 package net.dodian.uber.game.content.skills.cooking
 
+import net.dodian.uber.game.systems.skills.SkillActionRequest
+import net.dodian.uber.game.systems.skills.SkillActionState
+
 data class CookingDefinition(
     val rawItemId: Int,
     val cookedItemId: Int,
@@ -8,6 +11,18 @@ data class CookingDefinition(
     val requiredLevel: Int,
     val burnRollBase: Int,
 )
+
+data class CookingRequest(
+    val itemId: Int,
+    val cookIndex: Int,
+    val amount: Int,
+) : SkillActionRequest
+
+data class CookingState(
+    val itemId: Int,
+    val cookIndex: Int,
+    val remaining: Int,
+) : SkillActionState
 
 object CookingData {
     @JvmField

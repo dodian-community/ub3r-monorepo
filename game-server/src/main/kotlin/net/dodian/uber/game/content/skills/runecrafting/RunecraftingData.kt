@@ -1,5 +1,15 @@
 package net.dodian.uber.game.content.skills.runecrafting
 
+data class RunecraftingRequest(
+    val runeId: Int,
+    val requiredLevel: Int,
+    val experiencePerEssence: Int,
+)
+
+data class RunecraftingState(
+    val lastAltarCraftAtMillis: Long = 0L,
+)
+
 data class RunecraftingAltarDefinition(
     val objectId: Int,
     val request: RunecraftingRequest,

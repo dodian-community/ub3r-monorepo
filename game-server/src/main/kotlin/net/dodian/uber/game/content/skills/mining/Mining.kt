@@ -1,5 +1,7 @@
 package net.dodian.uber.game.content.skills.mining
 
+import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -17,6 +19,8 @@ import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.dsl.playerAction
+import net.dodian.uber.game.systems.api.content.ContentInteraction
+import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.utilities.Misc
@@ -321,4 +325,36 @@ object Mining {
         val deltaY = kotlin.math.abs(client.position.y - rockPosition.y)
         return (deltaX + deltaY) == 1
     }
+}
+
+object MiningRocksObjects : ObjectContent {
+    override val objectIds: IntArray = MiningData.allRockObjectIds
+
+    override fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ): ContentObjectInteractionPolicy? {
+        if (option != 1) {
+            return null
+        }
+        return ContentInteraction.nearestBoundaryCardinalPolicy()
+    }
+
+    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
+        return Mining.attempt(client, objectId, position)
+    }
+}
+
+object GemRocksObjectBindings : ObjectContent {
+    override val objectIds: IntArray = GemRocksObjectComponents.objectIds
+
+    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
+}
+
+object SpecialMiningObjectBindings : ObjectContent {
+    override val objectIds: IntArray = SpecialMiningObjectComponents.objectIds
+
+    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
 }

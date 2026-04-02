@@ -1,5 +1,20 @@
 package net.dodian.uber.game.content.skills.prayer
 
+import net.dodian.uber.game.systems.skills.SkillActionRequest
+import net.dodian.uber.game.systems.skills.SkillActionState
+
+data class PrayerOfferingRequest(
+    val boneItemId: Int,
+    val altarX: Int,
+    val altarY: Int,
+) : SkillActionRequest
+
+data class PrayerOfferingState(
+    val boneItemId: Int,
+    val altarX: Int,
+    val altarY: Int,
+) : SkillActionState
+
 object PrayerData {
     const val BURY_ANIMATION: Int = 827
     const val ALTAR_ANIMATION: Int = 3705

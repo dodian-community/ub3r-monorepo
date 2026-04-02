@@ -1,9 +1,13 @@
 package net.dodian.uber.game.content.skills.herblore
 
+import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.content.npcs.HerbloreNpcDialogue
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.systems.skills.ProgressionService
 
 object Herblore {
     @JvmStatic
@@ -96,5 +100,61 @@ object Herblore {
                 ),
             )
         }
+    }
+}
+
+object GrimyHerbItems : ItemContent {
+    override val itemIds: IntArray = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
+
+    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
+        val herb = HerbloreData.findHerbDefinitionByGrimy(itemId) ?: return false
+        val herbloreLevel = Skills.getLevelForExperience(client.getExperience(Skill.HERBLORE))
+        val requiredLevel = herb.requiredLevel
+        if (herbloreLevel < requiredLevel) {
+            client.sendMessage("You need level $requiredLevel herblore to clean this herb.")
+            return true
+        }
+        ProgressionService.addXp(client, herb.cleaningExperience, Skill.HERBLORE)
+        client.deleteItem(itemId, itemSlot, 1)
+        client.addItemSlot(herb.cleanId, 1, itemSlot)
+        client.sendMessage("You clean the ${client.getItemName(itemId)}.")
+        return true
+    }
+}
+
+object HerbloreSuppliesItems : ItemContent {
+    override val itemIds: IntArray = intArrayOf(11877, 11879, 12859)
+
+    override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
+        when (itemId) {
+            11877 -> {
+                client.deleteItem(11877, itemSlot, 1)
+                if (!client.playerHasItem(230)) {
+                    client.addItemSlot(230, 100, itemSlot)
+                } else {
+                    client.addItem(230, 100)
+                }
+                return true
+            }
+            11879 -> {
+                client.deleteItem(11879, itemSlot, 1)
+                if (!client.playerHasItem(228)) {
+                    client.addItemSlot(228, 100, itemSlot)
+                } else {
+                    client.addItem(228, 100)
+                }
+                return true
+            }
+            12859 -> {
+                client.deleteItem(12859, itemSlot, 1)
+                if (!client.playerHasItem(222)) {
+                    client.addItemSlot(222, 100, itemSlot)
+                } else {
+                    client.addItem(222, 100)
+                }
+                return true
+            }
+        }
+        return false
     }
 }

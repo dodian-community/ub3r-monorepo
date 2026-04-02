@@ -1,5 +1,11 @@
 package net.dodian.uber.game.content.skills.herblore
 
+data class HerbloreBatchRequest(
+    val slot: Int,
+    val amount: Int,
+    val npcId: Int,
+)
+
 data class HerbDefinition(
     val grimyId: Int,
     val cleanId: Int,
