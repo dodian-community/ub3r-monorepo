@@ -18,7 +18,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.dsl.playerAction
+import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming

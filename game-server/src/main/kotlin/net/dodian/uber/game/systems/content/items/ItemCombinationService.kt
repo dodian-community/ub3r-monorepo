@@ -1,15 +1,15 @@
 package net.dodian.uber.game.systems.content.items
 
-import net.dodian.uber.game.content.items.CraftingItemCombinationHandler
-import net.dodian.uber.game.content.items.DialogueGateItemCombinationHandler
-import net.dodian.uber.game.content.items.EquipmentAssemblyItemCombinationHandler
-import net.dodian.uber.game.content.items.FiremakingItemCombinationHandler
-import net.dodian.uber.game.content.items.FletchingItemCombinationHandler
-import net.dodian.uber.game.content.items.HerbloreItemCombinationHandler
-import net.dodian.uber.game.content.items.NoveltyItemCombinationHandler
-import net.dodian.uber.game.content.items.PotatoInteractionState
-import net.dodian.uber.game.content.items.RepairPlaceholderItemCombinationHandler
-import net.dodian.uber.game.content.items.SaplingItemCombinationHandler
+import net.dodian.uber.game.content.items.combination.CraftingItemCombinations
+import net.dodian.uber.game.content.items.combination.DialogueGateItemCombinations
+import net.dodian.uber.game.content.items.combination.EquipmentAssemblyItemCombinations
+import net.dodian.uber.game.content.items.combination.FiremakingItemCombinations
+import net.dodian.uber.game.content.items.combination.FletchingItemCombinations
+import net.dodian.uber.game.content.items.combination.HerbloreItemCombinations
+import net.dodian.uber.game.content.items.combination.NoveltyItemCombinations
+import net.dodian.uber.game.content.items.combination.PotatoItemInteractionState
+import net.dodian.uber.game.content.items.combination.RepairPlaceholderItemCombinations
+import net.dodian.uber.game.content.items.combination.SaplingItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.api.content.ContentActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
@@ -40,7 +40,7 @@ object ItemCombinationService {
         )
 
         if (useWith == 5733 || itemUsed == 5733) {
-            PotatoInteractionState.beginItemOnItem(
+            PotatoItemInteractionState.beginItemOnItem(
                 client,
                 if (useWith == 5733) itemUsedSlot else usedWithSlot,
                 if (useWith == 5733) itemUsed else useWith,
@@ -48,47 +48,47 @@ object ItemCombinationService {
             return
         }
 
-        SaplingItemCombinationHandler.handle(client, useWith, usedWithSlot, itemUsed, itemUsedSlot)
+        SaplingItemCombinations.handle(client, useWith, usedWithSlot, itemUsed, itemUsedSlot)
 
         val otherItem = client.playerItems[usedWithSlot] - 1
         val knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605)
 
-        if (CraftingItemCombinationHandler.handleCrystalKey(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
+        if (CraftingItemCombinations.handleCrystalKey(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
             return
         }
 
-        if (DialogueGateItemCombinationHandler.handle(client, itemUsed, useWith)) {
+        if (DialogueGateItemCombinations.handle(client, itemUsed, useWith)) {
             return
         }
 
-        if (HerbloreItemCombinationHandler.handle(client, itemUsed, otherItem)) {
+        if (HerbloreItemCombinations.handle(client, itemUsed, otherItem)) {
             return
         }
 
-        if (HerbloreItemCombinationHandler.handleDoseMixing(client, itemUsed, useWith)) {
+        if (HerbloreItemCombinations.handleDoseMixing(client, itemUsed, useWith)) {
             return
         }
 
-        if (NoveltyItemCombinationHandler.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot, knife)) {
+        if (NoveltyItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot, knife)) {
             return
         }
 
-        if (EquipmentAssemblyItemCombinationHandler.handle(client, itemUsed, otherItem)) {
+        if (EquipmentAssemblyItemCombinations.handle(client, itemUsed, otherItem)) {
             return
         }
 
-        if (FletchingItemCombinationHandler.handle(client, itemUsed, otherItem, knife)) {
+        if (FletchingItemCombinations.handle(client, itemUsed, otherItem, knife)) {
             return
         }
 
-        if (CraftingItemCombinationHandler.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
+        if (CraftingItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
             return
         }
 
-        if (FiremakingItemCombinationHandler.handle(client, itemUsed, useWith)) {
+        if (FiremakingItemCombinations.handle(client, itemUsed, useWith)) {
             return
         }
 
-        RepairPlaceholderItemCombinationHandler.handle(client, itemUsed, useWith)
+        RepairPlaceholderItemCombinations.handle(client, itemUsed, useWith)
     }
 }

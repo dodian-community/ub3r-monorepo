@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.systems.api.content.ContentInteractionType
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
+import net.dodian.uber.game.systems.content.ContentBootstrap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

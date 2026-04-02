@@ -19,7 +19,7 @@ import net.dodian.uber.game.systems.skills.gatheringAction
 import net.dodian.uber.game.systems.skills.productionAction
 import java.util.Collections
 import java.util.WeakHashMap
-import net.dodian.uber.game.systems.action.dsl.playerAction
+import net.dodian.uber.game.systems.action.playerAction
 
 object SkillingActionService {
     private const val STANDARD_ACTION_DELAY_MS = 1800L

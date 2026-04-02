@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.engine.sync.player.pool.PlayerSyncScratchPool
+import net.dodian.uber.game.engine.sync.player.PlayerSyncScratchPool
 import net.dodian.uber.game.engine.sync.playerinfo.PlayerVisibilityRules
 
 class DesiredLocalSetPlanner {

@@ -3,13 +3,13 @@ package net.dodian.uber.game.systems.api.content
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.tasking.TaskHandle
-import net.dodian.uber.game.engine.tasking.coroutine.NpcTaskContext
-import net.dodian.uber.game.engine.tasking.coroutine.PlayerTaskContext
-import net.dodian.uber.game.engine.tasking.coroutine.WorldTaskContext
-import net.dodian.uber.game.engine.tasking.coroutine.gameClock as engineGameClock
-import net.dodian.uber.game.engine.tasking.coroutine.npcTaskCoroutine as engineNpcTaskCoroutine
-import net.dodian.uber.game.engine.tasking.coroutine.playerTaskCoroutine as enginePlayerTaskCoroutine
-import net.dodian.uber.game.engine.tasking.coroutine.worldTaskCoroutine as engineWorldTaskCoroutine
+import net.dodian.uber.game.engine.tasking.NpcTaskContext
+import net.dodian.uber.game.engine.tasking.PlayerTaskContext
+import net.dodian.uber.game.engine.tasking.WorldTaskContext
+import net.dodian.uber.game.engine.tasking.gameClock as engineGameClock
+import net.dodian.uber.game.engine.tasking.npcTaskCoroutine as engineNpcTaskCoroutine
+import net.dodian.uber.game.engine.tasking.playerTaskCoroutine as enginePlayerTaskCoroutine
+import net.dodian.uber.game.engine.tasking.worldTaskCoroutine as engineWorldTaskCoroutine
 
 object ContentCoroutines {
     @JvmStatic

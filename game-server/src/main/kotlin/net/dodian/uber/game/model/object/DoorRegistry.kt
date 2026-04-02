@@ -1,8 +1,7 @@
 package net.dodian.uber.game.model.`object`
 
-import net.dodian.uber.game.model.`object`.door.DoorDefinition
-import net.dodian.uber.game.model.`object`.door.DoorDefinitionLoader
-import net.dodian.uber.game.model.`object`.door.DoorDefinitionRepository
+import net.dodian.uber.game.model.`object`.DoorDefinitionLoader
+import net.dodian.uber.game.model.`object`.DoorDefinitionRepository
 import org.slf4j.LoggerFactory
 
 class DoorRegistry @JvmOverloads constructor(

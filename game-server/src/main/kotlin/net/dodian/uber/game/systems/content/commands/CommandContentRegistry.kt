@@ -2,7 +2,7 @@ package net.dodian.uber.game.systems.content.commands
 
 import java.util.concurrent.atomic.AtomicBoolean
 import net.dodian.uber.game.systems.content.ContentModuleIndex
-import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
+import net.dodian.uber.game.systems.content.ContentBootstrap
 import org.slf4j.LoggerFactory
 
 object CommandContentRegistry : ContentBootstrap {

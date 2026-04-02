@@ -148,6 +148,40 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `repackaged kotlin roots keep practical depth cap`() {
+        val cappedRoots = mapOf(
+            "src/main/kotlin/net/dodian/uber/game/engine/tasking" to 1,
+            "src/main/kotlin/net/dodian/uber/game/engine/sync/player" to 2,
+            "src/main/kotlin/net/dodian/uber/game/systems/action" to 1,
+            "src/main/kotlin/net/dodian/uber/game/systems/content" to 2,
+            "src/main/kotlin/net/dodian/uber/game/systems/skills" to 1,
+            "src/main/kotlin/net/dodian/uber/game/content/objects" to 2,
+            "src/main/kotlin/net/dodian/uber/game/model/object" to 1,
+        )
+
+        val violations = cappedRoots.flatMap { (root, maxDepth) ->
+            val rootPath = Paths.get(root)
+            val rootPrefix = "${rootPath.invariantSeparatorsPathString}/"
+            sourceFiles
+                .asSequence()
+                .filter { it.extension == "kt" }
+                .filter { it.invariantSeparatorsPathString.startsWith(rootPrefix) }
+                .mapNotNull { file ->
+                    val relative = rootPath.relativize(file)
+                    val depth = relative.nameCount - 1
+                    if (depth <= maxDepth) return@mapNotNull null
+                    "$file depth=$depth max=$maxDepth"
+                }
+                .toList()
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Repackaged roots exceeded practical depth cap.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `systems layer does not import engine sync or net internals`() {
         val violations = sourceFiles
             .filter { it.toString().contains("/net/dodian/uber/game/systems/") }
@@ -671,6 +705,56 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "game.events should contain payload definitions, not event bus wiring.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `event contract runtime and payload packages stay split`() {
+        val gameEventPath = sourceRoot.resolve("kotlin/net/dodian/uber/game/event/GameEvent.kt")
+        val runtimeFiles = listOf(
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventBus.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventScheduler.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/EventListener.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/EventFilter.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/ReturnableEventListener.kt"),
+        )
+
+        val missing = buildList {
+            if (!Files.exists(gameEventPath)) add(gameEventPath.toString())
+            runtimeFiles.filterNot(Files::exists).forEach { add(it.toString()) }
+        }
+
+        assertTrue(
+            missing.isEmpty(),
+            "Event split files must exist in their canonical packages.\n${missing.joinToString("\n")}",
+        )
+
+        val forbiddenTypeLocations = sourceFiles.mapNotNull { file ->
+            val lines = Files.readAllLines(file)
+            val pkg = lines.asSequence().map { it.trim() }.firstOrNull { it.startsWith("package ") }
+                ?.removePrefix("package ")
+                ?.trim()
+                ?.removeSuffix(";")
+                ?: return@mapNotNull null
+            val name = file.fileName.toString()
+            val isRuntimeType = name in setOf(
+                "GameEventBus.kt",
+                "GameEventScheduler.kt",
+                "EventListener.kt",
+                "EventFilter.kt",
+                "ReturnableEventListener.kt",
+            )
+            val isGameEventContract = name == "GameEvent.kt"
+
+            val runtimeMisplaced = isRuntimeType && pkg != "net.dodian.uber.game.engine.event"
+            val gameEventMisplaced = isGameEventContract && pkg != "net.dodian.uber.game.event"
+            if (!runtimeMisplaced && !gameEventMisplaced) return@mapNotNull null
+            "$file -> package $pkg"
+        }
+
+        assertTrue(
+            forbiddenTypeLocations.isEmpty(),
+            "Event contract/runtime types must stay in split canonical packages.\n${forbiddenTypeLocations.joinToString("\n")}",
         )
     }
 

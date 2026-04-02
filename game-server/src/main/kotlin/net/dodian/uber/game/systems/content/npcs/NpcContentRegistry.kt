@@ -7,7 +7,7 @@ import net.dodian.uber.game.content.npcs.NpcInteractionSource
 import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import net.dodian.uber.game.content.npcs.hasInteractionHandlers
 import net.dodian.uber.game.content.npcs.optionLabel
-import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap
+import net.dodian.uber.game.systems.content.ContentBootstrap
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

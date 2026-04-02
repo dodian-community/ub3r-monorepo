@@ -14,7 +14,7 @@ import net.dodian.uber.game.systems.api.content.ContentProductionMode
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
-import net.dodian.uber.game.systems.action.dsl.playerAction
+import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.utilities.Range
 
 object Smithing {

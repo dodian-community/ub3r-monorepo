@@ -131,7 +131,7 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverContentBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val bootstrapType = "net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap"
+        val bootstrapType = "net.dodian.uber.game.systems.content.ContentBootstrap"
         return allObjects
             .filter { (file, declaration) ->
                 file.packageName.asString().startsWith("net.dodian.uber.game.systems.content") &&
@@ -165,7 +165,7 @@ class PluginModuleIndexSymbolProcessor(
         val out = StringBuilder()
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
-        out.appendLine("import net.dodian.uber.game.systems.content.bootstrap.ContentBootstrap")
+        out.appendLine("import net.dodian.uber.game.systems.content.ContentBootstrap")
         out.appendLine("import net.dodian.uber.game.systems.content.commands.CommandContent")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")

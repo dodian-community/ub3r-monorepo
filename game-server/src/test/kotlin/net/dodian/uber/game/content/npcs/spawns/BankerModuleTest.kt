@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class BankerModuleTest {
     @Test
     fun `banker module uses generated spawn coverage`() {
-        assertEquals(BankerGenerated.entries.size, Banker.entries.size)
+        assertEquals(BankerSpawnEntries.entries.size, Banker.entries.size)
         assertTrue(Banker.entries.size > 10, "Banker entries should include full generated coverage.")
     }
 

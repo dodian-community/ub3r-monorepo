@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.item
 import java.sql.Statement
 import java.util.HashMap
 import java.util.LinkedHashMap
-import net.dodian.uber.game.content.items.GlobalGroundSpawnContent
+import net.dodian.uber.game.content.items.spawn.GlobalGroundItemSpawns
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -35,7 +35,7 @@ open class ItemManager @JvmOverloads constructor(
             bootstrap()
             return
         }
-        GlobalGroundSpawnContent.spawnAll()
+        GlobalGroundItemSpawns.spawnAll()
     }
 
     open fun loadItems() {
