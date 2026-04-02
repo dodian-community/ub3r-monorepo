@@ -51,9 +51,10 @@ object NpcDataRepository {
         DbAsyncRepository.withConnection { connection ->
             connection
                 .prepareStatement(
-                    "INSERT INTO ${DbTables.GAME_NPC_DEFINITIONS}(id, name, examine, size) VALUES(?, 'no_name', 'no_examine', '1')",
+                    "INSERT IGNORE INTO ${DbTables.GAME_NPC_DEFINITIONS}(id, name, examine, size) VALUES(?, ?, 'no_examine', '1')",
                 ).use { statement ->
                     statement.setInt(1, id)
+                    statement.setString(2, "Unknown_npc_$id")
                     statement.executeUpdate()
                 }
         }

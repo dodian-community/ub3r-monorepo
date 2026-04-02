@@ -4,7 +4,6 @@ import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.content.npcs.NO_CLICK_HANDLER
 import net.dodian.uber.game.content.npcs.NpcContentDefinition
 import net.dodian.uber.game.content.npcs.NpcInteractionSource
-import net.dodian.uber.game.systems.content.npcs.NpcJsonSpawnOverlayLoader
 import net.dodian.uber.game.content.npcs.NpcSpawnDef
 import net.dodian.uber.game.content.npcs.hasInteractionHandlers
 import net.dodian.uber.game.content.npcs.optionLabel
@@ -110,15 +109,7 @@ object NpcContentRegistry : ContentBootstrap {
     @JvmStatic
     fun allSpawns(): List<NpcSpawnDef> {
         bootstrap()
-        val defaults = definitions.flatMap { it.entries }
-        val overlays = NpcJsonSpawnOverlayLoader.loadOverlaySpawns()
-        if (overlays.isEmpty()) {
-            return defaults
-        }
-        val mergedByKey = LinkedHashMap<String, NpcSpawnDef>(defaults.size + overlays.size)
-        defaults.forEach { mergedByKey[spawnKey(it)] = it }
-        overlays.forEach { mergedByKey[spawnKey(it)] = it }
-        return mergedByKey.values.toList()
+        return definitions.flatMap { it.entries }
     }
 
     @JvmStatic
@@ -205,10 +196,6 @@ object NpcContentRegistry : ContentBootstrap {
             }
         }
         byNpcId = rebuilt
-    }
-
-    private fun spawnKey(spawn: NpcSpawnDef): String {
-        return "${spawn.npcId}:${spawn.x}:${spawn.y}:${spawn.z}"
     }
 
     private fun readFlag(property: String, defaultValue: Boolean): Boolean {

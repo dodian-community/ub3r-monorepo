@@ -26,9 +26,44 @@ class NpcManager {
     fun loadSpawns() {
         logger.info("Loading NPC spawns from content registry only")
         val contentSpawns = NpcContentRegistry.allSpawns()
+        ensureDefinitionsForSpawnNpcIds(contentSpawns)
         validateRequiredContentSpawns(contentSpawns)
         val loaded = loadContentSpawns(contentSpawns)
         logger.info("Loaded {} content NPC spawns.", loaded)
+    }
+
+    private fun ensureDefinitionsForSpawnNpcIds(spawns: List<NpcSpawnDef>) {
+        val missingIds = spawns.asSequence().map { it.npcId }.distinct().filter { getData(it) == null }.sorted().toList()
+        if (missingIds.isEmpty()) {
+            return
+        }
+
+        var inserted = 0
+        val stillMissing = ArrayList<Int>()
+        for (npcId in missingIds) {
+            try {
+                NpcDataRepository.insertDefaultDefinition(npcId)
+                val loaded = NpcDataRepository.loadDefinitionById(npcId)
+                if (loaded != null) {
+                    data[npcId] = loaded
+                    inserted++
+                } else {
+                    stillMissing += npcId
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to backfill missing NPC definition for spawn npcId={}", npcId, e)
+                stillMissing += npcId
+            }
+        }
+
+        logger.warn(
+            "Backfilled {} missing NPC definitions required by content spawns ({} requested).",
+            inserted,
+            missingIds.size,
+        )
+        if (stillMissing.isNotEmpty()) {
+            logger.warn("NPC definitions still missing after backfill attempt: {}", stillMissing.joinToString(","))
+        }
     }
 
     private fun loadContentSpawns(contentSpawns: List<NpcSpawnDef>): Int {
@@ -39,6 +74,7 @@ class NpcManager {
         var skippedMissingData = 0
         var failed = 0
         val missingDataByNpcId = TreeMap<Int, Int>()
+        val missingSpawnSamplesByNpcId = HashMap<Int, MutableList<Position>>()
         val seen = HashSet<String>(total)
 
         for (spawn in contentSpawns) {
@@ -47,6 +83,10 @@ class NpcManager {
                     skipped++
                     skippedMissingData++
                     missingDataByNpcId.merge(spawn.npcId, 1, Int::plus)
+                    missingSpawnSamplesByNpcId
+                        .computeIfAbsent(spawn.npcId) { ArrayList(3) }
+                        .takeIf { it.size < 3 }
+                        ?.add(Position(spawn.x, spawn.y, spawn.z))
                     continue
                 }
                 val position = Position(spawn.x, spawn.y, spawn.z)
@@ -90,7 +130,7 @@ class NpcManager {
             logger.warn(
                 "Skipped {} content NPC spawns with missing NPC definitions: {}",
                 skippedMissingData,
-                formatMissingNpcCounts(missingDataByNpcId),
+                formatMissingNpcCounts(missingDataByNpcId, missingSpawnSamplesByNpcId),
             )
         }
 
@@ -124,14 +164,30 @@ class NpcManager {
         }
     }
 
-    private fun formatMissingNpcCounts(missingDataByNpcId: Map<Int, Int>): String {
+    private fun formatMissingNpcCounts(
+        missingDataByNpcId: Map<Int, Int>,
+        missingSpawnSamplesByNpcId: Map<Int, List<Position>>,
+    ): String {
         val builder = StringBuilder()
         var first = true
         for ((npcId, count) in missingDataByNpcId) {
             if (!first) {
                 builder.append(", ")
             }
-            builder.append(npcId).append("x").append(count)
+            val moduleName = NpcContentRegistry.get(npcId)?.name ?: "unmapped"
+            val positions = missingSpawnSamplesByNpcId[npcId]
+                .orEmpty()
+                .joinToString(" | ") { "(${it.x},${it.y},${it.z})" }
+                .ifEmpty { "no-sample" }
+            builder
+                .append(npcId)
+                .append("x")
+                .append(count)
+                .append("[module=")
+                .append(moduleName)
+                .append(", samples=")
+                .append(positions)
+                .append("]")
             first = false
         }
         return builder.toString()
