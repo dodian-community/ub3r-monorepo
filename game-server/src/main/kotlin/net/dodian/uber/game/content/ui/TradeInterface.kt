@@ -1,18 +1,19 @@
-package net.dodian.uber.game.content.interfaces.trade
+package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 import org.slf4j.LoggerFactory
 
-object TradeInterfaceButtons : InterfaceButtonContent {
-    private val logger = LoggerFactory.getLogger(TradeInterfaceButtons::class.java)
+object TradeInterface : InterfaceButtonContent {
+    private val logger = LoggerFactory.getLogger(TradeInterface::class.java)
+
+    private const val CONFIRM_STAGE_ONE_BUTTON = 3420
+    private const val CONFIRM_STAGE_TWO_BUTTON = 3546
 
     override val bindings =
         listOf(
-            buttonBinding(-1, 0, "trade.confirm.stage_one", intArrayOf(TradeComponents.CONFIRM_STAGE_ONE_BUTTON)) { client, _ ->
+            buttonBinding(-1, 0, "trade.confirm.stage_one", intArrayOf(CONFIRM_STAGE_ONE_BUTTON)) { client, _ ->
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||
@@ -43,7 +44,7 @@ object TradeInterfaceButtons : InterfaceButtonContent {
                 }
                 true
             },
-            buttonBinding(-1, 1, "trade.confirm.stage_two", intArrayOf(TradeComponents.CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
+            buttonBinding(-1, 1, "trade.confirm.stage_two", intArrayOf(CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
                 try {
                     val other = client.getClient(client.trade_reqId)
                     if (other == null || !client.validClient(client.trade_reqId) || !client.inTrade ||

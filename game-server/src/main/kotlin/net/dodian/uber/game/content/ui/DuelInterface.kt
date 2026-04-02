@@ -1,23 +1,27 @@
-package net.dodian.uber.game.content.interfaces.duel
+package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
-object DuelInterfaceButtons : InterfaceButtonContent {
+object DuelInterface : InterfaceButtonContent {
+    private val offerRuleButtons = intArrayOf(6698, 6699, 6697, 6702)
+    private val offerRuleIndexByButton = mapOf(6698 to 0, 6699 to 1, 6697 to 2, 6702 to 7)
+    private val bodyRuleButtons = intArrayOf(13813, 13814, 13815, 13816, 13817, 13818, 13819, 13820, 13821, 13822, 13823)
+    private const val CONFIRM_STAGE_TWO_BUTTON = 6520
+    private const val CONFIRM_STAGE_ONE_BUTTON = 6674
+
     override val bindings =
         listOf(
-            buttonBinding(-1, 0, "duel.offer_rule", DuelComponents.offerRuleButtons) { client, request ->
-                val ruleIndex = DuelComponents.offerRuleIndexByButton[request.rawButtonId] ?: return@buttonBinding false
+            buttonBinding(-1, 0, "duel.offer_rule", offerRuleButtons) { client, request ->
+                val ruleIndex = offerRuleIndexByButton[request.rawButtonId] ?: return@buttonBinding false
                 client.toggleDuelRule(ruleIndex)
             },
-            buttonBinding(-1, 1, "duel.body_rule", DuelComponents.bodyRuleButtons) { client, request ->
-                val ruleIndex = DuelComponents.bodyRuleButtons.indexOf(request.rawButtonId)
+            buttonBinding(-1, 1, "duel.body_rule", bodyRuleButtons) { client, request ->
+                val ruleIndex = bodyRuleButtons.indexOf(request.rawButtonId)
                 client.toggleDuelBodyRule(ruleIndex)
             },
-            buttonBinding(-1, 2, "duel.confirm.stage_two", intArrayOf(DuelComponents.CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
+            buttonBinding(-1, 2, "duel.confirm.stage_two", intArrayOf(CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
                 if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.DUEL_CONFIRM_STAGE_TWO, 1000L)) {
                     return@buttonBinding true
                 }
@@ -42,7 +46,7 @@ object DuelInterfaceButtons : InterfaceButtonContent {
                 }
                 true
             },
-            buttonBinding(-1, 3, "duel.confirm.stage_one", intArrayOf(DuelComponents.CONFIRM_STAGE_ONE_BUTTON)) { client, _ ->
+            buttonBinding(-1, 3, "duel.confirm.stage_one", intArrayOf(CONFIRM_STAGE_ONE_BUTTON)) { client, _ ->
                 val other = client.getClient(client.duel_with)
                 if (other == null || client.slot == other.slot || !client.inDuel || client.duelConfirmed) {
                     return@buttonBinding true

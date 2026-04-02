@@ -1,10 +1,10 @@
-package net.dodian.uber.game.content.interfaces.skilling
+package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.crafting.GoldJewelryRequest
 import net.dodian.uber.game.content.skills.crafting.CraftingPlugin
-import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
+import net.dodian.uber.game.content.skills.crafting.GoldJewelryRequest
 import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
+import net.dodian.uber.game.content.skills.smithing.SmithingPlugin
+import net.dodian.uber.game.model.entity.player.Client
 
 object SkillingInterfaceItemService {
     @JvmStatic

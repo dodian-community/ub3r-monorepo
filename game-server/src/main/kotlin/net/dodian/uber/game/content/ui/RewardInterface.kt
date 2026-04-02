@@ -1,25 +1,30 @@
-package net.dodian.uber.game.content.interfaces.rewards
+package net.dodian.uber.game.content.ui
 
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
-object RewardInterfaceButtons : InterfaceButtonContent {
+object RewardInterface : InterfaceButtonContent {
+    private val skillSelectionButtons: IntArray = intArrayOf(
+        10252, 11000, 10253, 11001, 10254, 11002, 10255, 11011,
+        11013, 11014, 11010, 11012, 11006, 11009, 11008, 11004,
+        11003, 11005, 47002, 54090, 11007,
+    )
+
     override val bindings =
         listOf(
-            buttonBinding(-1, 0, "rewards.skill_choice", RewardComponents.skillSelectionButtons) { client, request ->
+            buttonBinding(-1, 0, "rewards.skill_choice", skillSelectionButtons) { client, request ->
                 if (client.genie) {
                     client.send(RemoveInterfaces())
                     client.genie = false
                     if (client.isBusy || client.checkBankInterface || !client.playerHasItem(2528)) {
                         return@buttonBinding true
                     }
-                    val skillIndex = RewardComponents.skillSelectionButtons.indexOf(request.rawButtonId)
+                    val skillIndex = skillSelectionButtons.indexOf(request.rawButtonId)
                     val trainedSkill = Skill.getSkill(skillIndex) ?: return@buttonBinding true
                     if (request.rawButtonId != 54090) {
                         client.deleteItem(2528, 1)
@@ -40,7 +45,7 @@ object RewardInterfaceButtons : InterfaceButtonContent {
                     if (client.inDuel || client.duelFight || client.IsBanking || client.checkBankInterface || !client.playerHasItem(6543)) {
                         return@buttonBinding true
                     }
-                    val skillIndex = RewardComponents.skillSelectionButtons.indexOf(request.rawButtonId)
+                    val skillIndex = skillSelectionButtons.indexOf(request.rawButtonId)
                     val trainedSkill = Skill.getSkill(skillIndex) ?: return@buttonBinding true
                     client.deleteItem(6543, 1)
                     client.checkItemUpdate()

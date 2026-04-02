@@ -1,11 +1,11 @@
-package net.dodian.uber.game.content.interfaces.smithing
+package net.dodian.uber.game.content.ui
 
 import net.dodian.uber.game.content.skills.smithing.SmeltingInterfaceService
 import net.dodian.uber.game.content.skills.smithing.SmithingDefinitions
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding
 
-object SmithingInterfaceButtons : InterfaceButtonContent {
+object SmithingInterface : InterfaceButtonContent {
     override val bindings =
         buildList {
             SmithingDefinitions.smeltingButtonMappings
@@ -14,19 +14,19 @@ object SmithingInterfaceButtons : InterfaceButtonContent {
                     val (barId, amount) = key
                     val rawButtonIds = mappings.map { it.buttonId }.distinct().toIntArray()
                     val primary = mappings.first()
-                add(
-                    buttonBinding(
-                        interfaceId = 2400,
+                    add(
+                        buttonBinding(
+                            interfaceId = 2400,
                             componentId = barId,
                             componentKey = "smithing.smelting.$barId.$amount",
                             rawButtonIds = rawButtonIds,
-                        requiredInterfaceId = 2400,
-                    ) { client, _ ->
+                            requiredInterfaceId = 2400,
+                        ) { client, _ ->
                             SmeltingInterfaceService.startFromMapping(client, primary)
-                        true
-                    }
-                )
-            }
+                            true
+                        },
+                    )
+                }
             SmithingDefinitions.smeltingRecipes.forEachIndexed { index, recipe ->
                 val frameButtonId = SmithingDefinitions.frameIds()[index]
                 add(
@@ -39,7 +39,7 @@ object SmithingInterfaceButtons : InterfaceButtonContent {
                     ) { client, _ ->
                         SmeltingInterfaceService.selectPendingRecipe(client, recipe.barId)
                         true
-                    }
+                    },
                 )
             }
         }
