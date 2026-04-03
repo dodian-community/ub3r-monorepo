@@ -6,8 +6,7 @@ import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldPollPublisher
 import net.dodian.uber.game.persistence.WorldPollSnapshot
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
-import net.dodian.uber.game.systems.world.farming.FarmingScheduler
-import net.dodian.uber.game.systems.world.pulse.GlobalPulseService
+import net.dodian.uber.game.systems.world.farming.FarmingRuntimeService
 import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -18,7 +17,7 @@ class WorldMaintenanceService(
     private val logger = LoggerFactory.getLogger(WorldMaintenanceService::class.java)
     private val playerIndex = OnlinePlayerIndex()
     private val pollApplier = TargetedWorldPollApplier()
-    private val farmingScheduler = FarmingScheduler.INSTANCE
+    private val farmingRuntime = FarmingRuntimeService.INSTANCE
     private var lastPlunderRunMs = 0L
     private var worldDbDueCycle = Long.MIN_VALUE
     private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
@@ -56,28 +55,18 @@ class WorldMaintenanceService(
         worldDbDueCycle = Long.MIN_VALUE
     }
 
-    fun runFarming(cycle: Long) {
-        if (!GlobalPulseService.isDue(cycle)) {
-            return
-        }
-        val pulseNow = System.currentTimeMillis()
-        playerIndex.refresh()
-        val activePlayers = playerIndex.snapshot()
-        val refreshStats = farmingScheduler.refreshActivePlayers(activePlayers, cycle)
+    fun runFarming(@Suppress("UNUSED_PARAMETER") cycle: Long) {
+        val nowMs = System.currentTimeMillis()
         val runStats: net.dodian.uber.game.systems.world.farming.FarmingRunStats
         val elapsed = measureNanoTime {
-            runStats = farmingScheduler.runDue(cycle)
-        }
-        activePlayers.forEach { client ->
-            client.farmingJson.lastGlobalPulseAtMillis = pulseNow
+            runStats = farmingRuntime.runDue(nowMs)
         }
         val elapsedMs = elapsed / 1_000_000L
         if (elapsedMs >= runtimePhaseWarnMs) {
             logger.warn(
-                "World maintenance stage {} took {}ms activePlayers={} duePlayers={} processedPlayers={} maxBucketSize={}",
+                "World maintenance stage {} took {}ms duePlayers={} processedPlayers={} maxBucketSize={}",
                 WorldMaintenanceStage.FARMING_TICK,
                 elapsedMs,
-                refreshStats.activePlayers,
                 runStats.duePlayers,
                 runStats.processedPlayers,
                 runStats.maxBucketSize,
