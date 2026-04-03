@@ -16,8 +16,8 @@ import net.dodian.utilities.Utils
 object Balloons {
     private val balloons = ArrayList<GameObject>()
     private val partyEventPos = ArrayList<Position>()
-    private val partyItems = ArrayList<RewardItem>()
-    private val droppedItems = ArrayList<RewardItem>()
+    private val partyItems = ArrayList<PartyRoomRewardItem>()
+    private val droppedItems = ArrayList<PartyRoomRewardItem>()
 
     private var eventActive = false
 
@@ -220,7 +220,10 @@ object Balloons {
     }
 
     @JvmStatic
-    fun offerItems(client: Client, id: Int, amount: Int, _slot: Int) {
+    fun offerItems(client: Client, id: Int, amount: Int, ignoredSlot: Int) {
+        if (ignoredSlot < 0) {
+            return
+        }
         if (client.playerRights < 2) {
             return
         }
@@ -235,7 +238,7 @@ object Balloons {
             adjustedAmount = adjustedAmount.coerceAtMost(client.getInvAmt(id))
             repeat(adjustedAmount) {
                 client.deleteItem(id, 1)
-                client.offeredPartyItems.add(RewardItem(id, 1))
+                client.offeredPartyItems.add(PartyRoomRewardItem(id, 1))
             }
         } else {
             adjustedAmount = adjustedAmount.coerceAtMost(client.getInvAmt(id))
@@ -249,7 +252,7 @@ object Balloons {
             }
             if (!found) {
                 if (client.offeredPartyItems.size < 8) {
-                    client.offeredPartyItems.add(RewardItem(id, adjustedAmount))
+                    client.offeredPartyItems.add(PartyRoomRewardItem(id, adjustedAmount))
                 } else {
                     adjustedAmount = 0
                 }

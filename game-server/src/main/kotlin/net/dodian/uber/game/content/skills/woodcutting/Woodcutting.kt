@@ -14,9 +14,9 @@ import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.playerAction
+import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
@@ -44,7 +44,7 @@ object Woodcutting {
         obj: GameObjectData?,
     ): Boolean {
         val tree = WoodcuttingData.treeByObjectId[objectId] ?: return false
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.NEW_ACTION,
             fullResetAnimation = false,
@@ -148,7 +148,7 @@ object Woodcutting {
 
     @JvmStatic
     fun stopWoodcutting(client: Client, fullReset: Boolean) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,
@@ -159,7 +159,7 @@ object Woodcutting {
 
     @JvmStatic
     fun stopWoodcuttingFromReset(client: Client, fullReset: Boolean) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,

@@ -3,7 +3,7 @@ package net.dodian.uber.game.netty.listener.out;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.*;
-import net.dodian.uber.game.content.events.partyroom.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
 
 /**
  * Sends the shop/menu item list to interface 8847.

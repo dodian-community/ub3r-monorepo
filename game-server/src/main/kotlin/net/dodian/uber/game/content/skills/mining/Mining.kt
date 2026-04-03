@@ -16,9 +16,9 @@ import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.playerAction
+import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
@@ -66,7 +66,7 @@ object Mining {
 
     @JvmStatic
     fun startMining(client: Client, rock: MiningRockDef, position: Position): Boolean {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.NEW_ACTION,
             fullResetAnimation = false,
@@ -157,7 +157,7 @@ object Mining {
 
     @JvmStatic
     fun stopMining(client: Client, fullReset: Boolean) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,
@@ -168,7 +168,7 @@ object Mining {
 
     @JvmStatic
     fun stopMiningFromReset(client: Client, fullReset: Boolean) {
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             player = client,
             reason = PlayerActionCancelReason.MANUAL_RESET,
             fullResetAnimation = fullReset,

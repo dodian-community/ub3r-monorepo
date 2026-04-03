@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SetSmithing
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionCancellationService
+import net.dodian.uber.game.systems.api.content.ContentActions
 import org.slf4j.LoggerFactory
 
 object SmithingInterface {
@@ -227,7 +227,7 @@ object SmithingInterface {
         }
         client.setPendingSmeltingBarId(request.recipe.barId)
         client.send(RemoveInterfaces())
-        PlayerActionCancellationService.cancel(
+        ContentActions.cancel(
             client,
             PlayerActionCancelReason.NEW_ACTION,
             fullResetAnimation = false,

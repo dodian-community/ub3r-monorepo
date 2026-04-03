@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.events.partyroom
 
 import net.dodian.uber.game.model.Position
 
-class RewardItem {
+class PartyRoomRewardItem {
     private var itemId: Int = -1
     private var itemAmount: Int = 0
     private var itemPos: Position? = null

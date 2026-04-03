@@ -6,7 +6,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.events.partyroom.RewardItem
+import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.content.skills.herblore.HerbloreData
@@ -114,7 +114,7 @@ internal object HerbloreNpcDialogue {
         for (index in grimyHerbs.indices) {
             val notedGrimy = client.getNotedItem(grimyHerbs[index])
             if (client.playerHasItem(notedGrimy)) {
-                client.herbOptions.add(RewardItem(notedGrimy, 0))
+                client.herbOptions.add(PartyRoomRewardItem(notedGrimy, 0))
             }
         }
         if (client.herbOptions.isEmpty()) {
@@ -131,7 +131,7 @@ internal object HerbloreNpcDialogue {
         for (index in cleanHerbs.indices) {
             val notedHerb = client.getNotedItem(cleanHerbs[index])
             if (client.playerHasItem(notedHerb)) {
-                client.herbOptions.add(RewardItem(client.getNotedItem(unfinishedPotions[index]), 0))
+                client.herbOptions.add(PartyRoomRewardItem(client.getNotedItem(unfinishedPotions[index]), 0))
             }
         }
         if (client.herbOptions.isEmpty()) {

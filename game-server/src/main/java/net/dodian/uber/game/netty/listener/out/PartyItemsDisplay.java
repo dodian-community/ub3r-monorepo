@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.content.events.partyroom.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import java.util.List;
 public class PartyItemsDisplay implements OutgoingPacket {
 
     private final int interfaceId;
-    private final List<RewardItem> items;
+    private final List<PartyRoomRewardItem> items;
 
     /**
      * Creates a new PartyItemsDisplay packet.
@@ -33,7 +33,7 @@ public class PartyItemsDisplay implements OutgoingPacket {
      * @param interfaceId The interface ID (2273 for party items, 2274 for offered items)
      * @param items The list of RewardItems to display
      */
-    public PartyItemsDisplay(int interfaceId, List<RewardItem> items) {
+    public PartyItemsDisplay(int interfaceId, List<PartyRoomRewardItem> items) {
         this.interfaceId = interfaceId;
         this.items = items;
     }
@@ -46,7 +46,7 @@ public class PartyItemsDisplay implements OutgoingPacket {
         // Write item count as short (2 bytes) - matches client's incoming.readShort()
         message.putShort(items.size());
         // Write each item
-        for (RewardItem item : items) {
+        for (PartyRoomRewardItem item : items) {
             int amount = item.getAmount();
             // Amount as int (4 bytes) - matches client's incoming.readInt()
             message.putInt(amount);

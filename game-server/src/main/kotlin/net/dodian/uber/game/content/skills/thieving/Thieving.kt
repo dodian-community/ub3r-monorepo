@@ -15,7 +15,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.utilities.Misc
@@ -46,7 +45,7 @@ object Thieving {
             player.sendMessage("You need a thieving level of ${data.requiredLevel} to steal from ${data.name.lowercase().replace('_', ' ')}s.")
             return
         }
-        if (!PlayerTickThrottleService.tryAcquireMs(player, PlayerTickThrottleService.THIEVING_GENERIC, 2000L)) {
+        if (!ContentInteraction.tryAcquireMs(player, ContentInteraction.THIEVING_GENERIC, 2000L)) {
             return
         }
         if (data.type == ThievingType.PICKPOCKETING || data.type == ThievingType.OTHER) {
@@ -311,7 +310,7 @@ object PlunderObjects : ObjectContent {
                 true
             }
             objectId == 20932 -> {
-                client.transport(PyramidPlunder.endPosition(client))
+                client.transport(PyramidPlunder.endPosition())
                 true
             }
             objectId == 20931 -> {
@@ -439,7 +438,7 @@ object PyramidPlunder {
     fun roomNumber(client: Client): Int = client.pyramidPlunderState?.roomNumber ?: 0
 
     @JvmStatic
-    fun endPosition(client: Client): Position = globalState.end
+    fun endPosition(): Position = globalState.end
 
     @JvmStatic
     fun currentDoor(): Position? = globalState.currentDoor

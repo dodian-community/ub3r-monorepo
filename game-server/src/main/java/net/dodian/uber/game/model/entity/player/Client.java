@@ -1,7 +1,4 @@
 package net.dodian.uber.game.model.entity.player;
-
-
-
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
@@ -60,7 +57,7 @@ import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.content.events.partyroom.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
@@ -89,8 +86,6 @@ import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 public class Client extends Player implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
@@ -4754,7 +4749,7 @@ public class Client extends Player implements Runnable {
     }
 
     public int refundSlot = -1;
-    public ArrayList<RewardItem> rewardList = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> rewardList = new ArrayList<>();
     private final ArrayList<String> refundDates = new ArrayList<>();
 
     public void setRefundList() {
@@ -4762,7 +4757,7 @@ public class Client extends Player implements Runnable {
         refundDates.clear();
         try {
             for (RefundRecord refund : RefundRepository.loadUnclaimed(dbId)) {
-                rewardList.add(new RewardItem(refund.getItemId(), refund.getAmount()));
+                rewardList.add(new PartyRoomRewardItem(refund.getItemId(), refund.getAmount()));
                 refundDates.add(refund.getDate());
             }
         } catch (Exception e) {
@@ -4797,7 +4792,7 @@ public class Client extends Player implements Runnable {
                 setRefundList();
                 return;
             }
-            RewardItem item = rewardList.get(rowIndex);
+            PartyRoomRewardItem item = rewardList.get(rowIndex);
             if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
                 sendMessage("That refund entry was already claimed.");
                 setRefundList();

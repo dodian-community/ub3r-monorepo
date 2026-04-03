@@ -12,9 +12,9 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.netty.listener.out.SetGoldItems
-import net.dodian.uber.game.systems.action.ProductionActionService
 import net.dodian.uber.game.systems.action.ProductionRequest
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.api.content.ContentActions
 
 object Crafting {
     private val normalCraftIds = intArrayOf(
@@ -288,7 +288,7 @@ object GoldJewelryService {
         }
 
         client.send(RemoveInterfaces())
-        return ProductionActionService.start(
+        return ContentActions.startProduction(
             client,
             ProductionRequest(
                 skillId = Skill.CRAFTING.id,

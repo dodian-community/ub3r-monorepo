@@ -27,7 +27,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.content.skills.slayer.Slayer;
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
 import net.dodian.uber.game.content.events.partyroom.Balloons;
-import net.dodian.uber.game.content.events.partyroom.RewardItem;
+import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.content.skills.mining.MiningState;
 import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingState;
@@ -150,7 +150,7 @@ public abstract class Player extends Entity {
     public int agilityCourseStage = 0;
     public long walkBlock = 0;
     public boolean xLog = false;
-    public ArrayList<RewardItem> offeredPartyItems = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
     /*
      Entity(1 = player, 2 = npc, 3 = object, 4 = itemInv)
      slot
@@ -160,7 +160,7 @@ public abstract class Player extends Entity {
     public ArrayList<Integer> playerPotato = new ArrayList<>();
     //Herblore service
     public int herbMaking = -1;
-    public ArrayList<RewardItem> herbOptions = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> herbOptions = new ArrayList<>();
     //Slayer
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;

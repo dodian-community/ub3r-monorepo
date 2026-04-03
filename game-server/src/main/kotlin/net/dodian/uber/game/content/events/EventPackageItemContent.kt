@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.utilities.Misc
 
-object EventPackageItems : ItemContent {
+object EventPackageItemContent : ItemContent {
     override val itemIds: IntArray = intArrayOf(6199, 12854, 6542, 11996, 13345, 13346, 11918)
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
