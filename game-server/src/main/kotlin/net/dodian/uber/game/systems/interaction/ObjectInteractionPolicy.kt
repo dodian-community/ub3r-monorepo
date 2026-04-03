@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.interaction
 
 data class ObjectInteractionPolicy(
-    val distanceRule: DistanceRule = DistanceRule.LEGACY_OBJECT_DISTANCE,
+    val distanceRule: DistanceRule = DistanceRule.NEAREST_BOUNDARY_CARDINAL,
     val requireMovementSettled: Boolean = false,
     val settleTicks: Int = 0,
 ) {
@@ -10,7 +10,6 @@ data class ObjectInteractionPolicy(
     }
 
     enum class DistanceRule {
-        LEGACY_OBJECT_DISTANCE,
         NEAREST_BOUNDARY_CARDINAL,
         NEAREST_BOUNDARY_ANY,
     }

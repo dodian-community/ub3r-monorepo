@@ -1,6 +1,6 @@
 package net.dodian.utilities
 
-object UtilityText {
+object TextCodec {
     private val decodeBuf = CharArray(4096)
 
     @JvmField

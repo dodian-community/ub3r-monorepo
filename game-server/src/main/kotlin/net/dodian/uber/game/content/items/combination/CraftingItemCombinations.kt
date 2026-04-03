@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
 import net.dodian.uber.game.content.skills.crafting.CraftingData
-import net.dodian.uber.game.content.skills.crafting.GoldJewelryService
+import net.dodian.uber.game.content.skills.crafting.GoldJewelry
 import net.dodian.uber.game.content.skills.crafting.Crafting
 
 object CraftingItemCombinations {
@@ -121,7 +121,7 @@ object CraftingItemCombinations {
         }
         if (itemUsed == 1759 || otherItem == 1759) {
             val amulet = if (itemUsed == 1759) otherItem else itemUsed
-            val strung = GoldJewelryService.findStrungAmulet(amulet)
+            val strung = GoldJewelry.findStrungAmulet(amulet)
             if (strung < 0) {
                 client.sendMessage("You cannot string this item with wool!")
                 return true

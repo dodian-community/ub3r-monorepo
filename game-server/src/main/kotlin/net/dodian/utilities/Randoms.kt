@@ -2,7 +2,7 @@ package net.dodian.utilities
 
 import java.util.Random
 
-object UtilityRandoms {
+object Randoms {
     private val random = Random()
 
     @JvmStatic

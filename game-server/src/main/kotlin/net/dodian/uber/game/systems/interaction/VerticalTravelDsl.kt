@@ -203,4 +203,4 @@ abstract class VerticalTravelDslObjectContent(
 }
 
 val DEFAULT_VERTICAL_POLICY =
-    ContentInteraction.legacyObjectDistancePolicy()
+    ContentInteraction.nearestBoundaryCardinalPolicy()

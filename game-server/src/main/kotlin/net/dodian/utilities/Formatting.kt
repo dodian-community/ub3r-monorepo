@@ -2,7 +2,7 @@ package net.dodian.utilities
 
 import java.text.NumberFormat
 
-object UtilityFormatting {
+object Formatting {
     @JvmStatic
     fun format(number: Int): String = NumberFormat.getInstance().format(number)
 

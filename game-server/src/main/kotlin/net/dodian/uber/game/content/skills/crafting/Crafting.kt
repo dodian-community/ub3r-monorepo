@@ -35,16 +35,16 @@ object Crafting {
     fun startHide(client: Client, productGroup: Int, amount: Int) = startHideCraft(client, productGroup, amount)
 
     @JvmStatic
-    fun startTanning(client: Client, request: TanningRequest) = TanningService.start(client, request)
+    fun startTanning(client: Client, request: TanningRequest) = Tanning.start(client, request)
 
     @JvmStatic
-    fun openTanning(client: Client) = TanningService.open(client)
+    fun openTanning(client: Client) = Tanning.open(client)
 
     @JvmStatic
-    fun startGoldJewelry(client: Client, request: GoldJewelryRequest) = GoldJewelryService.start(client, request)
+    fun startGoldJewelry(client: Client, request: GoldJewelryRequest) = GoldJewelry.start(client, request)
 
     @JvmStatic
-    fun openGoldJewelry(client: Client) = GoldJewelryService.openInterface(client)
+    fun openGoldJewelry(client: Client) = GoldJewelry.openInterface(client)
 
     @JvmStatic
     fun performShaft(client: Client) {
@@ -238,7 +238,7 @@ object Crafting {
     }
 }
 
-object GoldJewelryService {
+object GoldJewelry {
     private const val GOLD_BAR_ID = 2357
     private const val GOLD_CRAFT_ANIMATION = 0x383
 
@@ -330,7 +330,7 @@ object GoldJewelryService {
     }
 }
 
-object TanningService {
+object Tanning {
     private val titleByType = mapOf(2 to "Green", 3 to "Blue", 4 to "Red", 5 to "Black")
     private val costByType = mapOf(2 to "1,000gp", 3 to "2,000gp", 4 to "5,000gp", 5 to "10,000gp")
 
@@ -386,7 +386,7 @@ object TanningService {
     }
 }
 
-object ResourceFillingService {
+object ResourceFilling {
     private data class FillEntry(val emptyItemId: Int, val filledItemId: Int, val emote: Int)
 
     private val waterSourceEntries =
@@ -452,13 +452,13 @@ object ResourceFillingObjects : ObjectContent {
         if (objectId == 879 || objectId == 873 || objectId == 874 || objectId == 6232 ||
             objectId == 12279 || objectId == 14868 || objectId == 20358 || objectId == 25929
         ) {
-            return ResourceFillingService.handleObjectUse(client, objectId)
+            return ResourceFilling.handleObjectUse(client, objectId)
         }
         if (objectId == 884 || objectId == 878 || objectId == 6249) {
-            return ResourceFillingService.handleObjectUse(client, objectId)
+            return ResourceFilling.handleObjectUse(client, objectId)
         }
         if (objectId == 14890) {
-            return ResourceFillingService.handleObjectUse(client, objectId)
+            return ResourceFilling.handleObjectUse(client, objectId)
         }
         if (objectId == 8689 && itemId == 1925) {
             client.setFocus(position.x, position.y)

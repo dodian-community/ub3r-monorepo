@@ -9,9 +9,7 @@ object DialogueDisplayService {
 
     @JvmStatic
     fun updateNpcChat(client: Client) {
-        DialogueService.captureCompatibilityState(client)
         DialogueRenderRegistry.render(client)
-        DialogueService.captureCompatibilityState(client)
     }
 
     @JvmStatic

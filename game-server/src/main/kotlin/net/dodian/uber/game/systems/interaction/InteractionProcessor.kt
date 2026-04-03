@@ -167,7 +167,7 @@ object InteractionProcessor {
                 intent.objectId,
                 routeSnapshot.objectData,
                 routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.CLICK),
+                resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
@@ -309,7 +309,7 @@ object InteractionProcessor {
                 intent.objectId,
                 routeSnapshot.objectData,
                 routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT),
+                resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
@@ -406,7 +406,7 @@ object InteractionProcessor {
                 intent.objectId,
                 routeSnapshot.objectData,
                 routeSnapshot.objectDef,
-                resolveDistanceMode(policy.distanceRule, ObjectInteractionPolicy.InteractionType.MAGIC),
+                resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
             return InteractionExecutionResult.WAITING
@@ -721,16 +721,8 @@ object InteractionProcessor {
         return GlobalObject.hasGlobalObject(WorldObject(objectId, position.x, position.y, position.z, 10))
     }
 
-    private fun resolveDistanceMode(
-        distanceRule: ObjectInteractionPolicy.DistanceRule,
-        interactionType: ObjectInteractionPolicy.InteractionType,
-    ): ObjectInteractionDistance.DistanceMode {
+    private fun resolveDistanceMode(distanceRule: ObjectInteractionPolicy.DistanceRule): ObjectInteractionDistance.DistanceMode {
         return when (distanceRule) {
-            ObjectInteractionPolicy.DistanceRule.LEGACY_OBJECT_DISTANCE -> when (interactionType) {
-                ObjectInteractionPolicy.InteractionType.CLICK -> ObjectInteractionDistance.DistanceMode.CLICK
-                ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT -> ObjectInteractionDistance.DistanceMode.ITEM_ON_OBJECT
-                ObjectInteractionPolicy.InteractionType.MAGIC -> ObjectInteractionDistance.DistanceMode.MAGIC
-            }
             ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL ->
                 ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL
             ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_ANY ->

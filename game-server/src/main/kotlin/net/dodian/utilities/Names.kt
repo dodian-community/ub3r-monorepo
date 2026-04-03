@@ -1,6 +1,6 @@
 package net.dodian.utilities
 
-object UtilityNames {
+object Names {
     @JvmField
     val playerNameXlateTable: CharArray =
         charArrayOf(

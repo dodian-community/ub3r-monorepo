@@ -169,7 +169,7 @@ class Farming {
         }
     }
     fun Client.interactItemBin(objectId : Int, itemId: Int) : Boolean {
-        FarmingCatchUpService.applyInteractionCatchUp(this)
+        FarmingCatchUp.applyInteractionCatchUp(this)
         val objName = GameObjectData.forId(objectId).name.lowercase()
         val itemName = getItemName(itemId).lowercase()
 
@@ -425,7 +425,7 @@ class Farming {
     }
 
     fun Client.clickPatch(objectId : Int) : Boolean {
-        FarmingCatchUpService.applyInteractionCatchUp(this)
+        FarmingCatchUp.applyInteractionCatchUp(this)
         if(findPatch(objectId, 0).isEmpty()) //Not go through if object is not here :D!
             return false
         val objName = GameObjectData.forId(objectId).name.lowercase()
@@ -796,7 +796,7 @@ object FarmingPatchObjects : ObjectContent {
     }
 }
 
-object FarmingCatchUpService {
+object FarmingCatchUp {
     private const val MAX_CATCH_UP_PULSES = 288
 
     @JvmStatic

@@ -5,13 +5,13 @@ import net.dodian.uber.game.model.Position
 
 object Misc {
     @JvmStatic
-    fun random(range: Int): Int = UtilityRandoms.random(range)
+    fun random(range: Int): Int = Randoms.random(range)
 
     @JvmStatic
-    fun chance(range: Int): Int = UtilityRandoms.chance(range)
+    fun chance(range: Int): Int = Randoms.chance(range)
 
     @JvmStatic
-    fun format(num: Int): String = UtilityFormatting.format(num)
+    fun format(num: Int): String = Formatting.format(num)
 
     @JvmStatic
     fun goodDistanceObject(
@@ -22,7 +22,7 @@ object Misc {
         objectXSize: Int,
         objectYSize: Int,
         z: Int,
-    ): Position? = UtilityGeometry.goodDistanceObject(objectX, objectY, playerX, playerY, objectXSize, objectYSize, z)
+    ): Position? = Geometry.goodDistanceObject(objectX, objectY, playerX, playerY, objectXSize, objectYSize, z)
 
     @JvmStatic
     fun goodDistanceObject(
@@ -32,13 +32,13 @@ object Misc {
         playerY: Int,
         distance: Int,
         z: Int,
-    ): Position? = UtilityGeometry.goodDistanceObject(objectX, objectY, playerX, playerY, distance, z)
+    ): Position? = Geometry.goodDistanceObject(objectX, objectY, playerX, playerY, distance, z)
 
     @JvmStatic
     fun delta(
         a: Position,
         b: Position,
-    ): Position = UtilityGeometry.delta(a, b)
+    ): Position = Geometry.delta(a, b)
 
     @JvmStatic
     fun getObject(
@@ -46,5 +46,5 @@ object Misc {
         x: Int,
         y: Int,
         h: Int,
-    ): GameObjectDef? = UtilityGeometry.getObject(objectId, x, y, h)
+    ): GameObjectDef? = Geometry.getObject(objectId, x, y, h)
 }

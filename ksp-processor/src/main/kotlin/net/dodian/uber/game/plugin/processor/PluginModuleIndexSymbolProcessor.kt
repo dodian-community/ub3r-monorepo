@@ -29,11 +29,13 @@ class PluginModuleIndexSymbolProcessor(
             return emptyList()
         }
 
-        val allObjects = resolver.getAllFiles().flatMap { file ->
+        val allDeclarations = resolver.getAllFiles().flatMap { file ->
             file.declarations.filterIsInstance<KSClassDeclaration>()
-                .filter { it.classKind == ClassKind.OBJECT }
                 .map { file to it }
         }.toList()
+        val allObjects = allDeclarations.filter { (_, declaration) -> declaration.classKind == ClassKind.OBJECT }
+
+        validateSingletonContracts(allDeclarations)
 
         val interfaceButtons = discoverInterfaceButtons(allObjects)
         val objectContents = discoverObjectsByInterface(allObjects, "net.dodian.uber.game.content.objects.ObjectContent")
@@ -55,6 +57,8 @@ class PluginModuleIndexSymbolProcessor(
             return emptyList()
         }
 
+        validateUniqueObjectModuleNames(objectContents)
+
         val output = buildOutput(interfaceButtons, objectContents, itemContents, commandContents, npcModules, eventBootstraps, contentBootstraps)
         val outputFile =
             codeGenerator.createNewFile(
@@ -66,6 +70,93 @@ class PluginModuleIndexSymbolProcessor(
         generated = true
         logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${commandContents.size} command modules, ${npcModules.size} npc modules, ${eventBootstraps.size} event bootstraps, ${contentBootstraps.size} content bootstraps.")
         return emptyList()
+    }
+
+    private fun validateSingletonContracts(allDeclarations: List<Pair<KSFile, KSClassDeclaration>>) {
+        val violations = mutableListOf<String>()
+
+        allDeclarations.forEach { (file, declaration) ->
+            if (declaration.classKind == ClassKind.OBJECT) {
+                return@forEach
+            }
+            val packageName = file.packageName.asString()
+            val simpleName = declaration.simpleName.asString()
+
+            fun recordViolation(message: String) {
+                logger.error(message, declaration)
+                violations += "$packageName.$simpleName"
+            }
+
+            if (
+                (
+                    packageName.startsWith("net.dodian.uber.game.content.interfaces") ||
+                        packageName.startsWith("net.dodian.uber.game.content.ui")
+                    ) &&
+                declaration.implementsInterface("net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
+            ) {
+                recordViolation("Interface button content must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+
+            if (
+                packageName.startsWith("net.dodian.uber.game.content") &&
+                declaration.implementsInterface("net.dodian.uber.game.content.objects.ObjectContent")
+            ) {
+                recordViolation("Object content must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+
+            if (
+                packageName.startsWith("net.dodian.uber.game.content") &&
+                declaration.implementsInterface("net.dodian.uber.game.content.items.ItemContent")
+            ) {
+                recordViolation("Item content must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+
+            if (
+                packageName.startsWith("net.dodian.uber.game.content.commands") &&
+                declaration.implementsInterface("net.dodian.uber.game.systems.content.commands.CommandContent")
+            ) {
+                recordViolation("Command content must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+
+            if (
+                packageName.startsWith("net.dodian.uber.game.content.npcs") &&
+                declaration.implementsInterface("net.dodian.uber.game.content.npcs.NpcModule")
+            ) {
+                recordViolation("NPC module must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+
+            if (
+                packageName.startsWith("net.dodian.uber.game.systems.content") &&
+                declaration.implementsInterface("net.dodian.uber.game.systems.content.ContentBootstrap")
+            ) {
+                recordViolation("Content bootstrap must be declared as Kotlin 'object': $packageName.$simpleName")
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            throw IllegalStateException(
+                "KSP module discovery failed: ${violations.size} non-singleton module declarations found.",
+            )
+        }
+    }
+
+    private fun validateUniqueObjectModuleNames(objectContents: List<DiscoveredSymbol>) {
+        val duplicates = objectContents.groupBy { it.objectName }.filterValues { it.size > 1 }
+        if (duplicates.isEmpty()) {
+            return
+        }
+
+        duplicates.forEach { (objectName, symbols) ->
+            val fqcnList = symbols.joinToString(", ") { it.fqcn }
+            logger.error(
+                "Duplicate ObjectContent module name '$objectName' detected. " +
+                    "Generated index key collisions are not allowed. Modules: $fqcnList",
+            )
+        }
+
+        throw IllegalStateException(
+            "KSP module discovery failed: duplicate ObjectContent module names detected (${duplicates.size}).",
+        )
     }
 
     private fun discoverInterfaceButtons(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {

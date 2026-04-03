@@ -31,15 +31,15 @@ class UtilitiesRefactorParityTest {
 
     @Test
     fun `player name conversion roundtrip remains stable`() {
-        val encoded = UtilityNames.playerNameToLong("alex")
-        assertEquals("alex", UtilityNames.longToPlayerName(encoded))
+        val encoded = Names.playerNameToLong("alex")
+        assertEquals("alex", Names.longToPlayerName(encoded))
     }
 
     @Test
     fun `direction lookup and protocol deltas remain stable`() {
-        assertEquals(4, UtilityDirection.direction(3200, 3200, 3201, 3200))
-        assertEquals(1, UtilityDirection.directionDeltaX[1].toInt())
-        assertEquals(1, UtilityDirection.directionDeltaY[1].toInt())
-        assertEquals(4, UtilityDirection.xlateDirectionToClient[2].toInt())
+        assertEquals(4, Direction.direction(3200, 3200, 3201, 3200))
+        assertEquals(1, Direction.directionDeltaX[1].toInt())
+        assertEquals(1, Direction.directionDeltaY[1].toInt())
+        assertEquals(4, Direction.xlateDirectionToClient[2].toInt())
     }
 }

@@ -7,7 +7,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.DoorRegistry
 
-object UtilityGeometry {
+object Geometry {
     @JvmStatic
     fun goodDistance(
         objectX: Int,

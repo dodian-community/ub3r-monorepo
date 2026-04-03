@@ -43,9 +43,9 @@ import net.dodian.uber.game.content.skills.cooking.CookingState;
 import net.dodian.uber.game.content.skills.crafting.Crafting;
 import net.dodian.uber.game.content.skills.crafting.CraftingMode;
 import net.dodian.uber.game.content.skills.crafting.CraftingState;
-import net.dodian.uber.game.content.skills.crafting.GoldJewelryService;
+import net.dodian.uber.game.content.skills.crafting.GoldJewelry;
 import net.dodian.uber.game.content.skills.crafting.TanningRequest;
-import net.dodian.uber.game.content.skills.crafting.TanningService;
+import net.dodian.uber.game.content.skills.crafting.Tanning;
 import net.dodian.uber.game.content.skills.prayer.Prayer;
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingData;
@@ -205,7 +205,7 @@ public class Client extends Player implements Runnable {
     public boolean validLogin = false;
 
     public void openTan() {
-        TanningService.open(this);
+        Tanning.open(this);
     }
 
     /**
@@ -4730,7 +4730,7 @@ public class Client extends Player implements Runnable {
                     return;
                 }
                 if (i > 0 && !getTravel(i - 1)) {
-                    DialogueService.setCompatDialogueId(this, 48054);
+                    DialogueService.setDialogueId(this, 48054);
                     DialogueService.setDialogueSent(this, false);
                     return;
                 }

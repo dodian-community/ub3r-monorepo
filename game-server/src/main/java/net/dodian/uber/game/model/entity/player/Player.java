@@ -2044,7 +2044,7 @@ public abstract class Player extends Entity {
         Client c = ((Client) this);
         if(herbOptions.isEmpty()) {
             herbMaking = -1;
-            DialogueService.setCompatNextDialogueId(c, -1);
+            DialogueService.setNextDialogueId(c, -1);
             return;
         }
         int slot = herbMaking;

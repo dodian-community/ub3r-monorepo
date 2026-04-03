@@ -153,26 +153,6 @@ object DialogueService {
         setNextDialogueId(client, -1)
     }
 
-    @JvmStatic
-    fun showCompatNpcChat(
-        client: Client,
-        npcId: Int,
-        emote: Int,
-        text: Array<String>,
-        nextDialogueId: Int? = null,
-    ) = showNpcChat(client, npcId, emote, text, nextDialogueId)
-
-    @JvmStatic
-    fun showCompatPlayerChat(
-        client: Client,
-        text: Array<String>,
-        emote: Int,
-        nextDialogueId: Int? = null,
-    ) = showPlayerChat(client, text, emote, nextDialogueId)
-
-    @JvmStatic
-    fun captureCompatibilityState(client: Client) = Unit
-
     /**
      * @return true if the continue click was consumed (paging or active session).
      */
@@ -355,30 +335,6 @@ object DialogueService {
         indexedState(client).sent = sent
         client.NpcDialogueSend = sent
     }
-
-    @JvmStatic
-    fun setCompatDialogueSent(client: Client, sent: Boolean) = setDialogueSent(client, sent)
-
-    @JvmStatic
-    fun compatDialogueId(client: Client): Int = currentDialogueId(client)
-
-    @JvmStatic
-    fun setCompatDialogueId(client: Client, dialogueId: Int) = setDialogueId(client, dialogueId)
-
-    @JvmStatic
-    fun compatNpcId(client: Client): Int = activeNpcId(client)
-
-    @JvmStatic
-    fun setCompatNpcId(client: Client, npcId: Int) = setActiveNpcId(client, npcId)
-
-    @JvmStatic
-    fun compatNextDialogueId(client: Client): Int = nextDialogueId(client)
-
-    @JvmStatic
-    fun setCompatNextDialogueId(client: Client, dialogueId: Int) = setNextDialogueId(client, dialogueId)
-
-    @JvmStatic
-    fun isCompatDialogueSent(client: Client): Boolean = isDialogueSent(client)
 
     @JvmStatic
     fun hasIndexedDialogue(client: Client): Boolean {

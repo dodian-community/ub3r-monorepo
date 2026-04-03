@@ -745,7 +745,7 @@ object GnomeCourseObjectBindings : FirstClickDslObjectContent(
         if (option != 1 || objectId !in objectIds) {
             return null
         }
-        return ContentInteraction.legacyObjectDistancePolicy()
+        return ContentInteraction.nearestBoundaryCardinalPolicy()
     }
 }
 

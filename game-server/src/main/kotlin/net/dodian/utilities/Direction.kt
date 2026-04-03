@@ -1,6 +1,6 @@
 package net.dodian.utilities
 
-object UtilityDirection {
+object Direction {
     @JvmField val directionDeltaX: ByteArray = byteArrayOf(0, 1, 1, 1, 0, -1, -1, -1)
     @JvmField val directionDeltaY: ByteArray = byteArrayOf(1, 1, 0, -1, -1, -1, 0, 1)
     @JvmField val xlateDirectionToClient: ByteArray = byteArrayOf(1, 2, 4, 7, 6, 5, 3, 0)

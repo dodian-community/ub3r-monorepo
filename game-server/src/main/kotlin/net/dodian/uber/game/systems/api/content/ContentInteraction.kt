@@ -59,15 +59,6 @@ object ContentInteraction {
     }
 
     @JvmStatic
-    fun legacyObjectDistancePolicy(settleTicks: Int = 1): ContentObjectInteractionPolicy {
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.LEGACY_OBJECT_DISTANCE,
-            requireMovementSettled = true,
-            settleTicks = settleTicks.coerceAtLeast(0),
-        )
-    }
-
-    @JvmStatic
     fun canStartDialogue(player: Client): Boolean = PlayerInteractionGuardService.canStartDialogue(player)
 
     @JvmStatic
