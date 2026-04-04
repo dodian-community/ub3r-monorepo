@@ -11,6 +11,8 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Cooking {
     @JvmStatic
@@ -119,4 +121,8 @@ object RangeObjects : ObjectContent {
         Cooking.attempt(client, itemId)
         return true
     }
+}
+
+object CookingSkillPlugin : SkillPlugin {
+    override val definition = skillPlugin(name = "Cooking", skill = Skill.COOKING) { }
 }

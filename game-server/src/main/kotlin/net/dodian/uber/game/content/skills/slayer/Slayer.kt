@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.quests.QuestSend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Slayer {
     @JvmStatic
@@ -152,4 +154,8 @@ object SlayerMaskItems : ItemContent {
             else -> false
         }
     }
+}
+
+object SlayerSkillPlugin : SkillPlugin {
+    override val definition = skillPlugin(name = "Slayer", skill = Skill.SLAYER) { }
 }

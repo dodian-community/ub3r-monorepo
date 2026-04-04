@@ -7,6 +7,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
+import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.content.ContentModuleIndex
 
 class ArchitectureBoundaryTest {
     private val sourceRoot: Path = Paths.get("src/main")
@@ -231,12 +233,41 @@ class ArchitectureBoundaryTest {
 
         val forbiddenCalls = listOf(
             "Fishing.handleNpcOption(",
+            "Mining.attempt(",
+            "Woodcutting.attempt(",
         )
         val violations = forbiddenCalls.filter { source.contains(it) }
 
         assertTrue(
             violations.isEmpty(),
             "Migrated skills must route through SkillInteractionDispatcher/NpcContentDispatcher.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `all gameplay skills are owned by skill plugins`() {
+        val expectedSkills = setOf(
+            Skill.MINING,
+            Skill.WOODCUTTING,
+            Skill.FISHING,
+            Skill.AGILITY,
+            Skill.COOKING,
+            Skill.CRAFTING,
+            Skill.FARMING,
+            Skill.FIREMAKING,
+            Skill.FLETCHING,
+            Skill.HERBLORE,
+            Skill.PRAYER,
+            Skill.RUNECRAFTING,
+            Skill.SLAYER,
+            Skill.SMITHING,
+            Skill.THIEVING,
+        )
+
+        val discovered = ContentModuleIndex.skillPlugins.map { it.definition.skill }.toSet()
+        assertTrue(
+            discovered == expectedSkills,
+            "Expected complete gameplay skill plugin ownership.\nmissing=${(expectedSkills - discovered).joinToString()}\nextra=${(discovered - expectedSkills).joinToString()}",
         )
     }
 
@@ -259,6 +290,32 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Migrated resource skills should register via SkillPlugin only.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `migrated skill plugin modules must use skilling templates instead of ad-hoc loops`() {
+        val pluginFiles = sourceFiles.filter { path ->
+            path.extension == "kt" &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
+        }
+
+        val violations = pluginFiles.flatMap { path ->
+            val source = Files.readString(path)
+            buildList {
+                if (source.contains("playerAction(")) {
+                    add("$path: contains forbidden ad-hoc playerAction orchestration")
+                }
+                if (source.contains("while (true)")) {
+                    add("$path: contains forbidden infinite loop orchestration")
+                }
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Migrated SkillPlugin modules must orchestrate cycles via gatheringAction/productionAction.\n${violations.joinToString("\n")}",
         )
     }
 
@@ -893,6 +950,7 @@ class ArchitectureBoundaryTest {
             "net.dodian.uber.game.systems.skills.SkillingRandomEventService",
             "net.dodian.uber.game.systems.skills.SkillAdminService",
             "net.dodian.uber.game.systems.skills.SkillReadService",
+            "net.dodian.uber.game.systems.skills.SkillDoctor",
         )
         val violations = sourceFiles
             .filter { it.invariantSeparatorsPathString.endsWith(".java") }

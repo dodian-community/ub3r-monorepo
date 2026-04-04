@@ -17,6 +17,8 @@ import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 
@@ -574,4 +576,29 @@ object PyramidPlunder {
         }
         client.varbit(821, config)
     }
+}
+
+object ThievingSkillPlugin : SkillPlugin {
+    private val firstClickObjects =
+        (ChestObjects.objectIds + PlunderObjects.objectIds).distinct().toIntArray()
+    private val secondClickObjects =
+        (StallObjects.objectIds + ChestObjects.objectIds + PlunderObjects.objectIds).distinct().toIntArray()
+
+    override val definition =
+        skillPlugin(name = "Thieving", skill = Skill.THIEVING) {
+            objectClick(option = 1, *firstClickObjects) { client, objectId, position, obj ->
+                if (objectId in ChestObjects.objectIds) {
+                    ChestObjects.onFirstClick(client, objectId, position, obj)
+                } else {
+                    PlunderObjects.onFirstClick(client, objectId, position, obj)
+                }
+            }
+            objectClick(option = 2, *secondClickObjects) { client, objectId, position, obj ->
+                when {
+                    objectId in StallObjects.objectIds -> StallObjects.onSecondClick(client, objectId, position, obj)
+                    objectId in ChestObjects.objectIds -> ChestObjects.onSecondClick(client, objectId, position, obj)
+                    else -> PlunderObjects.onSecondClick(client, objectId, position, obj)
+                }
+            }
+        }
 }

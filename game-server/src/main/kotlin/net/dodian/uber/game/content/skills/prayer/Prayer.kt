@@ -11,6 +11,8 @@ import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Prayer {
     @JvmStatic
@@ -103,4 +105,13 @@ object BuryBonesItems : ItemContent {
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         return Prayer.attempt(client, itemId, itemSlot)
     }
+}
+
+object PrayerSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Prayer", skill = Skill.PRAYER) {
+            objectClick(option = 1, *AltarObjects.objectIds) { client, objectId, position, obj ->
+                AltarObjects.onFirstClick(client, objectId, position, obj)
+            }
+        }
 }

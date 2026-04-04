@@ -8,13 +8,16 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionMode
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
-import net.dodian.uber.game.systems.action.playerAction
+import net.dodian.uber.game.systems.skills.ActionStopReason
+import net.dodian.uber.game.systems.skills.CycleSignal
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.productionAction
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Range
 
 object Smithing {
@@ -27,25 +30,23 @@ object Smithing {
     @JvmStatic
     fun startSmelting(client: Client) {
         val selection = client.getSmeltingSelection() ?: return
-        playerAction(
-            player = client,
-            type = PlayerActionType.SMELTING,
-            actionName = "smelting",
-            onStop = { player, _ -> player.clearSmeltingSelection() },
-        ) {
-            var remaining = selection.amount
-            while (remaining > 0) {
-                val current = player.getSmeltingSelection() ?: return@playerAction
-                if (!performCycle(player, current.recipe)) {
-                    return@playerAction
+        var remaining = selection.amount
+        productionAction("smelting") {
+            delay(SMELT_DELAY_TICKS)
+            onCycleSignal {
+                val current = getSmeltingSelection() ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                if (!performCycle(this, current.recipe)) {
+                    return@onCycleSignal CycleSignal.stop(ActionStopReason.REQUIREMENT_FAILED)
                 }
                 remaining--
                 if (remaining <= 0) {
-                    return@playerAction
+                    CycleSignal.stop(ActionStopReason.COMPLETED)
+                } else {
+                    CycleSignal.success()
                 }
-                waitTicks(SMELT_DELAY_TICKS)
             }
-        }
+            onStop { clearSmeltingSelection() }
+        }.start(client)
     }
 
     private fun performCycle(player: Client, recipe: SmeltingRecipe): Boolean {
@@ -285,4 +286,23 @@ object FurnaceObjects : ObjectContent {
         )
         return true
     }
+}
+
+object SmithingSkillPlugin : SkillPlugin {
+    private val firstClickObjects =
+        (AnvilObjects.objectIds + FurnaceObjects.objectIds).distinct().toIntArray()
+
+    override val definition =
+        skillPlugin(name = "Smithing", skill = Skill.SMITHING) {
+            objectClick(option = 1, *firstClickObjects) { client, objectId, position, obj ->
+                if (objectId in AnvilObjects.objectIds) {
+                    AnvilObjects.onFirstClick(client, objectId, position, obj)
+                } else {
+                    FurnaceObjects.onFirstClick(client, objectId, position, obj)
+                }
+            }
+            objectClick(option = 2, *FurnaceObjects.objectIds) { client, objectId, position, obj ->
+                FurnaceObjects.onSecondClick(client, objectId, position, obj)
+            }
+        }
 }

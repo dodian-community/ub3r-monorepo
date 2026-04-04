@@ -3,6 +3,8 @@ package net.dodian.uber.game.content.skills.firemaking
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Firemaking {
     private const val TINDERBOX = 590
@@ -22,4 +24,18 @@ object Firemaking {
         client.resetAction()
         return true
     }
+}
+
+object FiremakingSkillPlugin : SkillPlugin {
+    private const val TINDERBOX = 590
+    private val logIds = intArrayOf(1511, 1521, 1519, 1517, 1515, 1513)
+
+    override val definition =
+        skillPlugin(name = "Firemaking", skill = Skill.FIREMAKING) {
+            for (logId in logIds) {
+                itemOnItem(TINDERBOX, logId) { client, itemUsed, otherItem ->
+                    Firemaking.handleItemCombination(client, itemUsed, otherItem)
+                }
+            }
+        }
 }

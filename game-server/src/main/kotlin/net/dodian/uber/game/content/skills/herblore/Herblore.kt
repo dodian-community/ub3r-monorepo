@@ -8,6 +8,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Herblore {
     @JvmStatic
@@ -157,4 +159,8 @@ object HerbloreSuppliesItems : ItemContent {
         }
         return false
     }
+}
+
+object HerbloreSkillPlugin : SkillPlugin {
+    override val definition = skillPlugin(name = "Herblore", skill = Skill.HERBLORE) { }
 }

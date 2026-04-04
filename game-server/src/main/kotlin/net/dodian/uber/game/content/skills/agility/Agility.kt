@@ -13,7 +13,9 @@ import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
 import net.dodian.uber.game.systems.interaction.firstClickObjectActions
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
@@ -879,3 +881,92 @@ object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
         }
     },
 )
+
+object AgilitySkillPlugin : SkillPlugin {
+    private val agilityObjectIds: IntArray = (
+        intArrayOf(
+            GnomeCourseObjectComponents.LOG_BALANCE,
+            GnomeCourseObjectComponents.NET_ONE,
+            GnomeCourseObjectComponents.TREE_BRANCH_UP,
+            GnomeCourseObjectComponents.ROPE_SWING,
+            GnomeCourseObjectComponents.NET_TWO,
+            GnomeCourseObjectComponents.PIPE_ENTRY_ONE,
+            GnomeCourseObjectComponents.PIPE_ENTRY_TWO,
+            BarbarianCourseObjectComponents.ROPE_SWING,
+            BarbarianCourseObjectComponents.LOG_BALANCE,
+            BarbarianCourseObjectComponents.NET,
+            BarbarianCourseObjectComponents.LEDGE,
+            BarbarianCourseObjectComponents.STAIRS,
+            BarbarianCourseObjectComponents.CRUMBLING_WALL,
+            BarbarianCourseObjectComponents.ORANGE_BAR,
+            BarbarianCourseObjectComponents.YELLOW_LEDGE,
+            WildernessCourseObjectComponents.PIPE,
+            WildernessCourseObjectComponents.ROPE,
+            WildernessCourseObjectComponents.STONES,
+            WildernessCourseObjectComponents.LOG_BALANCE,
+            WildernessCourseObjectComponents.CLIFF,
+            WerewolfCourseObjectComponents.STEPPING_STONE,
+            WerewolfCourseObjectComponents.HURDLE,
+            WerewolfCourseObjectComponents.PIPE,
+            WerewolfCourseObjectComponents.SLOPE,
+            WerewolfCourseObjectComponents.ENTRY_GATE,
+        ) + GnomeCourseObjectComponents.TREE_BRANCH_DOWN +
+            WerewolfCourseObjectComponents.ZIPLINE
+        ).distinct().toIntArray()
+
+    override val definition =
+        skillPlugin(name = "Agility", skill = Skill.AGILITY) {
+            objectClick(option = 1, *agilityObjectIds) { client, objectId, position, _ ->
+                when {
+                    objectId == GnomeCourseObjectComponents.LOG_BALANCE -> Agility(client).GnomeLog()
+                    objectId == GnomeCourseObjectComponents.NET_ONE -> Agility(client).GnomeNet1()
+                    objectId == GnomeCourseObjectComponents.TREE_BRANCH_UP -> Agility(client).GnomeTree1()
+                    objectId == GnomeCourseObjectComponents.ROPE_SWING -> Agility(client).GnomeRope()
+                    objectId in GnomeCourseObjectComponents.TREE_BRANCH_DOWN -> Agility(client).GnomeTreebranch2()
+                    objectId == GnomeCourseObjectComponents.NET_TWO -> Agility(client).GnomeNet2()
+                    objectId == GnomeCourseObjectComponents.PIPE_ENTRY_ONE ||
+                        objectId == GnomeCourseObjectComponents.PIPE_ENTRY_TWO -> Agility(client).GnomePipe()
+
+                    objectId == BarbarianCourseObjectComponents.ROPE_SWING -> Agility(client).BarbRope()
+                    objectId == BarbarianCourseObjectComponents.LOG_BALANCE -> Agility(client).BarbLog()
+                    objectId == BarbarianCourseObjectComponents.NET -> Agility(client).BarbNet()
+                    objectId == BarbarianCourseObjectComponents.LEDGE -> Agility(client).BarbLedge()
+                    objectId == BarbarianCourseObjectComponents.STAIRS -> Agility(client).BarbStairs()
+                    objectId == BarbarianCourseObjectComponents.CRUMBLING_WALL -> {
+                        val agility = Agility(client)
+                        when {
+                            position.x == 2536 && position.y == 3553 -> agility.BarbFirstWall()
+                            position.x == 2539 && position.y == 3553 -> agility.BarbSecondWall()
+                            position.x == 2542 && position.y == 3553 -> agility.BarbFinishWall()
+                            else -> return@objectClick false
+                        }
+                    }
+                    objectId == BarbarianCourseObjectComponents.ORANGE_BAR -> Agility(client).orangeBar()
+                    objectId == BarbarianCourseObjectComponents.YELLOW_LEDGE -> Agility(client).yellowLedge()
+
+                    objectId == WildernessCourseObjectComponents.PIPE -> Agility(client).WildyPipe()
+                    objectId == WildernessCourseObjectComponents.ROPE -> Agility(client).WildyRope()
+                    objectId == WildernessCourseObjectComponents.STONES -> Agility(client).WildyStones()
+                    objectId == WildernessCourseObjectComponents.LOG_BALANCE -> Agility(client).WildyLog()
+                    objectId == WildernessCourseObjectComponents.CLIFF -> Agility(client).WildyClimb()
+
+                    objectId == WerewolfCourseObjectComponents.STEPPING_STONE -> AgilityWerewolf(client).StepStone(position)
+                    objectId == WerewolfCourseObjectComponents.HURDLE -> AgilityWerewolf(client).hurdle(position)
+                    objectId == WerewolfCourseObjectComponents.PIPE -> AgilityWerewolf(client).pipe(position)
+                    objectId == WerewolfCourseObjectComponents.SLOPE -> AgilityWerewolf(client).slope(position)
+                    objectId in WerewolfCourseObjectComponents.ZIPLINE -> AgilityWerewolf(client).zipLine(position)
+                    objectId == WerewolfCourseObjectComponents.ENTRY_GATE -> {
+                        if (client.getLevel(Skill.AGILITY) >= 60) {
+                            client.ReplaceObject(position.x, position.y, WerewolfCourseObjectComponents.ENTRY_GATE, 2, 10)
+                            client.showNPCChat(5928, 601, arrayOf("Welcome to the werewolf agility course!"))
+                            client.transport(Position(3549, 9865, 0))
+                        } else {
+                            client.showNPCChat(5928, 616, arrayOf("Go and train your agility!"))
+                        }
+                    }
+                    else -> return@objectClick false
+                }
+                true
+            }
+        }
+}

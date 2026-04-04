@@ -12,11 +12,11 @@ import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
 import net.dodian.uber.game.systems.skills.requirements.ValidationResult
 import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.CycleSignal
+import net.dodian.uber.game.systems.skills.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentTiming
@@ -100,7 +100,7 @@ object Mining {
 
         GameEventBus.post(MiningStartedEvent(client, rock, position.copy(), pickaxe))
 
-        val requirements =
+        val actionRequirements =
             RequirementBuilder().apply {
                 level(Skill.MINING, rock.requiredLevel, "You need a mining level of ${rock.requiredLevel} to mine this rock")
                 inventorySpace(1, "Your inventory is full!")
@@ -121,36 +121,44 @@ object Mining {
                 )
             }.build()
 
-        playerAction(
-            player = client,
-            type = PlayerActionType.MINING,
-            actionName = "Mining",
-            onStart = {
-                player.performAnimation(pickaxe.animationId, 0)
-                player.sendMessage("You swing your pick at the rock...")
-            },
-            onStop = { stoppedPlayer, reason ->
-                stopMiningInternal(stoppedPlayer, mapStopReason(reason))
-            },
-        ) {
-            while (true) {
-                if (player.isBusy) {
-                    stop(ActionStopReason.BUSY)
+        val action =
+            gatheringAction("Mining") {
+                delay {
+                    val state = miningState ?: return@delay 1
+                    val activeRock = MiningData.rockByObjectId[state.rockObjectId] ?: return@delay 1
+                    val activePickaxe = resolveBestPickaxe(this) ?: return@delay 1
+                    computeMiningDelayTicks(this, activeRock, activePickaxe)
                 }
-                ensureAll(requirements)
-                val state = player.miningState ?: stop(ActionStopReason.INVALID_TARGET)
-                val activeRock = MiningData.rockByObjectId[state.rockObjectId]
-                    ?: stop(ActionStopReason.INVALID_TARGET)
-                val activePickaxe = resolveBestPickaxe(player)
-                    ?: stop(ActionStopReason.MISSING_TOOL)
+                requirements {
+                    actionRequirements.forEach { requirement(it) }
+                }
+                onStart {
+                    performAnimation(pickaxe.animationId, 0)
+                    sendMessage("You swing your pick at the rock...")
+                }
+                onCycleSignal {
+                    if (isBusy) {
+                        return@onCycleSignal CycleSignal.stop(ActionStopReason.BUSY)
+                    }
+                    val state = miningState ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                    if (MiningData.rockByObjectId[state.rockObjectId] == null) {
+                        return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                    }
+                    val activePickaxe = resolveBestPickaxe(this)
+                        ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.MISSING_TOOL)
 
-                player.performAnimation(activePickaxe.animationId, 0)
-                if (!performMiningCycle(player)) {
-                    stop(ActionStopReason.COMPLETED)
+                    performAnimation(activePickaxe.animationId, 0)
+                    if (!performMiningCycle(this)) {
+                        return@onCycleSignal CycleSignal.stop(ActionStopReason.COMPLETED)
+                    }
+                    CycleSignal.success()
                 }
-                emitCycleSuccess("Mining")
-                waitTicks(computeMiningDelayTicks(player, activeRock, activePickaxe))
+                onStop { reason ->
+                    stopMiningInternal(this, mapStopReason(reason))
+                }
             }
+        if (action.start(client) == null) {
+            stopMiningInternal(client, MiningStopReason.INVALID_ROCK)
         }
         return true
     }

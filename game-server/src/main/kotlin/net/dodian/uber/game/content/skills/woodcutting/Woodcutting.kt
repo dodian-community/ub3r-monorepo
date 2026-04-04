@@ -11,10 +11,10 @@ import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
 import net.dodian.uber.game.systems.skills.requirements.ValidationResult
 import net.dodian.uber.game.systems.skills.ActionStopReason
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.CycleSignal
+import net.dodian.uber.game.systems.skills.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentTiming
@@ -84,7 +84,7 @@ object Woodcutting {
                 resourcesGathered = 0,
             )
 
-        val requirements =
+        val actionRequirements =
             RequirementBuilder().apply {
                 level(Skill.WOODCUTTING, tree.requiredLevel, "You need a woodcutting level of ${tree.requiredLevel} to cut this tree.")
                 inventorySpace(1, "Your inventory is full!")
@@ -105,43 +105,50 @@ object Woodcutting {
                 )
             }.build()
 
-        playerAction(
-            player = client,
-            type = PlayerActionType.WOODCUTTING,
-            actionName = "Woodcutting",
-            onStart = {
-                player.performAnimation(axe.animationId, 0)
-                player.sendMessage("You swing your axe at the tree...")
-            },
-            onStop = { stoppedPlayer, reason ->
-                stopWoodcuttingInternal(stoppedPlayer, reason)
-            },
-        ) {
-            while (true) {
-                ensureAll(requirements)
-                val state = player.woodcuttingState ?: stop(ActionStopReason.INVALID_TARGET)
-                val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId]
-                    ?: stop(ActionStopReason.INVALID_TARGET)
-                val activeAxe = resolveBestAxe(player)
-                    ?: stop(ActionStopReason.MISSING_TOOL)
-
-                player.performAnimation(activeAxe.animationId, 0)
-                player.sendMessage("You cut some ${player.getItemName(activeTree.logItemId).lowercase()}")
-                player.addItem(activeTree.logItemId, 1)
-                player.checkItemUpdate()
-                ItemLog.playerGathering(player, activeTree.logItemId, 1, position.copy(), "Woodcutting")
-                ProgressionService.addXp(player, activeTree.experience, Skill.WOODCUTTING)
-                SkillingRandomEventService.trigger(player, activeTree.experience)
-                emitCycleSuccess("Woodcutting")
-
-                val gathered = state.resourcesGathered + 1
-                player.woodcuttingState = state.copy(resourcesGathered = gathered)
-                if (gathered >= 4 && Misc.chance(20) == 1) {
-                    player.sendMessage("You take a rest after gathering $gathered resources.")
-                    stop(ActionStopReason.COMPLETED)
+        val action =
+            gatheringAction("Woodcutting") {
+                delay {
+                    val state = woodcuttingState ?: return@delay 1
+                    val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId] ?: return@delay 1
+                    val activeAxe = resolveBestAxe(this) ?: return@delay 1
+                    computeWoodcuttingDelayTicks(this, activeTree, activeAxe)
                 }
-                waitTicks(computeWoodcuttingDelayTicks(player, activeTree, activeAxe))
+                requirements {
+                    actionRequirements.forEach { requirement(it) }
+                }
+                onStart {
+                    performAnimation(axe.animationId, 0)
+                    sendMessage("You swing your axe at the tree...")
+                }
+                onCycleSignal {
+                    val state = woodcuttingState ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                    val activeTree = WoodcuttingData.treeByObjectId[state.treeObjectId]
+                        ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.INVALID_TARGET)
+                    val activeAxe = resolveBestAxe(this)
+                        ?: return@onCycleSignal CycleSignal.stop(ActionStopReason.MISSING_TOOL)
+
+                    performAnimation(activeAxe.animationId, 0)
+                    sendMessage("You cut some ${getItemName(activeTree.logItemId).lowercase()}")
+                    addItem(activeTree.logItemId, 1)
+                    checkItemUpdate()
+                    ItemLog.playerGathering(this, activeTree.logItemId, 1, position.copy(), "Woodcutting")
+                    ProgressionService.addXp(this, activeTree.experience, Skill.WOODCUTTING)
+                    SkillingRandomEventService.trigger(this, activeTree.experience)
+
+                    val gathered = state.resourcesGathered + 1
+                    woodcuttingState = state.copy(resourcesGathered = gathered)
+                    if (gathered >= 4 && Misc.chance(20) == 1) {
+                        sendMessage("You take a rest after gathering $gathered resources.")
+                        return@onCycleSignal CycleSignal.stop(ActionStopReason.COMPLETED)
+                    }
+                    CycleSignal.success()
+                }
+                onStop { reason ->
+                    stopWoodcuttingInternal(this, reason)
+                }
             }
+        if (action.start(client) == null) {
+            stopWoodcuttingInternal(client, ActionStopReason.REQUIREMENT_FAILED)
         }
         return true
     }

@@ -13,6 +13,8 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.farming.FarmingData.patches
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.systems.world.farming.FarmingRuntimeService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 
 class Farming {
@@ -799,4 +801,33 @@ fun Client.markFarmingDirty() {
     farmingJson.refreshSaveSnapshot()
     markSaveDirty(PlayerSaveSegment.FARMING.mask)
     FarmingRuntimeService.INSTANCE.onStateDirty(this, System.currentTimeMillis())
+}
+
+object FarmingSkillPlugin : SkillPlugin {
+    private val firstClickObjects = (CompostBinObjects.objectIds + FarmingPatchObjects.objectIds).distinct().toIntArray()
+    private val secondClickObjects = (FarmingPatchGuideObjects.objectIds + FarmingPatchObjects.objectIds).distinct().toIntArray()
+
+    override val definition =
+        skillPlugin(name = "Farming", skill = Skill.FARMING) {
+            objectClick(option = 1, *firstClickObjects) { client, objectId, position, obj ->
+                if (objectId in CompostBinObjects.objectIds) {
+                    CompostBinObjects.onFirstClick(client, objectId, position, obj)
+                } else {
+                    FarmingPatchObjects.onFirstClick(client, objectId, position, obj)
+                }
+            }
+            objectClick(option = 2, *secondClickObjects) { client, objectId, position, obj ->
+                if (objectId in FarmingPatchGuideObjects.objectIds) {
+                    FarmingPatchGuideObjects.onSecondClick(client, objectId, position, obj)
+                } else {
+                    FarmingPatchObjects.onSecondClick(client, objectId, position, obj)
+                }
+            }
+            objectClick(option = 4, *FarmingPatchGuideObjects.objectIds) { client, objectId, position, obj ->
+                FarmingPatchGuideObjects.onFourthClick(client, objectId, position, obj)
+            }
+            objectClick(option = 5, *CompostBinObjects.objectIds) { client, objectId, position, obj ->
+                CompostBinObjects.onFifthClick(client, objectId, position, obj)
+            }
+        }
 }

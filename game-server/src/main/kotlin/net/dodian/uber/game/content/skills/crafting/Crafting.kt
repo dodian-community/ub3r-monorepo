@@ -15,6 +15,8 @@ import net.dodian.uber.game.netty.listener.out.SetGoldItems
 import net.dodian.uber.game.systems.action.ProductionRequest
 import net.dodian.uber.game.systems.action.SkillingActionService
 import net.dodian.uber.game.systems.api.content.ContentActions
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Crafting {
     private val normalCraftIds = intArrayOf(
@@ -489,4 +491,13 @@ object SpinningWheelObjects : ObjectContent {
             else -> false
         }
     }
+}
+
+object CraftingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Crafting", skill = Skill.CRAFTING) {
+            objectClick(option = 2, *SpinningWheelObjects.objectIds) { client, objectId, position, obj ->
+                SpinningWheelObjects.onSecondClick(client, objectId, position, obj)
+            }
+        }
 }

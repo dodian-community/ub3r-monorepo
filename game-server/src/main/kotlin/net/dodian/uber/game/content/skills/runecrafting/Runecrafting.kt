@@ -9,6 +9,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 import org.slf4j.LoggerFactory
 
@@ -142,4 +144,14 @@ object RunecraftingObjectBindings : ObjectContent {
         val altar = RunecraftingData.byObjectId(objectId) ?: return false
         return Runecrafting.start(client, altar.request)
     }
+}
+
+object RunecraftingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
+            objectClick(option = 1, *RunecraftingData.altarObjectIds) { client, objectId, _, _ ->
+                val altar = RunecraftingData.byObjectId(objectId) ?: return@objectClick false
+                Runecrafting.start(client, altar.request)
+            }
+        }
 }

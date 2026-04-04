@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.systems.content.objects.ObjectContentRegistry;
 import net.dodian.uber.game.systems.content.ContentModuleIndex;
 import net.dodian.uber.game.systems.content.ContentBootstrap;
+import net.dodian.uber.game.systems.skills.SkillDoctor;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -127,6 +128,7 @@ public class Server {
         for (ContentBootstrap bootstrap : ContentModuleIndex.contentBootstraps) {
             bootstrap.bootstrap();
         }
+        SkillDoctor.validateOrThrow();
         GameEventBus.bootstrap();
         ObjectContentRegistry.prewarmObjectDefinitions();
 

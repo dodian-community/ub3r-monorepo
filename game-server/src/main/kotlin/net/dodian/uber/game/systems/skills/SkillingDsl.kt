@@ -18,6 +18,7 @@ data class ActionSpec(
 data class CycleSignal(
     val keepRunning: Boolean,
     val succeeded: Boolean = true,
+    val stopReason: ActionStopReason? = null,
 ) {
     companion object {
         @JvmStatic
@@ -28,6 +29,9 @@ data class CycleSignal(
 
         @JvmStatic
         fun stop(): CycleSignal = CycleSignal(keepRunning = false, succeeded = false)
+
+        @JvmStatic
+        fun stop(reason: ActionStopReason): CycleSignal = CycleSignal(keepRunning = false, succeeded = false, stopReason = reason)
     }
 }
 
@@ -138,6 +142,7 @@ class GatheringActionBuilder internal constructor(
                 override fun onTick(): Boolean {
                     val signal = spec.onCycle?.invoke(client) ?: CycleSignal.success()
                     if (!signal.keepRunning) {
+                        signal.stopReason?.let { cancel(it) }
                         return false
                     }
                     if (signal.succeeded) {

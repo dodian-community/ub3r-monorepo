@@ -8,6 +8,8 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 
 object Fletching {
     @JvmStatic
@@ -107,4 +109,27 @@ object Fletching {
         SkillingRandomEventService.trigger(client, state.experience)
         client.fletchingState = state.copy(remaining = state.remaining - 1)
     }
+}
+
+object FletchingSkillPlugin : SkillPlugin {
+    private val knifeIds = intArrayOf(946, 5605)
+
+    override val definition =
+        skillPlugin(name = "Fletching", skill = Skill.FLETCHING) {
+            val logIds = FletchingData.bowLogs.map { it.logItemId }.distinct()
+            for (knifeId in knifeIds) {
+                for (logId in logIds) {
+                    itemOnItem(knifeId, logId) { client, itemUsed, otherItem ->
+                        val usedLogId = if (itemUsed == knifeId) otherItem else itemUsed
+                        val logIndex = FletchingData.bowLogs.indexOfFirst { it.logItemId == usedLogId }
+                        if (logIndex < 0) {
+                            false
+                        } else {
+                            Fletching.open(client, logIndex)
+                            true
+                        }
+                    }
+                }
+            }
+        }
 }
