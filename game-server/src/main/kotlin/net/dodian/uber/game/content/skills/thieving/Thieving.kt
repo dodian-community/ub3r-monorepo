@@ -15,6 +15,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.systems.skills.SkillPlugin
@@ -586,14 +587,14 @@ object ThievingSkillPlugin : SkillPlugin {
 
     override val definition =
         skillPlugin(name = "Thieving", skill = Skill.THIEVING) {
-            objectClick(option = 1, *firstClickObjects) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *firstClickObjects) { client, objectId, position, obj ->
                 if (objectId in ChestObjects.objectIds) {
                     ChestObjects.onFirstClick(client, objectId, position, obj)
                 } else {
                     PlunderObjects.onFirstClick(client, objectId, position, obj)
                 }
             }
-            objectClick(option = 2, *secondClickObjects) { client, objectId, position, obj ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 2, *secondClickObjects) { client, objectId, position, obj ->
                 when {
                     objectId in StallObjects.objectIds -> StallObjects.onSecondClick(client, objectId, position, obj)
                     objectId in ChestObjects.objectIds -> ChestObjects.onSecondClick(client, objectId, position, obj)

@@ -10,6 +10,7 @@ import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.action.SkillingActionService
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.utilities.Misc
 
 object Fishing {
@@ -141,13 +142,13 @@ object FishingSkillPlugin : SkillPlugin {
             val secondNpcIds = byOption[2].orEmpty().map { it.objectId }.distinct().toIntArray()
 
             if (firstNpcIds.isNotEmpty()) {
-                npcClick(option = 1, *firstNpcIds) { client, npc ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 1, *firstNpcIds) { client, npc ->
                     Fishing.attempt(client, npc.id, 1)
                     true
                 }
             }
             if (secondNpcIds.isNotEmpty()) {
-                npcClick(option = 2, *secondNpcIds) { client, npc ->
+                npcClick(preset = PolicyPreset.GATHERING, option = 2, *secondNpcIds) { client, npc ->
                     Fishing.attempt(client, npc.id, 2)
                     true
                 }

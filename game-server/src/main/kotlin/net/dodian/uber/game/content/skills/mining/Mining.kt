@@ -18,11 +18,11 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.utilities.Misc
 
 object Mining {
@@ -339,9 +339,9 @@ object MiningSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Mining", skill = Skill.MINING) {
             objectClick(
+                preset = PolicyPreset.GATHERING,
                 option = 1,
                 *MiningData.allRockObjectIds,
-                policy = { _, _, _, _ -> ContentInteraction.nearestBoundaryCardinalPolicy() },
             ) { client, objectId, position, _ ->
                 Mining.attempt(client, objectId, position)
             }

@@ -1,5 +1,8 @@
 package net.dodian.uber.game.systems.action
 
+import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.policy.UnifiedPolicyDsl
+
 data class PlayerActionInterruptPolicy(
     val cancelOnMovement: Boolean = false,
     val cancelOnCombatEntry: Boolean = true,
@@ -12,7 +15,7 @@ data class PlayerActionInterruptPolicy(
 ) {
     companion object {
         @JvmField
-        val DEFAULT = PlayerActionInterruptPolicy()
+        val DEFAULT = UnifiedPolicyDsl.toActionInterruptPolicy(PolicyPreset.PRODUCTION)
 
         @JvmField
         val TELEPORT =
@@ -26,5 +29,8 @@ data class PlayerActionInterruptPolicy(
                 cancelOnDeath = true,
                 cancelOnTeleport = false,
             )
+
+        @JvmStatic
+        fun fromPreset(preset: PolicyPreset): PlayerActionInterruptPolicy = UnifiedPolicyDsl.toActionInterruptPolicy(preset)
     }
 }

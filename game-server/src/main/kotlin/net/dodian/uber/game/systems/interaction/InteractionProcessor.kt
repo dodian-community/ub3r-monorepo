@@ -26,6 +26,10 @@ import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionExecutionResult
 import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.systems.skills.SkillPluginRegistry
+import net.dodian.uber.game.systems.skills.SkillPolicyMetrics
+import net.dodian.uber.game.systems.skills.SkillPolicyResult
+import net.dodian.uber.game.systems.skills.SkillPolicyRoute
 import net.dodian.utilities.Misc
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -150,6 +154,7 @@ object InteractionProcessor {
                 fallbackData = intent.objectData,
                 fallbackDef = intent.objectDef,
             )
+        val skillObjectBinding = SkillPluginRegistry.current().objectBinding(intent.option, intent.objectId)
         val policy =
             SkillInteractionDispatcher.resolveObjectPolicy(
                 option = intent.option,
@@ -175,11 +180,17 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            skillObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
+            }
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
         if (!isSettleGateSatisfied(player, intent, policy)) {
+            skillObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.SETTLE_WAIT)
+            }
             return InteractionExecutionResult.WAITING
         }
 
@@ -261,6 +272,15 @@ object InteractionProcessor {
                     packetOpcode = intent.opcode,
                 ),
             )
+        if (skillObjectBinding == null &&
+            timing.handled &&
+            timing.handlerName != SkillInteractionDispatcher::class.java.name
+        ) {
+            val preset = SkillPluginRegistry.current().firstPresetForObjectId(intent.objectId)
+            if (preset != null) {
+                SkillPolicyMetrics.record(preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.ROUTE_BYPASS_REJECT)
+            }
+        }
         clear(player)
         slowLogIfNeeded(
             player,

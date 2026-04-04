@@ -16,10 +16,10 @@ import net.dodian.uber.game.systems.skills.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.persistence.audit.ItemLog
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
@@ -232,9 +232,9 @@ object WoodcuttingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Woodcutting", skill = Skill.WOODCUTTING) {
             objectClick(
+                preset = PolicyPreset.GATHERING,
                 option = 1,
                 *WoodcuttingData.allTreeObjectIds,
-                policy = { _, _, _, _ -> ContentInteraction.nearestBoundaryCardinalPolicy() },
             ) { client, objectId, position, obj ->
                 Woodcutting.attempt(client, objectId, position, obj)
             }

@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.skills.firemaking
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.skillPlugin
@@ -33,7 +34,7 @@ object FiremakingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Firemaking", skill = Skill.FIREMAKING) {
             for (logId in logIds) {
-                itemOnItem(TINDERBOX, logId) { client, itemUsed, otherItem ->
+                itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = TINDERBOX, rightItemId = logId) { client, itemUsed, otherItem ->
                     Firemaking.handleItemCombination(client, itemUsed, otherItem)
                 }
             }

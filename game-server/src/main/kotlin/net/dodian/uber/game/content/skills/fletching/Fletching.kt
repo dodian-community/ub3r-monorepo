@@ -8,6 +8,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.skillPlugin
 
@@ -119,7 +120,7 @@ object FletchingSkillPlugin : SkillPlugin {
             val logIds = FletchingData.bowLogs.map { it.logItemId }.distinct()
             for (knifeId in knifeIds) {
                 for (logId in logIds) {
-                    itemOnItem(knifeId, logId) { client, itemUsed, otherItem ->
+                    itemOnItem(preset = PolicyPreset.PRODUCTION, leftItemId = knifeId, rightItemId = logId) { client, itemUsed, otherItem ->
                         val usedLogId = if (itemUsed == knifeId) otherItem else itemUsed
                         val logIndex = FletchingData.bowLogs.indexOfFirst { it.logItemId == usedLogId }
                         if (logIndex < 0) {

@@ -5,6 +5,8 @@ import net.dodian.uber.game.systems.interaction.DispatchTiming
 import net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.policy.UnifiedPolicyDsl
 
 typealias ContentObjectInteractionPolicy = ObjectInteractionPolicy
 typealias ContentDispatchTiming = DispatchTiming
@@ -42,20 +44,14 @@ object ContentInteraction {
 
     @JvmStatic
     fun nearestBoundaryCardinalPolicy(settleTicks: Int = 1): ContentObjectInteractionPolicy {
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_CARDINAL,
-            requireMovementSettled = true,
-            settleTicks = settleTicks.coerceAtLeast(0),
-        )
+        val base = UnifiedPolicyDsl.toObjectPolicy(PolicyPreset.GATHERING)
+        return base.copy(settleTicks = settleTicks.coerceAtLeast(0))
     }
 
     @JvmStatic
     fun nearestBoundaryAnyPolicy(settleTicks: Int = 1): ContentObjectInteractionPolicy {
-        return ObjectInteractionPolicy(
-            distanceRule = ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_ANY,
-            requireMovementSettled = true,
-            settleTicks = settleTicks.coerceAtLeast(0),
-        )
+        val base = UnifiedPolicyDsl.toObjectPolicy(PolicyPreset.DIALOGUE)
+        return base.copy(settleTicks = settleTicks.coerceAtLeast(0))
     }
 
     @JvmStatic

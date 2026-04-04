@@ -59,6 +59,7 @@ object SkillPluginRegistry : ContentBootstrap {
         val npcBindings = HashMap<Long, SkillNpcClickBinding>()
         val itemOnItemBindings = HashMap<Long, SkillItemOnItemBinding>()
         val buttonBindings = HashMap<Long, SkillButtonBinding>()
+        val objectPresetById = HashMap<Int, MutableSet<net.dodian.uber.game.systems.policy.PolicyPreset>>()
 
         definitions.forEach { plugin ->
             val definition = plugin.definition
@@ -71,6 +72,7 @@ object SkillPluginRegistry : ContentBootstrap {
                         "Duplicate skill object binding option=${binding.option} objectId=$objectId " +
                             "for plugin=${definition.name}"
                     }
+                    objectPresetById.computeIfAbsent(objectId) { linkedSetOf() }.add(binding.preset)
                 }
             }
 
@@ -106,7 +108,7 @@ object SkillPluginRegistry : ContentBootstrap {
             }
         }
 
-        snapshot = SkillPluginSnapshot(objectBindings, npcBindings, itemOnItemBindings, buttonBindings)
+        snapshot = SkillPluginSnapshot(objectBindings, npcBindings, itemOnItemBindings, buttonBindings, objectPresetById)
         logger.info(
             "SkillPluginRegistry bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, button={})",
             definitions.size,
@@ -141,6 +143,7 @@ data class SkillPluginSnapshot(
     private val npcBindings: Map<Long, SkillNpcClickBinding>,
     private val itemOnItemBindings: Map<Long, SkillItemOnItemBinding>,
     private val buttonBindings: Map<Long, SkillButtonBinding>,
+    private val objectPresetById: Map<Int, Set<net.dodian.uber.game.systems.policy.PolicyPreset>>,
 ) {
     fun objectBinding(option: Int, objectId: Int): SkillObjectClickBinding? =
         objectBindings[SkillPluginRegistry.objectKey(option, objectId)]
@@ -156,8 +159,13 @@ data class SkillPluginSnapshot(
             ?: buttonBindings[SkillPluginRegistry.buttonKey(rawButtonId, -1)]
     }
 
+    fun ownsObjectId(objectId: Int): Boolean = objectPresetById.containsKey(objectId)
+
+    fun firstPresetForObjectId(objectId: Int): net.dodian.uber.game.systems.policy.PolicyPreset? =
+        objectPresetById[objectId]?.firstOrNull()
+
     companion object {
         @JvmStatic
-        fun empty(): SkillPluginSnapshot = SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap())
+        fun empty(): SkillPluginSnapshot = SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
     }
 }

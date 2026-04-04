@@ -5,7 +5,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.policy.UnifiedPolicyDsl
 
 interface SkillPlugin {
     val definition: SkillPluginDefinition
@@ -29,33 +30,31 @@ data class SkillPluginLifecycleHooks(
 )
 
 data class SkillObjectClickBinding(
+    val preset: PolicyPreset,
     val option: Int,
     val objectIds: IntArray,
     val handler: (client: Client, objectId: Int, position: Position, obj: GameObjectData?) -> Boolean,
-    val policyResolver: (
-        (
-            option: Int,
-            objectId: Int,
-            position: Position,
-            obj: GameObjectData?,
-        ) -> ContentObjectInteractionPolicy?
-    )? = null,
 )
 
 data class SkillNpcClickBinding(
+    val preset: PolicyPreset,
     val option: Int,
     val npcIds: IntArray,
     val handler: (client: Client, npc: Npc) -> Boolean,
 )
 
 data class SkillItemOnItemBinding(
+    val preset: PolicyPreset,
     val leftItemId: Int,
     val rightItemId: Int,
     val handler: (client: Client, itemUsed: Int, otherItem: Int) -> Boolean,
 )
 
 data class SkillButtonBinding(
+    val preset: PolicyPreset,
     val rawButtonIds: IntArray,
     val opIndex: Int? = null,
     val handler: (client: Client, rawButtonId: Int, opIndex: Int) -> Boolean,
 )
+
+fun SkillObjectClickBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)

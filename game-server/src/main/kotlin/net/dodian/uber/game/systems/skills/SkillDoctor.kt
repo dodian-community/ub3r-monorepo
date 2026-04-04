@@ -2,6 +2,7 @@ package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.content.ContentModuleIndex
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -80,6 +81,7 @@ object SkillDoctor {
 
         findings += scanLegacyRouteBypasses(sourceRoot)
         findings += scanBannedPluginPatterns(sourceRoot)
+        findings += scanPresetDeclarations(sourceRoot)
 
         return SkillDoctorReport(findings)
     }
@@ -137,6 +139,51 @@ object SkillDoctor {
                                 code = "banned-orchestration",
                                 message = path.toString() + " contains forbidden pattern: $pattern",
                             )
+                        }
+                    }
+                }
+        }
+        return findings
+    }
+
+    private fun scanPresetDeclarations(sourceRoot: Path): List<SkillDoctorFinding> {
+        val findings = mutableListOf<SkillDoctorFinding>()
+        val skillsRoot = sourceRoot.resolve("net/dodian/uber/game/content/skills")
+        if (!Files.exists(skillsRoot)) {
+            return findings
+        }
+
+        val validPresetNames = PolicyPreset.values().map { it.name }.toSet()
+        val callNames = listOf("objectClick", "npcClick", "itemOnItem", "button")
+
+        Files.walk(skillsRoot).use { stream ->
+            stream
+                .filter { path -> path.toString().endsWith(".kt") }
+                .forEach { path ->
+                    val source = Files.readString(path)
+                    if (!source.contains(Regex("""object\s+\w+SkillPlugin\s*:"""))) {
+                        return@forEach
+                    }
+
+                    callNames.forEach { callName ->
+                        val callRegex = Regex("""$callName\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL))
+                        callRegex.findAll(source).forEach { match ->
+                            val args = match.groupValues[1]
+                            if (!Regex("""preset\s*=\s*PolicyPreset\.[A-Z_]+""").containsMatchIn(args)) {
+                                findings += SkillDoctorFinding(
+                                    code = "missing-policy-preset",
+                                    message = "${path.toString()} has $callName(...) without explicit preset = PolicyPreset.<NAME>",
+                                )
+                            } else {
+                                val presetMatch = Regex("""preset\s*=\s*PolicyPreset\.([A-Z_]+)""").find(args)
+                                val presetName = presetMatch?.groupValues?.get(1)
+                                if (presetName == null || presetName !in validPresetNames) {
+                                    findings += SkillDoctorFinding(
+                                        code = "invalid-policy-preset",
+                                        message = "${path.toString()} has invalid policy preset on $callName(...): ${presetName ?: "unknown"}",
+                                    )
+                                }
+                            }
                         }
                     }
                 }

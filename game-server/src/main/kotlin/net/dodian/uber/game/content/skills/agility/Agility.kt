@@ -16,6 +16,7 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillPlugin
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
@@ -916,7 +917,7 @@ object AgilitySkillPlugin : SkillPlugin {
 
     override val definition =
         skillPlugin(name = "Agility", skill = Skill.AGILITY) {
-            objectClick(option = 1, *agilityObjectIds) { client, objectId, position, _ ->
+            objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { client, objectId, position, _ ->
                 when {
                     objectId == GnomeCourseObjectComponents.LOG_BALANCE -> Agility(client).GnomeLog()
                     objectId == GnomeCourseObjectComponents.NET_ONE -> Agility(client).GnomeNet1()

@@ -320,6 +320,71 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `skill plugin route bindings require explicit policy presets`() {
+        val pluginFiles = sourceFiles.filter { path ->
+            path.extension == "kt" &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
+        }
+
+        val callRegexByName = mapOf(
+            "objectClick" to Regex("""objectClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "npcClick" to Regex("""npcClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "itemOnItem" to Regex("""itemOnItem\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "button" to Regex("""button\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+        )
+
+        val violations = pluginFiles.flatMap { path ->
+            val source = Files.readString(path)
+            buildList {
+                callRegexByName.forEach { (call, regex) ->
+                    regex.findAll(source).forEach { match ->
+                        val args = match.groupValues[1]
+                        if (!Regex("""preset\s*=\s*PolicyPreset\.[A-Z_]+""").containsMatchIn(args)) {
+                            add("$path: $call(...) missing explicit preset = PolicyPreset.<NAME>")
+                        }
+                    }
+                }
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "SkillPlugin bindings must declare explicit policy presets.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill plugin modules do not import legacy split policy types`() {
+        val pluginFiles = sourceFiles.filter { path ->
+            path.extension == "kt" &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
+        }
+
+        val violations = pluginFiles.flatMap { path ->
+            Files.readAllLines(path).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                if (!trimmed.startsWith("import ")) {
+                    return@mapIndexedNotNull null
+                }
+                val usesLegacySplitPolicy =
+                    trimmed.contains("net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy") ||
+                        trimmed.contains("net.dodian.uber.game.systems.action.PlayerActionInterruptPolicy")
+                if (!usesLegacySplitPolicy) {
+                    return@mapIndexedNotNull null
+                }
+                "${path}:${idx + 1} -> $trimmed"
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "SkillPlugin modules should use unified policy preset DSL, not legacy split policy imports.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `engine layer does not import persistence`() {
         val violations = sourceFiles
             .filter { file ->

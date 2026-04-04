@@ -6,6 +6,7 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -149,7 +150,7 @@ object RunecraftingObjectBindings : ObjectContent {
 object RunecraftingSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Runecrafting", skill = Skill.RUNECRAFTING) {
-            objectClick(option = 1, *RunecraftingData.altarObjectIds) { client, objectId, _, _ ->
+            objectClick(preset = PolicyPreset.GATHERING, option = 1, *RunecraftingData.altarObjectIds) { client, objectId, _, _ ->
                 val altar = RunecraftingData.byObjectId(objectId) ?: return@objectClick false
                 Runecrafting.start(client, altar.request)
             }

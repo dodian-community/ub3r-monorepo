@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.policy.PolicyPreset
 
 class SkillPluginBuilder internal constructor(
     private val name: String,
@@ -18,42 +18,45 @@ class SkillPluginBuilder internal constructor(
     private var lifecycle = SkillPluginLifecycleHooks()
 
     fun objectClick(
+        preset: PolicyPreset,
         option: Int = 1,
         vararg objectIds: Int,
-        policy: ((option: Int, objectId: Int, position: Position, obj: GameObjectData?) -> ContentObjectInteractionPolicy?)? = null,
         handler: (client: Client, objectId: Int, position: Position, obj: GameObjectData?) -> Boolean,
     ) {
         require(option in 1..5) { "Object option must be between 1 and 5." }
         require(objectIds.isNotEmpty()) { "Object click binding requires at least one object id." }
-        objectBindings += SkillObjectClickBinding(option, objectIds.toSet().toIntArray(), handler, policy)
+        objectBindings += SkillObjectClickBinding(preset, option, objectIds.toSet().toIntArray(), handler)
     }
 
     fun npcClick(
+        preset: PolicyPreset,
         option: Int,
         vararg npcIds: Int,
         handler: (client: Client, npc: Npc) -> Boolean,
     ) {
         require(option in 1..4) { "NPC option must be between 1 and 4." }
         require(npcIds.isNotEmpty()) { "Npc click binding requires at least one npc id." }
-        npcBindings += SkillNpcClickBinding(option, npcIds.toSet().toIntArray(), handler)
+        npcBindings += SkillNpcClickBinding(preset, option, npcIds.toSet().toIntArray(), handler)
     }
 
     fun itemOnItem(
+        preset: PolicyPreset,
         leftItemId: Int,
         rightItemId: Int,
         handler: (client: Client, itemUsed: Int, otherItem: Int) -> Boolean,
     ) {
         require(leftItemId >= 0 && rightItemId >= 0) { "Item ids must be non-negative." }
-        itemOnItemBindings += SkillItemOnItemBinding(leftItemId, rightItemId, handler)
+        itemOnItemBindings += SkillItemOnItemBinding(preset, leftItemId, rightItemId, handler)
     }
 
     fun button(
+        preset: PolicyPreset,
         vararg rawButtonIds: Int,
         opIndex: Int? = null,
         handler: (client: Client, rawButtonId: Int, op: Int) -> Boolean,
     ) {
         require(rawButtonIds.isNotEmpty()) { "Button binding requires at least one raw button id." }
-        buttonBindings += SkillButtonBinding(rawButtonIds.toSet().toIntArray(), opIndex, handler)
+        buttonBindings += SkillButtonBinding(preset, rawButtonIds.toSet().toIntArray(), opIndex, handler)
     }
 
     fun lifecycle(block: SkillPluginLifecycleBuilder.() -> Unit) {

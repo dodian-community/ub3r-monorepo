@@ -1,6 +1,7 @@
 package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.policy.PolicyPreset
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -25,7 +26,7 @@ class SkillPluginRegistryTest {
             object : SkillPlugin {
                 override val definition =
                     skillPlugin("TestOne", Skill.MINING) {
-                        objectClick(1, 999_001) { _, _, _, _ -> true }
+                        objectClick(preset = PolicyPreset.GATHERING, option = 1, 999_001) { _, _, _, _ -> true }
                     }
             },
         )
@@ -34,7 +35,7 @@ class SkillPluginRegistryTest {
             object : SkillPlugin {
                 override val definition =
                     skillPlugin("TestTwo", Skill.WOODCUTTING) {
-                        objectClick(1, 999_001) { _, _, _, _ -> true }
+                        objectClick(preset = PolicyPreset.GATHERING, option = 1, 999_001) { _, _, _, _ -> true }
                     }
             },
         )
