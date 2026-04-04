@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.time.Duration
 import java.util.HashMap
 import java.util.HashSet
+import java.util.LinkedHashSet
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
@@ -84,8 +85,8 @@ object WorldDbPollService {
 
     private fun loadLatestNews(connection: Connection): Int? {
         val query = "SELECT threadid FROM thread WHERE forumid IN ('98', '99', '101') AND visible = '1' ORDER BY threadid DESC LIMIT 1"
-        connection.createStatement().use { statement ->
-            statement.executeQuery(query).use { results ->
+        connection.prepareStatement(query).use { statement ->
+            statement.executeQuery().use { results ->
                 return if (results.next()) results.getInt("threadid") else null
             }
         }
@@ -94,8 +95,8 @@ object WorldDbPollService {
     private fun loadRefundReceivers(connection: Connection): Set<Int> {
         val receivers = HashSet<Int>()
         val query = "SELECT DISTINCT receivedBy FROM ${DbTables.GAME_REFUND_ITEMS} WHERE message='0' AND claimed IS NULL"
-        connection.createStatement().use { statement ->
-            statement.executeQuery(query).use { results ->
+        connection.prepareStatement(query).use { statement ->
+            statement.executeQuery().use { results ->
                 while (results.next()) {
                     receivers += results.getInt("receivedBy")
                 }
@@ -105,20 +106,29 @@ object WorldDbPollService {
     }
 
     private fun markRefundMessagesDispatched(connection: Connection, receivers: Set<Int>) {
-        val ids = receivers.joinToString(",")
-        val updateQuery = "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' WHERE message='0' AND claimed IS NULL AND receivedBy IN ($ids)"
-        connection.createStatement().use { statement ->
-            statement.executeUpdate(updateQuery)
+        if (receivers.isEmpty()) {
+            return
+        }
+        val ids = normalizedIds(receivers)
+        val updateQuery =
+            "UPDATE ${DbTables.GAME_REFUND_ITEMS} SET message='1' WHERE message='0' AND claimed IS NULL AND receivedBy IN (${inClausePlaceholders(ids)})"
+        connection.prepareStatement(updateQuery).use { statement ->
+            bindIds(statement, startIndex = 1, ids = ids)
+            statement.executeUpdate()
         }
     }
 
     private fun loadMuteAndBanState(connection: Connection, onlinePlayerDbIds: List<Int>, muteTimes: MutableMap<Int, Long>, bannedPlayers: MutableSet<Int>) {
         if (onlinePlayerDbIds.isEmpty()) return
-        val ids = onlinePlayerDbIds.joinToString(",")
-        val query = "SELECT id, unmutetime, unbantime FROM ${DbTables.GAME_CHARACTERS} WHERE id IN ($ids)"
+        val ids = normalizedIds(onlinePlayerDbIds)
+        if (ids.isEmpty()) {
+            return
+        }
+        val query = "SELECT id, unmutetime, unbantime FROM ${DbTables.GAME_CHARACTERS} WHERE id IN (${inClausePlaceholders(ids)})"
         val now = System.currentTimeMillis()
-        connection.createStatement().use { statement ->
-            statement.executeQuery(query).use { results ->
+        connection.prepareStatement(query).use { statement ->
+            bindIds(statement, startIndex = 1, ids = ids)
+            statement.executeQuery().use { results ->
                 while (results.next()) {
                     val id = results.getInt("id")
                     val unmuteTime = results.getLong("unmutetime")
@@ -140,5 +150,24 @@ object WorldDbPollService {
             }
         }
         DbDispatchers.shutdown(worker, timeout)
+    }
+
+    internal fun normalizedIds(ids: Iterable<Int>): List<Int> {
+        val unique = LinkedHashSet<Int>()
+        for (id in ids) {
+            if (id > 0) {
+                unique += id
+            }
+        }
+        return unique.toList()
+    }
+
+    internal fun inClausePlaceholders(ids: List<Int>): String = List(ids.size.coerceAtLeast(1)) { "?" }.joinToString(",")
+
+    private fun bindIds(statement: java.sql.PreparedStatement, startIndex: Int, ids: List<Int>) {
+        var index = startIndex
+        for (id in ids) {
+            statement.setInt(index++, id)
+        }
     }
 }

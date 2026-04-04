@@ -11,6 +11,7 @@ import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import net.dodian.uber.game.engine.config.gameWorldId
+import org.slf4j.LoggerFactory
 
 class SlotMachine {
     @JvmField var slotsGames: Int = -1
@@ -24,6 +25,7 @@ class SlotMachine {
 
     private val symbols = ArrayList<Symbol>()
     private val counterLock = Any()
+    private val logger = LoggerFactory.getLogger(SlotMachine::class.java)
 
     init {
         symbols.add(Symbol(1, "0", intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)))
@@ -127,8 +129,8 @@ class SlotMachine {
             Runnable {
                 try {
                     DbAsyncRepository.withConnection { conn ->
-                        conn.createStatement().use { stmt ->
-                            stmt.executeQuery("SELECT * FROM ${DbTables.GAME_PETE_CO}").use { results ->
+                        conn.prepareStatement("SELECT Tracker_ID, CoinsBillion, Coins FROM ${DbTables.GAME_PETE_CO}").use { stmt ->
+                            stmt.executeQuery().use { results ->
                                 var winBillions = 0
                                 var winCoins = 0
                                 var loseBillions = 0
@@ -156,7 +158,7 @@ class SlotMachine {
                         }
                     }
                 } catch (exception: Exception) {
-                    exception.printStackTrace()
+                    logger.error("Failed loading slot machine balances", exception)
                 }
             },
         )
@@ -166,7 +168,9 @@ class SlotMachine {
         if (gameWorldId == 5) {
             return
         }
-        val query: String
+        val trackerId: Int
+        val coinsBillion: Int
+        val coins: Int
         synchronized(counterLock) {
             if (id == 1) {
                 Coins_Win += amount
@@ -174,14 +178,18 @@ class SlotMachine {
                     Coins_Win -= 1_000_000_000
                     CoinsBillion_Win += 1
                 }
-                query = "INSERT ${DbTables.GAME_PETE_CO} SET CoinsBillion = $CoinsBillion_Win, Coins = $Coins_Win where Tracker_ID=1"
+                trackerId = 1
+                coinsBillion = CoinsBillion_Win
+                coins = Coins_Win
             } else {
                 Coins_Lose += amount
                 if (Coins_Lose > 1_000_000_000) {
                     Coins_Lose -= 1_000_000_000
                     CoinsBillion_Lose += 1
                 }
-                query = "INSERT ${DbTables.GAME_PETE_CO} SET CoinsBillion = $CoinsBillion_Lose, Coins = $Coins_Lose where Tracker_ID=2"
+                trackerId = 2
+                coinsBillion = CoinsBillion_Lose
+                coins = Coins_Lose
             }
         }
 
@@ -190,12 +198,25 @@ class SlotMachine {
             Runnable {
                 try {
                     DbAsyncRepository.withConnection { conn ->
-                        conn.createStatement().use { stmt ->
-                            stmt.executeUpdate(query)
+                        conn.prepareStatement("UPDATE ${DbTables.GAME_PETE_CO} SET CoinsBillion = ?, Coins = ? WHERE Tracker_ID = ?")
+                            .use { stmt ->
+                                stmt.setInt(1, coinsBillion)
+                                stmt.setInt(2, coins)
+                                stmt.setInt(3, trackerId)
+                                stmt.executeUpdate()
+                            }
+                        conn.prepareStatement(
+                            "INSERT INTO ${DbTables.GAME_PETE_CO} (Tracker_ID, CoinsBillion, Coins) SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM ${DbTables.GAME_PETE_CO} WHERE Tracker_ID = ?)",
+                        ).use { insert ->
+                            insert.setInt(1, trackerId)
+                            insert.setInt(2, coinsBillion)
+                            insert.setInt(3, coins)
+                            insert.setInt(4, trackerId)
+                            insert.executeUpdate()
                         }
                     }
                 } catch (exception: Exception) {
-                    exception.printStackTrace()
+                    logger.error("Failed tracking slot machine counters for trackerId={}", trackerId, exception)
                 }
             },
         )

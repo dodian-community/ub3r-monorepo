@@ -1,29 +1,33 @@
 package net.dodian.uber.game.persistence.audit
 
 import java.sql.Connection
-import java.util.concurrent.BlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.LockSupport
+import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
-import net.dodian.uber.game.engine.config.gameWorldId
 import org.slf4j.LoggerFactory
 
 object ChatLog {
     private val logger = LoggerFactory.getLogger(ChatLog::class.java)
-    private val messageQueue: BlockingQueue<ChatMessage> = LinkedBlockingQueue()
+    private val messageQueue = LinkedBlockingQueue<ChatMessage>()
     private val startLock = Any()
+    private val started = AtomicBoolean(false)
+    private val running = AtomicBoolean(true)
+    private val workerScheduled = AtomicBoolean(false)
+    private val processedMessages = AtomicLong(0)
+    private val failedMessages = AtomicLong(0)
 
-    @Volatile
-    private var running = false
-
-    @Volatile
-    private var processorThread: Thread? = null
-
-    private const val DEBUG_METRICS = true
+    private const val DEBUG_METRICS = false
     private const val BATCH_SIZE = 20
+    private const val MAX_RETRY_ATTEMPTS = 2
+    private const val SHUTDOWN_WAIT_MS = 5_000L
     private val insertSql =
         "INSERT INTO ${DbTables.GAME_CHAT_LOGS} (type, sender, receiver, message, timestamp) VALUES (?, ?, ?, ?, ?)"
 
@@ -59,54 +63,47 @@ object ChatLog {
         if (gameWorldId > 1) return
         ensureStarted()
         messageQueue.add(ChatMessage(type, senderId, receiverId, senderName, sanitizeMessage(message)))
+        scheduleDrain()
     }
 
     private fun ensureStarted() {
-        if (running) return
+        if (started.get()) return
         synchronized(startLock) {
-            if (running) return
-            running = true
-            processorThread = Thread(::processMessages, "ChatLog-Processor").apply {
-                isDaemon = true
-                start()
-            }
+            if (!started.compareAndSet(false, true)) return
             logger.info("ChatLog processor started.")
         }
     }
 
-    private fun processMessages() {
-        while (running || messageQueue.isNotEmpty()) {
+    private fun scheduleDrain() {
+        if (!workerScheduled.compareAndSet(false, true)) {
+            return
+        }
+        DbDispatchers.logExecutor.execute {
             try {
-                if (messageQueue.size > 1) {
-                    processBatch()
-                } else {
-                    val message = messageQueue.poll(10, TimeUnit.MILLISECONDS)
-                    if (message != null) {
-                        val start = System.currentTimeMillis()
-                        saveMessage(message)
-                        if (DEBUG_METRICS) {
-                            val duration = System.currentTimeMillis() - start
-                            logger.info("{}: {} saved in {}ms", message.senderName, message.message, duration)
-                        }
-                    }
-                }
-            } catch (interrupted: InterruptedException) {
-                Thread.currentThread().interrupt()
-                logger.warn("ChatLog processor thread interrupted")
+                drainQueue()
             } catch (exception: Exception) {
-                logger.error("Error processing chat messages", exception)
-                try {
-                    Thread.sleep(100)
-                } catch (interrupted: InterruptedException) {
-                    Thread.currentThread().interrupt()
+                logger.error("Chat log drain worker failed", exception)
+            } finally {
+                workerScheduled.set(false)
+                if ((running.get() || messageQueue.isNotEmpty()) && messageQueue.isNotEmpty()) {
+                    scheduleDrain()
                 }
             }
         }
     }
 
-    private fun processBatch(): Int {
-        val batch = ArrayList<ChatMessage>(BATCH_SIZE)
-        messageQueue.drainTo(batch, BATCH_SIZE)
+    private fun drainQueue() {
+        while (running.get() || messageQueue.isNotEmpty()) {
+            val batch = ArrayList<ChatMessage>(BATCH_SIZE)
+            messageQueue.drainTo(batch, BATCH_SIZE)
+            if (batch.isEmpty()) {
+                break
+            }
+            processBatch(batch)
+        }
+    }
+
+    private fun processBatch(batch: List<ChatMessage>): Int {
         if (batch.isEmpty()) return 0
 
         return try {
@@ -124,30 +121,46 @@ object ChatLog {
                     statement.executeBatch()
                 }
             }
+            processedMessages.addAndGet(batch.size.toLong())
             batch.size
         } catch (exception: java.sql.SQLException) {
             logger.error("Failed to save chat batch", exception)
             for (message in batch) {
-                try {
-                    saveMessage(message)
-                } catch (fallbackException: Exception) {
-                    logger.error("Failed to save individual message", fallbackException)
+                var persisted = false
+                var attempts = 0
+                while (!persisted && attempts <= MAX_RETRY_ATTEMPTS) {
+                    attempts++
+                    persisted = saveMessage(message)
+                }
+                if (!persisted) {
+                    failedMessages.incrementAndGet()
                 }
             }
             batch.size
         }
     }
 
-    private fun saveMessage(message: ChatMessage) {
+    private fun saveMessage(message: ChatMessage): Boolean {
         try {
             DbAsyncRepository.withConnection { connection ->
                 saveMessage(connection, message, LogEntry.getTimeStamp())
             }
+            processedMessages.incrementAndGet()
+            if (DEBUG_METRICS) {
+                logger.debug(
+                    "Chat log metrics: processed={} failed={} queue={}",
+                    processedMessages.get(),
+                    failedMessages.get(),
+                    messageQueue.size,
+                )
+            }
+            return true
         } catch (exception: java.sql.SQLException) {
             logger.error("Unable to record chat message", exception)
             if (message.type == 1 || message.type == 2) {
                 YellSystem.alertStaff("Unable to record chat, please contact an admin.")
             }
+            return false
         }
     }
 
@@ -166,11 +179,21 @@ object ChatLog {
 
     @JvmStatic
     fun shutdown() {
-        synchronized(startLock) {
-            running = false
-            processorThread?.interrupt()
-            processorThread?.join(5_000L)
-            processorThread = null
+        running.set(false)
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(SHUTDOWN_WAIT_MS)
+        while (System.nanoTime() < deadline) {
+            if (messageQueue.isEmpty() && !workerScheduled.get()) {
+                break
+            }
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10))
+        }
+        if (DEBUG_METRICS || failedMessages.get() > 0L) {
+            logger.info(
+                "Chat log shutdown stats: processed={} failed={} remaining={}",
+                processedMessages.get(),
+                failedMessages.get(),
+                messageQueue.size,
+            )
         }
     }
 }

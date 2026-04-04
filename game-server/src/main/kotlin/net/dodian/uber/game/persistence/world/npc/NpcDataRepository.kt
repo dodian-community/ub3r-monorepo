@@ -13,6 +13,39 @@ data class NpcDropRow(
 )
 
 object NpcDataRepository {
+    enum class DefinitionField(
+        val column: String,
+        val parser: (String) -> Any,
+    ) {
+        NAME("name", { it }),
+        EXAMINE("examine", { it }),
+        ATTACK_EMOTE("attackEmote", { it.toInt() }),
+        DEATH_EMOTE("deathEmote", { it.toInt() }),
+        RESPAWN("respawn", { it.toInt() }),
+        COMBAT("combat", { it.toInt() }),
+        SIZE("size", { it.toInt() }),
+        DEFENCE("defence", { it.toInt() }),
+        ATTACK("attack", { it.toInt() }),
+        STRENGTH("strength", { it.toInt() }),
+        HITPOINTS("hitpoints", { it.toInt() }),
+        RANGED("ranged", { it.toInt() }),
+        MAGIC("magic", { it.toInt() }),
+        ;
+
+        companion object {
+            private val byAlias =
+                values().associateBy { it.column.lowercase() } +
+                    mapOf(
+                        "attackemote" to ATTACK_EMOTE,
+                        "deathemote" to DEATH_EMOTE,
+                        "hitpoints" to HITPOINTS,
+                    )
+
+            @JvmStatic
+            fun fromInput(input: String): DefinitionField? = byAlias[input.trim().lowercase()]
+        }
+    }
+
     @JvmStatic
     fun loadDefinitions(): Map<Int, NpcData> =
         DbAsyncRepository.withConnection { connection ->
@@ -60,14 +93,34 @@ object NpcDataRepository {
         }
 
     @JvmStatic
-    fun updateDefinitionField(id: Int, field: String, value: String): Unit =
+    fun updateDefinitionField(id: Int, field: DefinitionField, value: String): Unit =
         DbAsyncRepository.withConnection { connection ->
-            connection
-                .createStatement()
-                .use { statement ->
-                    statement.executeUpdate("UPDATE ${DbTables.GAME_NPC_DEFINITIONS} SET $field = '$value' WHERE id = '$id'")
-                }
+            val query = "UPDATE ${DbTables.GAME_NPC_DEFINITIONS} SET ${field.column} = ? WHERE id = ?"
+            connection.prepareStatement(query).use { statement ->
+                bindValue(statement, index = 1, value = field.parser(value))
+                statement.setInt(2, id)
+                statement.executeUpdate()
+            }
         }
+
+    @JvmStatic
+    fun parseDefinitionField(input: String): DefinitionField =
+        DefinitionField.fromInput(input)
+            ?: throw IllegalArgumentException("Unknown NPC definition field: $input")
+
+    private fun bindValue(statement: java.sql.PreparedStatement, index: Int, value: Any) {
+        when (value) {
+            is Int -> statement.setInt(index, value)
+            is String -> statement.setString(index, value)
+            else -> throw IllegalArgumentException("Unsupported NPC definition field type: ${value::class.java.simpleName}")
+        }
+    }
+
+    @JvmStatic
+    fun updateDefinitionField(id: Int, field: String, value: String): Unit {
+        val typedField = parseDefinitionField(field)
+        updateDefinitionField(id, typedField, value)
+    }
 
     @JvmStatic
     fun loadDropsForNpc(id: Int): List<NpcDropRow> =

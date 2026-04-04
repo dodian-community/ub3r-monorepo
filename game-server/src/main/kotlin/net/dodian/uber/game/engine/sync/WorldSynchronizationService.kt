@@ -2,7 +2,6 @@ package net.dodian.uber.game.engine.sync
 
 import io.netty.buffer.ByteBuf
 import kotlin.system.measureNanoTime
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -42,12 +41,7 @@ class WorldSynchronizationService {
         tick++
         val activePlayers = currentActivePlayers()
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
-        val relevantNpcs: Collection<Npc> =
-            if (viewportIndex != null) {
-                viewportIndex.relevantNpcs()
-            } else {
-                currentActiveNpcs()
-            }
+        val relevantNpcs: Collection<Npc> = viewportIndex?.relevantNpcs() ?: emptyList()
         val rootCache = RootSynchronizationCache()
         val playerActivityIndex = sharedPlayerActivityIndex.apply { clear() }
         val npcActivityIndex = sharedNpcActivityIndex.apply { clear() }
@@ -83,7 +77,7 @@ class WorldSynchronizationService {
                 flushActivePlayers(activePlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLAG_CLEAR) {
-                clearFlags(activePlayers)
+                clearFlags(activePlayers, relevantNpcs)
             }
         } finally {
             SynchronizationContext.clear()
@@ -101,16 +95,6 @@ class WorldSynchronizationService {
             }
         }
         return activePlayerBuffer
-    }
-
-    private fun currentActiveNpcs(): List<Npc> {
-        val npcs = ArrayList<Npc>()
-        for (npc in Server.npcManager.getNpcs()) {
-            if (npc != null) {
-                npcs += npc
-            }
-        }
-        return npcs
     }
 
     private fun buildPlayerRootCache(activePlayers: List<Client>, rootCache: RootSynchronizationCache) {
@@ -202,10 +186,8 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun clearFlags(activePlayers: List<Client>) {
-        for (npc in Server.npcManager.getNpcs()) {
-            npc?.clearUpdateFlags()
-        }
+    private fun clearFlags(activePlayers: List<Client>, relevantNpcs: Collection<Npc>) {
+        relevantNpcs.forEach(Npc::clearUpdateFlags)
         activePlayers.forEach(Client::clearUpdateFlags)
     }
 

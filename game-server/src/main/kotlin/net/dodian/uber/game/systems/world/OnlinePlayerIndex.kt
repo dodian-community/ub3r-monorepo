@@ -1,7 +1,6 @@
 package net.dodian.uber.game.systems.world
 
 import java.util.IdentityHashMap
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
@@ -16,11 +15,7 @@ class OnlinePlayerIndex {
         bySlot.clear()
         activePlayers.clear()
         activeSet.clear()
-        for (i in 0 until Constants.maxPlayers) {
-            val client = PlayerRegistry.players[i] as? Client ?: continue
-            if (!client.isActive) {
-                continue
-            }
+        for (client in PlayerRegistry.snapshotActivePlayers()) {
             activePlayers += client
             activeSet[client] = true
             bySlot[client.slot] = client

@@ -67,8 +67,8 @@ object SkillProgressionService {
 
     @JvmStatic
     fun setSkillLevel(client: Client, skill: Skill, currentLevel: Int, xp: Int) {
-        client.sendString(maxOf(currentLevel, 0).toString(), skill.currentComponent)
-        client.sendString(maxOf(Skills.getLevelForExperience(xp), 1).toString(), skill.levelComponent)
+        client.sendCachedString(maxOf(currentLevel, 0).toString(), skill.currentComponent)
+        client.sendCachedString(maxOf(Skills.getLevelForExperience(xp), 1).toString(), skill.levelComponent)
     }
 
     private fun applyGainXp(client: Client, request: SkillProgressionRequest): SkillProgressionResult {

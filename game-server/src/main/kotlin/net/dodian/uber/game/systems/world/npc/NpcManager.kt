@@ -261,8 +261,9 @@ class NpcManager {
             }
         } else if (!table.equals("new npc", ignoreCase = true)) {
             try {
-                NpcDataRepository.updateDefinitionField(id, table, value)
-                c.sendMessage("You updated '$table' with value '$value'!")
+                val field = NpcDataRepository.parseDefinitionField(table)
+                NpcDataRepository.updateDefinitionField(id, field, value)
+                c.sendMessage("You updated '${field.column}' with value '$value'!")
                 reloadAllData(c, id)
             } catch (e: Exception) {
                 when {
@@ -270,7 +271,9 @@ class NpcManager {
                         c.sendMessage("row name '$table' do not exist in the database!")
                     e.message?.contains("Incorrect integer") == true ->
                         c.sendMessage("row name '$table' need a int value!")
-                    else -> println("npc drop wrong during config reload..$e")
+                    e is IllegalArgumentException ->
+                        c.sendMessage(e.message ?: "Invalid npc config field.")
+                    else -> logger.error("NPC config reload failed for id={} field={}", id, table, e)
                 }
             }
         }
@@ -283,8 +286,7 @@ class NpcManager {
             data.putAll(definitions)
             logger.info("Loaded {} Npc Definitions", definitions.size)
         } catch (e: Exception) {
-            println("Error loading NPC definitions: $e")
-            e.printStackTrace()
+            logger.error("Error loading NPC definitions", e)
         }
 
         try {
@@ -303,8 +305,7 @@ class NpcManager {
             }
             logger.info("Loaded {} Npc Drops", amount)
         } catch (e: Exception) {
-            println("Error loading NPC drops: $e")
-            e.printStackTrace()
+            logger.error("Error loading NPC drops", e)
         }
     }
 

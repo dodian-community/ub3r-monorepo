@@ -27,13 +27,13 @@ class TargetedWorldPollApplier {
             return
         }
         cachedLatestNewsId = latestNews
-        playerIndex.snapshot()
-            .asSequence()
-            .filter { it.loadingDone && it.latestNews != latestNews }
-            .forEach { client ->
+        for (client in playerIndex.snapshot()) {
+            if (!client.loadingDone || client.latestNews == latestNews) {
+                continue
+            }
                 client.latestNews = latestNews
                 client.sendMessage("[SERVER]: There is a new post on the homepage! type ::news")
-            }
+        }
     }
 
     private fun applyRefundNotifications(

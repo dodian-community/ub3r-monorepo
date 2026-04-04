@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureNanoTime
+import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.processing.ActionProcessor
 import net.dodian.uber.game.engine.processing.EntityProcessor
 import net.dodian.uber.game.engine.processing.ItemProcessor
@@ -96,6 +97,7 @@ class GameLoopService(
         } catch (exception: Throwable) {
             logLoopFailure("tick", exception)
         }
+        triggerShutdownIfRequested()
     }
 
     private fun runIdleIngressScheduled() {
@@ -183,10 +185,40 @@ class GameLoopService(
         logger.error("Game loop {} encountered an unexpected error but will keep running.", scope, exception)
     }
 
-    private companion object {
+    companion object {
+        private val staticLogger = LoggerFactory.getLogger(GameLoopService::class.java)
         private const val GAME_TICK_INTERVAL_MS = 600L
         private const val CYCLE_LOG_INTERVAL_MS = 60_000L
         private const val IDLE_INGRESS_INTERVAL_MS = 25L
         private const val IDLE_INGRESS_CRITICAL_MAX = 64
+        private val shutdownRequested = AtomicBoolean(false)
+        private val shutdownSignalEmitted = AtomicBoolean(false)
+
+        @JvmStatic
+        fun requestShutdown(reason: String) {
+            if (!shutdownRequested.compareAndSet(false, true)) {
+                return
+            }
+            staticLogger.info("Game loop shutdown requested: {}", reason)
+        }
+    }
+
+    private fun triggerShutdownIfRequested() {
+        if (!shutdownRequested.get() || !shutdownSignalEmitted.compareAndSet(false, true)) {
+            return
+        }
+        Thread(
+            {
+                try {
+                    Server.shutdown()
+                } catch (exception: Exception) {
+                    logger.error("Controlled shutdown failed", exception)
+                }
+            },
+            "GameShutdown-Dispatcher",
+        ).apply {
+            isDaemon = true
+            start()
+        }
     }
 }

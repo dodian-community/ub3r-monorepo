@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.loop.GameLoopService
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.sync.util.IntHashSet
 import net.dodian.uber.game.engine.sync.util.LongHashSet
@@ -101,7 +102,7 @@ class EntityProcessor : Runnable {
     fun runHousekeepingPhase(now: Long) {
         if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L)) {
             if (PlayerRegistry.getPlayerCount() < 1) {
-                System.exit(0)
+                requestControlledShutdown()
             }
         }
         handleServerCycles()
@@ -190,25 +191,20 @@ class EntityProcessor : Runnable {
         if (activeChunks.isEmpty()) {
             return output
         }
-        if (Server.chunkManager != null) {
+        val chunkManager = Server.chunkManager
+        if (chunkManager == null) {
+            if (chunkIndexMissingLogged.compareAndSet(false, true)) {
+                logger.warn("Chunk manager unavailable during NPC collection; skipping chunk-indexed NPC pass.")
+            }
+        } else {
             activeChunks.forEach { key ->
                 val chunkX = unpackChunkX(key)
                 val chunkY = unpackChunkY(key)
-                val repo: ChunkRepository = Server.chunkManager.getLoaded(chunkX, chunkY) ?: return@forEach
+                val repo: ChunkRepository = chunkManager.getLoaded(chunkX, chunkY) ?: return@forEach
                 for (npc in repo.getAll<Npc>(EntityType.NPC)) {
                     if (npc != null && activeNpcSlots.add(npc.slot)) {
                         output.add(npc)
                     }
-                }
-            }
-        } else {
-            for (npc in Server.npcManager.getNpcs()) {
-                if (npc == null || npc.position == null) {
-                    continue
-                }
-                val position = npc.position
-                if (activeChunks.contains(packChunkKey(position.chunkX, position.chunkY)) && activeNpcSlots.add(npc.slot)) {
-                    output.add(npc)
                 }
             }
         }
@@ -525,5 +521,16 @@ class EntityProcessor : Runnable {
         private fun unpackChunkX(key: Long): Int = (key shr 32).toInt()
 
         private fun unpackChunkY(key: Long): Int = key.toInt()
+
+        private fun requestControlledShutdown() {
+            if (!shutdownRequested.compareAndSet(false, true)) {
+                return
+            }
+            logger.info("Update window elapsed with no active players; requesting controlled server shutdown.")
+            GameLoopService.requestShutdown("update-window-complete")
+        }
+
+        private val shutdownRequested = java.util.concurrent.atomic.AtomicBoolean(false)
+        private val chunkIndexMissingLogged = java.util.concurrent.atomic.AtomicBoolean(false)
     }
 }

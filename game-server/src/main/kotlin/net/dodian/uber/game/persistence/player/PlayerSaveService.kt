@@ -1,16 +1,18 @@
 package net.dodian.uber.game.persistence.player
 
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.LockSupport
 import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
@@ -107,11 +109,17 @@ object PlayerSaveService {
             if (pending.isEmpty() && activeDbId.get() == -1) {
                 break
             }
-            Thread.sleep(25L)
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(25L))
         }
 
-        runBlocking {
-            worker?.cancel()
+        val remainingNanos = (deadline - System.nanoTime()).coerceAtLeast(1L)
+        val remainingMillis = TimeUnit.NANOSECONDS.toMillis(remainingNanos).coerceAtLeast(1L)
+        val currentWorker = worker
+        if (currentWorker != null) {
+            val latch = CountDownLatch(1)
+            currentWorker.invokeOnCompletion { latch.countDown() }
+            currentWorker.cancel()
+            latch.await(remainingMillis, TimeUnit.MILLISECONDS)
         }
     }
 

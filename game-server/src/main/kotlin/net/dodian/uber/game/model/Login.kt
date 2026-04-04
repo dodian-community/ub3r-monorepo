@@ -6,8 +6,11 @@ import java.io.FileWriter
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.gameWorldId
+import org.slf4j.LoggerFactory
 
 class Login {
+    private val logger = LoggerFactory.getLogger(Login::class.java)
+
     @Synchronized
     fun sendSession(
         dbId: Int,
@@ -19,16 +22,21 @@ class Login {
     ) {
         try {
             DbAsyncRepository.withConnection { conn ->
-                conn.createStatement().use { stmt ->
-                    stmt.executeUpdate(
-                        "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} SET dbid='$dbId', client='$clientPid', duration='$elapsed', " +
-                            "hostname='$connectedFrom',start='$start',end='$end',world='$gameWorldId'",
-                    )
+                val query =
+                    "INSERT INTO ${DbTables.GAME_PLAYER_SESSIONS} (dbid, client, duration, hostname, start, end, world) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                conn.prepareStatement(query).use { statement ->
+                    statement.setInt(1, dbId)
+                    statement.setInt(2, clientPid)
+                    statement.setInt(3, elapsed)
+                    statement.setString(4, connectedFrom)
+                    statement.setLong(5, start)
+                    statement.setLong(6, end)
+                    statement.setInt(7, gameWorldId)
+                    statement.executeUpdate()
                 }
             }
         } catch (exception: Exception) {
-            println(exception.message)
-            exception.printStackTrace()
+            logger.error("Failed to record player session for dbId={}", dbId, exception)
         }
     }
 
@@ -67,7 +75,7 @@ class Login {
                 try {
                     file.createNewFile()
                 } catch (exception: Exception) {
-                    println("Could not initialize UUID ban file.")
+                    logger.warn("Could not initialize UUID ban file.", exception)
                 }
                 return
             }
@@ -79,7 +87,7 @@ class Login {
                     }
                 }
             } catch (exception: Exception) {
-                exception.printStackTrace()
+                logger.error("Failed reading UUID bans.", exception)
             }
         }
 
@@ -103,8 +111,10 @@ class Login {
             } catch (_: FileNotFoundException) {
                 // This file is often absent in local dev; ignore missing-file noise.
             } catch (exception: Exception) {
-                exception.printStackTrace()
+                logger.error("Failed appending UUID bans.", exception)
             }
         }
+
+        private val logger = LoggerFactory.getLogger(Login::class.java)
     }
 }
