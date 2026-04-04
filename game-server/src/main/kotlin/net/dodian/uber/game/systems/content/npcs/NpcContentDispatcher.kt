@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.NpcClickEvent
 import net.dodian.uber.game.systems.api.content.ContentDispatchTiming
+import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
 import org.slf4j.LoggerFactory
 
 object NpcContentDispatcher {
@@ -24,6 +25,9 @@ object NpcContentDispatcher {
     fun tryHandleClickTimed(client: Client, option: Int, npc: Npc): ContentDispatchTiming {
         if (GameEventBus.postWithResult(NpcClickEvent(client, option, npc))) {
             return ContentDispatchTiming(true, 0L, 0L, "GameEventBus")
+        }
+        if (SkillInteractionDispatcher.tryHandleNpcClick(client, option, npc)) {
+            return ContentDispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
         }
         var resolveNs = 0L
         val resolveStart = System.nanoTime()

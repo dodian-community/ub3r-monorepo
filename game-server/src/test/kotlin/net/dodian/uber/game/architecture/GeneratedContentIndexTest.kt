@@ -25,8 +25,17 @@ class GeneratedContentIndexTest {
         assertTrue(ids.contains("items.registry"), "items registry bootstrap missing")
         assertTrue(ids.contains("npcs.registry"), "npcs registry bootstrap missing")
         assertTrue(ids.contains("objects.registry"), "objects registry bootstrap missing")
+        assertTrue(ids.contains("skills.registry"), "skills registry bootstrap missing")
         assertEquals(ids.size, ids.toSet().size, "duplicate content bootstrap ids found")
 
         bootstraps.forEach { it.bootstrap() }
+    }
+
+    @Test
+    fun `generated skill plugins include migrated core skills`() {
+        val moduleNames = ContentModuleIndex.skillPlugins.map { it::class.java.name }.toSet()
+        assertTrue(moduleNames.any { it.endsWith("content.skills.fishing.FishingSkillPlugin") }, "Expected fishing skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("content.skills.mining.MiningSkillPlugin") }, "Expected mining skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("content.skills.woodcutting.WoodcuttingSkillPlugin") }, "Expected woodcutting skill plugin in generated index")
     }
 }

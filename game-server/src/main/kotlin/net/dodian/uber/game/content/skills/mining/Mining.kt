@@ -1,7 +1,6 @@
 package net.dodian.uber.game.content.skills.mining
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -20,9 +19,10 @@ import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.persistence.audit.ItemLog
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 
 object Mining {
@@ -327,34 +327,15 @@ object Mining {
     }
 }
 
-object MiningRocksObjects : ObjectContent {
-    override val objectIds: IntArray = MiningData.allRockObjectIds
-
-    override fun clickInteractionPolicy(
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): ContentObjectInteractionPolicy? {
-        if (option != 1) {
-            return null
+object MiningSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Mining", skill = Skill.MINING) {
+            objectClick(
+                option = 1,
+                *MiningData.allRockObjectIds,
+                policy = { _, _, _, _ -> ContentInteraction.nearestBoundaryCardinalPolicy() },
+            ) { client, objectId, position, _ ->
+                Mining.attempt(client, objectId, position)
+            }
         }
-        return ContentInteraction.nearestBoundaryCardinalPolicy()
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return Mining.attempt(client, objectId, position)
-    }
-}
-
-object GemRocksObjectBindings : ObjectContent {
-    override val objectIds: IntArray = GemRocksObjectComponents.objectIds
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
-}
-
-object SpecialMiningObjectBindings : ObjectContent {
-    override val objectIds: IntArray = SpecialMiningObjectComponents.objectIds
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean = false
 }

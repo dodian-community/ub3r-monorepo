@@ -224,6 +224,45 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `interaction processor does not hardcode migrated skill dispatch`() {
+        val interactionPath =
+            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/interaction/InteractionProcessor.kt")
+        val source = Files.readString(interactionPath)
+
+        val forbiddenCalls = listOf(
+            "Fishing.handleNpcOption(",
+        )
+        val violations = forbiddenCalls.filter { source.contains(it) }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Migrated skills must route through SkillInteractionDispatcher/NpcContentDispatcher.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `migrated resource skills do not expose direct ObjectContent bindings`() {
+        val files = listOf(
+            Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills/mining/Mining.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/Woodcutting.kt"),
+        )
+
+        val violations = files.flatMap { path ->
+            val source = Files.readString(path)
+            buildList {
+                if (source.contains("ObjectContent")) {
+                    add("${path}: contains legacy ObjectContent binding")
+                }
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Migrated resource skills should register via SkillPlugin only.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `engine layer does not import persistence`() {
         val violations = sourceFiles
             .filter { file ->

@@ -19,6 +19,9 @@ object ContentModuleIndex {
     val npcContents = GeneratedPluginModuleIndex.npcContents
 
     @JvmField
+    val skillPlugins = GeneratedPluginModuleIndex.skillPlugins
+
+    @JvmField
     val eventBootstraps = GeneratedPluginModuleIndex.eventBootstraps
 
     @JvmField

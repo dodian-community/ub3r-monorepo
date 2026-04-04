@@ -1,7 +1,6 @@
 package net.dodian.uber.game.content.skills.woodcutting
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
@@ -18,10 +17,11 @@ import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentInteraction
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.persistence.audit.ItemLog
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 
 object Woodcutting {
@@ -221,22 +221,15 @@ object Woodcutting {
     }
 }
 
-object WoodcuttingTreesObjects : ObjectContent {
-    override val objectIds: IntArray = WoodcuttingData.allTreeObjectIds
-
-    override fun clickInteractionPolicy(
-        option: Int,
-        objectId: Int,
-        position: Position,
-        obj: GameObjectData?,
-    ): ContentObjectInteractionPolicy? {
-        if (option != 1) {
-            return null
+object WoodcuttingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Woodcutting", skill = Skill.WOODCUTTING) {
+            objectClick(
+                option = 1,
+                *WoodcuttingData.allTreeObjectIds,
+                policy = { _, _, _, _ -> ContentInteraction.nearestBoundaryCardinalPolicy() },
+            ) { client, objectId, position, obj ->
+                Woodcutting.attempt(client, objectId, position, obj)
+            }
         }
-        return ContentInteraction.nearestBoundaryCardinalPolicy()
-    }
-
-    override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
-        return Woodcutting.attempt(client, objectId, position, obj)
-    }
 }

@@ -13,6 +13,7 @@ import net.dodian.uber.game.content.items.combination.SaplingItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.api.content.ContentActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
+import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
 
 object ItemCombinationService {
     private const val MAX_INVENTORY_SLOT = 28
@@ -38,6 +39,10 @@ object ItemCombinationService {
             false,
             true,
         )
+
+        if (SkillInteractionDispatcher.tryHandleItemOnItem(client, itemUsed, useWith)) {
+            return
+        }
 
         if (useWith == 5733 || itemUsed == 5733) {
             PotatoItemInteractionState.beginItemOnItem(

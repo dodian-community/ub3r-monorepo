@@ -10,6 +10,7 @@ import net.dodian.uber.game.events.ObjectClickEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.DispatchTiming
+import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
 import org.slf4j.LoggerFactory
 
 object ObjectInteractionService {
@@ -115,6 +116,18 @@ object ObjectInteractionService {
                 )
             ) {
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
+            }
+
+            if (context.type == ObjectInteractionType.CLICK &&
+                SkillInteractionDispatcher.tryHandleObjectClick(
+                    client = context.client,
+                    option = context.option ?: -1,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                )
+            ) {
+                return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
 
             val resolveStart = System.nanoTime()

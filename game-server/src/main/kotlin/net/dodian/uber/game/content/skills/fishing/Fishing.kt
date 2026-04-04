@@ -8,6 +8,8 @@ import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.skillPlugin
 import net.dodian.utilities.Misc
 
 object Fishing {
@@ -129,4 +131,26 @@ object Fishing {
         attempt(client, npcId, option)
         return true
     }
+}
+
+object FishingSkillPlugin : SkillPlugin {
+    override val definition =
+        skillPlugin(name = "Fishing", skill = Skill.FISHING) {
+            val byOption = FishingData.fishingSpots.groupBy { it.clickType }
+            val firstNpcIds = byOption[1].orEmpty().map { it.objectId }.distinct().toIntArray()
+            val secondNpcIds = byOption[2].orEmpty().map { it.objectId }.distinct().toIntArray()
+
+            if (firstNpcIds.isNotEmpty()) {
+                npcClick(option = 1, *firstNpcIds) { client, npc ->
+                    Fishing.attempt(client, npc.id, 1)
+                    true
+                }
+            }
+            if (secondNpcIds.isNotEmpty()) {
+                npcClick(option = 2, *secondNpcIds) { client, npc ->
+                    Fishing.attempt(client, npc.id, 2)
+                    true
+                }
+            }
+        }
 }
