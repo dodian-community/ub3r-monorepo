@@ -74,12 +74,12 @@ data class MiningStoppedEvent(
 ) : GameEvent
 
 object GemRocksObjectComponents {
-    // Current Dodian mining parity does not include gem-rock object behavior.
+    // TODO future content: add gem-rock object behavior when mining content expansion is enabled.
     val objectIds: IntArray = intArrayOf()
 }
 
 object SpecialMiningObjectComponents {
-    // Current Dodian mining parity does not include special mining object behavior.
+    // TODO future content: add special mining object behavior when mining content expansion is enabled.
     val objectIds: IntArray = intArrayOf()
 }
 
