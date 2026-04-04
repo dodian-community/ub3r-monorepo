@@ -1,7 +1,5 @@
 package net.dodian.uber.game.content.npcs
 
-import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -19,10 +17,14 @@ internal object Monk : NpcModule {
     )
 
     fun onFirstClick(client: Client, npc: Npc): Boolean {
-        DialogueService.start(client) {
-            npcChat(npc.id, DialogueEmote.DEFAULT, "Peace be with you.")
-            finish()
-        }
+        client.quests[0]++
+        client.sendMessage(
+            if (client.playerRights > 1) {
+                "Set your quest to: ${client.quests[0]}"
+            } else {
+                "Suddenly the monk had an urge to dissapear!"
+            },
+        )
         return true
     }
 }

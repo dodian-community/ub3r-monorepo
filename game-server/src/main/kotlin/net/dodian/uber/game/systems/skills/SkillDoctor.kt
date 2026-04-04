@@ -20,23 +20,7 @@ data class SkillDoctorReport(
 }
 
 object SkillDoctor {
-    private val gameplaySkills: Set<Skill> = setOf(
-        Skill.MINING,
-        Skill.WOODCUTTING,
-        Skill.FISHING,
-        Skill.AGILITY,
-        Skill.COOKING,
-        Skill.CRAFTING,
-        Skill.FARMING,
-        Skill.FIREMAKING,
-        Skill.FLETCHING,
-        Skill.HERBLORE,
-        Skill.PRAYER,
-        Skill.RUNECRAFTING,
-        Skill.SLAYER,
-        Skill.SMITHING,
-        Skill.THIEVING,
-    )
+    private val gameplaySkills: Set<Skill> = LegacyContentParityCatalog.default.requiredSkillCoverage
 
     private val legacyRouteBypassChecks: Map<String, List<String>> = mapOf(
         "systems/interaction/InteractionProcessor.kt" to listOf(
@@ -50,11 +34,16 @@ object SkillDoctor {
 
     @JvmStatic
     fun snapshot(): SkillDoctorReport {
+        return snapshot(registrySnapshot = null)
+    }
+
+    internal fun snapshot(registrySnapshot: SkillPluginSnapshot?): SkillDoctorReport {
         val findings = mutableListOf<SkillDoctorFinding>()
+        val activeSnapshot = registrySnapshot
 
         try {
-            SkillPluginRegistry.current()
-        } catch (exception: Exception) {
+            activeSnapshot ?: SkillPluginRegistry.current()
+        } catch (exception: IllegalArgumentException) {
             findings += SkillDoctorFinding(
                 code = "duplicate-ownership",
                 message = exception.message ?: "Duplicate skill interaction ownership detected.",
@@ -82,13 +71,18 @@ object SkillDoctor {
         findings += scanLegacyRouteBypasses(sourceRoot)
         findings += scanBannedPluginPatterns(sourceRoot)
         findings += scanPresetDeclarations(sourceRoot)
+        findings += ContentParityDoctor.scan(skillSnapshot = activeSnapshot ?: SkillPluginRegistry.current())
 
         return SkillDoctorReport(findings)
     }
 
     @JvmStatic
     fun validateOrThrow() {
-        val report = snapshot()
+        validateOrThrow(registrySnapshot = null)
+    }
+
+    internal fun validateOrThrow(registrySnapshot: SkillPluginSnapshot?) {
+        val report = snapshot(registrySnapshot = registrySnapshot)
         if (report.isClean) {
             return
         }
