@@ -58,6 +58,8 @@ object SkillPluginRegistry : ContentBootstrap {
         val objectBindings = HashMap<Long, SkillObjectClickBinding>()
         val npcBindings = HashMap<Long, SkillNpcClickBinding>()
         val itemOnItemBindings = HashMap<Long, SkillItemOnItemBinding>()
+        val itemBindings = HashMap<Long, SkillItemClickBinding>()
+        val itemOnObjectBindings = HashMap<Long, SkillItemOnObjectBinding>()
         val buttonBindings = HashMap<Long, SkillButtonBinding>()
         val objectPresetById = HashMap<Int, MutableSet<net.dodian.uber.game.systems.policy.PolicyPreset>>()
 
@@ -96,6 +98,30 @@ object SkillPluginRegistry : ContentBootstrap {
                 }
             }
 
+            definition.itemBindings.forEach { binding ->
+                binding.itemIds.forEach { itemId ->
+                    val key = itemKey(binding.option, itemId)
+                    val existing = itemBindings.putIfAbsent(key, binding)
+                    require(existing == null) {
+                        "Duplicate skill item binding option=${binding.option} itemId=$itemId " +
+                            "for plugin=${definition.name}"
+                    }
+                }
+            }
+
+            definition.itemOnObjectBindings.forEach { binding ->
+                binding.objectIds.forEach { objectId ->
+                    binding.itemIds.forEach { itemId ->
+                        val key = itemOnObjectKey(objectId, itemId)
+                        val existing = itemOnObjectBindings.putIfAbsent(key, binding)
+                        require(existing == null) {
+                            "Duplicate skill item-on-object binding objectId=$objectId itemId=$itemId " +
+                                "for plugin=${definition.name}"
+                        }
+                    }
+                }
+            }
+
             definition.buttonBindings.forEach { binding ->
                 binding.rawButtonIds.forEach { rawButtonId ->
                     val key = buttonKey(rawButtonId, binding.opIndex ?: -1)
@@ -108,13 +134,23 @@ object SkillPluginRegistry : ContentBootstrap {
             }
         }
 
-        snapshot = SkillPluginSnapshot(objectBindings, npcBindings, itemOnItemBindings, buttonBindings, objectPresetById)
+        snapshot = SkillPluginSnapshot(
+            objectBindings = objectBindings,
+            npcBindings = npcBindings,
+            itemOnItemBindings = itemOnItemBindings,
+            itemBindings = itemBindings,
+            itemOnObjectBindings = itemOnObjectBindings,
+            buttonBindings = buttonBindings,
+            objectPresetById = objectPresetById,
+        )
         logger.info(
-            "SkillPluginRegistry bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, button={})",
+            "SkillPluginRegistry bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
             definitions.size,
             objectBindings.size,
             npcBindings.size,
             itemOnItemBindings.size,
+            itemBindings.size,
+            itemOnObjectBindings.size,
             buttonBindings.size,
         )
     }
@@ -133,6 +169,14 @@ object SkillPluginRegistry : ContentBootstrap {
         return (left shl 32) or right
     }
 
+    internal fun itemKey(option: Int, itemId: Int): Long {
+        return (option.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
+    }
+
+    internal fun itemOnObjectKey(objectId: Int, itemId: Int): Long {
+        return (objectId.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
+    }
+
     internal fun buttonKey(rawButtonId: Int, opIndex: Int): Long {
         return (rawButtonId.toLong() shl 32) or (opIndex.toLong() and 0xffffffffL)
     }
@@ -142,6 +186,8 @@ data class SkillPluginSnapshot(
     private val objectBindings: Map<Long, SkillObjectClickBinding>,
     private val npcBindings: Map<Long, SkillNpcClickBinding>,
     private val itemOnItemBindings: Map<Long, SkillItemOnItemBinding>,
+    private val itemBindings: Map<Long, SkillItemClickBinding>,
+    private val itemOnObjectBindings: Map<Long, SkillItemOnObjectBinding>,
     private val buttonBindings: Map<Long, SkillButtonBinding>,
     private val objectPresetById: Map<Int, Set<net.dodian.uber.game.systems.policy.PolicyPreset>>,
 ) {
@@ -153,6 +199,13 @@ data class SkillPluginSnapshot(
 
     fun itemOnItemBinding(itemUsed: Int, otherItem: Int): SkillItemOnItemBinding? =
         itemOnItemBindings[SkillPluginRegistry.itemPairKey(itemUsed, otherItem)]
+
+    fun itemBinding(option: Int, itemId: Int): SkillItemClickBinding? =
+        itemBindings[SkillPluginRegistry.itemKey(option, itemId)]
+
+    fun itemOnObjectBinding(objectId: Int, itemId: Int): SkillItemOnObjectBinding? =
+        itemOnObjectBindings[SkillPluginRegistry.itemOnObjectKey(objectId, itemId)]
+            ?: itemOnObjectBindings[SkillPluginRegistry.itemOnObjectKey(objectId, -1)]
 
     fun buttonBinding(rawButtonId: Int, opIndex: Int): SkillButtonBinding? {
         return buttonBindings[SkillPluginRegistry.buttonKey(rawButtonId, opIndex)]
@@ -166,6 +219,7 @@ data class SkillPluginSnapshot(
 
     companion object {
         @JvmStatic
-        fun empty(): SkillPluginSnapshot = SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
+        fun empty(): SkillPluginSnapshot =
+            SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
     }
 }

@@ -315,8 +315,12 @@ object InteractionProcessor {
                 fallbackData = intent.objectData,
                 fallbackDef = intent.objectDef,
             )
+        val skillItemOnObjectBinding = SkillPluginRegistry.current().itemOnObjectBinding(intent.objectId, intent.itemId)
         val policy =
-            ObjectContentRegistry.resolvePolicy(
+            SkillInteractionDispatcher.resolveItemOnObjectPolicy(
+                objectId = intent.objectId,
+                itemId = intent.itemId,
+            ) ?: ObjectContentRegistry.resolvePolicy(
                 objectId = intent.objectId,
                 position = targetPosition,
                 interactionType = ObjectInteractionPolicy.InteractionType.ITEM_ON_OBJECT,
@@ -337,11 +341,17 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            skillItemOnObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+            }
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
         if (!isSettleGateSatisfied(player, intent, policy)) {
+            skillItemOnObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+            }
             return InteractionExecutionResult.WAITING
         }
 
@@ -379,6 +389,16 @@ object InteractionProcessor {
                         packetOpcode = intent.opcode,
                     ),
                 )
+        }
+        if (skillItemOnObjectBinding != null &&
+            timing.handled &&
+            timing.handlerName != SkillInteractionDispatcher::class.java.name
+        ) {
+            SkillPolicyMetrics.record(
+                skillItemOnObjectBinding.preset,
+                SkillPolicyRoute.ITEM_ON_OBJECT,
+                SkillPolicyResult.ROUTE_BYPASS_REJECT,
+            )
         }
         clear(player)
         slowLogIfNeeded(

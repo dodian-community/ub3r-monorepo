@@ -9,7 +9,9 @@ import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.bindItemContentClick
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 
 object Herblore {
     @JvmStatic
@@ -162,5 +164,17 @@ object HerbloreSuppliesItems : ItemContent {
 }
 
 object HerbloreSkillPlugin : SkillPlugin {
-    override val definition = skillPlugin(name = "Herblore", skill = Skill.HERBLORE) { }
+    override val definition =
+        skillPlugin(name = "Herblore", skill = Skill.HERBLORE) {
+            bindItemContentClick(
+                preset = PolicyPreset.PRODUCTION,
+                option = 1,
+                content = GrimyHerbItems,
+            )
+            bindItemContentClick(
+                preset = PolicyPreset.PRODUCTION,
+                option = 1,
+                content = HerbloreSuppliesItems,
+            )
+        }
 }

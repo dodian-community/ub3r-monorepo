@@ -7,7 +7,9 @@ import net.dodian.uber.game.model.player.quests.QuestSend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.bindItemContentClick
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 
 object Slayer {
     @JvmStatic
@@ -157,5 +159,27 @@ object SlayerMaskItems : ItemContent {
 }
 
 object SlayerSkillPlugin : SkillPlugin {
-    override val definition = skillPlugin(name = "Slayer", skill = Skill.SLAYER) { }
+    override val definition =
+        skillPlugin(name = "Slayer", skill = Skill.SLAYER) {
+            bindItemContentClick(
+                preset = PolicyPreset.DIALOGUE,
+                option = 1,
+                content = SlayerGemItems,
+            )
+            bindItemContentClick(
+                preset = PolicyPreset.DIALOGUE,
+                option = 2,
+                content = SlayerGemItems,
+            )
+            bindItemContentClick(
+                preset = PolicyPreset.DIALOGUE,
+                option = 3,
+                content = SlayerGemItems,
+            )
+            bindItemContentClick(
+                preset = PolicyPreset.DIALOGUE,
+                option = 3,
+                content = SlayerMaskItems,
+            )
+        }
 }

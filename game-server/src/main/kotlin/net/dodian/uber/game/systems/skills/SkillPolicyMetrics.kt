@@ -10,6 +10,8 @@ enum class SkillPolicyRoute {
     OBJECT,
     NPC,
     ITEM_ON_ITEM,
+    ITEM,
+    ITEM_ON_OBJECT,
     BUTTON,
     ACTION_CYCLE,
 }
@@ -55,4 +57,3 @@ object SkillPolicyMetrics {
     fun snapshot(): Map<SkillPolicyMetricKey, Long> =
         counters.mapValues { it.value.sum() }
 }
-

@@ -1,6 +1,11 @@
 package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.content.skills.cooking.RangeObjects
+import net.dodian.uber.game.content.skills.herblore.GrimyHerbItems
+import net.dodian.uber.game.content.skills.herblore.HerbloreSuppliesItems
+import net.dodian.uber.game.content.skills.slayer.SlayerGemItems
+import net.dodian.uber.game.content.skills.slayer.SlayerMaskItems
 import net.dodian.uber.game.systems.content.ContentModuleIndex
 import net.dodian.uber.game.systems.policy.PolicyPreset
 import java.nio.file.Files
@@ -58,6 +63,16 @@ object SkillDoctor {
                 message = "Missing SkillPlugin coverage for gameplay skills: ${missingSkills.joinToString { it.name.lowercase() }}",
             )
         }
+        val emptyGameplayPlugins = ContentModuleIndex.skillPlugins
+            .filter { it.definition.skill in gameplaySkills }
+            .filterNot { it.definition.hasAnyRouteBindings() }
+            .map { "${it.definition.name}(${it.definition.skill.name.lowercase()})" }
+        if (emptyGameplayPlugins.isNotEmpty()) {
+            findings += SkillDoctorFinding(
+                code = "empty-skill-plugin",
+                message = "Gameplay SkillPlugin definitions must own at least one route. Empty: ${emptyGameplayPlugins.joinToString()}",
+            )
+        }
 
         val sourceRoot = resolveSourceRoot()
         if (sourceRoot == null) {
@@ -71,6 +86,7 @@ object SkillDoctor {
         findings += scanLegacyRouteBypasses(sourceRoot)
         findings += scanBannedPluginPatterns(sourceRoot)
         findings += scanPresetDeclarations(sourceRoot)
+        findings += scanMappedRouteOwnership(activeSnapshot ?: SkillPluginRegistry.current())
         findings += ContentParityDoctor.scan(skillSnapshot = activeSnapshot ?: SkillPluginRegistry.current())
 
         return SkillDoctorReport(findings)
@@ -148,7 +164,7 @@ object SkillDoctor {
         }
 
         val validPresetNames = PolicyPreset.values().map { it.name }.toSet()
-        val callNames = listOf("objectClick", "npcClick", "itemOnItem", "button")
+        val callNames = listOf("objectClick", "npcClick", "itemOnItem", "itemClick", "itemOnObject", "button")
 
         Files.walk(skillsRoot).use { stream ->
             stream
@@ -193,4 +209,64 @@ object SkillDoctor {
         )
         return candidates.firstOrNull { Files.exists(it.resolve("net/dodian/uber/game")) }?.toAbsolutePath()?.normalize()
     }
+
+    private fun scanMappedRouteOwnership(skillSnapshot: SkillPluginSnapshot): List<SkillDoctorFinding> {
+        val findings = mutableListOf<SkillDoctorFinding>()
+
+        RangeObjects.objectIds.forEach { objectId ->
+            if (skillSnapshot.itemOnObjectBinding(objectId = objectId, itemId = -1) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Cooking route ownership missing item-on-object binding for range objectId=$objectId.",
+                )
+            }
+        }
+
+        GrimyHerbItems.itemIds.forEach { itemId ->
+            if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Herblore route ownership missing item click option=1 binding for itemId=$itemId.",
+                )
+            }
+        }
+        HerbloreSuppliesItems.itemIds.forEach { itemId ->
+            if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Herblore route ownership missing supplies click option=1 binding for itemId=$itemId.",
+                )
+            }
+        }
+
+        SlayerGemItems.itemIds.forEach { itemId ->
+            for (option in 1..3) {
+                if (skillSnapshot.itemBinding(option = option, itemId = itemId) == null) {
+                    findings += SkillDoctorFinding(
+                        code = "missing-route-ownership",
+                        message = "Slayer route ownership missing gem click option=$option binding for itemId=$itemId.",
+                    )
+                }
+            }
+        }
+        SlayerMaskItems.itemIds.forEach { itemId ->
+            if (skillSnapshot.itemBinding(option = 3, itemId = itemId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Slayer route ownership missing mask click option=3 binding for itemId=$itemId.",
+                )
+            }
+        }
+
+        return findings
+    }
+}
+
+private fun SkillPluginDefinition.hasAnyRouteBindings(): Boolean {
+    return objectBindings.isNotEmpty() ||
+        npcBindings.isNotEmpty() ||
+        itemOnItemBindings.isNotEmpty() ||
+        itemBindings.isNotEmpty() ||
+        itemOnObjectBindings.isNotEmpty() ||
+        buttonBindings.isNotEmpty()
 }

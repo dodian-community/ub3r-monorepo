@@ -1,6 +1,7 @@
 package net.dodian.uber.game.systems.content.items
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
 import org.slf4j.LoggerFactory
 
 object ItemDispatcher {
@@ -8,6 +9,9 @@ object ItemDispatcher {
 
     @JvmStatic
     fun tryHandle(client: Client, option: Int, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
+        if (SkillInteractionDispatcher.tryHandleItemClick(client, option, itemId, itemSlot, interfaceId)) {
+            return true
+        }
         val content = ItemContentRegistry.get(itemId) ?: return false
         return try {
             when (option) {

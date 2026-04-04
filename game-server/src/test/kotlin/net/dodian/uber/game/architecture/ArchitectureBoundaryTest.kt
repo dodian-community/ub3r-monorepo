@@ -272,6 +272,45 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `gameplay skill plugins are not empty route wrappers`() {
+        val gameplaySkills = setOf(
+            Skill.MINING,
+            Skill.WOODCUTTING,
+            Skill.FISHING,
+            Skill.AGILITY,
+            Skill.COOKING,
+            Skill.CRAFTING,
+            Skill.FARMING,
+            Skill.FIREMAKING,
+            Skill.FLETCHING,
+            Skill.HERBLORE,
+            Skill.PRAYER,
+            Skill.RUNECRAFTING,
+            Skill.SLAYER,
+            Skill.SMITHING,
+            Skill.THIEVING,
+        )
+
+        val empty = ContentModuleIndex.skillPlugins
+            .filter { it.definition.skill in gameplaySkills }
+            .filter { plugin ->
+                val definition = plugin.definition
+                definition.objectBindings.isEmpty() &&
+                    definition.npcBindings.isEmpty() &&
+                    definition.itemOnItemBindings.isEmpty() &&
+                    definition.itemBindings.isEmpty() &&
+                    definition.itemOnObjectBindings.isEmpty() &&
+                    definition.buttonBindings.isEmpty()
+            }
+            .map { "${it.definition.name}(${it.definition.skill.name.lowercase()})" }
+
+        assertTrue(
+            empty.isEmpty(),
+            "Gameplay SkillPlugin definitions must own at least one route.\n${empty.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `migrated resource skills do not expose direct ObjectContent bindings`() {
         val files = listOf(
             Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills/mining/Mining.kt"),
@@ -331,6 +370,8 @@ class ArchitectureBoundaryTest {
             "objectClick" to Regex("""objectClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "npcClick" to Regex("""npcClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "itemOnItem" to Regex("""itemOnItem\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "itemClick" to Regex("""itemClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "itemOnObject" to Regex("""itemOnObject\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "button" to Regex("""button\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
         )
 
@@ -351,6 +392,30 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "SkillPlugin bindings must declare explicit policy presets.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `mapped skill wrappers use shared skill route bridge helpers`() {
+        val requiredBridgeUsage = mapOf(
+            "src/main/kotlin/net/dodian/uber/game/content/skills/cooking/Cooking.kt" to "bindObjectContentUseItem(",
+            "src/main/kotlin/net/dodian/uber/game/content/skills/herblore/Herblore.kt" to "bindItemContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/content/skills/slayer/Slayer.kt" to "bindItemContentClick(",
+        )
+
+        val violations = requiredBridgeUsage.mapNotNull { (pathText, helperCall) ->
+            val path = Paths.get(pathText)
+            val source = Files.readString(path)
+            if (source.contains(helperCall)) {
+                null
+            } else {
+                "$pathText: expected bridge helper usage $helperCall"
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Mapped SkillPlugin wrappers should use shared bridge helpers.\n${violations.joinToString("\n")}",
         )
     }
 

@@ -14,6 +14,8 @@ class SkillPluginBuilder internal constructor(
     private val objectBindings = ArrayList<SkillObjectClickBinding>()
     private val npcBindings = ArrayList<SkillNpcClickBinding>()
     private val itemOnItemBindings = ArrayList<SkillItemOnItemBinding>()
+    private val itemBindings = ArrayList<SkillItemClickBinding>()
+    private val itemOnObjectBindings = ArrayList<SkillItemOnObjectBinding>()
     private val buttonBindings = ArrayList<SkillButtonBinding>()
     private var lifecycle = SkillPluginLifecycleHooks()
 
@@ -49,6 +51,41 @@ class SkillPluginBuilder internal constructor(
         itemOnItemBindings += SkillItemOnItemBinding(preset, leftItemId, rightItemId, handler)
     }
 
+    fun itemClick(
+        preset: PolicyPreset,
+        option: Int,
+        vararg itemIds: Int,
+        handler: (client: Client, itemId: Int, itemSlot: Int, interfaceId: Int) -> Boolean,
+    ) {
+        require(option in 1..3) { "Item option must be between 1 and 3." }
+        require(itemIds.isNotEmpty()) { "Item click binding requires at least one item id." }
+        itemBindings += SkillItemClickBinding(preset, option, itemIds.toSet().toIntArray(), handler)
+    }
+
+    fun itemOnObject(
+        preset: PolicyPreset,
+        vararg objectIds: Int,
+        itemIds: IntArray = intArrayOf(-1),
+        handler: (
+            client: Client,
+            objectId: Int,
+            position: Position,
+            obj: GameObjectData?,
+            itemId: Int,
+            itemSlot: Int,
+            interfaceId: Int,
+        ) -> Boolean,
+    ) {
+        require(objectIds.isNotEmpty()) { "Item-on-object binding requires at least one object id." }
+        require(itemIds.isNotEmpty()) { "Item-on-object binding requires at least one item id or wildcard (-1)." }
+        itemOnObjectBindings += SkillItemOnObjectBinding(
+            preset = preset,
+            objectIds = objectIds.toSet().toIntArray(),
+            itemIds = itemIds.toSet().toIntArray(),
+            handler = handler,
+        )
+    }
+
     fun button(
         preset: PolicyPreset,
         vararg rawButtonIds: Int,
@@ -70,6 +107,8 @@ class SkillPluginBuilder internal constructor(
             objectBindings = objectBindings.toList(),
             npcBindings = npcBindings.toList(),
             itemOnItemBindings = itemOnItemBindings.toList(),
+            itemBindings = itemBindings.toList(),
+            itemOnObjectBindings = itemOnObjectBindings.toList(),
             buttonBindings = buttonBindings.toList(),
             lifecycle = lifecycle,
         )

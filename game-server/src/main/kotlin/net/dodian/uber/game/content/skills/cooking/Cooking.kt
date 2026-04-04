@@ -12,7 +12,9 @@ import net.dodian.uber.game.systems.skills.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.SkillingActionService
 import net.dodian.uber.game.systems.skills.SkillPlugin
+import net.dodian.uber.game.systems.skills.bindObjectContentUseItem
 import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.policy.PolicyPreset
 
 object Cooking {
     @JvmStatic
@@ -124,5 +126,11 @@ object RangeObjects : ObjectContent {
 }
 
 object CookingSkillPlugin : SkillPlugin {
-    override val definition = skillPlugin(name = "Cooking", skill = Skill.COOKING) { }
+    override val definition =
+        skillPlugin(name = "Cooking", skill = Skill.COOKING) {
+            bindObjectContentUseItem(
+                preset = PolicyPreset.PRODUCTION,
+                content = RangeObjects,
+            )
+        }
 }

@@ -18,6 +18,8 @@ data class SkillPluginDefinition(
     val objectBindings: List<SkillObjectClickBinding> = emptyList(),
     val npcBindings: List<SkillNpcClickBinding> = emptyList(),
     val itemOnItemBindings: List<SkillItemOnItemBinding> = emptyList(),
+    val itemBindings: List<SkillItemClickBinding> = emptyList(),
+    val itemOnObjectBindings: List<SkillItemOnObjectBinding> = emptyList(),
     val buttonBindings: List<SkillButtonBinding> = emptyList(),
     val lifecycle: SkillPluginLifecycleHooks = SkillPluginLifecycleHooks(),
 )
@@ -50,6 +52,28 @@ data class SkillItemOnItemBinding(
     val handler: (client: Client, itemUsed: Int, otherItem: Int) -> Boolean,
 )
 
+data class SkillItemClickBinding(
+    val preset: PolicyPreset,
+    val option: Int,
+    val itemIds: IntArray,
+    val handler: (client: Client, itemId: Int, itemSlot: Int, interfaceId: Int) -> Boolean,
+)
+
+data class SkillItemOnObjectBinding(
+    val preset: PolicyPreset,
+    val objectIds: IntArray,
+    val itemIds: IntArray,
+    val handler: (
+        client: Client,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        itemId: Int,
+        itemSlot: Int,
+        interfaceId: Int,
+    ) -> Boolean,
+)
+
 data class SkillButtonBinding(
     val preset: PolicyPreset,
     val rawButtonIds: IntArray,
@@ -58,3 +82,5 @@ data class SkillButtonBinding(
 )
 
 fun SkillObjectClickBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
+
+fun SkillItemOnObjectBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)

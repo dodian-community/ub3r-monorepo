@@ -109,6 +109,82 @@ object SkillInteractionDispatcher {
     }
 
     @JvmStatic
+    fun tryHandleItemClick(client: Client, option: Int, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
+        val binding = SkillPluginRegistry.current().itemBinding(option, itemId) ?: return false
+        return try {
+            val handled = binding.handler(client, itemId, itemSlot, interfaceId)
+            SkillPolicyMetrics.record(
+                binding.preset,
+                SkillPolicyRoute.ITEM,
+                if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
+            )
+            handled
+        } catch (exception: Exception) {
+            logger.error(
+                "Error handling skill item click option={} itemId={} slot={} interface={}",
+                option,
+                itemId,
+                itemSlot,
+                interfaceId,
+                exception,
+            )
+            SkillPolicyMetrics.record(binding.preset, SkillPolicyRoute.ITEM, SkillPolicyResult.POLICY_REJECT)
+            false
+        }
+    }
+
+    @JvmStatic
+    fun tryHandleItemOnObject(
+        client: Client,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        itemId: Int,
+        itemSlot: Int,
+        interfaceId: Int,
+    ): Boolean {
+        val binding = SkillPluginRegistry.current().itemOnObjectBinding(objectId, itemId) ?: return false
+        return try {
+            val handled = binding.handler(client, objectId, position, obj, itemId, itemSlot, interfaceId)
+            SkillPolicyMetrics.record(
+                binding.preset,
+                SkillPolicyRoute.ITEM_ON_OBJECT,
+                if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
+            )
+            handled
+        } catch (exception: Exception) {
+            logger.error(
+                "Error handling skill item-on-object objectId={} itemId={} at {}",
+                objectId,
+                itemId,
+                position,
+                exception,
+            )
+            SkillPolicyMetrics.record(binding.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+            false
+        }
+    }
+
+    @JvmStatic
+    fun resolveItemOnObjectPolicy(
+        objectId: Int,
+        itemId: Int,
+    ): ObjectInteractionPolicy? {
+        val binding = SkillPluginRegistry.current().itemOnObjectBinding(objectId, itemId) ?: return null
+        return try {
+            binding.objectPolicy()
+        } catch (exception: Exception) {
+            logger.error(
+                "Error resolving skill item-on-object policy objectId={} itemId={}",
+                objectId,
+                itemId,
+                exception,
+            )
+            null
+        }
+    }
+
+    @JvmStatic
     fun tryHandleButton(client: Client, rawButtonId: Int, opIndex: Int): Boolean {
         val binding = SkillPluginRegistry.current().buttonBinding(rawButtonId, opIndex) ?: return false
         return try {

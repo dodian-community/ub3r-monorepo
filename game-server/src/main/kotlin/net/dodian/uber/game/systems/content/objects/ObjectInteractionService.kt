@@ -129,6 +129,19 @@ object ObjectInteractionService {
             ) {
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
+            if (context.type == ObjectInteractionType.USE_ITEM &&
+                SkillInteractionDispatcher.tryHandleItemOnObject(
+                    client = context.client,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                    itemId = context.itemId ?: -1,
+                    itemSlot = context.itemSlot ?: -1,
+                    interfaceId = context.interfaceId ?: -1,
+                )
+            ) {
+                return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
+            }
 
             val resolveStart = System.nanoTime()
             val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
