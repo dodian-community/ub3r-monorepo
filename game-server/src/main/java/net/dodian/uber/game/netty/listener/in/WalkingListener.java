@@ -4,25 +4,15 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
-import net.dodian.uber.game.systems.ui.dialogue.text.DialoguePagingService;
+import net.dodian.uber.game.systems.net.PacketGameplayFacade;
+import net.dodian.uber.game.systems.net.WalkRequest;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
-import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.concurrent.atomic.AtomicLong;
-
-
 
 /**
  * Netty implementation of the walking packet handler (opcodes 248, 164, 98).
@@ -37,8 +27,6 @@ public final class WalkingListener implements PacketListener {
     private static final int MINIMAP_TRAILING_BYTES = 14;
     private static final int MIN_WORLD_COORD = 0;
     private static final int MAX_WORLD_COORD = 16382;
-    private static final long MALFORMED_LOG_INTERVAL_MS = 5000L;
-    private static final AtomicLong lastMalformedLogMs = new AtomicLong(0L);
 
     static {
         WalkingListener handler = new WalkingListener();
@@ -51,43 +39,6 @@ public final class WalkingListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         int opcode = packet.opcode();
         int size   = packet.size();
-        long now   = System.currentTimeMillis();
-
-        if (client.deathStage > 0 || client.getCurrentHealth() < 1 || client.randomed || !client.validClient
-                || !client.pLoaded || now < client.walkBlock) {
-            return;
-        }
-        if (client.doingTeleport() || PyramidPlunder.isLooting(client)) return;
-        if (client.isVerticalTransitionActive()) {
-            client.resetWalkingQueue();
-            return;
-        }
-        // Auto-decline trade/duel when walking
-        if (client.inTrade && (opcode == 164 || opcode == 248)) client.declineTrade();
-        else if (client.inDuel && !client.duelFight && (opcode == 164 || opcode == 248)) client.declineDuel();
-
-        if (client.genie) client.genie = false;
-        if (client.antique) client.antique = false;
-        client.playerPotato.clear();
-        client.farming.updateCompost(client); //Need to update the closest compostBin!
-        client.farming.updateFarmPatch(client); //Need to update the closest farmingPatch!
-
-        if ((client.getStunTimer() > 0 || client.getSnareTimer() > 0) && opcode != 98) {
-            client.send(new SendMessage(client.getSnareTimer() > 0 ? "You are ensnared!" : "You are currently stunned!"));
-            client.resetWalkingQueue();
-            return;
-        }
-
-        if (client.morph) client.unMorph();
-        if (client.checkInv) {
-            client.checkInv = false;
-            client.resetItems(3214);
-        }
-        if (client.pickupWanted) {
-            client.pickupWanted = false;
-            client.attemptGround = null;
-            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client);
-        }
 
         ByteBuf buf = packet.payload();
         int effectiveSize = resolveEffectiveSize(opcode, size);
@@ -108,78 +59,31 @@ public final class WalkingListener implements PacketListener {
             return;
         }
 
-        int steps = (effectiveSize - MIN_WALK_PACKET_SIZE) / 2;
-        client.newWalkCmdSteps = steps;
-        if (++client.newWalkCmdSteps > Player.WALKING_QUEUE_SIZE) {
-            client.newWalkCmdSteps = 0;
+        int stepCount = ((effectiveSize - MIN_WALK_PACKET_SIZE) / 2) + 1;
+        if (stepCount > Player.WALKING_QUEUE_SIZE) {
+            rejectMalformedWalkPacket(client, opcode, size, -1, -1, "walk step count exceeds queue size");
             return;
         }
+        int[] deltasX = new int[stepCount];
+        int[] deltasY = new int[stepCount];
+        deltasX[0] = 0;
+        deltasY[0] = 0;
 
         int firstStepXAbs = ByteBufReader.readShort(buf, ValueType.ADD, ByteOrder.LITTLE);
-        int firstStepX = firstStepXAbs - client.mapRegionX * 8;
 
-        for (int i = 1; i < client.newWalkCmdSteps; i++) {
-            client.newWalkCmdX[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
-            client.newWalkCmdY[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
-            client.tmpNWCX[i] = client.newWalkCmdX[i];
-            client.tmpNWCY[i] = client.newWalkCmdY[i];
+        for (int i = 1; i < stepCount; i++) {
+            deltasX[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
+            deltasY[i] = ByteBufReader.readSignedByte(buf, ValueType.NORMAL);
         }
 
         int firstStepYAbs = ByteBufReader.readShort(buf, ValueType.NORMAL, ByteOrder.LITTLE);
-        int firstStepY = firstStepYAbs - client.mapRegionY * 8;
         if (!isValidWorldCoordinate(firstStepXAbs) || !isValidWorldCoordinate(firstStepYAbs)) {
             rejectMalformedWalkPacket(client, opcode, size, firstStepXAbs, firstStepYAbs, "first step out of world bounds");
             return;
         }
-        client.newWalkCmdIsRunning = (ByteBufReader.readSignedByte(buf, ValueType.NEGATE) == 1);
-
-        client.newWalkCmdX[0] = client.newWalkCmdY[0] = client.tmpNWCX[0] = client.tmpNWCY[0] = 0;
-
-        logger.debug("Walk steps {} firstX {} firstY {} running {}", client.newWalkCmdSteps, firstStepX, firstStepY, client.newWalkCmdIsRunning);
-        for (int i = 0; i < client.newWalkCmdSteps; i++) {
-            client.newWalkCmdX[i] += firstStepX;
-            client.newWalkCmdY[i] += firstStepY;
-        }
-
-
-
-        if (client.newWalkCmdSteps > 0) {
-            // Any movement cancels active dialogue sessions and paging.
-            DialogueService.closeBlockingDialogue(client, false);
-
-            if (client.inDuel) {
-                if (opcode != 98) client.send(new SendMessage("You cannot move during this duel!"));
-                client.resetWalkingQueue();
-                return;
-            }
-            // Reset interfaces/actions similar to legacy
-            if (client.NpcWanneTalk > 0) {
-                client.send(new RemoveInterfaces());
-                client.NpcWanneTalk = -1;
-            } else if (!client.isBusy()) {
-                client.send(new RemoveInterfaces());
-            }
-            client.rerequestAnim();
-            PlayerActionCancellationService.cancel(client, PlayerActionCancelReason.MOVEMENT, true, false, false, true);
-            client.discord = false;
-            if (client.checkInv) { client.checkInv = false; client.resetItems(3214);}            
-            client.faceTarget(65535);
-        }
-
-        if (client.chestEventOccur && opcode != 98) client.chestEventOccur = false;
-        client.convoId = -1;
-        if (DialogueService.hasBlockingDialogue(client)) {
-            DialogueService.closeBlockingDialogue(client, true);
-        }
-        if (client.refundSlot != -1) client.refundSlot = -1;
-        if (client.herbMaking != -1) client.herbMaking = -1;
-        if (client.IsBanking) { client.IsBanking = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
-        if (client.checkBankInterface) { client.checkBankInterface = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
-        if (client.bankStyleViewOpen) { client.clearBankStyleView(); client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
-        if (client.isPartyInterface) { client.isPartyInterface = false; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
-        if (client.isShopping()) { client.MyShopID = -1; client.send(new RemoveInterfaces()); client.checkItemUpdate(); }
-
-        // done – movement queue will be processed in Client.process()
+        boolean running = (ByteBufReader.readSignedByte(buf, ValueType.NEGATE) == 1);
+        WalkRequest request = new WalkRequest(opcode, firstStepXAbs, firstStepYAbs, running, deltasX, deltasY);
+        PacketGameplayFacade.handleWalk(client, request);
     }
 
     private static void safeRegister(int opcode, WalkingListener handler) {
@@ -213,33 +117,6 @@ public final class WalkingListener implements PacketListener {
             int firstStepYAbs,
             String reason
     ) {
-        client.resetWalkingQueue();
-        logMalformedWalkPacket(client, opcode, packetSize, firstStepXAbs, firstStepYAbs, reason);
-    }
-
-    private static void logMalformedWalkPacket(
-            Client client,
-            int opcode,
-            int packetSize,
-            int firstStepXAbs,
-            int firstStepYAbs,
-            String reason
-    ) {
-        long now = System.currentTimeMillis();
-        long last = lastMalformedLogMs.get();
-        if (now - last < MALFORMED_LOG_INTERVAL_MS || !lastMalformedLogMs.compareAndSet(last, now)) {
-            return;
-        }
-        logger.warn(
-                "Rejected malformed walk packet player={} opcode={} size={} firstStep=({}, {}) region=({}, {}) reason={}",
-                client.getPlayerName(),
-                opcode,
-                packetSize,
-                firstStepXAbs,
-                firstStepYAbs,
-                client.mapRegionX,
-                client.mapRegionY,
-                reason
-        );
+        PacketGameplayFacade.rejectMalformedWalk(client, opcode, packetSize, firstStepXAbs, firstStepYAbs, reason);
     }
 }

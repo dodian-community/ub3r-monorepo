@@ -1,7 +1,9 @@
 package net.dodian.uber.game.systems.net
 
+import io.netty.channel.embedded.EmbeddedChannel
+import net.dodian.uber.game.model.entity.player.Client
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -26,13 +28,19 @@ class PacketGameplayFacadeTest {
     }
 
     @Test
-    fun `walk handling fails fast until task 3 wires the real service`() {
-        val exception = assertThrows(IllegalStateException::class.java) {
-            PacketGameplayFacade.handleWalk(null, null)
-        }
-        assertTrue(
-            exception.message?.contains("not wired yet") == true,
-            "Expected a clear migration message, got: ${exception.message}",
+    fun `walk handling routes through the kotlin service without throwing on idle clients`() {
+        val client = Client(EmbeddedChannel(), 1)
+        val request = WalkRequest(
+            opcode = 248,
+            firstStepXAbs = 3200,
+            firstStepYAbs = 3201,
+            running = true,
+            deltasX = intArrayOf(0),
+            deltasY = intArrayOf(0),
         )
+
+        assertDoesNotThrow {
+            PacketGameplayFacade.handleWalk(client, request)
+        }
     }
 }
