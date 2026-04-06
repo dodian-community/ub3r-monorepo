@@ -25,6 +25,9 @@ object PacketBankingService {
         resolvedItemId: Int,
     ) {
         val stack = Server.itemManager.isStackable(resolvedItemId)
+        if (!isValidBankAllRequest(client, interfaceId, removeSlot, bankSlot, stack)) {
+            return
+        }
 
         when {
             interfaceId == 5064 -> {
@@ -109,6 +112,10 @@ object PacketBankingService {
         bankSlot: Int,
         amount: Int,
     ) {
+        if (!isValidFixedAmountRequest(client, interfaceId, removeSlot, bankSlot)) {
+            return
+        }
+
         when (interfaceId) {
             3322 -> {
                 if (client.inDuel && client.canOffer) {
@@ -274,6 +281,9 @@ object PacketBankingService {
             }
             when {
                 client.XinterfaceID == 5064 -> {
+                    if (!isValidInventorySlot(client, client.XremoveSlot)) {
+                        return
+                    }
                     if (client.IsBanking) {
                         client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                     } else if (client.isPartyInterface) {
@@ -291,13 +301,19 @@ object PacketBankingService {
                     if (client.bankStyleViewOpen) {
                         return
                     }
-                    if (client.XremoveSlot >= 0 && client.XremoveSlot < client.bankSize() && client.bankItems[client.XremoveSlot] > 0) {
+                    if (!isValidBankSlot(client, client.XremoveSlot)) {
+                        return
+                    }
+                    if (client.bankItems[client.XremoveSlot] > 0) {
                         client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                         client.checkItemUpdate()
                     }
                 }
 
                 client.XinterfaceID == 2274 -> {
+                    if (!isValidPartyOfferSlot(client, client.XremoveSlot)) {
+                        return
+                    }
                     Balloons.removeOfferItems(
                         client,
                         client.offeredPartyItems[client.XremoveSlot].getId(),
@@ -370,6 +386,10 @@ object PacketBankingService {
         removeId: Int,
         bankSlot: Int,
     ) {
+        if (!isValidRemoveItemRequest(client, interfaceId, removeSlot, bankSlot)) {
+            return
+        }
+
         when {
             interfaceId == 3322 && client.inDuel && client.canOffer -> {
                 client.stakeItem(removeId, removeSlot, 1)
@@ -498,8 +518,66 @@ object PacketBankingService {
 
     @JvmStatic
     fun handleMoveItems(client: Client, interfaceId: Int, itemFrom: Int, itemTo: Int) {
+        if (!isValidInventorySlot(client, itemFrom) || !isValidInventorySlot(client, itemTo)) {
+            return
+        }
         client.moveItems(itemFrom, itemTo, interfaceId)
     }
+
+    private fun isValidBankAllRequest(
+        client: Client,
+        interfaceId: Int,
+        removeSlot: Int,
+        bankSlot: Int,
+        stack: Boolean,
+    ): Boolean =
+        when {
+            interfaceId == 5064 -> isValidInventorySlot(client, removeSlot)
+            interfaceId == 3322 -> isValidInventorySlot(client, removeSlot)
+            interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
+            interfaceId == 6669 || interfaceId == 3415 -> !stack || isValidTradeOfferSlot(client, removeSlot)
+            interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            else -> true
+        }
+
+    private fun isValidFixedAmountRequest(
+        client: Client,
+        interfaceId: Int,
+        removeSlot: Int,
+        bankSlot: Int,
+    ): Boolean =
+        when {
+            interfaceId == 5064 || interfaceId == 3322 -> isValidInventorySlot(client, removeSlot)
+            interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
+            interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
+            interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            else -> true
+        }
+
+    private fun isValidRemoveItemRequest(
+        client: Client,
+        interfaceId: Int,
+        removeSlot: Int,
+        bankSlot: Int,
+    ): Boolean =
+        when {
+            interfaceId == 1688 -> isValidEquipmentSlot(client, removeSlot)
+            interfaceId == 5064 || interfaceId == 3322 -> isValidInventorySlot(client, removeSlot)
+            interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
+            interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
+            interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
+            else -> true
+        }
+
+    private fun isValidInventorySlot(client: Client, slot: Int): Boolean = slot in client.playerItems.indices
+
+    private fun isValidBankSlot(client: Client, slot: Int): Boolean = slot >= 0 && slot < client.bankSize()
+
+    private fun isValidTradeOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredItems.size
+
+    private fun isValidPartyOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredPartyItems.size
+
+    private fun isValidEquipmentSlot(client: Client, slot: Int): Boolean = slot in client.getEquipment().indices
 
     private fun formatValueSuffix(value: Int): String {
         val thousand = 1_000
