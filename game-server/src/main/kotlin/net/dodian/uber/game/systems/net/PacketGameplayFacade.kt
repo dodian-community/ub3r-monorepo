@@ -3,9 +3,11 @@ package net.dodian.uber.game.systems.net
 import net.dodian.uber.game.model.entity.player.Client
 
 object PacketGameplayFacade {
+    internal var walkDispatcher: (Client, WalkRequest) -> Unit = PacketWalkingService::handle
+
     @JvmStatic
     fun handleWalk(player: Client, request: WalkRequest) {
-        PacketWalkingService.handle(player, request)
+        walkDispatcher(player, request)
     }
 
     @JvmStatic

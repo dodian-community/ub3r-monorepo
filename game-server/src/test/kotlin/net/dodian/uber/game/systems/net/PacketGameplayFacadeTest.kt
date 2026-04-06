@@ -3,8 +3,8 @@ package net.dodian.uber.game.systems.net
 import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.model.entity.player.Client
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 
 class PacketGameplayFacadeTest {
@@ -28,8 +28,7 @@ class PacketGameplayFacadeTest {
     }
 
     @Test
-    fun `walk handling routes through the kotlin service without throwing on idle clients`() {
-        val client = Client(EmbeddedChannel(), 1)
+    fun `walk handling routes through the facade dispatcher`() {
         val request = WalkRequest(
             opcode = 248,
             firstStepXAbs = 3200,
@@ -39,8 +38,18 @@ class PacketGameplayFacadeTest {
             deltasY = intArrayOf(0),
         )
 
-        assertDoesNotThrow {
-            PacketGameplayFacade.handleWalk(client, request)
+        val previousDispatcher = PacketGameplayFacade.walkDispatcher
+        try {
+            var observedRequest: WalkRequest? = null
+            PacketGameplayFacade.walkDispatcher = { _, routedRequest ->
+                observedRequest = routedRequest
+            }
+
+            PacketGameplayFacade.handleWalk(Client(EmbeddedChannel(), 1), request)
+
+            assertSame(request, observedRequest, "Expected handleWalk to forward the original WalkRequest")
+        } finally {
+            PacketGameplayFacade.walkDispatcher = previousDispatcher
         }
     }
 }
