@@ -1,139 +1,42 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.Server;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
-import net.dodian.uber.game.content.npcs.HerbloreNpcDialogue;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.content.skills.cooking.Cooking;
-import net.dodian.uber.game.systems.content.ui.SkillingInterfaceItemService;
-import net.dodian.uber.game.content.skills.herblore.Herblore;
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.content.events.partyroom.Balloons;
-import net.dodian.uber.game.netty.listener.out.InventoryInterface;
-import net.dodian.uber.game.netty.listener.out.RemoveInterfaces;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.systems.action.SkillingActionService;
-import net.dodian.utilities.Utils;
+import net.dodian.uber.game.systems.net.PacketBankingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Handles the second half of an "X" withdraw/deposit (opcode 208).
- * Reads the user-entered amount and performs the appropriate action based on the
- * stored Xinterface/Xremove* variables on the {@link Client}.
+ * Reads the entered amount and delegates the actual container mutation logic.
  */
 public class BankX2Listener implements PacketListener {
 
     static { PacketListenerManager.register(208, new BankX2Listener()); }
 
     private static final Logger logger = LoggerFactory.getLogger(BankX2Listener.class);
+    private static final int MIN_PAYLOAD_BYTES = 4;
 
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
-        int enteredAmount = buf.readInt(); // big-endian dword
-        if (enteredAmount < 1) return;
+        if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            return;
+        }
+
+        int enteredAmount = buf.readInt();
+        if (enteredAmount < 1) {
+            return;
+        }
 
         if (logger.isTraceEnabled()) {
             logger.trace("BankX2 amount={} iface={} removeId={} slot={} player={}", enteredAmount,
                     client.XinterfaceID, client.XremoveID, client.XremoveSlot, client.getPlayerName());
         }
 
-        // --- BEGIN: direct copy of legacy logic (minus initial reads) ---
-        try {
-            if (client.convoId == 1001) {
-                client.send(new RemoveInterfaces());
-                Server.slots.rollDice(client, enteredAmount);
-                return;
-            }
-            if (Herblore.handleEnteredAmount(client, enteredAmount)) {
-                return;
-            }
-            if (client.XinterfaceID == 3838) { // Claim battlestaffs
-                client.send(new RemoveInterfaces());
-                int amount = client.dailyReward.isEmpty() ? 0 : Integer.parseInt(client.dailyReward.get(2));
-                int totalAmount = amount;
-                amount = Math.min(enteredAmount, amount);
-                int coins = client.getInvAmt(995);
-                amount = coins == 0 ? 0 : Math.min(amount, coins / 7000);
-                if (coins < 7000) {
-                    client.showNPCChat(3837, 597, new String[]{"You do not have enough coins to purchase one battlestaff."});
-                } else {
-                    client.deleteItem(995, amount * 7_000);
-                    client.addItem(1392, amount);
-                    client.dailyReward.set(2, (totalAmount - amount) + "");
-                    client.checkItemUpdate();
-                    client.showNPCChat(3837, 595, new String[]{"Here is " + amount + " battlestaffs for you."});
-                }
-                return;
-            }
-            if (client.enterAmountId > 0) {
-                client.send(new RemoveInterfaces());
-                if (client.enterAmountId == 1) { // cooking amt
-                    if (client.inTrade || client.inDuel) {
-                        client.send(new SendMessage("Cannot cook in duel or trade"));
-                        return;
-                    }
-                    Cooking.startFromEnteredAmount(client, enteredAmount);
-                    return;
-                } else if (client.enterAmountId == 2) { // smelting amt
-                    client.send(new RemoveInterfaces());
-                    SmithingInterface.startFromPending(client, enteredAmount);
-                    return;
-                }
-            }
-            if (client.XinterfaceID == 5064) { // remove from bag to bank
-                if (client.IsBanking)
-                    client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount);
-                else if (client.isPartyInterface)
-                    Balloons.offerItems(client, client.playerItems[client.XremoveSlot] - 1, enteredAmount, client.XremoveSlot);
-                client.checkItemUpdate();
-            } else if (client.XinterfaceID == 5382 || (client.XinterfaceID >= 50300 && client.XinterfaceID <= 50310)) { // remove from bank (mystic tabs: 50300-50310)
-                if ((client.XinterfaceID == 5382 || (client.XinterfaceID >= 50300 && client.XinterfaceID <= 50310)) && client.bankStyleViewOpen) {
-                    return;
-                }
-                if (client.XremoveSlot >= 0 && client.XremoveSlot < client.bankSize() && client.bankItems[client.XremoveSlot] > 0) {
-                    client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount);
-                    client.checkItemUpdate();
-                }
-            } else if (client.XinterfaceID == 2274) { // remove from party
-                Balloons.removeOfferItems(client, client.offeredPartyItems.get(client.XremoveSlot).getId(), enteredAmount, client.XremoveSlot);
-                client.checkItemUpdate();
-            } else if (client.XinterfaceID == 3322 && client.inDuel && client.canOffer) { // bag to duel
-                client.stakeItem(client.XremoveID, client.XremoveSlot, enteredAmount);
-            } else if (client.XinterfaceID == 6669 && client.inDuel && client.canOffer) { // from duel window
-                client.fromDuel(client.XremoveID, client.XremoveSlot, enteredAmount);
-            } else if (client.XinterfaceID == 3900 && client.XremoveID != -1) { // buy from shop
-                int id = client.XremoveID, slot = client.XremoveSlot;
-                client.XremoveID = -1; client.XremoveSlot = -1;
-                client.buyItem(id, slot, enteredAmount);
-                client.checkItemUpdate();
-                client.send(new InventoryInterface(3824, 3822));
-            } else if (client.XinterfaceID == 3823 && client.XremoveID != -1) { // sell to shop
-                int id = client.XremoveID, slot = client.XremoveSlot;
-                client.XremoveID = -1; client.XremoveSlot = -1;
-                client.sellItem(id, slot, enteredAmount);
-                client.checkItemUpdate();
-                client.send(new InventoryInterface(3824, 3822));
-            } else if (SmithingInterface.isSmeltingInterfaceFrame(client.XinterfaceID)) { // smelting X
-                logger.warn("Smelting interface item click amount=X({}) interfaceId={} itemId={} slot={} player={}",
-                        enteredAmount, client.XinterfaceID, client.XremoveID, client.XremoveSlot, client.getPlayerName());
-                SmithingInterface.startFromInterfaceItem(client, client.XremoveID, enteredAmount);
-            } else if (SkillingInterfaceItemService.handleContainerAmount(client, client.XinterfaceID, client.XremoveID, client.XremoveSlot, enteredAmount)) {
-            } else if (client.XinterfaceID == 3322 && client.inTrade && client.canOffer) { // bag to trade window
-                client.tradeItem(client.XremoveID, client.XremoveSlot, enteredAmount);
-            } else if (client.XinterfaceID == 3415 && client.inTrade && client.canOffer) { // from trade window
-                client.fromTrade(client.XremoveID, client.XremoveSlot, enteredAmount);
-            }
-        } finally {
-            // reset vars to avoid stale state
-            client.XinterfaceID = -1;
-            client.enterAmountId = 0;
-        }
-        // --- END legacy logic ---
+        PacketBankingService.handleXAmount(client, enteredAmount);
     }
 }

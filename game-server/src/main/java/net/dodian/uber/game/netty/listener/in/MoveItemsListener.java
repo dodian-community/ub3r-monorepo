@@ -9,9 +9,9 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketBankingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 @PacketHandler(opcode = 214)
 public class MoveItemsListener implements PacketListener {
@@ -31,7 +31,7 @@ public class MoveItemsListener implements PacketListener {
         }
 
         int interfaceId = ByteBufReader.readInt(buf);
-        buf.readUnsignedByte(); // mode/param2 (not used server-side)
+        buf.readUnsignedByte();
         int itemFrom = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int itemTo = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
@@ -40,6 +40,6 @@ public class MoveItemsListener implements PacketListener {
         }
 
         logger.debug("MoveItems: iface={} from={} to={}", interfaceId, itemFrom, itemTo);
-        client.moveItems(itemFrom, itemTo, interfaceId);
+        PacketBankingService.handleMoveItems(client, interfaceId, itemFrom, itemTo);
     }
 }
