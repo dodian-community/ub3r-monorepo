@@ -1,5 +1,6 @@
 package net.dodian.uber.game.persistence.audit
 
+import java.sql.SQLException
 import java.sql.Statement
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.YellSystem
@@ -47,7 +48,10 @@ object TradeLog {
                         }
                     }
                 }
-            } catch (exception: Exception) {
+            } catch (exception: SQLException) {
+                logger.error("Unable to record trade due to SQL exception", exception)
+                YellSystem.alertStaff("Unable to record trade, please contact an admin.")
+            } catch (exception: RuntimeException) {
                 logger.error("Unable to record trade", exception)
                 YellSystem.alertStaff("Unable to record trade, please contact an admin.")
             }

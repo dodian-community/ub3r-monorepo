@@ -1,5 +1,6 @@
 package net.dodian.uber.game.persistence.audit
 
+import java.sql.SQLException
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
@@ -65,7 +66,10 @@ object ItemLog {
                         statement.executeUpdate()
                     }
                 }
-            } catch (exception: Exception) {
+            } catch (exception: SQLException) {
+                logger.error(errorMessage, exception)
+                YellSystem.alertStaff(alertMessage)
+            } catch (exception: RuntimeException) {
                 logger.error(errorMessage, exception)
                 YellSystem.alertStaff(alertMessage)
             }

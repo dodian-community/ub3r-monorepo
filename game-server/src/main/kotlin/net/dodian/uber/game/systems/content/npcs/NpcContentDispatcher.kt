@@ -46,7 +46,7 @@ object NpcContentDispatcher {
                     4 -> content.onFourthClick(client, npc)
                     else -> false
                 }
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 logger.error(
                     "Error handling npc click (option={}, npcId={}) via {}",
                     option,
@@ -73,7 +73,7 @@ object NpcContentDispatcher {
         val handled =
             try {
                 content.onAttack(client, npc)
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 logger.error(
                     "Error handling npc attack (npcId={}) via {}",
                     npc.id,

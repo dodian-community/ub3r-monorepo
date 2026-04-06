@@ -3,6 +3,7 @@ package net.dodian.uber.game.persistence.account
 import java.time.Duration
 import java.util.function.Consumer
 import java.util.function.IntConsumer
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -56,7 +57,10 @@ object AccountPersistenceService {
                         delay(50L)
                     }
                     finalCode
-                } catch (exception: Exception) {
+                } catch (exception: CancellationException) {
+                    logger.info("Account load cancelled for {}", username)
+                    13
+                } catch (exception: RuntimeException) {
                     logger.warn("Account load failed for {}", username, exception)
                     13
                 }

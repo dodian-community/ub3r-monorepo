@@ -49,7 +49,7 @@ class NpcManager {
                 } else {
                     stillMissing += npcId
                 }
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 logger.error("Failed to upsert missing NPC definition for spawn npcId={}", npcId, e)
                 stillMissing += npcId
             }
@@ -118,7 +118,7 @@ class NpcManager {
                     spawn.condition,
                 )
                 loaded++
-            } catch (e: Exception) {
+            } catch (e: RuntimeException) {
                 failed++
                 logger.error(
                     "Failed to create content NPC spawn (id={}, x={}, y={}, z={}).",
@@ -224,8 +224,8 @@ class NpcManager {
                 npcData.addDrop(drop.itemId, drop.amountMin, drop.amountMax, drop.percent, drop.rareShout)
             }
             c.sendMessage("Finished reloading all drops for ${npcData.name}")
-        } catch (e: Exception) {
-            println("npc drop wrong during drop reload..$e")
+        } catch (e: RuntimeException) {
+            logger.error("NPC drop reload failed for id={}", id, e)
         }
     }
 
@@ -242,8 +242,8 @@ class NpcManager {
             }
             reloadDrops(c, id)
             c.sendMessage("Finished updating all '${getData(id)?.name}' npcs!")
-        } catch (e: Exception) {
-            println("npc drop wrong during reload of data..$e")
+        } catch (e: RuntimeException) {
+            logger.error("NPC full data reload failed for id={}", id, e)
         }
     }
 
@@ -256,8 +256,8 @@ class NpcManager {
                     data[id] = defaultDefinition
                     c.sendMessage("Added default config values to the npc!")
                 }
-            } catch (e: Exception) {
-                println("error? $e")
+            } catch (e: RuntimeException) {
+                logger.error("NPC config bootstrap failed for id={}", id, e)
             }
         } else if (!table.equals("new npc", ignoreCase = true)) {
             try {
@@ -265,16 +265,11 @@ class NpcManager {
                 NpcDataRepository.updateDefinitionField(id, field, value)
                 c.sendMessage("You updated '${field.column}' with value '$value'!")
                 reloadAllData(c, id)
-            } catch (e: Exception) {
-                when {
-                    e.message?.contains("Unknown column") == true ->
-                        c.sendMessage("row name '$table' do not exist in the database!")
-                    e.message?.contains("Incorrect integer") == true ->
-                        c.sendMessage("row name '$table' need a int value!")
-                    e is IllegalArgumentException ->
-                        c.sendMessage(e.message ?: "Invalid npc config field.")
-                    else -> logger.error("NPC config reload failed for id={} field={}", id, table, e)
-                }
+            } catch (e: IllegalArgumentException) {
+                c.sendMessage(e.message ?: "Invalid npc config field.")
+            } catch (e: RuntimeException) {
+                logger.error("NPC config reload failed for id={} field={}", id, table, e)
+                c.sendMessage("Failed updating npc config. Check logs for details.")
             }
         }
     }
@@ -285,7 +280,7 @@ class NpcManager {
             data.clear()
             data.putAll(definitions)
             logger.info("Loaded {} Npc Definitions", definitions.size)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.error("Error loading NPC definitions", e)
         }
 
@@ -304,7 +299,7 @@ class NpcManager {
                 }
             }
             logger.info("Loaded {} Npc Drops", amount)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.error("Error loading NPC drops", e)
         }
     }

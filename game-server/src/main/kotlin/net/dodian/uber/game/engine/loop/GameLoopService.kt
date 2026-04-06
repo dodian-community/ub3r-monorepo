@@ -211,7 +211,7 @@ class GameLoopService(
             {
                 try {
                     Server.shutdown()
-                } catch (exception: Exception) {
+                } catch (exception: RuntimeException) {
                     logger.error("Controlled shutdown failed", exception)
                 }
             },

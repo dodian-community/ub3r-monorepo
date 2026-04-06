@@ -19,7 +19,7 @@ object AsyncSqlService {
         DbDispatchers.logExecutor.execute {
             try {
                 task.run()
-            } catch (exception: Exception) {
+            } catch (exception: RuntimeException) {
                 logger.error("Async SQL task '{}' failed", taskName, exception)
             }
         }

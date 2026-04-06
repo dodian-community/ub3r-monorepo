@@ -122,7 +122,7 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
             if (poolStats.threadsAwaitingConnection > 0) {
                 logger.warn("[Pool Monitor] ${poolStats.threadsAwaitingConnection} threads waiting for connections!")
             }
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.error("Error during pool monitoring", e)
         }
     }, 30, 30, TimeUnit.SECONDS)

@@ -1,6 +1,7 @@
 package net.dodian.uber.game.persistence.account.login
 
 import java.sql.Connection
+import java.sql.SQLException
 import net.dodian.uber.game.model.Login
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
@@ -9,8 +10,10 @@ import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.serverDebugMode
 import net.dodian.uber.game.engine.config.serverEnv
+import org.slf4j.LoggerFactory
 
 object AccountLoginService {
+    private val logger = LoggerFactory.getLogger(AccountLoginService::class.java)
     const val FINAL_SAVE_PENDING_INTERNAL = 98
 
     @JvmStatic
@@ -26,8 +29,11 @@ object AccountLoginService {
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
                 )
             }
-        } catch (exception: Exception) {
-            println("Failed to load player: $playerName, $exception")
+        } catch (exception: SQLException) {
+            logger.error("Failed to load player {} due to SQL exception", playerName, exception)
+            13
+        } catch (exception: RuntimeException) {
+            logger.error("Failed to load player {} due to runtime exception", playerName, exception)
             13
         }
 
@@ -44,9 +50,11 @@ object AccountLoginService {
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
                 )
             }
-        } catch (exception: Exception) {
-            println("A critical error occurred while loading player: $playerName. Exception: $exception")
-            exception.printStackTrace()
+        } catch (exception: SQLException) {
+            logger.error("Critical SQL error while loading player {}", playerName, exception)
+            13
+        } catch (exception: RuntimeException) {
+            logger.error("Critical runtime error while loading player {}", playerName, exception)
             13
         }
 
@@ -56,8 +64,10 @@ object AccountLoginService {
             DbAsyncRepository.withConnection { connection ->
                 AccountLoginRepository.updateForumRegistration(connection, player.dbId, "40")
             }
-        } catch (exception: Exception) {
-            println("Something wrong with updating a players forum rights $exception")
+        } catch (exception: SQLException) {
+            logger.error("Failed to update forum rights for dbId={}", player.dbId, exception)
+        } catch (exception: RuntimeException) {
+            logger.error("Unexpected runtime error while updating forum rights for dbId={}", player.dbId, exception)
         }
         player.sendMessage("You have now been registered to the forum! Enjoy your stay :D")
     }

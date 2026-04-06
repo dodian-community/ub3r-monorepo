@@ -81,7 +81,7 @@ object ChatLog {
         DbDispatchers.logExecutor.execute {
             try {
                 drainQueue()
-            } catch (exception: Exception) {
+            } catch (exception: RuntimeException) {
                 logger.error("Chat log drain worker failed", exception)
             } finally {
                 workerScheduled.set(false)

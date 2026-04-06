@@ -1,13 +1,17 @@
 package net.dodian.uber.game.persistence.world
 
 import java.sql.Connection
+import java.sql.SQLException
 import java.time.Duration
+import java.util.concurrent.CancellationException
 import java.util.HashMap
 import java.util.HashSet
 import java.util.LinkedHashSet
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import net.dodian.uber.game.persistence.DbDispatchers
@@ -67,7 +71,9 @@ object WorldDbPollService {
                 }
                 loadMuteAndBanState(connection, input.onlinePlayerDbIds, muteTimes, bannedPlayers)
             }
-        } catch (exception: Exception) {
+        } catch (exception: SQLException) {
+            logger.error("World DB polling failed due to SQL error", exception)
+        } catch (exception: RuntimeException) {
             logger.error("World DB polling failed", exception)
         }
 
@@ -146,7 +152,13 @@ object WorldDbPollService {
         inFlight.get()?.let { future ->
             try {
                 future.get(maxOf(1L, timeout.toMillis() / 2), TimeUnit.MILLISECONDS)
-            } catch (_: Exception) {
+            } catch (_: TimeoutException) {
+                logger.warn("Timed out waiting for in-flight world poll result during shutdown")
+            } catch (_: CancellationException) {
+                logger.info("In-flight world poll was cancelled during shutdown")
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+            } catch (_: ExecutionException) {
             }
         }
         DbDispatchers.shutdown(worker, timeout)

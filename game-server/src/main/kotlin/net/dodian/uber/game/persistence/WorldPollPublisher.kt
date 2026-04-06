@@ -5,6 +5,7 @@ import net.dodian.uber.game.persistence.world.WorldDbPollService
 import net.dodian.uber.game.persistence.world.WorldPollInput
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -47,7 +48,9 @@ object WorldPollPublisher {
                     val snapshot = latestSnapshot.getAndSet(null) ?: break
                     try {
                         WorldPollResultStore.publish(WorldDbPollService.runBlockingPoll(snapshot.toInput()))
-                    } catch (exception: Exception) {
+                    } catch (_: CancellationException) {
+                        break
+                    } catch (exception: RuntimeException) {
                         logger.error("World poll publisher failed", exception)
                     }
                 }

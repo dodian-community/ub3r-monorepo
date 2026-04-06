@@ -32,7 +32,7 @@ object GameEventBus {
         try {
             processListeners(event, listeners[event.javaClass])
             processReturnable(event, returnableListeners[event.javaClass])
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error("Event bus dispatch failed for {}", event.javaClass.name, exception)
         }
     }
@@ -43,7 +43,7 @@ object GameEventBus {
         try {
             handled = processListeners(event, listeners[event.javaClass]) || handled
             handled = processReturnable(event, returnableListeners[event.javaClass]) || handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error("Event bus dispatch failed for {}", event.javaClass.name, exception)
         }
         return handled
@@ -64,7 +64,7 @@ object GameEventBus {
                     listener.otherwiseAction(event)
                 }
             }
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error("Event bus return dispatch failed for {}", event.javaClass.name, exception)
         }
         return results

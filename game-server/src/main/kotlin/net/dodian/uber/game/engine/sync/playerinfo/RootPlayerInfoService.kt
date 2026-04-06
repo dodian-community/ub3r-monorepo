@@ -312,7 +312,7 @@ class RootPlayerInfoService {
             write(message)
             viewer.updatePlayerUpdateCapacity(message.content().writerIndex())
             viewer.send(message)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             if (message != null) {
                 message.releaseAll()
             } else if (pooledBuffer.refCnt() > 0) {
@@ -337,7 +337,7 @@ class RootPlayerInfoService {
             message.putBytes(payload)
             viewer.updatePlayerUpdateCapacity(message.content().writerIndex())
             viewer.send(message)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             if (message != null) {
                 message.releaseAll()
             } else if (pooledBuffer.refCnt() > 0) {

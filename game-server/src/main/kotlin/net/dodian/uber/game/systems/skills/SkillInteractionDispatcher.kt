@@ -27,7 +27,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill object click option={} objectId={} at {}",
                 option,
@@ -50,7 +50,7 @@ object SkillInteractionDispatcher {
         val binding = SkillPluginRegistry.current().objectBinding(option, objectId) ?: return null
         return try {
             binding.objectPolicy()
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error resolving skill object policy option={} objectId={} at {}",
                 option,
@@ -73,7 +73,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill npc click option={} npcId={}",
                 option,
@@ -96,7 +96,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill item-on-item itemUsed={} otherItem={}",
                 itemUsed,
@@ -119,7 +119,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill item click option={} itemId={} slot={} interface={}",
                 option,
@@ -152,7 +152,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill item-on-object objectId={} itemId={} at {}",
                 objectId,
@@ -173,7 +173,7 @@ object SkillInteractionDispatcher {
         val binding = SkillPluginRegistry.current().itemOnObjectBinding(objectId, itemId) ?: return null
         return try {
             binding.objectPolicy()
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error resolving skill item-on-object policy objectId={} itemId={}",
                 objectId,
@@ -195,7 +195,7 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
-        } catch (exception: Exception) {
+        } catch (exception: RuntimeException) {
             logger.error(
                 "Error handling skill button rawButtonId={} opIndex={}",
                 rawButtonId,

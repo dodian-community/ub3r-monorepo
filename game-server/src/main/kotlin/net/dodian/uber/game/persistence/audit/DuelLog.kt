@@ -1,5 +1,6 @@
 package net.dodian.uber.game.persistence.audit
 
+import java.sql.SQLException
 import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
@@ -28,7 +29,10 @@ object DuelLog {
                         statement.executeUpdate()
                     }
                 }
-            } catch (exception: Exception) {
+            } catch (exception: SQLException) {
+                logger.error("Unable to record duel due to SQL exception", exception)
+                YellSystem.alertStaff("Unable to record duels, please contact an admin.")
+            } catch (exception: RuntimeException) {
                 logger.error("Unable to record duel", exception)
                 YellSystem.alertStaff("Unable to record duels, please contact an admin.")
             }

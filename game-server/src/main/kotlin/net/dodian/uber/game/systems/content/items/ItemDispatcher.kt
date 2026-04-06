@@ -20,7 +20,7 @@ object ItemDispatcher {
                 3 -> content.onThirdClick(client, itemId, itemSlot, interfaceId)
                 else -> false
             }
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.error(
                 "Error handling item click (option={}, itemId={}, slot={}) via {}",
                 option,

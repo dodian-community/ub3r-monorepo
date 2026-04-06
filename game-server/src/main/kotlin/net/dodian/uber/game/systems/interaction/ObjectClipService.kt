@@ -20,7 +20,7 @@ object ObjectClipService {
     fun apply(position: Position, type: Int, direction: Int, solid: Boolean) {
         try {
             Region.addClippingForVariableObject(position.x, position.y, position.z, type, direction, solid)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.debug("Clipping apply failed at {} (region cache not ready yet)", position, e)
         }
         appliedClips[key(position)] = AppliedClip(position.copy(), type, direction, solid)
@@ -29,7 +29,7 @@ object ObjectClipService {
     fun remove(position: Position, type: Int, direction: Int, solid: Boolean) {
         try {
             Region.removeClippingForVariableObject(position.x, position.y, position.z, type, direction, solid)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.debug("Clipping remove failed at {} (region cache not ready yet)", position, e)
         }
         appliedClips.remove(key(position))
