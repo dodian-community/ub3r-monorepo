@@ -106,9 +106,33 @@ class PacketBankingServiceTest {
         assertEquals(0, client.enterAmountId)
     }
 
+    @Test
+    fun `remove item from equipment rejects mismatched packet item id`() {
+        val client =
+            TrackingClient().apply {
+                getEquipment()[3] = 4151
+                getEquipmentN()[3] = 1
+            }
+
+        PacketBankingService.handleRemoveItem(
+            client = client,
+            interfaceId = 1688,
+            removeSlot = 3,
+            removeId = 4152,
+            bankSlot = -1,
+        )
+
+        assertTrue(client.removeCalls.isEmpty())
+        assertTrue(client.addItemCalls.isEmpty())
+        assertEquals(4151, client.getEquipment()[3])
+        assertEquals(1, client.getEquipmentN()[3])
+    }
+
     private class TrackingClient : Client(EmbeddedChannel(), 1) {
         val bankItemCalls = mutableListOf<Triple<Int, Int, Int>>()
         val fromBankCalls = mutableListOf<Triple<Int, Int, Int>>()
+        val removeCalls = mutableListOf<Pair<Int, Boolean>>()
+        val addItemCalls = mutableListOf<Pair<Int, Int>>()
         var itemUpdateCalls = 0
 
         override fun bankItem(itemID: Int, fromSlot: Int, amount: Int) {
@@ -121,6 +145,16 @@ class PacketBankingServiceTest {
 
         override fun checkItemUpdate() {
             itemUpdateCalls++
+        }
+
+        override fun remove(slot: Int, force: Boolean): Boolean {
+            removeCalls += slot to force
+            return true
+        }
+
+        override fun addItem(item: Int, amount: Int): Boolean {
+            addItemCalls += item to amount
+            return true
         }
     }
 

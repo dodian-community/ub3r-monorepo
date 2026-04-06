@@ -386,7 +386,7 @@ object PacketBankingService {
         removeId: Int,
         bankSlot: Int,
     ) {
-        if (!isValidRemoveItemRequest(client, interfaceId, removeSlot, bankSlot)) {
+        if (!isValidRemoveItemRequest(client, interfaceId, removeSlot, removeId, bankSlot)) {
             return
         }
 
@@ -558,10 +558,19 @@ object PacketBankingService {
         client: Client,
         interfaceId: Int,
         removeSlot: Int,
+        removeId: Int,
         bankSlot: Int,
     ): Boolean =
         when {
-            interfaceId == 1688 -> isValidEquipmentSlot(client, removeSlot)
+            interfaceId == 1688 -> {
+                if (!isValidEquipmentSlot(client, removeSlot)) {
+                    false
+                } else {
+                    val equippedId = client.getEquipment()[removeSlot]
+                    val equippedAmount = client.getEquipmentN()[removeSlot]
+                    equippedId >= 0 && equippedAmount > 0 && equippedId == removeId
+                }
+            }
             interfaceId == 5064 || interfaceId == 3322 -> isValidInventorySlot(client, removeSlot)
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
