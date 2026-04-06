@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.net
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -26,11 +26,13 @@ class PacketGameplayFacadeTest {
     }
 
     @Test
-    fun `facade is callable for walk handling`() {
-        assertNotNull(PacketGameplayFacade)
+    fun `walk handling fails fast until task 3 wires the real service`() {
+        val exception = assertThrows(IllegalStateException::class.java) {
+            PacketGameplayFacade.handleWalk(null, null)
+        }
         assertTrue(
-            PacketGameplayFacade::class.java.methods.any { it.name == "handleWalk" },
-            "Expected the facade to expose a handleWalk entry point",
+            exception.message?.contains("not wired yet") == true,
+            "Expected a clear migration message, got: ${exception.message}",
         )
     }
 }
