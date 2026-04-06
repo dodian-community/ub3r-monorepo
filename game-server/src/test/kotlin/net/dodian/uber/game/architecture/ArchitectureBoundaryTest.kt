@@ -1103,4 +1103,15 @@ class ArchitectureBoundaryTest {
             "Java interop must use explicit systems.skills wrapper APIs only.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `netty listener boundary guard exists`() {
+        val boundaryTestPath =
+            Paths.get("src/test/kotlin/net/dodian/uber/game/architecture/NettyListenerBoundaryTest.kt")
+
+        assertTrue(
+            Files.exists(boundaryTestPath),
+            "Expected Netty listener boundary test to exist at $boundaryTestPath",
+        )
+    }
 }
