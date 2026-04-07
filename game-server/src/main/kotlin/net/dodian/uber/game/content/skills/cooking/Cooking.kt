@@ -7,16 +7,23 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.skills.action.ActionStopReason
+import net.dodian.uber.game.systems.skills.action.RunningProductionAction
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.skills.action.productionAction
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.bindObjectContentUseItem
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import net.dodian.uber.game.systems.action.PolicyPreset
+import java.util.Collections
+import java.util.WeakHashMap
 
 object Cooking {
+    private const val STANDARD_ACTION_DELAY_MS = 1800L
+    private val cookingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningProductionAction>())
+
     @JvmStatic
     fun start(client: Client, itemId: Int) {
         if (client.isBusy) {
@@ -32,7 +39,46 @@ object Cooking {
     @JvmStatic
     fun start(client: Client, request: CookingRequest) {
         client.cookingState = CookingState(request.itemId, request.cookIndex, request.amount)
-        SkillingActionService.startCooking(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startAction(client: Client) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+        val action =
+            productionAction("cooking") {
+                delay { GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS) }
+                onCycleWhile {
+                    if ((cookingState?.remaining ?: 0) <= 0) {
+                        return@onCycleWhile false
+                    }
+                    performCycle(this)
+                    (cookingState?.remaining ?: 0) > 0
+                }
+                onStop {
+                    cookingTasks.remove(this)
+                    clearCookingState()
+                }
+            }
+        val running = action.start(client) ?: run {
+            client.clearCookingState()
+            return
+        }
+        cookingTasks[client] = running
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    @JvmStatic
+    fun stopAction(
+        client: Client,
+        reason: ActionStopReason = ActionStopReason.USER_INTERRUPT,
+    ) {
+        cookingTasks.remove(client)?.cancel(reason)
     }
 
     @JvmStatic
@@ -110,7 +156,7 @@ object RangeObjects : ObjectContent {
     ): Boolean {
         if (objectId == 26181 && itemId == 401) {
             val amount = client.getInvAmt(401)
-            for (i in 0 until amount) {
+            repeat(amount) {
                 client.deleteItem(401, 1)
                 client.addItem(1781, 1)
             }

@@ -16,6 +16,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.NpcInteractionIntent;
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,9 +130,7 @@ public class NpcInteractionListener implements PacketListener {
         NpcClickMetrics.recordDecoded(packet.opcode(), 5, npcIndex, client.getPlayerName());
 
         logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.opcode(), npcIndex, client.getPlayerName());
-        if (client.magicId >= 0) {
-            client.magicId = -1;
-        }
+        PacketMagicService.clearMagicIdIfSet(client);
         if (client.deathStage >= 1) {
             return;
         }

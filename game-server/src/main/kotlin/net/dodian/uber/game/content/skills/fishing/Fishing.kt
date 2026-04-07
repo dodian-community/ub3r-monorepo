@@ -3,17 +3,26 @@ package net.dodian.uber.game.content.skills.fishing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.api.content.ContentTiming
+import net.dodian.uber.game.systems.skills.action.ActionStopReason
+import net.dodian.uber.game.systems.skills.action.CycleSignal
+import net.dodian.uber.game.systems.skills.action.RunningGatheringAction
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
-import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.skills.action.gatheringAction
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.uber.game.systems.action.SkillingActionService
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.utilities.Misc
+import java.util.Collections
+import java.util.WeakHashMap
 
 object Fishing {
+    private const val REAPPLY_ANIMATION_DELAY_MS = 1800L
+    private val fishingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningGatheringAction>())
+
     @JvmStatic
     fun cycleDelayMs(client: Client): Long {
         val level = client.getLevel(Skill.FISHING) / 256.0
@@ -68,7 +77,68 @@ object Fishing {
         client.fishingState = FishingState(spot.index, 0)
         client.performAnimation(spot.animationId, 0)
         client.sendMessage("You start fishing...")
-        SkillingActionService.startFishing(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startAction(client: Client) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+        var nextCatchCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(cycleDelayMs(client))
+        var nextAnimationCycle = ContentTiming.currentCycle() + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+
+        val action =
+            gatheringAction("fishing") {
+                delay(1)
+                onCycleSignal {
+                    if (fishingState == null) {
+                        return@onCycleSignal CycleSignal.stop()
+                    }
+                    val cycle = ContentTiming.currentCycle()
+                    if (cycle >= nextAnimationCycle) {
+                        val fishIndex = fishingState?.spotIndex ?: return@onCycleSignal CycleSignal.stop()
+                        val spot = FishingData.byIndex(fishIndex)
+                        if (spot != null) {
+                            performAnimation(spot.animationId, 0)
+                        }
+                        nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+                    }
+                    if (cycle < nextCatchCycle) {
+                        return@onCycleSignal CycleSignal.continueWithoutSuccess()
+                    }
+                    performCycle(this)
+                    if (fishingState == null) {
+                        return@onCycleSignal CycleSignal.stop()
+                    }
+                    nextCatchCycle = cycle + GameCycleClock.ticksForDurationMs(cycleDelayMs(this))
+                    nextAnimationCycle = cycle + GameCycleClock.ticksForDurationMs(REAPPLY_ANIMATION_DELAY_MS)
+                    CycleSignal.success()
+                }
+                onStop {
+                    fishingTasks.remove(this)
+                    clearFishingState()
+                    lastFishAction = 0
+                }
+            }
+        val running = action.start(client) ?: run {
+            client.clearFishingState()
+            client.lastFishAction = 0
+            return
+        }
+        fishingTasks[client] = running
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    @JvmStatic
+    fun stopAction(
+        client: Client,
+        reason: ActionStopReason = ActionStopReason.USER_INTERRUPT,
+    ) {
+        fishingTasks.remove(client)?.cancel(reason)
     }
 
     @JvmStatic

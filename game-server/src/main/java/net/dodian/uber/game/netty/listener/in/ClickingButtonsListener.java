@@ -9,12 +9,12 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.widget.ButtonClickEvent;
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.systems.ui.buttons.ButtonClickLoggingService;
 import net.dodian.uber.game.systems.ui.buttons.ButtonClickRequest;
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonBinding;
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonRegistry;
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonService;
+import net.dodian.uber.game.systems.net.PacketButtonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +42,9 @@ public class ClickingButtonsListener implements PacketListener {
         if (packet.opcode() == 186 && payload.isReadable()) {
             actionIndex = payload.readUnsignedByte();
         }
-        client.lastButtonActionIndex = actionIndex;
+        PacketButtonService.recordLastActionIndex(client, actionIndex);
 
-        if (client.activeInterfaceId == 2400) {
+        if (PacketButtonService.isSmeltingInterfaceActive(client)) {
             logger.warn(
                     "Smelting button click buttonId={} actionIndex={} size={} iface={} player={}",
                     actionButton,
@@ -59,14 +59,7 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
 
-        if (!(actionButton >= 9157 && actionButton <= 9194)) {
-            client.actionButtonId = actionButton;
-        }
-        boolean preserveSmeltingSelection = client.activeInterfaceId == 2400 && SmithingData.isSmeltingInterfaceButton(actionButton);
-        boolean preserveSmithingSelection = client.activeInterfaceId >= 1119 && client.activeInterfaceId <= 1123;
-        if (!preserveSmeltingSelection && !preserveSmithingSelection && actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
-            client.resetAction(false);
-        }
+        PacketButtonService.prepareAction(client, actionButton);
 
         InterfaceButtonBinding resolvedBinding = InterfaceButtonRegistry.INSTANCE.resolve(client, actionButton, actionIndex);
         ButtonClickRequest request = new ButtonClickRequest(
@@ -89,7 +82,7 @@ public class ClickingButtonsListener implements PacketListener {
             return;
         }
 
-        if (client.activeInterfaceId == 2400) {
+        if (PacketButtonService.isSmeltingInterfaceActive(client)) {
             logger.warn(
                     "Unhandled smelting button buttonId={} actionIndex={} iface={} player={}",
                     actionButton,

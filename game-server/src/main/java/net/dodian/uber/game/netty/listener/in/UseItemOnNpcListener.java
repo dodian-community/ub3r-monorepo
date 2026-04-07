@@ -13,6 +13,7 @@ import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent;
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask;
+import net.dodian.uber.game.systems.net.PacketItemActionService;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,11 +45,7 @@ public class UseItemOnNpcListener implements PacketListener {
         }
 
         /* Validation */
-        if (slot < 0 || slot > 27) {
-            logger.warn("UseItemOnNpc invalid slot={} item={} npcIndex={} -> disconnect {}", slot, itemId, npcIndex, client.getPlayerName());
-            client.disconnected = true;
-            return;
-        }
+        if (!PacketItemActionService.validateItemOnNpcSlot(client, slot)) return;
         if (itemId != client.playerItems[slot] - 1) return;
         if (client.randomed || client.UsingAgility) return;
 

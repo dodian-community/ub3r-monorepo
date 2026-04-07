@@ -1,6 +1,12 @@
 package net.dodian.uber.game.systems.action
 
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.skills.cooking.Cooking
+import net.dodian.uber.game.content.skills.fishing.Fishing
+import net.dodian.uber.game.content.skills.fletching.Fletching
+import net.dodian.uber.game.content.skills.crafting.Crafting
+import net.dodian.uber.game.content.skills.prayer.Prayer
+import net.dodian.uber.game.content.skills.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface
@@ -42,13 +48,12 @@ object PlayerActionCancellationService {
         player: Client,
         fullResetAnimation: Boolean,
     ) {
-        player.clearSmeltingSelection()
-        player.clearPendingSmeltingBarId()
-        player.clearPrayerOfferingState()
-        player.clearCraftingState()
-        SkillingActionService.stopFletchingFromReset(player, fullResetAnimation)
-        SkillingActionService.stopFishingFromReset(player, fullResetAnimation)
-        SkillingActionService.stopCookingFromReset(player, fullResetAnimation)
+        Smithing.stopFromReset(player, fullResetAnimation)
+        Prayer.stopFromReset(player, fullResetAnimation)
+        Crafting.stopFromReset(player, fullResetAnimation)
+        Fletching.stopFromReset(player, fullResetAnimation)
+        Fishing.stopFromReset(player, fullResetAnimation)
+        Cooking.stopFromReset(player, fullResetAnimation)
         player.clearFletchingState()
         player.clearFishingState()
         player.resourcesGathered = 0

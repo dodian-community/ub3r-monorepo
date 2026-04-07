@@ -13,7 +13,7 @@ import net.dodian.uber.game.systems.net.PacketBankingService;
 
 /**
  * Netty version of legacy {@code RemoveItem} (opcode 145).
- * The listener now only decodes and resolves container context before delegating.
+ * Decodes packet fields then delegates to PacketBankingService.handleRemoveItemDecoded.
  */
 @PacketHandler(opcode = 145)
 public class RemoveItemListener implements PacketListener {
@@ -34,17 +34,7 @@ public class RemoveItemListener implements PacketListener {
         int interfaceID = ByteBufReader.readInt(buf);
         int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int removeID = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int bankSlot = removeSlot;
 
-        if ((interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) && client.bankStyleViewOpen) {
-            return;
-        }
-
-        if (interfaceID == 5382 || (interfaceID >= 50300 && interfaceID <= 50310)) {
-            bankSlot = client.resolveBankSlot(interfaceID, removeSlot);
-            removeID = client.resolveBankItemId(interfaceID, removeSlot, removeID);
-        }
-
-        PacketBankingService.handleRemoveItem(client, interfaceID, removeSlot, removeID, bankSlot);
+        PacketBankingService.handleRemoveItemDecoded(client, interfaceID, removeSlot, removeID);
     }
 }

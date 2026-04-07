@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +38,9 @@ public class FollowPlayerListener implements PacketListener {
             logger.trace("FollowPlayer from={} targetSlot={} targetName={}", client.getPlayerName(), followId, player.getPlayerName());
         }
 
-        client.resetWalkingQueue();
+        PacketConnectionService.handleFollowPlayer(client);
         String url = "https://dodian.net/index.php?pageid=modcp&action=search&player=" + player.getPlayerName().replace(" ", "%20");
         Player.openPage(client, url);
     }
 }
+

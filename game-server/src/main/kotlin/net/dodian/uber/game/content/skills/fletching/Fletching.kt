@@ -2,17 +2,23 @@ package net.dodian.uber.game.content.skills.fletching
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.systems.skills.action.ActionStopReason
+import net.dodian.uber.game.systems.skills.action.RunningProductionAction
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.action.productionAction
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.systems.action.SkillingActionService
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import java.util.Collections
+import java.util.WeakHashMap
 
 object Fletching {
+    private const val STANDARD_ACTION_DELAY_MS = 1800L
+    private val fletchingTasks = Collections.synchronizedMap(WeakHashMap<Client, RunningProductionAction>())
+
     @JvmStatic
     fun open(client: Client, logIndex: Int) = openBowSelection(client, logIndex)
 
@@ -74,7 +80,46 @@ object Fletching {
                 experience = request.experience,
                 remaining = request.amount,
             )
-        SkillingActionService.startFletching(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startAction(client: Client) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+        val action =
+            productionAction("fletching") {
+                delay { GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS) }
+                onCycleWhile {
+                    if ((fletchingState?.remaining ?: 0) <= 0) {
+                        return@onCycleWhile false
+                    }
+                    performBowCycle(this)
+                    (fletchingState?.remaining ?: 0) > 0
+                }
+                onStop {
+                    fletchingTasks.remove(this)
+                    clearFletchingState()
+                }
+            }
+        val running = action.start(client) ?: run {
+            client.clearFletchingState()
+            return
+        }
+        fletchingTasks[client] = running
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client, ActionStopReason.USER_INTERRUPT)
+    }
+
+    @JvmStatic
+    fun stopAction(
+        client: Client,
+        reason: ActionStopReason = ActionStopReason.USER_INTERRUPT,
+    ) {
+        fletchingTasks.remove(client)?.cancel(reason)
     }
 
     @JvmStatic

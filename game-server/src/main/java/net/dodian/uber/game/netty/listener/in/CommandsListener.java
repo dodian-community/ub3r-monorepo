@@ -9,7 +9,7 @@ import net.dodian.uber.game.events.widget.CommandEvent;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
+import net.dodian.uber.game.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
@@ -39,11 +39,10 @@ public class CommandsListener implements PacketListener {
 
         logCommand(client, command);
 
-        if (client.validClient) {
-            executeCommand(client, command);
-        } else {
-            client.send(new SendMessage("Command ignored, please use another client."));
+        if (PacketInteractionRequestService.rejectInvalidClientCommand(client)) {
+            return;
         }
+        executeCommand(client, command);
     }
 
     /**

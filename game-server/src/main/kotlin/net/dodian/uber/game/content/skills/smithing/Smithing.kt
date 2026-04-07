@@ -32,6 +32,21 @@ object Smithing {
     fun start(client: Client) = startSmelting(client)
 
     @JvmStatic
+    fun startAction(client: Client) = startSmelting(client)
+
+    @JvmStatic
+    fun stopAction(client: Client) {
+        client.clearSmeltingSelection()
+        client.clearPendingSmeltingBarId()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client)
+    }
+
+    @JvmStatic
     fun startSmelting(client: Client) {
         val selection = client.getSmeltingSelection() ?: return
         var remaining = selection.amount

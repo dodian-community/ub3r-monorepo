@@ -10,16 +10,19 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.netty.listener.out.SetGoldItems
+import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.ProductionRequest
-import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.engine.loop.GameCycleClock
 
 object Crafting {
+    private const val STANDARD_ACTION_DELAY_MS = 1800L
+
     private val normalCraftIds = intArrayOf(
         1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063,
         1095, 1095, 1095, 1169, 1169, 1169, 1167, 1167, 1167
@@ -74,7 +77,47 @@ object Crafting {
     @JvmStatic
     fun startShafting(client: Client) {
         client.craftingState = CraftingState(mode = CraftingMode.SHAFTING)
-        SkillingActionService.startShafting(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startAction(client: Client) {
+        when (client.craftingState?.mode) {
+            CraftingMode.SHAFTING -> startShaftingAction(client)
+            CraftingMode.SPINNING -> startSpinningAction(client)
+            CraftingMode.LEATHER -> startCraftingAction(client)
+            else -> stopAction(client)
+        }
+    }
+
+    @JvmStatic
+    fun stopAction(client: Client) {
+        client.clearCraftingState()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client)
+    }
+
+    @JvmStatic
+    fun startShaftingAction(client: Client) {
+        playerAction(
+            player = client,
+            type = PlayerActionType.SHAFTING,
+            actionName = "shafting",
+            onStop = { player, _ ->
+                player.clearCraftingState()
+            },
+        ) {
+            while (player.craftingState?.mode == CraftingMode.SHAFTING) {
+                performShaft(player)
+                emitCycleSuccess("shafting")
+                if (player.craftingState?.mode != CraftingMode.SHAFTING) return@playerAction
+                waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
+            }
+        }
     }
 
     @JvmStatic
@@ -100,7 +143,26 @@ object Crafting {
     @JvmStatic
     fun startSpinning(client: Client) {
         client.craftingState = CraftingState(mode = CraftingMode.SPINNING)
-        SkillingActionService.startSpinning(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startSpinningAction(client: Client) {
+        playerAction(
+            player = client,
+            type = PlayerActionType.SPINNING,
+            actionName = "spinning",
+            onStop = { player, _ ->
+                player.clearCraftingState()
+            },
+        ) {
+            while (player.craftingState?.mode == CraftingMode.SPINNING) {
+                performSpin(player)
+                emitCycleSuccess("spinning")
+                if (player.craftingState?.mode != CraftingMode.SPINNING) return@playerAction
+                waitTicks(GameCycleClock.ticksForDurationMs(spinDelayMs(player)))
+            }
+        }
     }
 
     @JvmStatic
@@ -143,7 +205,7 @@ object Crafting {
                     requiredLevel = normalCraftLevels[productIndex],
                     experience = normalCraftExp[productIndex] * 8,
                 )
-            SkillingActionService.startCrafting(client)
+            startAction(client)
         } else {
             client.sendMessage("You need level ${normalCraftLevels[productIndex]} crafting to craft a ${client.getItemName(productId).lowercase()}")
             client.send(RemoveInterfaces())
@@ -184,7 +246,7 @@ object Crafting {
                     experience = experience,
                 )
             client.send(RemoveInterfaces())
-            SkillingActionService.startCrafting(client)
+            startAction(client)
             return
         }
         if (required >= 0 && productId != -1) {
@@ -193,6 +255,25 @@ object Crafting {
             return
         }
         client.sendMessage("Can't make this??")
+    }
+
+    @JvmStatic
+    fun startCraftingAction(client: Client) {
+        playerAction(
+            player = client,
+            type = PlayerActionType.CRAFTING,
+            actionName = "crafting",
+            onStop = { player, _ ->
+                player.clearCraftingState()
+            },
+        ) {
+            while ((player.craftingState?.remaining ?: 0) > 0 && player.craftingState?.mode == CraftingMode.LEATHER) {
+                performCraft(player)
+                emitCycleSuccess("crafting")
+                if ((player.craftingState?.remaining ?: 0) <= 0 || player.craftingState?.mode != CraftingMode.LEATHER) return@playerAction
+                waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
+            }
+        }
     }
 
     @JvmStatic

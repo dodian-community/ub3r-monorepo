@@ -10,7 +10,8 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.action.SkillingActionService
+import net.dodian.uber.game.systems.action.PlayerActionType
+import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
@@ -61,7 +62,41 @@ object Prayer {
     @JvmStatic
     fun startAltarOffering(client: Client, request: PrayerOfferingRequest) {
         client.prayerOfferingState = PrayerOfferingState(request.boneItemId, request.altarX, request.altarY)
-        SkillingActionService.startAltarBones(client)
+        startAction(client)
+    }
+
+    @JvmStatic
+    fun startAction(client: Client) = startAltarOfferingAction(client)
+
+    @JvmStatic
+    fun stopAction(client: Client) {
+        client.clearPrayerOfferingState()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    @JvmStatic
+    fun stopFromReset(client: Client, fullReset: Boolean) {
+        stopAction(client)
+    }
+
+    @JvmStatic
+    fun startAltarOfferingAction(client: Client) {
+        playerAction(
+            player = client,
+            type = PlayerActionType.ALTAR_BONES,
+            actionName = "altar_bones",
+            onStop = { player, _ ->
+                player.clearPrayerOfferingState()
+            },
+        ) {
+            while (player.prayerOfferingState != null) {
+                val boneItemId = player.prayerOfferingState?.boneItemId ?: return@playerAction
+                emitCycle("altar_bones")
+                if (!altarBones(player, boneItemId)) return@playerAction
+                emitSuccess("altar_bones")
+                waitTicks(3)
+            }
+        }
     }
 }
 

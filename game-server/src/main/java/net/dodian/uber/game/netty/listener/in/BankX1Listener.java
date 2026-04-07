@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Handles the first part of an "X" withdraw/deposit (opcode 135).
- * Captures decoded context, then delegates state mutation to Kotlin systems code.
+ * Decodes context then delegates to PacketBankingService.handleXPromptDecoded.
  */
 public class BankX1Listener implements PacketListener {
 
@@ -35,18 +35,6 @@ public class BankX1Listener implements PacketListener {
         int slot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
         int itemId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
-        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
-            return;
-        }
-
-        if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) {
-            itemId = client.resolveBankItemId(interfaceId, slot, itemId);
-            slot = client.resolveBankSlot(interfaceId, slot);
-            if (slot < 0) {
-                return;
-            }
-        }
-
         if (logger.isTraceEnabled()) {
             logger.trace("BankX1 slot={} interface={} item={} player={}", slot, interfaceId, itemId, client.getPlayerName());
         }
@@ -56,6 +44,6 @@ public class BankX1Listener implements PacketListener {
                     interfaceId, itemId, slot, client.getPlayerName());
         }
 
-        PacketBankingService.handleXPrompt(client, interfaceId, slot, itemId);
+        PacketBankingService.handleXPromptDecoded(client, interfaceId, slot, itemId);
     }
 }

@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,16 +33,7 @@ public class ChangeRegionListener implements PacketListener {
             buf.skipBytes(buf.readableBytes());
         }
 
-        if (!client.pLoaded) {
-            client.pLoaded = true;
-        }
-        if (!client.IsPMLoaded) {
-            client.refreshFriends();
-            client.IsPMLoaded = true;
-        }
-        if (packet.opcode() == 121) {
-            // Loads new area => spawn custom objects
-            client.customObjects();
-        }
+        PacketConnectionService.handleRegionChange(client, packet.opcode() == 121);
     }
 }
+

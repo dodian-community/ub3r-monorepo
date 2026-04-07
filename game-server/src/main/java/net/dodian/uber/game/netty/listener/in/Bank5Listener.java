@@ -12,7 +12,7 @@ import net.dodian.uber.game.systems.net.PacketBankingService;
 
 /**
  * Netty implementation of legacy Bank5 packet (opcode 117).
- * Decodes packet data and delegates container actions to Kotlin systems code.
+ * Decodes packet data then delegates to PacketBankingService.handleFixedAmountDecoded.
  */
 public class Bank5Listener implements PacketListener {
 
@@ -30,17 +30,7 @@ public class Bank5Listener implements PacketListener {
         int interfaceId = ByteBufReader.readInt(buf);
         int removeId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        int bankSlot = removeSlot;
 
-        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
-            return;
-        }
-
-        if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) {
-            bankSlot = client.resolveBankSlot(interfaceId, removeSlot);
-            removeId = client.resolveBankItemId(interfaceId, removeSlot, removeId);
-        }
-
-        PacketBankingService.handleFixedAmount(client, interfaceId, removeId, removeSlot, bankSlot, 5);
+        PacketBankingService.handleFixedAmountDecoded(client, interfaceId, removeId, removeSlot, 5);
     }
 }

@@ -8,12 +8,13 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Netty implementation for opcode 41 (wear/equip item).
- * Ports the full functionality of legacy WearItem.ProcessPacket.
+ * Decodes packet fields and delegates to PacketItemActionService.
  */
 public class WearItemListener implements PacketListener {
 
@@ -35,8 +36,7 @@ public class WearItemListener implements PacketListener {
 
         logger.debug("WearItemListener: item {} slot {} interface {}", wearId, wearSlot, interfaceId);
 
-        if (client.randomed || client.UsingAgility) return;
-
-        client.wear(wearId, wearSlot, interfaceId);
+        PacketItemActionService.handleWear(client, wearId, wearSlot, interfaceId);
     }
 }
+

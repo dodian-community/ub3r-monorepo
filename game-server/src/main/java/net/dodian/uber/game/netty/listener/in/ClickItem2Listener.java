@@ -10,6 +10,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class ClickItem2Listener implements PacketListener {
 
         logger.debug("ClickItem2Listener: slot {} item {}", itemSlot, itemId);
 
-        if (itemSlot < 0 || itemSlot > 28) { client.disconnected = true; return; }
+        if (!PacketItemActionService.validateInventorySlot(client, itemSlot)) return;
         if (client.playerItems[itemSlot] - 1 != itemId) return;
         if (client.randomed || client.UsingAgility) return;
 
@@ -51,3 +52,4 @@ public class ClickItem2Listener implements PacketListener {
         }
     }
 }
+

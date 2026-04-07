@@ -8,17 +8,13 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.interaction.MagicOnPlayerIntent;
-import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
-import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Netty implementation of MagicOnPlayer (opcode 249) incoming packet.
- * Decodes packet fields using the same byte order/value transforms as the
- * legacy Stream-based handler and executes the same gameplay logic in-place.
+ * Decodes packet fields then delegates to PacketMagicService.
  */
 public class MagicOnPlayerListener implements PacketListener {
 
@@ -37,23 +33,9 @@ public class MagicOnPlayerListener implements PacketListener {
 
         int victimIndex = ByteBufReader.readShortSigned(buf, ByteOrder.BIG, ValueType.ADD);
         int magicId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        client.magicId = magicId;
 
         logger.debug("MagicOnPlayerListener: victim {} spell {}", victimIndex, magicId);
 
-        if (client.deathStage >= 1) {
-            return;
-        }
-
-        Client victim = PlayerRegistry.getClient(victimIndex);
-        if (victim == null) {
-            return;
-        }
-
-        if (client.randomed || client.UsingAgility) {
-            return;
-        }
-        MagicOnPlayerIntent intent = new MagicOnPlayerIntent(packet.opcode(), PlayerRegistry.cycle, magicId, victimIndex);
-        InteractionTaskScheduler.schedule(client, intent, new PlayerInteractionTask(client, intent));
+        PacketMagicService.handleMagicOnPlayer(client, packet.opcode(), victimIndex, magicId);
     }
 }

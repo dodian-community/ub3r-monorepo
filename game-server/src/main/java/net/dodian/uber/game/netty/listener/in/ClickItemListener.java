@@ -5,13 +5,13 @@ import net.dodian.uber.game.systems.dispatch.items.ItemDispatcher;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.item.ItemClickEvent;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.content.skills.runecrafting.Runecrafting;
+import net.dodian.uber.game.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +49,7 @@ public class ClickItemListener implements PacketListener {
             return;
         }
 
-        if (itemSlot < 0 || itemSlot >= client.playerItems.length) {
-            client.disconnected = true;
+        if (!PacketItemActionService.validateInventorySlot(client, itemSlot)) {
             return;
         }
 
@@ -69,27 +68,6 @@ public class ClickItemListener implements PacketListener {
     }
 
     public void processItemClick(Client client, int id, int slot, int interfaceId) {
-        int item = client.playerItems[slot] - 1;
-        if (item != id) {
-            return;
-        }
-        boolean bypassDuelGuards = item == 4155 || item == 2528 || item == 6543 || item == 5733;
-        if (!bypassDuelGuards && client.duelRule[7] && client.inDuel && client.duelFight) {
-            client.send(new SendMessage("Food has been disabled for this duel"));
-            return;
-        }
-        if (!bypassDuelGuards && (client.inDuel || client.duelFight || client.duelConfirmed || client.duelConfirmed2)) {
-            if (item != 4155) {
-                client.send(new SendMessage("This item cannot be used in a duel!"));
-                return;
-            }
-        }
-        if (GameEventBus.postWithResult(new ItemClickEvent(client, item, slot, interfaceId))) {
-            client.checkItemUpdate();
-            return;
-        }
-        if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
-            client.checkItemUpdate();
-        }
+        PacketItemActionService.handleFirstClickItem(client, id, slot, interfaceId);
     }
 }

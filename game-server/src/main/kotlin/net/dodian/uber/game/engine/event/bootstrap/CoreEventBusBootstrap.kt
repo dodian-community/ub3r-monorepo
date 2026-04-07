@@ -5,7 +5,6 @@ import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 object CoreEventBusBootstrap {
     @JvmStatic
     fun bootstrap() {
-        PacketGameplayEventWiring.bootstrap()
-        ContentModuleIndex.eventBootstraps.forEach { bootstrap -> bootstrap() }
+        ContentModuleIndex.eventBootstraps.forEach { bootstrap: () -> Unit -> bootstrap() }
     }
 }

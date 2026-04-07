@@ -12,7 +12,7 @@ import net.dodian.uber.game.systems.net.PacketBankingService;
 
 /**
  * Netty port of legacy BankAll packet (opcode 129).
- * The listener now only decodes and resolves container context before delegating.
+ * Decodes packet fields, then delegates to PacketBankingService.handleBankAllDecoded.
  */
 public class BankAllListener implements PacketListener {
 
@@ -30,24 +30,7 @@ public class BankAllListener implements PacketListener {
         int removeSlot = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
         int interfaceId = ByteBufReader.readInt(buf);
         int removeId = ByteBufReader.readShortUnsigned(buf, ByteOrder.BIG, ValueType.ADD);
-        int bankSlot = removeSlot;
 
-        if ((interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) && client.bankStyleViewOpen) {
-            return;
-        }
-
-        int resolvedItemId = removeId;
-        if (interfaceId == 5064) {
-            if (removeSlot >= 0 && removeSlot < client.playerItems.length && client.playerItems[removeSlot] > 0) {
-                resolvedItemId = client.playerItems[removeSlot] - 1;
-            }
-        } else if (interfaceId == 5382 || (interfaceId >= 50300 && interfaceId <= 50310)) {
-            bankSlot = client.resolveBankSlot(interfaceId, removeSlot);
-            if (bankSlot >= 0 && bankSlot < client.bankItems.length && client.bankItems[bankSlot] > 0) {
-                resolvedItemId = client.bankItems[bankSlot] - 1;
-            }
-        }
-
-        PacketBankingService.handleBankAll(client, interfaceId, removeSlot, removeId, bankSlot, resolvedItemId);
+        PacketBankingService.handleBankAllDecoded(client, interfaceId, removeSlot, removeId);
     }
 }

@@ -7,6 +7,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.systems.net.PacketConnectionService;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ public class UpdateChatListener implements PacketListener {
         if (!PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CHAT_PRIVACY, 600L)) {
             return; // anti-spam
         }
-        client.Privatechat = priv;
+        PacketConnectionService.setPrivateChatMode(client, priv);
 
         // Notify friends so their list icon updates
         for (int i = 0; i < PlayerRegistry.players.length; i++) {
@@ -43,3 +44,4 @@ public class UpdateChatListener implements PacketListener {
         logger.debug("UpdateChatListener: {} set private chat={} and refreshed friends", client.getPlayerName(), priv);
     }
 }
+

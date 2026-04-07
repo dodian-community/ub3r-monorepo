@@ -15,6 +15,139 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.dispatch.ui.SkillingInterfaceItemService
 
 object PacketBankingService {
+
+    // -------------------------------------------------------------------------
+    // Bank search (SyntaxInputListener opcode 60)
+    // -------------------------------------------------------------------------
+
+    /** Returns true when the client has a pending bank search input to process. */
+    @JvmStatic
+    fun hasPendingBankSearch(client: Client): Boolean = client.bankSearchPendingInput
+
+    /**
+     * Clears the pending-input flag and applies the bank-item filter.
+     * No-ops if the player is not currently banking.
+     */
+    @JvmStatic
+    fun applyPendingBankSearch(client: Client, input: String) {
+        client.bankSearchPendingInput = false
+        if (!client.IsBanking) return
+        client.applyBankSearch(input)
+    }
+
+    // -------------------------------------------------------------------------
+    // Bank tab creation (BankTabCreationListener opcode 216)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Assigns a bank item to a tab from a drag gesture.
+     * Guards: must be banking AND NOT in the bank-style-view.
+     */
+    @JvmStatic
+    fun handleTabCreation(client: Client, fromInterface: Int, dragFromSlot: Int, toTab: Int) {
+        if (!client.IsBanking || client.bankStyleViewOpen) return
+        if (fromInterface < 50300 || fromInterface > 50310) return
+        val clampedTab = toTab.coerceIn(0, 10)
+        val bankSlot = client.resolveBankSlot(fromInterface, dragFromSlot)
+        if (bankSlot < 0) return
+        client.assignBankSlotToTab(bankSlot, clampedTab)
+    }
+
+    // -------------------------------------------------------------------------
+    // BankAll (opcode 129) — absorbs guard + item resolution from listener
+    // -------------------------------------------------------------------------
+
+    /**
+     * Simplified entry point used by [BankAllListener].
+     * Internally handles the bank-style-view guard and resolves the true item id
+     * from the player's inventory / bank before forwarding to the existing logic.
+     */
+    @JvmStatic
+    fun handleBankAllDecoded(client: Client, interfaceId: Int, removeSlot: Int, removeId: Int) {
+        // Guard: cannot interact while the styled bank view is open
+        if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
+
+        var bankSlot = removeSlot
+        var resolvedItemId = removeId
+
+        when {
+            interfaceId == 5064 -> {
+                if (removeSlot >= 0 && removeSlot < client.playerItems.size && client.playerItems[removeSlot] > 0) {
+                    resolvedItemId = client.playerItems[removeSlot] - 1
+                }
+            }
+            interfaceId == 5382 || interfaceId in 50300..50310 -> {
+                bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
+                if (bankSlot >= 0 && bankSlot < client.bankItems.size && client.bankItems[bankSlot] > 0) {
+                    resolvedItemId = client.bankItems[bankSlot] - 1
+                }
+            }
+        }
+
+        handleBankAll(client, interfaceId, removeSlot, removeId, bankSlot, resolvedItemId)
+    }
+
+    // -------------------------------------------------------------------------
+    // Decoded entry-points for Bank5 / Bank10 listeners (guard + resolution)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Absorbs the bank-style-view guard and bank-slot resolution for
+     * "deposit/withdraw N items" packets (Bank5Listener, Bank10Listener).
+     */
+    @JvmStatic
+    fun handleFixedAmountDecoded(client: Client, interfaceId: Int, removeId: Int, removeSlot: Int, amount: Int) {
+        if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
+        var bankSlot = removeSlot
+        var resolvedItemId = removeId
+        if (interfaceId == 5382 || interfaceId in 50300..50310) {
+            bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
+            resolvedItemId = client.resolveBankItemId(interfaceId, removeSlot, removeId)
+        }
+        handleFixedAmount(client, interfaceId, resolvedItemId, removeSlot, bankSlot, amount)
+    }
+
+    // -------------------------------------------------------------------------
+    // Decoded entry-point for BankX1Listener (guard + resolution)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Absorbs the bank-style-view guard and bank-slot resolution for the
+     * "X amount" prompt trigger (BankX1Listener opcode 135).
+     */
+    @JvmStatic
+    fun handleXPromptDecoded(client: Client, interfaceId: Int, slot: Int, itemId: Int) {
+        if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
+        var resolvedSlot = slot
+        var resolvedItemId = itemId
+        if (interfaceId == 5382 || interfaceId in 50300..50310) {
+            resolvedItemId = client.resolveBankItemId(interfaceId, slot, itemId)
+            resolvedSlot = client.resolveBankSlot(interfaceId, slot)
+            if (resolvedSlot < 0) return
+        }
+        handleXPrompt(client, interfaceId, resolvedSlot, resolvedItemId)
+    }
+
+    // -------------------------------------------------------------------------
+    // Decoded entry-point for RemoveItemListener (guard + resolution)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Absorbs the bank-style-view guard and bank-slot resolution for the
+     * single-item remove action (RemoveItemListener opcode 145).
+     */
+    @JvmStatic
+    fun handleRemoveItemDecoded(client: Client, interfaceId: Int, removeSlot: Int, removeID: Int) {
+        if ((interfaceId == 5382 || interfaceId in 50300..50310) && client.bankStyleViewOpen) return
+        var bankSlot = removeSlot
+        var resolvedItemId = removeID
+        if (interfaceId == 5382 || interfaceId in 50300..50310) {
+            bankSlot = client.resolveBankSlot(interfaceId, removeSlot)
+            resolvedItemId = client.resolveBankItemId(interfaceId, removeSlot, removeID)
+        }
+        handleRemoveItem(client, interfaceId, removeSlot, resolvedItemId, bankSlot)
+    }
+
     @JvmStatic
     fun handleBankAll(
         client: Client,

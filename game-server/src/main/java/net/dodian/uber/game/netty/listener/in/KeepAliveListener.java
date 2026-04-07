@@ -5,6 +5,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ public final class KeepAliveListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        // Reset timeout counter so server knows the client is alive
-        client.resetTimeOutCounter();
+        PacketConnectionService.handleKeepAlive(client);
     }
-    }
+}
+
