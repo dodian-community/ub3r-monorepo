@@ -8,7 +8,7 @@ import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.content.ContentModuleIndex
+import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 
 class ArchitectureBoundaryTest {
     private val sourceRoot: Path = Paths.get("src/main")
@@ -87,27 +87,27 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt",
         )
         val missingSystemsFiles = setOf(
-            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcContentDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/objects/ObjectContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/objects/ObjectInteractionService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/objects/ObjectClickLoggingService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandAccess.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandContent.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandContext.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandLogging.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandParsing.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/commands/CommandReply.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemCombinationService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/items/ItemOnNpcContentService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcInteractionActionService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/npcs/NpcClickMetrics.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/ui/SkillingInterfaceItemService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/content/ContentModuleIndex.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcContentDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectInteractionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectClickLoggingService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandAccess.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContent.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContext.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandLogging.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandParsing.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemCombinationService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemOnNpcContentService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcInteractionActionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcClickMetrics.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/ContentModuleIndex.kt",
         )
 
         val forbidden = sourceFiles
@@ -127,7 +127,7 @@ class ArchitectureBoundaryTest {
         )
         assertTrue(
             missing.isEmpty(),
-            "Expected infrastructure under systems.content.\n${missing.joinToString("\n")}",
+            "Expected infrastructure under systems.dispatch.\n${missing.joinToString("\n")}",
         )
     }
 
@@ -157,7 +157,7 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/engine/tasking" to 1,
             "src/main/kotlin/net/dodian/uber/game/engine/sync/player" to 2,
             "src/main/kotlin/net/dodian/uber/game/systems/action" to 1,
-            "src/main/kotlin/net/dodian/uber/game/systems/content" to 2,
+            "src/main/kotlin/net/dodian/uber/game/systems/dispatch" to 2,
             "src/main/kotlin/net/dodian/uber/game/systems/skills" to 1,
             "src/main/kotlin/net/dodian/uber/game/content/objects" to 2,
             "src/main/kotlin/net/dodian/uber/game/model/object" to 1,
@@ -895,14 +895,10 @@ class ArchitectureBoundaryTest {
                 .firstOrNull { it.startsWith("package ") }
                 ?: return@mapNotNull null
             val packageName = packageLine.removePrefix("package ").trim().removeSuffix(";")
-            val isAllowedCoreGameEventType =
-                packageName == "net.dodian.uber.game.event" && file.fileName.toString() == "GameEvent.kt"
+            // GameEvent.kt now lives in game.events — the old game.event package must be entirely empty
             val isLegacyEventPackage =
-                !isAllowedCoreGameEventType &&
-                    (
-                        packageName == "net.dodian.uber.game.event" ||
-                            packageName.startsWith("net.dodian.uber.game.event.")
-                        )
+                packageName == "net.dodian.uber.game.event" ||
+                    packageName.startsWith("net.dodian.uber.game.event.")
             if (!isLegacyEventPackage) {
                 return@mapNotNull null
             }
@@ -916,7 +912,7 @@ class ArchitectureBoundaryTest {
                     return@mapIndexedNotNull null
                 }
                 val importsLegacyEvent = trimmed.contains("net.dodian.uber.game.event.")
-                val importsAllowedCoreGameEvent = trimmed == "import net.dodian.uber.game.event.GameEvent"
+                val importsAllowedCoreGameEvent = trimmed == "import net.dodian.uber.game.events.GameEvent"
                 if (!importsLegacyEvent || importsAllowedCoreGameEvent || trimmed.contains("net.dodian.uber.game.event;")) {
                     return@mapIndexedNotNull null
                 }
@@ -958,7 +954,7 @@ class ArchitectureBoundaryTest {
 
     @Test
     fun `event contract runtime and payload packages stay split`() {
-        val gameEventPath = sourceRoot.resolve("kotlin/net/dodian/uber/game/event/GameEvent.kt")
+        val gameEventPath = sourceRoot.resolve("kotlin/net/dodian/uber/game/events/GameEvent.kt")
         val runtimeFiles = listOf(
             sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventBus.kt"),
             sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/event/GameEventScheduler.kt"),
@@ -995,7 +991,7 @@ class ArchitectureBoundaryTest {
             val isGameEventContract = name == "GameEvent.kt"
 
             val runtimeMisplaced = isRuntimeType && pkg != "net.dodian.uber.game.engine.event"
-            val gameEventMisplaced = isGameEventContract && pkg != "net.dodian.uber.game.event"
+            val gameEventMisplaced = isGameEventContract && pkg != "net.dodian.uber.game.events"
             if (!runtimeMisplaced && !gameEventMisplaced) return@mapNotNull null
             "$file -> package $pkg"
         }

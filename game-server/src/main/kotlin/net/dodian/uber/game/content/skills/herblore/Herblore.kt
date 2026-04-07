@@ -8,10 +8,10 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.SkillPlugin
-import net.dodian.uber.game.systems.skills.bindItemContentClick
-import net.dodian.uber.game.systems.skills.skillPlugin
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.systems.skills.plugin.bindItemContentClick
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.systems.action.PolicyPreset
 
 object Herblore {
     @JvmStatic

@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.systems.combat.CombatAttackResult
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
-import net.dodian.uber.game.systems.combat.UnarmedAttackAnimationService
+import net.dodian.uber.game.systems.animation.UnarmedAttackAnimationService
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Range

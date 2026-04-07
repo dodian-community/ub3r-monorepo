@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.processing
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.ShopManager
+import net.dodian.uber.game.content.shop.ShopManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 

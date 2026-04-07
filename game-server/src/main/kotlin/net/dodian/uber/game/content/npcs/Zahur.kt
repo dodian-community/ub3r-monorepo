@@ -3,7 +3,7 @@ package net.dodian.uber.game.content.npcs
 import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
 import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem

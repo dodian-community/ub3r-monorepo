@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.skills
 
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.action.PolicyPreset
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong

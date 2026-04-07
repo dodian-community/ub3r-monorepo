@@ -3,6 +3,7 @@ package net.dodian.uber.game.systems.combat
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
+import net.dodian.uber.game.systems.animation.PlayerBlockAnimationService
 import net.dodian.uber.game.engine.loop.GameCycleClock
 
 object CombatDefenderReaction {

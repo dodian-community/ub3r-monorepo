@@ -53,6 +53,6 @@ public class SetEquipment implements OutgoingPacket {
         }
         
         client.GetBonus(true);
-        client.getUpdateFlags().setRequired(net.dodian.uber.game.model.UpdateFlag.APPEARANCE, true);
+        client.getUpdateFlags().setRequired(net.dodian.uber.game.model.entity.UpdateFlag.APPEARANCE, true);
     }
 }

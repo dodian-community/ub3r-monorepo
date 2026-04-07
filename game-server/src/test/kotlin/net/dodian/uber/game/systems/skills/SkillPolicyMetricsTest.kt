@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.skills
 
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.action.PolicyPreset
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

@@ -6,13 +6,13 @@ import net.dodian.uber.game.content.skills.cooking.Cooking
 import net.dodian.uber.game.content.skills.herblore.Herblore
 import net.dodian.uber.game.content.skills.slayer.Slayer
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface
-import net.dodian.uber.game.model.ShopManager
+import net.dodian.uber.game.content.shop.ShopManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.content.ui.SkillingInterfaceItemService
+import net.dodian.uber.game.systems.dispatch.ui.SkillingInterfaceItemService
 
 object PacketBankingService {
     @JvmStatic

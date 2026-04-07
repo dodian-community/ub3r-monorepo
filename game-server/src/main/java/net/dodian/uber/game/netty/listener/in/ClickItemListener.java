@@ -1,9 +1,9 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.systems.content.items.ItemDispatcher;
+import net.dodian.uber.game.systems.dispatch.items.ItemDispatcher;
 import net.dodian.uber.game.engine.event.GameEventBus;
-import net.dodian.uber.game.events.ItemClickEvent;
+import net.dodian.uber.game.events.item.ItemClickEvent;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;

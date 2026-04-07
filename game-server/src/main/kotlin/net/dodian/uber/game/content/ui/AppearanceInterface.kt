@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.systems.ui.buttons.buttonBinding

@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model
 
 import net.dodian.uber.game.model.entity.Entity
+import net.dodian.uber.game.model.entity.UpdateFlag
+import net.dodian.uber.game.model.entity.UpdateFlags
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals

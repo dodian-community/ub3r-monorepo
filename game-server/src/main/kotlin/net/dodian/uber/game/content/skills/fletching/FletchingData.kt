@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.fletching
 
-import net.dodian.uber.game.systems.skills.SkillActionRequest
-import net.dodian.uber.game.systems.skills.SkillActionState
+import net.dodian.uber.game.systems.skills.action.SkillActionRequest
+import net.dodian.uber.game.systems.skills.action.SkillActionState
 
 data class FletchingLogDefinition(
     val logItemId: Int,

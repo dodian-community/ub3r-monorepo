@@ -3,7 +3,10 @@ package net.dodian.uber.game.systems.skills
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.action.PolicyPreset
+import net.dodian.uber.game.systems.skills.plugin.bindItemContentClick
+import net.dodian.uber.game.systems.skills.plugin.bindObjectContentUseItem
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test

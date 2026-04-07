@@ -4,11 +4,11 @@ import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 

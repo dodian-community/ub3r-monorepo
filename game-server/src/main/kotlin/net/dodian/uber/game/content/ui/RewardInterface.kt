@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces

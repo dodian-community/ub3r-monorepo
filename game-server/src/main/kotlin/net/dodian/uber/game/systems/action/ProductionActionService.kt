@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.systems.skills.sendFilterMessage
 import net.dodian.uber.game.systems.skills.RuneCostService
-import net.dodian.uber.game.systems.skills.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 
 object ProductionActionService {
     @JvmStatic

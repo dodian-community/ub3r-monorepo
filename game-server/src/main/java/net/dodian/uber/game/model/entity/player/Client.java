@@ -3,16 +3,17 @@ import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
-import net.dodian.uber.game.events.PlayerLogoutEvent;
+import net.dodian.uber.game.events.player.PlayerLogoutEvent;
+import net.dodian.uber.game.events.item.ItemPickupEvent;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.ShopManager;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.content.shop.ShopManager;
+import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.object.DoorRegistry;
 import net.dodian.uber.game.model.object.RS2Object;
-import net.dodian.uber.game.model.player.content.Skillcape;
+import net.dodian.uber.game.content.skills.Skillcape;
 import net.dodian.uber.game.model.player.bank.PlayerBankService;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.model.player.quests.QuestSend;
@@ -23,7 +24,7 @@ import net.dodian.uber.game.content.skills.slayer.Slayer;
 import net.dodian.uber.game.content.skills.farming.Farming;
 import net.dodian.uber.game.content.skills.farming.FarmingState;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
-import net.dodian.uber.game.persistence.command.CommandDbService;
+import net.dodian.uber.game.persistence.admin.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.RefundRecord;
 import net.dodian.uber.game.persistence.player.RefundRepository;
@@ -80,7 +81,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
-import static net.dodian.uber.game.systems.combat.ClientExtensionsKt.getRangedStr;
+import net.dodian.uber.game.systems.world.item.Ground;
+import static net.dodian.uber.game.systems.combat.CombatPlayerExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.uber.game.engine.config.DotEnvKt.*;
@@ -1594,6 +1596,7 @@ public class Client extends Player implements Runnable {
         }
 
         if (addItem(target.id, target.amount)) {
+            GameEventBus.post(new ItemPickupEvent(this, target, getPosition().copy()));
             Ground.deleteItem(target);
             ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
             checkItemUpdate();

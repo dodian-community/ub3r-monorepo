@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.persistence.command.CommandDbService
+import net.dodian.uber.game.persistence.admin.CommandDbService
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object SkillAdminService {

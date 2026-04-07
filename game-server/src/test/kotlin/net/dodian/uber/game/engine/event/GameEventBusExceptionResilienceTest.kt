@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.event
 
-import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.events.GameEvent
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertFalse

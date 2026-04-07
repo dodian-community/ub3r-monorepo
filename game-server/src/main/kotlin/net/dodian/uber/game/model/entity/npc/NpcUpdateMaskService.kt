@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.npc
 
-import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.model.entity.UpdateFlag
 
 object NpcUpdateMaskService {
     @JvmStatic

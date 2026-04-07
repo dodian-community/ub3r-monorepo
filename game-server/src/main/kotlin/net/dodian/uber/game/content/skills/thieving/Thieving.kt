@@ -15,11 +15,11 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.SkillPlugin
-import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 

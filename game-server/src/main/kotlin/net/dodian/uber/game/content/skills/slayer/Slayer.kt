@@ -6,10 +6,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.quests.QuestSend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.skills.SkillPlugin
-import net.dodian.uber.game.systems.skills.bindItemContentClick
-import net.dodian.uber.game.systems.skills.skillPlugin
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.systems.skills.plugin.bindItemContentClick
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.systems.action.PolicyPreset
 
 object Slayer {
     @JvmStatic

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.architecture
 
-import net.dodian.uber.game.systems.content.ContentModuleIndex
+import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 import net.dodian.uber.game.model.player.skills.Skill
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

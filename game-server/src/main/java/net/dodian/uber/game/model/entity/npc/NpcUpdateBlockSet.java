@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.engine.sync.SynchronizationContext;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.UpdateFlag;
 
 /**
  * Stateless Luna-style NPC update block encoder.

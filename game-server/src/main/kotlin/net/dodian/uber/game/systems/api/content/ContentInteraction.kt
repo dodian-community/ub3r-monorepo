@@ -5,8 +5,8 @@ import net.dodian.uber.game.systems.interaction.DispatchTiming
 import net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService
-import net.dodian.uber.game.systems.policy.PolicyPreset
-import net.dodian.uber.game.systems.policy.UnifiedPolicyDsl
+import net.dodian.uber.game.systems.action.PolicyPreset
+import net.dodian.uber.game.systems.action.UnifiedPolicyDsl
 
 typealias ContentObjectInteractionPolicy = ObjectInteractionPolicy
 typealias ContentDispatchTiming = DispatchTiming

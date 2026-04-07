@@ -5,13 +5,13 @@ import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.ObjectDef;
 import net.dodian.cache.object.ObjectLoader;
 import net.dodian.cache.region.Region;
-import net.dodian.uber.game.model.Login;
-import net.dodian.uber.game.model.ShopManager;
+import net.dodian.uber.game.persistence.account.Login;
+import net.dodian.uber.game.content.shop.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
-import net.dodian.uber.game.systems.content.objects.ObjectContentRegistry;
-import net.dodian.uber.game.systems.content.ContentModuleIndex;
-import net.dodian.uber.game.systems.content.ContentBootstrap;
-import net.dodian.uber.game.systems.skills.SkillDoctor;
+import net.dodian.uber.game.systems.dispatch.objects.ObjectContentRegistry;
+import net.dodian.uber.game.systems.dispatch.ContentModuleIndex;
+import net.dodian.uber.game.systems.dispatch.ContentBootstrap;
+import net.dodian.uber.game.systems.skills.parity.SkillDoctor;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -19,14 +19,14 @@ import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.item.ItemManager;
 import net.dodian.uber.game.model.object.DoorRegistry;
 import net.dodian.uber.game.model.object.RS2Object;
-import net.dodian.uber.game.model.player.casino.SlotMachine;
+import net.dodian.uber.game.content.minigames.casino.SlotMachine;
 import net.dodian.uber.game.engine.loop.GameLoopService;
 import net.dodian.uber.game.engine.loop.GameTickScheduler;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
-import net.dodian.uber.game.persistence.WorldPollPublisher;
+import net.dodian.uber.game.persistence.WorldSavePublisher;
 import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
@@ -195,7 +195,7 @@ public class Server {
         }
 
         try {
-            WorldPollPublisher.shutdown();
+            WorldSavePublisher.shutdown();
         } catch (Exception exception) {
             logger.warn("Failed to shutdown world poll publisher", exception);
         }

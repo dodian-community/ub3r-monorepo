@@ -1,11 +1,11 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.uber.game.systems.content.commands.*
+import net.dodian.uber.game.systems.dispatch.commands.*
 
-import net.dodian.uber.game.systems.content.commands.CommandContent
-import net.dodian.uber.game.systems.content.commands.CommandContext
-import net.dodian.uber.game.systems.content.commands.commands
-import net.dodian.uber.game.systems.content.npcs.NpcClickMetrics
+import net.dodian.uber.game.systems.dispatch.commands.CommandContent
+import net.dodian.uber.game.systems.dispatch.commands.CommandContext
+import net.dodian.uber.game.systems.dispatch.commands.commands
+import net.dodian.uber.game.systems.dispatch.npcs.NpcClickMetrics
 
 object DevNpcContentCommands : CommandContent {
     override fun definitions() =

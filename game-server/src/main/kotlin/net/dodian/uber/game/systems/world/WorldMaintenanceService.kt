@@ -3,8 +3,8 @@ package net.dodian.uber.game.systems.world
 import kotlin.system.measureNanoTime
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
-import net.dodian.uber.game.persistence.WorldPollPublisher
-import net.dodian.uber.game.persistence.WorldPollSnapshot
+import net.dodian.uber.game.persistence.WorldSavePublisher
+import net.dodian.uber.game.persistence.WorldSaveSnapshot
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.systems.world.farming.FarmingRuntimeService
 import net.dodian.uber.game.engine.config.gameWorldId
@@ -30,7 +30,7 @@ class WorldMaintenanceService(
         val snapshot = timed(WorldMaintenanceStage.WORLD_DB_INPUT_BUILD) {
             createSnapshot(playerIndex)
         }
-        WorldPollPublisher.publish(snapshot)
+        WorldSavePublisher.publish(snapshot)
         worldDbDueCycle = cycle
     }
 
@@ -40,7 +40,7 @@ class WorldMaintenanceService(
         }
         pendingWorldPollResult =
             timed(WorldMaintenanceStage.WORLD_DB_RESULT_READ) {
-                WorldPollPublisher.latestResult()
+                WorldSavePublisher.latestResult()
             }
     }
 
@@ -84,8 +84,8 @@ class WorldMaintenanceService(
         }
     }
 
-    private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldPollSnapshot =
-        WorldPollSnapshot(gameWorldId, playerIndex.playerCount(), playerIndex.dbIdsArray())
+    private fun createSnapshot(playerIndex: OnlinePlayerIndex): WorldSaveSnapshot =
+        WorldSaveSnapshot(gameWorldId, playerIndex.playerCount(), playerIndex.dbIdsArray())
 
     @Suppress("UNCHECKED_CAST", "VARIABLE_WITH_REDUNDANT_INITIALIZER")
     private fun <T> timed(

@@ -1,6 +1,10 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.item.ItemExamineEvent;
+import net.dodian.uber.game.events.npc.NpcExamineEvent;
+import net.dodian.uber.game.events.objects.ObjectExamineEvent;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
@@ -39,12 +43,22 @@ public final class ExamineListener implements PacketListener {
                 logger.debug("Examine: Slot={}, Id={}, posX={}, posY={}", slot, ID, posX, posY);
             }
 
-            if(slot == 0) { //Item Examine
-                client.examineItem(client, ID, posX);
+            if (slot == 0) { //Item Examine
+                boolean handled = GameEventBus.postWithResult(new ItemExamineEvent(client, ID, posX));
+                if (!handled) {
+                    client.examineItem(client, ID, posX);
+                }
             } else if (slot == 1) { //Npc Examine
-                client.examineNpc(client, ID);
+                boolean handled = GameEventBus.postWithResult(new NpcExamineEvent(client, ID));
+                if (!handled) {
+                    client.examineNpc(client, ID);
+                }
             } else if (slot == 2) { //Object Examine
-                client.examineObject(client, ID, new Position(posX, posY, client.getPosition().getZ()));
+                Position objectPosition = new Position(posX, posY, client.getPosition().getZ());
+                boolean handled = GameEventBus.postWithResult(new ObjectExamineEvent(client, ID, objectPosition));
+                if (!handled) {
+                    client.examineObject(client, ID, objectPosition);
+                }
             }
         } catch (Exception e) {
             logger.error("Error handling Examine packet for {}", client.getPlayerName(), e);

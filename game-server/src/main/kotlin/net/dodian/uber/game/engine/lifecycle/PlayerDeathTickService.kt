@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.lifecycle
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -17,7 +17,7 @@ import net.dodian.uber.game.systems.combat.CombatCancellationReason
 import net.dodian.uber.game.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.events.DeathEvent
+import net.dodian.uber.game.events.combat.PlayerDeathEvent
 import net.dodian.utilities.Misc
 
 object PlayerDeathTickService {
@@ -62,7 +62,7 @@ object PlayerDeathTickService {
         player.deathTimer = wallClockNow
         player.deathStartedCycle = player.currentGameCycle
         player.deathTaskState = DeathTaskState(player.currentGameCycle, player.currentGameCycle + RESPAWN_DELAY_TICKS)
-        GameEventBus.post(DeathEvent(player = player, cycle = player.currentGameCycle))
+        GameEventBus.post(PlayerDeathEvent(player = player, cycle = player.currentGameCycle))
         player.prayerManager.reset()
         player.sendMessage("Oh dear you have died!")
     }

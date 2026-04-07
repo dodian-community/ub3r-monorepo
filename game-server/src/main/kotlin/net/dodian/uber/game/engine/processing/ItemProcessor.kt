@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.processing
 
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 
 class ItemProcessor : Runnable {
     override fun run() {

@@ -4,8 +4,8 @@ import net.dodian.cache.region.Region;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.UpdateFlags;
+import net.dodian.uber.game.model.entity.UpdateFlag;
+import net.dodian.uber.game.model.entity.UpdateFlags;
 import net.dodian.uber.game.systems.combat.style.CombatStyle;
 import net.dodian.uber.game.model.entity.npc.Npc;
 

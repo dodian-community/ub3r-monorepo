@@ -5,6 +5,8 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
+import net.dodian.uber.game.systems.skills.plugin.objectPolicy
 import org.slf4j.LoggerFactory
 
 object SkillInteractionDispatcher {

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.ui.dialogue
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.content.skills.agility.AgilityData

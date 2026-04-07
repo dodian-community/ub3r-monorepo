@@ -2,10 +2,10 @@ package net.dodian.uber.game.content.skills.firemaking
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.policy.PolicyPreset
+import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.SkillPlugin
-import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 
 object Firemaking {
     private const val TINDERBOX = 590

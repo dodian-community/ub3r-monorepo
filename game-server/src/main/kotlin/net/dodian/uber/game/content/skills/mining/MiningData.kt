@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.skills.mining
 
-import net.dodian.uber.game.event.GameEvent
+import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.skills.ResourceSkillContent
-import net.dodian.uber.game.systems.skills.resourceSkillContent
+import net.dodian.uber.game.systems.skills.plugin.ResourceSkillContent
+import net.dodian.uber.game.systems.skills.plugin.resourceSkillContent
 
 data class MiningState(
     val rockObjectId: Int,

@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.commands.admin
 
-import net.dodian.uber.game.systems.content.commands.*
+import net.dodian.uber.game.systems.dispatch.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.model.Login
-import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.persistence.account.Login
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.CameraReset

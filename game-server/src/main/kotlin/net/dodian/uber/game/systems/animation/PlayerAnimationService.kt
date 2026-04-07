@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.animation
 
-import net.dodian.uber.game.model.UpdateFlag
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import java.util.concurrent.ConcurrentHashMap

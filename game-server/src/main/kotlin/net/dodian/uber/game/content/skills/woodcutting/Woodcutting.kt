@@ -9,19 +9,19 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.requirements.Requirement
 import net.dodian.uber.game.systems.skills.requirements.RequirementBuilder
 import net.dodian.uber.game.systems.skills.requirements.ValidationResult
-import net.dodian.uber.game.systems.skills.ActionStopReason
-import net.dodian.uber.game.systems.skills.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.CycleSignal
-import net.dodian.uber.game.systems.skills.gatheringAction
+import net.dodian.uber.game.systems.skills.action.ActionStopReason
+import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.systems.skills.action.CycleSignal
+import net.dodian.uber.game.systems.skills.action.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.uber.game.systems.policy.PolicyPreset
-import net.dodian.uber.game.systems.skills.SkillPlugin
-import net.dodian.uber.game.systems.skills.skillPlugin
+import net.dodian.uber.game.systems.action.PolicyPreset
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import net.dodian.utilities.Misc
 
 object Woodcutting {

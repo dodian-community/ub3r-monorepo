@@ -115,7 +115,7 @@ class PluginModuleIndexSymbolProcessor(
 
             if (
                 packageName.startsWith("net.dodian.uber.game.content.commands") &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.content.commands.CommandContent")
+                declaration.implementsInterface("net.dodian.uber.game.systems.dispatch.commands.CommandContent")
             ) {
                 recordViolation("Command content must be declared as Kotlin 'object': $packageName.$simpleName")
             }
@@ -129,15 +129,15 @@ class PluginModuleIndexSymbolProcessor(
 
             if (
                 packageName.startsWith("net.dodian.uber.game.content.skills") &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.skills.SkillPlugin")
+                declaration.implementsInterface("net.dodian.uber.game.systems.skills.plugin.SkillPlugin")
             ) {
                 recordViolation("Skill plugin must be declared as Kotlin 'object': $packageName.$simpleName")
             }
 
             if (
-                (packageName.startsWith("net.dodian.uber.game.systems.content") ||
+                (packageName.startsWith("net.dodian.uber.game.systems.dispatch") ||
                     packageName.startsWith("net.dodian.uber.game.systems.skills")) &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.content.ContentBootstrap")
+                declaration.implementsInterface("net.dodian.uber.game.systems.dispatch.ContentBootstrap")
             ) {
                 recordViolation("Content bootstrap must be declared as Kotlin 'object': $packageName.$simpleName")
             }
@@ -210,7 +210,7 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverSkillPlugins(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val skillPluginType = "net.dodian.uber.game.systems.skills.SkillPlugin"
+        val skillPluginType = "net.dodian.uber.game.systems.skills.plugin.SkillPlugin"
         return allObjects
             .filter { (file, declaration) ->
                 file.packageName.asString().startsWith("net.dodian.uber.game.content.skills") &&
@@ -221,7 +221,7 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverCommandContents(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val commandContentType = "net.dodian.uber.game.systems.content.commands.CommandContent"
+        val commandContentType = "net.dodian.uber.game.systems.dispatch.commands.CommandContent"
         return allObjects
             .filter { (file, declaration) ->
                 file.packageName.asString().startsWith("net.dodian.uber.game.content.commands") &&
@@ -243,10 +243,10 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverContentBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val bootstrapType = "net.dodian.uber.game.systems.content.ContentBootstrap"
+        val bootstrapType = "net.dodian.uber.game.systems.dispatch.ContentBootstrap"
         return allObjects
             .filter { (file, declaration) ->
-                (file.packageName.asString().startsWith("net.dodian.uber.game.systems.content") ||
+                (file.packageName.asString().startsWith("net.dodian.uber.game.systems.dispatch") ||
                     file.packageName.asString().startsWith("net.dodian.uber.game.systems.skills")) &&
                     declaration.implementsInterface(bootstrapType)
             }
@@ -279,12 +279,12 @@ class PluginModuleIndexSymbolProcessor(
         val out = StringBuilder()
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
-        out.appendLine("import net.dodian.uber.game.systems.content.ContentBootstrap")
-        out.appendLine("import net.dodian.uber.game.systems.content.commands.CommandContent")
+        out.appendLine("import net.dodian.uber.game.systems.dispatch.ContentBootstrap")
+        out.appendLine("import net.dodian.uber.game.systems.dispatch.commands.CommandContent")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
         out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
-        out.appendLine("import net.dodian.uber.game.systems.skills.SkillPlugin")
+        out.appendLine("import net.dodian.uber.game.systems.skills.plugin.SkillPlugin")
         out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
         out.appendLine()
         out.appendLine("object GeneratedPluginModuleIndex {")

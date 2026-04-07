@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.event.GameEventBus;
-import net.dodian.uber.game.events.ButtonClickEvent;
+import net.dodian.uber.game.events.widget.ButtonClickEvent;
 import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
 import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.systems.ui.buttons.ButtonClickLoggingService;

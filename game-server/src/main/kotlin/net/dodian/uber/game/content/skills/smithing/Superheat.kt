@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.smithing
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.item.Ground
+import net.dodian.uber.game.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendSideTab

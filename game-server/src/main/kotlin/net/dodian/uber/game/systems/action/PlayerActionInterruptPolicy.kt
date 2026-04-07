@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.action
 
-import net.dodian.uber.game.systems.policy.PolicyPreset
-import net.dodian.uber.game.systems.policy.UnifiedPolicyDsl
+import net.dodian.uber.game.systems.action.PolicyPreset
+import net.dodian.uber.game.systems.action.UnifiedPolicyDsl
 
 data class PlayerActionInterruptPolicy(
     val cancelOnMovement: Boolean = false,

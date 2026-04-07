@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.systems.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;

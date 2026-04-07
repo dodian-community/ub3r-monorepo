@@ -2,11 +2,11 @@ package net.dodian.uber.game.model.player
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.music.RegionSong
-import net.dodian.uber.game.model.player.casino.SlotMachine
-import net.dodian.uber.game.model.player.casino.Spin
-import net.dodian.uber.game.model.player.casino.Symbol
-import net.dodian.uber.game.model.player.content.Skillcape
+import net.dodian.uber.game.systems.zone.RegionSong
+import net.dodian.uber.game.content.minigames.casino.SlotMachine
+import net.dodian.uber.game.content.minigames.casino.Spin
+import net.dodian.uber.game.content.minigames.casino.Symbol
+import net.dodian.uber.game.content.skills.Skillcape
 import net.dodian.uber.game.model.player.quests.QuestSend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull

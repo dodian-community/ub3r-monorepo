@@ -10,7 +10,7 @@ final class PlayerProgressState {
     private final ArrayList<Boolean> travelData = new ArrayList<>();
     private final ArrayList<Integer> paid = new ArrayList<>();
     private final ArrayList<Boolean> unlocked = new ArrayList<>();
-    private final boolean[] songUnlocked = new boolean[net.dodian.uber.game.model.music.RegionSong.values().length];
+    private final boolean[] songUnlocked = new boolean[net.dodian.uber.game.systems.zone.RegionSong.values().length];
 
     PlayerProgressState(Player owner) {
         this.owner = owner;

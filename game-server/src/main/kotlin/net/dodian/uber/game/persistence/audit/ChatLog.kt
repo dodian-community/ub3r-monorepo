@@ -7,11 +7,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.LockSupport
 import net.dodian.uber.game.engine.config.gameWorldId
-import net.dodian.uber.game.model.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.persistence.DbDispatchers
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.systems.chat.YellSystem
 import org.slf4j.LoggerFactory
 
 object ChatLog {
