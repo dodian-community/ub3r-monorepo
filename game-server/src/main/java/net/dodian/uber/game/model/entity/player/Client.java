@@ -5,6 +5,9 @@ import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.events.player.PlayerLogoutEvent;
 import net.dodian.uber.game.events.item.ItemPickupEvent;
+import net.dodian.uber.game.events.trade.TradeCancelEvent;
+import net.dodian.uber.game.events.trade.TradeCompleteEvent;
+import net.dodian.uber.game.events.trade.TradeRequestEvent;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.content.shop.ShopManager;
 import net.dodian.uber.game.model.entity.UpdateFlag;
@@ -3416,6 +3419,9 @@ public class Client extends Player implements Runnable {
 
     public void declineTrade(boolean tellOther) {
         Client other = getClient(trade_reqId);
+        if (tellOther && other != null) {
+            GameEventBus.post(new TradeCancelEvent(this, other));
+        }
         /* Prevent a dupe? */
         inTrade = false;
         if (tellOther && validClient(trade_reqId))
@@ -3493,6 +3499,7 @@ public class Client extends Player implements Runnable {
         } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
+            GameEventBus.post(new TradeRequestEvent(this, other));
             send(new SendMessage("Sending trade request..."));
             other.send(new SendMessage(getPlayerName() + ":tradereq:"));
         }
@@ -3584,6 +3591,9 @@ public class Client extends Player implements Runnable {
                 }
                 if (this.dbId > other.dbId)
                     TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
+                if (this.dbId > other.dbId) {
+                    GameEventBus.post(new TradeCompleteEvent(this, other));
+                }
                 send(new RemoveInterfaces());
                 tradeResetNeeded = true;
                 PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);

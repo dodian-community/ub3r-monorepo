@@ -2,7 +2,10 @@ package net.dodian.uber.game.model.entity.npc;
 
 import kotlin.jvm.functions.Function1;
 import net.dodian.uber.game.Server;
+import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
+import net.dodian.uber.game.events.combat.NpcDeathEvent;
+import net.dodian.uber.game.events.combat.NpcDropEvent;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.UpdateFlag;
@@ -31,6 +34,8 @@ import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Owner
@@ -588,6 +593,7 @@ public class Npc extends Entity {
         NpcTimerScheduler.onNpcDied(this);
         performAnimation(deathEmote, 0);
         Client p = getTarget(false);
+        GameEventBus.post(new NpcDeathEvent(this, p, getCurrentGameCycle()));
         if (p == null)
             return;
         if (boss) {
@@ -637,6 +643,7 @@ public class Npc extends Entity {
         int roll = 1;
         boolean wealth = target.getEquipment()[Equipment.Slot.RING.getId()] == 2572;
         boolean itemDropped;
+        List<net.dodian.uber.game.model.item.GameItem> rolledDrops = new ArrayList<>();
         pos = getId() == 33333 ? new Position(1,2,0) : pos; //Force a position of item drop!
 
         for (int rolls = 0; rolls < roll; rolls++) {
@@ -655,7 +662,9 @@ public class Npc extends Entity {
                             continue;
                     if (Server.itemManager.isStackable(drop.getId())) {
                         Ground.addNpcDropItem(target, this, drop.getId(), drop.getAmount());
+                        rolledDrops.add(new net.dodian.uber.game.model.item.GameItem(drop.getId(), drop.getAmount()));
                     } else {
+                        rolledDrops.add(new net.dodian.uber.game.model.item.GameItem(drop.getId(), drop.getAmount()));
                         for (int i = 0; i < drop.getAmount(); i++) {
                             Ground.addNpcDropItem(target, this, drop.getId(), 1);
                         }
@@ -673,6 +682,9 @@ public class Npc extends Entity {
                 } else if (!itemDropped && checkChance < 100.0)
                     currentChance += checkChance;
             }
+        }
+        if (!rolledDrops.isEmpty()) {
+            GameEventBus.post(new NpcDropEvent(this, target, rolledDrops, pos.copy()));
         }
     }
 
