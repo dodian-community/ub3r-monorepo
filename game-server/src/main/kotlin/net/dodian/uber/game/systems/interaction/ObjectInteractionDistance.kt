@@ -157,12 +157,22 @@ object ObjectInteractionDistance {
         }
 
         val footprint = resolveObjectFootprint(walkTo, objectData, def, objectId)
-        val nearestBoundaryTile = resolveNearestBoundaryTile(client.position, footprint) ?: return null
+        val nearestBoundaryTile = resolveNearestBoundaryTile(client.position, footprint)
         if (cardinalOnly && isCardinalAdjacent(client.position, nearestBoundaryTile)) {
             return nearestBoundaryTile
         }
         if (!cardinalOnly && isAdjacent(client.position, nearestBoundaryTile)) {
             return nearestBoundaryTile
+        }
+
+        // Fallback for edge-cases where footprint rotation/shape resolution does not
+        // match the clicked tile semantics (e.g. certain gate/cage interactions):
+        // allow interaction if the player is on/adjacent to the clicked tile itself.
+        if (cardinalOnly && isCardinalInRangeOneOrSame(client.position, walkTo)) {
+            return walkTo
+        }
+        if (!cardinalOnly && isInRangeOneOrSame(client.position, walkTo)) {
+            return walkTo
         }
         return null
     }
@@ -245,6 +255,24 @@ object ObjectInteractionDistance {
         val deltaX = abs(player.x - tile.x)
         val deltaY = abs(player.y - tile.y)
         return maxOf(deltaX, deltaY) == 1
+    }
+
+    private fun isCardinalInRangeOneOrSame(player: Position, tile: Position): Boolean {
+        if (player.z != tile.z) {
+            return false
+        }
+        val deltaX = abs(player.x - tile.x)
+        val deltaY = abs(player.y - tile.y)
+        return (deltaX + deltaY) <= 1
+    }
+
+    private fun isInRangeOneOrSame(player: Position, tile: Position): Boolean {
+        if (player.z != tile.z) {
+            return false
+        }
+        val deltaX = abs(player.x - tile.x)
+        val deltaY = abs(player.y - tile.y)
+        return maxOf(deltaX, deltaY) <= 1
     }
 
     private fun clamp(value: Int, min: Int, max: Int): Int = maxOf(min, minOf(max, value))
