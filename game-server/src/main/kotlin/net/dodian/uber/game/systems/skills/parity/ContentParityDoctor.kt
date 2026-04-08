@@ -5,13 +5,13 @@ import net.dodian.uber.game.content.npcs.NpcContentDefinition
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 import net.dodian.uber.game.systems.dispatch.npcs.NpcContentRegistry
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginSnapshot
 
 object ContentParityDoctor {
     fun scan(
         catalog: ContentParityCatalog = LegacyContentParityCatalog.default,
-        skillSnapshot: SkillPluginSnapshot = SkillPluginRegistry.current(),
+        skillSnapshot: SkillPluginSnapshot = PluginRegistry.currentSkills(),
         npcLookup: (Int) -> NpcContentDefinition? = { npcId -> NpcContentRegistry.get(npcId) },
         discoveredSkills: Set<Skill> = ContentModuleIndex.skillPlugins.map { it.definition.skill }.toSet(),
     ): List<SkillDoctorFinding> {

@@ -221,31 +221,35 @@ object ConsoleAuditLog {
     fun button(request: ButtonClickRequest, opcode: Int, handled: Boolean) {
         if (handled) {
             if (!buttonLogger.isInfoEnabled) return
-            buttonLogger.info(
-                "BUTTON OK | opcode={} | activeInterface={} | interface={} | buttonId={} | componentId={} | opIndex={} | player={}",
-                opcode,
-                request.activeInterfaceId,
-                request.interfaceId,
-                request.rawButtonId,
-                request.componentId,
-                request.opIndex,
-                playerRef(request.client),
-            )
+            buttonLogger.info(buttonAuditText(request, opcode, handled))
         } else {
             if (!buttonLogger.isWarnEnabled) return
-            buttonLogger.warn(
-                "BUTTON UNHANDLED | opcode={} | activeInterface={} | interface={} | buttonId={} | componentId={} | opIndex={} | key={} | player={}",
-                opcode,
-                request.activeInterfaceId,
-                request.interfaceId,
-                request.rawButtonId,
-                request.componentId,
-                request.opIndex,
-                request.componentKey,
-                playerRef(request.client),
-            )
+            buttonLogger.warn(buttonAuditText(request, opcode, handled))
         }
     }
+
+    internal fun buttonAuditText(request: ButtonClickRequest, opcode: Int, handled: Boolean): String =
+        buildString {
+            append(if (handled) "BUTTON OK" else "BUTTON UNHANDLED")
+            append(" | buttonId=")
+            append(request.rawButtonId)
+            append(" | opcode=")
+            append(opcode)
+            append(" | activeInterface=")
+            append(request.activeInterfaceId)
+            append(" | interface=")
+            append(request.interfaceId)
+            append(" | componentId=")
+            append(request.componentId)
+            append(" | opIndex=")
+            append(request.opIndex)
+            if (!handled) {
+                append(" | key=")
+                append(sanitizeInlineText(request.componentKey))
+            }
+            append(" | ")
+            append(playerRef(request.client))
+        }
 
     @JvmStatic
     fun objectInteraction(

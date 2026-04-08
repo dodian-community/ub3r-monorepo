@@ -3,6 +3,7 @@ package net.dodian.uber.game.systems.skills
 import net.dodian.uber.game.content.items.ItemContent
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.bindItemContentClick
 import net.dodian.uber.game.systems.skills.plugin.bindObjectContentUseItem
@@ -12,6 +13,14 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
 class SkillPluginRouteBridgeTest {
+    @Test
+    fun `dispatcher resolves via PluginRegistry`() {
+        PluginRegistry.resetForTests()
+        PluginRegistry.bootstrap()
+        val binding = PluginRegistry.currentSkills().objectBinding(option = 1, objectId = 1276)
+        assertNotNull(binding)
+    }
+
     @Test
     fun `bind item content click emits item bindings`() {
         val plugin =

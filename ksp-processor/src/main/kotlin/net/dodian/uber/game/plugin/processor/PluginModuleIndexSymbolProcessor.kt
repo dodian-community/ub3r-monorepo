@@ -43,6 +43,7 @@ class PluginModuleIndexSymbolProcessor(
         val commandContents = discoverCommandContents(allObjects)
         val npcModules = discoverNpcModules(allObjects)
         val skillPlugins = discoverSkillPlugins(allObjects)
+        val shopPlugins = discoverShopPlugins(allObjects)
         val eventBootstraps = discoverEventBootstraps(allObjects)
         val contentBootstraps = discoverContentBootstraps(allObjects)
 
@@ -53,6 +54,7 @@ class PluginModuleIndexSymbolProcessor(
             commandContents.isEmpty() &&
             npcModules.isEmpty() &&
             skillPlugins.isEmpty() &&
+            shopPlugins.isEmpty() &&
             eventBootstraps.isEmpty() &&
             contentBootstraps.isEmpty()
         ) {
@@ -61,7 +63,18 @@ class PluginModuleIndexSymbolProcessor(
 
         validateUniqueObjectModuleNames(objectContents)
 
-        val output = buildOutput(interfaceButtons, objectContents, itemContents, commandContents, npcModules, skillPlugins, eventBootstraps, contentBootstraps)
+        val output =
+            buildOutput(
+                interfaceButtons,
+                objectContents,
+                itemContents,
+                commandContents,
+                npcModules,
+                skillPlugins,
+                shopPlugins,
+                eventBootstraps,
+                contentBootstraps,
+            )
         val outputFile =
             codeGenerator.createNewFile(
                 dependencies = Dependencies(aggregating = true, *resolver.getAllFiles().toList().toTypedArray()),
@@ -70,7 +83,12 @@ class PluginModuleIndexSymbolProcessor(
             )
         outputFile.bufferedWriter().use { it.write(output) }
         generated = true
-        logger.info("Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, ${itemContents.size} item modules, ${commandContents.size} command modules, ${npcModules.size} npc modules, ${skillPlugins.size} skill plugins, ${eventBootstraps.size} event bootstraps, ${contentBootstraps.size} content bootstraps.")
+        logger.info(
+            "Generated PluginModuleIndex with ${interfaceButtons.size} interface buttons, ${objectContents.size} object modules, " +
+                "${itemContents.size} item modules, ${commandContents.size} command modules, ${npcModules.size} npc modules, " +
+                "${skillPlugins.size} skill plugins, ${shopPlugins.size} shop plugins, ${eventBootstraps.size} event bootstraps, " +
+                "${contentBootstraps.size} content bootstraps.",
+        )
         return emptyList()
     }
 
@@ -220,6 +238,14 @@ class PluginModuleIndexSymbolProcessor(
             .sortedBy { it.fqcn }
     }
 
+    private fun discoverShopPlugins(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
+        val shopPluginType = "net.dodian.uber.game.content.shop.plugin.ShopPlugin"
+        return allObjects
+            .filter { (_, declaration) -> declaration.implementsInterface(shopPluginType) }
+            .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
+            .sortedBy { it.fqcn }
+    }
+
     private fun discoverCommandContents(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
         val commandContentType = "net.dodian.uber.game.systems.dispatch.commands.CommandContent"
         return allObjects
@@ -273,6 +299,7 @@ class PluginModuleIndexSymbolProcessor(
         commandContents: List<DiscoveredSymbol>,
         npcModules: List<DiscoveredSymbol>,
         skillPlugins: List<DiscoveredSymbol>,
+        shopPlugins: List<DiscoveredSymbol>,
         eventBootstraps: List<DiscoveredSymbol>,
         contentBootstraps: List<DiscoveredSymbol>,
     ): String {
@@ -284,6 +311,7 @@ class PluginModuleIndexSymbolProcessor(
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
         out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
+        out.appendLine("import net.dodian.uber.game.content.shop.plugin.ShopPlugin as ShopContentPlugin")
         out.appendLine("import net.dodian.uber.game.systems.skills.plugin.SkillPlugin")
         out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
         out.appendLine()
@@ -350,6 +378,17 @@ class PluginModuleIndexSymbolProcessor(
         if (skillPlugins.isNotEmpty()) {
             skillPlugins.forEachIndexed { index, symbol ->
                 val suffix = if (index == skillPlugins.lastIndex) "" else ","
+                out.appendLine("        ${symbol.fqcn}$suffix")
+            }
+        }
+        out.appendLine("    )")
+        out.appendLine()
+
+        out.appendLine("    @JvmField")
+        out.appendLine("    val shopPlugins: List<ShopContentPlugin> = listOf(")
+        if (shopPlugins.isNotEmpty()) {
+            shopPlugins.forEachIndexed { index, symbol ->
+                val suffix = if (index == shopPlugins.lastIndex) "" else ","
                 out.appendLine("        ${symbol.fqcn}$suffix")
             }
         }

@@ -9,7 +9,7 @@ import net.dodian.uber.game.content.skills.slayer.SlayerMaskItems
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginDefinition
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginSnapshot
 import java.nio.file.Files
 import java.nio.file.Path
@@ -50,7 +50,7 @@ object SkillDoctor {
         val activeSnapshot = registrySnapshot
 
         try {
-            activeSnapshot ?: SkillPluginRegistry.current()
+            activeSnapshot ?: PluginRegistry.currentSkills()
         } catch (exception: IllegalArgumentException) {
             findings += SkillDoctorFinding(
                 code = "duplicate-ownership",
@@ -89,8 +89,8 @@ object SkillDoctor {
         findings += scanLegacyRouteBypasses(sourceRoot)
         findings += scanBannedPluginPatterns(sourceRoot)
         findings += scanPresetDeclarations(sourceRoot)
-        findings += scanMappedRouteOwnership(activeSnapshot ?: SkillPluginRegistry.current())
-        findings += ContentParityDoctor.scan(skillSnapshot = activeSnapshot ?: SkillPluginRegistry.current())
+        findings += scanMappedRouteOwnership(activeSnapshot ?: PluginRegistry.currentSkills())
+        findings += ContentParityDoctor.scan(skillSnapshot = activeSnapshot ?: PluginRegistry.currentSkills())
 
         return SkillDoctorReport(findings)
     }

@@ -26,7 +26,7 @@ import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionExecutionResult
 import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.skills.SkillPolicyMetrics
 import net.dodian.uber.game.systems.skills.SkillPolicyResult
 import net.dodian.uber.game.systems.skills.SkillPolicyRoute
@@ -154,7 +154,7 @@ object InteractionProcessor {
                 fallbackData = intent.objectData,
                 fallbackDef = intent.objectDef,
             )
-        val skillObjectBinding = SkillPluginRegistry.current().objectBinding(intent.option, intent.objectId)
+        val skillObjectBinding = PluginRegistry.currentSkills().objectBinding(intent.option, intent.objectId)
         val policy =
             SkillInteractionDispatcher.resolveObjectPolicy(
                 option = intent.option,
@@ -276,7 +276,7 @@ object InteractionProcessor {
             timing.handled &&
             timing.handlerName != SkillInteractionDispatcher::class.java.name
         ) {
-            val preset = SkillPluginRegistry.current().firstPresetForObjectId(intent.objectId)
+            val preset = PluginRegistry.currentSkills().firstPresetForObjectId(intent.objectId)
             if (preset != null) {
                 SkillPolicyMetrics.record(preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.ROUTE_BYPASS_REJECT)
             }
@@ -315,7 +315,7 @@ object InteractionProcessor {
                 fallbackData = intent.objectData,
                 fallbackDef = intent.objectDef,
             )
-        val skillItemOnObjectBinding = SkillPluginRegistry.current().itemOnObjectBinding(intent.objectId, intent.itemId)
+        val skillItemOnObjectBinding = PluginRegistry.currentSkills().itemOnObjectBinding(intent.objectId, intent.itemId)
         val policy =
             SkillInteractionDispatcher.resolveItemOnObjectPolicy(
                 objectId = intent.objectId,

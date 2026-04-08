@@ -1,5 +1,6 @@
 package net.dodian.uber.game.systems.dispatch
 
+import net.dodian.uber.game.content.shop.plugin.ShopPlugin
 import net.dodian.uber.game.plugin.GeneratedPluginModuleIndex
 
 object ContentModuleIndex {
@@ -20,6 +21,9 @@ object ContentModuleIndex {
 
     @JvmField
     val skillPlugins = GeneratedPluginModuleIndex.skillPlugins
+
+    @JvmField
+    val shopPlugins: List<ShopPlugin> = GeneratedPluginModuleIndex.shopPlugins
 
     @JvmField
     val eventBootstraps = GeneratedPluginModuleIndex.eventBootstraps

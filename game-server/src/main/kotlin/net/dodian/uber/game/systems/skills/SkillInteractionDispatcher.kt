@@ -5,7 +5,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.ObjectInteractionPolicy
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.skills.plugin.objectPolicy
 import org.slf4j.LoggerFactory
 
@@ -20,7 +20,7 @@ object SkillInteractionDispatcher {
         position: Position,
         obj: GameObjectData?,
     ): Boolean {
-        val binding = SkillPluginRegistry.current().objectBinding(option, objectId) ?: return false
+        val binding = PluginRegistry.currentSkills().objectBinding(option, objectId) ?: return false
         return try {
             val handled = binding.handler(client, objectId, position, obj)
             SkillPolicyMetrics.record(
@@ -49,7 +49,7 @@ object SkillInteractionDispatcher {
         position: Position,
         obj: GameObjectData?,
     ): ObjectInteractionPolicy? {
-        val binding = SkillPluginRegistry.current().objectBinding(option, objectId) ?: return null
+        val binding = PluginRegistry.currentSkills().objectBinding(option, objectId) ?: return null
         return try {
             binding.objectPolicy()
         } catch (exception: RuntimeException) {
@@ -66,7 +66,7 @@ object SkillInteractionDispatcher {
 
     @JvmStatic
     fun tryHandleNpcClick(client: Client, option: Int, npc: Npc): Boolean {
-        val binding = SkillPluginRegistry.current().npcBinding(option, npc.id) ?: return false
+        val binding = PluginRegistry.currentSkills().npcBinding(option, npc.id) ?: return false
         return try {
             val handled = binding.handler(client, npc)
             SkillPolicyMetrics.record(
@@ -89,7 +89,7 @@ object SkillInteractionDispatcher {
 
     @JvmStatic
     fun tryHandleItemOnItem(client: Client, itemUsed: Int, otherItem: Int): Boolean {
-        val binding = SkillPluginRegistry.current().itemOnItemBinding(itemUsed, otherItem) ?: return false
+        val binding = PluginRegistry.currentSkills().itemOnItemBinding(itemUsed, otherItem) ?: return false
         return try {
             val handled = binding.handler(client, itemUsed, otherItem)
             SkillPolicyMetrics.record(
@@ -112,7 +112,7 @@ object SkillInteractionDispatcher {
 
     @JvmStatic
     fun tryHandleItemClick(client: Client, option: Int, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
-        val binding = SkillPluginRegistry.current().itemBinding(option, itemId) ?: return false
+        val binding = PluginRegistry.currentSkills().itemBinding(option, itemId) ?: return false
         return try {
             val handled = binding.handler(client, itemId, itemSlot, interfaceId)
             SkillPolicyMetrics.record(
@@ -145,7 +145,7 @@ object SkillInteractionDispatcher {
         itemSlot: Int,
         interfaceId: Int,
     ): Boolean {
-        val binding = SkillPluginRegistry.current().itemOnObjectBinding(objectId, itemId) ?: return false
+        val binding = PluginRegistry.currentSkills().itemOnObjectBinding(objectId, itemId) ?: return false
         return try {
             val handled = binding.handler(client, objectId, position, obj, itemId, itemSlot, interfaceId)
             SkillPolicyMetrics.record(
@@ -172,7 +172,7 @@ object SkillInteractionDispatcher {
         objectId: Int,
         itemId: Int,
     ): ObjectInteractionPolicy? {
-        val binding = SkillPluginRegistry.current().itemOnObjectBinding(objectId, itemId) ?: return null
+        val binding = PluginRegistry.currentSkills().itemOnObjectBinding(objectId, itemId) ?: return null
         return try {
             binding.objectPolicy()
         } catch (exception: RuntimeException) {
@@ -188,7 +188,7 @@ object SkillInteractionDispatcher {
 
     @JvmStatic
     fun tryHandleButton(client: Client, rawButtonId: Int, opIndex: Int): Boolean {
-        val binding = SkillPluginRegistry.current().buttonBinding(rawButtonId, opIndex) ?: return false
+        val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex) ?: return false
         return try {
             val handled = binding.handler(client, rawButtonId, opIndex)
             SkillPolicyMetrics.record(

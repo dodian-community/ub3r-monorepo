@@ -51,7 +51,7 @@
         <Property name="consoleAuditItemLevel">${sys:dodian.consoleAudit.item.level:-${env:DODIAN_CONSOLE_AUDIT_ITEM_LEVEL:-off}}</Property>
 
         <!-- UI / interaction flow -->
-        <Property name="consoleAuditButtonLevel">${sys:dodian.consoleAudit.button.level:-${env:DODIAN_CONSOLE_AUDIT_BUTTON_LEVEL:-off}}</Property>
+        <Property name="consoleAuditButtonLevel">${sys:dodian.consoleAudit.button.level:-${env:DODIAN_CONSOLE_AUDIT_BUTTON_LEVEL:-info}}</Property>
         <Property name="consoleAuditObjectLevel">${sys:dodian.consoleAudit.object.level:-${env:DODIAN_CONSOLE_AUDIT_OBJECT_LEVEL:-info}}</Property>
         <Property name="consoleAuditInterfaceLevel">${sys:dodian.consoleAudit.interface.level:-${env:DODIAN_CONSOLE_AUDIT_INTERFACE_LEVEL:-info}}</Property>
     </Properties>

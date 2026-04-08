@@ -1,24 +1,66 @@
 package net.dodian.uber.game.systems.skills.plugin
 
 import net.dodian.uber.game.systems.dispatch.ContentBootstrap
-import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Deprecated("Use net.dodian.uber.game.systems.plugin.PluginRegistry")
 object SkillPluginRegistry : ContentBootstrap {
     override val id: String = "skills.registry"
-    private val logger = LoggerFactory.getLogger(SkillPluginRegistry::class.java)
+
+    override fun bootstrap() = PluginRegistry.bootstrap()
+
+    fun register(plugin: SkillPlugin) = PluginRegistry.registerSkill(plugin)
+
+    fun current(): SkillPluginSnapshot = PluginRegistry.currentSkills()
+
+    internal fun clearForTests() = PluginRegistry.clearForTests()
+
+    internal fun resetForTests() = PluginRegistry.resetForTests()
+}
+
+internal object SkillPluginKeys {
+    fun objectKey(option: Int, objectId: Int): Long {
+        return (option.toLong() shl 32) or (objectId.toLong() and 0xffffffffL)
+    }
+
+    fun npcKey(option: Int, npcId: Int): Long {
+        return (option.toLong() shl 32) or (npcId.toLong() and 0xffffffffL)
+    }
+
+    fun itemPairKey(a: Int, b: Int): Long {
+        val left = minOf(a, b).toLong() and 0xffffffffL
+        val right = maxOf(a, b).toLong() and 0xffffffffL
+        return (left shl 32) or right
+    }
+
+    fun itemKey(option: Int, itemId: Int): Long {
+        return (option.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
+    }
+
+    fun itemOnObjectKey(objectId: Int, itemId: Int): Long {
+        return (objectId.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
+    }
+
+    fun buttonKey(rawButtonId: Int, opIndex: Int): Long {
+        return (rawButtonId.toLong() shl 32) or (opIndex.toLong() and 0xffffffffL)
+    }
+}
+
+internal class SkillPluginRegistryEngine {
+    private val logger = LoggerFactory.getLogger(SkillPluginRegistryEngine::class.java)
 
     private val bootstrapped = AtomicBoolean(false)
     private val definitions = mutableListOf<SkillPlugin>()
     @Volatile
     private var snapshot: SkillPluginSnapshot = SkillPluginSnapshot.empty()
 
-    override fun bootstrap() {
+    fun bootstrap(discoveredPlugins: List<SkillPlugin>) {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            definitions += ContentModuleIndex.skillPlugins
+            definitions += discoveredPlugins
             rebuildSnapshotLocked()
             bootstrapped.set(true)
         }
@@ -34,11 +76,10 @@ object SkillPluginRegistry : ContentBootstrap {
     }
 
     fun current(): SkillPluginSnapshot {
-        bootstrap()
         return snapshot
     }
 
-    internal fun clearForTests() {
+    fun clearForTests() {
         synchronized(this) {
             definitions.clear()
             snapshot = SkillPluginSnapshot.empty()
@@ -46,7 +87,7 @@ object SkillPluginRegistry : ContentBootstrap {
         }
     }
 
-    internal fun resetForTests() {
+    fun resetForTests() {
         synchronized(this) {
             definitions.clear()
             snapshot = SkillPluginSnapshot.empty()
@@ -68,7 +109,7 @@ object SkillPluginRegistry : ContentBootstrap {
 
             definition.objectBindings.forEach { binding ->
                 binding.objectIds.forEach { objectId ->
-                    val key = objectKey(binding.option, objectId)
+                    val key = SkillPluginKeys.objectKey(binding.option, objectId)
                     val existing = objectBindings.putIfAbsent(key, binding)
                     require(existing == null) {
                         "Duplicate skill object binding option=${binding.option} objectId=$objectId " +
@@ -80,7 +121,7 @@ object SkillPluginRegistry : ContentBootstrap {
 
             definition.npcBindings.forEach { binding ->
                 binding.npcIds.forEach { npcId ->
-                    val key = npcKey(binding.option, npcId)
+                    val key = SkillPluginKeys.npcKey(binding.option, npcId)
                     val existing = npcBindings.putIfAbsent(key, binding)
                     require(existing == null) {
                         "Duplicate skill npc binding option=${binding.option} npcId=$npcId " +
@@ -90,7 +131,7 @@ object SkillPluginRegistry : ContentBootstrap {
             }
 
             definition.itemOnItemBindings.forEach { binding ->
-                val key = itemPairKey(binding.leftItemId, binding.rightItemId)
+                val key = SkillPluginKeys.itemPairKey(binding.leftItemId, binding.rightItemId)
                 val existing = itemOnItemBindings.putIfAbsent(key, binding)
                 require(existing == null) {
                     "Duplicate skill item-on-item binding left=${binding.leftItemId} right=${binding.rightItemId} " +
@@ -100,7 +141,7 @@ object SkillPluginRegistry : ContentBootstrap {
 
             definition.itemBindings.forEach { binding ->
                 binding.itemIds.forEach { itemId ->
-                    val key = itemKey(binding.option, itemId)
+                    val key = SkillPluginKeys.itemKey(binding.option, itemId)
                     val existing = itemBindings.putIfAbsent(key, binding)
                     require(existing == null) {
                         "Duplicate skill item binding option=${binding.option} itemId=$itemId " +
@@ -112,7 +153,7 @@ object SkillPluginRegistry : ContentBootstrap {
             definition.itemOnObjectBindings.forEach { binding ->
                 binding.objectIds.forEach { objectId ->
                     binding.itemIds.forEach { itemId ->
-                        val key = itemOnObjectKey(objectId, itemId)
+                        val key = SkillPluginKeys.itemOnObjectKey(objectId, itemId)
                         val existing = itemOnObjectBindings.putIfAbsent(key, binding)
                         require(existing == null) {
                             "Duplicate skill item-on-object binding objectId=$objectId itemId=$itemId " +
@@ -124,7 +165,7 @@ object SkillPluginRegistry : ContentBootstrap {
 
             definition.buttonBindings.forEach { binding ->
                 binding.rawButtonIds.forEach { rawButtonId ->
-                    val key = buttonKey(rawButtonId, binding.opIndex ?: -1)
+                    val key = SkillPluginKeys.buttonKey(rawButtonId, binding.opIndex ?: -1)
                     val existing = buttonBindings.putIfAbsent(key, binding)
                     require(existing == null) {
                         "Duplicate skill button binding raw=$rawButtonId op=${binding.opIndex ?: -1} " +
@@ -134,17 +175,18 @@ object SkillPluginRegistry : ContentBootstrap {
             }
         }
 
-        snapshot = SkillPluginSnapshot(
-            objectBindings = objectBindings,
-            npcBindings = npcBindings,
-            itemOnItemBindings = itemOnItemBindings,
-            itemBindings = itemBindings,
-            itemOnObjectBindings = itemOnObjectBindings,
-            buttonBindings = buttonBindings,
-            objectPresetById = objectPresetById,
-        )
+        snapshot =
+            SkillPluginSnapshot(
+                objectBindings = objectBindings,
+                npcBindings = npcBindings,
+                itemOnItemBindings = itemOnItemBindings,
+                itemBindings = itemBindings,
+                itemOnObjectBindings = itemOnObjectBindings,
+                buttonBindings = buttonBindings,
+                objectPresetById = objectPresetById,
+            )
         logger.info(
-            "SkillPluginRegistry bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
+            "SkillPluginRegistryEngine bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
             definitions.size,
             objectBindings.size,
             npcBindings.size,
@@ -153,32 +195,6 @@ object SkillPluginRegistry : ContentBootstrap {
             itemOnObjectBindings.size,
             buttonBindings.size,
         )
-    }
-
-    internal fun objectKey(option: Int, objectId: Int): Long {
-        return (option.toLong() shl 32) or (objectId.toLong() and 0xffffffffL)
-    }
-
-    internal fun npcKey(option: Int, npcId: Int): Long {
-        return (option.toLong() shl 32) or (npcId.toLong() and 0xffffffffL)
-    }
-
-    internal fun itemPairKey(a: Int, b: Int): Long {
-        val left = minOf(a, b).toLong() and 0xffffffffL
-        val right = maxOf(a, b).toLong() and 0xffffffffL
-        return (left shl 32) or right
-    }
-
-    internal fun itemKey(option: Int, itemId: Int): Long {
-        return (option.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
-    }
-
-    internal fun itemOnObjectKey(objectId: Int, itemId: Int): Long {
-        return (objectId.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
-    }
-
-    internal fun buttonKey(rawButtonId: Int, opIndex: Int): Long {
-        return (rawButtonId.toLong() shl 32) or (opIndex.toLong() and 0xffffffffL)
     }
 }
 
@@ -192,24 +208,24 @@ data class SkillPluginSnapshot(
     private val objectPresetById: Map<Int, Set<net.dodian.uber.game.systems.action.PolicyPreset>>,
 ) {
     fun objectBinding(option: Int, objectId: Int): SkillObjectClickBinding? =
-        objectBindings[SkillPluginRegistry.objectKey(option, objectId)]
+        objectBindings[SkillPluginKeys.objectKey(option, objectId)]
 
     fun npcBinding(option: Int, npcId: Int): SkillNpcClickBinding? =
-        npcBindings[SkillPluginRegistry.npcKey(option, npcId)]
+        npcBindings[SkillPluginKeys.npcKey(option, npcId)]
 
     fun itemOnItemBinding(itemUsed: Int, otherItem: Int): SkillItemOnItemBinding? =
-        itemOnItemBindings[SkillPluginRegistry.itemPairKey(itemUsed, otherItem)]
+        itemOnItemBindings[SkillPluginKeys.itemPairKey(itemUsed, otherItem)]
 
     fun itemBinding(option: Int, itemId: Int): SkillItemClickBinding? =
-        itemBindings[SkillPluginRegistry.itemKey(option, itemId)]
+        itemBindings[SkillPluginKeys.itemKey(option, itemId)]
 
     fun itemOnObjectBinding(objectId: Int, itemId: Int): SkillItemOnObjectBinding? =
-        itemOnObjectBindings[SkillPluginRegistry.itemOnObjectKey(objectId, itemId)]
-            ?: itemOnObjectBindings[SkillPluginRegistry.itemOnObjectKey(objectId, -1)]
+        itemOnObjectBindings[SkillPluginKeys.itemOnObjectKey(objectId, itemId)]
+            ?: itemOnObjectBindings[SkillPluginKeys.itemOnObjectKey(objectId, -1)]
 
     fun buttonBinding(rawButtonId: Int, opIndex: Int): SkillButtonBinding? {
-        return buttonBindings[SkillPluginRegistry.buttonKey(rawButtonId, opIndex)]
-            ?: buttonBindings[SkillPluginRegistry.buttonKey(rawButtonId, -1)]
+        return buttonBindings[SkillPluginKeys.buttonKey(rawButtonId, opIndex)]
+            ?: buttonBindings[SkillPluginKeys.buttonKey(rawButtonId, -1)]
     }
 
     fun ownsObjectId(objectId: Int): Boolean = objectPresetById.containsKey(objectId)

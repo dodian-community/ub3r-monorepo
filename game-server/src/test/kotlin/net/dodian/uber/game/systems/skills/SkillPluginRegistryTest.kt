@@ -2,6 +2,7 @@ package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.action.PolicyPreset
+import net.dodian.uber.game.systems.plugin.PluginRegistry
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistry
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
@@ -10,6 +11,22 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class SkillPluginRegistryTest {
+    @Test
+    fun `plugin registry alias resolves skill bindings`() {
+        PluginRegistry.resetForTests()
+        PluginRegistry.bootstrap()
+        val snapshot = PluginRegistry.currentSkills()
+
+        assertNotNull(snapshot.objectBinding(option = 1, objectId = 7451))
+    }
+
+    @Test
+    fun `legacy SkillPluginRegistry forwards to PluginRegistry`() {
+        SkillPluginRegistry.resetForTests()
+        SkillPluginRegistry.bootstrap()
+        assertNotNull(SkillPluginRegistry.current().itemBinding(option = 1, itemId = 4155))
+    }
+
     @Test
     fun `registry resolves migrated skill bindings`() {
         SkillPluginRegistry.resetForTests()
