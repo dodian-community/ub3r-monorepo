@@ -11,7 +11,7 @@ class ObjectInteractionDistanceTest {
     @Test
     fun `policy nearest boundary cardinal accepts player standing on clicked tile`() {
         val player = Client(EmbeddedChannel(), 1)
-        player.setPosition(Position(2604, 3100, 0))
+        player.moveTo(2604, 3100, 0)
         val walkTo = Position(2604, 3100, 0)
 
         val resolved =
@@ -31,7 +31,7 @@ class ObjectInteractionDistanceTest {
     @Test
     fun `policy nearest boundary cardinal accepts adjacent clicked tile`() {
         val player = Client(EmbeddedChannel(), 1)
-        player.setPosition(Position(2604, 3099, 0))
+        player.moveTo(2604, 3099, 0)
         val walkTo = Position(2604, 3100, 0)
 
         val resolved =
