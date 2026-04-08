@@ -17,7 +17,7 @@ public final class SystemUpdateTimer implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(114, MessageType.FIXED);
-        message.putShort(clientTicks, ByteOrder.BIG);
+        message.putShort(clientTicks, ByteOrder.LITTLE);
         client.send(message);
     }
 }
