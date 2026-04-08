@@ -19,16 +19,11 @@ class TaskingSurfaceAreaBoundaryTest {
     @Test
     fun `runtime and service code does not depend on TickTasks facade`() {
         val runtimeRoot = Paths.get("src/main/kotlin/net/dodian/uber/game")
-        val allowedFacade = runtimeRoot.resolve("tasks/TickTasks.kt").toAbsolutePath().normalize()
         val violations = mutableListOf<String>()
 
         Files.walk(runtimeRoot).use { paths ->
             paths.filter { Files.isRegularFile(it) && it.extension == "kt" }
                 .forEach { file ->
-                    val normalized = file.toAbsolutePath().normalize()
-                    if (normalized == allowedFacade) {
-                        return@forEach
-                    }
                     Files.readAllLines(file).forEachIndexed { idx, line ->
                         val trimmed = line.trim()
                         if (trimmed.contains("TickTasks")) {
@@ -40,7 +35,7 @@ class TaskingSurfaceAreaBoundaryTest {
 
         assertTrue(
             violations.isEmpty(),
-            "Runtime/service code must not depend on TickTasks outside the legacy facade.\n${violations.joinToString("\n")}",
+            "Runtime/service code must not depend on TickTasks.\n${violations.joinToString("\n")}",
         )
     }
 }
