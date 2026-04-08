@@ -49,7 +49,7 @@ internal object SkillPluginKeys {
 }
 
 internal class SkillPluginRegistryEngine {
-    private val logger = LoggerFactory.getLogger(SkillPluginRegistryEngine::class.java)
+    private val logger = LoggerFactory.getLogger("PluginRegistry")
 
     private val bootstrapped = AtomicBoolean(false)
     private val definitions = mutableListOf<SkillPlugin>()
@@ -186,7 +186,7 @@ internal class SkillPluginRegistryEngine {
                 objectPresetById = objectPresetById,
             )
         logger.info(
-            "SkillPluginRegistryEngine bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
+            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
             definitions.size,
             objectBindings.size,
             npcBindings.size,

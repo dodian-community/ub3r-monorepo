@@ -4,9 +4,11 @@ import net.dodian.uber.game.content.shop.ShopDefinition
 import net.dodian.uber.game.content.shop.ShopManager
 import net.dodian.uber.game.systems.dispatch.ContentBootstrap
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 object ShopPluginRegistry : ContentBootstrap {
+    private val logger = LoggerFactory.getLogger("ShopPluginRegistry")
     override val id: String = "shops.registry"
     private val bootstrapped = AtomicBoolean(false)
     private val registeredPlugins = mutableListOf<ShopPlugin>()
@@ -17,13 +19,21 @@ object ShopPluginRegistry : ContentBootstrap {
         if (bootstrapped.get()) return
         synchronized(this) {
             if (bootstrapped.get()) return
-            val definitions =
+            val loadedPlugins =
                 if (registeredPlugins.isNotEmpty()) {
-                    registeredPlugins.map { it.definition }
+                    registeredPlugins.toList()
                 } else {
-                    ContentModuleIndex.shopPlugins.map { it.definition }
+                    ContentModuleIndex.shopPlugins
                 }
+            val definitions = loadedPlugins.map { it.definition }
             snapshot = buildSnapshot(definitions)
+            val source = if (registeredPlugins.isNotEmpty()) "registered" else "generated"
+            logger.info(
+                "shop plugins bootstrapped {} plugins (shops={}, source={})",
+                loadedPlugins.size,
+                snapshot.size,
+                source,
+            )
             bootstrapped.set(true)
         }
     }
