@@ -2,7 +2,6 @@ package net.dodian.uber.game.content.skills.thieving
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.Entity
@@ -15,6 +14,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
@@ -60,7 +60,7 @@ object Thieving {
             player.performAnimation(STALL_THIEVING_EMOTE, 0)
         }
 
-        GameEventScheduler.runLaterMs(600) {
+        ContentTiming.runLaterMs(600) {
             if (player.disconnected) return@runLaterMs
             if (failChance > 75) {
                 player.sendMessage("You fail to thieve from the ${data.name.lowercase().replace('_', ' ')}")

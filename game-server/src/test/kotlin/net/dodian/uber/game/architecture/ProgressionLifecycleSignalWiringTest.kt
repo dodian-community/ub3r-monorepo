@@ -21,14 +21,13 @@ class ProgressionLifecycleSignalWiringTest {
     }
 
     @Test
-    fun `death event is defined in flat events package`() {
-        val eventsFile =
-            sourceRoot.resolve("net/dodian/uber/game/events/ProgressionLifecycleEvents.kt")
-        assertTrue(Files.exists(eventsFile), "ProgressionLifecycleEvents.kt must exist in net.dodian.uber.game.events")
+    fun `player death event is defined in flat events package`() {
+        val eventsFile = sourceRoot.resolve("net/dodian/uber/game/events/PlayerDeathEvent.kt")
+        assertTrue(eventsFile.toFile().exists(), "PlayerDeathEvent.kt must exist in net.dodian.uber.game.events")
 
         val content = Files.readString(eventsFile)
         assertTrue(content.contains("package net.dodian.uber.game.events"))
-        assertTrue(content.contains("data class DeathEvent("))
+        assertTrue(content.contains("data class PlayerDeathEvent("))
     }
 
     @Test
@@ -44,14 +43,14 @@ class ProgressionLifecycleSignalWiringTest {
     }
 
     @Test
-    fun `player death tick service posts death event when death begins`() {
+    fun `player death tick service posts player death event when death begins`() {
         val deathServiceFile =
             sourceRoot.resolve("net/dodian/uber/game/engine/lifecycle/PlayerDeathTickService.kt")
         val content = Files.readString(deathServiceFile)
 
         assertTrue(
-            content.contains("GameEventBus.post(DeathEvent("),
-            "PlayerDeathTickService must post DeathEvent when death sequence starts",
+            content.contains("GameEventBus.post(PlayerDeathEvent("),
+            "PlayerDeathTickService must post PlayerDeathEvent when death sequence starts",
         )
     }
 }

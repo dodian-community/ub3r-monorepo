@@ -71,6 +71,10 @@ import net.dodian.uber.game.systems.action.PlayerActionType;
 import net.dodian.uber.game.systems.action.ProductionActionService;
 import net.dodian.uber.game.systems.action.SmithingActionService;
 import net.dodian.uber.game.systems.action.TeleportActionService;
+import net.dodian.uber.game.systems.action.TravelDecision;
+import net.dodian.uber.game.systems.action.TravelRouteService;
+import net.dodian.uber.game.systems.action.DuelCountdownService;
+import net.dodian.uber.game.systems.action.DuelCountdownState;
 import net.dodian.uber.game.systems.animation.PlayerAnimationService;
 import net.dodian.uber.game.systems.combat.CombatStartService;
 import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
@@ -3770,16 +3774,16 @@ public class Client extends Player implements Runnable {
         }
         otherdbId = other.dbId;
         final Client player = this;
-        final int[] countDown = {7};
+        final DuelCountdownState[] countdownState = {DuelCountdownState.initial()};
         player.requestForceChat("It is time to D-D-D-DUEL!");
         GameEventScheduler.runRepeatingMs(600, () -> {
-            countDown[0]--;
-            if (countDown[0] > 0 && countDown[0] % 2 == 0) {
-                player.requestForceChat("" + (countDown[0] / 2));
-                return true;
+            var step = DuelCountdownService.advance(countdownState[0]);
+            countdownState[0] = step.getNextState();
+
+            if (step.getForceChat() != null) {
+                player.requestForceChat(step.getForceChat());
             }
-            if (countDown[0] < 1) {
-                player.requestForceChat("Fight!");
+            if (step.getEnableCombat()) {
                 player.canAttack = true;
                 return false;
             }
@@ -4723,43 +4727,31 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean home = checkPos != 0;
-        int[] posTrigger = {1, 3, 4, 7, 10, 2, 5, 6, 11}; //0-4 is to something! rest is to the Catherby
-        int[][] travel = {
-                {3057, 2803, 3421, 0}, //Catherby
-                {3058, -1, -1, 0}, //Mountain aka Trollheim?
-                {3059, 3511, 3506, 0}, //Castle aka Canifis
-                {3060, 3274, 2798, 0}, //Tent aka Sophanem
-                {3056, 2863, 2971, 0}, //Tree aka shilo
-                {48054, 2772, 3234, 0} //Totem aka Brimhaven
-        };
-        for (int i = 0; i < travel.length; i++)
-            if (travel[i][0] == buttonId) { //Initiate the teleport!
-                /* Check conditions! */
-                if ((!home && i == 0) || (home && i != 0)) {
-                    send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));
-                    return;
+        TravelDecision decision = TravelRouteService.resolve(home, checkPos, buttonId, this::getTravel);
+        if (decision instanceof TravelDecision.Ignored) {
+            return;
+        }
+        if (decision instanceof TravelDecision.Rejected rejected) {
+            send(new SendMessage(rejected.getMessage()));
+            return;
+        }
+        if (decision instanceof TravelDecision.RequireUnlockDialogue unlockDialogue) {
+            DialogueService.setDialogueId(this, unlockDialogue.getDialogueId());
+            DialogueService.setDialogueSent(this, false);
+            return;
+        }
+        if (decision instanceof TravelDecision.Approved approved) {
+            varbit(153, approved.getVarbitValue());
+            travelInitiate = true;
+            Position destination = approved.getDestination();
+            GameEventScheduler.runLaterMs(1800, () -> {
+                if (!disconnected) {
+                    transport(destination);
+                    send(new RemoveInterfaces());
+                    travelInitiate = false;
                 }
-                if (travel[i][1] == -1) {
-                    send(new SendMessage("This will lead you to nothing!"));
-                    return;
-                }
-                if (i > 0 && !getTravel(i - 1)) {
-                    DialogueService.setDialogueId(this, 48054);
-                    DialogueService.setDialogueSent(this, false);
-                    return;
-                }
-                /* Set configs! */
-                final int pos = i;
-                varbit(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
-                travelInitiate = true;
-                GameEventScheduler.runLaterMs(1800, () -> {
-                    if (!disconnected) {
-                        transport(new Position(travel[pos][1], travel[pos][2], 0));
-                        send(new RemoveInterfaces());
-                        travelInitiate = false;
-                    }
-                });
-            }
+            });
+        }
     }
 
     public int refundSlot = -1;

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.world.farming
 
-data class FarmingRunStats(
-    val duePlayers: Int,
-    val processedPlayers: Int,
-    val maxBucketSize: Int,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.FarmingRunStats",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.FarmingRunStats"),
 )
+typealias FarmingRunStats = net.dodian.uber.game.systems.skills.farming.runtime.FarmingRunStats

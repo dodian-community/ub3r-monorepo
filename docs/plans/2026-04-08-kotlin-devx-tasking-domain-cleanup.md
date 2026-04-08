@@ -10,6 +10,33 @@
 
 ---
 
+### Architecture Addendum: Split Content Tasks from Engine Sync Tasks
+
+**Why (from Tarnish/OpenRune):**
+- Tarnish separates content/world timers (`com.osroyale.game.task.*`, executed via `World.taskManager.process()`) from core sync/update pipeline tasks (`com.osroyale.game.engine.sync.task.*`, executed by synchronizer).
+- OpenRune does the same conceptually: core loop `org.alter.game.task.*` (`PlayerCycleTask`, `SynchronizationTask`, etc.) is separate from gameplay coroutine queues under `org.alter.game.model.queue.*`.
+
+**Decision for our server:**
+- Keep a single runtime clock/tick, but enforce **two task domains**:
+- `Content Task Domain` (high churn): plugins/content/mechanics, delay/repeat/cancel APIs through `systems/api/content`.
+- `Engine Task Domain` (low churn): sync, serialization, packet update, phase orchestration under `engine/*` and never imported by content.
+
+**Rules:**
+- Content code must never import `engine.sync.*`, `engine.net.*`, or low-level engine scheduler internals.
+- Engine sync phases must not depend on content-facing coroutine wrappers.
+- No new “second manager” for now: keep one backend scheduler/runtime, expose two strict API surfaces with boundary tests.
+
+**Concrete package targets:**
+- Content-facing: `net.dodian.uber.game.systems.api.content.ContentScheduling` + `ContentTiming`
+- Engine/internal scheduling: `net.dodian.uber.game.engine.tasking.*`, `net.dodian.uber.game.engine.phases.*`, `net.dodian.uber.game.engine.sync.*`
+
+**New guard tasks (add to execution sequence):**
+- Add `EngineTaskDomainBoundaryTest` to assert content modules do not import engine tasking/sync internals.
+- Add `ContentTaskApiBoundaryTest` to assert content modules use `systems.api.content` instead of direct `GameTaskRuntime`/`GameEventScheduler`.
+- Add package-level naming guard: engine sync/update classes stay under `engine/sync` or `engine/phases`, while content runtime loops stay in content/systems API surfaces.
+
+---
+
 ### Task 1: Add Canonical Content Scheduling API (Single Entry Point)
 
 **Files:**

@@ -1,18 +1,22 @@
 package net.dodian.uber.game.content.skills.agility
 
-import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.api.content.ContentTiming
 
 class AgilityTravel(private val c: Client) {
     private fun runLater(delayMs: Int, action: () -> Unit) {
-        GameEventScheduler.runLaterMs(delayMs, action)
+        ContentTiming.runLaterMs(delayMs) {
+            action()
+        }
     }
 
     private fun runRepeating(delayMs: Int, action: () -> Boolean) {
-        GameEventScheduler.runRepeatingMs(delayMs, action)
+        ContentTiming.runRepeatingMs(delayMs) {
+            action()
+        }
     }
 
     private fun startRide(initialCount: Int, beforeLoop: () -> Unit, tickHandler: (Int) -> Boolean) {

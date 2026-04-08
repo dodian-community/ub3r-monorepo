@@ -1,58 +1,43 @@
 package net.dodian.uber.game.systems.world.farming
 
-import net.dodian.uber.game.content.skills.farming.FarmingData
-
-data class PatchSlotSnapshot(
-    val patch: FarmingData.patches,
-    val slot: Int,
-    val itemId: Int,
-    val state: String,
-    val compost: String,
-    val stageOrLife: Int,
-    val progress: Int,
-    val plantedBy: Int,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotSnapshot",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotSnapshot"),
 )
+typealias PatchSlotSnapshot = net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotSnapshot
 
-data class CompostBinSnapshot(
-    val bin: FarmingData.compostBin,
-    val compost: String,
-    val state: String,
-    val amount: Int,
-    val progress: Int,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.CompostBinSnapshot",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.CompostBinSnapshot"),
 )
+typealias CompostBinSnapshot = net.dodian.uber.game.systems.skills.farming.runtime.CompostBinSnapshot
 
-data class PlayerFarmingSnapshot(
-    val patchSlots: List<PatchSlotSnapshot>,
-    val compostBins: List<CompostBinSnapshot>,
-    val hasPendingSaplings: Boolean,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingSnapshot",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingSnapshot"),
 )
+typealias PlayerFarmingSnapshot = net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingSnapshot
 
-data class PatchSlotRuntimeState(
-    var nextDueAtMillis: Long,
-    var lastAppliedPulseAtMillis: Long,
-    var state: String,
-    var dirty: Boolean,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotRuntimeState",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotRuntimeState"),
 )
+typealias PatchSlotRuntimeState = net.dodian.uber.game.systems.skills.farming.runtime.PatchSlotRuntimeState
 
-data class CompostBinRuntimeState(
-    var nextDueAtMillis: Long,
-    var lastAppliedPulseAtMillis: Long,
-    var state: String,
-    var dirty: Boolean,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.CompostBinRuntimeState",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.CompostBinRuntimeState"),
 )
+typealias CompostBinRuntimeState = net.dodian.uber.game.systems.skills.farming.runtime.CompostBinRuntimeState
 
-data class SaplingRuntimeState(
-    var nextDueAtMillis: Long,
-    var lastAppliedPulseAtMillis: Long,
-    var state: String,
-    var dirty: Boolean,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.SaplingRuntimeState",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.SaplingRuntimeState"),
 )
+typealias SaplingRuntimeState = net.dodian.uber.game.systems.skills.farming.runtime.SaplingRuntimeState
 
-data class PlayerFarmingRuntimeState(
-    var nextDueAtMillis: Long,
-    var lastAppliedPulseAtMillis: Long,
-    var dirty: Boolean,
-    val patchStates: MutableMap<String, PatchSlotRuntimeState>,
-    val compostStates: MutableMap<String, CompostBinRuntimeState>,
-    var saplingState: SaplingRuntimeState?,
+@Deprecated(
+    message = "Use net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingRuntimeState",
+    replaceWith = ReplaceWith("net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingRuntimeState"),
 )
+typealias PlayerFarmingRuntimeState = net.dodian.uber.game.systems.skills.farming.runtime.PlayerFarmingRuntimeState

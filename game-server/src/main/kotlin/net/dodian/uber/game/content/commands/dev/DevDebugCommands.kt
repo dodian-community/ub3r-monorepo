@@ -6,18 +6,14 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.systems.dispatch.commands.CommandContent
 import net.dodian.uber.game.systems.dispatch.commands.CommandContext
 import net.dodian.uber.game.systems.dispatch.commands.commands
-import net.dodian.uber.game.engine.event.GameEventScheduler
+import net.dodian.uber.game.engine.scheduler.QueueTaskHandle
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.api.content.ContentCoroutines.gameClock
-import net.dodian.uber.game.systems.api.content.ContentCoroutines.npcTaskCoroutine
-import net.dodian.uber.game.systems.api.content.ContentCoroutines.playerTaskCoroutine
-import net.dodian.uber.game.systems.api.content.ContentCoroutines.worldTaskCoroutine
+import net.dodian.uber.game.systems.api.content.ContentScheduling
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.skills.ProgressionService
-import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.events.partyroom.Balloons
-import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.utilities.Misc
 
 object DevDebugCommands : CommandContent {
@@ -105,32 +101,32 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                     4 -> {
                         client.cancelFarmDebugTask()
                         val farmConfig = intArrayOf(0)
-                        client.farmDebugTaskHandle = GameEventScheduler.schedule(
-                            1,
-                            1,
-                            BooleanSupplier {
-                                if (client.disconnected || !client.isActive) {
-                                    client.farmDebugTaskHandle = null
-                                    false
-                                } else if (farmConfig[0] >= 2000) {
-                                    context.reply("Finished farming config test.")
-                                    client.farmDebugTaskHandle = null
-                                    false
-                                } else {
-                                    context.reply("config = ${farmConfig[0]}")
-                                    client.varbit(4771, farmConfig[0])
-                                    farmConfig[0]++
-                                    true
+                        client.farmDebugTaskHandle = QueueTaskHandle.from(
+                            ContentScheduling.player(client) {
+                                repeatEvery(intervalTicks = 1, initialDelayTicks = 1) {
+                                    if (client.disconnected || !client.isActive) {
+                                        client.farmDebugTaskHandle = null
+                                        false
+                                    } else if (farmConfig[0] >= 2000) {
+                                        context.reply("Finished farming config test.")
+                                        client.farmDebugTaskHandle = null
+                                        false
+                                    } else {
+                                        context.reply("config = ${farmConfig[0]}")
+                                        client.varbit(4771, farmConfig[0])
+                                        farmConfig[0]++
+                                        true
+                                    }
                                 }
-                            },
+                            }
                         )
                     }
                     5 -> {
-                        context.reply("Starting farming TickTasks player coroutine demo (6 ticks).")
-                        TickTasks.playerTaskCoroutine(client) {
+                        context.reply("Starting farming content coroutine demo (6 ticks).")
+                        ContentScheduling.player(client) {
                             repeat(6) { tick ->
-                                player.send(SendMessage("[farm-pilot] tick=$tick cycle=${TickTasks.gameClock()}"))
-                                delay(1)
+                                client.sendMessage("[farm-pilot] tick=$tick cycle=${ContentTiming.currentCycle()}")
+                                delayTicks(1)
                             }
                         }
                     }
@@ -214,24 +210,22 @@ private fun handleDevDebug(context: CommandContext): Boolean {
         }
         "wcor" -> {
             context.reply("Scheduled world coroutine demo.")
-            worldTaskCoroutine {
-                client.sendMessage("[${gameClock()}] world: start")
-                delay(3)
-                client.sendMessage("[${gameClock()}] world: step-2")
-                delay(7)
-                client.sendMessage("[${gameClock()}] world: stop")
-                stop()
+            ContentScheduling.world {
+                client.sendMessage("[${ContentTiming.currentCycle()}] world: start")
+                delayTicks(3)
+                client.sendMessage("[${ContentTiming.currentCycle()}] world: step-2")
+                delayTicks(7)
+                client.sendMessage("[${ContentTiming.currentCycle()}] world: stop")
             }
         }
         "pcor" -> {
             context.reply("Scheduled player coroutine demo.")
-            playerTaskCoroutine(client) {
-                player.sendMessage("[${gameClock()}] player: start")
-                delay(2)
-                player.sendMessage("[${gameClock()}] player: step-2")
-                delay(2)
-                player.sendMessage("[${gameClock()}] player: stop")
-                stop()
+            ContentScheduling.player(client) {
+                client.sendMessage("[${ContentTiming.currentCycle()}] player: start")
+                delayTicks(2)
+                client.sendMessage("[${ContentTiming.currentCycle()}] player: step-2")
+                delayTicks(2)
+                client.sendMessage("[${ContentTiming.currentCycle()}] player: stop")
             }
         }
         "ncor" -> {
@@ -246,13 +240,12 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                 return true
             }
             context.reply("Scheduled npc coroutine demo on npc ${targetNpc.id} (${targetNpc.position}).")
-            npcTaskCoroutine(targetNpc) {
-                npc.setText("[${gameClock()}] npc coroutine start")
-                delay(2)
-                npc.setText("[${gameClock()}] npc coroutine step-2")
-                delay(2)
-                npc.setText("[${gameClock()}] npc coroutine stop")
-                stop()
+            ContentScheduling.npc(targetNpc) {
+                targetNpc.setText("[${ContentTiming.currentCycle()}] npc coroutine start")
+                delayTicks(2)
+                targetNpc.setText("[${ContentTiming.currentCycle()}] npc coroutine step-2")
+                delayTicks(2)
+                targetNpc.setText("[${ContentTiming.currentCycle()}] npc coroutine stop")
             }
         }
         else -> return false

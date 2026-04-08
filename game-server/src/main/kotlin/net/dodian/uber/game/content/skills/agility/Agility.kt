@@ -1,7 +1,6 @@
 package net.dodian.uber.game.content.skills.agility
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -27,11 +26,15 @@ class Agility(private val c: Client) {
     }
 
     private fun runLater(delayMs: Int, action: () -> Unit) {
-        GameEventScheduler.runLaterMs(delayMs, action)
+        ContentTiming.runLaterMs(delayMs) {
+            action()
+        }
     }
 
     private fun runRepeating(delayMs: Int, action: () -> Boolean) {
-        GameEventScheduler.runRepeatingMs(delayMs, action)
+        ContentTiming.runRepeatingMs(delayMs) {
+            action()
+        }
     }
 
     private fun isBusy(): Boolean = c.UsingAgility

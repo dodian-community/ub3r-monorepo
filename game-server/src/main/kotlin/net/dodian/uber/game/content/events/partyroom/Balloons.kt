@@ -1,12 +1,12 @@
 package net.dodian.uber.game.content.events.partyroom
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.systems.world.item.Ground
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.PartyItemsDisplay
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -100,14 +100,14 @@ object Balloons {
         setPartyPos()
 
         var timer = 9
-        GameEventScheduler.runRepeatingMs(600) outer@{
+        ContentTiming.runRepeatingMs(600) outer@{
             if (timer == 0) {
                 sendPartyTimer("PARTYYYYYYYYYYYYYYYYYYYYYYYYYY! Get popping!")
                 spawnPartyEventBalloon()
                 totalBalloons -= balloonIncrement
 
                 var waveTimer = 4
-                GameEventScheduler.runRepeatingMs(600) inner@{
+                ContentTiming.runRepeatingMs(600) inner@{
                     if (totalBalloons <= 0) {
                         eventActive = false
                         totalBalloons = DEFAULT_BALLOONS
@@ -173,7 +173,7 @@ object Balloons {
         client.performAnimation(794, 0)
         client.ReplaceObject2(Position(balloon.x, balloon.y, balloon.z), balloon.id + 8, 0, 10)
 
-        GameEventScheduler.runLaterMs(600) {
+        ContentTiming.runLaterMs(600) {
             val droppedIndex = droppedItems.indexOfFirst { dropped -> dropped.getPosition() == pos }
             if (droppedIndex != -1) {
                 val dropped = droppedItems.removeAt(droppedIndex)
@@ -191,7 +191,7 @@ object Balloons {
             if (person.distanceToPoint(balloon.x, balloon.y) <= 104 && person.position.z == balloon.z) {
                 val balloonPos = Position(balloon.x, balloon.y, balloon.z)
                 person.ReplaceObject2(balloonPos, balloon.id + 8, 0, 10)
-                GameEventScheduler.runLaterMs(1200) {
+                ContentTiming.runLaterMs(1200) {
                     person.ReplaceObject2(balloonPos, -1, 0, 10)
                 }
             }

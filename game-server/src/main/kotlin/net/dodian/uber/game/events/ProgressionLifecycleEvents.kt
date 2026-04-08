@@ -12,10 +12,3 @@ data class LevelUpEvent(
     val oldExperience: Int,
     val newExperience: Int,
 ) : GameEvent
-
-/** Fired when a player's death flow begins. */
-data class DeathEvent(
-    val player: Client,
-    val cycle: Long,
-) : GameEvent
-

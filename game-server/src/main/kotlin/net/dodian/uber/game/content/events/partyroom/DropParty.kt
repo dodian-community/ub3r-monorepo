@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.events.partyroom
 
-import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -21,7 +21,7 @@ class DropParty(private var minutes: Int) : Runnable {
         }
 
         val startDelayMs = max(0L, startTime - System.currentTimeMillis()).toInt()
-        GameEventScheduler.runLaterMs(startDelayMs) {
+        ContentTiming.runLaterMs(startDelayMs) {
             if (!started) {
                 Client.publicyell("<col=FF0000>[S] The drop party in Ardougne has now started!")
                 started = true
@@ -37,9 +37,9 @@ class DropParty(private var minutes: Int) : Runnable {
     }
 
     private fun beginDropLoop() {
-        GameEventScheduler.runRepeatingMs(3000) {
+        ContentTiming.runRepeatingMs(3000) {
             if (dropItems.isEmpty()) {
-                GameEventScheduler.runLaterMs(180_000) {
+                ContentTiming.runLaterMs(180_000) {
                     Client.publicyell("<col=FF0000>[S] The drop party has now ended.")
                 }
                 return@runRepeatingMs false
