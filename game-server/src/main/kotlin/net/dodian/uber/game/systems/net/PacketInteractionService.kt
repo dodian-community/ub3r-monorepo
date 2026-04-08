@@ -1,6 +1,8 @@
 package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.combat.PlayerAttackEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent
@@ -25,6 +27,7 @@ object PacketInteractionService {
         if (client.deathStage >= 1) return
         PlayerRegistry.getClient(victimSlot) ?: return
         if (client.randomed || client.UsingAgility) return
+        GameEventBus.post(PlayerAttackEvent(client, victimSlot, true))
 
         val intent = AttackPlayerIntent(opcode, PlayerRegistry.cycle.toLong(), victimSlot)
         InteractionTaskScheduler.schedule(client, intent, PlayerInteractionTask(client, intent))
@@ -91,9 +94,9 @@ object PacketInteractionService {
             return
         }
 
+        GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
         val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
         NpcClickMetrics.recordScheduled(opcode, 5, npc.id, npcIndex, client.playerName)
     }
 }
-

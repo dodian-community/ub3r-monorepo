@@ -1,9 +1,12 @@
 package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
+import net.dodian.uber.game.events.player.WalkEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
@@ -143,6 +146,13 @@ object PacketWalkingService {
             }
             player.faceTarget(65535)
         }
+
+        GameEventBus.post(
+            WalkEvent(
+                player,
+                Position(request.firstStepXAbs, request.firstStepYAbs, player.position.z),
+            ),
+        )
 
         if (player.chestEventOccur && request.opcode != 98) {
             player.chestEventOccur = false

@@ -1,5 +1,6 @@
 package net.dodian.uber.game.architecture
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -18,6 +19,12 @@ class ProgressionLifecycleSignalWiringTest {
         val content = Files.readString(eventsFile)
         assertTrue(content.contains("package net.dodian.uber.game.events"))
         assertTrue(content.contains("data class LevelUpEvent("))
+    }
+
+    @Test
+    fun `legacy player level-up event file is removed`() {
+        val duplicateEventFile = sourceRoot.resolve("net/dodian/uber/game/events/player/LevelUpEvent.kt")
+        assertFalse(Files.exists(duplicateEventFile), "Duplicate player LevelUpEvent.kt must be removed")
     }
 
     @Test

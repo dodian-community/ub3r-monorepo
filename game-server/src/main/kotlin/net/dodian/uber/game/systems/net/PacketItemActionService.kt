@@ -3,6 +3,7 @@ package net.dodian.uber.game.systems.net
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemClickEvent
+import net.dodian.uber.game.events.item.ItemOnPlayerEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.dispatch.items.ItemDispatcher
@@ -100,6 +101,7 @@ object PacketItemActionService {
         else null
         if (target == null || !client.playerHasItem(itemId)) return
         if (client.randomed || client.UsingAgility) return
+        GameEventBus.post(ItemOnPlayerEvent(client, target, itemId, crackerSlot))
 
         if (itemId == 5733) { // hot-potato mini-game setup
             client.playerPotato.clear()
@@ -134,4 +136,3 @@ object PacketItemActionService {
         }
     }
 }
-

@@ -1,6 +1,8 @@
 package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.events.widget.ChatMessageEvent
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -49,9 +51,9 @@ object PacketChatService {
             System.arraycopy(chatBytes, 0, client.getChatText(), 0, copyLen)
         }
         client.setChatTextMessage(chat)
+        GameEventBus.post(ChatMessageEvent(client, chat))
         client.invalidateCachedUpdateBlock()
         client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true)
         ChatLog.recordPublicChat(client, chat)
     }
 }
-

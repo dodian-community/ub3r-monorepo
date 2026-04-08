@@ -5,12 +5,13 @@ import java.util.TreeMap
 import kotlin.system.measureNanoTime
 import net.dodian.uber.game.content.skills.farming.FarmingData
 import net.dodian.uber.game.content.skills.farming.markFarmingDirty
+import net.dodian.uber.game.systems.api.content.ContentScheduling
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.tasking.TaskHandle
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.slf4j.LoggerFactory
 
@@ -69,13 +70,13 @@ open class FarmingRuntimeService {
             return false
         }
         tickPilotHandle =
-            TickTasks.worldTaskCoroutine {
+            ContentScheduling.world {
                 repeatEvery(intervalTicks = FARMING_RUNTIME_POLL_TICKS) {
                     runTick(System.currentTimeMillis())
                     true
                 }
             }
-        logger.info("Farming runtime pilot bound to TickTasks world coroutine")
+        logger.info("Farming runtime pilot bound to ContentScheduling world coroutine")
         return true
     }
 
@@ -236,7 +237,7 @@ open class FarmingRuntimeService {
             return
         }
         deferredLoginCatchUpStartCycle.remove(player)
-        val ticks = (TickTasks.gameClock() - startCycle).coerceAtLeast(0L)
+        val ticks = (ContentTiming.currentCycle() - startCycle).coerceAtLeast(0L)
         deferredLoginCatchUpLatencyByTicks[ticks] = (deferredLoginCatchUpLatencyByTicks[ticks] ?: 0) + 1
         logger.info(
             "Farming deferred login catch-up settled in {} ticks player={} dbId={} lagMs={}",

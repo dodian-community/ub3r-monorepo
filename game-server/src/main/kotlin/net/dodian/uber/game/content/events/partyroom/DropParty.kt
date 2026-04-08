@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.events.partyroom
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
+import net.dodian.uber.game.systems.api.content.ContentTaskRecipes
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import kotlin.math.max
 import kotlin.random.Random
@@ -21,12 +22,14 @@ class DropParty(private var minutes: Int) : Runnable {
         }
 
         val startDelayMs = max(0L, startTime - System.currentTimeMillis()).toInt()
-        ContentTiming.runLaterMs(startDelayMs) {
-            if (!started) {
-                Client.publicyell("<col=FF0000>[S] The drop party in Ardougne has now started!")
-                started = true
-            }
-            beginDropLoop()
+        val startDelayTicks = ContentTiming.ticksForDurationMs(startDelayMs.toLong())
+        if (startDelayTicks <= 0) {
+            startDropParty()
+            return
+        }
+
+        ContentTaskRecipes.worldCountdown(totalTicks = startDelayTicks) {
+            startDropParty()
         }
     }
 
@@ -47,6 +50,14 @@ class DropParty(private var minutes: Int) : Runnable {
             dropItems.removeAt(Random.nextInt(dropItems.size))
             true
         }
+    }
+
+    private fun startDropParty() {
+        if (!started) {
+            Client.publicyell("<col=FF0000>[S] The drop party in Ardougne has now started!")
+            started = true
+        }
+        beginDropLoop()
     }
 
     private enum class DropPartyItems(val id: Int, val amount: Int, val occurrences: Int) {
