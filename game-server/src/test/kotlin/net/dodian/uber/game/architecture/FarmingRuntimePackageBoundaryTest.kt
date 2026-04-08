@@ -2,6 +2,7 @@ package net.dodian.uber.game.architecture
 
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -14,5 +15,18 @@ class FarmingRuntimePackageBoundaryTest {
             ),
             "Expected canonical farming runtime service file to exist",
         )
+    }
+
+    @Test
+    fun `legacy world farming runtime shims are removed`() {
+        val legacyFiles = listOf(
+            "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingRuntimeService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingPersistenceCodec.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingRuntimeModels.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingRunStats.kt",
+        )
+        legacyFiles.forEach { path ->
+            assertFalse(Files.exists(Paths.get(path)), "Legacy farming shim should be removed: $path")
+        }
     }
 }

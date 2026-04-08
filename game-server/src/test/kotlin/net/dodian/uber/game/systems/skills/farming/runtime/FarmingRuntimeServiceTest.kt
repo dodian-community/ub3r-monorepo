@@ -1,12 +1,12 @@
-package net.dodian.uber.game.systems.world.farming
+package net.dodian.uber.game.systems.skills.farming.runtime
 
 import com.google.gson.JsonPrimitive
 import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.content.skills.farming.FarmingData
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
-import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -78,7 +78,7 @@ class FarmingRuntimeServiceTest {
 
         client.farmingJson.lastGlobalPulseAtMillis = now - (20 * pulseMs)
         GameCycleClock.syncTo(200)
-        runtime.recordDeferredLoginCatchUpStart(client, TickTasks.gameClock())
+        runtime.recordDeferredLoginCatchUpStart(client, ContentTiming.currentCycle())
 
         runtime.onLogin(client, now)
         var pollNow = now
