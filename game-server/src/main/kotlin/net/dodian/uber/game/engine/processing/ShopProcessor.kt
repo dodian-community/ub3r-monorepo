@@ -8,28 +8,26 @@ import net.dodian.uber.game.systems.world.player.PlayerRegistry
 class ShopProcessor : Runnable {
     override fun run() {
         var didUpdate = false
-        for (i in 1..ShopManager.MaxShops) {
-            if (ShopManager.ShopItemsDelay.size > i) {
-                if (ShopManager.ShopItemsDelay[i] >= ShopManager.MaxShowDelay) {
-                    for (j in 0 until ShopManager.MaxShopItems) {
-                        if (ShopManager.ShopItems[i][j] > 0) {
-                            if (j < ShopManager.ShopItemsStandard[i] && ShopManager.ShopItemsN[i][j] != ShopManager.ShopItemsSN[i][j]) {
-                                if (ShopManager.ShopItemsN[i][j] < ShopManager.ShopItemsSN[i][j]) {
-                                    val restockAmount = (ShopManager.ShopItemsSN[i][j] - ShopManager.ShopItemsN[i][j]) * 0.05
-                                    ShopManager.ShopItemsN[i][j] += if (restockAmount > 1) restockAmount.toInt() else 1
-                                } else {
-                                    Server.shopManager.DiscountItem(i, j)
-                                }
-                            }
-                            if (j >= ShopManager.ShopItemsStandard[i]) {
+        for (i in 0 until ShopManager.MaxShops) {
+            if (ShopManager.ShopItemsDelay[i] >= ShopManager.MaxShowDelay) {
+                for (j in 0 until ShopManager.MaxShopItems) {
+                    if (ShopManager.ShopItems[i][j] > 0) {
+                        if (j < ShopManager.ShopItemsStandard[i] && ShopManager.ShopItemsN[i][j] != ShopManager.ShopItemsSN[i][j]) {
+                            if (ShopManager.ShopItemsN[i][j] < ShopManager.ShopItemsSN[i][j]) {
+                                val restockAmount = (ShopManager.ShopItemsSN[i][j] - ShopManager.ShopItemsN[i][j]) * 0.05
+                                ShopManager.ShopItemsN[i][j] += if (restockAmount > 1) restockAmount.toInt() else 1
+                            } else {
                                 Server.shopManager.DiscountItem(i, j)
                             }
-                            didUpdate = true
                         }
+                        if (j >= ShopManager.ShopItemsStandard[i]) {
+                            Server.shopManager.DiscountItem(i, j)
+                        }
+                        didUpdate = true
                     }
-                } else {
-                    ShopManager.ShopItemsDelay[i]++
                 }
+            } else {
+                ShopManager.ShopItemsDelay[i]++
             }
 
             if (didUpdate) {

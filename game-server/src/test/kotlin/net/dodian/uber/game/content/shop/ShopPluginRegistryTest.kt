@@ -46,4 +46,28 @@ class ShopPluginRegistryTest {
         ShopPluginRegistry.bootstrap()
         assertTrue(ShopPluginRegistry.all().isNotEmpty())
     }
+
+    @Test
+    fun `shop registry rejects invalid ids and slot price mismatches`() {
+        ShopPluginRegistry.resetForTests()
+        ShopPluginRegistry.register(
+            shopPlugin("Broken", shopId = -1) {
+                item(590, 1)
+            },
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            ShopPluginRegistry.bootstrap()
+        }
+
+        ShopPluginRegistry.resetForTests()
+        ShopPluginRegistry.register(
+            shopPlugin("BrokenSlot", shopId = 77) {
+                item(590, 1)
+                buyPrice(slot = 4, price = 50)
+            },
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            ShopPluginRegistry.bootstrap()
+        }
+    }
 }

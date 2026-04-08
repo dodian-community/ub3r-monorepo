@@ -9,6 +9,7 @@ import net.dodian.uber.game.events.trade.TradeCancelEvent;
 import net.dodian.uber.game.events.trade.TradeCompleteEvent;
 import net.dodian.uber.game.events.trade.TradeRequestEvent;
 import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.content.shop.ShopDefinitions;
 import net.dodian.uber.game.content.shop.ShopManager;
 import net.dodian.uber.game.content.shop.ShopRulesService;
 import net.dodian.uber.game.model.entity.UpdateFlag;
@@ -1633,6 +1634,10 @@ public class Client extends Player implements Runnable {
         }
         if (!Server.shopping) {
             send(new SendMessage("Shopping have been disabled!"));
+            return;
+        }
+        if (ShopID < 0 || ShopID >= ShopManager.MaxShops || ShopDefinitions.find(ShopID) == null) {
+            send(new SendMessage("This shop is currently unavailable."));
             return;
         }
         String accessDeniedMessage = ShopRulesService.accessDeniedMessage(this, ShopID);

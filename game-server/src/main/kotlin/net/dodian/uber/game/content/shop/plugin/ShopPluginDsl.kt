@@ -28,6 +28,12 @@ class ShopPluginBuilder(
         slotBuyPriceOverrides[slot] = price
     }
 
+    fun items(vararg entries: Pair<Int, Int>) {
+        for ((itemId, amount) in entries) {
+            item(itemId = itemId, amount = amount)
+        }
+    }
+
     fun build(): ShopDefinition =
         ShopDefinition(
             id = shopId,

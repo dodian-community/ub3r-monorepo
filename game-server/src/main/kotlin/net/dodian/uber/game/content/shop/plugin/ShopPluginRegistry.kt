@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.shop.plugin
 
 import net.dodian.uber.game.content.shop.ShopDefinition
+import net.dodian.uber.game.content.shop.ShopManager
 import net.dodian.uber.game.systems.dispatch.ContentBootstrap
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
 import java.util.concurrent.atomic.AtomicBoolean
@@ -63,6 +64,15 @@ object ShopPluginRegistry : ContentBootstrap {
     private fun buildSnapshot(definitions: List<ShopDefinition>): Map<Int, ShopDefinition> {
         val byId = linkedMapOf<Int, ShopDefinition>()
         definitions.forEach { definition ->
+            require(definition.id in 0 until ShopManager.MaxShops) {
+                "Shop id out of range: ${definition.id}"
+            }
+            require(definition.stock.size <= ShopManager.MaxShopItems) {
+                "Shop ${definition.id} exceeds max items"
+            }
+            require(definition.slotBuyPriceOverrides.keys.all { it in definition.stock.indices }) {
+                "Shop ${definition.id} has slot override outside stock range"
+            }
             val existing = byId.putIfAbsent(definition.id, definition)
             require(existing == null) {
                 "Duplicate shop definition id=${definition.id}"
