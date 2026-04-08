@@ -73,12 +73,12 @@ public class ClickingButtonsListener implements PacketListener {
         );
 
         if (GameEventBus.postWithResult(new ButtonClickEvent(request))) {
-            ButtonClickLoggingService.logClick(logger, request, packet.opcode(), true);
+            ButtonClickLoggingService.logClick(request, packet.opcode(), true);
             return;
         }
 
         if (InterfaceButtonService.tryHandle(client, actionButton, actionIndex)) {
-            ButtonClickLoggingService.logClick(logger, request, packet.opcode(), true);
+            ButtonClickLoggingService.logClick(request, packet.opcode(), true);
             return;
         }
 
@@ -92,6 +92,6 @@ public class ClickingButtonsListener implements PacketListener {
             );
         }
 
-        ButtonClickLoggingService.logClick(logger, request, packet.opcode(), false);
+        ButtonClickLoggingService.logClick(request, packet.opcode(), false);
     }
 }

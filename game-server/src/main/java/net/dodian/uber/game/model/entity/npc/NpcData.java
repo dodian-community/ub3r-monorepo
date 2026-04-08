@@ -3,6 +3,9 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
@@ -11,6 +14,8 @@ import java.util.ArrayList;
  *
  */
 public class NpcData {
+
+    private static final Logger logger = LoggerFactory.getLogger(NpcData.class);
 
     private final ArrayList<NpcDrop> drops = new ArrayList<>();
     private String name = "", examine="";
@@ -43,7 +48,7 @@ public class NpcData {
             size = mapped.size;
             System.arraycopy(mapped.level, 0, level, 0, level.length);
         } catch (Exception e) {
-            System.out.println("NpcData error..." + e);
+            logger.error("NpcData error while mapping result set", e);
         }
     }
 

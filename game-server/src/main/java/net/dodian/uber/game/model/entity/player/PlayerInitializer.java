@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.listener.out.PlayerDetails;
 import net.dodian.uber.game.netty.listener.out.CameraReset;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.systems.skills.ProgressionService;
-import net.dodian.uber.game.systems.world.farming.FarmingRuntimeService;
+import net.dodian.uber.game.systems.api.content.ContentRuntimeApi;
 import net.dodian.uber.game.persistence.db.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.quests.QuestSend;
@@ -71,7 +71,7 @@ public class PlayerInitializer {
     }
 
     public void initializeDeferredPostLoginState(Client client) {
-        FarmingRuntimeService.INSTANCE.onLogin(client, System.currentTimeMillis());
+        ContentRuntimeApi.onFarmingLogin(client, System.currentTimeMillis());
         initializeInterfaceTexts(client);
         client.onPostLoginUiInit();
         client.refreshFriends();

@@ -24,7 +24,7 @@ object DevAccountAndStateCommands : CommandContent {
         commands {
             command(
                 "rank", "combat", "remitem", "remskill", "pouch", "update", "resettask",
-                "reloaditems", "setlevel", "setxp", "reset", "master", "quest", "quest_reward",
+                "reloaditems", "reloadshops", "setlevel", "setxp", "reset", "master", "quest", "quest_reward",
                 "moooo", "busy",
             ) {
                 handleDevAccountState(this)
@@ -36,7 +36,7 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
     val client = context.client
     val command = context.rawCommand
     val cmd = context.parts
-    if (!context.specialRights && context.alias in setOf("rank", "combat", "remitem", "remskill", "pouch", "update", "resettask", "reloaditems", "setlevel", "setxp")) {
+    if (!context.specialRights && context.alias in setOf("rank", "combat", "remitem", "remskill", "pouch", "update", "resettask", "reloaditems", "reloadshops", "setlevel", "setxp")) {
         return false
     }
     when {
@@ -152,6 +152,17 @@ private fun handleDevAccountState(context: CommandContext): Boolean {
         context.alias == "reloaditems" && context.specialRights -> {
             Server.itemManager.reloadItems()
             context.reply("You reloaded all items!")
+            return true
+        }
+        context.alias == "reloadshops" && context.specialRights -> {
+            val reloaded = Server.shopManager?.reloadShops() == true
+            context.reply(
+                if (reloaded) {
+                    "You reset all shops from the Kotlin shop definitions!"
+                } else {
+                    "Shop reload failed. Check the server logs for details."
+                },
+            )
             return true
         }
         context.alias == "setlevel" && context.specialRights -> {

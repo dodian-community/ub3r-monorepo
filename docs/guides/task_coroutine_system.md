@@ -112,7 +112,7 @@ worldTaskCoroutine {
 }
 ```
 
-## Rules / Pitfalls
+## Rules 
 
 - Ticks are game ticks (`600ms`), not milliseconds.
 - `delay(0)` is valid and immediate.
@@ -120,14 +120,6 @@ worldTaskCoroutine {
 - Do not do blocking DB/file/network I/O inside these task blocks.
 - Don’t build a custom `WorldTasksManager`; use this facade over `GameTaskRuntime`.
 
-## When To Use What
-
-- Use coroutine facade (`worldTaskCoroutine` / `playerTaskCoroutine` / `npcTaskCoroutine`) for scripted step flows.
-- Use queue/repeating scheduler APIs when you only need simple fixed-delay callbacks without coroutine flow control.
-
-## Real RSPS Examples From This Codebase
-
-These are direct “how you’d write it now” versions of patterns already in your server.
 
 ### 1) Interaction chase loop (like `InteractionTaskScheduler`)
 

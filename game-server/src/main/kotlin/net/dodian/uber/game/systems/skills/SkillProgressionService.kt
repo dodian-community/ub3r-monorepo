@@ -2,7 +2,7 @@ package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.engine.config.gameMultiplierGlobalXp
 import net.dodian.uber.game.engine.event.GameEventBus
-import net.dodian.uber.game.events.player.LevelUpEvent
+import net.dodian.uber.game.events.LevelUpEvent
 import net.dodian.uber.game.events.skilling.SkillProgressAppliedEvent
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client

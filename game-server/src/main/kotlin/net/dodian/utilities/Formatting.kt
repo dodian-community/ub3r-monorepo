@@ -1,19 +1,22 @@
 package net.dodian.utilities
 
+import org.slf4j.LoggerFactory
 import java.text.NumberFormat
 
 object Formatting {
+    private val logger = LoggerFactory.getLogger(Formatting::class.java)
+
     @JvmStatic
     fun format(number: Int): String = NumberFormat.getInstance().format(number)
 
     @JvmStatic
     fun println(str: String) {
-        System.out.println(str)
+        logger.info(str)
     }
 
     @JvmStatic
     fun printlnDebug(message: String) {
-        return
+        logger.debug(message)
     }
 
     @JvmStatic

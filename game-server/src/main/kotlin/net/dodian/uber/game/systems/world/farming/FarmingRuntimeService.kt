@@ -5,9 +5,12 @@ import java.util.TreeMap
 import kotlin.system.measureNanoTime
 import net.dodian.uber.game.content.skills.farming.FarmingData
 import net.dodian.uber.game.content.skills.farming.markFarmingDirty
+import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.tasking.TaskHandle
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
+import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.slf4j.LoggerFactory
 
@@ -17,30 +20,81 @@ class FarmingRuntimeService {
     private val dueBuckets = TreeMap<Long, MutableSet<Client>>()
     private val runtimeStateByPlayer = IdentityHashMap<Client, PlayerFarmingRuntimeState>()
     private val pendingSaveAt = IdentityHashMap<Client, Long>()
+    private val deferredLoginCatchUpStartCycle = IdentityHashMap<Client, Long>()
+    private val deferredLoginCatchUpLatencyByTicks = TreeMap<Long, Int>()
+    @Volatile
+    private var tickPilotHandle: TaskHandle? = null
+
+    fun recordDeferredLoginCatchUpStart(player: Client, startCycle: Long) {
+        deferredLoginCatchUpStartCycle[player] = startCycle
+    }
+
+    @Synchronized
+    fun deferredLoginCatchUpLatencySnapshot(): Map<Long, Int> = deferredLoginCatchUpLatencyByTicks.toMap()
 
     fun onLogin(player: Client, nowMs: Long) {
+        ensureTickPilotStarted()
         applyTimestampCatchUp(player, nowMs)
         notePlayer(player, nowMs, immediate = true)
     }
 
     fun onPatchInteraction(player: Client, nowMs: Long) {
+        ensureTickPilotStarted()
         applyTimestampCatchUp(player, nowMs)
         notePlayer(player, nowMs, immediate = true)
     }
 
     fun onCompostInteraction(player: Client, nowMs: Long) {
+        ensureTickPilotStarted()
         applyTimestampCatchUp(player, nowMs)
         notePlayer(player, nowMs, immediate = true)
     }
 
     fun onSaplingInventoryChange(player: Client, nowMs: Long) {
+        ensureTickPilotStarted()
         notePlayer(player, nowMs, immediate = true)
     }
 
     fun onStateDirty(player: Client, nowMs: Long) {
+        ensureTickPilotStarted()
         pendingSaveAt[player] = nowMs + FARMING_SAVE_DEBOUNCE_MS
         runtimeStateByPlayer[player]?.dirty = true
         notePlayer(player, nowMs, immediate = false)
+    }
+
+    @Synchronized
+    fun ensureTickPilotStarted(): Boolean {
+        val handle = tickPilotHandle
+        if (handle != null && !handle.isCancelled()) {
+            return false
+        }
+        tickPilotHandle =
+            TickTasks.worldTaskCoroutine {
+                repeatEvery(intervalTicks = FARMING_RUNTIME_POLL_TICKS) {
+                    runTick(System.currentTimeMillis())
+                    true
+                }
+            }
+        logger.info("Farming runtime pilot bound to TickTasks world coroutine")
+        return true
+    }
+
+    private fun runTick(nowMs: Long) {
+        val runStats: FarmingRunStats
+        val elapsed =
+            measureNanoTime {
+                runStats = runDue(nowMs)
+            }
+        val elapsedMs = elapsed / 1_000_000L
+        if (elapsedMs >= runtimePhaseWarnMs) {
+            logger.warn(
+                "Farming runtime tick took {}ms duePlayers={} processedPlayers={} maxBucketSize={}",
+                elapsedMs,
+                runStats.duePlayers,
+                runStats.processedPlayers,
+                runStats.maxBucketSize,
+            )
+        }
     }
 
     fun runDue(nowMs: Long): FarmingRunStats {
@@ -86,6 +140,7 @@ class FarmingRuntimeService {
     private fun notePlayer(player: Client, nowMs: Long, immediate: Boolean) {
         if (!player.isActive || player.disconnected) {
             unschedule(player)
+            deferredLoginCatchUpStartCycle.remove(player)
             runtimeStateByPlayer.remove(player)
             return
         }
@@ -116,11 +171,13 @@ class FarmingRuntimeService {
         if (lastPulseAt <= 0L) {
             state.lastGlobalPulseAtMillis = nowMs
             player.markFarmingDirty()
+            maybeRecordDeferredCatchUpLatency(player, nowMs)
             return
         }
 
         val elapsed = nowMs - lastPulseAt
         if (elapsed < FARMING_PULSE_MS) {
+            maybeRecordDeferredCatchUpLatency(player, nowMs)
             return
         }
 
@@ -136,9 +193,13 @@ class FarmingRuntimeService {
             }
         val requiredWindows = (activeSlots + activeBins + if (snapshot.hasPendingSaplings) 1 else 0).coerceAtLeast(1)
         val rawPulses = (elapsed / FARMING_PULSE_MS).toInt()
-        val pulsesToApply = rawPulses.coerceAtMost(requiredWindows.coerceAtMost(MAX_CATCH_UP_PULSES))
+        val pulsesToApply =
+            rawPulses
+                .coerceAtMost(requiredWindows.coerceAtMost(MAX_CATCH_UP_PULSES))
+                .coerceAtMost(MAX_CATCH_UP_PULSES_PER_INVOCATION)
 
         if (pulsesToApply <= 0) {
+            maybeRecordDeferredCatchUpLatency(player, nowMs)
             return
         }
 
@@ -165,6 +226,25 @@ class FarmingRuntimeService {
                 player.dbId,
             )
         }
+        maybeRecordDeferredCatchUpLatency(player, nowMs)
+    }
+
+    private fun maybeRecordDeferredCatchUpLatency(player: Client, nowMs: Long) {
+        val startCycle = deferredLoginCatchUpStartCycle[player] ?: return
+        val lagMs = nowMs - player.farmingJson.lastGlobalPulseAtMillis
+        if (lagMs > FARMING_PULSE_MS) {
+            return
+        }
+        deferredLoginCatchUpStartCycle.remove(player)
+        val ticks = (TickTasks.gameClock() - startCycle).coerceAtLeast(0L)
+        deferredLoginCatchUpLatencyByTicks[ticks] = (deferredLoginCatchUpLatencyByTicks[ticks] ?: 0) + 1
+        logger.info(
+            "Farming deferred login catch-up settled in {} ticks player={} dbId={} lagMs={}",
+            ticks,
+            player.playerName,
+            player.dbId,
+            lagMs,
+        )
     }
 
     private fun flushDebouncedSaves(nowMs: Long) {
@@ -293,6 +373,7 @@ class FarmingRuntimeService {
                 dueBuckets.remove(due)
             }
             pendingSaveAt.remove(client)
+            deferredLoginCatchUpStartCycle.remove(client)
             runtimeStateByPlayer.remove(client)
             iterator.remove()
         }
@@ -303,7 +384,9 @@ class FarmingRuntimeService {
         val INSTANCE = FarmingRuntimeService()
 
         private const val FARMING_PULSE_MS = 300_000L
+        private const val FARMING_RUNTIME_POLL_TICKS = 1
         private const val FARMING_SAVE_DEBOUNCE_MS = 5_000L
         private const val MAX_CATCH_UP_PULSES = 288
+        private const val MAX_CATCH_UP_PULSES_PER_INVOCATION = 6
     }
 }

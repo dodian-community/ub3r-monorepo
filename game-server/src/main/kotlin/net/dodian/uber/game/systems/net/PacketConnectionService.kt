@@ -1,6 +1,7 @@
 package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.Player
 
 /**
  * Thin Kotlin façade for connection-lifecycle packet side-effects that must not
@@ -52,10 +53,21 @@ object PacketConnectionService {
         client.Privatechat = mode
     }
 
-    /** Clears the walking queue for a follow-player request (opcode 39). */
+    /**
+     * Handles the follow-player request side-effects (opcode 39).
+     *
+     * This legacy packet is used to open a moderator search page for the target
+     * player after resetting the walking queue.
+     */
     @JvmStatic
-    fun handleFollowPlayer(client: Client) {
+    fun handleFollowPlayer(client: Client, followId: Int) {
+        if (client.slot == followId) return
+
+        val player = client.getClient(followId) ?: return
         client.resetWalkingQueue()
+        val url = "https://dodian.net/index.php?pageid=modcp&action=search&player=" +
+            player.playerName.replace(" ", "%20")
+        Player.openPage(client, url)
     }
 }
 

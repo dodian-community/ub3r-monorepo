@@ -3,6 +3,8 @@ package net.dodian.uber.game.persistence.account
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileWriter
+import java.io.IOException
+import java.sql.SQLException
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.gameWorldId
@@ -35,7 +37,9 @@ class Login {
                     statement.executeUpdate()
                 }
             }
-        } catch (exception: Exception) {
+        } catch (exception: SQLException) {
+            logger.error("Failed to record player session for dbId={}", dbId, exception)
+        } catch (exception: RuntimeException) {
             logger.error("Failed to record player session for dbId={}", dbId, exception)
         }
     }
@@ -74,7 +78,7 @@ class Login {
                 file.parentFile?.mkdirs()
                 try {
                     file.createNewFile()
-                } catch (exception: Exception) {
+                } catch (exception: IOException) {
                     logger.warn("Could not initialize UUID ban file.", exception)
                 }
                 return
@@ -86,7 +90,7 @@ class Login {
                         bannedUid.add(value)
                     }
                 }
-            } catch (exception: Exception) {
+            } catch (exception: IOException) {
                 logger.error("Failed reading UUID bans.", exception)
             }
         }
@@ -110,7 +114,7 @@ class Login {
                 }
             } catch (_: FileNotFoundException) {
                 // This file is often absent in local dev; ignore missing-file noise.
-            } catch (exception: Exception) {
+            } catch (exception: IOException) {
                 logger.error("Failed appending UUID bans.", exception)
             }
         }

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,6 @@ public class RemoveIgnoreListener implements PacketListener {
         ByteBuf buf = packet.payload();
         long ign = buf.readLong();
         logger.debug("RemoveIgnoreListener: {} unignores {}", client.getPlayerName(), ign);
-        client.removeIgnore(ign);
+        PacketSocialService.handleRemoveIgnore(client, ign);
     }
 }

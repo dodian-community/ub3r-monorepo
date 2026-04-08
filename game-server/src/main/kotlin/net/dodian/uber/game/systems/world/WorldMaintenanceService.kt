@@ -1,12 +1,10 @@
 package net.dodian.uber.game.systems.world
 
 import kotlin.system.measureNanoTime
-import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.world.WorldPollResult
 import net.dodian.uber.game.persistence.WorldSavePublisher
 import net.dodian.uber.game.persistence.WorldSaveSnapshot
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
-import net.dodian.uber.game.systems.world.farming.FarmingRuntimeService
 import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
@@ -17,7 +15,6 @@ class WorldMaintenanceService(
     private val logger = LoggerFactory.getLogger(WorldMaintenanceService::class.java)
     private val playerIndex = OnlinePlayerIndex()
     private val pollApplier = TargetedWorldPollApplier()
-    private val farmingRuntime = FarmingRuntimeService.INSTANCE
     private var lastPlunderRunMs = 0L
     private var worldDbDueCycle = Long.MIN_VALUE
     private var pendingWorldPollResult: WorldPollResult = WorldPollResult.EMPTY
@@ -55,24 +52,6 @@ class WorldMaintenanceService(
         worldDbDueCycle = Long.MIN_VALUE
     }
 
-    fun runFarming(@Suppress("UNUSED_PARAMETER") cycle: Long) {
-        val nowMs = System.currentTimeMillis()
-        val runStats: net.dodian.uber.game.systems.world.farming.FarmingRunStats
-        val elapsed = measureNanoTime {
-            runStats = farmingRuntime.runDue(nowMs)
-        }
-        val elapsedMs = elapsed / 1_000_000L
-        if (elapsedMs >= runtimePhaseWarnMs) {
-            logger.warn(
-                "World maintenance stage {} took {}ms duePlayers={} processedPlayers={} maxBucketSize={}",
-                WorldMaintenanceStage.FARMING_TICK,
-                elapsedMs,
-                runStats.duePlayers,
-                runStats.processedPlayers,
-                runStats.maxBucketSize,
-            )
-        }
-    }
 
     fun runPlunder(nowMs: Long) {
         if (lastPlunderRunMs != 0L && nowMs - lastPlunderRunMs < PLUNDER_DOOR_INTERVAL_MS) {

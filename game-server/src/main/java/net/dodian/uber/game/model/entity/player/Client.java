@@ -10,6 +10,7 @@ import net.dodian.uber.game.events.trade.TradeCompleteEvent;
 import net.dodian.uber.game.events.trade.TradeRequestEvent;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.content.shop.ShopManager;
+import net.dodian.uber.game.content.shop.ShopRulesService;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
@@ -496,15 +497,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        return;
+        logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void print_debug(String str) {
-        // TODO: Is this method necessary? I commented out the implementation of it and will just redirect it to the println variant.
         println_debug(str);
-
-        // String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        // System.out.print("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
     }
 
     public void println(String str) {
@@ -943,8 +940,10 @@ public class Client extends Player implements Runnable {
         if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
+        int previousInterfaceId = activeInterfaceId;
         Integer openedInterfaceId = null;
         String openedVia = null;
+        String closedVia = null;
 
         if (packet instanceof ShowInterface) {
             openedInterfaceId = ((ShowInterface) packet).interfaceId();
@@ -956,11 +955,19 @@ public class Client extends Player implements Runnable {
             openedInterfaceId = ((SendFrame164) packet).frame();
             openedVia = "Frame164";
         } else if (packet instanceof RemoveInterfaces) {
+            closedVia = "RemoveInterfaces";
             activeInterfaceId = -1;
         }
 
         if (openedInterfaceId != null) {
             activeInterfaceId = openedInterfaceId;
+        }
+
+        if (closedVia != null && previousInterfaceId != -1) {
+            ConsoleAuditLog.interfaceClose(this, previousInterfaceId, closedVia);
+        }
+        if (openedInterfaceId != null && openedInterfaceId != previousInterfaceId) {
+            ConsoleAuditLog.interfaceOpen(this, openedInterfaceId, openedVia);
         }
 
         packet.send(this);
@@ -1628,11 +1635,10 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Shopping have been disabled!"));
             return;
         }
-        if (ShopID == 20 || ShopID == 34) {
-            if (!premium) {
-                send(new SendMessage("You need to be a premium member to access this shop."));
-                return;
-            }
+        String accessDeniedMessage = ShopRulesService.accessDeniedMessage(this, ShopID);
+        if (accessDeniedMessage != null) {
+            send(new SendMessage(accessDeniedMessage));
+            return;
         }
         MyShopID = ShopID;
         checkItemUpdate();
@@ -2599,19 +2605,15 @@ public class Client extends Player implements Runnable {
         }
         /* Item Values */
         int original = itemID;
-        int price = (int) Math.floor(GetShopBuyValue(itemID));
         itemID = getUnnotedItem(original) > 0 ? getUnnotedItem(original) : itemID;
+        int price = ShopRulesService.sellPrice(itemID);
         /* Functions */
         if (!Server.shopping || tradeLocked) {
             send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
             return;
         }
-        if (price < 0 || !Server.itemManager.isTradable(itemID) || ShopManager.ShopBModifier[MyShopID] > 2) {
+        if (price < 0 || !Server.itemManager.isTradable(itemID) || !ShopRulesService.canSellItemToShop(MyShopID, itemID)) {
             send(new SendMessage("You cannot sell " + getItemName(itemID).toLowerCase() + " in this store."));
-            return;
-        }
-        if (ShopManager.ShopBModifier[MyShopID] == 2 && !ShopManager.findDefaultItem(MyShopID, itemID)) {
-            send(new SendMessage("Can't sell that item to the store!"));
             return;
         }
         int slot = -1;
@@ -2628,10 +2630,11 @@ public class Client extends Player implements Runnable {
             return;
         }
         /* Amount checks */
+        int currency = ShopRulesService.currencyItemId(MyShopID);
         boolean stack = Server.itemManager.isStackable(original);
         amount = Math.min(amount, getInvAmt(original));
         amount = Math.min(Integer.MAX_VALUE - ShopManager.ShopItemsN[MyShopID][slot], amount);
-        amount = Integer.MAX_VALUE - getInvAmt(995) < amount * price ? (Integer.MAX_VALUE - getInvAmt(995)) / price : amount;
+        amount = Integer.MAX_VALUE - getInvAmt(currency) < amount * price ? (Integer.MAX_VALUE - getInvAmt(currency)) / price : amount;
 
         if (amount > 0) { // Code to check if there is any amount to sell!
             if (!stack) {
@@ -2643,7 +2646,9 @@ public class Client extends Player implements Runnable {
             }
             ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
             ShopManager.ShopItemsN[MyShopID][slot] += amount;
-            addItem(995, amount * price);
+            int totalPrice = amount * price;
+            addItem(currency, totalPrice);
+            ConsoleAuditLog.shopSell(this, MyShopID, slot, itemID, amount, currency, totalPrice);
         } else
             send(new SendMessage("Could not sell anything!"));
         /* Store update! */
@@ -2652,21 +2657,8 @@ public class Client extends Player implements Runnable {
     }
 
     public int eventShopValues(int slot) {
-        switch (slot) {
-            case 0:
-                return 8000;
-            case 1:
-            case 2:
-                return 12000;
-            case 3:
-            case 4:
-                return 4000;
-            case 5:
-                return 25000;
-            case 6:
-                return 15000;
-        }
-        return 0;
+        int itemId = ShopManager.ShopItems[MyShopID][slot] - 1;
+        return ShopRulesService.buyPrice(MyShopID, itemId, slot);
     }
 
     public void buyItem(int itemID, int fromSlot, int amount) {
@@ -2683,15 +2675,15 @@ public class Client extends Player implements Runnable {
                 return;
             }
 
-            int currency = MyShopID == 55 ? 11997 : 995;
-            int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID));
-            TotPrice2 = MyShopID >= 7 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
+            int currency = ShopRulesService.currencyItemId(MyShopID);
+            int TotPrice2 = ShopRulesService.buyPrice(MyShopID, itemID, fromSlot);
             int coins = getInvAmt(currency);
             amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
             if (amount == 0) {
                 send(new SendMessage("You don't have enough " + getItemName(currency).toLowerCase()));
                 return;
             }
+            int purchasedAmount = 0;
             if (!stack) {
                 for (int i = amount; i > 0; i--) {
                     if (freeSlots() == 0) {
@@ -2701,6 +2693,7 @@ public class Client extends Player implements Runnable {
                     if (addItem(itemID, 1)) {
                         deleteItem(currency, TotPrice2);
                         ShopManager.ShopItemsN[MyShopID][fromSlot] -= 1;
+                        purchasedAmount += 1;
                         if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
                             ShopManager.resetAnItem(MyShopID, fromSlot);
                             break;
@@ -2714,11 +2707,15 @@ public class Client extends Player implements Runnable {
                 if (addItem(itemID, amount)) {
                     deleteItem(currency, TotPrice2 * amount);
                     ShopManager.ShopItemsN[MyShopID][fromSlot] -= amount;
+                    purchasedAmount = amount;
                     if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
                         ShopManager.resetAnItem(MyShopID, fromSlot);
                     }
                 } else
                     return;
+            }
+            if (purchasedAmount > 0) {
+                ConsoleAuditLog.shopBuy(this, MyShopID, fromSlot, itemID, purchasedAmount, currency, TotPrice2 * purchasedAmount);
             }
             /* Store update! */
             UpdatePlayerShop();

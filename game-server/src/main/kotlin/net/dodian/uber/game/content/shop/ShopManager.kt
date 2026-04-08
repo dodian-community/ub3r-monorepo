@@ -1,25 +1,8 @@
 package net.dodian.uber.game.content.shop
 
-import java.io.BufferedReader
-import java.io.FileNotFoundException
-import java.io.FileReader
-import java.io.IOException
-import net.dodian.utilities.Utils
-
 class ShopManager {
     init {
-        for (i in 0 until MaxShops) {
-            for (j in 0 until MaxShopItems) {
-                ResetItem(i, j)
-                ShopItemsSN[i][j] = 0
-            }
-            ShopItemsStandard[i] = 0
-            ShopSModifier[i] = 0
-            ShopBModifier[i] = 0
-            ShopName[i] = ""
-        }
-        TotalShops = 0
-        loadShops("./data/shops.cfg")
+        reloadShops()
     }
 
     fun DiscountItem(ShopID: Int, ArrayID: Int) {
@@ -36,74 +19,42 @@ class ShopManager {
         ShopItemsDelay[ShopID] = 0
     }
 
-    @Suppress("resource")
-    fun loadShops(FileName: String): Boolean {
-        var line: String
-        val token3 = arrayOfNulls<String>((MaxShopItems * 2) + 4)
+    @Suppress("UNUSED_PARAMETER")
+    fun loadShops(FileName: String): Boolean = reloadShops()
 
-        val characterfile: BufferedReader =
-            try {
-                BufferedReader(FileReader("./$FileName"))
-            } catch (_: FileNotFoundException) {
-                Utils.println("$FileName: file not found.")
-                return false
+    @Synchronized
+    fun reloadShops(): Boolean {
+        for (i in 0 until MaxShops) {
+            for (j in 0 until MaxShopItems) {
+                ResetItem(i, j)
+                ShopItemsSN[i][j] = 0
             }
-
-        try {
-            line = characterfile.readLine() ?: return false
-        } catch (_: IOException) {
-            Utils.println("$FileName: error loading file.")
-            return false
+            ShopItemsStandard[i] = 0
+            ShopSModifier[i] = 0
+            ShopBModifier[i] = 0
+            ShopName[i] = ""
         }
-
-        var endOfFile = false
-        while (!endOfFile && line.isNotEmpty()) {
-            val trimmed = line.trim()
-            val spot = trimmed.indexOf('=')
-            if (spot > -1) {
-                val token = trimmed.substring(0, spot).trim()
-                val token2 = trimmed.substring(spot + 1).trim()
-                val token2_2 = token2.replace("\t\t", "\t").replace("\t\t", "\t").replace("\t\t", "\t").replace("\t\t", "\t").replace("\t\t", "\t")
-                val parsed = token2_2.split("\t")
-                for (i in parsed.indices) {
-                    token3[i] = parsed[i]
-                }
-                if (token == "shop") {
-                    val ShopID = token3[0]!!.toInt()
-                    ShopName[ShopID] = token3[1]!!.replace("_", " ")
-                    ShopSModifier[ShopID] = token3[2]!!.toInt()
-                    ShopBModifier[ShopID] = token3[3]!!.toInt()
-                    for (i in 0 until ((parsed.size - 4) / 2)) {
-                        val itemValue = token3[4 + (i * 2)] ?: break
-                        ShopItems[ShopID][i] = itemValue.toInt() + 1
-                        ShopItemsN[ShopID][i] = token3[5 + (i * 2)]!!.toInt()
-                        ShopItemsSN[ShopID][i] = token3[5 + (i * 2)]!!.toInt()
-                        ShopItemsStandard[ShopID]++
-                    }
-                    TotalShops++
-                }
-            } else if (trimmed == "[ENDOFSHOPLIST]") {
-                try {
-                    characterfile.close()
-                } catch (_: IOException) {
-                }
-                return true
+        var loadedShops = 0
+        for (definition in ShopDefinitions.all()) {
+            require(definition.id in 0 until MaxShops) {
+                "Shop ${definition.id} is outside the configured shop bounds (max=${MaxShops - 1})."
             }
-
-            line =
-                try {
-                    characterfile.readLine() ?: break
-                } catch (_: IOException) {
-                    endOfFile = true
-                    ""
-                }
+            require(definition.stock.size <= MaxShopItems) {
+                "Shop ${definition.id} exceeds MaxShopItems=$MaxShopItems with ${definition.stock.size} items."
+            }
+            ShopName[definition.id] = definition.name
+            ShopSModifier[definition.id] = definition.sellModifier
+            ShopBModifier[definition.id] = definition.buyModifier
+            definition.stock.forEachIndexed { index, item ->
+                ShopItems[definition.id][index] = item.itemId + 1
+                ShopItemsN[definition.id][index] = item.amount
+                ShopItemsSN[definition.id][index] = item.amount
+                ShopItemsStandard[definition.id]++
+            }
+            loadedShops++
         }
-
-        try {
-            characterfile.close()
-        } catch (_: IOException) {
-        }
-        return false
+        TotalShops = loadedShops
+        return true
     }
 
     companion object {
@@ -130,6 +81,9 @@ class ShopManager {
 
         @JvmStatic
         fun findDefaultItem(shopId: Int, id: Int): Boolean {
+            if (ShopRulesService.isDefaultStockItem(shopId, id)) {
+                return true
+            }
             for (i in 0 until ShopItemsStandard[shopId]) {
                 if (ShopItems[shopId][i] - 1 == id) {
                     return true

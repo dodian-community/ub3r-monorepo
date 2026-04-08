@@ -6,7 +6,6 @@ enum class GamePhase {
     WORLD_DB_INPUT_BUILD,
     WORLD_DB_RESULT_READ,
     WORLD_DB_APPLY,
-    FARMING_TICK,
     PLUNDER_DOOR,
     NPC_MAIN,
     PLAYER_MAIN,

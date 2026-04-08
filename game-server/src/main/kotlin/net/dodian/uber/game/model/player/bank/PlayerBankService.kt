@@ -5,9 +5,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.SendBankItems
 import net.dodian.uber.game.netty.listener.out.SendCurrentBankTab
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.content.events.partyroom.Balloons
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService
 import java.util.ArrayList
@@ -312,12 +311,15 @@ object PlayerBankService {
         if (itemId == 995 && currentTab in 1..9 && tab in 1..9 && currentTab != tab && !hasBankTabItems(client, tab)) {
             return
         }
-        client.bankSlotTabs[bankSlot] = clampOwnedTab(tab)
+        val targetTab = clampOwnedTab(tab)
+        client.bankSlotTabs[bankSlot] = targetTab
         if (client.currentBankTab == 10) {
             client.bankSearchActive = false
             client.bankSearchQuery = ""
             client.currentBankTab = 0
         }
+        client.markSaveDirty(PlayerSaveSegment.BANK.mask)
+        ConsoleAuditLog.bankTabAssignment(client, itemId, bankSlot, currentTab, targetTab)
         checkItemUpdate(client)
     }
 

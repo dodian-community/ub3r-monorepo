@@ -9,6 +9,7 @@ import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 
 class ArchitectureBoundaryTest {
     private val sourceRoot: Path = Paths.get("src/main")
@@ -264,7 +265,8 @@ class ArchitectureBoundaryTest {
             Skill.THIEVING,
         )
 
-        val discovered = ContentModuleIndex.skillPlugins.map { it.definition.skill }.toSet()
+        val skillPlugins: List<SkillPlugin> = ContentModuleIndex.skillPlugins
+        val discovered = skillPlugins.map { plugin -> plugin.definition.skill }.toSet()
         assertTrue(
             discovered == expectedSkills,
             "Expected complete gameplay skill plugin ownership.\nmissing=${(expectedSkills - discovered).joinToString()}\nextra=${(discovered - expectedSkills).joinToString()}",
@@ -291,8 +293,10 @@ class ArchitectureBoundaryTest {
             Skill.THIEVING,
         )
 
-        val empty = ContentModuleIndex.skillPlugins
-            .filter { it.definition.skill in gameplaySkills }
+        val skillPlugins: List<SkillPlugin> = ContentModuleIndex.skillPlugins
+
+        val empty = skillPlugins
+            .filter { plugin -> plugin.definition.skill in gameplaySkills }
             .filter { plugin ->
                 val definition = plugin.definition
                 definition.objectBindings.isEmpty() &&
@@ -1097,6 +1101,21 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Java interop must use explicit systems.skills wrapper APIs only.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `player initializer routes farming login through content runtime api`() {
+        val path = sourceRoot.resolve("java/net/dodian/uber/game/model/entity/player/PlayerInitializer.java")
+        val source = Files.readString(path)
+
+        assertTrue(
+            source.contains("ContentRuntimeApi.onFarmingLogin(client, System.currentTimeMillis())"),
+            "Expected PlayerInitializer to call ContentRuntimeApi.onFarmingLogin(client, System.currentTimeMillis())",
+        )
+        assertTrue(
+            !source.contains("FarmingRuntimeService.INSTANCE.onLogin"),
+            "PlayerInitializer must not call FarmingRuntimeService directly",
         )
     }
 

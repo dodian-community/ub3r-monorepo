@@ -132,7 +132,6 @@ class GameLoopService(
         worldMaintenancePhase.runWorldDbInputBuild(currentCycle)
         worldMaintenancePhase.runWorldDbResultRead(currentCycle)
         worldMaintenancePhase.runWorldDbApply(currentCycle)
-        worldMaintenancePhase.runFarming(currentCycle)
         worldMaintenancePhase.runPlunder(now)
         npcMainPhase.run(now)
         playerMainPhase.run()

@@ -11,17 +11,13 @@ import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetGoldItems
-import net.dodian.uber.game.systems.action.PlayerActionType
 import net.dodian.uber.game.systems.action.ProductionRequest
-import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
-import net.dodian.uber.game.engine.loop.GameCycleClock
 
 object Crafting {
-    private const val STANDARD_ACTION_DELAY_MS = 1800L
 
     private val normalCraftIds = intArrayOf(
         1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063,
@@ -102,23 +98,7 @@ object Crafting {
     }
 
     @JvmStatic
-    fun startShaftingAction(client: Client) {
-        playerAction(
-            player = client,
-            type = PlayerActionType.SHAFTING,
-            actionName = "shafting",
-            onStop = { player, _ ->
-                player.clearCraftingState()
-            },
-        ) {
-            while (player.craftingState?.mode == CraftingMode.SHAFTING) {
-                performShaft(player)
-                emitCycleSuccess("shafting")
-                if (player.craftingState?.mode != CraftingMode.SHAFTING) return@playerAction
-                waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            }
-        }
-    }
+    fun startShaftingAction(client: Client) = CraftingActions.startShaftingAction(client)
 
     @JvmStatic
     fun performSpin(client: Client) {
@@ -147,23 +127,7 @@ object Crafting {
     }
 
     @JvmStatic
-    fun startSpinningAction(client: Client) {
-        playerAction(
-            player = client,
-            type = PlayerActionType.SPINNING,
-            actionName = "spinning",
-            onStop = { player, _ ->
-                player.clearCraftingState()
-            },
-        ) {
-            while (player.craftingState?.mode == CraftingMode.SPINNING) {
-                performSpin(player)
-                emitCycleSuccess("spinning")
-                if (player.craftingState?.mode != CraftingMode.SPINNING) return@playerAction
-                waitTicks(GameCycleClock.ticksForDurationMs(spinDelayMs(player)))
-            }
-        }
-    }
+    fun startSpinningAction(client: Client) = CraftingActions.startSpinningAction(client)
 
     @JvmStatic
     fun spinDelayMs(client: Client): Long {
@@ -258,23 +222,7 @@ object Crafting {
     }
 
     @JvmStatic
-    fun startCraftingAction(client: Client) {
-        playerAction(
-            player = client,
-            type = PlayerActionType.CRAFTING,
-            actionName = "crafting",
-            onStop = { player, _ ->
-                player.clearCraftingState()
-            },
-        ) {
-            while ((player.craftingState?.remaining ?: 0) > 0 && player.craftingState?.mode == CraftingMode.LEATHER) {
-                performCraft(player)
-                emitCycleSuccess("crafting")
-                if ((player.craftingState?.remaining ?: 0) <= 0 || player.craftingState?.mode != CraftingMode.LEATHER) return@playerAction
-                waitTicks(GameCycleClock.ticksForDurationMs(STANDARD_ACTION_DELAY_MS))
-            }
-        }
-    }
+    fun startCraftingAction(client: Client) = CraftingActions.startCraftingAction(client)
 
     @JvmStatic
     fun performCraft(client: Client) {

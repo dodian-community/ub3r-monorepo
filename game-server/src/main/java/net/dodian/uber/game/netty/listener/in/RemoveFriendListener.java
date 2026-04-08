@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,6 @@ public class RemoveFriendListener implements PacketListener {
         ByteBuf buf = packet.payload();
         long friend = buf.readLong(); // big-endian qword
         logger.debug("RemoveFriendListener: {} removes {}", client.getPlayerName(), friend);
-        client.removeFriend(friend);
+        PacketSocialService.handleRemoveFriend(client, friend);
     }
 }

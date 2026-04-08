@@ -2,6 +2,8 @@ package net.dodian.utilities;
 
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.util.ByteStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -10,6 +12,8 @@ import java.io.FileInputStream;
 import java.util.zip.GZIPInputStream;
 
 public class Rangable {
+
+    private static final Logger logger = LoggerFactory.getLogger(Rangable.class);
 
     private static Rangable[] rangables;
     private final int id;
@@ -382,7 +386,7 @@ public class Rangable {
     public static void removeObjectAndClip(int id, int x, int y, int height, int direction, int type) {
         GameObjectData data = GameObjectData.forId(id);
         if (data == null) {
-            System.out.println("ID: " + id + " HAS NO DEF");
+            logger.warn("Rangable.removeObjectAndClip missing object definition for id={}", id);
             return;
         }
         int xLength = data.getSizeX(direction);
@@ -400,7 +404,7 @@ public class Rangable {
     public static void removeObject(int id, int x, int y, int height, int direction, int type) {
         GameObjectData data = GameObjectData.forId(id);
         if (data == null) {
-            System.out.println("ID: " + id + " HAS NO DEF");
+            logger.warn("Rangable.removeObject missing object definition for id={}", id);
             return;
         }
         int xLength = data.getSizeX(direction);
@@ -569,16 +573,16 @@ public class Rangable {
                 } catch (Exception e) {
                     failedRegions++;
                     if (failedRegions <= 10) {
-                        System.out.println("Error loading map region: " + regionIds[i] + " (" + e.getClass().getSimpleName() + ")");
+                        logger.warn("Error loading map region {} ({})", regionIds[i], e.getClass().getSimpleName());
                     }
                 }
             }
             if (failedRegions > 10) {
-                System.out.println("[Rangable] Additional failed regions: " + (failedRegions - 10));
+                logger.warn("[Rangable] Additional failed regions: {}", failedRegions - 10);
             }
-            System.out.println("[Rangable] DONE LOADING REGION CONFIGURATIONS");
+            logger.info("[Rangable] DONE LOADING REGION CONFIGURATIONS");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed loading rangable region configurations", e);
         }
     }
 
@@ -648,7 +652,7 @@ public class Rangable {
         GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(buffer));
         do {
             if (bufferlength == gzipInputBuffer.length) {
-                System.out.println("Error inflating data.\nGZIP buffer overflow.");
+                logger.error("Error inflating rangable data. GZIP buffer overflow.");
                 break;
             }
             int readByte = gzip.read(gzipInputBuffer, bufferlength, gzipInputBuffer.length - bufferlength);

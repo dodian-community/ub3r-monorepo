@@ -2,7 +2,6 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -29,18 +28,12 @@ public class FollowPlayerListener implements PacketListener {
             return;
         }
         int followId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
-        if (client.getSlot() == followId) return; // cannot follow yourself
-
-        Client player = client.getClient(followId);
-        if (player == null) return;
 
         if (logger.isTraceEnabled()) {
-            logger.trace("FollowPlayer from={} targetSlot={} targetName={}", client.getPlayerName(), followId, player.getPlayerName());
+            logger.trace("FollowPlayer from={} targetSlot={}", client.getPlayerName(), followId);
         }
 
-        PacketConnectionService.handleFollowPlayer(client);
-        String url = "https://dodian.net/index.php?pageid=modcp&action=search&player=" + player.getPlayerName().replace(" ", "%20");
-        Player.openPage(client, url);
+        PacketConnectionService.handleFollowPlayer(client, followId);
     }
 }
 

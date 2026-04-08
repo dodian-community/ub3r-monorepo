@@ -10,8 +10,6 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
 import net.dodian.uber.game.model.player.skills.prayer.Bones
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.playerAction
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
@@ -80,24 +78,7 @@ object Prayer {
     }
 
     @JvmStatic
-    fun startAltarOfferingAction(client: Client) {
-        playerAction(
-            player = client,
-            type = PlayerActionType.ALTAR_BONES,
-            actionName = "altar_bones",
-            onStop = { player, _ ->
-                player.clearPrayerOfferingState()
-            },
-        ) {
-            while (player.prayerOfferingState != null) {
-                val boneItemId = player.prayerOfferingState?.boneItemId ?: return@playerAction
-                emitCycle("altar_bones")
-                if (!altarBones(player, boneItemId)) return@playerAction
-                emitSuccess("altar_bones")
-                waitTicks(3)
-            }
-        }
-    }
+    fun startAltarOfferingAction(client: Client) = PrayerActions.startAltarOfferingAction(client)
 }
 
 object AltarObjects : ObjectContent {

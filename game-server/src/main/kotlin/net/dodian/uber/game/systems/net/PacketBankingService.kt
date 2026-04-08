@@ -6,12 +6,13 @@ import net.dodian.uber.game.content.skills.cooking.Cooking
 import net.dodian.uber.game.content.skills.herblore.Herblore
 import net.dodian.uber.game.content.skills.slayer.Slayer
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface
-import net.dodian.uber.game.content.shop.ShopManager
+import net.dodian.uber.game.content.shop.ShopRulesService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.systems.dispatch.ui.SkillingInterfaceItemService
 
 object PacketBankingService {
@@ -32,6 +33,7 @@ object PacketBankingService {
     fun applyPendingBankSearch(client: Client, input: String) {
         client.bankSearchPendingInput = false
         if (!client.IsBanking) return
+        ConsoleAuditLog.bankSearch(client, input)
         client.applyBankSearch(input)
     }
 
@@ -166,6 +168,7 @@ object PacketBankingService {
             interfaceId == 5064 -> {
                 val amount = if (stack) client.playerItemsN[removeSlot] else client.getInvAmt(resolvedItemId)
                 if (client.IsBanking) {
+                    ConsoleAuditLog.bankDeposit(client, resolvedItemId, "ALL", removeSlot)
                     client.bankItem(resolvedItemId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     Balloons.offerItems(client, resolvedItemId, amount, removeSlot)
@@ -175,6 +178,7 @@ object PacketBankingService {
 
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
                 if (bankSlot >= 0) {
+                    ConsoleAuditLog.bankWithdraw(client, resolvedItemId, "ALL", bankSlot)
                     client.fromBank(resolvedItemId, bankSlot, -2)
                 }
             }
@@ -266,6 +270,7 @@ object PacketBankingService {
 
             5064 -> {
                 if (client.IsBanking) {
+                    ConsoleAuditLog.bankDeposit(client, removeId, amount.toString(), removeSlot)
                     client.bankItem(removeId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     Balloons.offerItems(client, removeId, amount, removeSlot)
@@ -275,6 +280,7 @@ object PacketBankingService {
 
             5382 -> {
                 if (bankSlot >= 0) {
+                    ConsoleAuditLog.bankWithdraw(client, removeId, amount.toString(), bankSlot)
                     client.fromBank(removeId, bankSlot, amount)
                 }
             }
@@ -292,6 +298,7 @@ object PacketBankingService {
             else -> {
                 if (interfaceId in 50300..50310) {
                     if (bankSlot >= 0) {
+                        ConsoleAuditLog.bankWithdraw(client, removeId, amount.toString(), bankSlot)
                         client.fromBank(removeId, bankSlot, amount)
                     }
                 } else {
@@ -418,6 +425,7 @@ object PacketBankingService {
                         return
                     }
                     if (client.IsBanking) {
+                        ConsoleAuditLog.bankDeposit(client, client.playerItems[client.XremoveSlot] - 1, enteredAmount.toString(), client.XremoveSlot)
                         client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                     } else if (client.isPartyInterface) {
                         Balloons.offerItems(
@@ -438,6 +446,7 @@ object PacketBankingService {
                         return
                     }
                     if (client.bankItems[client.XremoveSlot] > 0) {
+                        ConsoleAuditLog.bankWithdraw(client, client.bankItems[client.XremoveSlot] - 1, enteredAmount.toString(), client.XremoveSlot)
                         client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                         client.checkItemUpdate()
                     }
@@ -547,6 +556,7 @@ object PacketBankingService {
 
             interfaceId == 5064 -> {
                 if (client.IsBanking) {
+                    ConsoleAuditLog.bankDeposit(client, removeId, "1", removeSlot)
                     client.bankItem(removeId, removeSlot, 1)
                 } else if (client.isPartyInterface) {
                     Balloons.offerItems(client, removeId, 1, removeSlot)
@@ -556,6 +566,7 @@ object PacketBankingService {
 
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
                 if (bankSlot >= 0) {
+                    ConsoleAuditLog.bankWithdraw(client, removeId, "1", bankSlot)
                     client.fromBank(removeId, bankSlot, 1)
                 }
             }
@@ -588,7 +599,8 @@ object PacketBankingService {
                     )
                     return
                 }
-                if (Server.itemManager.getShopBuyValue(removeId) < 0 || !Server.itemManager.isTradable(removeId)) {
+                val sellItemId = client.getUnnotedItem(removeId).takeIf { it > 0 } ?: removeId
+                if (ShopRulesService.sellPrice(sellItemId) < 0 || !Server.itemManager.isTradable(sellItemId)) {
                     client.send(
                         SendMessage(
                             "You cannot sell ${client.getItemName(removeId).lowercase()} in this store.",
@@ -596,26 +608,15 @@ object PacketBankingService {
                     )
                     return
                 }
-                var isIn = false
-                if (ShopManager.ShopSModifier[client.MyShopID] > 1) {
-                    for (j in 0..ShopManager.ShopItemsStandard[client.MyShopID]) {
-                        if (removeId == ShopManager.ShopItems[client.MyShopID][j] - 1) {
-                            isIn = true
-                            break
-                        }
-                    }
-                } else {
-                    isIn = true
-                }
-                if (!isIn && ShopManager.ShopBModifier[client.MyShopID] == 2 && !ShopManager.findDefaultItem(client.MyShopID, removeId)) {
+                if (!ShopRulesService.canSellItemToShop(client.MyShopID, sellItemId)) {
                     client.send(
                         SendMessage(
                             "You cannot sell ${client.getItemName(removeId).lowercase()} in this store.",
                         ),
                     )
                 } else {
-                    val currency = if (client.MyShopID == 55) 11997 else 995
-                    val shopValue = if (client.MyShopID == 55) 1000 else kotlin.math.floor(client.GetShopBuyValue(removeId)).toInt()
+                    val currency = ShopRulesService.currencyItemId(client.MyShopID)
+                    val shopValue = ShopRulesService.sellPrice(sellItemId)
                     val shopAdd = formatValueSuffix(shopValue)
                     client.send(
                         SendMessage(
@@ -626,18 +627,8 @@ object PacketBankingService {
             }
 
             interfaceId == 3900 -> {
-                val currency = if (client.MyShopID == 55) 11997 else 995
-                var shopValue = if (client.MyShopID == 55) {
-                    client.eventShopValues(removeSlot)
-                } else {
-                    kotlin.math.floor(client.GetShopSellValue(removeId)).toInt()
-                }
-                if (client.MyShopID in 7..11) {
-                    shopValue = (shopValue * 1.5).toInt()
-                }
-                if (client.MyShopID in 9..11) {
-                    shopValue = (shopValue * 1.5).toInt()
-                }
+                val currency = ShopRulesService.currencyItemId(client.MyShopID)
+                val shopValue = ShopRulesService.buyPrice(client.MyShopID, removeId, removeSlot)
                 val shopAdd = formatValueSuffix(shopValue)
                 client.send(
                     SendMessage(

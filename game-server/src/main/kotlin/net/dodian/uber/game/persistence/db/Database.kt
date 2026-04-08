@@ -13,15 +13,15 @@ import net.dodian.uber.game.engine.config.databasePoolMinSize
 import net.dodian.uber.game.engine.config.databasePort
 import net.dodian.uber.game.engine.config.databaseTablePrefix
 import net.dodian.uber.game.engine.config.databaseUsername
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-private val logger: Logger = LogManager.getLogger("Database")
+private val logger: Logger = LoggerFactory.getLogger("Database")
 private val databaseJdbcUrl = buildDatabaseJdbcUrl(databaseHost, databasePort, databaseName)
 
 private val dataSourceLazy = lazy { createDataSource() }

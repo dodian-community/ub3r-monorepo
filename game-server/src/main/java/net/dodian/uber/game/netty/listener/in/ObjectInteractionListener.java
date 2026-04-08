@@ -5,8 +5,6 @@ import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.object.GameObjectDef;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.model.object.Object;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
@@ -15,10 +13,11 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.systems.interaction.ItemOnObjectIntent;
-import net.dodian.uber.game.systems.interaction.MagicOnObjectIntent;
 import net.dodian.uber.game.systems.interaction.ObjectClickIntent;
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler;
 import net.dodian.uber.game.systems.interaction.scheduler.ObjectInteractionTask;
+import net.dodian.uber.game.systems.net.PacketMagicService;
+import net.dodian.uber.game.systems.net.PacketObjectService;
 import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +25,6 @@ import org.slf4j.LoggerFactory;
 @PacketHandler(opcode = 132)
 public class ObjectInteractionListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(ObjectInteractionListener.class);
-
-    private enum DistanceMode {
-        CLICK,
-        ITEM_ON_OBJECT,
-        MAGIC,
-    }
 
     static {
         ObjectInteractionListener listener = new ObjectInteractionListener();
@@ -88,26 +81,7 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectX = decoded.objectX;
         final int objectY = decoded.objectY;
 
-        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
-        final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
-        final GameObjectData object = GameObjectData.forId(objectId);
-
-        if (client.randomed || client.UsingAgility) {
-            return;
-        }
-
-        // OpenRune-style: tick-owned routing. The game thread will execute when in range.
-        ObjectClickIntent intent =
-                new ObjectClickIntent(
-                        packet.opcode(),
-                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
-                        option,
-                        objectId,
-                        targetPosition,
-                        object,
-                        def
-                );
-        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
+        PacketObjectService.handleObjectClick(client, packet.opcode(), option, objectId, objectX, objectY);
     }
 
     private void handleItemOnObject(Client client, GamePacket packet) {
@@ -124,29 +98,7 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectX = readLEShortA(buf);
         final int itemId = buf.readShort();
 
-        if (client.randomed) {
-            return;
-        }
-        if (itemSlot < 0 || itemSlot >= client.playerItems.length || interfaceId != 3214) {
-            return;
-        }
-
-        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
-        GameObjectData objectData = GameObjectData.forId(objectId);
-        GameObjectDef def = Misc.getObject(objectId, targetPosition.getX(), targetPosition.getY(), client.getPosition().getZ());
-        ItemOnObjectIntent intent =
-                new ItemOnObjectIntent(
-                        packet.opcode(),
-                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
-                        interfaceId,
-                        itemSlot,
-                        itemId,
-                        objectId,
-                        targetPosition,
-                        objectData,
-                        def
-                );
-        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
+        PacketObjectService.handleItemOnObject(client, packet.opcode(), interfaceId, objectId, objectX, objectY, itemSlot, itemId);
     }
 
     private void handleMagicOnObject(Client client, GamePacket packet) {
@@ -161,24 +113,7 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         final int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD) - 128;
 
-        final Position targetPosition = new Position(objectX, objectY, client.getPosition().getZ());
-        final GameObjectDef def = Misc.getObject(objectId, objectX, objectY, client.getPosition().getZ());
-        final GameObjectData object = GameObjectData.forId(objectId);
-
-        if (client.randomed || client.UsingAgility) {
-            return;
-        }
-        MagicOnObjectIntent intent =
-                new MagicOnObjectIntent(
-                        packet.opcode(),
-                        net.dodian.uber.game.systems.world.player.PlayerRegistry.cycle,
-                        spellId,
-                        objectId,
-                        targetPosition,
-                        object,
-                        def
-                );
-        InteractionTaskScheduler.schedule(client, intent, new ObjectInteractionTask(client, intent));
+        PacketMagicService.handleMagicOnObject(client, packet.opcode(), objectX, objectY, objectId, spellId);
     }
 
     private DecodedObjectClick decodeClickPacket(GamePacket packet, int option) {

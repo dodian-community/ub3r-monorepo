@@ -10,10 +10,15 @@ import kotlin.io.path.extension
 class NettyListenerBoundaryTest {
     private val nettyListenerRoot: Path = Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in")
     private val forbiddenMethodPatterns = listOf(
+        "CommandDispatcher.dispatch(",
         "client.send(",
         "client.reset",
         "client.face",
         "client.decline",
+        "client.addFriend(",
+        "client.removeFriend(",
+        "client.addIgnore(",
+        "client.removeIgnore(",
         "client.bank",
         "client.trade",
         "client.stake",

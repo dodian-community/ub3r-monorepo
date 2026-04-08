@@ -368,7 +368,7 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        return;
+        logger.debug("[player-{}] {}", getPlayerName(), str);
     }
 
     public void println(String str) {

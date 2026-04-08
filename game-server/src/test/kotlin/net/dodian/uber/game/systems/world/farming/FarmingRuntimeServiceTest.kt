@@ -3,17 +3,33 @@ package net.dodian.uber.game.systems.world.farming
 import com.google.gson.JsonPrimitive
 import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.content.skills.farming.FarmingData
+import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.tasking.GameTaskRuntime
+import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class FarmingRuntimeServiceTest {
     @AfterEach
     fun tearDown() {
+        GameTaskRuntime.clear()
         PlayerRegistry.playersOnline.clear()
+    }
+
+    @Test
+    fun `tick pilot startup is idempotent`() {
+        val runtime = FarmingRuntimeService()
+
+        val started = runtime.ensureTickPilotStarted()
+        val startedAgain = runtime.ensureTickPilotStarted()
+
+        assertTrue(started)
+        assertFalse(startedAgain)
     }
 
     @Test
@@ -46,6 +62,37 @@ class FarmingRuntimeServiceTest {
 
         assertEquals(1, stats.duePlayers)
         assertEquals(1, stats.processedPlayers)
+    }
+
+    @Test
+    fun `deferred login catch-up latency metric is recorded when backlog settles`() {
+        val runtime = FarmingRuntimeService()
+        val client = testClient(slot = 4, key = 4004L)
+        activatePatchWork(client)
+        val compost = FarmingData.compostBin.values().first()
+        val compostArray = client.farmingJson.getCompostData().get(compost.name).asJsonArray
+        compostArray.set(1, JsonPrimitive(FarmingData.compostState.FILLED.toString()))
+        compostArray.set(2, JsonPrimitive(1))
+        val now = 10_000_000L
+        val pulseMs = 300_000L
+
+        client.farmingJson.lastGlobalPulseAtMillis = now - (20 * pulseMs)
+        GameCycleClock.syncTo(200)
+        runtime.recordDeferredLoginCatchUpStart(client, TickTasks.gameClock())
+
+        runtime.onLogin(client, now)
+        var pollNow = now
+        repeat(32) {
+            if (runtime.deferredLoginCatchUpLatencySnapshot().isNotEmpty()) {
+                return@repeat
+            }
+            GameCycleClock.advance()
+            runtime.runDue(pollNow)
+            pollNow += pulseMs
+        }
+        val metrics = runtime.deferredLoginCatchUpLatencySnapshot()
+        assertTrue(metrics.isNotEmpty())
+        assertEquals(1, metrics.values.sum())
     }
 
     private fun testClient(slot: Int, key: Long): Client {

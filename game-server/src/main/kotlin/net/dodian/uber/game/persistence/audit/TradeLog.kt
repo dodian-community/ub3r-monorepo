@@ -27,6 +27,8 @@ object TradeLog {
     ) {
         if (gameWorldId > 1) return
 
+        ConsoleAuditLog.trade(p1, p2, items, otherItems, trade)
+
         AsyncSqlService.execute("trade-log", Runnable {
             try {
                 DbAsyncRepository.withConnection { connection ->

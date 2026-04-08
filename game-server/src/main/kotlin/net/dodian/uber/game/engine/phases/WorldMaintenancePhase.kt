@@ -38,9 +38,6 @@ class WorldMaintenancePhase(
         service.runWorldDbApply(cycle)
     }
 
-    fun runFarming(cycle: Long) {
-        service.runFarming(cycle)
-    }
 
     fun runPlunder(nowMs: Long) {
         service.runPlunder(nowMs)

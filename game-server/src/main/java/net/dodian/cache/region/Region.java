@@ -2,6 +2,8 @@ package net.dodian.cache.region;
 
 import net.dodian.cache.object.GameObjectData;
 import net.dodian.cache.util.ByteStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -10,6 +12,8 @@ import java.io.FileInputStream;
 import java.util.zip.GZIPInputStream;
 
 public class Region {
+
+    private static final Logger logger = LoggerFactory.getLogger(Region.class);
 
     private static Region[] regions;
     private final int id;
@@ -32,7 +36,7 @@ public class Region {
             }
             clips[height][x - regionAbsX][y - regionAbsY] |= shift;
         } catch (Exception e) {
-            System.out.println("Clipping wrong? " + e);
+            logger.warn("Clipping wrong for region={} x={} y={} height={}", id, x, y, height, e);
         }
     }
 
@@ -539,9 +543,9 @@ public class Region {
                     //System.out.println("Error loading map region: " + regionIds[i]);
                 }
             }
-            System.out.println("[Region] DONE LOADING REGION CONFIGURATIONS");
+            logger.info("[Region] DONE LOADING REGION CONFIGURATIONS");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed loading region configurations", e);
         }
     }
 
@@ -623,7 +627,7 @@ public class Region {
         GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(buffer));
         do {
             if (bufferlength == gzipInputBuffer.length) {
-                System.out.println("Error inflating data.\nGZIP buffer overflow.");
+                logger.error("Error inflating region data. GZIP buffer overflow.");
                 break;
             }
             int readByte = gzip.read(gzipInputBuffer, bufferlength, gzipInputBuffer.length - bufferlength);

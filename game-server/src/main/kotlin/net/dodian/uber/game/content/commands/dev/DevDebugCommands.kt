@@ -9,7 +9,6 @@ import net.dodian.uber.game.systems.dispatch.commands.commands
 import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.gameClock
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.npcTaskCoroutine
 import net.dodian.uber.game.systems.api.content.ContentCoroutines.playerTaskCoroutine
@@ -18,6 +17,7 @@ import net.dodian.uber.game.systems.skills.ProgressionService
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.events.partyroom.Balloons
+import net.dodian.uber.game.tasks.TickTasks
 import net.dodian.utilities.Misc
 
 object DevDebugCommands : CommandContent {
@@ -124,6 +124,15 @@ private fun handleDevDebug(context: CommandContext): Boolean {
                                 }
                             },
                         )
+                    }
+                    5 -> {
+                        context.reply("Starting farming TickTasks player coroutine demo (6 ticks).")
+                        TickTasks.playerTaskCoroutine(client) {
+                            repeat(6) { tick ->
+                                player.send(SendMessage("[farm-pilot] tick=$tick cycle=${TickTasks.gameClock()}"))
+                                delay(1)
+                            }
+                        }
                     }
                     else -> gotValue = false
                 }

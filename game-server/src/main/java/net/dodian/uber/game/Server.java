@@ -11,7 +11,7 @@ import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.systems.dispatch.objects.ObjectContentRegistry;
 import net.dodian.uber.game.systems.dispatch.ContentModuleIndex;
 import net.dodian.uber.game.systems.dispatch.ContentBootstrap;
-import net.dodian.uber.game.systems.skills.parity.SkillDoctor;
+import net.dodian.uber.game.systems.skills.SkillDoctor;
 import net.dodian.uber.game.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
@@ -82,10 +82,6 @@ public class Server {
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
-        logger.info("Info log!");
-        logger.error("Error log!");
-        logger.warn("Warning log!");
-        logger.debug("Debug log!");
 
         serverStartup = System.currentTimeMillis();
         System.out.println();

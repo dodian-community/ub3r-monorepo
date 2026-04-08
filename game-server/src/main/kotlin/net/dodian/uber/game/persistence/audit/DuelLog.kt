@@ -16,6 +16,8 @@ object DuelLog {
     fun recordDuel(player: String, opponent: String, playerStake: String, opponentStake: String, winner: String) {
         if (gameWorldId > 1) return
 
+        ConsoleAuditLog.duel(player, opponent, playerStake, opponentStake, winner)
+
         AsyncSqlService.execute("duel-log", Runnable {
             try {
                 DbAsyncRepository.withConnection { connection ->

@@ -17,6 +17,7 @@ object CommandLog {
     fun recordCommand(player: Player, command: String) {
         if (gameWorldId > 1 || player.playerGroup == 10) return
 
+
         AsyncSqlService.execute("command-log", Runnable {
             try {
                 DbAsyncRepository.withConnection { connection ->

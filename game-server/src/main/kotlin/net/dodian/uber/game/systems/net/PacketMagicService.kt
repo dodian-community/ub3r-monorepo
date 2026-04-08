@@ -1,6 +1,8 @@
 package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.content.skills.smithing.Smithing
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -8,13 +10,16 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendSideTab
 import net.dodian.uber.game.systems.interaction.MagicOnNpcIntent
+import net.dodian.uber.game.systems.interaction.MagicOnObjectIntent
 import net.dodian.uber.game.systems.interaction.MagicOnPlayerIntent
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask
+import net.dodian.uber.game.systems.interaction.scheduler.ObjectInteractionTask
 import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.skills.RuneCostService
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.utilities.Misc
 
 /**
  * Kotlin service for magic-packet side-effects.
@@ -40,7 +45,7 @@ object PacketMagicService {
     fun handleMagicOnPlayer(client: Client, opcode: Int, victimIndex: Int, magicId: Int) {
         client.magicId = magicId
         if (client.deathStage >= 1) return
-        val victim = PlayerRegistry.getClient(victimIndex) ?: return
+        PlayerRegistry.getClient(victimIndex) ?: return
         if (client.randomed || client.UsingAgility) return
         val intent = MagicOnPlayerIntent(opcode, PlayerRegistry.cycle.toLong(), magicId, victimIndex)
         InteractionTaskScheduler.schedule(client, intent, PlayerInteractionTask(client, intent))
@@ -59,10 +64,37 @@ object PacketMagicService {
     fun handleMagicOnNpc(client: Client, opcode: Int, npcIndex: Int, magicId: Int) {
         client.magicId = magicId
         if (client.deathStage >= 1) return
-        val npc = Server.npcManager.getNpc(npcIndex) ?: return
+        Server.npcManager.npcMap[npcIndex] ?: return
         if (client.randomed || client.UsingAgility) return
         val intent = MagicOnNpcIntent(opcode, PlayerRegistry.cycle.toLong(), magicId, npcIndex)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
+    }
+
+    // -------------------------------------------------------------------------
+    // MagicOnObject
+    // -------------------------------------------------------------------------
+
+    /**
+     * Schedules a magic-on-object interaction after the listener has decoded
+     * the world coordinates, spell id, and object id.
+     */
+    @JvmStatic
+    fun handleMagicOnObject(client: Client, opcode: Int, objectX: Int, objectY: Int, objectId: Int, spellId: Int) {
+        if (client.randomed || client.UsingAgility) return
+
+        val targetPosition = Position(objectX, objectY, client.position.z)
+        val objectDef = Misc.getObject(objectId, objectX, objectY, client.position.z)
+        val obj = GameObjectData.forId(objectId)
+        val intent = MagicOnObjectIntent(
+            opcode = opcode,
+            createdCycle = PlayerRegistry.cycle.toLong(),
+            spellId = spellId,
+            objectId = objectId,
+            objectPosition = targetPosition,
+            objectData = obj,
+            objectDef = objectDef,
+        )
+        InteractionTaskScheduler.schedule(client, intent, ObjectInteractionTask(client, intent))
     }
 
     // -------------------------------------------------------------------------

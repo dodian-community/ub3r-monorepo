@@ -41,21 +41,25 @@ object ChatLog {
 
     @JvmStatic
     fun recordPublicChat(player: Player, message: String) {
+        ConsoleAuditLog.publicChat(player, message)
         enqueue(1, player.dbId, -1, player.playerName, message)
     }
 
     @JvmStatic
     fun recordYellChat(player: Player, message: String) {
+        ConsoleAuditLog.yellChat(player, message)
         enqueue(2, player.dbId, -1, player.playerName, message)
     }
 
     @JvmStatic
     fun recordPrivateChat(sender: Player, receiver: Player, message: String) {
+        ConsoleAuditLog.privateChat(sender, receiver, message)
         enqueue(3, sender.dbId, receiver.dbId, sender.playerName, message)
     }
 
     @JvmStatic
     fun recordModChat(player: Player, message: String) {
+        ConsoleAuditLog.modChat(player, message)
         enqueue(4, player.dbId, -1, player.playerName, message)
     }
 

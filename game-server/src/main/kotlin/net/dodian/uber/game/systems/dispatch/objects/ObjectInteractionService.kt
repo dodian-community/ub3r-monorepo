@@ -87,6 +87,12 @@ object ObjectInteractionService {
                     ),
                 )
             ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = "GameEventBus",
+                )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
             if (context.type == ObjectInteractionType.USE_ITEM &&
@@ -102,6 +108,12 @@ object ObjectInteractionService {
                     ),
                 )
             ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = "GameEventBus",
+                )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
             if (context.type == ObjectInteractionType.MAGIC &&
@@ -115,6 +127,12 @@ object ObjectInteractionService {
                     ),
                 )
             ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = "GameEventBus",
+                )
                 return DispatchTiming(true, 0L, 0L, "GameEventBus")
             }
 
@@ -127,6 +145,12 @@ object ObjectInteractionService {
                     obj = context.obj,
                 )
             ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
             if (context.type == ObjectInteractionType.USE_ITEM &&
@@ -140,6 +164,12 @@ object ObjectInteractionService {
                     interfaceId = context.interfaceId ?: -1,
                 )
             ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
 
@@ -147,7 +177,7 @@ object ObjectInteractionService {
             val candidates = ObjectContentRegistry.resolveCandidates(context.objectId, context.position)
             val resolveNs = System.nanoTime() - resolveStart
             if (candidates.isEmpty()) {
-                ObjectClickLoggingService.log(logger, context, resolution = null, handled = false)
+                ObjectClickLoggingService.log(context, resolution = null, handled = false)
                 return DispatchTiming(false, resolveNs, 0L, null)
             }
 
@@ -188,7 +218,7 @@ object ObjectInteractionService {
                     handlerNs += System.nanoTime() - handlerStart
                     if (handled) {
                         handlerName = content::class.java.name
-                        ObjectClickLoggingService.log(logger, context, resolution = resolution, handled = true)
+                        ObjectClickLoggingService.log(context, resolution = resolution, handled = true)
                         return DispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
                 } catch (e: RuntimeException) {
@@ -202,7 +232,7 @@ object ObjectInteractionService {
                     )
                 }
             }
-            ObjectClickLoggingService.log(logger, context, resolution = candidates.firstOrNull(), handled = false)
+            ObjectClickLoggingService.log(context, resolution = candidates.firstOrNull(), handled = false)
             return DispatchTiming(false, resolveNs, handlerNs, handlerName)
         } finally {
             active.remove(key)
