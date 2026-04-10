@@ -127,6 +127,28 @@ class InteractionMaskEncodingTest {
     }
 
     @Test
+    fun `add-local block includes one-time facing snapshot from last walk delta`() {
+        previousItemManager = Server.itemManager
+        Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
+
+        val player = Client(EmbeddedChannel(), 1)
+        player.longName = 1L
+        player.playerName = "player-1"
+        player.isActive = true
+        player.initialized = true
+        player.disconnected = false
+        player.pLoaded = true
+        player.dbId = 1
+        player.teleportTo(3200, 3200, 0)
+        player.setLastWalkDelta(1, 0)
+
+        val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
+
+        assertEquals(0x12, block[0].toInt() and 0x12)
+        assertArrayEquals(expectedFaceCoordinateTail(3201, 3200), block.copyOfRange(block.size - 4, block.size))
+    }
+
+    @Test
     fun `add-local block includes face-coordinate only when explicitly flagged`() {
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
@@ -146,6 +168,29 @@ class InteractionMaskEncodingTest {
 
         assertEquals(0x12, block[0].toInt() and 0x12)
         assertArrayEquals(expectedFaceCoordinateTail(3201, 3200), block.copyOfRange(block.size - 4, block.size))
+    }
+
+    @Test
+    fun `add-local does not inject coordinate snapshot when face-character is flagged`() {
+        previousItemManager = Server.itemManager
+        Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
+
+        val player = Client(EmbeddedChannel(), 1)
+        player.longName = 1L
+        player.playerName = "player-1"
+        player.isActive = true
+        player.initialized = true
+        player.disconnected = false
+        player.pLoaded = true
+        player.dbId = 1
+        player.teleportTo(3200, 3200, 0)
+        player.setLastWalkDelta(1, 0)
+        player.facePlayer(2)
+
+        val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
+
+        assertEquals(0x11, block[0].toInt() and 0x11)
+        assertEquals(0, block[0].toInt() and 0x02)
     }
 
     @Test

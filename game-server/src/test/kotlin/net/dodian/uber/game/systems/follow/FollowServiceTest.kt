@@ -30,7 +30,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
     }
 
@@ -47,7 +47,7 @@ class FollowServiceTest {
 
         FollowService.processTick()
 
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertTrue(FollowService.isFollowing(follower))
     }
 
@@ -59,7 +59,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertTrue(follower.newWalkCmdSteps > 0)
         assertTrue(follower.newWalkCmdIsRunning)
 
@@ -84,7 +84,7 @@ class FollowServiceTest {
         FollowService.processTick()
 
         assertTrue(FollowService.isFollowing(follower))
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
 
         leader.disconnected = true
         FollowService.processTick()
@@ -170,7 +170,7 @@ class FollowServiceTest {
 
         FollowService.requestFollow(follower, leader)
         FollowService.processTick()
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
 
         // Simulate movement queue consumed; follow should hold interaction without requeueing.
@@ -179,8 +179,22 @@ class FollowServiceTest {
         follower.newWalkCmdSteps = 0
 
         FollowService.processTick()
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
+    }
+
+    @Test
+    fun `stationary adjacent target keeps emitting focus-facing each tick`() {
+        val follower = testClient(slot = 27, nameKey = 1027L, x = 3200, y = 3200)
+        val leader = testClient(slot = 28, nameKey = 1028L, x = 3201, y = 3200)
+
+        FollowService.requestFollow(follower, leader)
+        FollowService.processTick()
+        assertFacingCoordinateAtTarget(follower, leader)
+
+        follower.clearUpdateFlags()
+        FollowService.processTick()
+        assertFacingCoordinateAtTarget(follower, leader)
     }
 
     @Test
@@ -211,8 +225,8 @@ class FollowServiceTest {
         FollowService.processTick()
         assertEquals(0, a.newWalkCmdSteps)
         assertEquals(0, b.newWalkCmdSteps)
-        assertFacingPlayer(a, b.slot)
-        assertFacingPlayer(b, a.slot)
+        assertFacingCoordinateAtTarget(a, b)
+        assertFacingCoordinateAtTarget(b, a)
     }
 
     @Test
@@ -249,7 +263,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(1, follower.newWalkCmdSteps)
 
         val baseX = follower.mapRegionX * 8
@@ -278,7 +292,7 @@ class FollowServiceTest {
         FollowService.requestFollow(follower, leader)
         FollowService.processTick()
         assertTrue(FollowService.isFollowing(follower))
-        assertFacingPlayer(follower, leader.slot)
+        assertFacingCoordinateAtTarget(follower, leader)
 
         PacketWalkingService.handle(
             follower,
@@ -294,11 +308,18 @@ class FollowServiceTest {
 
         assertFalse(FollowService.isFollowing(follower))
         assertEquals(65535, follower.getFaceTarget())
+        assertFalse(follower.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
         assertEquals(1, follower.newWalkCmdSteps)
         val baseX = follower.mapRegionX * 8
         val baseY = follower.mapRegionY * 8
         assertEquals(3201, follower.newWalkCmdX[0] + baseX)
         assertEquals(3200, follower.newWalkCmdY[0] + baseY)
+
+        follower.clearUpdateFlags()
+        FollowService.processTick()
+        assertFalse(FollowService.isFollowing(follower))
+        assertFalse(follower.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+        assertEquals(-1, follower.getFaceTarget())
     }
 
     @Test
@@ -356,9 +377,10 @@ class FollowServiceTest {
         player.clearUpdateFlags()
     }
 
-    private fun assertFacingPlayer(player: Client, targetSlot: Int) {
-        assertEquals(32768 + targetSlot, player.faceTarget)
-        assertTrue(player.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
-        assertFalse(player.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+    private fun assertFacingCoordinateAtTarget(player: Client, target: Client) {
+        assertTrue(player.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+        assertFalse(player.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
+        assertEquals(target.position.x, player.faceCoordinateWorldX)
+        assertEquals(target.position.y, player.faceCoordinateWorldY)
     }
 }

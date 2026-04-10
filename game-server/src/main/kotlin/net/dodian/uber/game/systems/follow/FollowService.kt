@@ -161,8 +161,8 @@ object FollowService {
             return
         }
 
-        // Keep follow facing as interaction-facing (Luna parity for player-follow).
-        follower.facePlayer(target.slot)
+        // Keep follow facing as coordinate focus so observers reliably see turns.
+        follower.setFocus(target.position.x, target.position.y)
 
         val fx = follower.position.x
         val fy = follower.position.y
@@ -183,8 +183,8 @@ object FollowService {
             return
         }
 
-        // Strict Luna behavior: if the target tile is unchanged this tick, keep
-        // interaction but do not issue new follow route commands.
+        // If the target tile is unchanged this tick, keep facing but do not issue
+        // new follow route commands.
         if (!firstFollowTick && !targetMoved) {
             followStates[follower.longName] =
                 state.copy(
