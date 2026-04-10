@@ -85,10 +85,7 @@ object PassageObjectContent : ObjectContent {
                 true
             }
             2391, 2392 -> {
-                if (client.premium) {
-                    client.ReplaceObject(2728, 3349, 2391, 0, 0)
-                    client.ReplaceObject(2729, 3349, 2392, -2, 0)
-                }
+                LegendsGuildGateService.allowPassage(client)
                 true
             }
             2309 -> {

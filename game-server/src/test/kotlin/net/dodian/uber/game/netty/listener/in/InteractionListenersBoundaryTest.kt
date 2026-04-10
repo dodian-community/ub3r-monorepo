@@ -27,19 +27,30 @@ class InteractionListenersBoundaryTest {
     }
 
     @Test
-    fun `follow player listener delegates follow side effects to kotlin service`() {
+    fun `follow player listener delegates trade side effects to kotlin service`() {
         val source = Files.readString(
             Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/FollowPlayerListener.java"),
         )
 
         assertTrue(
-            source.contains("PacketConnectionService.handleFollowPlayer(client, followId)"),
-            "Expected FollowPlayerListener to route through PacketConnectionService.handleFollowPlayer",
+            source.contains("PacketInteractionRequestService.handleTradeRequest(client, followId, other)"),
+            "Expected FollowPlayerListener to route through PacketInteractionRequestService.handleTradeRequest",
         )
         assertFalse(source.contains("Player.openPage("))
         assertFalse(source.contains("modcp&action=search"))
-        assertFalse(source.contains("client.getClient("))
-        assertFalse(source.contains("client.getSlot() == followId"))
+    }
+
+    @Test
+    fun `trade listener delegates follow side effects to kotlin service`() {
+        val source = Files.readString(
+            Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/TradeListener.java"),
+        )
+
+        assertTrue(
+            source.contains("PlayerClickListener.handleFollowPlayer(client, targetSlot)"),
+            "Expected TradeListener to route through PlayerClickListener.handleFollowPlayer",
+        )
+        assertFalse(source.contains("PacketInteractionRequestService.handleTradeRequest("))
     }
 
     @Test

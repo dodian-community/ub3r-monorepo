@@ -16,4 +16,6 @@ data class CombatTargetState(
     val lastFollowCycle: Long,
     val lastFollowTargetX: Int,
     val lastFollowTargetY: Int,
+    val lastFollowTargetDeltaX: Int,
+    val lastFollowTargetDeltaY: Int,
 )

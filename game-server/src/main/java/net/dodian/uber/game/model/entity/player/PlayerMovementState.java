@@ -1,6 +1,8 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.systems.interaction.PersonalPassageService;
+import net.dodian.uber.game.systems.pathing.collision.CollisionManager;
 import net.dodian.utilities.Utils;
 
 final class PlayerMovementState {
@@ -45,7 +47,7 @@ final class PlayerMovementState {
 
     void addToWalkingQueue(int x, int y) {
         int next = (owner.wQueueWritePtr + 1) % Player.WALKING_QUEUE_SIZE;
-        if (next == owner.wQueueWritePtr) {
+        if (next == owner.wQueueReadPtr) {
             return;
         }
         owner.walkingQueueX[owner.wQueueWritePtr] = x;
@@ -76,13 +78,27 @@ final class PlayerMovementState {
             return -1;
         }
 
-        Position newPos = new Position(owner.getPosition().getX(), owner.getPosition().getY(), owner.getPosition().getZ());
         int deltaX = Utils.directionDeltaX[dir];
         int deltaY = Utils.directionDeltaY[dir];
+
+        // Per-step collision validation: stop if the next tile is blocked or
+        // a wall prevents movement in this direction.
+        int absX = owner.getPosition().getX();
+        int absY = owner.getPosition().getY();
+        int z = owner.getPosition().getZ();
+        if (!CollisionManager.global().traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY) &&
+            !PersonalPassageService.canTraverse(owner, absX, absY, absX + deltaX, absY + deltaY, z)) {
+            resetWalkingQueue();
+            return -1;
+        }
+
+        Position newPos = new Position(absX, absY, z);
         currentX += deltaX;
         currentY += deltaY;
         newPos.move(deltaX, deltaY);
         owner.getPosition().moveTo(newPos.getX(), newPos.getY());
+        owner.setLastWalkDelta(deltaX, deltaY);
+        owner.setPersistedFaceCoord(absX + deltaX, absY + deltaY);
         return dir;
     }
 

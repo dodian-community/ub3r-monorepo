@@ -1,8 +1,6 @@
 package net.dodian.utilities
 
-import net.dodian.cache.`object`.CacheObject
 import net.dodian.cache.`object`.GameObjectDef
-import net.dodian.cache.`object`.ObjectLoader
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.DoorRegistry
@@ -97,10 +95,6 @@ object Geometry {
         y: Int,
         h: Int,
     ): GameObjectDef? {
-        val cached: CacheObject? = ObjectLoader.`object`(objectId, x, y, h)
-        if (cached != null) {
-            return cached.def
-        }
         for (i in DoorRegistry.doorId.indices) {
             if (DoorRegistry.doorId[i] == objectId && DoorRegistry.doorX[i] == x && DoorRegistry.doorY[i] == y) {
                 return GameObjectDef(objectId, 2, 0, Position(x, y))

@@ -32,7 +32,7 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ChatListener");
             // Load UseItemOnPlayerListener for opcode 14
             Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnPlayerListener");
-            // Load FollowPlayerListener for opcode 39
+            // Load opcode-39 player menu listener (Trade with in current mapping)
             Class.forName("net.dodian.uber.game.netty.listener.in.FollowPlayerListener");
             // Load ItemOnGroundItemListener for opcode 25
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener");

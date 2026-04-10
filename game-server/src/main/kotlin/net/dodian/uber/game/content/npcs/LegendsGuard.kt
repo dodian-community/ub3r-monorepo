@@ -4,6 +4,7 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.content.objects.travel.LegendsGuildGateService
 
 internal object LegendsGuard : NpcModule {
     // Stats: 3951: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -24,8 +25,7 @@ internal object LegendsGuard : NpcModule {
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
         if (client.premium) {
-            client.ReplaceObject(2728, 3349, 2391, 0, 0)
-            client.ReplaceObject(2729, 3349, 2392, -2, 0)
+            LegendsGuildGateService.allowPassage(client)
             client.showNPCChat(npc.id, 590, arrayOf("Welcome to the Guild of Legends", "Enjoy your stay."))
         } else {
             client.showNPCChat(npc.id, 595, arrayOf("You must be a premium member to enter", "Visit Dodian.net to subscribe"))

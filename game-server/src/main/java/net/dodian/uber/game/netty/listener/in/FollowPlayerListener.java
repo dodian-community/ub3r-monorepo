@@ -8,12 +8,12 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.net.PacketConnectionService;
+import net.dodian.uber.game.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Opcode 39 – Follow player (opens mod-cp search page for target player).
+ * Opcode 39 – slot-5 player menu click (Trade with in current menu mapping).
  */
 public class FollowPlayerListener implements PacketListener {
 
@@ -30,10 +30,14 @@ public class FollowPlayerListener implements PacketListener {
         int followId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.NORMAL);
 
         if (logger.isTraceEnabled()) {
-            logger.trace("FollowPlayer from={} targetSlot={}", client.getPlayerName(), followId);
+            logger.trace("Trade request from={} targetSlot={}", client.getPlayerName(), followId);
         }
 
-        PacketConnectionService.handleFollowPlayer(client, followId);
+        Client other = client.getClient(followId);
+        if (!client.validClient(followId) || client.getSlot() == followId) {
+            return;
+        }
+
+        PacketInteractionRequestService.handleTradeRequest(client, followId, other);
     }
 }
-

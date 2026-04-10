@@ -103,6 +103,13 @@ object PlayerRegistry {
     }
 
     @JvmStatic
+    fun snapshotActivePlayersSortedBySlot(): List<Client> {
+        val activePlayers = ArrayList(snapshotActivePlayers())
+        activePlayers.sortWith(compareBy<Client> { it.slot })
+        return activePlayers
+    }
+
+    @JvmStatic
     fun isPlayerOn(playerName: String): Boolean {
         val playerId = Utils.playerNameToLong(playerName)
         val existing = playersOnline[playerId] ?: return false

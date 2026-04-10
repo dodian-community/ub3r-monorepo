@@ -27,10 +27,11 @@ import net.dodian.uber.game.persistence.audit.AsyncSqlService;
 import net.dodian.uber.game.persistence.audit.ChatLog;
 import net.dodian.uber.game.persistence.world.ObjectDefinitionRepository;
 import net.dodian.uber.game.engine.config.DotEnvKt;
-import net.dodian.utilities.Rangable;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.dodian.uber.game.systems.cache.CacheBootstrapService;
+import net.dodian.uber.game.systems.interaction.ObjectClipService;
 
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
@@ -108,10 +109,11 @@ public class Server {
         shopManager = new ShopManager();
         clientHandler = new Server();
         login = new Login();
-        Rangable.load();
         GameObjectData.init();
+        new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();
+        ObjectClipService.bootstrapStartupOverlays(objects);
         for (ContentBootstrap bootstrap : ContentModuleIndex.contentBootstraps) {
             bootstrap.bootstrap();
         }

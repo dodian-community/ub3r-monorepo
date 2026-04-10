@@ -4707,10 +4707,7 @@ public class Client extends Player implements Runnable {
 
     public void transport(Position pos) {
         resetActionTeleport();
-        moveTo(pos.getX(), pos.getY(), pos.getZ());
-        teleportToX = pos.getX();
-        teleportToY = pos.getY();
-        teleportToZ = pos.getZ();
+        teleportTo(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public void resetActionTeleport() {

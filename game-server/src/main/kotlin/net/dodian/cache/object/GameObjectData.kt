@@ -42,6 +42,20 @@ class GameObjectData(
         }
 
         @JvmStatic
+        fun replaceDefinitions(nextDefinitions: Map<Int, GameObjectData>) {
+            definitions.clear()
+            for ((id, def) in nextDefinitions) {
+                if (id < 0 || id > MAX_DYNAMIC_DEFINITIONS) {
+                    continue
+                }
+                definitions[id] = def
+            }
+        }
+
+        @JvmStatic
+        fun definitionCount(): Int = definitions.size
+
+        @JvmStatic
         fun forId(id: Int): GameObjectData {
             if (id < 0) {
                 return fallback(id)

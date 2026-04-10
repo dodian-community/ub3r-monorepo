@@ -1,6 +1,5 @@
 package net.dodian.uber.game.systems.combat
 
-import net.dodian.uber.game.systems.combat.getAttackStyle
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -60,6 +59,8 @@ object CombatStartService {
                     lastFollowCycle = cycle,
                     lastFollowTargetX = target.position.x,
                     lastFollowTargetY = target.position.y,
+                    lastFollowTargetDeltaX = resolveTargetDeltaX(target),
+                    lastFollowTargetDeltaY = resolveTargetDeltaY(target),
                 )
             return true
         }
@@ -86,6 +87,8 @@ object CombatStartService {
                 lastFollowCycle = cycle,
                 lastFollowTargetX = target.position.x,
                 lastFollowTargetY = target.position.y,
+                lastFollowTargetDeltaX = resolveTargetDeltaX(target),
+                lastFollowTargetDeltaY = resolveTargetDeltaY(target),
             )
         return true
     }
@@ -132,10 +135,8 @@ object CombatStartService {
         return CombatStartPolicy(attackDistance = attackDistance)
     }
 
-    private fun canAttackNow(
-        client: Client,
-        target: Entity,
-        policy: CombatStartPolicy,
-    ): Boolean = client.goodDistanceEntity(target, policy.attackDistance)
+    private fun resolveTargetDeltaX(target: Entity): Int = if (target is Client) target.lastWalkDeltaX.coerceIn(-1, 1) else 0
+
+    private fun resolveTargetDeltaY(target: Entity): Int = if (target is Client) target.lastWalkDeltaY.coerceIn(-1, 1) else 0
 
 }

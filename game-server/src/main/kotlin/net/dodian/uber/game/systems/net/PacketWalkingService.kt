@@ -11,6 +11,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
+import net.dodian.uber.game.systems.follow.FollowService
 import net.dodian.uber.game.systems.ui.dialogue.DialogueService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
@@ -116,6 +117,11 @@ object PacketWalkingService {
 
         if (player.newWalkCmdSteps > 0) {
             DialogueService.closeBlockingDialogue(player, false)
+
+            // Manual click-walk should break follow intent (Luna parity).
+            if (request.opcode == 164 || request.opcode == 248) {
+                FollowService.cancelFollowIntent(player)
+            }
 
             if (player.inDuel) {
                 if (request.opcode != 98) {

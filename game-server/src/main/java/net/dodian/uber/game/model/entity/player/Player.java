@@ -38,6 +38,7 @@ import net.dodian.uber.game.content.skills.crafting.CraftingState;
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.systems.interaction.ActiveInteraction;
+import net.dodian.uber.game.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.systems.interaction.InteractionIntent;
 import net.dodian.uber.game.systems.combat.CombatCancellationReason;
@@ -574,6 +575,8 @@ public abstract class Player extends Entity {
     public int wQueueReadPtr = 0; // points to slot for reading from queue
     public int wQueueWritePtr = 0; // points to (first free) slot for writing
     public boolean isRunning = false;
+    private int lastWalkDeltaX = 0;
+    private int lastWalkDeltaY = 0;
     public int teleportToX, teleportToY, teleportToZ; // contain absolute x/y
     public boolean walkingBlock = false;
     public void resetWalkingQueue() {
@@ -587,6 +590,19 @@ public abstract class Player extends Entity {
     // returns 0-7 for next walking direction or -1, if we're not moving
     public int getNextWalkingDirection() {
         return movementState.getNextWalkingDirection();
+    }
+
+    public int getLastWalkDeltaX() {
+        return lastWalkDeltaX;
+    }
+
+    public int getLastWalkDeltaY() {
+        return lastWalkDeltaY;
+    }
+
+    public void setLastWalkDelta(int deltaX, int deltaY) {
+        this.lastWalkDeltaX = deltaX;
+        this.lastWalkDeltaY = deltaY;
     }
 
     public boolean firstSend = false;
@@ -1251,10 +1267,27 @@ public abstract class Player extends Entity {
     }
 
     public void teleportTo(int x, int y, int z) {
+        int deltaX = resolveTeleportFacingDeltaX();
+        int deltaY = resolveTeleportFacingDeltaY();
         getPosition().moveTo(x, y, z); //Update position!
         teleportToX = getPosition().getX();
         teleportToY = getPosition().getY();
         teleportToZ = getPosition().getZ();
+        if (deltaX != 0 || deltaY != 0) {
+            setPersistedFaceCoord(x + deltaX, y + deltaY);
+        }
+    }
+
+    private int resolveTeleportFacingDeltaX() {
+        int currentX = getPosition().getX();
+        int facingX = hasPersistedFaceCoord() ? getPersistedFaceX() : getFaceCoordinateWorldX();
+        return Integer.compare(facingX, currentX);
+    }
+
+    private int resolveTeleportFacingDeltaY() {
+        int currentY = getPosition().getY();
+        int facingY = hasPersistedFaceCoord() ? getPersistedFaceY() : getFaceCoordinateWorldY();
+        return Integer.compare(facingY, currentY);
     }
 
     Prayers prayers = new Prayers(this);
@@ -1911,6 +1944,7 @@ public abstract class Player extends Entity {
     public void customObjects() {
         Client client = (Client) this;
         client.replaceDoors();
+        StaticObjectOverrides.replayTo(client);
         Balloons.updateBalloons(client);
         GlobalObject.updateObject(client);
         for(int i = 0; i <= 4; i++) //Refresh farming varbits!
@@ -1946,11 +1980,6 @@ public abstract class Player extends Entity {
             client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
             client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair
 
-            client.ReplaceObject2(new Position(2669, 2713, 0), -1, -1, 11); // Remove door?
-            client.ReplaceObject2(new Position(2713, 3483, 0), -1, -1, 0); // Remove seers door?
-            client.ReplaceObject2(new Position(2716, 3472, 0), -1, -1, 0); // Remove seers door?
-            client.ReplaceObject2(new Position(2594, 3102, 0), -1, -1, 0); // Remove Yanille door?
-            client.ReplaceObject2(new Position(2816, 3438, 0), -1, -1, 0); // Remove Catherby door?
             /* Rope from Tzhaar city */
             client.ReplaceObject2(new Position(2443, 5169, 0), 2352, 0, 10);
             /*

@@ -196,6 +196,12 @@ public class Npc extends Entity {
         faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
+        if (defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length) {
+            setFocus(
+                    getPosition().getX() + Utils.directionDeltaX[defaultFace],
+                    getPosition().getY() + Utils.directionDeltaY[defaultFace]
+            );
+        }
         clearPendingHits();
     }
 

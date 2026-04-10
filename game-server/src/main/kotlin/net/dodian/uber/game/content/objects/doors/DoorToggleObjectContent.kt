@@ -4,10 +4,10 @@ import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectBinding
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.systems.interaction.ObjectClipService
+import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object DoorToggleObjectContent : ObjectContent {
     override fun bindings(): List<ObjectBinding> {
@@ -77,6 +77,13 @@ object DoorToggleObjectContent : ObjectContent {
                 DoorRegistry.doorFaceClosed[index]
             }
             DoorRegistry.doorFace[index] = newFace
+            ObjectClipService.applyDecodedObject(
+                position = Position(DoorRegistry.doorX[index], DoorRegistry.doorY[index], DoorRegistry.doorHeight[index]),
+                objectId = DoorRegistry.doorId[index],
+                type = 0,
+                direction = newFace,
+                obj = GameObjectData.forId(DoorRegistry.doorId[index]),
+            )
             for (player in PlayerRegistry.players) {
                 val other = player as? Client ?: continue
                 if (other.playerName == null) continue

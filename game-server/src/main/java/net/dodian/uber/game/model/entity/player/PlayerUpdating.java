@@ -10,7 +10,6 @@ import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.netty.codec.MessageType;
 import net.dodian.uber.game.engine.sync.SynchronizationContext;
 import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision;
 import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState;
@@ -20,6 +19,7 @@ import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
 import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.systems.world.player.PlayerRegistry;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -440,6 +440,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             // Send map region change as separate packet (73)
             ((Client) player).send(new net.dodian.uber.game.netty.listener.out.MapRegionUpdate(player.mapRegionX, player.mapRegionY));
             ((Client) player).updateGroundItems();
+            StaticObjectOverrides.replayTo((Client) player);
         }
         // This should match the original: createFrameVarSizeWord(81) + initBitAccess()
         // But we're doing this in the packet wrapper instead
@@ -761,7 +762,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendFaceCharacter(Player player, ByteMessage buf) {
-        buf.putShort(player.getFaceTarget(), ByteOrder.LITTLE); // writeWordBigEndian
+        int faceTarget = player.getFaceTarget();
+        if (faceTarget < 0 || faceTarget > 0xFFFF) {
+            faceTarget = 0xFFFF;
+        }
+        buf.putShort(faceTarget, ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     public static void appendPlayerAppearance(Player player, ByteMessage buf) {
@@ -941,6 +946,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     public void appendFaceCoordinates(Player player, ByteMessage buf) {
         buf.putShort(player.getFaceCoordinateX(), ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
         buf.putShort(player.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
+    }
+
+    public void appendPersistedFaceCoordinates(Player player, ByteMessage buf) {
+        buf.putShort(player.getPersistedFaceCoordinateX(), ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
+        buf.putShort(player.getPersistedFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override

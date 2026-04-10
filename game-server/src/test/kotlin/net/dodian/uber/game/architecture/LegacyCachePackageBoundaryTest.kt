@@ -35,6 +35,8 @@ class LegacyCachePackageBoundaryTest {
             "import net.dodian.cache.index.",
             "import net.dodian.cache.map.",
             "import net.dodian.cache.obj.",
+            "import net.dodian.cache.region.Region",
+            "import net.dodian.utilities.Rangable",
         )
         val violations = mutableListOf<String>()
 

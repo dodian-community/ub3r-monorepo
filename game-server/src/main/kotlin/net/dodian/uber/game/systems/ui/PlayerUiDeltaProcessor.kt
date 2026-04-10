@@ -105,9 +105,9 @@ object PlayerUiDeltaProcessor {
                     slot2Enabled = false,
                     slot3Text = "Attack",
                     slot3Enabled = true,
-                    slot4Text = if (player.inWildy()) "Trade with" else "null",
+                    slot4Text = "Follow",
                     slot4Enabled = false,
-                    slot5Text = null,
+                    slot5Text = if (player.inWildy()) "Trade with" else "null",
                     slot5Enabled = false,
                 )
             } else {
@@ -118,9 +118,9 @@ object PlayerUiDeltaProcessor {
                     slot2Enabled = false,
                     slot3Text = "null",
                     slot3Enabled = true,
-                    slot4Text = "Trade with",
+                    slot4Text = "Follow",
                     slot4Enabled = false,
-                    slot5Text = if (player.playerRights > 0) "Mod Action Lookup" else null,
+                    slot5Text = "Trade with",
                     slot5Enabled = false,
                 )
             }
@@ -132,9 +132,7 @@ object PlayerUiDeltaProcessor {
         player.setPlayerContextMenu(2, menuState.slot2Enabled, menuState.slot2Text)
         player.setPlayerContextMenu(3, menuState.slot3Enabled, menuState.slot3Text)
         player.setPlayerContextMenu(4, menuState.slot4Enabled, menuState.slot4Text)
-        if (menuState.slot5Text != null) {
-            player.setPlayerContextMenu(5, menuState.slot5Enabled, menuState.slot5Text)
-        }
+        player.setPlayerContextMenu(5, menuState.slot5Enabled, menuState.slot5Text)
         state.lastContextMenuHash = hash
     }
 
@@ -158,7 +156,7 @@ object PlayerUiDeltaProcessor {
         val slot3Enabled: Boolean,
         val slot4Text: String,
         val slot4Enabled: Boolean,
-        val slot5Text: String?,
+        val slot5Text: String,
         val slot5Enabled: Boolean,
     )
 }

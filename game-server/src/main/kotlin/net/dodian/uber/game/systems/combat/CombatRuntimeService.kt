@@ -1,9 +1,9 @@
 package net.dodian.uber.game.systems.combat
 
-import net.dodian.uber.game.systems.combat.attackTarget
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.systems.follow.FollowRouting
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 object CombatRuntimeService {
@@ -53,6 +53,8 @@ object CombatRuntimeService {
                     initialSwingConsumed = false,
                     lastFollowTargetX = target.position.x,
                     lastFollowTargetY = target.position.y,
+                    lastFollowTargetDeltaX = targetDeltaX(target),
+                    lastFollowTargetDeltaY = targetDeltaY(target),
                 )
             player.combatTargetState = state
         }
@@ -90,6 +92,8 @@ object CombatRuntimeService {
                 autoFollowEnabled = true,
                 lastFollowTargetX = target.position.x,
                 lastFollowTargetY = target.position.y,
+                lastFollowTargetDeltaX = targetDeltaX(target),
+                lastFollowTargetDeltaY = targetDeltaY(target),
             )
     }
 
@@ -175,7 +179,15 @@ object CombatRuntimeService {
         }
 
         if (refreshed) {
-            player.AddToRunCords(target.position.x, target.position.y, 0)
+            FollowRouting.routeToEntityBoundary(
+                follower = player,
+                targetX = target.position.x,
+                targetY = target.position.y,
+                targetSize = target.getSize(),
+                z = player.position.z,
+                preferredDestination = preferredCombatDestination(target, state),
+                running = true,
+            )
         }
         if (target is Npc) {
             player.faceNpc(target.slot)
@@ -187,6 +199,28 @@ object CombatRuntimeService {
                 lastFollowCycle = cycleNow,
                 lastFollowTargetX = target.position.x,
                 lastFollowTargetY = target.position.y,
+                lastFollowTargetDeltaX = targetDeltaX(target),
+                lastFollowTargetDeltaY = targetDeltaY(target),
             )
     }
+
+    private fun preferredCombatDestination(target: Entity, state: CombatTargetState): Pair<Int, Int>? {
+        if (target !is Client) {
+            return null
+        }
+        var deltaX = target.lastWalkDeltaX.coerceIn(-1, 1)
+        var deltaY = target.lastWalkDeltaY.coerceIn(-1, 1)
+        if (deltaX == 0 && deltaY == 0) {
+            deltaX = state.lastFollowTargetDeltaX.coerceIn(-1, 1)
+            deltaY = state.lastFollowTargetDeltaY.coerceIn(-1, 1)
+        }
+        if (deltaX == 0 && deltaY == 0) {
+            return null
+        }
+        return (target.position.x - deltaX) to (target.position.y - deltaY)
+    }
+
+    private fun targetDeltaX(target: Entity): Int = if (target is Client) target.lastWalkDeltaX.coerceIn(-1, 1) else 0
+
+    private fun targetDeltaY(target: Entity): Int = if (target is Client) target.lastWalkDeltaY.coerceIn(-1, 1) else 0
 }

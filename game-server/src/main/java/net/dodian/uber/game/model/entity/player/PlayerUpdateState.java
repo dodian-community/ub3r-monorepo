@@ -119,7 +119,7 @@ final class PlayerUpdateState {
     }
 
     void clearUpdateFlags() {
-        faceTarget(-1);
+        faceTarget = -1;
         owner.getUpdateFlags().clear();
         chatTextSize = 0;
         chatTextColor = 0;
@@ -129,6 +129,7 @@ final class PlayerUpdateState {
 
     void faceTarget(int index) {
         faceTarget = index;
+        owner.getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, false);
         owner.getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
     }
 

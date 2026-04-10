@@ -1,12 +1,10 @@
 package net.dodian.uber.game.model.entity;
 
-import net.dodian.cache.region.Region;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.entity.UpdateFlag;
-import net.dodian.uber.game.model.entity.UpdateFlags;
 import net.dodian.uber.game.systems.combat.style.CombatStyle;
+import net.dodian.uber.game.systems.pathing.collision.CollisionManager;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;
@@ -30,6 +28,8 @@ public abstract class Entity {
     private String text;
     private int faceCoordinateX = 1;
     private int faceCoordinateY = 1;
+    private int persistedFaceX = 0;
+    private int persistedFaceY = 0;
     private volatile long currentGameCycle = 0L;
     private volatile long processedGameCycle = 0L;
 
@@ -89,6 +89,7 @@ public abstract class Entity {
     public void setFocus(int focusPointX, int focusPointY) {
         faceCoordinateX = encodeFaceCoordinate(focusPointX);
         faceCoordinateY = encodeFaceCoordinate(focusPointY);
+        getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, false);
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 
@@ -98,6 +99,39 @@ public abstract class Entity {
 
     public int getFaceCoordinateY() {
         return faceCoordinateY;
+    }
+
+    public int getFaceCoordinateWorldX() {
+        return decodeFaceCoordinate(faceCoordinateX);
+    }
+
+    public int getFaceCoordinateWorldY() {
+        return decodeFaceCoordinate(faceCoordinateY);
+    }
+
+    public void setPersistedFaceCoord(int focusPointX, int focusPointY) {
+        persistedFaceX = focusPointX;
+        persistedFaceY = focusPointY;
+    }
+
+    public int getPersistedFaceX() {
+        return persistedFaceX;
+    }
+
+    public int getPersistedFaceY() {
+        return persistedFaceY;
+    }
+
+    public boolean hasPersistedFaceCoord() {
+        return persistedFaceX != 0 || persistedFaceY != 0;
+    }
+
+    public int getPersistedFaceCoordinateX() {
+        return encodeFaceCoordinate(persistedFaceX);
+    }
+
+    public int getPersistedFaceCoordinateY() {
+        return encodeFaceCoordinate(persistedFaceY);
     }
 
     public long getCurrentGameCycle() {
@@ -125,6 +159,13 @@ public abstract class Entity {
             return 0xFFFF;
         }
         return (int) encoded;
+    }
+
+    private int decodeFaceCoordinate(int value) {
+        if (value <= 1) {
+            return 0;
+        }
+        return (value - 1) / 2;
     }
 
     public int getAnimationDelay() {
@@ -182,8 +223,8 @@ public abstract class Entity {
     }
 
     public boolean canMove(int x, int y) {
-        return Region.canMove(getPosition().getX(), getPosition().getY(), getPosition().getX() + x,
-                getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
+        return CollisionManager.global().canMove(getPosition().getX(), getPosition().getY(),
+                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
     }
 
     public CombatStyle getCombatStyle() {
