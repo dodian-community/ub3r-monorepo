@@ -51,7 +51,11 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     }
 
     CombatLogoutLockService.refreshInteraction(this, target)
-    setFocus(target.position.x, target.position.y)
+    if (target is Player) {
+        facePlayer(target.slot)
+    } else {
+        setFocus(target.position.x, target.position.y)
+    }
     val distance = distanceToPoint(target.position.x, target.position.y)
     val hitDelay = getDistanceDelay(distance, true).toLong()
     deleteItem(565, 1)

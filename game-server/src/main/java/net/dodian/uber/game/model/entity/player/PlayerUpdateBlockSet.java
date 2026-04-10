@@ -13,9 +13,8 @@ final class PlayerUpdateBlockSet {
         boolean cacheablePhase = phase == PlayerUpdating.UpdatePhase.UPDATE_LOCAL;
         boolean includeChat = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
         boolean forceAppearance = phase == PlayerUpdating.UpdatePhase.ADD_LOCAL;
-        boolean forcePersistedFaceCoordinate = forceAppearance && player.hasPersistedFaceCoord();
         boolean sharedCacheablePhase = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
-        int updateMask = computeUpdateMask(player, includeChat, forceAppearance, forcePersistedFaceCoordinate);
+        int updateMask = computeUpdateMask(player, includeChat, forceAppearance);
 
         if (sharedCacheablePhase && updateMask != 0) {
             byte[] sharedBlock = SynchronizationContext.getSharedPlayerBlock(player, phase.name());
@@ -39,7 +38,7 @@ final class PlayerUpdateBlockSet {
             }
 
             writeMask(blockBuf, updateMask);
-            encodeBlocks(updating, player, blockBuf, includeChat, forceAppearance, forcePersistedFaceCoordinate);
+            encodeBlocks(updating, player, blockBuf, includeChat, forceAppearance);
 
             if (cacheablePhase) {
                 out.putBytes(blockBuf);
@@ -54,8 +53,7 @@ final class PlayerUpdateBlockSet {
 
     private int computeUpdateMask(Player player,
                                   boolean includeChat,
-                                  boolean forceAppearance,
-                                  boolean forcePersistedFaceCoordinate) {
+                                  boolean forceAppearance) {
         int updateMask = 0;
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT)) updateMask |= UpdateFlag.FORCED_MOVEMENT.getMask(player.getType());
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updateMask |= UpdateFlag.GRAPHICS.getMask(player.getType());
@@ -64,7 +62,7 @@ final class PlayerUpdateBlockSet {
         if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT)) updateMask |= UpdateFlag.CHAT.getMask(player.getType());
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updateMask |= UpdateFlag.FACE_CHARACTER.getMask(player.getType());
         if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) updateMask |= UpdateFlag.APPEARANCE.getMask(player.getType());
-        if (forcePersistedFaceCoordinate || player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updateMask |= UpdateFlag.FACE_COORDINATE.getMask(player.getType());
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updateMask |= UpdateFlag.FACE_COORDINATE.getMask(player.getType());
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT)) updateMask |= UpdateFlag.HIT.getMask(player.getType());
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updateMask |= UpdateFlag.HIT2.getMask(player.getType());
         return updateMask;
@@ -84,8 +82,7 @@ final class PlayerUpdateBlockSet {
                               Player player,
                               ByteMessage blockBuf,
                               boolean includeChat,
-                              boolean forceAppearance,
-                              boolean forcePersistedFaceCoordinate) {
+                              boolean forceAppearance) {
         if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT)) player.appendMask400Update(blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updating.appendGraphic(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updating.appendAnimationRequest(player, blockBuf);
@@ -93,9 +90,7 @@ final class PlayerUpdateBlockSet {
         if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT)) PlayerUpdating.appendPlayerChatText(player, blockBuf);
         if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updating.appendFaceCharacter(player, blockBuf);
         if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) PlayerUpdating.appendPlayerAppearance(player, blockBuf);
-        if (forcePersistedFaceCoordinate) {
-            updating.appendPersistedFaceCoordinates(player, blockBuf);
-        } else if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) {
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) {
             updating.appendFaceCoordinates(player, blockBuf);
         }
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT)) updating.appendPrimaryHit(player, blockBuf);

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Properties>
+        <!--
+          General application logging.
+          Toggle with either:
+            -Ddodian.log.level=debug
+          or:
+            export DODIAN_LOG_LEVEL=debug
+        -->
+        <Property name="dodianLogLevel">${sys:dodian.log.level:-${env:DODIAN_LOG_LEVEL:-info}}</Property>
+
+        <!--
+          ConsoleAudit category defaults.
+          Recommended RSPS defaults:
+            - Keep high-signal investigation categories ON by default.
+            - Keep high-volume click/result spam OFF by default unless actively debugging.
+
+          Toggle with either JVM properties:
+            -Ddodian.consoleAudit.object.level=off
+            -Ddodian.consoleAudit.interface.level=info
+
+          Or environment variables:
+            export DODIAN_CONSOLE_AUDIT_OBJECT_LEVEL=off
+            export DODIAN_CONSOLE_AUDIT_INTERFACE_LEVEL=info
+
+          Common presets:
+
+          1) Economy / dupe investigation
+             chat=info command=info trade=info duel=info bank=info item=info object=info interface=info button=off
+
+          2) UI / interface debugging
+             interface=info button=info object=off item=off bank=off
+
+          3) Object interaction debugging (stalls, cages, chests, doors)
+             object=info interface=info button=off item=off
+
+          4) Quiet audit mode
+             chat=off command=off trade=info duel=info bank=info item=off object=off interface=off button=off
+        -->
+
+        <!-- Social / player intent -->
+        <Property name="consoleAuditChatLevel">${sys:dodian.consoleAudit.chat.level:-${env:DODIAN_CONSOLE_AUDIT_CHAT_LEVEL:-info}}</Property>
+        <Property name="consoleAuditCommandLevel">${sys:dodian.consoleAudit.command.level:-${env:DODIAN_CONSOLE_AUDIT_COMMAND_LEVEL:-info}}</Property>
+        <Property name="consoleAuditTradeLevel">${sys:dodian.consoleAudit.trade.level:-${env:DODIAN_CONSOLE_AUDIT_TRADE_LEVEL:-info}}</Property>
+        <Property name="consoleAuditDuelLevel">${sys:dodian.consoleAudit.duel.level:-${env:DODIAN_CONSOLE_AUDIT_DUEL_LEVEL:-info}}</Property>
+
+        <!-- Economy / inventory flow -->
+        <Property name="consoleAuditBankLevel">${sys:dodian.consoleAudit.bank.level:-${env:DODIAN_CONSOLE_AUDIT_BANK_LEVEL:-info}}</Property>
+        <Property name="consoleAuditShopLevel">${sys:dodian.consoleAudit.shop.level:-${env:DODIAN_CONSOLE_AUDIT_SHOP_LEVEL:-info}}</Property>
+        <Property name="consoleAuditItemLevel">${sys:dodian.consoleAudit.item.level:-${env:DODIAN_CONSOLE_AUDIT_ITEM_LEVEL:-off}}</Property>
+
+        <!-- UI / interaction flow -->
+        <Property name="consoleAuditButtonLevel">${sys:dodian.consoleAudit.button.level:-${env:DODIAN_CONSOLE_AUDIT_BUTTON_LEVEL:-info}}</Property>
+        <Property name="consoleAuditObjectLevel">${sys:dodian.consoleAudit.object.level:-${env:DODIAN_CONSOLE_AUDIT_OBJECT_LEVEL:-info}}</Property>
+        <Property name="consoleAuditInterfaceLevel">${sys:dodian.consoleAudit.interface.level:-${env:DODIAN_CONSOLE_AUDIT_INTERFACE_LEVEL:-info}}</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %highlight{%-5p} [%c{1}] %msg%n" disableAnsi="false"/>
+        </Console>
+        <Console name="ConsoleAuditConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] ConsoleAudit %-5level [%c{1}] %msg%n" disableAnsi="false"/>
+        </Console>
+        <RollingFile
+                name="ConsoleAuditFile"
+                fileName="logs/console-audit.log"
+                filePattern="logs/archive/console-audit-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] ConsoleAudit %-5level [%c{1}] %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="25 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="14"/>
+        </RollingFile>
+        <RollingFile
+                name="ShopAuditFile"
+                fileName="logs/shop-transactions.log"
+                filePattern="logs/archive/shop-transactions-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] ShopAudit %-5level [%c{1}] %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="25 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+        <Async name="AsyncConsole" bufferSize="4096" blocking="false">
+            <AppenderRef ref="Console"/>
+        </Async>
+        <Async name="AsyncConsoleAudit" bufferSize="8192" blocking="false">
+            <AppenderRef ref="ConsoleAuditConsole"/>
+            <AppenderRef ref="ConsoleAuditFile"/>
+        </Async>
+        <Async name="AsyncShopAudit" bufferSize="8192" blocking="false">
+            <AppenderRef ref="ShopAuditFile"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef level="all" ref="AsyncConsole"/>
+        </Root>
+        <Logger name="io.netty" level="info" additivity="false"/>
+        <Logger name="org.pf4j" level="info" additivity="false"/>
+        <Logger name="net.dodian" level="${dodianLogLevel}" additivity="true"/>
+        <Logger name="net.dodian.consoleaudit.chat" level="${consoleAuditChatLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.command" level="${consoleAuditCommandLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.trade" level="${consoleAuditTradeLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.duel" level="${consoleAuditDuelLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.bank" level="${consoleAuditBankLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.shop" level="${consoleAuditShopLevel}" additivity="false">
+            <AppenderRef ref="AsyncShopAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.item" level="${consoleAuditItemLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.button" level="${consoleAuditButtonLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.object" level="${consoleAuditObjectLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+        <Logger name="net.dodian.consoleaudit.interface" level="${consoleAuditInterfaceLevel}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
+    </Loggers>
+</Configuration>

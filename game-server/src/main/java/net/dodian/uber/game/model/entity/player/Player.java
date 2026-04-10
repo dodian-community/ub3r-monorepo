@@ -1267,27 +1267,10 @@ public abstract class Player extends Entity {
     }
 
     public void teleportTo(int x, int y, int z) {
-        int deltaX = resolveTeleportFacingDeltaX();
-        int deltaY = resolveTeleportFacingDeltaY();
         getPosition().moveTo(x, y, z); //Update position!
         teleportToX = getPosition().getX();
         teleportToY = getPosition().getY();
         teleportToZ = getPosition().getZ();
-        if (deltaX != 0 || deltaY != 0) {
-            setPersistedFaceCoord(x + deltaX, y + deltaY);
-        }
-    }
-
-    private int resolveTeleportFacingDeltaX() {
-        int currentX = getPosition().getX();
-        int facingX = hasPersistedFaceCoord() ? getPersistedFaceX() : getFaceCoordinateWorldX();
-        return Integer.compare(facingX, currentX);
-    }
-
-    private int resolveTeleportFacingDeltaY() {
-        int currentY = getPosition().getY();
-        int facingY = hasPersistedFaceCoord() ? getPersistedFaceY() : getFaceCoordinateWorldY();
-        return Integer.compare(facingY, currentY);
     }
 
     Prayers prayers = new Prayers(this);

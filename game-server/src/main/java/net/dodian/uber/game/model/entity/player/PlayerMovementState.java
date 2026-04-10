@@ -98,7 +98,6 @@ final class PlayerMovementState {
         newPos.move(deltaX, deltaY);
         owner.getPosition().moveTo(newPos.getX(), newPos.getY());
         owner.setLastWalkDelta(deltaX, deltaY);
-        owner.setPersistedFaceCoord(absX + deltaX, absY + deltaY);
         return dir;
     }
 

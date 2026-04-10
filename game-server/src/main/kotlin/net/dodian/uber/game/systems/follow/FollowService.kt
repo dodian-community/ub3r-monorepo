@@ -85,32 +85,6 @@ object FollowService {
     }
 
     /**
-     * Reassert follow-facing after other per-tick systems have run so incidental
-     * non-follow resets do not override active follow interaction masks.
-     */
-    @JvmStatic
-    fun reassertFacingTick() {
-        if (followStates.isEmpty()) {
-            return
-        }
-        for ((_, state) in followStates) {
-            val follower = PlayerRegistry.playersOnline[state.followerLongName] ?: continue
-            if (!isUsableFollower(follower) || follower.slot != state.followerSlot) {
-                continue
-            }
-            // Active combat keeps facing authority.
-            if (follower.target != null || follower.combatTargetState != null) {
-                continue
-            }
-            val target = PlayerRegistry.playersOnline[state.targetLongName] ?: continue
-            if (!isUsableTarget(target) || target.slot != state.targetSlot) {
-                continue
-            }
-            follower.setFocus(target.position.x, target.position.y)
-        }
-    }
-
-    /**
      * Applies one tick of follow behavior for the supplied follower/target.
      *
      * The method is also safe to call in tests without pre-registering state;
@@ -187,8 +161,8 @@ object FollowService {
             return
         }
 
-        // Reassert a coordinate-facing mask so follow preserves walking direction visuals.
-        follower.setFocus(target.position.x, target.position.y)
+        // Keep follow facing as interaction-facing (Luna parity for player-follow).
+        follower.facePlayer(target.slot)
 
         val fx = follower.position.x
         val fy = follower.position.y
@@ -247,6 +221,7 @@ object FollowService {
     }
 
     private fun clearFollowerState(follower: Client) {
+        follower.faceTarget(-1)
         clearQueuedWalking(follower)
     }
 

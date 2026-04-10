@@ -948,11 +948,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         buf.putShort(player.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
-    public void appendPersistedFaceCoordinates(Player player, ByteMessage buf) {
-        buf.putShort(player.getPersistedFaceCoordinateX(), ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
-        buf.putShort(player.getPersistedFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
-    }
-
     @Override
     public void appendPrimaryHit(Player player, ByteMessage buf) {
         synchronized (this) {
