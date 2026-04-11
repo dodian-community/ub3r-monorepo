@@ -50,7 +50,12 @@ object FollowRouting {
             if (!isValidBoundaryDestination(destination, targetX, targetY, normalizedTargetSize, z)) {
                 continue
             }
+            val searchStart = System.nanoTime()
             val path = pathfinding.find(follower.position.x, follower.position.y, destination.first, destination.second, z)
+            FollowPathfindingTelemetry.recordSearch(
+                durationNanos = System.nanoTime() - searchStart,
+                foundPath = path.isNotEmpty(),
+            )
             if (path.isEmpty()) {
                 continue
             }
@@ -208,6 +213,5 @@ object FollowRouting {
 
     private val CARDINAL_OFFSETS = listOf(-1 to 0, 1 to 0, 0 to 1, 0 to -1)
 }
-
 
 
