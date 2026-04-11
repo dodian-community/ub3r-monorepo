@@ -71,6 +71,52 @@ class CollisionBuildServiceTest {
     }
 
     @Test
+    fun `type 10 with null object name does not block movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1024,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+            objectName = "null",
+            blockWalk = 2,
+        )
+
+        assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 10 with named object still blocks movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1025,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = true,
+            objectName = "Crate",
+            blockWalk = 2,
+        )
+
+        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
     fun `type 11 solid non-interactive blocks movement`() {
         val manager = CollisionManager()
 
@@ -89,6 +135,29 @@ class CollisionBuildServiceTest {
         )
 
         assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 11 with null object name does not block movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1026,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 11,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+            objectName = "null",
+            blockWalk = 2,
+        )
+
+        assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
     }
 
     @Test

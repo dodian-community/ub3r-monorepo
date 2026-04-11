@@ -72,6 +72,7 @@ class CollisionBuildService(
                 solid = definition.isSolid(),
                 walkable = definition.isWalkable(),
                 hasActions = definition.hasActions(),
+                objectName = definition.name,
                 blockWalk = definition.blockWalk(),
                 blockRange = definition.blockRange(),
                 breakRouteFinding = definition.breakRouteFinding(),
@@ -92,6 +93,7 @@ class CollisionBuildService(
             solid = definition.isSolid(),
             walkable = definition.isWalkable(),
             hasActions = definition.hasActions(),
+            objectName = definition.name,
             blockWalk = definition.blockWalk(),
             blockRange = definition.blockRange(),
             breakRouteFinding = definition.breakRouteFinding(),
@@ -117,6 +119,7 @@ class CollisionBuildService(
         solid: Boolean,
         walkable: Boolean,
         hasActions: Boolean = true,
+        objectName: String? = null,
         blockWalk: Int = if (solid) 2 else 0,
         blockRange: Boolean = blockWalk != 0,
         breakRouteFinding: Boolean = false,
@@ -133,6 +136,7 @@ class CollisionBuildService(
         solid = solid,
         walkable = walkable,
         hasActions = hasActions,
+        objectName = objectName,
         blockWalk = blockWalk,
         blockRange = blockRange,
         breakRouteFinding = breakRouteFinding,
@@ -150,6 +154,7 @@ class CollisionBuildService(
         solid: Boolean,
         walkable: Boolean,
         hasActions: Boolean = true,
+        objectName: String? = null,
         blockWalk: Int = if (solid) 2 else 0,
         blockRange: Boolean = blockWalk != 0,
         breakRouteFinding: Boolean = false,
@@ -166,6 +171,7 @@ class CollisionBuildService(
         solid = solid,
         walkable = walkable,
         hasActions = hasActions,
+        objectName = objectName,
         blockWalk = blockWalk,
         blockRange = blockRange,
         breakRouteFinding = breakRouteFinding,
@@ -185,11 +191,12 @@ class CollisionBuildService(
         solid: Boolean,
         walkable: Boolean,
         hasActions: Boolean,
+        objectName: String?,
         blockWalk: Int,
         blockRange: Boolean,
         breakRouteFinding: Boolean,
     ) {
-        if (!isTypeWalkBlocking(type, blockWalk)) {
+        if (!isTypeWalkBlocking(type, blockWalk, objectName)) {
             return
         }
 
@@ -269,19 +276,28 @@ class CollisionBuildService(
         }
 
         @JvmStatic
-        fun isTypeWalkBlocking(type: Int, blockWalk: Int): Boolean =
-            when (type) {
+        fun isTypeWalkBlocking(type: Int, blockWalk: Int, objectName: String? = null): Boolean {
+            if (type in 10..11 && isUnnamedDefinitionName(objectName)) {
+                return false
+            }
+            return when (type) {
                 in 4..8 -> false
                 22 -> blockWalk == 1
                 else -> blockWalk != 0
             }
+        }
+
+        private fun isUnnamedDefinitionName(objectName: String?): Boolean {
+            val normalized = objectName?.trim()?.lowercase() ?: return false
+            return normalized == "null"
+        }
 
         /**
          * Legacy compatibility shim. New callers should use [isTypeWalkBlocking].
          */
         @JvmStatic
         fun isTypeUnwalkable(type: Int, solid: Boolean, walkable: Boolean, hasActions: Boolean): Boolean =
-            isTypeWalkBlocking(type, if (solid) 2 else 0)
+            isTypeWalkBlocking(type, if (solid) 2 else 0, objectName = null)
 
         @JvmStatic
         fun shouldApplyRouteBlocking(type: Int, breakRouteFinding: Boolean): Boolean =

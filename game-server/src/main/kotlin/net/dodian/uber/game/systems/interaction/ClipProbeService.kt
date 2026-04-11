@@ -68,7 +68,11 @@ object ClipProbeService {
                 .mapNotNull { obj ->
                     val definition = GameObjectData.forId(obj.objectId)
                     val blocksByTypeRule =
-                        CollisionBuildService.isTypeWalkBlocking(type = obj.type, blockWalk = definition.blockWalk())
+                        CollisionBuildService.isTypeWalkBlocking(
+                            type = obj.type,
+                            blockWalk = definition.blockWalk(),
+                            objectName = definition.name,
+                        )
                     val overlapsCurrent =
                         CollisionBuildService.occupiesTile(
                             objectX = obj.x,

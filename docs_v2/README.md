@@ -19,8 +19,10 @@ Welcome to the comprehensive documentation for the Ub3r RSPS game server. This d
 *   [Game Event Bus](2_engine/event_bus.md)
 *   [Entity Updating & Masks](2_engine/entity_updating.md)
 *   [Pathfinding & Collision](2_engine/pathfinding.md)
+*   [Pathfinding Optimization](2_engine/pathfinding_optimization.md)
 *   [Spatial Partitioning (Chunks)](2_engine/chunk_system.md)
 *   [Performance "Easy Wins"](2_engine/performance_wins.md)
+*   [Zero-Allocation Patterns](2_engine/zero_allocation_patterns.md)
 
 ### 3. Content Systems
 *   [Content Plugins & Dispatch](3_content/plugins.md)

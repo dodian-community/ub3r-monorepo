@@ -139,7 +139,12 @@ class CacheBootstrapService(
                 val definition = definitionCache.getOrPut(obj.objectId) { GameObjectData.forId(obj.objectId) }
                 collisionBuildService.applyObjectData(obj, definition)
                 objectCount++
-                val blocksByType = CollisionBuildService.isTypeWalkBlocking(type = obj.type, blockWalk = definition.blockWalk())
+                val blocksByType =
+                    CollisionBuildService.isTypeWalkBlocking(
+                        type = obj.type,
+                        blockWalk = definition.blockWalk(),
+                        objectName = definition.name,
+                    )
                 if (blocksByType && obj.plane == KNOWN_TILE_Z) {
                     val overlapsCurrent =
                         CollisionBuildService.occupiesTile(
