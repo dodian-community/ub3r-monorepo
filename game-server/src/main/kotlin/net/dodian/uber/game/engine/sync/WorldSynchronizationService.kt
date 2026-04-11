@@ -34,7 +34,7 @@ class WorldSynchronizationService {
     private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
     private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
     private val sharedNpcActivityIndex = NpcChunkActivityIndex()
-    private val activePlayerBuffer = ArrayList<Client>(512)
+    private val activePlayerBuffer = ArrayList<Client>(2048)
     private var tick = 0L
 
     fun run() {

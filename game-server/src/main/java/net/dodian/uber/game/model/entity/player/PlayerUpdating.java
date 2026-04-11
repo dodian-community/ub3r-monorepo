@@ -40,7 +40,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     private static final int MAX_LOCAL_PLAYER_CAP = 255;
 
     private static final PlayerUpdating instance = new PlayerUpdating();
-    private static final java.util.concurrent.atomic.AtomicInteger DEBUG_ADDED_LOCAL_COUNTER = new java.util.concurrent.atomic.AtomicInteger();
     private static final PlayerUpdateBlockSet BLOCK_SET = new PlayerUpdateBlockSet();
 
     enum UpdatePhase {
@@ -264,8 +263,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
             playersAdded[0]++;
             SynchronizationContext.recordPlayerAdd();
-            if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
+                logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
             }
         });
     }
@@ -287,8 +286,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             }
             playersAdded++;
             SynchronizationContext.recordPlayerAdd();
-            if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+            if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
+                logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
             }
 
             if (playersAdded >= remainingAdds || player.playerListSize >= MAX_LOCAL_PLAYER_CAP) {
@@ -320,8 +319,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             player.addNewPlayer(other, stream, updateBlock);
             if (player.playersUpdating.contains(other)) {
                 SynchronizationContext.recordPlayerAdd();
-                if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
+                    logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
                 }
             }
         }
@@ -350,8 +349,8 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             player.addNewPlayer(other, stream, updateBlock);
             if (player.playersUpdating.contains(other)) {
                 SynchronizationContext.recordPlayerAdd();
-                if (DEBUG_ADDED_LOCAL_PLAYERS) {
-                    DEBUG_ADDED_LOCAL_COUNTER.incrementAndGet();
+                if (DEBUG_ADDED_LOCAL_PLAYERS && logger.isDebugEnabled()) {
+                    logger.debug("playerAddLocal viewer={} local={}", player.getPlayerName(), other.getPlayerName());
                 }
             }
         }
@@ -723,14 +722,6 @@ public class PlayerUpdating extends EntityUpdating<Player> {
                     || player.getUpdateFlags().isRequired(UpdateFlag.HIT2);
         }
         return player.getUpdateFlags().isUpdateRequired();
-    }
-
-    public static void resetDebugAddedLocalCounter() {
-        DEBUG_ADDED_LOCAL_COUNTER.set(0);
-    }
-
-    public static int consumeDebugAddedLocalCounter() {
-        return DEBUG_ADDED_LOCAL_COUNTER.getAndSet(0);
     }
 
     public void appendGraphic(Player player, ByteMessage buf) {

@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -29,7 +28,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
     private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
     private static final int MAX_LOCAL_NPC_CAP = 255;
-    private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
     private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
@@ -89,8 +87,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             }
             // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
-            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
-                DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
+            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0 && logger.isDebugEnabled()) {
                 logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
             }
         } finally {
@@ -106,7 +103,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (Server.chunkManager == null) {
             return Server.npcManager.getNpcs();
         }
-        return Server.chunkManager.findUpdateNpcs(player, 16);
+        java.util.ArrayList<Npc> candidates = new java.util.ArrayList<>();
+        Server.chunkManager.forEachUpdateNpcCandidate(player, 16, candidates::add);
+        return candidates;
     }
 
     private void pruneLocalNpcsToProtocolCap(Player player) {
@@ -308,10 +307,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         }
-    }
-
-    public static int consumeDebugMovementWriteCounter() {
-        return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
     }
 
     private int translateDirectionToClient(Npc npc) {
