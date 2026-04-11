@@ -47,7 +47,7 @@ object DialogueOptionService {
 //                                c.sendMessage("This npc has already been removed!")
 //                            } else {
 //                                tempNpc.die()
-//                                Replaced with GameEventScheduler after legacy event scheduler removal.
+//                                Replaced with event-based scheduling after legacy scheduler removal.
 //                                    override fun execute() {
 //                                        Server.npcManager.npcs.remove(tempNpc)
 //                                        stop()

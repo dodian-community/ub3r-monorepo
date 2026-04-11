@@ -57,6 +57,11 @@ object PersonalPassageService {
         grants.clear()
     }
 
+    @JvmStatic
+    fun clearForPlayer(player: Player) {
+        grants.remove(playerKey(player))
+    }
+
     private fun playerKey(player: Player): String {
         val longName = player.longName
         return if (longName > 0L) {
@@ -70,4 +75,3 @@ object PersonalPassageService {
 
     private fun edgeKey(fromX: Int, fromY: Int, toX: Int, toY: Int, z: Int): String = "$fromX:$fromY:$toX:$toY:$z"
 }
-

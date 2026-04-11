@@ -52,6 +52,17 @@ class FollowServiceTest {
     }
 
     @Test
+    fun `follow request is ignored while follower is in agility traversal`() {
+        val follower = testClient(slot = 30, nameKey = 1030L, x = 3210, y = 3210)
+        val leader = testClient(slot = 31, nameKey = 1031L, x = 3212, y = 3210)
+        follower.UsingAgility = true
+
+        FollowService.requestFollow(follower, leader)
+
+        assertFalse(FollowService.isFollowing(follower))
+    }
+
+    @Test
     fun `follow routes around blocked tile using canonical walk command buffers`() {
         val follower = testClient(slot = 5, nameKey = 1005L, x = 3200, y = 3200)
         val leader = testClient(slot = 6, nameKey = 1006L, x = 3202, y = 3200)
