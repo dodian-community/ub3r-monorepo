@@ -6,6 +6,10 @@ import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.content.skills.agility.runtime.AgilityTraversalService
+import net.dodian.uber.game.content.skills.runtime.SkillActionContext
+import net.dodian.uber.game.content.skills.runtime.SkillTraversalMovement
+import net.dodian.uber.game.content.skills.runtime.SkillTraversalPlan
 import net.dodian.uber.game.systems.api.content.ContentInteraction
 import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
@@ -20,6 +24,12 @@ import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
 class Agility(private val c: Client) {
+    private fun defaultActionContext(
+        objectId: Int,
+        option: Int = 1,
+        objectPosition: Position = c.position.copy(),
+    ): SkillActionContext = SkillActionContext(player = c, objectId = objectId, option = option, objectPosition = objectPosition)
+
     fun giveEndExperience(xp: Int) {
         ProgressionService.addXp(c, xp, Skill.AGILITY)
         SkillingRandomEventService.trigger(c, xp)
@@ -69,22 +79,22 @@ class Agility(private val c: Client) {
         return false
     }
 
-    fun GnomeLog() {
-        if (isBusy()) {
-            return
+    fun GnomeLog(context: SkillActionContext = defaultActionContext(GnomeCourseObjectComponents.LOG_BALANCE)): Boolean {
+        val start = Position(2474, 3436, 0)
+        if (!c.position.equals(start)) {
+            return false
         }
-        if (c.position.x == 2474 && c.position.y == 3436) {
-            c.UsingAgility = true
-            c.setWalkAnim(762)
-            val time = 4800
-            c.AddToWalkCords(0, -7, time.toLong())
-            runLater(time) {
-                c.requestWeaponAnims()
-                giveEndExperience(280)
-                c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
-                c.UsingAgility = false
-            }
-        }
+        val plan =
+            SkillTraversalPlan(
+                name = "agility.gnome.log_balance",
+                movement = SkillTraversalMovement(deltaX = 0, deltaY = -7, durationMs = 4800, movementAnimationId = 762),
+                passageEdges = { AgilityTraversalService.straightPathEdges(start = c.position.copy(), deltaX = 0, deltaY = -7) },
+                onComplete = {
+                    giveEndExperience(280)
+                    c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
+                },
+            )
+        return AgilityTraversalService.execute(context, plan)
     }
 
     fun GnomeNet1() {
@@ -121,25 +131,24 @@ class Agility(private val c: Client) {
         }
     }
 
-    fun GnomeRope() {
+    fun GnomeRope(context: SkillActionContext = defaultActionContext(GnomeCourseObjectComponents.ROPE_SWING)): Boolean {
         val npc = NpcSpawnLocator.gnomeCourseNpc(2)
-        if (isBusy()) {
-            return
-        }
         if (c.position.x != 2477 || c.position.y != 3420) {
-            return
+            return false
         }
-        c.UsingAgility = true
-        npc?.text = "I do not know why you bother. HAHA!"
-        c.setWalkAnim(762)
-        val time = 4800
-        c.AddToWalkCords(6, 0, time.toLong())
-        runLater(time) {
-            c.requestWeaponAnims()
-            giveEndExperience(250)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
-            c.UsingAgility = false
-        }
+        val start = c.position.copy()
+        val plan =
+            SkillTraversalPlan(
+                name = "agility.gnome.balancing_rope",
+                movement = SkillTraversalMovement(deltaX = 6, deltaY = 0, durationMs = 4800, movementAnimationId = 762),
+                passageEdges = { AgilityTraversalService.straightPathEdges(start = start, deltaX = 6, deltaY = 0) },
+                onStart = { npc?.text = "I do not know why you bother. HAHA!" },
+                onComplete = {
+                    giveEndExperience(250)
+                    c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
+                },
+            )
+        return AgilityTraversalService.execute(context, plan)
     }
 
     fun GnomeTreebranch2() {
@@ -698,7 +707,6 @@ object GnomeCourseObjectBindings : FirstClickDslObjectContent(
     firstClickObjectActions {
         objectAction(GnomeCourseObjectComponents.LOG_BALANCE) { client, _, _, _ ->
             Agility(client).GnomeLog()
-            true
         }
         objectAction(GnomeCourseObjectComponents.NET_ONE) { client, _, position, _ ->
             if (client.distanceToPoint(position.x, position.y) >= 2) {
@@ -713,7 +721,6 @@ object GnomeCourseObjectBindings : FirstClickDslObjectContent(
         }
         objectAction(GnomeCourseObjectComponents.ROPE_SWING) { client, _, _, _ ->
             Agility(client).GnomeRope()
-            true
         }
         objectAction(*GnomeCourseObjectComponents.TREE_BRANCH_DOWN) { client, _, _, _ ->
             Agility(client).GnomeTreebranch2()
@@ -922,10 +929,26 @@ object AgilitySkillPlugin : SkillPlugin {
         skillPlugin(name = "Agility", skill = Skill.AGILITY) {
             objectClick(preset = PolicyPreset.MOVEMENT_LOCKED, option = 1, *agilityObjectIds) { client, objectId, position, _ ->
                 when {
-                    objectId == GnomeCourseObjectComponents.LOG_BALANCE -> Agility(client).GnomeLog()
+                    objectId == GnomeCourseObjectComponents.LOG_BALANCE ->
+                        Agility(client).GnomeLog(
+                            SkillActionContext(
+                                player = client,
+                                objectId = objectId,
+                                option = 1,
+                                objectPosition = position,
+                            ),
+                        )
                     objectId == GnomeCourseObjectComponents.NET_ONE -> Agility(client).GnomeNet1()
                     objectId == GnomeCourseObjectComponents.TREE_BRANCH_UP -> Agility(client).GnomeTree1()
-                    objectId == GnomeCourseObjectComponents.ROPE_SWING -> Agility(client).GnomeRope()
+                    objectId == GnomeCourseObjectComponents.ROPE_SWING ->
+                        Agility(client).GnomeRope(
+                            SkillActionContext(
+                                player = client,
+                                objectId = objectId,
+                                option = 1,
+                                objectPosition = position,
+                            ),
+                        )
                     objectId in GnomeCourseObjectComponents.TREE_BRANCH_DOWN -> Agility(client).GnomeTreebranch2()
                     objectId == GnomeCourseObjectComponents.NET_TWO -> Agility(client).GnomeNet2()
                     objectId == GnomeCourseObjectComponents.PIPE_ENTRY_ONE ||

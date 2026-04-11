@@ -277,6 +277,7 @@ object FollowService {
     private fun isUsableFollower(player: Client?): Boolean =
         player != null &&
             player.isActive &&
+            !player.UsingAgility &&
             !player.disconnected &&
             player.channel?.isActive == true
 
