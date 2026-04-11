@@ -2,6 +2,7 @@ package net.dodian.uber.game.content.objects.travel
 
 import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.`object`.DoorRegistry
 import net.dodian.uber.game.systems.interaction.PersonalPassageService
 import net.dodian.uber.game.systems.net.PacketWalkingService
 import net.dodian.uber.game.systems.net.WalkRequest
@@ -15,8 +16,25 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class LegendsGuildGateServiceTest {
+    private lateinit var originalDoorId: IntArray
+    private lateinit var originalDoorX: IntArray
+    private lateinit var originalDoorY: IntArray
+    private lateinit var originalDoorHeight: IntArray
+    private lateinit var originalDoorFaceOpen: IntArray
+    private lateinit var originalDoorFaceClosed: IntArray
+    private lateinit var originalDoorFace: IntArray
+    private lateinit var originalDoorState: IntArray
+
     @BeforeEach
     fun setUp() {
+        originalDoorId = DoorRegistry.doorId.copyOf()
+        originalDoorX = DoorRegistry.doorX.copyOf()
+        originalDoorY = DoorRegistry.doorY.copyOf()
+        originalDoorHeight = DoorRegistry.doorHeight.copyOf()
+        originalDoorFaceOpen = DoorRegistry.doorFaceOpen.copyOf()
+        originalDoorFaceClosed = DoorRegistry.doorFaceClosed.copyOf()
+        originalDoorFace = DoorRegistry.doorFace.copyOf()
+        originalDoorState = DoorRegistry.doorState.copyOf()
         CollisionManager.global().clear()
         CollisionManager.global().flagSolid(2728, 3349, 0)
         CollisionManager.global().flagSolid(2729, 3349, 0)
@@ -26,6 +44,15 @@ class LegendsGuildGateServiceTest {
     fun tearDown() {
         CollisionManager.global().clear()
         PersonalPassageService.clearForTests()
+        LegendsGuildGateService.clearForTests()
+        DoorRegistry.doorId = originalDoorId
+        DoorRegistry.doorX = originalDoorX
+        DoorRegistry.doorY = originalDoorY
+        DoorRegistry.doorHeight = originalDoorHeight
+        DoorRegistry.doorFaceOpen = originalDoorFaceOpen
+        DoorRegistry.doorFaceClosed = originalDoorFaceClosed
+        DoorRegistry.doorFace = originalDoorFace
+        DoorRegistry.doorState = originalDoorState
         PlayerRegistry.playersOnline.clear()
     }
 
@@ -37,9 +64,10 @@ class LegendsGuildGateServiceTest {
         val allowed = LegendsGuildGateService.allowPassage(client)
 
         assertTrue(allowed)
-        runMovementTicks(client, 8)
+        runMovementTicks(client, 10)
         assertEquals(2728, client.position.x)
         assertEquals(3350, client.position.y)
+        assertEquals("success", LegendsGuildGateService.completionReasonForTests(client))
     }
 
     @Test
@@ -50,9 +78,10 @@ class LegendsGuildGateServiceTest {
         val allowed = LegendsGuildGateService.allowPassage(client)
 
         assertTrue(allowed)
-        runMovementTicks(client, 8)
+        runMovementTicks(client, 10)
         assertEquals(2729, client.position.x)
         assertEquals(3348, client.position.y)
+        assertEquals("success", LegendsGuildGateService.completionReasonForTests(client))
     }
 
     @Test
@@ -80,6 +109,26 @@ class LegendsGuildGateServiceTest {
 
         assertEquals(2729, blocked.position.x)
         assertEquals(3348, blocked.position.y)
+    }
+
+    @Test
+    fun `visual snapshot uses door registry faces for close restore`() {
+        DoorRegistry.doorId = intArrayOf(2391, 2392)
+        DoorRegistry.doorX = intArrayOf(2728, 2729)
+        DoorRegistry.doorY = intArrayOf(3349, 3349)
+        DoorRegistry.doorHeight = intArrayOf(0, 0)
+        DoorRegistry.doorFaceOpen = intArrayOf(0, 2)
+        DoorRegistry.doorFaceClosed = intArrayOf(3, 1)
+        DoorRegistry.doorFace = intArrayOf(0, 0)
+        DoorRegistry.doorState = intArrayOf(0, 0)
+
+        val premium = clientAt(slot = 6, nameKey = 66L, x = 2728, y = 3347)
+        premium.premium = true
+
+        assertTrue(LegendsGuildGateService.allowPassage(premium))
+        val snapshot = LegendsGuildGateService.visualSnapshotForTests()
+        assertEquals(3, snapshot?.left?.closed)
+        assertEquals(1, snapshot?.right?.closed)
     }
 
     private fun clientAt(slot: Int, nameKey: Long, x: Int, y: Int): Client {
@@ -118,6 +167,7 @@ class LegendsGuildGateServiceTest {
         repeat(ticks) {
             client.postProcessing()
             client.getNextPlayerMovement()
+            LegendsGuildGateService.pumpTraversalForTests(client)
         }
     }
 

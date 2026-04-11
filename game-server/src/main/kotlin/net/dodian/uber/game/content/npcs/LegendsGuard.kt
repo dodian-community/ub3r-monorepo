@@ -5,6 +5,8 @@ package net.dodian.uber.game.content.npcs
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.content.objects.travel.LegendsGuildGateService
+import net.dodian.uber.game.content.social.dialogue.DialogueEmote
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 
 internal object LegendsGuard : NpcModule {
     // Stats: 3951: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
@@ -24,12 +26,22 @@ internal object LegendsGuard : NpcModule {
 
     @Suppress("UNUSED_PARAMETER")
     fun onFirstClick(client: Client, npc: Npc): Boolean {
+        openDialogue(client, npc.id)
+        return true
+    }
+
+    internal fun openDialogue(client: Client, npcId: Int) {
         if (client.premium) {
             LegendsGuildGateService.allowPassage(client)
-            client.showNPCChat(npc.id, 590, arrayOf("Welcome to the Guild of Legends", "Enjoy your stay."))
+            DialogueService.start(client) {
+                npcChat(npcId, DialogueEmote.CALM_TALK2, "Welcome to the Guild of Legends", "Enjoy your stay.")
+                finish()
+            }
         } else {
-            client.showNPCChat(npc.id, 595, arrayOf("You must be a premium member to enter", "Visit Dodian.net to subscribe"))
+            DialogueService.start(client) {
+                npcChat(npcId, DialogueEmote.ANNOYED, "You must be a premium member to enter", "Visit Dodian.net to subscribe")
+                finish()
+            }
         }
-        return true
     }
 }

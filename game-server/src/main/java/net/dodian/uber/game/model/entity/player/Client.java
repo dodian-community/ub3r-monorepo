@@ -2364,7 +2364,14 @@ public class Client extends Player implements Runnable {
     }
 
     public String GetNpcName(int NpcID) {
-        return Server.npcManager.getName(NpcID).replaceAll("_", " ");
+        if (Server.npcManager == null) {
+            return "Npc";
+        }
+        String npcName = Server.npcManager.getName(NpcID);
+        if (npcName == null) {
+            return "Npc";
+        }
+        return npcName.replaceAll("_", " ");
     }
 
     public String getItemName(int ItemID) {

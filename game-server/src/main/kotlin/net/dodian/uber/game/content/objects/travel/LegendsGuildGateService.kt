@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.objects.travel
 
 import java.util.ArrayDeque
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
@@ -14,6 +15,7 @@ import net.dodian.uber.game.systems.pathing.Heuristic
 import net.dodian.uber.game.systems.pathing.Node
 import net.dodian.uber.game.systems.pathing.collision.CollisionManager
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import org.slf4j.LoggerFactory
 
 object LegendsGuildGateService {
     private val leftGate = Position(2728, 3349, 0)
@@ -22,43 +24,167 @@ object LegendsGuildGateService {
     private val southRight = Position(2729, 3348, 0)
     private val northLeft = Position(2728, 3350, 0)
     private val northRight = Position(2729, 3350, 0)
+
     private const val GATE_OBJECT_LEFT = 2391
     private const val GATE_OBJECT_RIGHT = 2392
     private const val GATE_TYPE = 0
-    private const val LEFT_OPEN_FACE = 0
-    private const val RIGHT_OPEN_FACE = 2
     private const val PASSAGE_DURATION_MS = 5_000L
     private const val VISUAL_OPEN_MS = 2_400L
-    private const val LEFT_CLOSED_FALLBACK_FACE = 1
-    private const val RIGHT_CLOSED_FALLBACK_FACE = 3
+    private const val TRAVERSAL_TICK_MS = 600
+    private const val TRAVERSAL_TIMEOUT_MS = 8_000L
+
+    private enum class Stage {
+        TO_ENTRY,
+        TO_EXIT,
+    }
+
+    private data class Lane(
+        val id: String,
+        val entry: Position,
+        val gate: Position,
+        val exit: Position,
+    )
+
+    internal data class FacePair(
+        val open: Int,
+        val closed: Int,
+    )
+
+    internal data class VisualSnapshot(
+        val left: FacePair?,
+        val right: FacePair?,
+    )
+
+    private data class ActiveTraversal(
+        val playerKey: String,
+        val lane: Lane,
+        val deadlineMs: Long,
+        var stage: Stage = Stage.TO_ENTRY,
+    )
+
+    private val logger = LoggerFactory.getLogger(LegendsGuildGateService::class.java)
     private val visualToken = AtomicInteger(0)
-    private val pathfinding =
-        AStarPathfindingAlgorithm(
-            collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
-            heuristic = Heuristic.EUCLIDEAN,
-        )
+    private val activeTraversals = ConcurrentHashMap<String, ActiveTraversal>()
+    private val completionReasonsForTests = ConcurrentHashMap<String, String>()
+
+    @Volatile
+    private var lastVisualSnapshotForTests: VisualSnapshot? = null
 
     @JvmStatic
     fun allowPassage(client: Client): Boolean {
         if (!client.premium) {
             return false
         }
+
         val lane = resolveLane(client)
-        openGateForNearbyPlayers()
-        grantPassage(client, lane)
+        val key = playerKey(client)
+        if (activeTraversals.containsKey(key)) {
+            return true
+        }
+
         FollowService.cancelFollow(client)
-        return routeTo(client, lane.exit)
+
+        if (!routeTo(client, lane.entry)) {
+            finishTraversal(client, lane, "entry_path_missing", clearPassage = true)
+            return false
+        }
+        openGateForNearbyPlayers()
+
+        val traversal =
+            ActiveTraversal(
+                playerKey = key,
+                lane = lane,
+                deadlineMs = System.currentTimeMillis() + TRAVERSAL_TIMEOUT_MS,
+            )
+        activeTraversals[key] = traversal
+        scheduleTraversalTick(client, traversal)
+        return true
+    }
+
+    private fun scheduleTraversalTick(client: Client, traversal: ActiveTraversal) {
+        ContentTiming.runRepeatingMs(
+            delayMs = TRAVERSAL_TICK_MS,
+            intervalMs = TRAVERSAL_TICK_MS,
+        ) {
+            tickTraversal(client, traversal)
+        }
+    }
+
+    private fun tickTraversal(client: Client, traversal: ActiveTraversal): Boolean {
+        val current = activeTraversals[traversal.playerKey] ?: return false
+        if (current !== traversal) {
+            return false
+        }
+
+        if (client.disconnected || !client.isActive) {
+            cleanup(client)
+            return false
+        }
+
+        if (System.currentTimeMillis() > traversal.deadlineMs) {
+            finishTraversal(client, traversal.lane, "timeout", clearPassage = true)
+            return false
+        }
+
+        return when (traversal.stage) {
+            Stage.TO_ENTRY -> handleEntryStage(client, traversal)
+            Stage.TO_EXIT -> handleExitStage(client, traversal)
+        }
+    }
+
+    private fun handleEntryStage(client: Client, traversal: ActiveTraversal): Boolean {
+        if (isAtAndSettled(client, traversal.lane.entry)) {
+            grantPassage(client, traversal.lane)
+            if (!routeAcrossGate(client, traversal.lane)) {
+                finishTraversal(client, traversal.lane, "cross_path_missing", clearPassage = true)
+                return false
+            }
+            traversal.stage = Stage.TO_EXIT
+            return true
+        }
+
+        if (isMovementSettled(client) && !routeTo(client, traversal.lane.entry)) {
+            finishTraversal(client, traversal.lane, "entry_path_missing", clearPassage = true)
+            return false
+        }
+
+        return true
+    }
+
+    private fun handleExitStage(client: Client, traversal: ActiveTraversal): Boolean {
+        if (isAtAndSettled(client, traversal.lane.exit)) {
+            finishTraversal(client, traversal.lane, "success", clearPassage = true)
+            return false
+        }
+
+        if (isMovementSettled(client) && !routeAcrossGate(client, traversal.lane)) {
+            finishTraversal(client, traversal.lane, "cross_path_missing", clearPassage = true)
+            return false
+        }
+
+        return true
     }
 
     private fun resolveLane(client: Client): Lane {
         val fromSouth = client.position.y <= leftGate.y
-        val laneX = if (kotlin.math.abs(client.position.x - southLeft.x) <= kotlin.math.abs(client.position.x - southRight.x)) southLeft.x else southRight.x
+        val laneX =
+            if (kotlin.math.abs(client.position.x - southLeft.x) <= kotlin.math.abs(client.position.x - southRight.x)) {
+                southLeft.x
+            } else {
+                southRight.x
+            }
+
         val entryY = if (fromSouth) southLeft.y else northLeft.y
         val exitY = if (fromSouth) northLeft.y else southLeft.y
-        val gate = Position(laneX, leftGate.y, leftGate.z)
-        val entry = Position(laneX, entryY, leftGate.z)
-        val exit = Position(laneX, exitY, leftGate.z)
-        return Lane(entry = entry, gate = gate, exit = exit)
+        val direction = if (fromSouth) "south_to_north" else "north_to_south"
+        val side = if (laneX == leftGate.x) "left" else "right"
+
+        return Lane(
+            id = "$side:$direction",
+            entry = Position(laneX, entryY, leftGate.z),
+            gate = Position(laneX, leftGate.y, leftGate.z),
+            exit = Position(laneX, exitY, leftGate.z),
+        )
     }
 
     private fun grantPassage(client: Client, lane: Lane) {
@@ -74,18 +200,44 @@ object LegendsGuildGateService {
     }
 
     private fun openGateForNearbyPlayers() {
-        val faces = resolveFaces()
-        broadcastGateFaces(faces.leftOpen, faces.rightOpen)
+        val snapshot = resolveVisualSnapshot()
+        lastVisualSnapshotForTests = snapshot
+        broadcastGateFaces(snapshot, open = true)
         val token = visualToken.incrementAndGet()
         ContentTiming.runLaterMs(VISUAL_OPEN_MS.toInt()) {
             if (visualToken.get() != token) {
                 return@runLaterMs
             }
-            broadcastGateFaces(faces.leftClosed, faces.rightClosed)
+            broadcastGateFaces(snapshot, open = false)
         }
     }
 
-    private fun broadcastGateFaces(leftFace: Int, rightFace: Int) {
+    private fun resolveVisualSnapshot(): VisualSnapshot {
+        val left = resolveDoorFace(leftGate, GATE_OBJECT_LEFT)
+        val right = resolveDoorFace(rightGate, GATE_OBJECT_RIGHT)
+        return VisualSnapshot(left = left, right = right)
+    }
+
+    private fun resolveDoorFace(position: Position, objectId: Int): FacePair? {
+        for (index in DoorRegistry.doorId.indices) {
+            if (DoorRegistry.doorId[index] != objectId) {
+                continue
+            }
+            if (DoorRegistry.doorX[index] != position.x || DoorRegistry.doorY[index] != position.y || DoorRegistry.doorHeight[index] != position.z) {
+                continue
+            }
+            return FacePair(open = DoorRegistry.doorFaceOpen[index], closed = DoorRegistry.doorFaceClosed[index])
+        }
+        return null
+    }
+
+    private fun broadcastGateFaces(snapshot: VisualSnapshot, open: Boolean) {
+        val leftFace = if (open) snapshot.left?.open else snapshot.left?.closed
+        val rightFace = if (open) snapshot.right?.open else snapshot.right?.closed
+        if (leftFace == null && rightFace == null) {
+            return
+        }
+
         for (player in PlayerRegistry.players) {
             val viewer = player as? Client ?: continue
             if (!viewer.isActive || viewer.disconnected || viewer.position.z != leftGate.z) {
@@ -94,42 +246,63 @@ object LegendsGuildGateService {
             if (!viewer.isWithinDistance(viewer.position.x, viewer.position.y, leftGate.x, leftGate.y, 60)) {
                 continue
             }
-            viewer.ReplaceObject(leftGate.x, leftGate.y, GATE_OBJECT_LEFT, leftFace, GATE_TYPE)
-            viewer.ReplaceObject(rightGate.x, rightGate.y, GATE_OBJECT_RIGHT, rightFace, GATE_TYPE)
-        }
-    }
-
-    private fun resolveFaces(): GateFaces {
-        val left = resolveDoorFace(leftGate, GATE_OBJECT_LEFT, LEFT_OPEN_FACE, LEFT_CLOSED_FALLBACK_FACE)
-        val right = resolveDoorFace(rightGate, GATE_OBJECT_RIGHT, RIGHT_OPEN_FACE, RIGHT_CLOSED_FALLBACK_FACE)
-        return GateFaces(leftOpen = left.open, rightOpen = right.open, leftClosed = left.closed, rightClosed = right.closed)
-    }
-
-    private fun resolveDoorFace(position: Position, objectId: Int, fallbackOpen: Int, fallbackClosed: Int): FacePair {
-        for (index in DoorRegistry.doorId.indices) {
-            if (DoorRegistry.doorId[index] != objectId) continue
-            if (DoorRegistry.doorX[index] != position.x || DoorRegistry.doorY[index] != position.y || DoorRegistry.doorHeight[index] != position.z) {
-                continue
+            if (leftFace != null) {
+                viewer.ReplaceObject(leftGate.x, leftGate.y, GATE_OBJECT_LEFT, leftFace, GATE_TYPE)
             }
-            val open = DoorRegistry.doorFaceOpen[index]
-            val closed = DoorRegistry.doorFaceClosed[index]
-            return FacePair(open = open, closed = closed)
+            if (rightFace != null) {
+                viewer.ReplaceObject(rightGate.x, rightGate.y, GATE_OBJECT_RIGHT, rightFace, GATE_TYPE)
+            }
         }
-        return FacePair(open = fallbackOpen, closed = fallbackClosed)
+    }
+
+    private fun routeAcrossGate(client: Client, lane: Lane): Boolean {
+        if (client.position.z != lane.exit.z) {
+            return false
+        }
+
+        val path = ArrayDeque<Node>(2)
+        path.add(Node(lane.gate.x, lane.gate.y, lane.gate.z))
+        path.add(Node(lane.exit.x, lane.exit.y, lane.exit.z))
+
+        val validated = validatePath(client, path)
+        if (validated.isEmpty()) {
+            return false
+        }
+
+        val finalStep = validated.lastOrNull() ?: return false
+        if (finalStep.x != lane.exit.x || finalStep.y != lane.exit.y) {
+            return false
+        }
+
+        applyRoute(client, validated)
+        return true
     }
 
     private fun routeTo(client: Client, destination: Position): Boolean {
         if (client.position.z != destination.z) {
             return false
         }
-        val path = pathfinding.find(client.position.x, client.position.y, destination.x, destination.y, destination.z)
+
+        val pathfinder =
+            AStarPathfindingAlgorithm(
+                collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
+                heuristic = Heuristic.EUCLIDEAN,
+            )
+        val path = pathfinder.find(client.position.x, client.position.y, destination.x, destination.y, destination.z)
         if (path.isEmpty()) {
             return false
         }
+
         val validated = validatePath(client, path)
         if (validated.isEmpty()) {
             return false
         }
+
+        val finalStep = validated.lastOrNull() ?: return false
+        if (finalStep.x != destination.x || finalStep.y != destination.y) {
+            return false
+        }
+
         applyRoute(client, validated)
         return true
     }
@@ -139,6 +312,7 @@ object LegendsGuildGateService {
         var currentX = client.position.x
         var currentY = client.position.y
         val z = client.position.z
+
         for (step in path) {
             val dx = (step.x - currentX).coerceIn(-1, 1)
             val dy = (step.y - currentY).coerceIn(-1, 1)
@@ -155,6 +329,7 @@ object LegendsGuildGateService {
             currentX = step.x
             currentY = step.y
         }
+
         return validated
     }
 
@@ -178,21 +353,55 @@ object LegendsGuildGateService {
         }
     }
 
-    private data class Lane(
-        val entry: Position,
-        val gate: Position,
-        val exit: Position,
-    )
+    private fun finishTraversal(client: Client, lane: Lane, reason: String, clearPassage: Boolean) {
+        cleanup(client, clearPassage)
+        completionReasonsForTests[playerKey(client)] = reason
+        logger.info(
+            "Legends gate traversal player={} lane={} result={}",
+            client.playerName,
+            lane.id,
+            reason,
+        )
+    }
 
-    private data class FacePair(
-        val open: Int,
-        val closed: Int,
-    )
+    private fun cleanup(client: Client, clearPassage: Boolean = true) {
+        val key = playerKey(client)
+        activeTraversals.remove(key)
+        if (clearPassage) {
+            PersonalPassageService.clearForPlayer(client)
+        }
+    }
 
-    private data class GateFaces(
-        val leftOpen: Int,
-        val rightOpen: Int,
-        val leftClosed: Int,
-        val rightClosed: Int,
-    )
+    private fun isAtAndSettled(client: Client, position: Position): Boolean {
+        return client.position.x == position.x && client.position.y == position.y && client.position.z == position.z && isMovementSettled(client)
+    }
+
+    private fun isMovementSettled(client: Client): Boolean {
+        return client.primaryDirection == -1 && client.secondaryDirection == -1 && client.wQueueReadPtr == client.wQueueWritePtr
+    }
+
+    private fun playerKey(player: Player): String {
+        val longName = player.longName
+        return if (longName > 0L) {
+            "long:$longName"
+        } else {
+            "slot:${player.slot}"
+        }
+    }
+
+    internal fun completionReasonForTests(client: Client): String? = completionReasonsForTests[playerKey(client)]
+
+    internal fun visualSnapshotForTests(): VisualSnapshot? = lastVisualSnapshotForTests
+
+    internal fun pumpTraversalForTests(client: Client) {
+        val traversal = activeTraversals[playerKey(client)] ?: return
+        tickTraversal(client, traversal)
+    }
+
+    internal fun clearForTests() {
+        activeTraversals.clear()
+        completionReasonsForTests.clear()
+        lastVisualSnapshotForTests = null
+        visualToken.set(0)
+    }
 }
