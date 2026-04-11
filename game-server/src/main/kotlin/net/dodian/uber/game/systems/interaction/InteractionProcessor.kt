@@ -92,14 +92,18 @@ object InteractionProcessor {
                 1
         }
 
+        val legendsGuardFrontLane = isLegendsGuardFrontLaneInteraction(player, npc, intent.option)
         val routeStart = System.nanoTime()
-        if (!player.goodDistanceEntity(npc, range)) {
+        if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
             NpcClickMetrics.recordWait("out_of_range", intent.option, npc.id, intent.npcIndex, player.playerName)
             return InteractionExecutionResult.WAITING
         }
         if (npc.position.withinDistance(player.position, 0)) {
             NpcClickMetrics.recordWait("overlap_tile", intent.option, npc.id, intent.npcIndex, player.playerName)
             return InteractionExecutionResult.WAITING
+        }
+        if (intent.option != NPC_ATTACK_OPTION && !legendsGuardFrontLane) {
+            settleNpcInteractionMovement(player)
         }
         val routeNs = System.nanoTime() - routeStart
 
@@ -726,6 +730,12 @@ object InteractionProcessor {
         return timing
     }
 
+    private fun settleNpcInteractionMovement(player: Client) {
+        if (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr) {
+            player.resetWalkingQueue()
+        }
+    }
+
     private fun clear(player: Client) {
         player.pendingInteraction?.let { settledSinceCycle.remove(it) }
         player.pendingInteraction = null
@@ -804,6 +814,23 @@ object InteractionProcessor {
             player.wQueueReadPtr == player.wQueueWritePtr
     }
 
+    internal fun isLegendsGuardFrontLaneInteraction(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc, option: Int): Boolean {
+        if (option !in 1..4) {
+            return false
+        }
+        if (npc.id != LEGENDS_GUARD_NPC_ID || npc.position.z != LEGENDS_GATE_Z || player.position.z != LEGENDS_GATE_Z) {
+            return false
+        }
+        val npcIsLegendsGuard =
+            (npc.position.x == LEGENDS_GUARD_WEST_X || npc.position.x == LEGENDS_GUARD_EAST_X) &&
+                npc.position.y == LEGENDS_GATE_Y
+        if (!npcIsLegendsGuard) {
+            return false
+        }
+        val playerFrontLane = player.position.x in LEGENDS_FRONT_LANE_X && player.position.y in LEGENDS_FRONT_LANE_Y
+        return playerFrontLane
+    }
+
     private fun slowLogIfNeeded(
         player: Client,
         intent: InteractionIntent,
@@ -839,6 +866,13 @@ object InteractionProcessor {
     }
 
     private const val NPC_ATTACK_OPTION = 5
+    private const val LEGENDS_GUARD_NPC_ID = 3951
+    private const val LEGENDS_GUARD_WEST_X = 2727
+    private const val LEGENDS_GUARD_EAST_X = 2730
+    private const val LEGENDS_GATE_Y = 3349
+    private const val LEGENDS_GATE_Z = 0
+    private val LEGENDS_FRONT_LANE_X = 2728..2729
+    private val LEGENDS_FRONT_LANE_Y = 3348..3350
 
     private data class ObjectSnapshot(
         val objectData: GameObjectData?,

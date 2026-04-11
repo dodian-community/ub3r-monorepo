@@ -285,12 +285,16 @@ final class PlayerMovementState {
 
         int[] destination = resolveQueuedDestinationAbs();
         ClipProbeService.TileProbe probe = ClipProbeService.probeTile(blockedX, blockedY, z);
+        int fromX = owner.getPosition().getX();
+        int fromY = owner.getPosition().getY();
+        boolean passageForward = PersonalPassageService.canTraverse(owner, fromX, fromY, blockedX, blockedY, z);
+        boolean passageReverse = PersonalPassageService.canTraverse(owner, blockedX, blockedY, fromX, fromY, z);
         logger.info(
             "Blocked movement player={} from=({}, {}, {}) blocked=({}, {}, {}) clickDest=({}, {}, {}) flags=0x{} [{}] fullBlocked={} " +
                 "objCurrent={} objLuna={} footprintMismatch={} likelyTerrainOrUnknown={} staticOverride={} runtimeOverlay={} objectOverlaps={} overlapDetails={}",
             owner.getPlayerName(),
-            owner.getPosition().getX(),
-            owner.getPosition().getY(),
+            fromX,
+            fromY,
             owner.getPosition().getZ(),
             blockedX,
             blockedY,
@@ -309,6 +313,17 @@ final class PlayerMovementState {
             probe.getRuntimeOverlayPresent(),
             probe.getObjectMatches().size(),
             ClipProbeService.formatOverlapSummary(probe, 3)
+        );
+        logger.info(
+            "Blocked movement passageProbe player={} edge={}:{}->{}:{}:{} forward={} reverse={}",
+            owner.getPlayerName(),
+            fromX,
+            fromY,
+            blockedX,
+            blockedY,
+            z,
+            passageForward,
+            passageReverse
         );
     }
 

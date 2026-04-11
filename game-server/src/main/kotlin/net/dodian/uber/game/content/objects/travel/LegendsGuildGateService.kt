@@ -4,6 +4,7 @@ import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.`object`.DoorRegistry
@@ -28,6 +29,9 @@ object LegendsGuildGateService {
     private const val GATE_OBJECT_LEFT = 2391
     private const val GATE_OBJECT_RIGHT = 2392
     private const val GATE_TYPE = 0
+    private const val LEGENDS_GUARD_NPC_ID = 3951
+    private val DEFAULT_LEFT_GATE_FACES = FacePair(open = 0, closed = -3)
+    private val DEFAULT_RIGHT_GATE_FACES = FacePair(open = -2, closed = -3)
     private const val PASSAGE_DURATION_MS = 5_000L
     private const val VISUAL_OPEN_MS = 2_400L
     private const val TRAVERSAL_TICK_MS = 600
@@ -83,11 +87,17 @@ object LegendsGuildGateService {
         }
 
         FollowService.cancelFollow(client)
-
-        if (!routeTo(client, lane.entry)) {
+        val alreadyAtEntry = isAtPosition(client, lane.entry)
+        if (!alreadyAtEntry && !routeTo(client, lane.entry)) {
             finishTraversal(client, lane, "entry_path_missing", clearPassage = true)
             return false
         }
+        logger.info(
+            "Legends gate init player={} lane={} route={}",
+            client.playerName,
+            lane.id,
+            if (alreadyAtEntry) "already_at_entry" else "entry_path_found",
+        )
         openGateForNearbyPlayers()
 
         val traversal =
@@ -97,7 +107,25 @@ object LegendsGuildGateService {
                 deadlineMs = System.currentTimeMillis() + TRAVERSAL_TIMEOUT_MS,
             )
         activeTraversals[key] = traversal
+        if (!tickTraversal(client, traversal)) {
+            return completionReasonsForTests[key] == "success"
+        }
         scheduleTraversalTick(client, traversal)
+        return true
+    }
+
+    @JvmStatic
+    fun primeGuardApproach(client: Client, npc: Npc): Boolean {
+        if (!client.premium || npc.id != LEGENDS_GUARD_NPC_ID || !isLegendsGuard(npc.position)) {
+            return false
+        }
+
+        PersonalPassageService.grantBidirectionalEdges(
+            client,
+            edges = guardApproachEdges(fromSouth = client.position.y <= leftGate.y),
+            durationMs = PASSAGE_DURATION_MS,
+        )
+        openGateForNearbyPlayers()
         return true
     }
 
@@ -143,7 +171,7 @@ object LegendsGuildGateService {
             return true
         }
 
-        if (isMovementSettled(client) && !routeTo(client, traversal.lane.entry)) {
+        if (isMovementSettled(client) && !hasPendingWalkCommand(client) && !routeTo(client, traversal.lane.entry)) {
             finishTraversal(client, traversal.lane, "entry_path_missing", clearPassage = true)
             return false
         }
@@ -157,7 +185,7 @@ object LegendsGuildGateService {
             return false
         }
 
-        if (isMovementSettled(client) && !routeAcrossGate(client, traversal.lane)) {
+        if (isMovementSettled(client) && !hasPendingWalkCommand(client) && !routeAcrossGate(client, traversal.lane)) {
             finishTraversal(client, traversal.lane, "cross_path_missing", clearPassage = true)
             return false
         }
@@ -194,10 +222,23 @@ object LegendsGuildGateService {
                 listOf(
                     lane.entry to lane.gate,
                     lane.gate to lane.exit,
-                ),
+                ) + guardApproachEdges(fromSouth = lane.entry.y < leftGate.y),
             durationMs = PASSAGE_DURATION_MS,
         )
     }
+
+    private fun guardApproachEdges(fromSouth: Boolean): List<Pair<Position, Position>> {
+        val frontTiles = if (fromSouth) listOf(southLeft, southRight) else listOf(northLeft, northRight)
+        return buildList {
+            for (frontTile in frontTiles) {
+                add(frontTile to leftGate)
+                add(frontTile to rightGate)
+            }
+        }
+    }
+
+    private fun isLegendsGuard(position: Position): Boolean =
+        (position.x == 2727 || position.x == 2730) && position.y == 3349 && position.z == 0
 
     private fun openGateForNearbyPlayers() {
         val snapshot = resolveVisualSnapshot()
@@ -228,7 +269,15 @@ object LegendsGuildGateService {
             }
             return FacePair(open = DoorRegistry.doorFaceOpen[index], closed = DoorRegistry.doorFaceClosed[index])
         }
-        return null
+        return fallbackDoorFace(position, objectId)
+    }
+
+    private fun fallbackDoorFace(position: Position, objectId: Int): FacePair? {
+        return when {
+            objectId == GATE_OBJECT_LEFT && position == leftGate -> DEFAULT_LEFT_GATE_FACES
+            objectId == GATE_OBJECT_RIGHT && position == rightGate -> DEFAULT_RIGHT_GATE_FACES
+            else -> null
+        }
     }
 
     private fun broadcastGateFaces(snapshot: VisualSnapshot, open: Boolean) {
@@ -282,6 +331,9 @@ object LegendsGuildGateService {
         if (client.position.z != destination.z) {
             return false
         }
+        if (isAtPosition(client, destination)) {
+            return true
+        }
 
         val pathfinder =
             AStarPathfindingAlgorithm(
@@ -334,6 +386,9 @@ object LegendsGuildGateService {
     }
 
     private fun applyRoute(client: Client, path: ArrayDeque<Node>) {
+        client.resetWalkingQueue()
+        client.newWalkCmdSteps = 0
+        client.newWalkCmdIsRunning = false
         val steps = minOf(path.size, Player.WALKING_QUEUE_SIZE)
         val baseX = client.mapRegionX * 8
         val baseY = client.mapRegionY * 8
@@ -376,9 +431,14 @@ object LegendsGuildGateService {
         return client.position.x == position.x && client.position.y == position.y && client.position.z == position.z && isMovementSettled(client)
     }
 
+    private fun isAtPosition(client: Client, position: Position): Boolean =
+        client.position.x == position.x && client.position.y == position.y && client.position.z == position.z
+
     private fun isMovementSettled(client: Client): Boolean {
         return client.primaryDirection == -1 && client.secondaryDirection == -1 && client.wQueueReadPtr == client.wQueueWritePtr
     }
+
+    private fun hasPendingWalkCommand(client: Client): Boolean = client.newWalkCmdSteps > 0
 
     private fun playerKey(player: Player): String {
         val longName = player.longName

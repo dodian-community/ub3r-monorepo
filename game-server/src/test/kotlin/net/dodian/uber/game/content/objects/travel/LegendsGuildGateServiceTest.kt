@@ -1,6 +1,7 @@
 package net.dodian.uber.game.content.objects.travel
 
 import io.netty.channel.embedded.EmbeddedChannel
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.DoorRegistry
 import net.dodian.uber.game.systems.interaction.PersonalPassageService
@@ -71,6 +72,20 @@ class LegendsGuildGateServiceTest {
     }
 
     @Test
+    fun `premium player already at entry tile still starts traversal and crosses`() {
+        val client = clientAt(slot = 8, nameKey = 88L, x = 2728, y = 3348)
+        client.premium = true
+
+        val allowed = LegendsGuildGateService.allowPassage(client)
+
+        assertTrue(allowed)
+        runMovementTicks(client, 10)
+        assertEquals(2728, client.position.x)
+        assertEquals(3350, client.position.y)
+        assertEquals("success", LegendsGuildGateService.completionReasonForTests(client))
+    }
+
+    @Test
     fun `premium player is force-routed through legends guild gate from north`() {
         val client = clientAt(slot = 2, nameKey = 22L, x = 2729, y = 3351)
         client.premium = true
@@ -112,6 +127,51 @@ class LegendsGuildGateServiceTest {
     }
 
     @Test
+    fun `stale queued walk is cleared before gate route to avoid backtrack`() {
+        val premium = clientAt(slot = 9, nameKey = 99L, x = 2728, y = 3347)
+        premium.premium = true
+        queueWalkNoTick(premium, targetX = 2728, targetY = 3346)
+
+        assertTrue(LegendsGuildGateService.allowPassage(premium))
+
+        premium.postProcessing()
+        premium.getNextPlayerMovement()
+        LegendsGuildGateService.pumpTraversalForTests(premium)
+        assertEquals(3347, premium.position.y)
+
+        premium.postProcessing()
+        premium.getNextPlayerMovement()
+        LegendsGuildGateService.pumpTraversalForTests(premium)
+        assertEquals(3348, premium.position.y)
+
+        runMovementTicks(premium, 10)
+        assertEquals(2728, premium.position.x)
+        assertEquals(3350, premium.position.y)
+    }
+
+    @Test
+    fun `visual snapshot falls back to built in legends gate faces when door registry rows are missing`() {
+        DoorRegistry.doorId = IntArray(0)
+        DoorRegistry.doorX = IntArray(0)
+        DoorRegistry.doorY = IntArray(0)
+        DoorRegistry.doorHeight = IntArray(0)
+        DoorRegistry.doorFaceOpen = IntArray(0)
+        DoorRegistry.doorFaceClosed = IntArray(0)
+        DoorRegistry.doorFace = IntArray(0)
+        DoorRegistry.doorState = IntArray(0)
+
+        val premium = clientAt(slot = 6, nameKey = 66L, x = 2728, y = 3347)
+        premium.premium = true
+
+        assertTrue(LegendsGuildGateService.allowPassage(premium))
+        val snapshot = LegendsGuildGateService.visualSnapshotForTests()
+        assertEquals(0, snapshot?.left?.open)
+        assertEquals(-3, snapshot?.left?.closed)
+        assertEquals(-2, snapshot?.right?.open)
+        assertEquals(-3, snapshot?.right?.closed)
+    }
+
+    @Test
     fun `visual snapshot uses door registry faces for close restore`() {
         DoorRegistry.doorId = intArrayOf(2391, 2392)
         DoorRegistry.doorX = intArrayOf(2728, 2729)
@@ -122,7 +182,7 @@ class LegendsGuildGateServiceTest {
         DoorRegistry.doorFace = intArrayOf(0, 0)
         DoorRegistry.doorState = intArrayOf(0, 0)
 
-        val premium = clientAt(slot = 6, nameKey = 66L, x = 2728, y = 3347)
+        val premium = clientAt(slot = 7, nameKey = 77L, x = 2728, y = 3347)
         premium.premium = true
 
         assertTrue(LegendsGuildGateService.allowPassage(premium))
@@ -130,6 +190,7 @@ class LegendsGuildGateServiceTest {
         assertEquals(3, snapshot?.left?.closed)
         assertEquals(1, snapshot?.right?.closed)
     }
+
 
     private fun clientAt(slot: Int, nameKey: Long, x: Int, y: Int): Client {
         val client = Client(EmbeddedChannel(), slot)
@@ -148,6 +209,12 @@ class LegendsGuildGateServiceTest {
 
     private fun walkOneTile(client: Client, targetX: Int, targetY: Int) {
         primeMovementState(client)
+        queueWalkNoTick(client, targetX, targetY)
+        client.postProcessing()
+        client.getNextPlayerMovement()
+    }
+
+    private fun queueWalkNoTick(client: Client, targetX: Int, targetY: Int) {
         PacketWalkingService.handle(
             client,
             WalkRequest(
@@ -159,8 +226,6 @@ class LegendsGuildGateServiceTest {
                 deltasY = intArrayOf(0),
             ),
         )
-        client.postProcessing()
-        client.getNextPlayerMovement()
     }
 
     private fun runMovementTicks(client: Client, ticks: Int) {

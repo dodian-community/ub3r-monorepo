@@ -2,7 +2,9 @@ package net.dodian.uber.game.systems.net
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.content.objects.travel.LegendsGuildGateService
 import net.dodian.uber.game.events.combat.PlayerAttackEvent
+import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.systems.interaction.ItemOnNpcIntent
@@ -69,6 +71,12 @@ object PacketInteractionService {
         if (client.playerPotato.isNotEmpty()) {
             client.playerPotato.clear()
         }
+        if (option in 1..4) {
+            LegendsGuildGateService.primeGuardApproach(client, npc)
+        }
+        if (shouldClearRedundantWalkForNpcInteraction(client, npc, option)) {
+            client.resetWalkingQueue()
+        }
 
         val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, option)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
@@ -98,5 +106,15 @@ object PacketInteractionService {
         val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
         NpcClickMetrics.recordScheduled(opcode, 5, npc.id, npcIndex, client.playerName)
+    }
+
+    internal fun shouldClearRedundantWalkForNpcInteraction(client: Client, npc: Npc, option: Int): Boolean {
+        if (option !in 1..4) {
+            return false
+        }
+        if (npc.position.withinDistance(client.position, 0)) {
+            return false
+        }
+        return client.goodDistanceEntity(npc, 1)
     }
 }
