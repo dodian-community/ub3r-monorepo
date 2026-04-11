@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.api.content.ContentTiming
+import net.dodian.uber.game.api.content.ContentTiming
 
 data class VerticalTravelStyle(
     val animationId: Int = -1,

@@ -1,42 +1,44 @@
 package net.dodian.utilities
 
+import net.dodian.uber.game.engine.util.Utils as EngineUtils
+
 object Utils {
-    @JvmField val playerNameXlateTable: CharArray = Names.playerNameXlateTable
-    @JvmField val directionDeltaX: ByteArray = Direction.directionDeltaX
-    @JvmField val directionDeltaY: ByteArray = Direction.directionDeltaY
-    @JvmField val xlateDirectionToClient: ByteArray = Direction.xlateDirectionToClient
-    @JvmField val xlateTable: CharArray = TextCodec.xlateTable
+    @JvmField val playerNameXlateTable: CharArray = EngineUtils.playerNameXlateTable
+    @JvmField val directionDeltaX: ByteArray = EngineUtils.directionDeltaX
+    @JvmField val directionDeltaY: ByteArray = EngineUtils.directionDeltaY
+    @JvmField val xlateDirectionToClient: ByteArray = EngineUtils.xlateDirectionToClient
+    @JvmField val xlateTable: CharArray = EngineUtils.xlateTable
 
     @JvmStatic
-    fun longToPlayerName(l: Long): String = Names.longToPlayerName(l)
+    fun longToPlayerName(l: Long): String = EngineUtils.longToPlayerName(l)
 
     @JvmStatic
-    fun println(str: String) = Formatting.println(str)
+    fun println(str: String) = EngineUtils.println(str)
 
     @JvmStatic
     fun HexToInt(
         data: ByteArray,
         offset: Int,
         len: Int,
-    ): Int = TextCodec.hexToInt(data, offset, len)
+    ): Int = EngineUtils.HexToInt(data, offset, len)
 
     @JvmStatic
-    fun random(range: Int): Int = Randoms.random(range)
+    fun random(range: Int): Int = EngineUtils.random(range)
 
     @JvmStatic
-    fun dRandom2(range: Double): Double = Randoms.dRandom2(range)
+    fun dRandom2(range: Double): Double = EngineUtils.dRandom2(range)
 
     @JvmStatic
-    fun playerNameToInt64(s: String): Long = Names.playerNameToInt64(s)
+    fun playerNameToInt64(s: String): Long = EngineUtils.playerNameToInt64(s)
 
     @JvmStatic
-    fun playerNameToLong(s: String): Long = Names.playerNameToLong(s)
+    fun playerNameToLong(s: String): Long = EngineUtils.playerNameToLong(s)
 
     @JvmStatic
     fun textUnpack(
         packedData: ByteArray,
         size: Int,
-    ): String = TextCodec.textUnpack(packedData, size)
+    ): String = EngineUtils.textUnpack(packedData, size)
 
     @JvmStatic
     fun direction(
@@ -44,10 +46,10 @@ object Utils {
         srcY: Int,
         destX: Int,
         destY: Int,
-    ): Int = Direction.direction(srcX, srcY, destX, destY)
+    ): Int = EngineUtils.direction(srcX, srcY, destX, destY)
 
     @JvmStatic
-    fun format(num: Int): String = Formatting.format(num)
+    fun format(num: Int): String = EngineUtils.format(num)
 
     @JvmStatic
     fun getDistance(
@@ -55,11 +57,11 @@ object Utils {
         coordY1: Int,
         coordX2: Int,
         coordY2: Int,
-    ): Int = Geometry.getDistance(coordX1, coordY1, coordX2, coordY2)
+    ): Int = EngineUtils.getDistance(coordX1, coordY1, coordX2, coordY2)
 
     @JvmStatic
-    fun println_debug(message: String) = Formatting.printlnDebug(message)
+    fun println_debug(message: String) = EngineUtils.println_debug(message)
 
     @JvmStatic
-    fun capitalize(str: String?): String? = Formatting.capitalize(str)
+    fun capitalize(str: String?): String? = EngineUtils.capitalize(str)
 }

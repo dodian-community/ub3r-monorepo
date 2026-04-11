@@ -5,8 +5,8 @@ import net.dodian.uber.game.content.skills.runtime.SkillTraversalMovementMode
 import net.dodian.uber.game.content.skills.runtime.SkillTraversalPlan
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.interaction.PersonalPassageService
+import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
 
 object AgilityTraversalService {
     private const val PASSAGE_GRANT_BUFFER_MS = 1_200L

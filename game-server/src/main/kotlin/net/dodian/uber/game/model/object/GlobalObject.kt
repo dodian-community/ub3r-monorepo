@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.`object`
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 object GlobalObject {
     private val globalObjects = CopyOnWriteArrayList<Object>()

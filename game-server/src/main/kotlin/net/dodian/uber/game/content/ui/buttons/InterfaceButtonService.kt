@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.ui.buttons
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
 
 object InterfaceButtonService {
     @JvmStatic

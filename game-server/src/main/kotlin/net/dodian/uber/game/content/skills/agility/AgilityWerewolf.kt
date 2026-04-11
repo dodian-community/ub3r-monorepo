@@ -3,13 +3,13 @@ package net.dodian.uber.game.content.skills.agility
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
-import net.dodian.uber.game.systems.world.item.Ground
+import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
+import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
 class AgilityWerewolf(private val c: Client) {

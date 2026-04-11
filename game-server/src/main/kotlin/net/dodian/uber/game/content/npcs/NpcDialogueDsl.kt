@@ -4,7 +4,7 @@ import net.dodian.uber.game.content.social.dialogue.DialogueEmote
 import net.dodian.uber.game.content.social.dialogue.DialogueFactory
 import net.dodian.uber.game.content.social.dialogue.DialogueOption
 import net.dodian.uber.game.content.social.dialogue.DialogueService
-import net.dodian.uber.game.systems.interaction.npcs.NpcInteractionActionService
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcInteractionActionService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage

@@ -6,7 +6,7 @@ import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.net.PacketBankingService;
+import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
 /**
  * Handles text syntax input (opcode 60).

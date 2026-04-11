@@ -11,7 +11,7 @@ class TaskingSurfaceAreaBoundaryTest {
     @Test
     fun `content runtime api does not depend on TickTasks directly`() {
         val contentRuntimeApi = Files.readString(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/systems/api/content/ContentRuntimeApi.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/api/content/ContentRuntimeApi.kt"),
         )
         assertFalse(contentRuntimeApi.contains("TickTasks"))
     }

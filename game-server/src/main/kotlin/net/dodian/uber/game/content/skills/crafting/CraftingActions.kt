@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.skills.crafting
 
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.playerAction
+import net.dodian.uber.game.engine.systems.action.PlayerActionType
+import net.dodian.uber.game.engine.systems.action.playerAction
 
 object CraftingActions {
     private const val STANDARD_ACTION_DELAY_MS = 1800L

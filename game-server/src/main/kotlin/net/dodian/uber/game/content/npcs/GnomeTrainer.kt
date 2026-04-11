@@ -5,7 +5,7 @@ import net.dodian.uber.game.content.social.dialogue.DialogueOption
 import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
+import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 
 internal object GnomeTrainer : NpcModule {
     // Stats: 6080: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0

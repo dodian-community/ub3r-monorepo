@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.net.PacketBankingService;
+import net.dodian.uber.game.engine.systems.net.PacketBankingService;
 
 /**
  * Netty implementation of legacy Bank5 packet (opcode 117).

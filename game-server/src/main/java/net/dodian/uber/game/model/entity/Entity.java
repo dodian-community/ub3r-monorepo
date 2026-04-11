@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.content.combat.style.CombatStyle;
-import net.dodian.uber.game.systems.pathing.collision.CollisionManager;
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;

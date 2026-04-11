@@ -10,17 +10,17 @@ import net.dodian.uber.game.content.skills.agility.runtime.AgilityTraversalServi
 import net.dodian.uber.game.content.skills.runtime.SkillActionContext
 import net.dodian.uber.game.content.skills.runtime.SkillTraversalMovement
 import net.dodian.uber.game.content.skills.runtime.SkillTraversalPlan
-import net.dodian.uber.game.systems.api.content.ContentInteraction
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.interaction.FirstClickDslObjectContent
-import net.dodian.uber.game.systems.interaction.firstClickObjectActions
-import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
+import net.dodian.uber.game.api.content.ContentInteraction
+import net.dodian.uber.game.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.interaction.FirstClickDslObjectContent
+import net.dodian.uber.game.engine.systems.interaction.firstClickObjectActions
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.plugin.skillPlugin
-import net.dodian.uber.game.systems.action.PolicyPreset
-import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator
+import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.utilities.Misc
 
 class Agility(private val c: Client) {

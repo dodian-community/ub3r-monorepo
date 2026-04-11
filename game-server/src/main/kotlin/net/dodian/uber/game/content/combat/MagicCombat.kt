@@ -9,12 +9,12 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.uber.game.systems.animation.PlayerAnimationService
+import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.content.combat.CombatAttackResult
 import net.dodian.uber.game.content.combat.CombatHitQueueService
 import net.dodian.uber.game.content.combat.CombatLogoutLockService
-import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.RuneCostService
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min

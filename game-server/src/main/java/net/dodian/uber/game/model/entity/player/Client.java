@@ -28,7 +28,7 @@ import net.dodian.uber.game.model.player.skills.prayer.Prayers;
 import net.dodian.uber.game.content.skills.slayer.Slayer;
 import net.dodian.uber.game.content.skills.farming.Farming;
 import net.dodian.uber.game.content.skills.farming.FarmingState;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.admin.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.RefundRecord;
@@ -65,23 +65,23 @@ import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.audit.*;
-import net.dodian.uber.game.systems.action.PlayerActionCancellationService;
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
-import net.dodian.uber.game.systems.action.PlayerActionType;
-import net.dodian.uber.game.systems.action.ProductionActionService;
-import net.dodian.uber.game.systems.action.SmithingActionService;
-import net.dodian.uber.game.systems.action.TeleportActionService;
-import net.dodian.uber.game.systems.action.TravelDecision;
-import net.dodian.uber.game.systems.action.TravelRouteService;
-import net.dodian.uber.game.systems.action.DuelCountdownService;
-import net.dodian.uber.game.systems.action.DuelCountdownState;
-import net.dodian.uber.game.systems.animation.PlayerAnimationService;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.engine.systems.action.PlayerActionType;
+import net.dodian.uber.game.engine.systems.action.ProductionActionService;
+import net.dodian.uber.game.engine.systems.action.SmithingActionService;
+import net.dodian.uber.game.engine.systems.action.TeleportActionService;
+import net.dodian.uber.game.engine.systems.action.TravelDecision;
+import net.dodian.uber.game.engine.systems.action.TravelRouteService;
+import net.dodian.uber.game.engine.systems.action.DuelCountdownService;
+import net.dodian.uber.game.engine.systems.action.DuelCountdownState;
+import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService;
 import net.dodian.uber.game.content.combat.CombatStartService;
-import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
-import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.utilities.*;
-import net.dodian.uber.game.systems.skills.ProgressionService;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 
 import java.io.IOException;
 import java.util.*;
@@ -89,7 +89,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
-import net.dodian.uber.game.systems.world.item.Ground;
+import net.dodian.uber.game.engine.systems.world.item.Ground;
 import static net.dodian.uber.game.content.combat.CombatPlayerExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.content.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
@@ -377,7 +377,7 @@ public class Client extends Player implements Runnable {
 
     public void animation(int id, Position pos) {
         for (int i = 0; i < PlayerRegistry.players.length; i++) {
-            Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
+            Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
             if (p != null) {
                 Client person = (Client) p;
                 if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
@@ -393,7 +393,7 @@ public class Client extends Player implements Runnable {
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
         if (showAll) {
             for (int i = 0; i < PlayerRegistry.players.length; i++) {
-                Player p = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
+                Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
                 if (p != null) {
                     Client person = (Client) p;
                     if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
@@ -2315,7 +2315,7 @@ public class Client extends Player implements Runnable {
 
     public void sendpm(long name, int rights, byte[] chatmessage, int messagesize) {
         // Preserve old signature but route through new outgoing packet implementation.
-        send(new PrivateMessage(name, rights, chatmessage, messagesize, net.dodian.uber.game.systems.world.player.PlayerRegistry.lastchatid++));
+        send(new PrivateMessage(name, rights, chatmessage, messagesize, net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.lastchatid++));
     }
 
     public void loadpm(long name, int world) {
@@ -2486,7 +2486,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -2555,7 +2555,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -2741,10 +2741,10 @@ public class Client extends Player implements Runnable {
 
     public void UpdatePlayerShop() {
         for (int i = 1; i < Constants.maxPlayers; i++) {
-            if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i] != null) {
-                if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
+            if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i] != null) {
+                if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
                         && i != getSlot()) {
-                    ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
+                    ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
                 }
             }
         }
@@ -3084,7 +3084,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
@@ -3164,7 +3164,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -3363,7 +3363,7 @@ public class Client extends Player implements Runnable {
 
     public void modYell(String msg) {
         for (int i = 0; i < PlayerRegistry.players.length; i++) {
-            Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[i];
+            Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
             if (p != null && !p.disconnected && p.getPosition().getX() > 0 && p.dbId > 0 && p.playerRights > 0) {
                 p.send(new SendMessage(msg));
             }
@@ -3414,10 +3414,10 @@ public class Client extends Player implements Runnable {
         resetTItems(3415);
         resetOTItems(3416);
         send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
-        if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
+        String out = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
+        if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
             out = "@cr1@" + out;
-        } else if (net.dodian.uber.game.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
+        } else if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
             out = "@cr2@" + out;
         }
         send(new SendString("Trading With: " + out, 3417));
@@ -3461,12 +3461,12 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index];
+        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
     public Client getClient(int index) {
-        return index < 0 ? null : ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index]);
+        return index < 0 ? null : ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public void tradeReq(int id) {
@@ -3481,8 +3481,8 @@ public class Client extends Player implements Runnable {
                 logout();
             }
         }
-        Client other = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[id];
-        String tradeBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
+        Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
+        String tradeBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
         if (tradeBlockMessage != null) {
             send(new SendMessage(tradeBlockMessage));
             return;
@@ -3508,7 +3508,7 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
+        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
             GameEventBus.post(new TradeRequestEvent(this, other));
@@ -3635,7 +3635,7 @@ public class Client extends Player implements Runnable {
     public void duelReq(int pid) {
         facePlayer(pid);
         Client other = getClient(pid);
-        String duelBlockMessage = net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
+        String duelBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
         if (duelBlockMessage != null) {
             send(new SendMessage(duelBlockMessage));
             return;
@@ -3827,7 +3827,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
-                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
+                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -3847,7 +3847,7 @@ public class Client extends Player implements Runnable {
     public boolean toggleDuelBodyRule(int ruleIndex) {
         Client other = getClient(duel_with);
         if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
-                || !net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
+                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
@@ -4209,7 +4209,7 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (!net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
+            if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
             }
             Client other = getClient(duel_with);

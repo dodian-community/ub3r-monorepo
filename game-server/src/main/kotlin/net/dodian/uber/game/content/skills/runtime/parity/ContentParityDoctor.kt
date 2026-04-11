@@ -1,12 +1,12 @@
 package net.dodian.uber.game.content.skills.runtime.parity
 
-import net.dodian.uber.game.content.npcs.NO_CLICK_HANDLER
-import net.dodian.uber.game.content.npcs.NpcContentDefinition
+import net.dodian.uber.game.npc.NO_CLICK_HANDLER
+import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.plugin.ContentModuleIndex
-import net.dodian.uber.game.systems.interaction.npcs.NpcContentRegistry
-import net.dodian.uber.game.systems.plugin.PluginRegistry
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginSnapshot
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
+import net.dodian.uber.game.api.plugin.PluginRegistry
+import net.dodian.uber.game.api.plugin.skills.SkillPluginSnapshot
 
 object ContentParityDoctor {
     fun scan(

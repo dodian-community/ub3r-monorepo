@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.ShowInterface
-import net.dodian.uber.game.systems.skills.sendFilterMessage
+import net.dodian.uber.game.engine.systems.skills.sendFilterMessage
 
 object SkillGuide {
     private val baselineHidden = intArrayOf(15307, 15304, 15294, 8863, 8860, 8850, 8841, 8838, 8828)

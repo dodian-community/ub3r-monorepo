@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 
 object SkillingInterruptService {
     @JvmStatic

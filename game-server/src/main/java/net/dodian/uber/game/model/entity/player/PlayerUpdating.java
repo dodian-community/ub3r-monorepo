@@ -19,8 +19,8 @@ import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplate;
 import net.dodian.uber.game.engine.sync.template.PlayerSyncTemplateKey;
 import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
-import net.dodian.uber.game.systems.interaction.StaticObjectOverrides;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -930,7 +930,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (slot < 0 || slot >= PlayerRegistry.players.length) {
             return null;
         }
-        return net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot];
+        return net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slot];
     }
 
     @Override

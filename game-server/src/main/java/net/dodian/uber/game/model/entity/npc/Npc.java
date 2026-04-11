@@ -15,21 +15,21 @@ import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.systems.world.item.Ground;
+import net.dodian.uber.game.engine.systems.world.item.Ground;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.systems.skills.ProgressionService;
-import net.dodian.uber.game.systems.skills.SkillingRandomEventService;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
+import net.dodian.uber.game.engine.systems.skills.SkillingRandomEventService;
 import net.dodian.uber.game.content.skills.slayer.Slayer;
 import net.dodian.uber.game.persistence.audit.ItemLog;
 import net.dodian.uber.game.content.combat.CombatCancellationReason;
 import net.dodian.uber.game.content.combat.CombatRuntimeService;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
-import net.dodian.uber.game.systems.world.npc.NpcSpawnLocator;
-import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler;
+import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator;
+import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
 import net.dodian.utilities.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
@@ -168,11 +168,11 @@ public class Npc extends Entity {
     }
 
     public Client getClient(int index) {
-        return ((Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index]);
+        return ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) net.dodian.uber.game.systems.world.player.PlayerRegistry.players[index];
+        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 

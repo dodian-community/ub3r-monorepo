@@ -4,9 +4,9 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.systems.world.item.Ground
-import net.dodian.uber.game.systems.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.item.Ground
+import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.PartyItemsDisplay
 import net.dodian.uber.game.netty.listener.out.SendMessage

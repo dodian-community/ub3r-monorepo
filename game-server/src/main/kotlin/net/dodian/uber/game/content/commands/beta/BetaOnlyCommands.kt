@@ -1,11 +1,11 @@
 package net.dodian.uber.game.content.commands.beta
 
-import net.dodian.uber.game.systems.interaction.commands.*
+import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.interaction.commands.CommandContent
-import net.dodian.uber.game.systems.interaction.commands.CommandContext
-import net.dodian.uber.game.systems.interaction.commands.commands
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.engine.systems.interaction.commands.commands
 import net.dodian.uber.game.content.commands.dev.handleFarmTest
 import net.dodian.uber.game.content.commands.dev.handleSkillBank
 import net.dodian.uber.game.content.commands.dev.handleSkillSet
@@ -15,7 +15,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.skills.SkillAdminService
+import net.dodian.uber.game.engine.systems.skills.SkillAdminService
 import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.uber.game.engine.config.gameWorldId
 

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.items.spawn
 
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.systems.world.item.Ground
+import net.dodian.uber.game.engine.systems.world.item.Ground
 
 data class GroundItemSpawn(
     val position: Position,

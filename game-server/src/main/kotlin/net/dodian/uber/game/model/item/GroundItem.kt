@@ -3,7 +3,7 @@ package net.dodian.uber.game.model.item
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem
 

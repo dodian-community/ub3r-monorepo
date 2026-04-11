@@ -1,27 +1,10 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.uber.game.content.shop.plugin.ShopPluginRegistry
-import net.dodian.uber.game.systems.interaction.commands.CommandContent
-import net.dodian.uber.game.systems.interaction.commands.commands
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandDefinition
 
-object ShopDevCommand : CommandContent {
-    override fun definitions() =
-        commands {
-            command("shopdiag", "shopdev") {
-                if (!specialRights) {
-                    return@command false
-                }
-                reply(renderSummary())
-                true
-            }
-        }
+@Deprecated("Use net.dodian.uber.game.command.dev.ShopDevCommand")
+object ShopDevCommand {
+    fun definitions(): List<CommandDefinition> = net.dodian.uber.game.command.dev.ShopDevCommand.definitions()
 
-    internal fun renderSummaryForTests(): String = renderSummary()
-
-    private fun renderSummary(): String {
-        val shops = ShopPluginRegistry.all()
-        val ids = shops.map { it.id }.sorted()
-        val duplicates = ids.size - ids.toSet().size
-        return "shops=${shops.size} ids=$ids duplicates=$duplicates"
-    }
+    internal fun renderSummaryForTests(): String = net.dodian.uber.game.command.dev.ShopDevCommand.renderSummaryForTests()
 }

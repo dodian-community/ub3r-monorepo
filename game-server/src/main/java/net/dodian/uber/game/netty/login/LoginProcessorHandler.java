@@ -11,7 +11,7 @@ import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.model.entity.player.PlayerInitializer;
 import net.dodian.uber.game.netty.codec.ByteMessageEncoder;
 import net.dodian.uber.game.netty.game.GamePacketDecoder;
@@ -241,7 +241,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 // Channel died before the game thread could register the player; release the reserved slot.
                 synchronized (PlayerRegistry.slotLock) {
                     PlayerRegistry.usedSlots.clear(slotCopy);
-                    net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = null;
+                    net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = null;
                 }
                 logger.warn(
                         "Login channel closed before game-thread finalization for {} queueWait={}ms failures={}",
@@ -252,7 +252,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return;
             }
 
-            net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slotCopy] = client;
+            net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slotCopy] = client;
             PlayerRegistry.playersOnline.put(client.longName, client);
 
             long initializerDurationMs = 0L;
@@ -315,7 +315,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         if (slot <= 0) return;
         synchronized (PlayerRegistry.slotLock) {
             PlayerRegistry.usedSlots.clear(slot);
-            net.dodian.uber.game.systems.world.player.PlayerRegistry.players[slot] = null;
+            net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slot] = null;
         }
     }
 

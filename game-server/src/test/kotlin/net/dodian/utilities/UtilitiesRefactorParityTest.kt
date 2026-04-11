@@ -1,6 +1,9 @@
 package net.dodian.utilities
 
+import net.dodian.uber.game.engine.util.Misc as EngineMisc
+import net.dodian.uber.game.engine.util.Utils as EngineUtils
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -41,5 +44,15 @@ class UtilitiesRefactorParityTest {
         assertEquals(1, Direction.directionDeltaX[1].toInt())
         assertEquals(1, Direction.directionDeltaY[1].toInt())
         assertEquals(4, Direction.xlateDirectionToClient[2].toInt())
+    }
+
+    @Test
+    fun `legacy misc and utils delegate to canonical engine util facades`() {
+        assertEquals(Misc.format(123456), EngineMisc.format(123456))
+        assertEquals(Utils.playerNameToLong("alex"), EngineUtils.playerNameToLong("alex"))
+        assertEquals(Utils.capitalize("dodian"), EngineUtils.capitalize("dodian"))
+        assertSame(Utils.directionDeltaX, EngineUtils.directionDeltaX)
+        assertSame(Utils.directionDeltaY, EngineUtils.directionDeltaY)
+        assertSame(Utils.xlateDirectionToClient, EngineUtils.xlateDirectionToClient)
     }
 }

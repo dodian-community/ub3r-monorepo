@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.processing
 import net.dodian.uber.game.engine.scheduler.QueueTaskService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.WorldTickEvent
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
  * Processes queued game actions/events in tick-order.

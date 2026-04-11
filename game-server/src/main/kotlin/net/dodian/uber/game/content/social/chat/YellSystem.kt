@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.social.chat
 
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 /** Broadcasts alert messages to all online staff members. */

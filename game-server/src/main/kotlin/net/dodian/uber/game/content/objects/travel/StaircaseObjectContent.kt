@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.interaction.VerticalTravelDslObjectContent
-import net.dodian.uber.game.systems.interaction.verticalTravelActions
+import net.dodian.uber.game.engine.systems.interaction.VerticalTravelDslObjectContent
+import net.dodian.uber.game.engine.systems.interaction.verticalTravelActions
 import net.dodian.uber.game.content.objects.travel.VerticalTravel
 import net.dodian.uber.game.content.objects.travel.VerticalTravelStyles
 

@@ -11,7 +11,7 @@ class FarmingRuntimePackageBoundaryTest {
     fun `canonical farming runtime file exists in skills domain`() {
         assertTrue(
             Files.exists(
-                Paths.get("src/main/kotlin/net/dodian/uber/game/systems/skills/farming/runtime/FarmingRuntimeService.kt"),
+                Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/skills/farming/runtime/FarmingRuntimeService.kt"),
             ),
             "Expected canonical farming runtime service file to exist",
         )
@@ -24,6 +24,10 @@ class FarmingRuntimePackageBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingPersistenceCodec.kt",
             "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingRuntimeModels.kt",
             "src/main/kotlin/net/dodian/uber/game/systems/world/farming/FarmingRunStats.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/world/farming/FarmingRuntimeService.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/world/farming/FarmingPersistenceCodec.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/world/farming/FarmingRuntimeModels.kt",
+            "src/main/kotlin/net/dodian/uber/game/engine/systems/world/farming/FarmingRunStats.kt",
         )
         legacyFiles.forEach { path ->
             assertFalse(Files.exists(Paths.get(path)), "Legacy farming shim should be removed: $path")

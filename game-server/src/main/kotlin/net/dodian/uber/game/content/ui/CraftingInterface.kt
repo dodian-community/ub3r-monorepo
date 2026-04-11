@@ -4,8 +4,8 @@ import net.dodian.uber.game.content.skills.crafting.Crafting
 import net.dodian.uber.game.content.skills.crafting.TanningRequest
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentProductionRequest
+import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentProductionRequest
 import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.content.ui.buttons.buttonBinding
 

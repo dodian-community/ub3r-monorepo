@@ -6,8 +6,8 @@ import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.systems.interaction.ObjectClipService
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 object DoorToggleObjectContent : ObjectContent {
     override fun bindings(): List<ObjectBinding> {

@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.skills.prayer
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.action.PlayerActionType
-import net.dodian.uber.game.systems.action.playerAction
+import net.dodian.uber.game.engine.systems.action.PlayerActionType
+import net.dodian.uber.game.engine.systems.action.playerAction
 
 object PrayerActions {
     @JvmStatic

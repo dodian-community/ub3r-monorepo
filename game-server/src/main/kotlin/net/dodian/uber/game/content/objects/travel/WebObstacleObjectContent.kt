@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as GameObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.api.content.ContentInteraction
+import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.utilities.Misc
 
 object WebObstacleObjectContent : ObjectContent {

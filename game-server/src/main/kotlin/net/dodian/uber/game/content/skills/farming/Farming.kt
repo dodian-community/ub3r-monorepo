@@ -12,10 +12,10 @@ import net.dodian.uber.game.content.skills.skillguide.SkillGuide
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.content.skills.farming.FarmingData.patches
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.systems.api.content.ContentRuntimeApi
-import net.dodian.uber.game.systems.action.PolicyPreset
-import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
-import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.api.content.ContentRuntimeApi
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.utilities.Misc
 
 class Farming {

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.combat
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 
 object CombatPreemptionPolicy {
     @JvmStatic

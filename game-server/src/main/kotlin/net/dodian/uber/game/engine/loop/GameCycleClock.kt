@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.loop
 
 import java.util.concurrent.atomic.AtomicLong
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 object GameCycleClock {
     private val cycle = AtomicLong(0L)

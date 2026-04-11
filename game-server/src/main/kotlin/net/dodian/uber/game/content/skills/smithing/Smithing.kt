@@ -8,20 +8,20 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentProductionMode
-import net.dodian.uber.game.systems.api.content.ContentProductionRequest
-import net.dodian.uber.game.systems.action.PolicyPreset
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentProductionMode
+import net.dodian.uber.game.api.content.ContentProductionRequest
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.content.skills.runtime.action.ActionStopReason
 import net.dodian.uber.game.content.skills.runtime.action.CycleSignal
-import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
-import net.dodian.uber.game.systems.skills.SkillPolicyMetrics
-import net.dodian.uber.game.systems.skills.SkillPolicyResult
-import net.dodian.uber.game.systems.skills.SkillPolicyRoute
+import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.engine.systems.skills.SkillPolicyMetrics
+import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
+import net.dodian.uber.game.engine.systems.skills.SkillPolicyRoute
 import net.dodian.uber.game.content.skills.runtime.action.productionAction
-import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.utilities.Range
 
 object Smithing {

@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.runtime.action
 
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.action.PlayerActionStopResult
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
+import net.dodian.uber.game.engine.systems.action.PlayerActionStopResult
 
 object ActionStopReasonMapper {
     @JvmStatic

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.player
 
-import net.dodian.uber.game.systems.interaction.commands.*
+import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.content.combat.getRangedStr
@@ -8,7 +8,7 @@ import net.dodian.uber.game.content.combat.magicBonusDamage
 import net.dodian.uber.game.content.combat.meleeMaxHit
 import net.dodian.uber.game.content.combat.rangedMaxHit
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.engine.config.gameWorldId

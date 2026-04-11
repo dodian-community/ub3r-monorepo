@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.admin
 
-import net.dodian.uber.game.systems.interaction.commands.*
+import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.account.Login
@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.CameraReset
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendCamera
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 object StaffCommands : CommandContent {
     private val moderationAliases = setOf(

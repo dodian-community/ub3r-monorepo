@@ -5,7 +5,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.item.Equipment
-import net.dodian.uber.game.systems.world.item.Ground
+import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.model.player.skills.prayer.Prayers

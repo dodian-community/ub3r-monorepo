@@ -1,0 +1,24 @@
+package net.dodian.uber.game.engine.systems.net
+
+import net.dodian.uber.game.model.entity.player.Client
+
+object PacketGameplayFacade {
+    internal var walkDispatcher: (Client, WalkRequest) -> Unit = PacketWalkingService::handle
+
+    @JvmStatic
+    fun handleWalk(player: Client, request: WalkRequest) {
+        walkDispatcher(player, request)
+    }
+
+    @JvmStatic
+    fun rejectMalformedWalk(
+        player: Client,
+        opcode: Int,
+        packetSize: Int,
+        firstStepXAbs: Int,
+        firstStepYAbs: Int,
+        reason: String,
+    ) {
+        PacketWalkingService.rejectMalformedWalk(player, opcode, packetSize, firstStepXAbs, firstStepYAbs, reason)
+    }
+}

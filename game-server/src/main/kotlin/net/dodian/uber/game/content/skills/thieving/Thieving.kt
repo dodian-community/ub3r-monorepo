@@ -12,14 +12,14 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
-import net.dodian.uber.game.systems.api.content.ContentInteraction
-import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
-import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.action.PolicyPreset
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.api.content.ContentInteraction
+import net.dodian.uber.game.api.content.ContentObjectInteractionPolicy
+import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
-import net.dodian.uber.game.systems.skills.plugin.skillPlugin
+import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
 

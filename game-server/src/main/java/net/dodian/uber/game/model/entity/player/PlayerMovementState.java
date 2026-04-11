@@ -1,9 +1,9 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.systems.interaction.ClipProbeService;
-import net.dodian.uber.game.systems.interaction.PersonalPassageService;
-import net.dodian.uber.game.systems.pathing.collision.CollisionManager;
+import net.dodian.uber.game.engine.systems.interaction.ClipProbeService;
+import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService;
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.npcs.unknown
 
-import net.dodian.uber.game.content.npcs.*
+import net.dodian.uber.game.npc.*
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client

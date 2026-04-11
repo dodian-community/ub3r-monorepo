@@ -1,8 +1,8 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.systems.follow.FollowService;
-import net.dodian.uber.game.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.systems.follow.FollowService;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 
 /**
  * Player-click routing for the legacy follow packet.

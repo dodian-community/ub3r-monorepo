@@ -6,11 +6,11 @@ import net.dodian.uber.game.content.skills.herblore.GrimyHerbItems
 import net.dodian.uber.game.content.skills.herblore.HerbloreSuppliesItems
 import net.dodian.uber.game.content.skills.slayer.SlayerGemItems
 import net.dodian.uber.game.content.skills.slayer.SlayerMaskItems
-import net.dodian.uber.game.systems.plugin.ContentModuleIndex
-import net.dodian.uber.game.systems.action.PolicyPreset
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginDefinition
-import net.dodian.uber.game.systems.plugin.PluginRegistry
-import net.dodian.uber.game.systems.skills.plugin.SkillPluginSnapshot
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
+import net.dodian.uber.game.api.plugin.PluginRegistry
+import net.dodian.uber.game.api.plugin.skills.SkillPluginSnapshot
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

@@ -2,11 +2,11 @@ package net.dodian.uber.game.content.items.combination
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentProductionRequest
+import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentProductionRequest
 import net.dodian.uber.game.content.skills.crafting.CraftingData
 import net.dodian.uber.game.content.skills.crafting.GoldJewelry
 import net.dodian.uber.game.content.skills.crafting.Crafting

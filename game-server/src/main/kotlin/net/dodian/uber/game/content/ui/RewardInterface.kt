@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.systems.world.item.Ground
+import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.content.ui.buttons.buttonBinding
 

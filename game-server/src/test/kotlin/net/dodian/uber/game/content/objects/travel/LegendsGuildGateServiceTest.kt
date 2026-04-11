@@ -4,11 +4,11 @@ import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.systems.interaction.PersonalPassageService
-import net.dodian.uber.game.systems.net.PacketWalkingService
-import net.dodian.uber.game.systems.net.WalkRequest
-import net.dodian.uber.game.systems.pathing.collision.CollisionManager
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
+import net.dodian.uber.game.engine.systems.net.PacketWalkingService
+import net.dodian.uber.game.engine.systems.net.WalkRequest
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

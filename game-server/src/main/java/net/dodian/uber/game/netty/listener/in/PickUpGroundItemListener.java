@@ -5,8 +5,8 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.systems.net.PacketPickupService;
+import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.engine.systems.net.PacketPickupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

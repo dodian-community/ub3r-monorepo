@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.player.PlayerTickEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

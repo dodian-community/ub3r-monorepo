@@ -8,14 +8,14 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.follow.FollowService
-import net.dodian.uber.game.systems.interaction.PersonalPassageService
-import net.dodian.uber.game.systems.pathing.AStarPathfindingAlgorithm
-import net.dodian.uber.game.systems.pathing.Heuristic
-import net.dodian.uber.game.systems.pathing.Node
-import net.dodian.uber.game.systems.pathing.collision.CollisionManager
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.engine.systems.follow.FollowService
+import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
+import net.dodian.uber.game.engine.systems.pathing.AStarPathfindingAlgorithm
+import net.dodian.uber.game.engine.systems.pathing.Heuristic
+import net.dodian.uber.game.engine.systems.pathing.Node
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import org.slf4j.LoggerFactory
 
 object LegendsGuildGateService {

@@ -2,16 +2,17 @@ package net.dodian.utilities
 
 import net.dodian.cache.`object`.GameObjectDef
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.engine.util.Misc as EngineMisc
 
 object Misc {
     @JvmStatic
-    fun random(range: Int): Int = Randoms.random(range)
+    fun random(range: Int): Int = EngineMisc.random(range)
 
     @JvmStatic
-    fun chance(range: Int): Int = Randoms.chance(range)
+    fun chance(range: Int): Int = EngineMisc.chance(range)
 
     @JvmStatic
-    fun format(num: Int): String = Formatting.format(num)
+    fun format(num: Int): String = EngineMisc.format(num)
 
     @JvmStatic
     fun goodDistanceObject(
@@ -22,7 +23,7 @@ object Misc {
         objectXSize: Int,
         objectYSize: Int,
         z: Int,
-    ): Position? = Geometry.goodDistanceObject(objectX, objectY, playerX, playerY, objectXSize, objectYSize, z)
+    ): Position? = EngineMisc.goodDistanceObject(objectX, objectY, playerX, playerY, objectXSize, objectYSize, z)
 
     @JvmStatic
     fun goodDistanceObject(
@@ -32,13 +33,13 @@ object Misc {
         playerY: Int,
         distance: Int,
         z: Int,
-    ): Position? = Geometry.goodDistanceObject(objectX, objectY, playerX, playerY, distance, z)
+    ): Position? = EngineMisc.goodDistanceObject(objectX, objectY, playerX, playerY, distance, z)
 
     @JvmStatic
     fun delta(
         a: Position,
         b: Position,
-    ): Position = Geometry.delta(a, b)
+    ): Position = EngineMisc.delta(a, b)
 
     @JvmStatic
     fun getObject(
@@ -46,5 +47,5 @@ object Misc {
         x: Int,
         y: Int,
         h: Int,
-    ): GameObjectDef? = Geometry.getObject(objectId, x, y, h)
+    ): GameObjectDef? = EngineMisc.getObject(objectId, x, y, h)
 }

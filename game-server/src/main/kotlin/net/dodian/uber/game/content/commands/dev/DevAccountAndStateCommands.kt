@@ -1,23 +1,23 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.uber.game.systems.interaction.commands.*
+import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.interaction.commands.CommandContent
-import net.dodian.uber.game.systems.interaction.commands.CommandContext
-import net.dodian.uber.game.systems.interaction.commands.commandLogger
-import net.dodian.uber.game.systems.interaction.commands.commands
-import net.dodian.uber.game.systems.interaction.commands.numericToken
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.engine.systems.interaction.commands.commandLogger
+import net.dodian.uber.game.engine.systems.interaction.commands.commands
+import net.dodian.uber.game.engine.systems.interaction.commands.numericToken
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.persistence.admin.CommandDbService
-import net.dodian.uber.game.systems.skills.SkillAdminService
-import net.dodian.uber.game.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.SkillAdminService
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
 
 object DevAccountAndStateCommands : CommandContent {
     override fun definitions() =

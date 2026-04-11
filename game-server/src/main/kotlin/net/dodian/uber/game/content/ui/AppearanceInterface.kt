@@ -1,19 +1,9 @@
 package net.dodian.uber.game.content.ui
 
-import net.dodian.uber.game.model.entity.UpdateFlag
-import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.content.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonBinding
 
-object AppearanceInterface : InterfaceButtonContent {
-    private val confirmButtons = intArrayOf(3651)
-
-    override val bindings =
-        listOf(
-            buttonBinding(-1, 0, "appearance.confirm", confirmButtons) { client, _ ->
-                client.send(RemoveInterfaces())
-                client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                true
-            },
-        )
+@Deprecated("Use net.dodian.uber.game.ui.AppearanceInterface")
+object AppearanceInterface {
+    val bindings: List<InterfaceButtonBinding>
+        get() = net.dodian.uber.game.ui.AppearanceInterface.bindings
 }

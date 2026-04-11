@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.systems.net.PacketMagicService;
+import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

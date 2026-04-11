@@ -1,49 +1,34 @@
 package net.dodian.uber.game.content.npcs
 
-import net.dodian.uber.game.model.entity.npc.Npc
-import net.dodian.uber.game.model.entity.player.Client
+@Deprecated("Use net.dodian.uber.game.npc.NpcClickHandler")
+typealias NpcClickHandler = net.dodian.uber.game.npc.NpcClickHandler
 
-typealias NpcClickHandler = (Client, Npc) -> Boolean
-internal val NO_CLICK_HANDLER: NpcClickHandler = { _, _ -> false }
+@Deprecated("Use net.dodian.uber.game.npc.NO_CLICK_HANDLER")
+internal val NO_CLICK_HANDLER: NpcClickHandler = net.dodian.uber.game.npc.NO_CLICK_HANDLER
 
-enum class NpcInteractionSource {
-    DSL,
-}
+@Deprecated("Use net.dodian.uber.game.npc.NpcInteractionSource")
+typealias NpcInteractionSource = net.dodian.uber.game.npc.NpcInteractionSource
 
-interface NpcModule {
-    val definition: NpcContentDefinition
-}
+@Deprecated("Use net.dodian.uber.game.npc.NpcModule")
+typealias NpcModule = net.dodian.uber.game.npc.NpcModule
 
-fun npcIds(vararg ids: Int): IntArray = ids.distinct().toIntArray()
+@Deprecated("Use net.dodian.uber.game.npc.npcIds")
+fun npcIds(vararg ids: Int): IntArray = net.dodian.uber.game.npc.npcIds(*ids)
 
-fun npcIdsFromEntries(entries: List<NpcSpawnDef>): IntArray = entries
-    .map { it.npcId }
-    .distinct()
-    .toIntArray()
+@Deprecated("Use net.dodian.uber.game.npc.npcIdsFromEntries")
+fun npcIdsFromEntries(entries: List<NpcSpawnDef>): IntArray = net.dodian.uber.game.npc.npcIdsFromEntries(entries)
 
-fun npcIdsFromEntries(entries: List<NpcSpawnDef>, vararg additionalNpcIds: Int): IntArray = buildList {
-    addAll(entries.map { it.npcId })
-    addAll(additionalNpcIds.toList())
-}
-    .distinct()
-    .toIntArray()
+@Deprecated("Use net.dodian.uber.game.npc.npcIdsFromEntries")
+fun npcIdsFromEntries(entries: List<NpcSpawnDef>, vararg additionalNpcIds: Int): IntArray =
+    net.dodian.uber.game.npc.npcIdsFromEntries(entries, *additionalNpcIds)
 
-data class NpcContentDefinition(
-    val name: String,
-    val npcIds: IntArray,
-    val ownsSpawnDefinitions: Boolean = false,
-    val entries: List<NpcSpawnDef> = emptyList(),
-    val optionLabels: Map<Int, String> = emptyMap(),
-    val interactionSource: NpcInteractionSource = NpcInteractionSource.DSL,
-    val onFirstClick: NpcClickHandler = NO_CLICK_HANDLER,
-    val onSecondClick: NpcClickHandler = NO_CLICK_HANDLER,
-    val onThirdClick: NpcClickHandler = NO_CLICK_HANDLER,
-    val onFourthClick: NpcClickHandler = NO_CLICK_HANDLER,
-    val onAttack: NpcClickHandler = NO_CLICK_HANDLER,
-)
+@Deprecated("Use net.dodian.uber.game.npc.NpcContentDefinition")
+typealias NpcContentDefinition = net.dodian.uber.game.npc.NpcContentDefinition
 
+@Deprecated("Use net.dodian.uber.game.npc.optionLabel")
 fun NpcContentDefinition.optionLabel(option: Int): String? = optionLabels[option]
 
+@Deprecated("Use net.dodian.uber.game.npc.hasInteractionHandlers")
 internal fun NpcContentDefinition.hasInteractionHandlers(): Boolean {
     return onFirstClick !== NO_CLICK_HANDLER ||
         onSecondClick !== NO_CLICK_HANDLER ||

@@ -5,9 +5,9 @@ import net.dodian.uber.game.content.social.dialogue.core.DialogueUi
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.api.content.ContentActionCancelReason
-import net.dodian.uber.game.systems.api.content.ContentActions
-import net.dodian.uber.game.systems.api.content.ContentInteraction
+import net.dodian.uber.game.api.content.ContentActionCancelReason
+import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentInteraction
 import java.util.ArrayDeque
 import java.util.Collections
 import java.util.WeakHashMap

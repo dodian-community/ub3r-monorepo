@@ -1,12 +1,10 @@
 package net.dodian.uber.game.content.ui.buttons
 
-import net.dodian.uber.game.systems.plugin.ContentModuleIndex
+import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.model.entity.player.Client
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 object InterfaceButtonRegistry {
-    private val logger = LoggerFactory.getLogger(InterfaceButtonRegistry::class.java)
     private val bootstrapped = AtomicBoolean(false)
     private val definitions = mutableListOf<InterfaceButtonContent>()
 
@@ -68,14 +66,23 @@ object InterfaceButtonRegistry {
         val allBindings = definitions.flatMap { it.bindings }
         val maxButtonId = allBindings.asSequence().flatMap { it.rawButtonIds.asSequence() }.maxOrNull() ?: -1
         val rebuilt = arrayOfNulls<MutableList<InterfaceButtonBinding>>(maxButtonId + 1)
-        val semanticKeys = HashSet<String>()
+        val semanticOwners = HashMap<String, String>()
+        val routeOwners = HashMap<Long, String>()
 
         for (binding in allBindings) {
+            val owner = binding.handler::class.java.name
             val semanticKey = "${binding.interfaceId}:${binding.componentId}:${binding.opIndex ?: -1}:${binding.componentKey}"
-            if (!semanticKeys.add(semanticKey)) {
-                logger.error("Duplicate interface button semantic binding {}", semanticKey)
+            val existingSemanticOwner = semanticOwners.putIfAbsent(semanticKey, owner)
+            check(existingSemanticOwner == null) {
+                "Duplicate interface button semantic binding key=$semanticKey existing=$existingSemanticOwner new=$owner"
             }
             for (rawButtonId in binding.rawButtonIds) {
+                val op = binding.opIndex ?: -1
+                val routeKey = (rawButtonId.toLong() shl 32) or (op.toLong() and 0xffffffffL)
+                val existingRouteOwner = routeOwners.putIfAbsent(routeKey, owner)
+                check(existingRouteOwner == null) {
+                    "Duplicate interface button route rawButtonId=$rawButtonId op=$op existing=$existingRouteOwner new=$owner"
+                }
                 val list = rebuilt[rawButtonId] ?: mutableListOf<InterfaceButtonBinding>().also { rebuilt[rawButtonId] = it }
                 list += binding
             }

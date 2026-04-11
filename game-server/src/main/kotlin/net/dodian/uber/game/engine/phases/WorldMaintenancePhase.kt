@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.processing.ActionProcessor
 import net.dodian.uber.game.engine.processing.ItemProcessor
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
-import net.dodian.uber.game.systems.world.WorldMaintenanceService
+import net.dodian.uber.game.engine.systems.world.WorldMaintenanceService
 
 class WorldMaintenancePhase(
     private val plunderDoor: PlunderDoorProcessor,

@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm") version "1.6.21"
-    id("com.google.devtools.ksp") version "1.6.21-1.0.6"
     id("application")
     `java-library`
 }
@@ -67,7 +66,7 @@ dependencies {
 
     implementation("com.sparkjava:spark-kotlin:1.0.0-alpha")
 
-    ksp(project(":ksp-processor"))
+    implementation(kotlin("reflect"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

@@ -4,7 +4,7 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 internal object PopulationAnnouncer : NpcModule {
     // Stats: 3306: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0

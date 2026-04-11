@@ -8,7 +8,7 @@ import net.dodian.uber.game.netty.listener.out.SendCurrentBankTab
 import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService
+import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
 import java.util.ArrayList
 import java.util.Arrays
 

@@ -40,14 +40,14 @@ class CoreRuntimeExceptionCatchGuardTest {
             Path.of("src/main/kotlin/net/dodian/uber/game/persistence/account"),
             Path.of("src/main/kotlin/net/dodian/uber/game/persistence/audit"),
             Path.of("src/main/kotlin/net/dodian/uber/game/persistence/world"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/persistence/WorldSavePublisher.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/persistence/world/WorldSavePublisher.kt"),
             Path.of("src/main/kotlin/net/dodian/uber/game/persistence/db/Database.kt"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/world"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/skills/SkillInteractionDispatcher.kt"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectInteractionService.kt"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcContentDispatcher.kt"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemDispatcher.kt"),
-            Path.of("src/main/kotlin/net/dodian/uber/game/systems/interaction/ObjectClipService.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/world"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/skills/SkillInteractionDispatcher.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/objects/ObjectInteractionService.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/npcs/NpcContentDispatcher.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/items/ItemDispatcher.kt"),
+            Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/ObjectClipService.kt"),
         )
 
     private companion object {

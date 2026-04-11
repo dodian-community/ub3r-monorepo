@@ -1,14 +1,14 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.systems.interaction.ActiveInteraction;
-import net.dodian.uber.game.systems.interaction.InteractionIntent;
-import net.dodian.uber.game.systems.action.PlayerActionCancelReason;
-import net.dodian.uber.game.systems.action.PendingProductionSelection;
+import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
+import net.dodian.uber.game.engine.systems.interaction.InteractionIntent;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.content.combat.CombatCancellationReason;
 import net.dodian.uber.game.content.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
-import net.dodian.uber.game.systems.action.ActiveProductionSelection;
-import net.dodian.uber.game.systems.action.PlayerActionType;
+import net.dodian.uber.game.engine.systems.action.ActiveProductionSelection;
+import net.dodian.uber.game.engine.systems.action.PlayerActionType;
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
 import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
@@ -22,7 +22,7 @@ import net.dodian.uber.game.content.skills.crafting.CraftingState;
 import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
 import net.dodian.uber.game.content.skills.thieving.PyramidPlunderPlayerState;
-import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class PlayerInteractionState {

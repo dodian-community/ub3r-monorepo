@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.systems.api.content.ContentTiming
+import net.dodian.uber.game.api.content.ContentTiming
 
 class AgilityTravel(private val c: Client) {
     private fun runLater(delayMs: Int, action: () -> Unit) {

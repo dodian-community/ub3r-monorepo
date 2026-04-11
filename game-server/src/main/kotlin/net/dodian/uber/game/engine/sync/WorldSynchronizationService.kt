@@ -5,7 +5,7 @@ import kotlin.system.measureNanoTime
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
@@ -21,7 +21,7 @@ import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState
 import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
 import net.dodian.uber.game.content.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
-import net.dodian.uber.game.systems.zone.ZoneUpdateBus
+import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import org.slf4j.LoggerFactory
 
@@ -144,7 +144,7 @@ class WorldSynchronizationService {
 
     private fun flushActivePlayers(activePlayers: List<Client>) {
         val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(activePlayers) }
-        val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.systems.zone.ZoneFlushStats>(1)
+        val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.engine.systems.zone.ZoneFlushStats>(1)
         val zoneNanos =
             measureNanoTime {
                 zoneStatsRef[0] = ZoneUpdateBus.flush(activePlayers)
@@ -169,7 +169,7 @@ class WorldSynchronizationService {
             }
         val totalMs = (uiNanos + zoneNanos + netNanos) / 1_000_000L
         if (totalMs >= runtimePhaseWarnMs) {
-            val zoneStats = zoneStatsRef[0] ?: net.dodian.uber.game.systems.zone.ZoneFlushStats.EMPTY
+            val zoneStats = zoneStatsRef[0] ?: net.dodian.uber.game.engine.systems.zone.ZoneFlushStats.EMPTY
             logger.warn(
                 "SYNC_FLUSH detail: total={}ms ui={}ms zone={}ms net={}ms playersFlushed={} messages={} bytes={} zoneDeltas={} zoneCandidates={} zoneDeliveries={}",
                 totalMs,
