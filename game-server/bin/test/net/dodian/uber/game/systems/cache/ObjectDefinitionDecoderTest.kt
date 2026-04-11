@@ -152,5 +152,46 @@ class ObjectDefinitionDecoderTest {
 
         assertTrue(result.definitions.getValue(3).hasActions())
     }
-}
 
+    @Test
+    fun `non solid roofing object from cache remains traversable after collision rebuild`() {
+        val cacheDir = Files.createTempDirectory("cache-object-defs-roofing-nonsolid")
+        CacheStoreTestFixtures.writeObjectDefinitionArchive(
+            cacheDir,
+            listOf(
+                CacheStoreTestFixtures.FixtureObjectDefinition(
+                    id = 4,
+                    name = "Roof deco",
+                    solid = false,
+                ),
+            ),
+        )
+        CacheStoreTestFixtures.writeRegionArchives(
+            root = cacheDir,
+            regionId = 42,
+            landscapeArchiveId = 43,
+            objectArchiveId = 44,
+            landscapeArchive = CacheStoreTestFixtures.createLandscapeArchive(),
+            objectArchive =
+                CacheStoreTestFixtures.createObjectArchive(
+                    listOf(
+                        CacheStoreTestFixtures.FixtureMapObject(
+                            id = 4,
+                            x = 6,
+                            y = 6,
+                            plane = 0,
+                            type = 12,
+                            rotation = 0,
+                        ),
+                    ),
+                ),
+        )
+
+        CacheBootstrapService(cacheDir).bootstrap()
+        val definition = GameObjectData.forId(4)
+
+        assertFalse(definition.isSolid())
+        assertTrue(definition.isWalkable())
+        assertTrue(CollisionManager.global().canMove(5, 2694, 6, 2694, 0, 1, 1))
+    }
+}

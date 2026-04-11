@@ -40,7 +40,7 @@ object ObjectDefinitionDecoder {
             if (definition.hasActions()) {
                 interactiveCount++
             }
-            if (definition.isSolid() && !definition.isWalkable()) {
+            if (definition.blockWalk() != 0) {
                 blockingCount++
             }
         }
@@ -61,6 +61,9 @@ object ObjectDefinitionDecoder {
         var interactive = false
         var supportItems = -1
         var obstructive = false
+        var blockWalk = 2
+        var blockRange = true
+        var breakRouteFinding = false
         var hasModelData = false
         var firstModelType: Int? = null
         val interactions = arrayOfNulls<String>(9)
@@ -87,6 +90,9 @@ object ObjectDefinitionDecoder {
                         hasActionsFlag = hasActions,
                         unknownValue = obstructive,
                         walkType = supportItems,
+                        blockWalk = blockWalk,
+                        blockRange = blockRange,
+                        breakRouteFinding = breakRouteFinding,
                     )
                 }
 
@@ -119,10 +125,15 @@ object ObjectDefinitionDecoder {
 
                 14 -> sizeX = data.readUnsignedByte()
                 15 -> sizeY = data.readUnsignedByte()
-                17 -> solid = false
-                18 -> Unit
+                17 -> {
+                    solid = false
+                    blockWalk = 0
+                    blockRange = false
+                }
+                18 -> blockRange = false
                 19 -> interactive = data.readBoolean()
-                21, 22, 23, 27, 62, 64, 89 -> Unit
+                21, 22, 23, 62, 64, 89 -> Unit
+                27 -> blockWalk = 1
                 24 -> data.skip(2)
                 28, 29, 39, 69 -> data.skip(1)
                 75, 81 -> supportItems = data.readUnsignedByte()
@@ -150,7 +161,7 @@ object ObjectDefinitionDecoder {
                 60, 61, 65, 66, 67, 68, 82 -> data.skip(2)
                 70, 71, 72 -> data.readShort()
                 73 -> obstructive = true
-                74 -> solid = false
+                74 -> breakRouteFinding = true
 
                 77, 92 -> {
                     data.skip(2)
@@ -201,5 +212,4 @@ object ObjectDefinitionDecoder {
     private const val CONFIG_ARCHIVE = 2
     private val EMPTY_RESULT = Result(emptyMap(), interactiveCount = 0, blockingCount = 0)
 }
-
 

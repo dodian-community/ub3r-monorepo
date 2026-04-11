@@ -100,6 +100,10 @@ object ObjectClipService {
             sizeY = obj.sizeY,
             solid = obj.isSolid(),
             walkable = obj.isWalkable(),
+            hasActions = obj.hasActions(),
+            blockWalk = obj.blockWalk(),
+            blockRange = obj.blockRange(),
+            breakRouteFinding = obj.breakRouteFinding(),
         )
     }
 
@@ -116,6 +120,9 @@ object ObjectClipService {
     }
 
     internal fun getAppliedForTests(position: Position): AppliedClip? = appliedClips[key(position)]
+
+    @JvmStatic
+    fun getAppliedClip(position: Position): AppliedClip? = appliedClips[key(position)]
 
     internal fun clearForTests() {
         clearTrackedClips()
@@ -162,6 +169,9 @@ object ObjectClipService {
             solid = definition.isSolid(),
             walkable = definition.isWalkable(),
             hasActions = definition.hasActions(),
+            blockWalk = definition.blockWalk(),
+            blockRange = definition.blockRange(),
+            breakRouteFinding = definition.breakRouteFinding(),
         )
     }
 

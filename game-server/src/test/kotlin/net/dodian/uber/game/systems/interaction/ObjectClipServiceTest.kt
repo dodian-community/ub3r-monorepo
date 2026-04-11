@@ -66,7 +66,7 @@ class ObjectClipServiceTest {
     }
 
     @Test
-    fun `runtime decoded wall type remains blocked even when definition is non-solid`() {
+    fun `runtime decoded wall type does not block when definition is non-solid`() {
         val collision = CollisionManager.global()
         collision.clear()
         ObjectClipService.clearForTests()
@@ -78,7 +78,67 @@ class ObjectClipServiceTest {
 
             ObjectClipService.applyDecodedObject(position, 2003, 0, 0, definition)
 
-            assertFalse(collision.canMove(39, 40, 40, 40, 0, 1, 1))
+            assertTrue(collision.canMove(39, 40, 40, 40, 0, 1, 1))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
+    fun `apply decoded roofing type does not block when definition is non-solid`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(nonSolidDefinition(2004))
+            val position = Position(41, 41, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2004, 12, 0, GameObjectData.forId(2004))
+
+            assertTrue(collision.canMove(40, 41, 41, 41, 0, 1, 1))
+            assertFalse(collision.isTileBlocked(41, 41, 0))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
+    fun `apply decoded roofing type blocks when definition is solid`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(blockingDefinition(2005))
+            val position = Position(42, 42, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2005, 12, 0, GameObjectData.forId(2005))
+
+            assertFalse(collision.canMove(41, 42, 42, 42, 0, 1, 1))
+            assertTrue(collision.isTileBlocked(42, 42, 0))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
+    fun `apply decoded default type blocks when solid but non-interactive`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(solidNoActionDefinition(2006))
+            val position = Position(43, 43, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2006, 10, 0, GameObjectData.forId(2006))
+
+            assertFalse(collision.canMove(42, 43, 43, 43, 0, 1, 1))
+            assertTrue(collision.isTileBlocked(43, 43, 0))
         } finally {
             ObjectClipService.clearForTests()
             collision.clear()
@@ -145,16 +205,21 @@ class ObjectClipServiceTest {
     fun `static override registry includes migrated deleted door positions`() {
         val positions = StaticObjectOverrides.all().map { it.position.x to it.position.y }.toSet()
 
-        assertEquals(
+        val expectedDoorPositions =
             setOf(
                 2669 to 2713,
                 2713 to 3483,
                 2716 to 3472,
                 2594 to 3102,
                 2816 to 3438,
-            ),
-            positions,
-        )
+            )
+        assertTrue(positions.containsAll(expectedDoorPositions))
+    }
+
+    @Test
+    fun `static override registry includes nmz removed rectangle tile`() {
+        val positions = StaticObjectOverrides.all().map { it.position.x to it.position.y }.toSet()
+        assertTrue(positions.contains(2609 to 3111))
     }
 
     private fun blockingDefinition(id: Int): GameObjectData =
@@ -181,6 +246,20 @@ class ObjectClipServiceTest {
             solid = false,
             walkable = true,
             hasActionsFlag = true,
+            unknownValue = false,
+            walkType = 0,
+        )
+
+    private fun solidNoActionDefinition(id: Int): GameObjectData =
+        GameObjectData(
+            id = id,
+            name = "Solid decoration $id",
+            description = "fixture",
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActionsFlag = false,
             unknownValue = false,
             walkType = 0,
         )

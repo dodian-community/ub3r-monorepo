@@ -7,6 +7,11 @@ import net.dodian.uber.game.systems.pathing.collision.CollisionManager
 class CollisionBuildService(
     private val collision: CollisionManager,
 ) {
+    enum class FootprintMode {
+        ROTATED,
+        LUNA_UNROTATED_INTERACTABLE,
+    }
+
     fun clear() {
         collision.clear()
     }
@@ -168,8 +173,7 @@ class CollisionBuildService(
         }
 
         val normalizedRotation = rotation and 0x3
-        val width = if (normalizedRotation == 1 || normalizedRotation == 3) sizeY else sizeX
-        val height = if (normalizedRotation == 1 || normalizedRotation == 3) sizeX else sizeY
+        val (width, height) = resolveFootprint(type, normalizedRotation, sizeX, sizeY, LIVE_FOOTPRINT_MODE)
 
         when (type) {
             0 -> applyWall(remove, x, y, z, CollisionDirection.WNES[normalizedRotation])
@@ -197,14 +201,7 @@ class CollisionBuildService(
      * footprint objects still honor solidity/walkable metadata.
      */
     private fun isUnwalkableObjectType(type: Int, solid: Boolean, walkable: Boolean, hasActions: Boolean): Boolean =
-        when (type) {
-            0, 1, 2, 3 -> true
-            in 12..21 -> true
-            22 -> solid && hasActions
-            9 -> true
-            10, 11 -> solid
-            else -> solid && !walkable
-        }
+        isTypeUnwalkable(type, solid, walkable, hasActions)
 
     private fun applyWall(remove: Boolean, x: Int, y: Int, z: Int, direction: CollisionDirection) {
         if (remove) {
@@ -235,6 +232,50 @@ class CollisionBuildService(
             collision.clearSolid(x, y, z)
         } else {
             collision.flagSolid(x, y, z)
+        }
+    }
+
+    companion object {
+        @Volatile
+        var LIVE_FOOTPRINT_MODE: FootprintMode = FootprintMode.ROTATED
+
+        @JvmStatic
+        fun resolveFootprint(type: Int, normalizedRotation: Int, sizeX: Int, sizeY: Int, mode: FootprintMode): Pair<Int, Int> {
+            val swapForRotation = normalizedRotation == 1 || normalizedRotation == 3
+            val swap =
+                when (mode) {
+                    FootprintMode.ROTATED -> swapForRotation
+                    FootprintMode.LUNA_UNROTATED_INTERACTABLE -> swapForRotation && type !in 9..21
+                }
+            return if (swap) sizeY to sizeX else sizeX to sizeY
+        }
+
+        @JvmStatic
+        fun isTypeUnwalkable(type: Int, solid: Boolean, walkable: Boolean, hasActions: Boolean): Boolean =
+            when (type) {
+                0, 1, 2, 3 -> true
+                in 4..8 -> false
+                in 12..21 -> solid
+                22 -> solid && hasActions
+                9 -> solid
+                10, 11 -> solid
+                else -> solid && !walkable
+            }
+
+        @JvmStatic
+        fun occupiesTile(
+            objectX: Int,
+            objectY: Int,
+            tileX: Int,
+            tileY: Int,
+            type: Int,
+            rotation: Int,
+            sizeX: Int,
+            sizeY: Int,
+            mode: FootprintMode,
+        ): Boolean {
+            val (width, height) = resolveFootprint(type, rotation and 0x3, sizeX, sizeY, mode)
+            return tileX in objectX until (objectX + width) && tileY in objectY until (objectY + height)
         }
     }
 }

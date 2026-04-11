@@ -32,7 +32,11 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
         return null
 
         CombatLogoutLockService.refreshInteraction(this, target)
-        setFocus(target.position.x, target.position.y)
+        if (target is Player) {
+            facePlayer(target.slot)
+        } else {
+            setFocus(target.position.x, target.position.y)
+        }
         var maxHit = meleeMaxHit().toDouble()
          if (target is Npc) { // Slayer damage!
              val npc = Server.npcManager.getNpc(target.slot)

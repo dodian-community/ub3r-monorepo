@@ -30,7 +30,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
     }
 
@@ -47,7 +47,7 @@ class FollowServiceTest {
 
         FollowService.processTick()
 
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertTrue(FollowService.isFollowing(follower))
     }
 
@@ -59,7 +59,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertTrue(follower.newWalkCmdSteps > 0)
         assertTrue(follower.newWalkCmdIsRunning)
 
@@ -84,14 +84,14 @@ class FollowServiceTest {
         FollowService.processTick()
 
         assertTrue(FollowService.isFollowing(follower))
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
 
         leader.disconnected = true
         FollowService.processTick()
 
         assertFalse(FollowService.isFollowing(follower))
         assertEquals(-1, follower.getFaceTarget())
-        assertFalse(follower.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
+        assertTrue(follower.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
         assertEquals(0, follower.newWalkCmdSteps)
     }
 
@@ -170,7 +170,7 @@ class FollowServiceTest {
 
         FollowService.requestFollow(follower, leader)
         FollowService.processTick()
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
 
         // Simulate movement queue consumed; follow should hold interaction without requeueing.
@@ -179,8 +179,22 @@ class FollowServiceTest {
         follower.newWalkCmdSteps = 0
 
         FollowService.processTick()
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(0, follower.newWalkCmdSteps)
+    }
+
+    @Test
+    fun `stationary adjacent target keeps emitting focus-facing each tick`() {
+        val follower = testClient(slot = 27, nameKey = 1027L, x = 3200, y = 3200)
+        val leader = testClient(slot = 28, nameKey = 1028L, x = 3201, y = 3200)
+
+        FollowService.requestFollow(follower, leader)
+        FollowService.processTick()
+        assertFacingCoordinateAtTarget(follower, leader)
+
+        follower.clearUpdateFlags()
+        FollowService.processTick()
+        assertFacingCoordinateAtTarget(follower, leader)
     }
 
     @Test
@@ -211,23 +225,8 @@ class FollowServiceTest {
         FollowService.processTick()
         assertEquals(0, a.newWalkCmdSteps)
         assertEquals(0, b.newWalkCmdSteps)
-        assertFocusedOn(a, b.position.x, b.position.y)
-        assertFocusedOn(b, a.position.x, a.position.y)
-    }
-
-    @Test
-    fun `follow-facing reassert restores target after incidental reset`() {
-        val follower = testClient(slot = 27, nameKey = 1027L, x = 3200, y = 3200)
-        val leader = testClient(slot = 28, nameKey = 1028L, x = 3202, y = 3200)
-
-        FollowService.requestFollow(follower, leader)
-        FollowService.processTick()
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
-
-        follower.clearUpdateFlags()
-        FollowService.reassertFacingTick()
-
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(a, b)
+        assertFacingCoordinateAtTarget(b, a)
     }
 
     @Test
@@ -264,7 +263,7 @@ class FollowServiceTest {
 
         FollowService.processFollowing(follower, leader)
 
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
         assertEquals(1, follower.newWalkCmdSteps)
 
         val baseX = follower.mapRegionX * 8
@@ -293,7 +292,7 @@ class FollowServiceTest {
         FollowService.requestFollow(follower, leader)
         FollowService.processTick()
         assertTrue(FollowService.isFollowing(follower))
-        assertFocusedOn(follower, leader.position.x, leader.position.y)
+        assertFacingCoordinateAtTarget(follower, leader)
 
         PacketWalkingService.handle(
             follower,
@@ -309,15 +308,22 @@ class FollowServiceTest {
 
         assertFalse(FollowService.isFollowing(follower))
         assertEquals(65535, follower.getFaceTarget())
+        assertFalse(follower.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
         assertEquals(1, follower.newWalkCmdSteps)
         val baseX = follower.mapRegionX * 8
         val baseY = follower.mapRegionY * 8
         assertEquals(3201, follower.newWalkCmdX[0] + baseX)
         assertEquals(3200, follower.newWalkCmdY[0] + baseY)
+
+        follower.clearUpdateFlags()
+        FollowService.processTick()
+        assertFalse(FollowService.isFollowing(follower))
+        assertFalse(follower.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+        assertEquals(-1, follower.getFaceTarget())
     }
 
     @Test
-    fun `accepted walking step persists last face coordinate`() {
+    fun `accepted walking step does not persist face replay state`() {
         val walker = testClient(slot = 29, nameKey = 1029L, x = 3200, y = 3200)
 
         primeMovementState(walker)
@@ -335,8 +341,8 @@ class FollowServiceTest {
 
         runMovementTick(walker)
 
-        assertEquals(3201, walker.persistedFaceX)
-        assertEquals(3200, walker.persistedFaceY)
+        assertEquals(0, walker.persistedFaceX)
+        assertEquals(0, walker.persistedFaceY)
     }
 
     private fun testClient(
@@ -371,13 +377,10 @@ class FollowServiceTest {
         player.clearUpdateFlags()
     }
 
-    private fun assertFocusedOn(player: Client, targetX: Int, targetY: Int) {
-        assertEquals(-1, player.faceTarget)
-        assertFalse(player.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
+    private fun assertFacingCoordinateAtTarget(player: Client, target: Client) {
         assertTrue(player.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
-        assertEquals(encodeFaceCoordinate(targetX), player.faceCoordinateX)
-        assertEquals(encodeFaceCoordinate(targetY), player.faceCoordinateY)
+        assertFalse(player.updateFlags.isRequired(UpdateFlag.FACE_CHARACTER))
+        assertEquals(target.position.x, player.faceCoordinateWorldX)
+        assertEquals(target.position.y, player.faceCoordinateWorldY)
     }
-
-    private fun encodeFaceCoordinate(value: Int): Int = (value * 2) + 1
 }

@@ -117,6 +117,9 @@ object ObjectClipService {
 
     internal fun getAppliedForTests(position: Position): AppliedClip? = appliedClips[key(position)]
 
+    @JvmStatic
+    fun getAppliedClip(position: Position): AppliedClip? = appliedClips[key(position)]
+
     internal fun clearForTests() {
         clearTrackedClips()
     }

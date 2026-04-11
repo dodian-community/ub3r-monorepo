@@ -10,8 +10,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.model.item.ItemManager
 import net.dodian.uber.game.netty.codec.ByteMessage
-import net.dodian.uber.game.systems.net.PacketWalkingService
-import net.dodian.uber.game.systems.net.WalkRequest
 import net.dodian.uber.game.systems.world.npc.NpcManager
 import net.dodian.utilities.Utils
 import org.junit.jupiter.api.AfterEach
@@ -108,7 +106,7 @@ class InteractionMaskEncodingTest {
     }
 
     @Test
-    fun `add-local block includes persisted face coordinate after movement`() {
+    fun `add-local block forces appearance without face-coordinate when not flagged`() {
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
 
@@ -122,23 +120,27 @@ class InteractionMaskEncodingTest {
         player.dbId = 1
         player.teleportTo(3200, 3200, 0)
 
-        primeMovementState(player)
-        PacketWalkingService.handle(
-            player,
-            WalkRequest(
-                opcode = 164,
-                firstStepXAbs = 3201,
-                firstStepYAbs = 3200,
-                running = false,
-                deltasX = intArrayOf(0),
-                deltasY = intArrayOf(0),
-            ),
-        )
-        player.postProcessing()
-        player.getNextPlayerMovement()
+        val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
 
-        assertEquals(3201, player.persistedFaceX)
-        assertEquals(3200, player.persistedFaceY)
+        assertEquals(0x10, block[0].toInt() and 0x10)
+        assertEquals(0, block[0].toInt() and 0x02)
+    }
+
+    @Test
+    fun `add-local block includes one-time facing snapshot from last walk delta`() {
+        previousItemManager = Server.itemManager
+        Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
+
+        val player = Client(EmbeddedChannel(), 1)
+        player.longName = 1L
+        player.playerName = "player-1"
+        player.isActive = true
+        player.initialized = true
+        player.disconnected = false
+        player.pLoaded = true
+        player.dbId = 1
+        player.teleportTo(3200, 3200, 0)
+        player.setLastWalkDelta(1, 0)
 
         val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
 
@@ -147,7 +149,7 @@ class InteractionMaskEncodingTest {
     }
 
     @Test
-    fun `teleport remaps persisted face coordinate into new area for add-local sync`() {
+    fun `add-local block includes face-coordinate only when explicitly flagged`() {
         previousItemManager = Server.itemManager
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
 
@@ -160,17 +162,35 @@ class InteractionMaskEncodingTest {
         player.pLoaded = true
         player.dbId = 1
         player.teleportTo(3200, 3200, 0)
-        player.setPersistedFaceCoord(3201, 3200)
-
-        player.teleportTo(3300, 3300, 0)
-
-        assertEquals(3301, player.persistedFaceX)
-        assertEquals(3300, player.persistedFaceY)
+        player.setFocus(3201, 3200)
 
         val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
 
         assertEquals(0x12, block[0].toInt() and 0x12)
-        assertArrayEquals(expectedFaceCoordinateTail(3301, 3300), block.copyOfRange(block.size - 4, block.size))
+        assertArrayEquals(expectedFaceCoordinateTail(3201, 3200), block.copyOfRange(block.size - 4, block.size))
+    }
+
+    @Test
+    fun `add-local does not inject coordinate snapshot when face-character is flagged`() {
+        previousItemManager = Server.itemManager
+        Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
+
+        val player = Client(EmbeddedChannel(), 1)
+        player.longName = 1L
+        player.playerName = "player-1"
+        player.isActive = true
+        player.initialized = true
+        player.disconnected = false
+        player.pLoaded = true
+        player.dbId = 1
+        player.teleportTo(3200, 3200, 0)
+        player.setLastWalkDelta(1, 0)
+        player.facePlayer(2)
+
+        val block = PlayerUpdating.getInstance().buildSharedBlock(player, "ADD_LOCAL")
+
+        assertEquals(0x11, block[0].toInt() and 0x11)
+        assertEquals(0, block[0].toInt() and 0x02)
     }
 
     @Test
@@ -210,12 +230,6 @@ class InteractionMaskEncodingTest {
         } finally {
             buffer.release()
         }
-    }
-
-    private fun primeMovementState(player: Client) {
-        player.getNextPlayerMovement()
-        player.postProcessing()
-        player.clearUpdateFlags()
     }
 
     private fun expectedFaceCoordinateTail(x: Int, y: Int): ByteArray {

@@ -1,0 +1,12 @@
+description = "Build checkpoint B: domain docs"
+
+prompt = """
+Work only until CHECKPOINT B is fully complete.
+
+Rules:
+- Follow GEMINI.md exactly.
+- Refer to docs/evidence/*.json created in Checkpoint A.
+- Update docs/CHECKPOINT_STATUS.md and docs/TODO_REMAINING.md before ending.
+
+CHECKPOINT B means all domain docs in docs/domains/ are complete and verified.
+"""

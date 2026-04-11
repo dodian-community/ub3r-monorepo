@@ -1,6 +1,5 @@
 package net.dodian.uber.game.systems.cache
 
-import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.systems.pathing.collision.CollisionManager
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
@@ -19,18 +18,18 @@ class CacheBootstrapLoggingTest {
     fun `bootstrap logs cache decode summary and rebuilds runtime collision`() {
         val cacheDir = Files.createTempDirectory("cache-bootstrap-logging")
         CollisionManager.global().clear()
-        GameObjectData.addDefinition(
-            GameObjectData(
-                id = 1000,
-                name = "Test blocking object",
-                description = "fixture",
-                sizeX = 1,
-                sizeY = 1,
-                solid = true,
-                walkable = false,
-                hasActionsFlag = true,
-                unknownValue = false,
-                walkType = 0,
+        CacheStoreTestFixtures.writeObjectDefinitionArchive(
+            cacheDir,
+            listOf(
+                CacheStoreTestFixtures.FixtureObjectDefinition(
+                    id = 1000,
+                    name = "Test blocking object",
+                    description = "fixture",
+                    sizeX = 1,
+                    sizeY = 1,
+                    solid = true,
+                    interactive = true,
+                ),
             ),
         )
         CacheStoreTestFixtures.writeRegionArchives(

@@ -21,8 +21,7 @@ object DevDebugCommands : CommandContent {
         commands {
             command(
                 "npca", "loot", "death", "damage", "dharok", "heal", "farm", "immune", "rehp",
-                "split", "party", "event", "gem", "rune", "boost_on", "boost_off",
-                "wcor", "pcor", "ncor",
+                "split", "party", "event", "gem", "rune", "boost_on", "boost_off", "wcor", "pcor", "ncor",
             ) {
                 handleDevDebug(this)
             }

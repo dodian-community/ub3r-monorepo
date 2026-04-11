@@ -97,7 +97,6 @@ class EntityProcessor : Runnable {
         for (player in activePlayers) {
             processPlayer(player, wallClockNow)
         }
-        FollowService.reassertFacingTick()
     }
 
     fun runMovementFinalizePhase() {

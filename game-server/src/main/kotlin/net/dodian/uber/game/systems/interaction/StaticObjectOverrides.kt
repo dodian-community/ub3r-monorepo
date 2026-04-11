@@ -19,13 +19,14 @@ data class StaticObjectOverride(
 
 object StaticObjectOverrides {
     private val overrides =
-        listOf(
-            removedDoor(2669, 2713, 0, objectType = 11),
-            removedDoor(2713, 3483, 0),
-            removedDoor(2716, 3472, 0),
-            removedDoor(2594, 3102, 0),
-            removedDoor(2816, 3438, 0),
-        )
+        buildList {
+            add(removedDoor(2669, 2713, 0, objectType = 11))
+            add(removedDoor(2713, 3483, 0))
+            add(removedDoor(2716, 3472, 0))
+            add(removedDoor(2594, 3102, 0))
+            add(removedDoor(2816, 3438, 0))
+            addAll(removedRectangle(2600..2609, 3111..3119, 0, objectType = 10))
+        }
 
     @JvmStatic
     fun all(): List<StaticObjectOverride> = overrides
@@ -49,5 +50,25 @@ object StaticObjectOverrides {
             replacementFace = -1,
             replacementType = objectType,
         )
-}
 
+    private fun removedRectangle(
+        xRange: IntRange,
+        yRange: IntRange,
+        z: Int,
+        objectType: Int,
+    ): List<StaticObjectOverride> {
+        val rows = ArrayList<StaticObjectOverride>(xRange.count() * yRange.count())
+        for (x in xRange) {
+            for (y in yRange) {
+                rows +=
+                    StaticObjectOverride(
+                        position = Position(x, y, z),
+                        replacementObjectId = -1,
+                        replacementFace = -1,
+                        replacementType = objectType,
+                    )
+            }
+        }
+        return rows
+    }
+}

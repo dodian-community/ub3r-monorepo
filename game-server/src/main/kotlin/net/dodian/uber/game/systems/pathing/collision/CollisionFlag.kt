@@ -50,6 +50,7 @@ object CollisionFlag {
         PROJECTILE_NORTH_WEST or PROJECTILE_NORTH or PROJECTILE_NORTH_EAST or PROJECTILE_WEST or PROJECTILE_EAST or PROJECTILE_SOUTH_WEST or PROJECTILE_SOUTH or PROJECTILE_SOUTH_EAST
 
     const val FULL_BLOCK: Int = FULL_MOB_BLOCK or FULL_PROJECTILE_BLOCK
+    const val ROUTE_BLOCKER: Int = 1 shl 16
 
     fun approachMask(dx: Int, dy: Int): Int =
         when {

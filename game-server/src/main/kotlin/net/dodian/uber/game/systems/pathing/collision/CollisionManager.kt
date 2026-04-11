@@ -19,6 +19,14 @@ class CollisionManager(
         matrix.clear(x, y, z, CollisionFlag.fullTile(impenetrable))
     }
 
+    fun flagRouteBlocker(x: Int, y: Int, z: Int) {
+        matrix.flag(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    }
+
+    fun clearRouteBlocker(x: Int, y: Int, z: Int) {
+        matrix.clear(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    }
+
     fun wall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
         tile(x, y, z, setOf(direction), impenetrable)
         tile(x + direction.dx, y + direction.dy, z, setOf(direction.opposite()), impenetrable)
@@ -76,6 +84,8 @@ class CollisionManager(
     }
 
     fun traversable(x: Int, y: Int, z: Int, dx: Int, dy: Int): Boolean = canStep(x - dx, y - dy, z, dx, dy, 1, 1)
+
+    fun getFlags(x: Int, y: Int, z: Int): Int = matrix.getFlags(x, y, z)
 
     fun isTileBlocked(x: Int, y: Int, z: Int): Boolean = matrix.hasAllFlags(x, y, z, CollisionFlag.FULL_MOB_BLOCK)
 

@@ -1,11 +1,16 @@
 package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.Position;
+import net.dodian.uber.game.systems.interaction.ClipProbeService;
 import net.dodian.uber.game.systems.interaction.PersonalPassageService;
 import net.dodian.uber.game.systems.pathing.collision.CollisionManager;
 import net.dodian.utilities.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class PlayerMovementState {
+    private static final Logger logger = LoggerFactory.getLogger(PlayerMovementState.class);
+    private static final long BLOCKED_LOG_INTERVAL_MS = 2000L;
     private final Player owner;
     private int currentX;
     private int currentY;
@@ -13,6 +18,10 @@ final class PlayerMovementState {
     private boolean mapRegionDidChange = false;
     private int primaryDirection = -1;
     private int secondaryDirection = -1;
+    private long lastBlockedLogMs = 0L;
+    private int lastBlockedLogX = Integer.MIN_VALUE;
+    private int lastBlockedLogY = Integer.MIN_VALUE;
+    private int lastBlockedLogZ = Integer.MIN_VALUE;
 
     PlayerMovementState(Player owner) {
         this.owner = owner;
@@ -88,6 +97,7 @@ final class PlayerMovementState {
         int z = owner.getPosition().getZ();
         if (!CollisionManager.global().traversable(absX + deltaX, absY + deltaY, z, deltaX, deltaY) &&
             !PersonalPassageService.canTraverse(owner, absX, absY, absX + deltaX, absY + deltaY, z)) {
+            logBlockedStep(absX + deltaX, absY + deltaY, z);
             resetWalkingQueue();
             return -1;
         }
@@ -258,6 +268,63 @@ final class PlayerMovementState {
         }
         owner.isRunning = owner.UsingAgility && System.currentTimeMillis() < owner.walkBlock ? owner.newWalkCmdIsRunning : owner.buttonOnRun;
         owner.newWalkCmdSteps = 0;
+    }
+
+    private void logBlockedStep(int blockedX, int blockedY, int z) {
+        long now = System.currentTimeMillis();
+        if (now - lastBlockedLogMs < BLOCKED_LOG_INTERVAL_MS &&
+            blockedX == lastBlockedLogX &&
+            blockedY == lastBlockedLogY &&
+            z == lastBlockedLogZ) {
+            return;
+        }
+        lastBlockedLogMs = now;
+        lastBlockedLogX = blockedX;
+        lastBlockedLogY = blockedY;
+        lastBlockedLogZ = z;
+
+        int[] destination = resolveQueuedDestinationAbs();
+        ClipProbeService.TileProbe probe = ClipProbeService.probeTile(blockedX, blockedY, z);
+        logger.info(
+            "Blocked movement player={} from=({}, {}, {}) blocked=({}, {}, {}) clickDest=({}, {}, {}) flags=0x{} [{}] fullBlocked={} " +
+                "objCurrent={} objLuna={} footprintMismatch={} likelyTerrainOrUnknown={} staticOverride={} runtimeOverlay={} objectOverlaps={} overlapDetails={}",
+            owner.getPlayerName(),
+            owner.getPosition().getX(),
+            owner.getPosition().getY(),
+            owner.getPosition().getZ(),
+            blockedX,
+            blockedY,
+            z,
+            destination[0],
+            destination[1],
+            destination[2],
+            Integer.toHexString(probe.getRawFlags()),
+            ClipProbeService.formatFlags(probe.getRawFlags()),
+            probe.getFullMobBlocked(),
+            probe.getBlockedByCurrentObjects(),
+            probe.getBlockedByLunaObjects(),
+            probe.getLikelyFootprintMismatch(),
+            probe.getLikelyTerrainOrUnknownSource(),
+            probe.getStaticOverridePresent(),
+            probe.getRuntimeOverlayPresent(),
+            probe.getObjectMatches().size(),
+            ClipProbeService.formatOverlapSummary(probe, 3)
+        );
+    }
+
+    private int[] resolveQueuedDestinationAbs() {
+        if (owner.wQueueReadPtr == owner.wQueueWritePtr) {
+            return new int[] { owner.getPosition().getX(), owner.getPosition().getY(), owner.getPosition().getZ() };
+        }
+        int tail = owner.wQueueWritePtr - 1;
+        if (tail < 0) {
+            tail = Player.WALKING_QUEUE_SIZE - 1;
+        }
+        int destLocalX = owner.walkingQueueX[tail];
+        int destLocalY = owner.walkingQueueY[tail];
+        int absDestX = owner.mapRegionX * 8 + destLocalX;
+        int absDestY = owner.mapRegionY * 8 + destLocalY;
+        return new int[] { absDestX, absDestY, owner.getPosition().getZ() };
     }
 
     boolean didTeleport() {

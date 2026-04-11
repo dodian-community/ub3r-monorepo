@@ -85,32 +85,6 @@ object FollowService {
     }
 
     /**
-     * Reassert follow-facing after other per-tick systems have run so incidental
-     * non-follow resets do not override active follow interaction masks.
-     */
-    @JvmStatic
-    fun reassertFacingTick() {
-        if (followStates.isEmpty()) {
-            return
-        }
-        for ((_, state) in followStates) {
-            val follower = PlayerRegistry.playersOnline[state.followerLongName] ?: continue
-            if (!isUsableFollower(follower) || follower.slot != state.followerSlot) {
-                continue
-            }
-            // Active combat keeps facing authority.
-            if (follower.target != null || follower.combatTargetState != null) {
-                continue
-            }
-            val target = PlayerRegistry.playersOnline[state.targetLongName] ?: continue
-            if (!isUsableTarget(target) || target.slot != state.targetSlot) {
-                continue
-            }
-            follower.setFocus(target.position.x, target.position.y)
-        }
-    }
-
-    /**
      * Applies one tick of follow behavior for the supplied follower/target.
      *
      * The method is also safe to call in tests without pre-registering state;
@@ -187,7 +161,7 @@ object FollowService {
             return
         }
 
-        // Reassert a coordinate-facing mask so follow preserves walking direction visuals.
+        // Keep follow facing as coordinate focus so observers reliably see turns.
         follower.setFocus(target.position.x, target.position.y)
 
         val fx = follower.position.x
@@ -209,8 +183,8 @@ object FollowService {
             return
         }
 
-        // Strict Luna behavior: if the target tile is unchanged this tick, keep
-        // interaction but do not issue new follow route commands.
+        // If the target tile is unchanged this tick, keep facing but do not issue
+        // new follow route commands.
         if (!firstFollowTick && !targetMoved) {
             followStates[follower.longName] =
                 state.copy(
@@ -247,6 +221,7 @@ object FollowService {
     }
 
     private fun clearFollowerState(follower: Client) {
+        follower.faceTarget(-1)
         clearQueuedWalking(follower)
     }
 

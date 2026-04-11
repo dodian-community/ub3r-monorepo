@@ -86,6 +86,46 @@ class ObjectClipServiceTest {
     }
 
     @Test
+    fun `apply decoded roofing type does not block when definition is non-solid`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(nonSolidDefinition(2004))
+            val position = Position(41, 41, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2004, 12, 0, GameObjectData.forId(2004))
+
+            assertTrue(collision.canMove(40, 41, 41, 41, 0, 1, 1))
+            assertFalse(collision.isTileBlocked(41, 41, 0))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
+    fun `apply decoded roofing type blocks when definition is solid`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(blockingDefinition(2005))
+            val position = Position(42, 42, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2005, 12, 0, GameObjectData.forId(2005))
+
+            assertFalse(collision.canMove(41, 42, 42, 42, 0, 1, 1))
+            assertTrue(collision.isTileBlocked(42, 42, 0))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
     fun `static removal override clears cache collision for deleted door tile`() {
         val collision = CollisionManager.global()
         collision.clear()
@@ -145,16 +185,21 @@ class ObjectClipServiceTest {
     fun `static override registry includes migrated deleted door positions`() {
         val positions = StaticObjectOverrides.all().map { it.position.x to it.position.y }.toSet()
 
-        assertEquals(
+        val expectedDoorPositions =
             setOf(
                 2669 to 2713,
                 2713 to 3483,
                 2716 to 3472,
                 2594 to 3102,
                 2816 to 3438,
-            ),
-            positions,
-        )
+            )
+        assertTrue(positions.containsAll(expectedDoorPositions))
+    }
+
+    @Test
+    fun `static override registry includes nmz removed rectangle tile`() {
+        val positions = StaticObjectOverrides.all().map { it.position.x to it.position.y }.toSet()
+        assertTrue(positions.contains(2609 to 3111))
     }
 
     private fun blockingDefinition(id: Int): GameObjectData =
