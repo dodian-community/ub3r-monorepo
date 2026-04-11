@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.ui
 
 import net.dodian.uber.game.content.skills.fletching.Fletching
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
 
 object FletchingInterface : InterfaceButtonContent {
     private val longbowButtons = intArrayOf(34170, 34169, 34168, 34167)

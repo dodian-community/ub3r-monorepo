@@ -4,9 +4,9 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
-import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueEmote
+import net.dodian.uber.game.content.social.dialogue.DialogueOption
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 
 internal object Jatix : NpcModule {
     // Stats: 1174: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0

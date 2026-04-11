@@ -112,7 +112,7 @@ class PluginModuleIndexSymbolProcessor(
                     packageName.startsWith("net.dodian.uber.game.content.interfaces") ||
                         packageName.startsWith("net.dodian.uber.game.content.ui")
                     ) &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
+                declaration.implementsInterface("net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent")
             ) {
                 recordViolation("Interface button content must be declared as Kotlin 'object': $packageName.$simpleName")
             }
@@ -133,7 +133,7 @@ class PluginModuleIndexSymbolProcessor(
 
             if (
                 packageName.startsWith("net.dodian.uber.game.content.commands") &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.dispatch.commands.CommandContent")
+                declaration.implementsInterface("net.dodian.uber.game.systems.interaction.commands.CommandContent")
             ) {
                 recordViolation("Command content must be declared as Kotlin 'object': $packageName.$simpleName")
             }
@@ -154,8 +154,10 @@ class PluginModuleIndexSymbolProcessor(
 
             if (
                 (packageName.startsWith("net.dodian.uber.game.systems.dispatch") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.skills")) &&
-                declaration.implementsInterface("net.dodian.uber.game.systems.dispatch.ContentBootstrap")
+                    packageName.startsWith("net.dodian.uber.game.systems.skills") ||
+                    packageName.startsWith("net.dodian.uber.game.systems.interaction") ||
+                    packageName.startsWith("net.dodian.uber.game.systems.plugin")) &&
+                declaration.implementsInterface("net.dodian.uber.game.systems.plugin.ContentBootstrap")
             ) {
                 recordViolation("Content bootstrap must be declared as Kotlin 'object': $packageName.$simpleName")
             }
@@ -188,15 +190,9 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverInterfaceButtons(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val interfaceButtonsType = "net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent"
+        val interfaceButtonsType = "net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent"
         return allObjects
-            .filter { (file, declaration) ->
-                (
-                    file.packageName.asString().startsWith("net.dodian.uber.game.content.interfaces") ||
-                        file.packageName.asString().startsWith("net.dodian.uber.game.content.ui")
-                    ) &&
-                    declaration.implementsInterface(interfaceButtonsType)
-            }
+            .filter { (_, declaration) -> declaration.implementsInterface(interfaceButtonsType) }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
     }
@@ -219,10 +215,7 @@ class PluginModuleIndexSymbolProcessor(
     private fun discoverNpcModules(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
         val npcModuleType = "net.dodian.uber.game.content.npcs.NpcModule"
         return allObjects
-            .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.content.npcs") &&
-                    declaration.implementsInterface(npcModuleType)
-            }
+            .filter { (_, declaration) -> declaration.implementsInterface(npcModuleType) }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
     }
@@ -230,10 +223,7 @@ class PluginModuleIndexSymbolProcessor(
     private fun discoverSkillPlugins(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
         val skillPluginType = "net.dodian.uber.game.systems.skills.plugin.SkillPlugin"
         return allObjects
-            .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.content.skills") &&
-                    declaration.implementsInterface(skillPluginType)
-            }
+            .filter { (_, declaration) -> declaration.implementsInterface(skillPluginType) }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
     }
@@ -247,12 +237,9 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverCommandContents(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val commandContentType = "net.dodian.uber.game.systems.dispatch.commands.CommandContent"
+        val commandContentType = "net.dodian.uber.game.systems.interaction.commands.CommandContent"
         return allObjects
-            .filter { (file, declaration) ->
-                file.packageName.asString().startsWith("net.dodian.uber.game.content.commands") &&
-                    declaration.implementsInterface(commandContentType)
-            }
+            .filter { (_, declaration) -> declaration.implementsInterface(commandContentType) }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
     }
@@ -269,13 +256,9 @@ class PluginModuleIndexSymbolProcessor(
     }
 
     private fun discoverContentBootstraps(allObjects: List<Pair<KSFile, KSClassDeclaration>>): List<DiscoveredSymbol> {
-        val bootstrapType = "net.dodian.uber.game.systems.dispatch.ContentBootstrap"
+        val bootstrapType = "net.dodian.uber.game.systems.plugin.ContentBootstrap"
         return allObjects
-            .filter { (file, declaration) ->
-                (file.packageName.asString().startsWith("net.dodian.uber.game.systems.dispatch") ||
-                    file.packageName.asString().startsWith("net.dodian.uber.game.systems.skills")) &&
-                    declaration.implementsInterface(bootstrapType)
-            }
+            .filter { (_, declaration) -> declaration.implementsInterface(bootstrapType) }
             .map { (_, declaration) -> declaration.toDiscoveredSymbol() }
             .sortedBy { it.fqcn }
     }
@@ -306,14 +289,14 @@ class PluginModuleIndexSymbolProcessor(
         val out = StringBuilder()
         out.appendLine("package net.dodian.uber.game.plugin")
         out.appendLine()
-        out.appendLine("import net.dodian.uber.game.systems.dispatch.ContentBootstrap")
-        out.appendLine("import net.dodian.uber.game.systems.dispatch.commands.CommandContent")
+        out.appendLine("import net.dodian.uber.game.systems.plugin.ContentBootstrap")
+        out.appendLine("import net.dodian.uber.game.systems.interaction.commands.CommandContent")
         out.appendLine("import net.dodian.uber.game.content.items.ItemContent")
         out.appendLine("import net.dodian.uber.game.content.npcs.NpcContentDefinition")
         out.appendLine("import net.dodian.uber.game.content.objects.ObjectContent")
         out.appendLine("import net.dodian.uber.game.content.shop.plugin.ShopPlugin as ShopContentPlugin")
         out.appendLine("import net.dodian.uber.game.systems.skills.plugin.SkillPlugin")
-        out.appendLine("import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent")
+        out.appendLine("import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent")
         out.appendLine()
         out.appendLine("object GeneratedPluginModuleIndex {")
         out.appendLine()

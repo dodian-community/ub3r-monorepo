@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.dialogue
 
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueRenderRegistry
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueRenderModule
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueUi
+import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.core.DialogueIds
+import net.dodian.uber.game.content.social.dialogue.core.DialogueRenderRegistry
+import net.dodian.uber.game.content.social.dialogue.core.DialogueRenderModule
+import net.dodian.uber.game.content.social.dialogue.core.DialogueUi
 
 object BrimhavenEntryDialogueModule : DialogueRenderModule {
     override fun register(builder: DialogueRenderRegistry.Builder) {

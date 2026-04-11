@@ -10,7 +10,7 @@ import net.dodian.uber.game.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.systems.interaction.scheduler.PlayerInteractionTask
-import net.dodian.uber.game.systems.dispatch.npcs.NpcClickMetrics
+import net.dodian.uber.game.systems.interaction.npcs.NpcClickMetrics
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 
 /**

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.player
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.gameWorldId

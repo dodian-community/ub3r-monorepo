@@ -1,10 +1,10 @@
 package net.dodian.uber.game.content.commands.admin
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
-import net.dodian.uber.game.systems.dispatch.commands.CommandContent
-import net.dodian.uber.game.systems.dispatch.commands.CommandContext
-import net.dodian.uber.game.systems.dispatch.commands.commands
+import net.dodian.uber.game.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.systems.interaction.commands.commands
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BossCommands : CommandContent {

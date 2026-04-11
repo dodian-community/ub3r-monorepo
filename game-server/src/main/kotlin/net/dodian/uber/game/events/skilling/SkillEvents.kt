@@ -4,7 +4,7 @@ import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.systems.skills.SkillProgressionMode
-import net.dodian.uber.game.systems.skills.action.ActionStopReason
+import net.dodian.uber.game.content.skills.runtime.action.ActionStopReason
 
 // ── Plugin-framework level ────────────────────────────────────────────────────
 

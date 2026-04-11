@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.ui
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
 
 object SlotsInterface : InterfaceButtonContent {
     private val spinButtons = intArrayOf(54074)

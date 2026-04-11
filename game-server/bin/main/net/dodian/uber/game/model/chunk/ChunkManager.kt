@@ -98,6 +98,16 @@ class ChunkManager {
         )
     }
 
+    fun forEachUpdateNpcCandidate(viewer: Player, distance: Int, consumer: Consumer<Npc>) {
+        forEach(
+            viewer.position,
+            EntityType.NPC,
+            distance,
+            Predicate { npc -> npc.isVisible },
+            consumer,
+        )
+    }
+
     private fun <E : Entity> forEach(
         center: Position,
         type: EntityType,

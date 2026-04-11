@@ -1,6 +1,6 @@
 package net.dodian.uber.game.systems.skills.plugin
 
-import net.dodian.uber.game.systems.dispatch.ContentBootstrap
+import net.dodian.uber.game.systems.plugin.ContentBootstrap
 import net.dodian.uber.game.systems.plugin.PluginRegistry
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

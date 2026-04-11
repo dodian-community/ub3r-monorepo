@@ -19,7 +19,7 @@ import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision
 import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState
 import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
-import net.dodian.uber.game.systems.ui.PlayerUiDeltaProcessor
+import net.dodian.uber.game.content.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 import net.dodian.uber.game.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
@@ -34,7 +34,7 @@ class WorldSynchronizationService {
     private val rootPlayerInfoService = RootPlayerInfoService.INSTANCE
     private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
     private val sharedNpcActivityIndex = NpcChunkActivityIndex()
-    private val activePlayerBuffer = ArrayList<Client>(512)
+    private val activePlayerBuffer = ArrayList<Client>(2048)
     private var tick = 0L
 
     fun run() {

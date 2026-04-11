@@ -55,6 +55,8 @@ class CacheBootstrapService(
             )
             logger.info("Cache collision offenders: typeDistribution={}", finalPass.blockingTypeDistribution)
             logger.info("Cache collision offenders: nonSolidBlockedByTypeRule={}", finalPass.nonSolidBlockedByTypeRule)
+            logger.info("Cache collision offenders: type10_11SolidNoActions={}", finalPass.type10_11SolidNoActions)
+            logger.info("Cache collision offenders: nonSolidInBlockingTypeBuckets={}", finalPass.nonSolidInBlockingTypeBuckets)
             logger.info("Cache collision offenders: topBlockingAnchorTiles={}", finalPass.topBlockingAnchors)
             if (store.isAvailable().not()) {
                 logger.warn("Cache bootstrap: cache directory missing at {}", store.describe())
@@ -103,6 +105,8 @@ class CacheBootstrapService(
                 footprintMismatchAtKnownTile = false,
                 blockingTypeDistribution = "none",
                 nonSolidBlockedByTypeRule = "none",
+                type10_11SolidNoActions = "none",
+                nonSolidInBlockingTypeBuckets = "none",
                 topBlockingAnchors = "none",
             )
         }
@@ -115,6 +119,8 @@ class CacheBootstrapService(
         val regionObjects = HashMap<Int, MutableList<DecodedMapObject>>(regions.size)
         val blockingByType = HashMap<Int, Int>(32)
         val nonSolidBlockedByTypeRule = HashMap<String, Int>(128)
+        val type10_11SolidNoActions = HashMap<String, Int>(128)
+        val nonSolidInBlockingTypeBuckets = HashMap<String, Int>(128)
         val blockingAnchorCounts = HashMap<Long, Int>(2048)
         var knownTileBlockedByCurrentObjects = false
         var knownTileBlockedByLunaObjects = false
@@ -134,11 +140,10 @@ class CacheBootstrapService(
                 collisionBuildService.applyObjectData(obj, definition)
                 objectCount++
                 val blocksByType =
-                    CollisionBuildService.isTypeUnwalkable(
+                    CollisionBuildService.isTypeWalkBlocking(
                         type = obj.type,
-                        solid = definition.isSolid(),
-                        walkable = definition.isWalkable(),
-                        hasActions = definition.hasActions(),
+                        blockWalk = definition.blockWalk(),
+                        objectName = definition.name,
                     )
                 if (blocksByType && obj.plane == KNOWN_TILE_Z) {
                     val overlapsCurrent =
@@ -181,10 +186,18 @@ class CacheBootstrapService(
                     val anchorKey = anchorKey(obj.x, obj.y, obj.plane)
                     blockingAnchorCounts.merge(anchorKey, 1, Int::plus)
                 }
-                if (definition.isSolid() && !definition.isWalkable()) {
+                if (obj.type in 10..11 && definition.blockWalk() != 0 && !definition.hasActions()) {
+                    val key = "${obj.objectId}:${obj.type}"
+                    type10_11SolidNoActions.merge(key, 1, Int::plus)
+                }
+                if (!definition.isSolid() && obj.type in NON_SOLID_BLOCKING_TYPE_BUCKETS) {
+                    val key = "${obj.objectId}:${obj.type}"
+                    nonSolidInBlockingTypeBuckets.merge(key, 1, Int::plus)
+                }
+                if (definition.blockWalk() != 0) {
                     blockingObjects++
                 }
-                if (definition.isWalkable()) {
+                if (definition.blockWalk() == 0) {
                     walkableObjects++
                 }
             }
@@ -207,6 +220,9 @@ class CacheBootstrapService(
             footprintMismatchAtKnownTile = knownTileBlockedByCurrentObjects && !knownTileBlockedByLunaObjects,
             blockingTypeDistribution = topEntriesString(blockingByType, 12) { (type, count) -> "$type=$count" },
             nonSolidBlockedByTypeRule = topEntriesString(nonSolidBlockedByTypeRule, 12) { (key, count) -> "$key=$count" },
+            type10_11SolidNoActions = topEntriesString(type10_11SolidNoActions, 12) { (key, count) -> "$key=$count" },
+            nonSolidInBlockingTypeBuckets =
+                topEntriesString(nonSolidInBlockingTypeBuckets, 12) { (key, count) -> "$key=$count" },
             topBlockingAnchors =
                 topEntriesString(blockingAnchorCounts, 12) { (key, count) ->
                     val x = ((key shr 42) and 0x1FFFFF).toInt()
@@ -222,6 +238,8 @@ class CacheBootstrapService(
         val footprintMismatchAtKnownTile: Boolean,
         val blockingTypeDistribution: String,
         val nonSolidBlockedByTypeRule: String,
+        val type10_11SolidNoActions: String,
+        val nonSolidInBlockingTypeBuckets: String,
         val topBlockingAnchors: String,
     )
 
@@ -229,6 +247,7 @@ class CacheBootstrapService(
         const val KNOWN_TILE_X = 2727
         const val KNOWN_TILE_Y = 9773
         const val KNOWN_TILE_Z = 0
+        val NON_SOLID_BLOCKING_TYPE_BUCKETS: Set<Int> = (0..3).toSet() + 9 + (10..11).toSet() + (12..21).toSet()
 
         fun anchorKey(x: Int, y: Int, z: Int): Long =
             ((x.toLong() and 0x1FFFFF) shl 42) or

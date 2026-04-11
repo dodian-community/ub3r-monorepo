@@ -15,7 +15,7 @@ import net.dodian.uber.game.engine.processing.ItemProcessor
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.systems.combat.CombatHitQueueService
+import net.dodian.uber.game.content.combat.CombatHitQueueService
 import net.dodian.uber.game.engine.phases.InboundPacketPhase
 import net.dodian.uber.game.engine.phases.MovementFinalizePhase
 import net.dodian.uber.game.engine.phases.NpcMainPhase

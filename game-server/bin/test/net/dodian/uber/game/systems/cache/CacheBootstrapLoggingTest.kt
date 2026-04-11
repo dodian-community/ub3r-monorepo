@@ -86,9 +86,21 @@ class CacheBootstrapLoggingTest {
             .firstOrNull {
                 it.contains("World collision ready from decoded cache: regions=1, tiles=16384, objects=1")
             }
+        val type10NoActionOffenderMessage = appender.events
+            .map { it.message.formattedMessage }
+            .firstOrNull {
+                it.contains("Cache collision offenders: type10_11SolidNoActions=none")
+            }
+        val nonSolidBlockingBucketMessage = appender.events
+            .map { it.message.formattedMessage }
+            .firstOrNull {
+                it.contains("Cache collision offenders: nonSolidInBlockingTypeBuckets=none")
+            }
 
         assertTrue(summaryMessage != null, "Expected cache decode summary log line, got: ${appender.events.map { it.message.formattedMessage }}")
         assertTrue(collisionReadyMessage != null, "Expected collision-ready log line, got: ${appender.events.map { it.message.formattedMessage }}")
+        assertTrue(type10NoActionOffenderMessage != null, "Expected type10/11 non-action offender log line, got: ${appender.events.map { it.message.formattedMessage }}")
+        assertTrue(nonSolidBlockingBucketMessage != null, "Expected non-solid blocking-bucket offender log line, got: ${appender.events.map { it.message.formattedMessage }}")
                 assertFalse(CollisionManager.global().canMove(1, 2689, 1, 2690, 0, 1, 1))
                 CollisionManager.global().clear()
     }

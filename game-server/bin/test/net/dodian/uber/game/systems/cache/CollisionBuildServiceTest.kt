@@ -1,7 +1,9 @@
 package net.dodian.uber.game.systems.cache
 
 import net.dodian.cache.`object`.GameObjectData
+import net.dodian.uber.game.systems.pathing.collision.CollisionFlag
 import net.dodian.uber.game.systems.pathing.collision.CollisionManager
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -28,7 +30,7 @@ class CollisionBuildServiceTest {
     }
 
     @Test
-    fun `default object blocks movement when solid even if walkable is true`() {
+    fun `default object blocks movement when solid walkable and interactive`() {
         val manager = CollisionManager()
 
         CollisionBuildService(manager).applyObject(
@@ -48,7 +50,118 @@ class CollisionBuildServiceTest {
     }
 
     @Test
-    fun `wall type blocks movement even when definition reports non-solid`() {
+    fun `type 10 solid non-interactive blocks movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1022,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+        )
+
+        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 10 with null object name does not block movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1024,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+            objectName = "null",
+            blockWalk = 2,
+        )
+
+        assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 10 with named object still blocks movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1025,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = true,
+            objectName = "Crate",
+            blockWalk = 2,
+        )
+
+        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 11 solid non-interactive blocks movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1023,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 11,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+        )
+
+        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `type 11 with null object name does not block movement`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1026,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 11,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActions = false,
+            objectName = "null",
+            blockWalk = 2,
+        )
+
+        assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+    }
+
+    @Test
+    fun `wall type does not block movement when definition reports non-solid`() {
         val manager = CollisionManager()
 
         CollisionBuildService(manager).applyObject(
@@ -64,11 +177,11 @@ class CollisionBuildServiceTest {
             walkable = true,
         )
 
-        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+        assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
     }
 
     @Test
-    fun `diagonal wall type blocks diagonal traversal for fence-style lines`() {
+    fun `diagonal wall type does not block diagonal traversal when definition is non-solid`() {
         val manager = CollisionManager()
 
         CollisionBuildService(manager).applyObject(
@@ -84,7 +197,27 @@ class CollisionBuildServiceTest {
             walkable = true,
         )
 
-        assertFalse(manager.canMove(3200, 3200, 3201, 3201, 0, 1, 1))
+        assertTrue(manager.canMove(3200, 3200, 3201, 3201, 0, 1, 1))
+    }
+
+    @Test
+    fun `wall type 3 does not block diagonal traversal when definition is non-solid`() {
+        val manager = CollisionManager()
+
+        CollisionBuildService(manager).applyObject(
+            id = 1021,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 3,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = false,
+            walkable = true,
+        )
+
+        assertTrue(manager.canMove(3199, 3199, 3200, 3200, 0, 1, 1))
     }
 
     @Test
@@ -148,7 +281,7 @@ class CollisionBuildServiceTest {
     }
 
     @Test
-    fun `ground decoration blocks only when interactive and solid`() {
+    fun `ground decoration blocks only when blockWalk equals one`() {
         val manager = CollisionManager()
         val service = CollisionBuildService(manager)
 
@@ -164,6 +297,7 @@ class CollisionBuildServiceTest {
             solid = true,
             walkable = false,
             hasActions = false,
+            blockWalk = 2,
         )
         assertTrue(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
 
@@ -179,6 +313,7 @@ class CollisionBuildServiceTest {
             solid = true,
             walkable = false,
             hasActions = true,
+            blockWalk = 1,
         )
         assertFalse(manager.canMove(3200, 3200, 3201, 3200, 0, 1, 1))
     }
@@ -353,6 +488,98 @@ class CollisionBuildServiceTest {
         service.rebuild(table)
 
         assertFalse(manager.canMove(0, 2687, 0, 2688, 0, 1, 1))
+    }
+
+    @Test
+    fun `block range false keeps movement blocking but drops projectile flags`() {
+        val manager = CollisionManager()
+        val service = CollisionBuildService(manager)
+
+        service.applyObject(
+            id = 3000,
+            x = 3200,
+            y = 3200,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            blockWalk = 2,
+            blockRange = false,
+            breakRouteFinding = false,
+        )
+
+        assertFalse(manager.canMove(3199, 3200, 3200, 3200, 0, 1, 1))
+        val flags = manager.getFlags(3200, 3200, 0)
+        assertTrue(flags and CollisionFlag.FULL_MOB_BLOCK == CollisionFlag.FULL_MOB_BLOCK)
+        assertEquals(0, flags and CollisionFlag.FULL_PROJECTILE_BLOCK)
+    }
+
+    @Test
+    fun `break route finding marks route blocker for primary shapes`() {
+        val manager = CollisionManager()
+        val service = CollisionBuildService(manager)
+
+        service.applyObject(
+            id = 3001,
+            x = 3210,
+            y = 3210,
+            z = 0,
+            type = 10,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            blockWalk = 2,
+            blockRange = true,
+            breakRouteFinding = true,
+        )
+
+        val flags = manager.getFlags(3210, 3210, 0)
+        assertTrue(flags and CollisionFlag.ROUTE_BLOCKER != 0)
+    }
+
+    @Test
+    fun `ground decor only blocks when blockWalk equals one`() {
+        val manager = CollisionManager()
+        val service = CollisionBuildService(manager)
+
+        service.applyObject(
+            id = 3002,
+            x = 3220,
+            y = 3220,
+            z = 0,
+            type = 22,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            blockWalk = 2,
+            blockRange = true,
+            breakRouteFinding = false,
+        )
+        assertTrue(manager.canMove(3219, 3220, 3220, 3220, 0, 1, 1))
+
+        service.applyObject(
+            id = 3003,
+            x = 3221,
+            y = 3220,
+            z = 0,
+            type = 22,
+            rotation = 0,
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            blockWalk = 1,
+            blockRange = true,
+            breakRouteFinding = false,
+        )
+        assertFalse(manager.canMove(3220, 3220, 3221, 3220, 0, 1, 1))
     }
 
     private fun gridWithBridgeBlockedTile(): DecodedMapTileGrid {

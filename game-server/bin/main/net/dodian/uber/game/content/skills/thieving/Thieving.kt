@@ -2,7 +2,7 @@ package net.dodian.uber.game.content.skills.thieving
 
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.`object`.GlobalObject
@@ -17,7 +17,7 @@ import net.dodian.uber.game.systems.api.content.ContentObjectInteractionPolicy
 import net.dodian.uber.game.systems.api.content.ContentTiming
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin
 import net.dodian.utilities.Misc

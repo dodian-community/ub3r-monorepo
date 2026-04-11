@@ -100,6 +100,11 @@ object ObjectClipService {
             sizeY = obj.sizeY,
             solid = obj.isSolid(),
             walkable = obj.isWalkable(),
+            hasActions = obj.hasActions(),
+            objectName = obj.name,
+            blockWalk = obj.blockWalk(),
+            blockRange = obj.blockRange(),
+            breakRouteFinding = obj.breakRouteFinding(),
         )
     }
 
@@ -165,6 +170,10 @@ object ObjectClipService {
             solid = definition.isSolid(),
             walkable = definition.isWalkable(),
             hasActions = definition.hasActions(),
+            objectName = definition.name,
+            blockWalk = definition.blockWalk(),
+            blockRange = definition.blockRange(),
+            breakRouteFinding = definition.breakRouteFinding(),
         )
     }
 

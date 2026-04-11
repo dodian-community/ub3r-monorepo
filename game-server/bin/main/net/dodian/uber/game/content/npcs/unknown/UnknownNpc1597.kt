@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.npcs.unknown
 
 import net.dodian.uber.game.content.npcs.*
 
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.content.social.dialogue.core.DialogueIds
+import net.dodian.uber.game.content.social.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.netty.listener.out.SendString
 
 internal object UnknownNpc1597 {

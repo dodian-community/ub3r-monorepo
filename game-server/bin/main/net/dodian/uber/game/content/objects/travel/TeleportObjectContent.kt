@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.objects.travel
 
 import net.dodian.cache.`object`.GameObjectData
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.content.objects.travel.EssenceMineTravel
 import net.dodian.uber.game.content.objects.ObjectContent
 import net.dodian.uber.game.model.Position

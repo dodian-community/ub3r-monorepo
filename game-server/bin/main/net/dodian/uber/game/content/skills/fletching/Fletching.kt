@@ -4,10 +4,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.action.ActionStopReason
-import net.dodian.uber.game.systems.skills.action.RunningProductionAction
-import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.action.productionAction
+import net.dodian.uber.game.content.skills.runtime.action.ActionStopReason
+import net.dodian.uber.game.content.skills.runtime.action.RunningProductionAction
+import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.content.skills.runtime.action.productionAction
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.action.PolicyPreset
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin

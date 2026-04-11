@@ -1,12 +1,12 @@
 package net.dodian.uber.game.content.commands.player
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.combat.getRangedStr
-import net.dodian.uber.game.systems.combat.magicBonusDamage
-import net.dodian.uber.game.systems.combat.meleeMaxHit
-import net.dodian.uber.game.systems.combat.rangedMaxHit
+import net.dodian.uber.game.content.combat.getRangedStr
+import net.dodian.uber.game.content.combat.magicBonusDamage
+import net.dodian.uber.game.content.combat.meleeMaxHit
+import net.dodian.uber.game.content.combat.rangedMaxHit
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage

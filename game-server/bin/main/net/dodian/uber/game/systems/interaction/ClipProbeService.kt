@@ -18,6 +18,9 @@ object ClipProbeService {
         val solid: Boolean,
         val walkable: Boolean,
         val hasActions: Boolean,
+        val blockWalk: Int,
+        val blockRange: Boolean,
+        val breakRouteFinding: Boolean,
         val sizeX: Int,
         val sizeY: Int,
         val blocksByTypeRule: Boolean,
@@ -65,11 +68,10 @@ object ClipProbeService {
                 .mapNotNull { obj ->
                     val definition = GameObjectData.forId(obj.objectId)
                     val blocksByTypeRule =
-                        CollisionBuildService.isTypeUnwalkable(
+                        CollisionBuildService.isTypeWalkBlocking(
                             type = obj.type,
-                            solid = definition.isSolid(),
-                            walkable = definition.isWalkable(),
-                            hasActions = definition.hasActions(),
+                            blockWalk = definition.blockWalk(),
+                            objectName = definition.name,
                         )
                     val overlapsCurrent =
                         CollisionBuildService.occupiesTile(
@@ -121,6 +123,9 @@ object ClipProbeService {
                             solid = definition.isSolid(),
                             walkable = definition.isWalkable(),
                             hasActions = definition.hasActions(),
+                            blockWalk = definition.blockWalk(),
+                            blockRange = definition.blockRange(),
+                            breakRouteFinding = definition.breakRouteFinding(),
                             sizeX = definition.sizeX,
                             sizeY = definition.sizeY,
                             blocksByTypeRule = blocksByTypeRule,
@@ -174,6 +179,7 @@ object ClipProbeService {
         if (rawFlags and CollisionFlag.MOB_NORTH_WEST != 0) tags += "NW"
         if (rawFlags and CollisionFlag.MOB_SOUTH_EAST != 0) tags += "SE"
         if (rawFlags and CollisionFlag.MOB_SOUTH_WEST != 0) tags += "SW"
+        if (rawFlags and CollisionFlag.ROUTE_BLOCKER != 0) tags += "ROUTE"
         return if (tags.isEmpty()) "none" else tags.joinToString(",")
     }
 
@@ -188,6 +194,7 @@ object ClipProbeService {
                 "id=${match.objectId},type=${match.type},rot=${match.rotation},anchor=${match.anchorX},${match.anchorY}," +
                     "name=${match.objectName}," +
                     "size=${match.sizeX}x${match.sizeY},solid=${match.solid},walkable=${match.walkable},actions=${match.hasActions}," +
+                    "blockWalk=${match.blockWalk},blockRange=${match.blockRange},breakRoute=${match.breakRouteFinding}," +
                     "ovCurrent=${match.overlapsCurrent},ovLuna=${match.overlapsLuna},dirContact=${match.directionalContact}," +
                     "reasons=${match.reasonTags.joinToString("+")}"
             }

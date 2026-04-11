@@ -9,7 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
 import net.dodian.utilities.Misc
 

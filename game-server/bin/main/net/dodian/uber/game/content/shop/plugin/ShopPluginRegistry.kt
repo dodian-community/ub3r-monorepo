@@ -2,8 +2,8 @@ package net.dodian.uber.game.content.shop.plugin
 
 import net.dodian.uber.game.content.shop.ShopDefinition
 import net.dodian.uber.game.content.shop.ShopManager
-import net.dodian.uber.game.systems.dispatch.ContentBootstrap
-import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import net.dodian.uber.game.systems.plugin.ContentBootstrap
+import net.dodian.uber.game.systems.plugin.ContentModuleIndex
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 

@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.systems.skills.ProgressionService
-import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
+import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetGoldItems

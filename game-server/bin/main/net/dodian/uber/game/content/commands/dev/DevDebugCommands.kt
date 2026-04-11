@@ -1,11 +1,11 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.dispatch.commands.CommandContent
-import net.dodian.uber.game.systems.dispatch.commands.CommandContext
-import net.dodian.uber.game.systems.dispatch.commands.commands
+import net.dodian.uber.game.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.systems.interaction.commands.commands
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.player.skills.Skill

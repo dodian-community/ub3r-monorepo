@@ -173,4 +173,58 @@ class ClipProbeServiceTest {
             collision.clear()
         }
     }
+
+    @Test
+    fun `type 10 solid non-interactive overlap is visible and blocked by type rule`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        CacheCollisionAuditStore.clearForTests()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(
+                GameObjectData(
+                    id = 4003,
+                    name = "default deco",
+                    description = "fixture",
+                    sizeX = 1,
+                    sizeY = 1,
+                    solid = true,
+                    walkable = false,
+                    hasActionsFlag = false,
+                    unknownValue = false,
+                    walkType = 0,
+                ),
+            )
+            val regionId = CacheCollisionAuditStore.regionId(3400, 3400)
+            CacheCollisionAuditStore.publish(
+                regions = listOf(MapIndexEntry(regionId = regionId, landscapeArchiveId = -1, objectArchiveId = -1)),
+                regionObjects =
+                    mapOf(
+                        regionId to
+                            listOf(
+                                DecodedMapObject(
+                                    objectId = 4003,
+                                    x = 3400,
+                                    y = 3400,
+                                    plane = 0,
+                                    type = 10,
+                                    rotation = 0,
+                                    regionId = regionId,
+                                ),
+                            ),
+                    ),
+            )
+
+            val probe = ClipProbeService.probeTile(3400, 3400, 0)
+            assertEquals(1, probe.objectMatches.size)
+            val overlap = probe.objectMatches.first()
+            assertTrue(overlap.blocksByTypeRule)
+            assertTrue(overlap.reasonTags.contains("blocked_by_type_rule"))
+        } finally {
+            CacheCollisionAuditStore.clearForTests()
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
 }

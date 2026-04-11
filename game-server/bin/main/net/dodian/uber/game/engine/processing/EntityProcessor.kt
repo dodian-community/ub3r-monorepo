@@ -15,6 +15,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.chunk.ChunkRepository
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.systems.follow.FollowPathfindingTelemetry
 import net.dodian.uber.game.systems.follow.FollowService
 import net.dodian.uber.game.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.`object`.GlobalObject
@@ -22,8 +23,8 @@ import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
-import net.dodian.uber.game.systems.combat.CombatRuntimeService
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.combat.CombatRuntimeService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils
@@ -92,7 +93,9 @@ class EntityProcessor : Runnable {
     }
 
     fun runPlayerMainPhase(wallClockNow: Long) {
+        FollowPathfindingTelemetry.beginTick()
         FollowService.processTick()
+        FollowPathfindingTelemetry.logIfSlow(GameCycleClock.currentCycle())
         val activePlayers = PlayerRegistry.snapshotActivePlayersSortedBySlot()
         for (player in activePlayers) {
             processPlayer(player, wallClockNow)

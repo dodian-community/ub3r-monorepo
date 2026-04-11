@@ -1,9 +1,9 @@
 package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
-import net.dodian.uber.game.systems.ui.dialogue.DialogueOption
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueEmote
+import net.dodian.uber.game.content.social.dialogue.DialogueOption
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -149,7 +149,7 @@ internal object SlayerMasterDialogue {
         }
     }
 
-    private fun net.dodian.uber.game.systems.ui.dialogue.DialogueFactory.mainMenu(client: Client, npcId: Int) {
+    private fun net.dodian.uber.game.content.social.dialogue.DialogueFactory.mainMenu(client: Client, npcId: Int) {
         if (npcId == 405 && (client.determineCombatLevel() < 50 || client.getLevel(Skill.SLAYER) < 50)) {
             npcChat(npcId, DialogueEmote.DEFAULT, "You need 50 combat and slayer", "to be assign tasks from me!")
             finish()
@@ -184,7 +184,7 @@ internal object SlayerMasterDialogue {
         )
     }
 
-    private fun net.dodian.uber.game.systems.ui.dialogue.DialogueFactory.cancelTaskFlow(client: Client, npcId: Int) {
+    private fun net.dodian.uber.game.content.social.dialogue.DialogueFactory.cancelTaskFlow(client: Client, npcId: Int) {
         val taskName = currentTaskName(client)
         val cost = cancelTaskCost(client)
 
@@ -212,7 +212,7 @@ internal object SlayerMasterDialogue {
         )
     }
 
-    private fun net.dodian.uber.game.systems.ui.dialogue.DialogueFactory.upgradeFlow(client: Client, npcId: Int) {
+    private fun net.dodian.uber.game.content.social.dialogue.DialogueFactory.upgradeFlow(client: Client, npcId: Int) {
         val hasHelmet = client.playerHasItem(11864)
         val hasMask = client.playerHasItem(8921)
         if (!hasMask && !hasHelmet) {

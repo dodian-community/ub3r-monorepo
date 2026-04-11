@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.crafting
 
-import net.dodian.uber.game.systems.skills.action.SkillActionRequest
-import net.dodian.uber.game.systems.skills.action.SkillActionState
+import net.dodian.uber.game.content.skills.runtime.action.SkillActionRequest
+import net.dodian.uber.game.content.skills.runtime.action.SkillActionState
 
 data class CraftingRequest(
     val mode: CraftingMode,

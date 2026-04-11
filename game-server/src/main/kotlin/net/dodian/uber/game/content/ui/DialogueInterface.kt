@@ -5,10 +5,10 @@ import net.dodian.uber.game.events.widget.DialogueOptionEvent
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.core.DialogueIds
 
 object DialogueInterface : InterfaceButtonContent {
     private const val INTERFACE_ID = 0

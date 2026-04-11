@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.skills.herblore
 
 import net.dodian.uber.game.content.items.ItemContent
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.content.npcs.HerbloreNpcDialogue
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill

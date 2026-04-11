@@ -6,11 +6,11 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.systems.api.content.ContentTiming
-import net.dodian.uber.game.systems.skills.action.ActionStopReason
-import net.dodian.uber.game.systems.skills.action.CycleSignal
-import net.dodian.uber.game.systems.skills.action.RunningGatheringAction
-import net.dodian.uber.game.systems.skills.action.SkillingRandomEventService
-import net.dodian.uber.game.systems.skills.action.gatheringAction
+import net.dodian.uber.game.content.skills.runtime.action.ActionStopReason
+import net.dodian.uber.game.content.skills.runtime.action.CycleSignal
+import net.dodian.uber.game.content.skills.runtime.action.RunningGatheringAction
+import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.content.skills.runtime.action.gatheringAction
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.skillPlugin

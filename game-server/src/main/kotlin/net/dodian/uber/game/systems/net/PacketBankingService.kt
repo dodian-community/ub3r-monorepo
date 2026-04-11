@@ -13,7 +13,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
-import net.dodian.uber.game.systems.dispatch.ui.SkillingInterfaceItemService
+import net.dodian.uber.game.systems.interaction.ui.SkillingInterfaceItemService
 
 object PacketBankingService {
 

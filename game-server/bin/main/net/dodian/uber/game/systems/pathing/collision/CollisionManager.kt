@@ -19,6 +19,14 @@ class CollisionManager(
         matrix.clear(x, y, z, CollisionFlag.fullTile(impenetrable))
     }
 
+    fun flagRouteBlocker(x: Int, y: Int, z: Int) {
+        matrix.flag(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    }
+
+    fun clearRouteBlocker(x: Int, y: Int, z: Int) {
+        matrix.clear(x, y, z, CollisionFlag.ROUTE_BLOCKER)
+    }
+
     fun wall(x: Int, y: Int, z: Int, direction: CollisionDirection, impenetrable: Boolean = true) {
         tile(x, y, z, setOf(direction), impenetrable)
         tile(x + direction.dx, y + direction.dy, z, setOf(direction.opposite()), impenetrable)

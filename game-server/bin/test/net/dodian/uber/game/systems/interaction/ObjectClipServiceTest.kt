@@ -66,7 +66,7 @@ class ObjectClipServiceTest {
     }
 
     @Test
-    fun `runtime decoded wall type remains blocked even when definition is non-solid`() {
+    fun `runtime decoded wall type does not block when definition is non-solid`() {
         val collision = CollisionManager.global()
         collision.clear()
         ObjectClipService.clearForTests()
@@ -78,7 +78,7 @@ class ObjectClipServiceTest {
 
             ObjectClipService.applyDecodedObject(position, 2003, 0, 0, definition)
 
-            assertFalse(collision.canMove(39, 40, 40, 40, 0, 1, 1))
+            assertTrue(collision.canMove(39, 40, 40, 40, 0, 1, 1))
         } finally {
             ObjectClipService.clearForTests()
             collision.clear()
@@ -119,6 +119,26 @@ class ObjectClipServiceTest {
 
             assertFalse(collision.canMove(41, 42, 42, 42, 0, 1, 1))
             assertTrue(collision.isTileBlocked(42, 42, 0))
+        } finally {
+            ObjectClipService.clearForTests()
+            collision.clear()
+        }
+    }
+
+    @Test
+    fun `apply decoded default type blocks when solid but non-interactive`() {
+        val collision = CollisionManager.global()
+        collision.clear()
+        ObjectClipService.clearForTests()
+
+        try {
+            GameObjectData.addDefinition(solidNoActionDefinition(2006))
+            val position = Position(43, 43, 0)
+
+            ObjectClipService.applyDecodedObject(position, 2006, 10, 0, GameObjectData.forId(2006))
+
+            assertFalse(collision.canMove(42, 43, 43, 43, 0, 1, 1))
+            assertTrue(collision.isTileBlocked(43, 43, 0))
         } finally {
             ObjectClipService.clearForTests()
             collision.clear()
@@ -226,6 +246,20 @@ class ObjectClipServiceTest {
             solid = false,
             walkable = true,
             hasActionsFlag = true,
+            unknownValue = false,
+            walkType = 0,
+        )
+
+    private fun solidNoActionDefinition(id: Int): GameObjectData =
+        GameObjectData(
+            id = id,
+            name = "Solid decoration $id",
+            description = "fixture",
+            sizeX = 1,
+            sizeY = 1,
+            solid = true,
+            walkable = false,
+            hasActionsFlag = false,
             unknownValue = false,
             walkType = 0,
         )

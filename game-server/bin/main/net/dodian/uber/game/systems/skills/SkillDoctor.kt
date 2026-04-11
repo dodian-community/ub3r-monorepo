@@ -1,14 +1,14 @@
 package net.dodian.uber.game.systems.skills
 
-import net.dodian.uber.game.systems.skills.parity.SkillDoctorReport
+import net.dodian.uber.game.content.skills.runtime.parity.SkillDoctorReport
 
 object SkillDoctor {
     @JvmStatic
-    fun snapshot(): SkillDoctorReport = net.dodian.uber.game.systems.skills.parity.SkillDoctor.snapshot()
+    fun snapshot(): SkillDoctorReport = net.dodian.uber.game.content.skills.runtime.parity.SkillDoctor.snapshot()
 
     @JvmStatic
     fun validateOrThrow() {
-        net.dodian.uber.game.systems.skills.parity.SkillDoctor.validateOrThrow()
+        net.dodian.uber.game.content.skills.runtime.parity.SkillDoctor.validateOrThrow()
     }
 }
 

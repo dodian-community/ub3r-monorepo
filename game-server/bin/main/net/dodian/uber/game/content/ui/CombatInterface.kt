@@ -1,9 +1,9 @@
 package net.dodian.uber.game.content.ui
 
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.systems.combat.style.CombatStyleService
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.combat.style.CombatStyleService
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
 
 private data class CombatStyleDefinition(
     val componentId: Int,

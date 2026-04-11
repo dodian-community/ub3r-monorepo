@@ -1,7 +1,7 @@
 package net.dodian.uber.game.content.npcs
 
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueIds
-import net.dodian.uber.game.systems.ui.dialogue.core.DialogueRegistry
+import net.dodian.uber.game.content.social.dialogue.core.DialogueIds
+import net.dodian.uber.game.content.social.dialogue.core.DialogueRegistry
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.Frame171

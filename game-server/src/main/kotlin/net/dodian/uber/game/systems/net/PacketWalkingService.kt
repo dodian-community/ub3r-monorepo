@@ -12,7 +12,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.follow.FollowService
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 

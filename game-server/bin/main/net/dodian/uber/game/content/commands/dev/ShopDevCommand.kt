@@ -1,8 +1,8 @@
 package net.dodian.uber.game.content.commands.dev
 
 import net.dodian.uber.game.content.shop.plugin.ShopPluginRegistry
-import net.dodian.uber.game.systems.dispatch.commands.CommandContent
-import net.dodian.uber.game.systems.dispatch.commands.commands
+import net.dodian.uber.game.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.systems.interaction.commands.commands
 
 object ShopDevCommand : CommandContent {
     override fun definitions() =

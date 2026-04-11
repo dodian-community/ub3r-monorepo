@@ -13,6 +13,9 @@ class GameObjectData(
     private val hasActionsFlag: Boolean,
     private val unknownValue: Boolean,
     private val walkType: Int,
+    private val blockWalk: Int = if (solid) 2 else 0,
+    private val blockRange: Boolean = blockWalk != 0,
+    private val breakRouteFinding: Boolean = false,
 ) {
     fun unknown(): Boolean = unknownValue
     fun getSizeX(rotation: Int): Int = if (rotation == 1 || rotation == 3) sizeY else sizeX
@@ -20,6 +23,9 @@ class GameObjectData(
     fun isSolid(): Boolean = solid
     fun isWalkable(): Boolean = walkable
     fun hasActions(): Boolean = hasActionsFlag
+    fun blockWalk(): Int = blockWalk
+    fun blockRange(): Boolean = blockRange
+    fun breakRouteFinding(): Boolean = breakRouteFinding
     fun getBiggestSize(): Int = maxOf(sizeX, sizeY)
     fun isRangeAble(): Boolean = walkType <= 1 || (walkType == 2 && !solid)
     fun canShootThru(): Boolean = !solid
@@ -75,6 +81,9 @@ class GameObjectData(
                 hasActionsFlag = true,
                 unknownValue = false,
                 walkType = 2,
+                blockWalk = 0,
+                blockRange = false,
+                breakRouteFinding = false,
             )
         }
     }

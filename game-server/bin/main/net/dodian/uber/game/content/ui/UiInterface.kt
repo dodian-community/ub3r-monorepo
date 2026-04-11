@@ -4,9 +4,9 @@ import net.dodian.uber.game.netty.listener.out.SetTabInterface
 import net.dodian.uber.game.systems.api.content.ContentActionCancelReason
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentSafety
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 
 object UiInterface : InterfaceButtonContent {
     private val runOffButtons = intArrayOf(152)

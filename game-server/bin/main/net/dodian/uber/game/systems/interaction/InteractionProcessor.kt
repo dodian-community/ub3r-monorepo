@@ -3,12 +3,12 @@ package net.dodian.uber.game.systems.interaction
 import net.dodian.uber.game.Server
 import net.dodian.cache.`object`.GameObjectData
 import net.dodian.cache.`object`.GameObjectDef
-import net.dodian.uber.game.systems.combat.getAttackStyle
-import net.dodian.uber.game.systems.dispatch.objects.ObjectContentRegistry
-import net.dodian.uber.game.systems.dispatch.objects.ObjectInteractionService
-import net.dodian.uber.game.systems.dispatch.npcs.NpcContentDispatcher
-import net.dodian.uber.game.systems.dispatch.npcs.NpcClickMetrics
-import net.dodian.uber.game.systems.dispatch.items.ItemOnNpcContentService
+import net.dodian.uber.game.content.combat.getAttackStyle
+import net.dodian.uber.game.systems.interaction.objects.ObjectContentRegistry
+import net.dodian.uber.game.systems.interaction.objects.ObjectInteractionService
+import net.dodian.uber.game.systems.interaction.npcs.NpcContentDispatcher
+import net.dodian.uber.game.systems.interaction.npcs.NpcClickMetrics
+import net.dodian.uber.game.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnNpcEvent
@@ -20,8 +20,8 @@ import net.dodian.uber.game.model.`object`.GlobalObject
 import net.dodian.uber.game.model.`object`.Object as WorldObject
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.`object`.RS2Object
-import net.dodian.uber.game.systems.combat.CombatIntent
-import net.dodian.uber.game.systems.combat.CombatStartService
+import net.dodian.uber.game.content.combat.CombatIntent
+import net.dodian.uber.game.content.combat.CombatStartService
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.systems.interaction.scheduler.InteractionExecutionResult

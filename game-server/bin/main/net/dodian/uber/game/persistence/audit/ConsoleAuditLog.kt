@@ -4,9 +4,9 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.GameItem
-import net.dodian.uber.game.systems.dispatch.objects.ObjectContentRegistry
+import net.dodian.uber.game.systems.interaction.objects.ObjectContentRegistry
 import net.dodian.uber.game.systems.interaction.ObjectInteractionContext
-import net.dodian.uber.game.systems.ui.buttons.ButtonClickRequest
+import net.dodian.uber.game.content.ui.buttons.ButtonClickRequest
 import org.slf4j.LoggerFactory
 
 /**

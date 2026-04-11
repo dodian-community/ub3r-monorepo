@@ -2,7 +2,7 @@ package net.dodian.uber.game.events.widget
 
 import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.ui.buttons.ButtonClickRequest
+import net.dodian.uber.game.content.ui.buttons.ButtonClickRequest
 
 /** Fired when a player clicks a button on any interface. */
 data class ButtonClickEvent(

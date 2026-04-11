@@ -6,8 +6,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.systems.api.content.ContentActions
 import net.dodian.uber.game.systems.api.content.ContentProductionRequest
-import net.dodian.uber.game.systems.ui.buttons.InterfaceButtonContent
-import net.dodian.uber.game.systems.ui.buttons.buttonBinding
+import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.content.ui.buttons.buttonBinding
 
 object CraftingInterface : InterfaceButtonContent {
     private const val LEATHER_INTERFACE_ID = 8880

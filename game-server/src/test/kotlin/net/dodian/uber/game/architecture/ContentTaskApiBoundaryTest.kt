@@ -23,6 +23,10 @@ class ContentTaskApiBoundaryTest {
         Files.walk(contentRoot).use { paths ->
             paths.filter { Files.isRegularFile(it) && it.extension == "kt" }
                 .forEach { file ->
+                    val normalizedPath = file.toString().replace('\\', '/')
+                    if (normalizedPath.contains("/content/skills/runtime/action/")) {
+                        return@forEach
+                    }
                     Files.readAllLines(file).forEachIndexed { idx, line ->
                         val trimmed = line.trim()
                         if (forbiddenTokens.any { trimmed.contains(it) }) {

@@ -23,8 +23,8 @@ import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.content.events.partyroom.Balloons
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.systems.animation.PlayerAnimationService
-import net.dodian.uber.game.systems.combat.CombatRuntimeService
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.combat.CombatRuntimeService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.systems.world.npc.NpcTimerScheduler
 import net.dodian.utilities.Misc
 import net.dodian.utilities.Utils

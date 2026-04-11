@@ -1,7 +1,7 @@
 package net.dodian.uber.game.persistence.audit
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.ui.buttons.ButtonClickRequest
+import net.dodian.uber.game.content.ui.buttons.ButtonClickRequest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

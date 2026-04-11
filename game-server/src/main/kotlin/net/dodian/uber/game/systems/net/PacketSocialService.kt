@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.widget.CommandEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
-import net.dodian.uber.game.systems.dispatch.commands.CommandDispatcher
+import net.dodian.uber.game.systems.interaction.commands.CommandDispatcher
 
 /**
  * Kotlin service for social/chat-command packet side-effects that must stay

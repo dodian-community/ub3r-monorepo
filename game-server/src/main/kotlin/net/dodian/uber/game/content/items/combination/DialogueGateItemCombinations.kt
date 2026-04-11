@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.items.combination
 
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 
 object DialogueGateItemCombinations {

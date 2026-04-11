@@ -1,11 +1,11 @@
 package net.dodian.uber.game.content.commands.dev
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
 import net.dodian.cache.`object`.GameObjectDef
-import net.dodian.uber.game.systems.dispatch.commands.CommandContent
-import net.dodian.uber.game.systems.dispatch.commands.CommandContext
-import net.dodian.uber.game.systems.dispatch.commands.commands
+import net.dodian.uber.game.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.systems.interaction.commands.commands
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.npc.Npc

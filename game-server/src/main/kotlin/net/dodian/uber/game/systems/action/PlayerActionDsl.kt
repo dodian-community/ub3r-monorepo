@@ -7,11 +7,11 @@ import kotlin.coroutines.cancellation.CancellationException
 import net.dodian.uber.game.events.skilling.SkillActionCompleteEvent
 import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
 import net.dodian.uber.game.events.skilling.SkillActionStartEvent
-import net.dodian.uber.game.systems.skills.requirements.Requirement
-import net.dodian.uber.game.systems.skills.requirements.ValidationResult
-import net.dodian.uber.game.systems.skills.requirements.failureMessageOrNull
-import net.dodian.uber.game.systems.skills.action.ActionStopReason
-import net.dodian.uber.game.systems.skills.action.ActionStopReasonMapper
+import net.dodian.uber.game.content.skills.runtime.requirements.Requirement
+import net.dodian.uber.game.content.skills.runtime.requirements.ValidationResult
+import net.dodian.uber.game.content.skills.runtime.requirements.failureMessageOrNull
+import net.dodian.uber.game.content.skills.runtime.action.ActionStopReason
+import net.dodian.uber.game.content.skills.runtime.action.ActionStopReasonMapper
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.skilling.SkillingActionCycleEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent

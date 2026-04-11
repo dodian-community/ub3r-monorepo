@@ -1,6 +1,6 @@
 package net.dodian.uber.game.content.commands.admin
 
-import net.dodian.uber.game.systems.dispatch.commands.*
+import net.dodian.uber.game.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.persistence.account.Login

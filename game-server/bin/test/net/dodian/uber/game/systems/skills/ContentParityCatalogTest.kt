@@ -1,8 +1,8 @@
 package net.dodian.uber.game.systems.skills
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.skills.parity.LegacyContentParityCatalog
-import net.dodian.uber.game.systems.skills.parity.NpcClickRouteKey
+import net.dodian.uber.game.content.skills.runtime.parity.LegacyContentParityCatalog
+import net.dodian.uber.game.content.skills.runtime.parity.NpcClickRouteKey
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

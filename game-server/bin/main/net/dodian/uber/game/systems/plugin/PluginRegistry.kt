@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.plugin
 
-import net.dodian.uber.game.systems.dispatch.ContentBootstrap
-import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import net.dodian.uber.game.systems.plugin.ContentBootstrap
+import net.dodian.uber.game.systems.plugin.ContentModuleIndex
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginRegistryEngine
 import net.dodian.uber.game.systems.skills.plugin.SkillPluginSnapshot

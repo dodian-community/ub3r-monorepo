@@ -1,7 +1,7 @@
 package net.dodian.uber.game.systems.api.content
 
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.combat.CombatLogoutLockService
+import net.dodian.uber.game.content.combat.CombatLogoutLockService
 
 object ContentSafety {
     @JvmStatic

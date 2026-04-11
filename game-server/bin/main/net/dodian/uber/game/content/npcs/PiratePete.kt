@@ -4,8 +4,8 @@ package net.dodian.uber.game.content.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.systems.ui.dialogue.DialogueEmote
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService
+import net.dodian.uber.game.content.social.dialogue.DialogueEmote
+import net.dodian.uber.game.content.social.dialogue.DialogueService
 
 internal object PiratePete : NpcModule {
     // Stats: 2825: r=0 a=0 d=0 s=0 hp=0 rg=0 mg=0

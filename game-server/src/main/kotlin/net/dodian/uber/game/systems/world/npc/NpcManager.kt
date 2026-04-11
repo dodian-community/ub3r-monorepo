@@ -7,7 +7,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.world.npc.NpcDataRepository
-import net.dodian.uber.game.systems.dispatch.npcs.NpcContentRegistry
+import net.dodian.uber.game.systems.interaction.npcs.NpcContentRegistry
 import org.slf4j.LoggerFactory
 
 class NpcManager {

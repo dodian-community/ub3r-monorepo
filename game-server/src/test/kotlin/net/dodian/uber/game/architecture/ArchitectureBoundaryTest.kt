@@ -8,7 +8,7 @@ import java.nio.file.Paths
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.systems.dispatch.ContentModuleIndex
+import net.dodian.uber.game.systems.plugin.ContentModuleIndex
 import net.dodian.uber.game.systems.skills.plugin.SkillPlugin
 
 class ArchitectureBoundaryTest {
@@ -88,27 +88,27 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt",
         )
         val missingSystemsFiles = setOf(
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcContentDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectInteractionService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/objects/ObjectClickLoggingService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandAccess.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContent.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandContext.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandLogging.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandParsing.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/commands/CommandReply.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemCombinationService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/items/ItemOnNpcContentService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcInteractionActionService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/npcs/NpcClickMetrics.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/ui/SkillingInterfaceItemService.kt",
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch/ContentModuleIndex.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/items/ItemContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/items/ItemDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/npcs/NpcContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/npcs/NpcContentDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/objects/ObjectContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/objects/ObjectInteractionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/objects/ObjectClickLoggingService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandAccess.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandContent.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandContext.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandLogging.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandParsing.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/items/ItemCombinationService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/items/ItemOnNpcContentService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/npcs/NpcInteractionActionService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/npcs/NpcClickMetrics.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/systems/plugin/ContentModuleIndex.kt",
         )
 
         val forbidden = sourceFiles
@@ -128,7 +128,7 @@ class ArchitectureBoundaryTest {
         )
         assertTrue(
             missing.isEmpty(),
-            "Expected infrastructure under systems.dispatch.\n${missing.joinToString("\n")}",
+            "Expected infrastructure under systems.interaction/systems.plugin.\n${missing.joinToString("\n")}",
         )
     }
 
@@ -158,7 +158,8 @@ class ArchitectureBoundaryTest {
             "src/main/kotlin/net/dodian/uber/game/engine/tasking" to 1,
             "src/main/kotlin/net/dodian/uber/game/engine/sync/player" to 2,
             "src/main/kotlin/net/dodian/uber/game/systems/action" to 1,
-            "src/main/kotlin/net/dodian/uber/game/systems/dispatch" to 2,
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction" to 2,
+            "src/main/kotlin/net/dodian/uber/game/systems/plugin" to 1,
             "src/main/kotlin/net/dodian/uber/game/systems/skills" to 1,
             "src/main/kotlin/net/dodian/uber/game/content/objects" to 2,
             "src/main/kotlin/net/dodian/uber/game/model/object" to 1,
@@ -223,6 +224,69 @@ class ArchitectureBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Systems must not import engine sync/net internals.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `legacy gameplay packages are no longer under systems`() {
+        val legacyPrefixes = listOf(
+            "package net.dodian.uber.game.systems.combat",
+            "package net.dodian.uber.game.systems.ui",
+            "package net.dodian.uber.game.systems.chat",
+            "package net.dodian.uber.game.systems.dispatch",
+            "package net.dodian.uber.game.systems.skills.action",
+            "package net.dodian.uber.game.systems.skills.requirements",
+            "package net.dodian.uber.game.systems.skills.parity",
+        )
+
+        val violations = sourceFiles
+            .filter { it.extension == "kt" || it.extension == "java" }
+            .mapNotNull { file ->
+                val firstPackage = Files.readAllLines(file)
+                    .asSequence()
+                    .map { it.trim() }
+                    .firstOrNull { it.startsWith("package ") }
+                    ?: return@mapNotNull null
+                if (legacyPrefixes.any { firstPackage.startsWith(it) }) {
+                    "$file -> $firstPackage"
+                } else {
+                    null
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Gameplay modules must not live under legacy systems.* gameplay packages.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `new gameplay package depths stay practical`() {
+        val cappedRoots = mapOf(
+            "src/main/kotlin/net/dodian/uber/game/content/combat" to 1,
+            "src/main/kotlin/net/dodian/uber/game/content/social" to 2,
+            "src/main/kotlin/net/dodian/uber/game/content/skills/runtime" to 2,
+            "src/main/kotlin/net/dodian/uber/game/content/ui/buttons" to 1,
+            "src/main/kotlin/net/dodian/uber/game/systems/interaction" to 2,
+        )
+        val violations = cappedRoots.flatMap { (root, maxDepth) ->
+            val rootPath = Paths.get(root)
+            if (!Files.exists(rootPath)) return@flatMap emptyList()
+            val rootPrefix = "${rootPath.invariantSeparatorsPathString}/"
+            sourceFiles
+                .asSequence()
+                .filter { it.extension == "kt" }
+                .filter { it.invariantSeparatorsPathString.startsWith(rootPrefix) }
+                .mapNotNull { file ->
+                    val relative = rootPath.relativize(file)
+                    val depth = relative.nameCount - 1
+                    if (depth <= maxDepth) null else "$file depth=$depth max=$maxDepth"
+                }
+                .toList()
+        }
+        assertTrue(
+            violations.isEmpty(),
+            "New gameplay roots exceeded depth limits.\n${violations.joinToString("\n")}",
         )
     }
 
@@ -578,8 +642,8 @@ class ArchitectureBoundaryTest {
             val fileName = file.fileName.toString()
             val isLegacy =
                 packageName.startsWith("net.dodian.uber.game.content.entities") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.ui.interfaces") ||
-                    packageName.startsWith("net.dodian.uber.game.systems.ui.dialogue.modules") ||
+                    packageName.startsWith("net.dodian.uber.game.content.ui.interfaces") ||
+                    packageName.startsWith("net.dodian.uber.game.content.social.dialogue.modules") ||
                     (packageName == "net.dodian.uber.game.skills.farming" && fileName == "FarmingProcessor.kt") ||
                     (packageName == "net.dodian.uber.game.skills.thieving.plunder" && fileName == "PlunderDoorProcessor.kt") ||
                     packageName.startsWith("net.dodian.jobs") ||

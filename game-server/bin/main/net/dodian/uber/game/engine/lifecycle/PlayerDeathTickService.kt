@@ -11,9 +11,9 @@ import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.systems.action.PlayerActionCancelReason
-import net.dodian.uber.game.systems.combat.CombatCancellationReason
-import net.dodian.uber.game.systems.combat.CombatHitQueueService
-import net.dodian.uber.game.systems.combat.CombatLogoutLockService
+import net.dodian.uber.game.content.combat.CombatCancellationReason
+import net.dodian.uber.game.content.combat.CombatHitQueueService
+import net.dodian.uber.game.content.combat.CombatLogoutLockService
 import net.dodian.uber.game.systems.skills.ProgressionService
 import net.dodian.uber.game.events.PlayerDeathEvent
 import net.dodian.utilities.Misc

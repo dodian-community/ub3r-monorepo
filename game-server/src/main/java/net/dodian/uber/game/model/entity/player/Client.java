@@ -57,9 +57,9 @@ import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingData;
 import net.dodian.uber.game.content.skills.runecrafting.Runecrafting;
 import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueOptionService;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueDisplayService;
-import net.dodian.uber.game.systems.ui.dialogue.DialogueService;
+import net.dodian.uber.game.content.social.dialogue.DialogueOptionService;
+import net.dodian.uber.game.content.social.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.content.social.dialogue.DialogueService;
 import net.dodian.uber.game.content.skills.smithing.SmithingData;
 import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
 import net.dodian.uber.game.netty.listener.out.*;
@@ -76,7 +76,7 @@ import net.dodian.uber.game.systems.action.TravelRouteService;
 import net.dodian.uber.game.systems.action.DuelCountdownService;
 import net.dodian.uber.game.systems.action.DuelCountdownState;
 import net.dodian.uber.game.systems.animation.PlayerAnimationService;
-import net.dodian.uber.game.systems.combat.CombatStartService;
+import net.dodian.uber.game.content.combat.CombatStartService;
 import net.dodian.uber.game.systems.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
@@ -90,8 +90,8 @@ import io.netty.channel.Channel;
 
 /* Kotlin imports */
 import net.dodian.uber.game.systems.world.item.Ground;
-import static net.dodian.uber.game.systems.combat.CombatPlayerExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.systems.combat.PlayerAttackCombatKt.attackTarget;
+import static net.dodian.uber.game.content.combat.CombatPlayerExtensionsKt.getRangedStr;
+import static net.dodian.uber.game.content.combat.PlayerAttackCombatKt.attackTarget;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import org.slf4j.Logger;
@@ -3637,9 +3637,9 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
-        if (net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
-                || net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(other)) {
-            send(new SendMessage(net.dodian.uber.game.systems.combat.CombatLogoutLockService.isLocked(this)
+        if (net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(this)
                     ? "You can't duel while in combat."
                     : other.getPlayerName() + " can't duel while in combat."));
             return;
